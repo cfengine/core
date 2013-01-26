@@ -125,8 +125,6 @@ unsigned int WINVER_BUILD = 0;
 /* Compatability infrastructure                                              */
 /*****************************************************************************/
 
-double FORGETRATE = 0.7;
-
 int IGNORELOCK = false;
 int DONTDO = false;
 int DEBUG = false;

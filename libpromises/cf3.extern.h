@@ -138,7 +138,6 @@ extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
-extern double FORGETRATE;
 extern Rlist *GOALS;
 
 extern Rlist *CF_STCK;

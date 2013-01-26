@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("monitor");
-    Policy *policy = GenericInitialize("monitor", config, report_context);
+    Policy *policy = GenericInitialize("monitor", config, report_context, false);
     ThisAgentInit();
     KeepPromises(policy, report_context);
 

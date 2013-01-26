@@ -118,7 +118,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
 {
     AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
@@ -220,6 +220,11 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
             {
                 check_promises = true;
                 CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
+            }
+            if (force_validation)
+            {
+                check_promises = true;
+                CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
             }
 
             if (check_promises)
@@ -852,7 +857,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
         result = true;
     }
 
-    return result | ALWAYS_VALIDATE;
+    return result;
 }
 
 /*******************************************************************/

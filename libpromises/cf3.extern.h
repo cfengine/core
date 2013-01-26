@@ -113,7 +113,6 @@ extern unsigned int WINVER_BUILD;
 extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
-extern int ALWAYS_VALIDATE;
 extern int LICENSES;
 extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];

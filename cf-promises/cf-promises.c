@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     ReportContext *report_context = OpenReports("common");
     
-    GenericInitialize("common", config, report_context);
+    GenericInitialize("common", config, report_context, false);
     ThisAgentInit();
     AnalyzePromiseConflicts();
 

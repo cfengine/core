@@ -41,7 +41,7 @@ typedef struct
     bool ignore_missing_inputs;
 } GenericAgentConfig;
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
 void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);

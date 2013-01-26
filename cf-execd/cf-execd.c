@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports("executor");
-    Policy *policy = GenericInitialize("executor", config, report_context);
+    Policy *policy = GenericInitialize("executor", config, report_context, false);
     ThisAgentInit();
 
     ExecConfig exec_config = {

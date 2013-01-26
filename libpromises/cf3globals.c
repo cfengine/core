@@ -68,7 +68,6 @@ char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 int CSV = false;
 int CF_TOPICS = 0;              // objects
 int CF_OCCUR = 0;               // objects
-int CF_EDGES = 0;               // links or promises between them
 
 Rlist *MOUNTEDFSLIST = NULL;
 PromiseIdent *PROMISE_ID_LIST = NULL;

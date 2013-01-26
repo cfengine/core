@@ -138,7 +138,6 @@ char VDAY[3] = { 0 };
 char VMONTH[4] = { 0 };
 char VSHIFT[12] = { 0 };
 
-char PADCHAR = ' ';
 char PURGE = 'n';
 
 int ERRORCOUNT = 0;

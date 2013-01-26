@@ -38,7 +38,6 @@ extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 
 extern char CONTEXTID[];
-extern char PADCHAR;
 extern Item *IPADDRESSES;
 
 extern char STR_CFENGINEPORT[16];

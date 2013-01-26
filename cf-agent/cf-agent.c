@@ -600,8 +600,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_binarypaddingchar].lval) == 0)
             {
-                PADCHAR = *(char *) retval.item;
-                CfOut(cf_verbose, "", "SET binarypaddingchar = %c\n", PADCHAR);
+                CfOut(cf_verbose, "", "binarypaddingchar is obsolete and does nothing\n");
                 continue;
             }
 

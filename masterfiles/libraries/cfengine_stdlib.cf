@@ -2715,8 +2715,8 @@ vars:
   "stopcommand[udevmonitor]"  string => "/etc/init.d/udevmonitor stop";
   "pattern[udevmonitor]"      string => ".*udevadm.*monitor.*";
 
-  "startcommand[www]"     string => "/etc/init.d/httpd stop";
-  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
+  "startcommand[www]"     string => "/etc/init.d/apache2 start";
+  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
   "pattern[www]"          string => ".*apache2.*";
 
 
@@ -2947,6 +2947,35 @@ bundle common paths
       "svc"      string => "/sbin/service";
       "useradd"  string => "/usr/sbin/useradd";
       "groupadd" string => "/usr/sbin/groupadd";
+
+    debian::
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/bin/egrep";
+      "grep"     string => "/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+      #
+      "svc"      string => "/usr/sbin/service";
+      "useradd"  string => "/usr/sbin/useradd";
+      "groupadd" string => "/usr/sbin/groupadd";
+      "ping" string => "/bin/ping";
+
 
     all::
       "ping" string => "/usr/bin/ping";

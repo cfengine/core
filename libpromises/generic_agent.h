@@ -34,7 +34,11 @@ typedef struct
     Rlist *bundlesequence;
     char *input_file;
     bool check_not_writable_by_others;
-    bool tty_interactive;       //agent is running interactively, via tty/terminal interface
+    bool tty_interactive; //agent is running interactively, via tty/terminal interface
+
+    // change to evaluation behavior from the policy itself
+    bool ignore_missing_bundles;
+    bool ignore_missing_inputs;
 } GenericAgentConfig;
 
 Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context);
@@ -42,12 +46,12 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
-int CheckPromises(AgentType ag, const char *input_file, const ReportContext *report_context);
+int CheckPromises(const char *input_file, const ReportContext *report_context);
 Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
-void HashControls(const Policy *policy);
+void HashControls(const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 

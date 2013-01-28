@@ -23,7 +23,8 @@
 
 */
 
-#include "cf3.defs.h"
+#include "server_transform.h"
+
 #include "server.h"
 
 #include "env_context.h"
@@ -48,6 +49,7 @@ static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(Promise *pp);
 static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
+static void KeepControlPromises(Policy *policy, GenericAgentConfig *config);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
@@ -81,10 +83,10 @@ void KeepQueryAccessPromise(Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(Policy *policy, const ReportContext *report_context)
+void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     KeepContextBundles(policy, report_context);
-    KeepControlPromises(policy);
+    KeepControlPromises(policy, config);
     KeepPromiseBundles(policy, report_context);
 }
 
@@ -202,7 +204,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepControlPromises(Policy *policy)
+static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 {
     Rval retval;
 
@@ -217,7 +219,7 @@ void KeepControlPromises(Policy *policy)
 
     Banner("Server control promises..");
 
-    HashControls(policy);
+    HashControls(policy, config);
 
 /* Now expand */
 

@@ -83,7 +83,7 @@ void PolicyDestroy(Policy *policy)
     }
 }
 
-Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name)
+Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name)
 {
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {

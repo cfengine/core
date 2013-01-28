@@ -119,8 +119,6 @@ extern int LICENSES;
 extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
-extern int IGNORE_MISSING_INPUTS;
-extern int IGNORE_MISSING_BUNDLES;
 extern char WEBDRIVER[CF_MAXVARSIZE];
 extern char BANNER[2 * CF_BUFSIZE];
 extern char FOOTER[CF_BUFSIZE];

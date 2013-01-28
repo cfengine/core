@@ -39,9 +39,23 @@ Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);
 void PolicyDestroy(Policy *policy);
 
+/**
+ * @brief Merge two partial policy objects. The memory for the child objects of the original policies are transfered to the new parent.
+ * @param a
+ * @param b
+ * @return Merged policy
+ */
 Policy *PolicyMerge(Policy *a, Policy *b);
 
-Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char *name);
+/**
+ * @brief Query a policy for a body
+ * @param policy The policy to query
+ * @param ns Namespace filter (optionally NULL)
+ * @param type Body type filter
+ * @param name Body name filter
+ * @return Body child object if found, otherwise NULL
+ */
+Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name);
 
 /**
  * @brief Check to see if a policy is runnable (contains body common control)
@@ -50,6 +64,11 @@ Body *PolicyGetBody(Policy *policy, const char *ns, const char *type, const char
  */
 bool PolicyIsRunnable(const Policy *policy);
 
+/**
+ * @brief Convenience function to get the policy object associated with a promise
+ * @param promise
+ * @return Policy object
+ */
 Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
 

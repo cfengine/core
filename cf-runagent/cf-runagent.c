@@ -45,6 +45,7 @@
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
+static void KeepControlPromises(Policy *policy);
 static int HailServer(char *host, Attributes a, Promise *pp);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
@@ -498,7 +499,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 /* Level 2                                                          */
 /********************************************************************/
 
-void KeepControlPromises(Policy *policy)
+static void KeepControlPromises(Policy *policy)
 {
     Rval retval;
 

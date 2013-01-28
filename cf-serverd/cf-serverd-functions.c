@@ -24,6 +24,7 @@
 
 #include "cf-serverd-functions.h"
 
+#include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"
 #include "cfstream.h"
@@ -564,7 +565,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
     {
         CfOut(cf_verbose, "", " -> New promises detected...\n");
 
-        if (CheckPromises(AGENT_TYPE_SERVER, config->input_file, report_context))
+        if (CheckPromises(config->input_file, report_context))
         {
             CfOut(cf_inform, "", "Rereading config files %s..\n", config->input_file);
 
@@ -652,7 +653,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
 
             SetReferenceTime(true);
             *policy = ReadPromises(AGENT_TYPE_SERVER, CF_SERVERC, config, report_context);
-            KeepPromises(*policy, report_context);
+            KeepPromises(*policy, config, report_context);
             Summarize();
 
         }

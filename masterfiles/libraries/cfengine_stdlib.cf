@@ -1095,6 +1095,17 @@ repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
+##
+
+body classes all_prefix(prefix)
+{
+promise_repaired => { "$(prefix)_repaired" };
+promise_kept => { "$(prefix)_kept" };
+repair_failed => { "$(prefix)_failed" };
+repair_denied => { "$(prefix)_denied" };
+repair_timeout => { "$(prefix)_timeout" };
+}
+
 ##-------------------------------------------------------
 ## Persistent classes
 ##-------------------------------------------------------

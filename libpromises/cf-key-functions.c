@@ -199,7 +199,12 @@ int RemoveKeys(const char *host)
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {
     unsigned long err;
+#ifdef OPENSSL_NO_DEPRECATED
+    RSA *pair = RSA_new();
+    BIGNUM *rsa_bignum = BN_new();
+#else
     RSA *pair;
+#endif
     FILE *fp;
     struct stat statbuf;
     int fd;
@@ -223,9 +228,15 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
 
+#ifdef OPENSSL_NO_DEPRECATED
+    BN_set_word(rsa_bignum, 35);
+
+    if (!RSA_generate_key_ex(pair, 2048, rsa_bignum, NULL))
+#else
     pair = RSA_generate_key(2048, 35, NULL, NULL);
 
     if (pair == NULL)
+#endif
     {
         err = ERR_get_error();
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));

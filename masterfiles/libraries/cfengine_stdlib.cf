@@ -1489,6 +1489,29 @@ leaf_name => { ".*" };
 file_result => "leaf_name";
 }
 
+##
+
+body file_select filetype_older_than(filetype, days)
+# Select files of specified type older than specified number of days
+# Note: This body only takes a single filetype, see filetypes_older_than
+#       if you want to select more than one type of file
+{
+file_types => { "$(filetype)" };
+mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "file_types.mtime";
+}
+
+##
+
+body file_select filetypes_older_than(filetypes, days)
+# Select files of specified type older than specified number of days
+# Note: This body only takes a list of filetypes
+{
+file_types => { @(filetypes) };
+mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "file_types.mtime";
+}
+
 ##-------------------------------------------------------
 ## changes
 ##-------------------------------------------------------

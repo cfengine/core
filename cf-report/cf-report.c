@@ -94,7 +94,6 @@ int ERRORBARS = true;
 int NOSCALING = true;
 int NOWOPT = false;
 int EMBEDDED = false;
-static char PURGE = 'n';
 
 unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 int SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];

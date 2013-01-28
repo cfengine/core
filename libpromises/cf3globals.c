@@ -123,6 +123,8 @@ char VDAY[3] = { 0 };
 char VMONTH[4] = { 0 };
 char VSHIFT[12] = { 0 };
 
+char PURGE = 'n';
+
 int ERRORCOUNT = 0;
 char VPREFIX[CF_MAXVARSIZE] = { 0 };
 

@@ -257,7 +257,8 @@ static int RemoveKeys(const char *host)
 static void KeepKeyPromises(void)
 {
     unsigned long err;
-    RSA *pair;
+    RSA *pair = RSA_new();
+    BIGNUM *rsa_bignum = BN_new();
     FILE *fp;
     struct stat statbuf;
     int fd;
@@ -283,9 +284,9 @@ static void KeepKeyPromises(void)
 
     printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
 
-    pair = RSA_generate_key(2048, 35, NULL, NULL);
+    BN_set_word(rsa_bignum, 35);
 
-    if (pair == NULL)
+    if (!RSA_generate_key_ex(pair, 2048, rsa_bignum, NULL))
     {
         err = ERR_get_error();
         CfOut(cf_error, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));

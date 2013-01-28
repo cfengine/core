@@ -55,6 +55,13 @@
 
 #define CF_RECURSION_LIMIT 100
 
+static Rlist *AUTO_DEFINE_LIST;
+
+Item *VSETUIDLIST;
+
+Rlist *SINGLE_COPY_LIST = NULL;
+static Rlist *SINGLE_COPY_CACHE = NULL;
+
 static int TransformFile(char *file, Attributes attr, Promise *pp);
 static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
@@ -92,6 +99,11 @@ static void LogFileChange(char *file, int change, Attributes a, Promise *pp, con
     CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
 }
 #endif
+
+void SetFileAutoDefineList(Rlist *auto_define_list)
+{
+    AUTO_DEFINE_LIST = auto_define_list;
+}
 
 int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
                    const ReportContext *report_context)
@@ -3285,11 +3297,6 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         return;
     }
 
-    if (EXCLAIM)
-    {
-        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    }
-
     if (cmpsb.st_mode != sb->st_mode)
     {
         snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
@@ -3356,11 +3363,6 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     if (pp->ref)
     {
         CfOut(cf_error, "", "Preceding promise: %s", pp->ref);
-    }
-
-    if (EXCLAIM)
-    {
-        CfOut(cf_error, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
 
     if (attr.change.update && !DONTDO)

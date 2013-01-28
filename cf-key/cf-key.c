@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     THIS_AGENT_TYPE = AGENT_TYPE_KEYGEN;
 
     ReportContext *report_context = OpenReports("keygenerator");
-    GenericInitialize("keygenerator", config, report_context);
+    GenericInitialize("keygenerator", config, report_context, false);
 
     if (SHOWHOSTS)
     {

@@ -55,6 +55,8 @@
 #define MON_THRESHOLD_HIGH 1000000      // samples should stay below this threshold
 #define LDT_BUFSIZE 10
 
+double FORGETRATE = 0.7;
+
 static char ENVFILE_NEW[CF_BUFSIZE];
 static char ENVFILE[CF_BUFSIZE];
 

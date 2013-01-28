@@ -94,6 +94,7 @@ int ERRORBARS = true;
 int NOSCALING = true;
 int NOWOPT = false;
 int EMBEDDED = false;
+static char PURGE = 'n';
 
 unsigned int HISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
 int SMOOTHHISTOGRAM[CF_OBSERVABLES][7][CF_GRAINS];
@@ -299,7 +300,7 @@ int main(int argc, char *argv[])
     Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        policy = GenericInitialize("reporter", config, report_context);
+        policy = GenericInitialize("reporter", config, report_context, false);
     }
     else
     {

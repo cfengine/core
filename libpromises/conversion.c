@@ -657,13 +657,27 @@ long Str2Int(const char *s)
 
 /****************************************************************************/
 
+static const long DAYS[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+static int GetMonthLength(int month, int year)
+{
+    /* FIXME: really? */
+    if ((month == 1) && (year % 4 == 0))
+    {
+        return 29;
+    }
+    else
+    {
+        return DAYS[month];
+    }
+}
+
 long TimeAbs2Int(char *s)
 {
     time_t cftime;
     int i;
     char mon[4], h[3], m[3];
     long month = 0, day = 0, hour = 0, min = 0, year = 0;
-    static long days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
     if (s == NULL)
     {
@@ -671,11 +685,6 @@ long TimeAbs2Int(char *s)
     }
 
     year = Str2Int(VYEAR);
-
-    if (year % 4 == 0)          /* leap years */
-    {
-        days[1] = 29;
-    }
 
     if (strstr(s, ":"))         /* Hr:Min */
     {
@@ -708,7 +717,7 @@ long TimeAbs2Int(char *s)
 
     for (i = 0; i < month - 1; i++)
     {
-        cftime += days[i] * 24 * 3600;
+        cftime += GetMonthLength(i, year) * 24 * 3600;
     }
 
     cftime += (year - 1970) * 365 * 24 * 3600;
@@ -721,7 +730,6 @@ long TimeAbs2Int(char *s)
 
 long Months2Seconds(int m)
 {
-    static long days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     long tot_days = 0;
     int this_month, i, month, year;
 
@@ -743,14 +751,7 @@ long Months2Seconds(int m)
             year--;
         }
 
-        if ((year % 4) && (month == 1))
-        {
-            tot_days += 29;
-        }
-        else
-        {
-            tot_days += days[month];
-        }
+        tot_days += GetMonthLength(month, year);
     }
 
     return (long) tot_days *3600 * 24;

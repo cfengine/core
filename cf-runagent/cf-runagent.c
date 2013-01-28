@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     ReportContext *report_context = OpenReports("runagent");
 
-    Policy *policy = GenericInitialize("runagent", config, report_context);
+    Policy *policy = GenericInitialize("runagent", config, report_context, false);
     ThisAgentInit();
     KeepControlPromises(policy);      // Set RUNATTR using copy
 
@@ -332,7 +332,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'x':
-            SelfDiagnostic();
+            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:

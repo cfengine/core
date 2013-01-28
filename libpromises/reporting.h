@@ -34,6 +34,9 @@ ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);
 
+void ReportHtmlPromiseBegin(Writer *writer);
+void ReportHtmlPromiseEnd(Writer *writer);
+
 void ShowPromises(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
 void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent);
 void ShowScopedVariables(const ReportContext *context, ReportOutputType type);

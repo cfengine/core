@@ -108,7 +108,7 @@ void PromiseDestroy(Promise *pp);
 // TODO: legacy
 
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
-SubType *GetSubTypeForBundle(char *type, Bundle *bp);
+SubType *GetSubTypeForBundle(const char *type, Bundle *bp);
 
 
 

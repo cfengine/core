@@ -25,6 +25,29 @@
 #include "alloc.h"
 #include "list.h"
 
+struct List {
+    // Number of nodes
+    int node_count;
+    // Incremental number that keeps track of the state of the list, only used for light iterators
+    unsigned int state;
+    // Nodes
+    ListNode *list;
+    // Link to the first element
+    ListNode *first;
+    // Link to the last element
+    ListNode *last;
+    // This function is used to compare two elements
+    int (*compare)(const void *a, const void *b);
+    // This function is used whenever there is need to perform a deep copy
+    void (*copy)(const void *source, void **destination);
+    // This function can be used to destroy the elements at destruction time
+    void (*destroy)(void *element);
+    // Reference counting
+    RefCount *ref_count;
+    // Mutable iterator.
+    ListMutableIterator *iterator;
+};
+
 #define IsIteratorValid(iterator) \
     iterator->state != iterator->origin->state
 #define IsMutableIteratorValid(iterator) \

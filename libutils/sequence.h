@@ -48,7 +48,14 @@ typedef struct
 } Seq;
 
 #define SeqAt(seq, i) seq->data[i]
-#define SeqLength(seq) (seq->length)
+
+/**
+  @brief Length of the sequence.
+  @note On NULL sequence return size 0.
+  @param seq [in] sequence.
+  @return Sequence length.
+  */
+size_t SeqLength(const Seq *seq);
 
 /**
   @brief Create a new Sequence

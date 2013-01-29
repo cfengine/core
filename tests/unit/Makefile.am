@@ -108,7 +108,13 @@ if HAVE_AVAHI_COMMON
 
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
+if HAVE_NOVA
 avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
+else
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
+endif
 
 endif
 endif

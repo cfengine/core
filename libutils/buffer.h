@@ -52,6 +52,16 @@ typedef enum {
 #define DEFAULT_BUFFER_SIZE     4096
 #define DEFAULT_MEMORY_CAP      65535
 
+struct Buffer {
+    char *buffer;
+    int mode;
+    unsigned int capacity;
+    unsigned int used;
+    unsigned int memory_cap;
+    unsigned int beginning; /*!< This is to be used in the future to trim characters in the front. */
+    unsigned int end; /*!< This is to be used in the future to trim characters in the back. */
+    RefCount *ref_count;
+};
 typedef struct Buffer Buffer;
 
 /**

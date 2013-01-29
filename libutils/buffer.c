@@ -26,17 +26,6 @@
 #include "buffer.h"
 #include "refcount.h"
 
-struct Buffer {
-    char *buffer;
-    int mode;
-    unsigned int capacity;
-    unsigned int used;
-    unsigned int memory_cap;
-    unsigned int beginning; /*!< This is to be used in the future to trim characters in the front. */
-    unsigned int end; /*!< This is to be used in the future to trim characters in the back. */
-    RefCount *ref_count;
-};
-
 static unsigned int general_memory_cap = DEFAULT_MEMORY_CAP;
 unsigned int BufferGeneralMemoryCap()
 {

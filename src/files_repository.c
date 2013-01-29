@@ -134,7 +134,7 @@ int ArchiveToRepository(char *file, Attributes attr, Promise *pp, const ReportCo
 
     CheckForFileHoles(&sb, pp);
 
-    if (CopyRegularFileDisk(file, destination, pp->makeholes))
+    if (pp && CopyRegularFileDisk(file, destination, pp->makeholes))
     {
         CfOut(cf_inform, "", "Moved %s to repository location %s\n", file, destination);
         return true;

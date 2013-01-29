@@ -46,7 +46,7 @@
 
 #include <assert.h>
 
-char *CFH[][2] =
+static const char *CFH[][2] =
 {
     {"<html><head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"/cf_enterprise.css\" />\n</head>\n", "</html>"},
     {"<div id=\"bundle\"><table class=border><tr><td><h2>", "</td></tr></h2></table></div>"},
@@ -130,6 +130,17 @@ void ReportContextDestroy(ReportContext *context)
         }
         free(context);
     }
+}
+
+void ReportHtmlPromiseBegin(Writer *w)
+{
+    WriterWriteF(w, "<div id=\"reporttext\">\n");
+    WriterWriteF(w, "%s", CFH[cfx_promise][cfb]);
+}
+
+void ReportHtmlPromiseEnd(Writer *w)
+{
+    WriterWriteF(w, "%s", CFH[cfx_promise][cfe]);
 }
 
 /*******************************************************************/

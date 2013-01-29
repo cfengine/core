@@ -109,7 +109,7 @@ int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
-void LogTotalCompliance(const char *version);
+void LogTotalCompliance(const char *version, int background_tasks);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 #endif
@@ -204,13 +204,6 @@ void CloseNetwork(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
-
-/* selfdiagnostic.c */
-
-void SelfDiagnostic(void);
-void TestVariableScan(void);
-void TestExpandPromise(const ReportContext *report_context);
-void TestExpandVariables(const ReportContext *report_context);
 
 /* sockaddr.c */
 

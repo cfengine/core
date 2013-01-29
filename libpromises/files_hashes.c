@@ -71,21 +71,11 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
             {
                 CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
 
-                if (EXCLAIM)
-                {
-                    CfOut(warnlevel, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                }
-
                 CfOut(warnlevel, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
                 if (pp->ref)
                 {
                     CfOut(warnlevel, "", "Preceding promise: %s", pp->ref);
-                }
-
-                if (EXCLAIM)
-                {
-                    CfOut(warnlevel, "", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 }
 
                 if (attr.change.update)

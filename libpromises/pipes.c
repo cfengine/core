@@ -103,8 +103,8 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-pid_t *CHILDREN;
-int MAX_FD = 128;               /* Max number of simultaneous pipes */
+static pid_t *CHILDREN;
+static int MAX_FD = 128;               /* Max number of simultaneous pipes */
 
 static int InitChildrenFD()
 {

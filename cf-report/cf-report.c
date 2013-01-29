@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
     Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        policy = GenericInitialize("reporter", config, report_context);
+        policy = GenericInitialize("reporter", config, report_context, false);
     }
     else
     {

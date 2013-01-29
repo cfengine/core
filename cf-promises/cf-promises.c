@@ -30,8 +30,11 @@
 #include "reporting.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "syntax.h"
 
 /*******************************************************************/
+
+static bool SHOW_PARSE_TREE;
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -92,7 +95,15 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     ReportContext *report_context = OpenReports("common");
     
-    GenericInitialize("common", config, report_context);
+    Policy *policy = GenericInitialize("common", config, report_context, false);
+
+    if (SHOW_PARSE_TREE)
+    {
+        Writer *writer = FileWriter(stdout);
+        PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
+        WriterClose(writer);
+    }
+
     ThisAgentInit();
     AnalyzePromiseConflicts();
 
@@ -197,7 +208,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'x':
-            SelfDiagnostic();
+            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         case 'a':

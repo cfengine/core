@@ -1489,6 +1489,29 @@ leaf_name => { ".*" };
 file_result => "leaf_name";
 }
 
+##
+
+body file_select filetype_older_than(filetype, days)
+# Select files of specified type older than specified number of days
+# Note: This body only takes a single filetype, see filetypes_older_than
+#       if you want to select more than one type of file
+{
+file_types => { "$(filetype)" };
+mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "file_types.mtime";
+}
+
+##
+
+body file_select filetypes_older_than(filetypes, days)
+# Select files of specified type older than specified number of days
+# Note: This body only takes a list of filetypes
+{
+file_types => { @(filetypes) };
+mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "file_types.mtime";
+}
+
 ##-------------------------------------------------------
 ## changes
 ##-------------------------------------------------------
@@ -2715,8 +2738,8 @@ vars:
   "stopcommand[udevmonitor]"  string => "/etc/init.d/udevmonitor stop";
   "pattern[udevmonitor]"      string => ".*udevadm.*monitor.*";
 
-  "startcommand[www]"     string => "/etc/init.d/httpd stop";
-  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
+  "startcommand[www]"     string => "/etc/init.d/apache2 start";
+  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
   "pattern[www]"          string => ".*apache2.*";
 
 
@@ -2947,6 +2970,35 @@ bundle common paths
       "svc"      string => "/sbin/service";
       "useradd"  string => "/usr/sbin/useradd";
       "groupadd" string => "/usr/sbin/groupadd";
+
+    debian::
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/bin/egrep";
+      "grep"     string => "/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+      #
+      "svc"      string => "/usr/sbin/service";
+      "useradd"  string => "/usr/sbin/useradd";
+      "groupadd" string => "/usr/sbin/groupadd";
+      "ping" string => "/bin/ping";
+
 
     all::
       "ping" string => "/usr/bin/ping";

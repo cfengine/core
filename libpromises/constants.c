@@ -274,7 +274,7 @@ const char *OBS[CF_OBSERVABLES][2] =
 
 /*****************************************************************/
 
-char *AGENT_TYPESEQUENCE[] =
+const char *AGENT_TYPESEQUENCE[] =
 {
     "meta",
     "vars",

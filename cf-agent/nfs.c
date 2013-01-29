@@ -42,6 +42,9 @@
 /* seconds */
 #define RPCTIMEOUT 60
 
+int FSTAB_EDITS;
+Item *FSTABLIST = NULL;
+
 #ifndef __MINGW32__
 
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);

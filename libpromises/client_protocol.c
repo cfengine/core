@@ -39,7 +39,6 @@ static void SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
 
-int CFSIGNATURE;
 static int SKIPIDENTIFY;
 
 /*********************************************************************/
@@ -105,7 +104,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
         snprintf(localip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop((struct sockaddr *) &myaddr));
 
-        CfDebug("Identifying this agent as %s i.e. %s, with signature %d, family %d\n", localip, VFQNAME, CFSIGNATURE, family);
+        CfDebug("Identifying this agent as %s i.e. %s, with signature %d, family %d\n", localip, VFQNAME, 0, family);
 
 #if defined(HAVE_GETADDRINFO)
 
@@ -180,7 +179,7 @@ int IdentifyAgent(int sd, char *localip, int family)
         strcpy(dnsname, localip);
     }
 
-    snprintf(sendbuff, CF_BUFSIZE - 1, "CAUTH %s %s %s %d", localip, dnsname, uname, CFSIGNATURE);
+    snprintf(sendbuff, CF_BUFSIZE - 1, "CAUTH %s %s %s %d", localip, dnsname, uname, 0);
 
     if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
     {

@@ -256,7 +256,7 @@ body action u_immediate
 body depth_search u_recurse(d)
 {
  depth => "$(d)";
- exclude_dirs => { "\.svn", "\.git" };
+ exclude_dirs => { "\.svn", "\.git", "\.hg", "\.bzr" };
 }
 
 #########################################################
@@ -265,7 +265,7 @@ body depth_search u_recurse_basedir(d)
 {
  include_basedir => "true";
  depth => "$(d)";
- exclude_dirs => { "\.svn", "\.git" };
+ exclude_dirs => { "\.svn", "\.git", "\.hg", "\.bzr" };
 }
 
 #########################################################

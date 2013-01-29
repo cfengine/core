@@ -1,3 +1,28 @@
+3.5.0 - Alpha 1
+
+       New Features:
+
+       - Enable zeroconf-discovery of policy hubs for automatic bootstrapping
+         if Avahi is present
+
+       - Support for sys.cpus on more platforms than Linux & HPUX
+
+       Changes:
+
+       - Make parser output in GCC compatible format the only supported format 
+         (remove --gcc-brief-format flag)
+
+       - Silence license warnings in Enterprise Free25 installations
+
+       Bugfixes:
+
+       - Allocate memory dynamically to avoid out-of-buffer or out-of-hash
+         situations
+
+       - fix edit_xml update of existing attributes  (Redmine #2034)
+
+       - use failsafe policy from compile-time specified workdir (Redmine #1991)
+
 3.4.2   (Bugfix and Stability release)
 
        Bugfixes:

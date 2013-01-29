@@ -1,3 +1,61 @@
+3.4.2   (Bugfix and Stability release)
+
+       Bugfixes:
+
+       - Fixes to policies in masterfiles (see masterfiles/Changelog for details)
+
+       - Fixes for OpenBSD (GitHub #278)
+
+       - Do not canonify values specified in abortbundleclasses/abortclasses (Redmine #1786)
+
+       - Fix build issues on NetBSD, SLES 12.2
+
+       - Improve error message when libxml2 support is not compiled (Redmine #1799)
+
+       - fix potential segmentation fault when trimming network socket data (GitHub #233)
+
+       - fix potential segmentation fault when address-lookups in lastseen db failed (GitHub #233)
+
+       - execute background promise serially when max_children was reached, rather
+         than skipping them (GitHub #233)
+
+       - fix segmentation fault in cf-promises when invoked with --reports (Redmine #1931)
+
+       - fix compilation with Sun Studio 12 (Redmine #1901)
+
+       - silence type-pun warning when building on HP-UX (GitHub #287)
+
+3.4.1   (Bugfix and Stability release)
+
+        New feature/behavior:
+
+        - cf-execd terminates agent processes that are not responsive
+          for a configurable amount of time (see agent_expireafter in body
+          executor control), defaulting to 1 week
+
+        Bugfixes:
+
+        - fix regression of classmatch() failing with hard classes (Redmine #1834)
+
+        - create promise-defined and persistent classes in correct
+          namespace (Redmine #1836)
+
+        - several fixes to namespace support
+
+        - fix several crash bugs caused by buffer overflow and race
+          conditions in cf-serverd
+
+        - regenerate time classes in cf-execd for each run (Redmine #1838)
+
+        - edit_xml: fix select_xpath implementation and update documentation
+          NOTE: code that uses select_xpath_region needs to be changed to
+          select_xpath
+
+        - edit_xml: make sure that text-modification functions don't overwrite
+          child nodes
+
+        - edit_xml: improve error logging
+
 3.4.0
 
 	New features:
@@ -172,6 +230,40 @@
 	Full list of issues fixed is available on
 	https://cfengine.com/bugtracker/changelog_page.php (old bug tracker)
 	and https://cfengine.com/dev/projects/core/versions/34 (new bug tracker)
+
+3.3.9   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Do not lose hard classes in cf-serverd during policy reload
+	  (Mantis #1218).
+	- Implement recieve network timeout in cf-serverd. Prevents
+	  overloading cf-serverd with stale connections.
+
+3.3.8   (Bugfix and Stability release)
+
+	Versions 3.3.6, 3.3.7 were internal and weren't released.
+
+	Bugfixes:
+
+	- Propery set sys.domain variable if hostname is fully-qualified.
+	- Fixed several small memory leaks.
+	- Make network timeout for network reads configurable. Previously
+	  it was hardcoded to be 30 seconds, which was not enough for
+	  cf-runagent invoking cf-agent on big policies (Mantis #1028).
+
+3.3.5   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Fixed cf-execd memory leak on hosts with cf-monitord running.
+	- Robustify against wrongly-sized entires in embedded databases.
+
+	Standard library:
+
+	- Bugfixes from upstream COPBL repository.
+	- standard_services bundle from upstream COPBL repository.
+
 
 3.3.4   (Bugfix and Stability release)
 

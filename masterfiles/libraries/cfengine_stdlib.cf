@@ -283,7 +283,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
     field_edits:
 
     # If the line is there, but commented out, first uncomment it
-        "#+$(index)\s*=.*"
+        "#+\s*$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
             edit_field => col("=","1","$(index)","set"),
             ifvarclass => "edit_$(cindex[$(index)])";
@@ -358,7 +358,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
     field_edits:
 
     # If the line is there, but commented out, first uncomment it
-        "#+$(index)\s*=.*"
+        "#+\s*$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
             edit_field => col("=","1","$(index)","set"),
             ifvarclass => "edit_$(cindex[$(index)])";

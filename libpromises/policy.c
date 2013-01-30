@@ -58,8 +58,6 @@ Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
 
-    policy->current_namespace = xstrdup("default");
-
     policy->bundles = SeqNew(100, BundleDestroy);
     policy->bodies = SeqNew(100, BodyDestroy);
 
@@ -78,7 +76,6 @@ void PolicyDestroy(Policy *policy)
         SeqDestroy(policy->bundles);
         SeqDestroy(policy->bodies);
 
-        free(policy->current_namespace);
         free(policy);
     }
 }
@@ -135,23 +132,6 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     free(b);
 
     return result;
-}
-
-/*************************************************************************/
-
-void PolicySetNameSpace(Policy *policy, char *ns)
-{
-    if (policy->current_namespace)
-    {
-        free(policy->current_namespace);
-    }
-
-    policy->current_namespace = xstrdup(ns);
-}
-
-char *CurrentNameSpace(Policy *policy)
-{
-    return policy->current_namespace;
 }
 
 const char *NamespaceFromConstraint(const Constraint *cp)
@@ -578,7 +558,7 @@ static void SubTypeDestroy(SubType *subtype)
     }
 }
 
-Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
+Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
     CfDebug("Appending new bundle %s %s (", type, name);
@@ -595,19 +575,19 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, R
 
     SeqAppend(policy->bundles, bundle);
 
-    if (strcmp(policy->current_namespace,"default") == 0)
+    if (strcmp(ns, "default") == 0)
     {
         bundle->name = xstrdup(name);
     }
     else
     {
         char fqname[CF_BUFSIZE];
-        snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
+        snprintf(fqname,CF_BUFSIZE-1, "%s:%s", ns, name);
         bundle->name = xstrdup(fqname);
     }
 
     bundle->type = xstrdup(type);
-    bundle->namespace = xstrdup(policy->current_namespace);
+    bundle->namespace = xstrdup(ns);
     bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->subtypes = SeqNew(10, SubTypeDestroy);
@@ -617,8 +597,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, R
 
 /*******************************************************************/
 
-Body *PolicyAppendBody(Policy *policy, const char *name, const char *type, Rlist *args,
-                 const char *source_path)
+Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path)
 {
     CfDebug("Appending new promise body %s %s(", type, name);
 
@@ -633,19 +612,19 @@ Body *PolicyAppendBody(Policy *policy, const char *name, const char *type, Rlist
 
     SeqAppend(policy->bodies, body);
 
-    if (strcmp(policy->current_namespace,"default") == 0)
-       {
-       body->name = xstrdup(name);
-       }
+    if (strcmp(ns, "default") == 0)
+    {
+        body->name = xstrdup(name);
+    }
     else
-       {
-       char fqname[CF_BUFSIZE];
-       snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
-       body->name = xstrdup(fqname);
-       }
+    {
+        char fqname[CF_BUFSIZE];
+        snprintf(fqname, CF_BUFSIZE-1, "%s:%s", ns, name);
+        body->name = xstrdup(fqname);
+    }
 
     body->type = xstrdup(type);
-    body->namespace = xstrdup(policy->current_namespace);
+    body->namespace = xstrdup(ns);
     body->args = CopyRlist(args);
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);

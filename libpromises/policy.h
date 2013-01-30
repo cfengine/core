@@ -32,7 +32,6 @@ struct Policy_
 {
     Seq *bundles;
     Seq *bodies;
-    char *current_namespace;
 };
 
 Policy *PolicyNew(void);
@@ -93,13 +92,10 @@ void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 bool PolicyCheck(const Policy *policy, Seq *errors);
 
-Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
-Body *PolicyAppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
+Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
 SubType *BundleAppendSubType(Bundle *bundle, char *name);
-
-void PolicySetNameSpace(Policy *policy, char *ns);
-char *CurrentNameSpace(Policy *policy);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 

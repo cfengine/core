@@ -40,6 +40,9 @@ static void ParserStateReset()
     P.list_nesting = 0;
     P.arg_nesting = 0;
 
+    free(P.current_namespace);
+    P.current_namespace = xstrdup("default");
+
     P.currentid[0] = '\0';
     P.currentstring = NULL;
     P.currenttype[0] = '\0';

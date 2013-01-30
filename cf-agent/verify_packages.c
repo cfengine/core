@@ -44,6 +44,9 @@
 #include "exec_tools.h"
 #include "policy.h"
 #include "misc_lib.h"
+#ifdef HAVE_NOVA
+#include "agent_reports.h"
+#endif
 
 /** Entry points from VerifyPackagesPromise **/
 
@@ -68,6 +71,13 @@ static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum
 static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
+
+#ifndef HAVE_NOVA
+void ReportPatches(PackageManager *list)
+{
+    CfOut(cf_verbose, "", "# Patch reporting feature is only available in version Nova and above\n");
+}
+#endif
 
 /*****************************************************************************/
 

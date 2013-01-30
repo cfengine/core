@@ -3,6 +3,10 @@ sbin_PROGRAMS = cf-monitord
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
 	$(NOVA_CPPFLAGS)
 
+if HAVE_NOVA
+AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfmonitord
+endif
+
 AM_CFLAGS = @CFLAGS@ \
 	$(NOVA_CFLAGS)
 

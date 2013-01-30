@@ -23,13 +23,20 @@
 
 */
 
-#include "cf3.defs.h"
+#include "verify_measurements.h"
 
 #include "promises.h"
 #include "files_names.h"
 #include "attributes.h"
 #include "cfstream.h"
 #include "logging.h"
+#ifdef HAVE_NOVA
+#include "history.h"
+#endif
+
+#ifndef HAVE_NOVA
+static void VerifyMeasurement(double *this, Attributes a, Promise *pp);
+#endif
 
 static int CheckMeasureSanity(Attributes a, Promise *pp);
 
@@ -131,3 +138,9 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
 
     return retval;
 }
+
+#ifndef HAVE_NOVA
+static void VerifyMeasurement(double *this, Attributes a, Promise *pp)
+{
+}
+#endif

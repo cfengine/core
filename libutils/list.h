@@ -140,6 +140,17 @@ int ListCopy(List *origin, List **destination);
   @return 0 if prepended, -1 otherwise.
   */
 int ListPrepend(List *list, void *payload);
+
+/**
+  @brief Adds an element to the beginning of the list if the item doesn't already exist
+  The Compare function must be supplied while creating the list. Other properties are
+  exactly the same as ListPrepend.
+  @param list Linked list.
+  @param payload Data to be added.
+  @return 0 if prepended, 1 if the element already exists, -1 otherwise.
+  */
+int ListPrependIdemp(List *list, void *payload);
+
 /**
   @brief Adds an element to the end of the list.
   Notice that we do not copy the element, so if the original element is free'd there will be
@@ -154,6 +165,17 @@ int ListPrepend(List *list, void *payload);
   @return 0 if appended, -1 otherwise.
   */
 int ListAppend(List *list, void *payload);
+
+/**
+  @brief Adds an element to the end of the list if the item doesn't already exist
+  The Compare function must be supplied while creating the list. Other properties are
+  exactly the same as ListAppend.
+  @param list Linked list.
+  @param payload Data to be added.
+  @return 0 if appended, 1 if the element already exists, -1 otherwise.
+  */
+int ListAppendIdemp(List *list, void *payload);
+
 /**
   @brief Removes an element from the linked list.
   Removes the first element that matches the payload. It starts looking from the beginning of the list.

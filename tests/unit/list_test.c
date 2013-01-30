@@ -5,6 +5,8 @@
 #include "cmockery.h"
 #include "list.h"
 
+static int compareFunction(const void *a, const void *b);
+
 // Simple initialization test
 static void test_initList(void **state)
 {
@@ -112,6 +114,85 @@ static void test_prependToList(void **state)
     // know that it works.
 }
 
+static void test_prependToListIdemp(void **state)
+{
+    List *list = NULL;
+    assert_int_equal(ListNew(&list, compareFunction, NULL, testDestroyer), 0);
+    assert_int_not_equal(list, NULL);
+    assert_int_equal(list->first, NULL);
+    assert_int_equal(list->list, NULL);
+    assert_int_equal(list->last, NULL);
+    assert_int_equal(list->node_count, 0);
+    assert_int_equal(list->state, 0);
+    assert_int_not_equal(list->compare, NULL);
+    assert_int_equal(list->copy, NULL);
+    assert_int_not_equal(list->destroy, NULL);
+
+    char element0[] = "this is a test string";
+    char element1[] = "another test string";
+    char element_duplicate0[] = "this is a test string";
+    void *listPointer = NULL;
+    void *firstPointer = NULL;
+    void *lastPointer = NULL;
+
+    // We add element0 to the list.
+    assert_int_equal(ListPrependIdemp(list, element0), 0);
+    // Now we check the list
+    assert_int_not_equal(list->first, NULL);
+    firstPointer = list->first;
+    assert_int_not_equal(list->list, NULL);
+    listPointer = list->list;
+    assert_true(list->list == list->first);
+    assert_int_not_equal(list->last, NULL);
+    lastPointer = list->last;
+    assert_int_equal(list->node_count, 1);
+    // Adding elements does not change the state of the list
+    assert_int_equal(list->state, 0);
+
+    // We add element1 to the list.
+    assert_int_equal(ListPrependIdemp(list, element1), 0);
+    // Now we check the list
+    assert_int_not_equal(list->first, NULL);
+    assert_false(list->first == firstPointer);
+    assert_int_not_equal(list->list, NULL);
+    assert_false(list->list == listPointer);
+    assert_int_not_equal(list->last, NULL);
+    assert_true(list->last == lastPointer);
+    assert_int_equal(list->node_count, 2);
+    assert_int_equal(list->state, 0);
+
+    // Try to add element_duplicate0
+    assert_int_equal(ListPrependIdemp(list, element_duplicate0), 1);
+
+    // Make sure that the list size has not increased
+    assert_int_equal(ListCount(list), 2);
+
+    // Now test with NULL Compare function
+    List *list2 = NULL;
+    assert_int_equal(ListNew(&list2, NULL, NULL, testDestroyer), 0);
+    assert_int_not_equal(list2, NULL);
+    assert_int_equal(list2->first, NULL);
+    assert_int_equal(list2->list, NULL);
+    assert_int_equal(list2->last, NULL);
+    assert_int_equal(list2->node_count, 0);
+    assert_int_equal(list2->state, 0);
+    assert_int_equal(list2->compare, NULL);
+    assert_int_equal(list2->copy, NULL);
+    assert_int_not_equal(list2->destroy, NULL);
+
+    // Trying to prepend an element must fail
+    assert_int_equal(ListPrependIdemp(list2, element0), -1);
+
+    // Confirm that the list hasn't been altered
+    assert_int_equal(ListCount(list2), 0);
+
+    // Now we try to destroy the list. This should fail because the list is not empty
+    assert_int_equal(ListDestroy(&list), 0);
+    assert_int_equal(ListDestroy(&list2), 0);
+    // Yes, we are leaking memory here but we shouldn't be using the remove function until we
+    // know that it works.
+}
+
 static void test_appendToList(void **state)
 {
     List *list = NULL;
@@ -156,6 +237,82 @@ static void test_appendToList(void **state)
     // Now we try to destroy the list. This should fail because the list is not empty
     assert_int_equal(ListDestroy(&list), 0);
 
+    // Yes, we are leaking memory here but we shouldn't be using the remove function until we
+    // know that it works.
+}
+
+static void test_appendToListIdemp(void **state)
+{
+    List *list1 = NULL;
+    assert_int_equal(ListNew(&list1, compareFunction, NULL, NULL), 0);
+    assert_int_not_equal(list1, NULL);
+    assert_int_equal(list1->first, NULL);
+    assert_int_equal(list1->list, NULL);
+    assert_int_equal(list1->last, NULL);
+    assert_int_equal(list1->node_count, 0);
+    assert_int_equal(list1->state, 0);
+    assert_int_not_equal(list1->compare, NULL);
+    assert_int_equal(list1->destroy, NULL);
+
+    char element0[] = "this is a test string";
+    char element1[] = "another test string";
+    char element_dup0[] = "this is a test string";
+    void *element0tPointer = NULL;
+
+    // We add element0 to the list.
+    assert_int_equal(ListAppendIdemp(list1, element0), 0);
+    // Now we check the list
+    assert_int_not_equal(list1->first, NULL);
+    element0tPointer = list1->first;
+    assert_int_not_equal(list1->list, NULL);
+    assert_true(list1->list == list1->first);
+    assert_int_not_equal(list1->last, NULL);
+    assert_true(list1->last == list1->first);
+    assert_int_equal(list1->node_count, 1);
+    // Adding elements does not change the list state
+    assert_int_equal(list1->state, 0);
+
+    // We add element1 to the list.
+    assert_int_equal(ListAppendIdemp(list1, element1), 0);
+    // Now we check the list
+    assert_int_not_equal(list1->first, NULL);
+    assert_int_not_equal(list1->list, NULL);
+    assert_int_not_equal(list1->last, NULL);
+    assert_true(element0tPointer == list1->list);
+    assert_true(element0tPointer == list1->first);
+    assert_false(list1->first == list1->last);
+    assert_int_equal(list1->node_count, 2);
+    assert_int_equal(list1->state, 0);
+
+    // Adding element_dup0 should fail
+    assert_int_equal(ListAppendIdemp(list1, element_dup0), 1);
+
+    // Confirm that the list size hasn't changed
+    assert_int_equal(ListCount(list1), 2);
+
+    // Test with another list having a NULL Compare function
+    List *list2 = NULL;
+    assert_int_equal(ListNew(&list2, NULL, NULL, NULL), 0);
+    assert_int_not_equal(list2, NULL);
+    assert_int_equal(list2->first, NULL);
+    assert_int_equal(list2->list, NULL);
+    assert_int_equal(list2->last, NULL);
+    assert_int_equal(list2->node_count, 0);
+    assert_int_equal(list2->state, 0);
+    assert_int_equal(list2->compare, NULL);
+    assert_int_equal(list2->destroy, NULL);
+
+    // Trying to append an element to a list with no Compare function is not allowed
+    assert_int_equal(ListAppendIdemp(list2, element0), -1);
+
+    // Confirm that nothing was added to the list
+    assert_int_equal(list2->node_count, 0);
+    assert_int_equal(list2->state, 0);
+    //assert_int_equal(ListCount(list2), 0);
+
+    // Now we try to destroy the list. This should fail because the list is not empty
+    assert_int_equal(ListDestroy(&list1), 0);
+    assert_int_equal(ListDestroy(&list2), 0);
     // Yes, we are leaking memory here but we shouldn't be using the remove function until we
     // know that it works.
 }
@@ -792,7 +949,9 @@ int main()
         , unit_test(test_destroyList)
         , unit_test(test_destroyer)
         , unit_test(test_prependToList)
+        , unit_test(test_prependToListIdemp)
         , unit_test(test_appendToList)
+        , unit_test(test_appendToListIdemp)
         , unit_test(test_removeFromList)
         , unit_test(test_copyList)
         , unit_test(test_iterator)

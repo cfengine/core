@@ -32,6 +32,8 @@
 #define ChangeListState(list) \
     list->state++
 
+static int ListFindNode(List *list, void *payload);
+
 /*
  * Helper method to detach lists.
  */
@@ -225,6 +227,38 @@ int ListAppend(List *list, void *payload)
     list->last = node;
     list->node_count++;
     return 0;
+}
+
+int ListPrependIdemp(List *list, void *payload)
+{
+    if (!list || !payload || !(list->compare))
+    {
+        return -1;
+    }
+
+    int found = ListFindNode(list, payload);
+    if (!found)
+    {
+        ListPrepend(list, payload);
+    }
+
+    return found;
+}
+
+int ListAppendIdemp(List *list, void *payload)
+{
+    if (!list || !payload || !(list->compare))
+    {
+        return -1;
+    }
+
+    int found = ListFindNode(list, payload);
+    if (!found)
+    {
+        ListAppend(list, payload);
+    }
+
+    return found;
 }
 
 /*

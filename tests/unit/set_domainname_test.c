@@ -125,6 +125,8 @@ int main()
 
 /* Stub out functions we do not use in test */
 
+int LOOKUP = false;
+
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
     fail();

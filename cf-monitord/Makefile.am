@@ -14,7 +14,7 @@ endif
 cf_monitord_SOURCES = \
         verify_measurements.c \
         env_monitor.c env_monitor.h \
-        monitoring.h \
+        mon.h \
         mon_cpu.c \
         mon_disk.c \
         mon_entropy.c \

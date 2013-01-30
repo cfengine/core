@@ -96,6 +96,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
 SubType *BundleAppendSubType(Bundle *bundle, char *name);
+SubType *BundleGetSubType(Bundle *bp, const char *name);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
@@ -109,8 +110,6 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
 // TODO: legacy
 
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
-SubType *GetSubTypeForBundle(const char *type, Bundle *bp);
-
 
 
 #endif

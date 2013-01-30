@@ -180,24 +180,9 @@ void SetMeasurementPromises(Item **classlist)
 
 /* cf-agent: cf-agent.c */
 
-
-void NoteEfficiency(double e)
-{
-}
-
 void LastSawBundle(const Bundle *bundle, double comp)
 {
 }
-
-
-/* cf-agent: verify_packages.c */
-
-
-void ReportPatches(PackageManager *list)
-{
-    CfOut(cf_verbose, "", "# Patch reporting feature is only available in version Nova and above\n");
-}
-
 
 /* cf-agent: evalfunction.c */
 

@@ -68,7 +68,7 @@
 #endif
 
 #ifdef HAVE_NOVA
-#include "nova_reporting.h"
+#include "agent_reports.h"
 #else
 #include "reporting.h"
 #endif
@@ -155,6 +155,12 @@ static const char *HINTS[15] =
     "Output the version of the software",
     NULL
 };
+
+#ifndef HAVE_NOVA
+void NoteEfficiency(double e)
+{
+}
+#endif
 
 /*******************************************************************/
 

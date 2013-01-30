@@ -1,11 +1,11 @@
-#include <stdarg.h>
+#include "test.h"
+
 #include <stdlib.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmockery.h>
 #include <assert.h>
 
 #include "cf3.defs.h"
+
+#include "assoc.h"
 
 /* Stubs */
 
@@ -176,8 +176,9 @@ static void test_filter_everything(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_prepend_scalar),
         unit_test(test_prepend_scalar_idempotent),
         unit_test(test_length),
@@ -201,12 +202,16 @@ int main()
 int DEBUG;
 char CONTEXTID[32];
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    mock_assert(0, "0", __FILE__, __LINE__);
+}
+
 int FullTextMatch(const char *regptr, const char *cmpptr)
 {
     fail();
 }
 
-#if defined(HAVE_PTHREAD)
 pthread_mutex_t *cft_lock;
 pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
@@ -218,7 +223,6 @@ int ThreadUnlock(pthread_mutex_t *name)
 {
     return true;
 }
-#endif
 
 void ShowFnCall(FILE *fout, const FnCall *fp)
 {

@@ -1,26 +1,27 @@
 SUBDIRS = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) $(GCC_CFLAG) -I$(srcdir)/../../src -DTESTDATADIR='"$(srcdir)/data"'
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
 
-LDADD = ../../src/libpromises.la libtest.la
+LDADD = ../../libpromises/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../src/alloc.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c
 libtest_la_LIBADD = ../../pub/libcfpub.la
 
 check_LTLIBRARIES += libstr.la
-libstr_la_SOURCES = ../../src/string_lib.c ../../src/writer.c
+libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c
 libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../src/dbm_api.c ../../src/dbm_quick.c ../../src/dbm_tokyocab.c ../../src/dbm_lib.c ../../src/patches.c ../../src/dbm_migration.c ../../src/dbm_migration_lastseen.c ../../src/dbm_migration_bundles.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
 	alphalist_test \
 	arg_split_test \
 	assoc_test \
+	atexit_test \
 	csv_writer_test \
 	item_test \
 	rlist_test \
@@ -53,7 +54,20 @@ check_PROGRAMS = \
 	granules_test \
 	scope_test \
 	conversion_test \
-	files_interfaces_test
+	files_interfaces_test \
+	refcount_test \
+	list_test \
+	buffer_test \
+	timeout_test \
+	connection_management_test
+
+if HAVE_AVAHI_CLIENT
+if HAVE_AVAHI_COMMON
+check_PROGRAMS += \
+    findhub_test \
+    avahi_config_test
+endif
+endif
 
 TESTS = $(check_PROGRAMS)
 
@@ -62,25 +76,48 @@ TESTS = $(check_PROGRAMS)
 #
 TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
 
-csv_writer_test_SOURCES = csv_writer_test.c ../../src/csv_writer.c
+atexit_test_SOURCES = atexit_test.c
+atexit_test_LDADD = libtest.la libdb.la
+
+csv_writer_test_SOURCES = csv_writer_test.c ../../libutils/csv_writer.c
 csv_writer_test_LDADD = libtest.la libstr.la
 
-conversion_test_SOURCES = conversion_test.c ../../src/conversion.c
+conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
 rlist_test_SOURCES = rlist_test.c \
-	../../src/rlist.c
+	../../libpromises/rlist.c
 rlist_test_LDADD = libtest.la libstr.la
 
 set_domainname_test_SOURCES = set_domainname_test.c \
-	../../src/sysinfo.c
+	../../libpromises/sysinfo.c
 set_domainname_test_LDADD = libstr.la
 
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
 
-xml_writer_test_SOURCES = xml_writer_test.c ../../src/xml_writer.c
+xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
+list_test_SOURCES = list_test.c ../../libutils/list.c
+
+refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
+
+buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+if HAVE_AVAHI_CLIENT
+if HAVE_AVAHI_COMMON
+
+findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
+
+if HAVE_NOVA
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
+else
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
+endif
+
+endif
+endif
 #
 # file_writer_test overrides fclose(3) which causes gcov to fail as gcov
 # instrumentation code uses fclose(3).
@@ -93,10 +130,10 @@ file_writer_test_LDLFAGS =
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
 
-lastseen_test_SOURCES = lastseen_test.c ../../src/lastseen.c ../../src/statistics.c
+lastseen_test_SOURCES = lastseen_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
 lastseen_test_LDADD = libdb.la
 
-lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../src/lastseen.c ../../src/statistics.c
+lastseen_migration_test_SOURCES = lastseen_migration_test.c ../../libpromises/lastseen.c ../../libutils/statistics.c
 lastseen_migration_test_LDADD = libdb.la
 
 dbm_migration_bundles_test_SOURCES = dbm_migration_bundles_test.c
@@ -105,7 +142,10 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../src/verify_packages.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c
 
-sort_test_SOURCES = sort_test.c ../../src/sort.c
+sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la
+
+connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server.c
+connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la

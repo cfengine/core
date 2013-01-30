@@ -1,2 +1,2 @@
 
-@i{History}: Was introduced in version 3.2, Nova 2.1, Constellation 1.0 (2011)
+@i{History}: Was introduced in version 3.2, Nova 2.1 (2011)

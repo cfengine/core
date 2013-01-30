@@ -2,6 +2,8 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 
+#include "alphalist.h"
+
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
 
@@ -39,6 +41,11 @@ int main()
 
 /* STUBS */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     exit(42);
@@ -65,11 +72,6 @@ const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
-
-void Chop(char *str)
-{
-    exit(42);
-}
 
 AlphaListIterator AlphaListIteratorInit(AlphaList *al)
 {
@@ -98,7 +100,7 @@ void DeleteItemList(Item *item)
     exit(42);
 }
 
-int MINUSF;
+bool MINUSF;
 
 char *MapAddress(char *addr)
 {

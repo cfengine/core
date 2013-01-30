@@ -1,0 +1,17 @@
+body common control
+{
+  inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+  bundlesequence => { test };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+bundle agent test
+{
+methods:
+  "any" usebundle => generate_key;
+  "any" usebundle => start_server("lan_open");
+  "any" usebundle => run_test("$(this.promise_filename).sub");
+  "any" usebundle => stop_server("lan_open");
+}

@@ -1,3 +1,0 @@
-Edits to the xml document take place within the selected region.
-Please note that this attribute is not used when inserting xml
-content into an empty file.

@@ -125,7 +125,15 @@ int main()
 
 /* Stub out functions we do not use in test */
 
-void StripTrailingNewline(char *str)
+int LOOKUP = false;
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
+void __UnexpectedError(const char *file, int lineno, const char *format, ...)
 {
     fail();
 }
@@ -171,17 +179,17 @@ Item *SplitString(const char *string, char sep)
     fail();
 }
 
-void Chop(char *str)
-{
-    fail();
-}
-
 char *cf_ctime(const time_t *timep)
 {
     fail();
 }
 
 char *CanonifyName(const char *str)
+{
+    fail();
+}
+
+void CanonifyNameInPlace(char *str)
 {
     fail();
 }
@@ -226,7 +234,7 @@ char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
     fail();
 }
 
-void Unix_GetInterfaceInfo(enum cfagenttype ag)
+void Unix_GetInterfaceInfo(AgentType ag)
 {
     fail();
 }
@@ -241,7 +249,7 @@ int StrnCmp(char *s1, char *s2, size_t n)
     fail();
 }
 
-int CfReadLine(char *buff, int size, FILE *fp)
+ssize_t CfReadLine(char *buff, int size, FILE *fp)
 {
     fail();
 }
@@ -274,7 +282,7 @@ void DeleteRlist(Rlist *list)
 /* Stub out variables */
 
 int DEBUG;
-enum cfagenttype THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;
 enum classes VSYSTEMHARDCLASS;

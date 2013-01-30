@@ -1,0 +1,6 @@
+
+@i{History}: Was introduced in 3.4.0, Enterprise 3.0 (2012)
+
+This attribute allows to disable @code{cf-serverd} from listening on any port. Should be used in conjunction with @code{call_collect_interval}.
+
+This setting only applies to CFEngine clients, the policy hub will not be affected. Changing this setting requires a restart of @code{cf-serverd} for the change to take effect.

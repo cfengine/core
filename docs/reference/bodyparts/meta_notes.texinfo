@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2012)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2012)
 
 Attending to knowledge management, it is sometimes convenient to
 attach meta-data of a more technical nature to policy. It may be

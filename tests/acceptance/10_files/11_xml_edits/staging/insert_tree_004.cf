@@ -1,0 +1,92 @@
+######################################################################
+#
+# File editing edit_xml - Inserting a tree into an initially empty file, using build_xpath body attribute
+# Note that selext_xpath must still be specified, as file will no longer be empty after build_xpath is verified.
+#
+######################################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+nova_edition::
+  host_licenses_paid => "5";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "states" slist => { "actual", "expected" };
+
+        "expected" string =>
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><OneFish><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish><Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+
+<Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
+
+<Alias>cfe_alias</Alias>
+</Host></Engine></Service></Server>";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_defaults => init_empty;
+
+        "$(G.testfile).expected"
+            create => "true",
+            edit_line => init_insert("$(init.expected)"),
+            edit_defaults => init_empty;
+}
+
+bundle edit_line init_insert(str)
+{
+insert_lines:
+        "$(str)";
+}
+
+body edit_defaults init_empty
+{
+        empty_file_before_editing => "true";
+}
+
+#######################################################
+bundle agent test
+{
+vars:
+      "content" string =>
+"<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"
+        unpackWARs=\"true\" autoDeploy=\"true\"
+    xmlValidation=\"false\" xmlNamespaceAware=\"false\">
+
+<Logger className=\"org.apache.catalina.logger.FileLogger\"
+directory=\"logs\"  prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
+
+<Alias>cfe_alias</Alias>
+</Host>";
+
+files:
+        "$(G.testfile).actual"
+            create => "true",
+            edit_xml => test_create("$(test.content)");
+}
+
+bundle edit_xml test_create(str)
+{
+insert_tree:
+        "$(str)"
+        build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
+        select_xpath => "/Server/Service/Engine";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+        "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                              "$(G.testfile).expected",
+                                              "$(this.promise_filename)");
+}

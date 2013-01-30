@@ -1,4 +1,4 @@
-This function is only available in Enterprise versions of CFEngine (Nova, Constellation, etc).
+This function is only available in Enterprise versions of CFEngine (Nova, Enterprise, etc).
 
 This function contacts a remote @code{cf-serverd} and requests access to defined
 @i{persistent classes} on that system. These must be granted access to by making an

@@ -1,0 +1,10 @@
+
+This promise is part of the XML-editing model. It assures that a
+balanced XML tree, described by the given XPath, will be present
+within the XML file. If the document is empty, the default promise is to
+build the XML tree within the document. If the document is not empty, the
+default promise is to verify the given XPath, and if necessary, locate an
+insertion node and build the necessary portion of xlm tree within
+selected node. The insertion node is selected as the last unique node
+that is described by the XPath and also found within the document. The
+promise object referred to is a literal string representation of an XPath.

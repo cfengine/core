@@ -9,7 +9,7 @@ dnl ##########################################################################
 AC_PREREQ(2.59)
 
 AC_INIT
-AC_CONFIG_SRCDIR([src/cf-promises.c])
+AC_CONFIG_SRCDIR([libpromises/generic_agent.c])
 AC_CANONICAL_TARGET
 
 dnl
@@ -32,7 +32,7 @@ AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_CONFIG_HEADERS([src/conf.h])
+AC_CONFIG_HEADERS([libutils/conf.h])
 
 dnl Libtool madness
 
@@ -58,7 +58,8 @@ if test "x$with_pthreads" != x && test "x$with_pthreads" != "xyes" && test "x$wi
    CFLAGS="$CFLAGS -I$with_pthreads/include"
 fi
 
-ACX_PTHREAD
+ACX_PTHREAD([],
+            [AC_MSG_ERROR(pthread-compatible library is required to build CFEngine)])
 
 CC="$PTHREAD_CC"
 CFLAGS="$PTHREAD_CFLAGS $CFLAGS"
@@ -366,6 +367,11 @@ if test "x$with_libxml2" != xno; then
     ])
 fi
 
+dnl avahi
+
+AC_CHECK_HEADERS(avahi-client/client.h, AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true), AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false), [])
+AC_CHECK_HEADERS(avahi-common/address.h, AM_CONDITIONAL(HAVE_AVAHI_COMMON, true), AM_CONDITIONAL(HAVE_AVAHI_COMMON, false),[])
+
 dnl
 
 dnl ######################################################################
@@ -399,6 +405,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
+AC_CHECK_HEADERS(sys/mpctl.h)	dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -520,6 +527,9 @@ AC_REPLACE_FUNCS(strcasecmp)
 AC_CHECK_DECLS(strncasecmp)
 AC_REPLACE_FUNCS(strncasecmp)
 
+AC_CHECK_DECLS(strsep)
+AC_REPLACE_FUNCS(strsep)
+
 AC_CHECK_DECLS(strsignal)
 AC_REPLACE_FUNCS(strsignal)
 
@@ -558,6 +568,18 @@ AC_CHECK_FUNCS(mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
+
+AC_MSG_CHECKING([for PRIuMAX/PRIdMAX macros])
+AC_EGREP_CPP([primacros_found],
+  AC_INCLUDES_DEFAULT
+  [#include <inttypes.h>
+  #if defined(PRIuMAX) && defined(PRIdMAX)
+    primacros_found
+  #endif
+  ],
+  [AC_MSG_RESULT(yes)],
+  [AC_MSG_RESULT(no)
+   AC_MSG_RESULT(Unable to find out how to print intmax_t/uintmax_t types)])
 
 HW_FUNC_VSNPRINTF
 HW_FUNC_SNPRINTF
@@ -604,9 +626,6 @@ AC_CHECK_FUNCS(setsockopt)
 AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
 
-AC_SEARCH_LIBS(door_create, door)
-AC_CHECK_FUNCS(door_create)
-
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
@@ -626,6 +645,13 @@ AC_CHECK_MEMBERS([struct sockaddr.sa_len], , , [
 AC_CHECK_MEMBERS([struct ifreq.ifr_hwaddr],,, [
 #include <sys/ioctl.h>
 #include <net/if.h>])
+
+dnl BSD uses sys/sysctl.h for CPU counting
+AC_CHECK_HEADERS(sys/sysctl.h, [], [], [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+])
    
 dnl #######################################################################
 dnl Newer BSD systems don't have a compatible rtentry - use ortentry
@@ -659,10 +685,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $POSTGRESQL_CPPFLAGS $MYSQL_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $LDAP_CPPFLAGS $LIBVIRT_CPPFLAGS $SQLITE3_CPPFLAGS $LIBACL_CPPFLAGS $LIBXML2_CPPFLAGS"
-CFLAGS="$CFLAGS $POSTGRESQL_CFLAGS $MYSQL_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $LDAP_CFLAGS $LIBVIRT_CFLAGS $SQLITE3_CFLAGS $LIBACL_CFLAGS $LIBXML2_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $LDAP_LDFLAGS $SQLITE3_LDFLAGS $LIBACL_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $LDAP_LIBS $SQLITE3_LIBS $LIBACL_LIBS"
+CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS"
+CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS"
+LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS"
+LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -670,84 +696,51 @@ dnl ######################################################################
 
 dnl To ensure conf.h is picked up via VPATH
 if test "$srcdir" != "."; then
-  CPPFLAGS="$CPPFLAGS -I`pwd`/src"
+  CPPFLAGS="$CPPFLAGS -I`pwd`/libpromises"
 fi
 
 case "$target_os" in
 
    solaris2.8|solaris2.9)
-	AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 500, [UNIX 98])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
-        LIBS="$LIBS -lelf -lsec"
         ;;
    solaris2.10|solaris2.11)
-        AC_DEFINE(SOLARIS, [], [Solaris build])
         AC_DEFINE(_XOPEN_SOURCE, 600, [SUSv3])
         AC_DEFINE(__EXTENSIONS__, 1, [Extended UNIX 98 interfaces])
-        LIBS="$LIBS -lelf -lsec";;
+        ;;
    hpux*|hp-ux*) 
-
-	AC_DEFINE(HPuUX, [], [HP/UX build])
-	AC_CHECK_LIB(PW, main)
         ;;
    aix*)
-	AC_DEFINE(AIX, [], [AIX build])
         CPPFLAGS="$CPPFLAGS -w"
         ;;
    linux*)
-	AC_DEFINE(LINUX, [], [Linux build])
 	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
-	AC_DEFINE(FREEBSD, [], [FreeBSD build])
         ;;
    netbsd*)
-	AC_DEFINE(NETBSD, [], [NetBSD build])
         ;;
    unicos*)
-	AC_DEFINE(CFCRAY, [], [Cray build])
         ;;
-
    cray*)
-	AC_DEFINE(CFCRAY)
         ;;
-
    qnx*)
-        AC_DEFINE(CFQNX, [], [QNX build])
         ;;
-
    openbsd*|obsd*)
-	AC_DEFINE(OPENBSD, [], [OpenBSD build])
         ;;
-
    gnu*)
-	AC_DEFINE(CFGNU, [], [GNU build])
         ;;
-
    sysv4.2MP|unix_sv*)
-	AC_DEFINE(UNIXWARE, [], [Unixware build])
         ;;
-
    cygwin*)
-        AC_DEFINE(CFCYG, 1, [Cygwin NT build])
-        AC_DEFINE(NT, [], [NT build])
         ;;
-
    mingw*)
-        AC_DEFINE(MINGW, 1, [Native NT build])
-        AC_DEFINE(NT)
-        LIBS="$LIBS -liphlpapi -lws2_32 -lpsapi -lole32 -loleaut32 -luuid"
         ;;
-
    sco*)
-        AC_DEFINE(SCO, [], [SCO build])
         ;;
-
    darwin*)
-        AC_DEFINE(DARWIN, [], [Darwin build])
         ;;
-
    *)
 	AC_MSG_ERROR(Unknown system type $target_os)
         ;;
@@ -764,6 +757,7 @@ esac
 AM_CONDITIONAL([LINUX], [test -n "`echo ${target_os} | grep linux`"])
 AM_CONDITIONAL([SOLARIS], [test -n "`(echo ${target_os} | egrep 'solaris|sunos')`"])
 AM_CONDITIONAL([NT], [test -n "`(echo ${target_os} | egrep 'mingw|cygwin')`"])
+AM_CONDITIONAL([CYGWIN], [test -n "`(echo ${target_os} | egrep 'cygwin')`"])
 AM_CONDITIONAL([AIX], [test -n "`(echo ${target_os} | grep aix)`"])
 AM_CONDITIONAL([HPUX], [test -n "`(echo ${target_os} | egrep 'hpux|hp-ux')`"])
 AM_CONDITIONAL([FREEBSD], [test -n "`(echo ${target_os} | grep freebsd)`"])
@@ -817,32 +811,27 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	GCC_CFLAG="-g -Wall"
+	CFLAGS="$CFLAGS -g -Wall"
 	CPPFLAGS="$CPPFLAGS -std=gnu99"
 	AC_MSG_RESULT(yes)
-	AC_SUBST(GCC_CFLAG)
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Wno-pointer-sign"
+        CFLAGS="$CFLAGS -Wno-pointer-sign"
         AC_MSG_CHECKING(for -Wno-pointer-sign)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Wno-pointer-sign"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 
         save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $GCC_CFLAG -Werror=implicit-function-declaration"
+        CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
         AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
         AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)
-           GCC_CFLAG="$GCC_CFLAG -Werror=implicit-function-declaration"],
-          [AC_MSG_RESULT(no)])
-        CFLAGS="$save_CFLAGS"
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 else 
-	GCC_CFLAG=""
 	AC_MSG_RESULT(no)
-	AC_SUBST(GCC_CFLAG)
 fi
 
 dnl #####################################################################
@@ -908,7 +897,7 @@ if test "x$use_coverage" = "xyes"; then
   changequote([,])
 
   dnl Add the special gcc flags
-  GCC_CFLAG="$GCC_CFLAG -O0 -fprofile-arcs -ftest-coverage"
+  CFLAGS="$CFLAGS -O0 -fprofile-arcs -ftest-coverage"
   LDFLAGS="$LDFLAGS -lgcov"
 fi
 
@@ -1001,7 +990,17 @@ dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
 	pub/Makefile
-	src/Makefile
+	libutils/Makefile
+	libpromises/Makefile
+	cf-agent/Makefile
+	cf-promises/Makefile
+	cf-execd/Makefile
+	cf-gendoc/Makefile
+	cf-key/Makefile
+	cf-monitord/Makefile
+	cf-report/Makefile
+	cf-runagent/Makefile
+	cf-serverd/Makefile
 	ext/Makefile
 	docs/Makefile
 	docs/guides/Makefile

@@ -179,6 +179,12 @@ int main()
 
 /* STUBS */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     fail();
@@ -209,7 +215,7 @@ RSA *PUBKEY;
 
 int DEBUG;
 
-int MINUSF;
+bool MINUSF;
 
 char *MapAddress(char *addr)
 {

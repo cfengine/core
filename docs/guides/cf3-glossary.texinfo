@@ -97,17 +97,12 @@ and optionally under the COSL license.
 @item CFEngine Community Open Promise-Body Library
 A collection of standard definitions that is open to the user community for comment and standardization.
 
-@item CFEngine Constellation
-An enterprise edition of CFEngine, that is designed to scale to huge
-systems by using a federated design. Constellation allows better handling
-of groups (i.e. constellations of objects) in a network.
-
-@item CFEngine Enterprise Editions	
-Refers to commercial (paid) editions of the CFEngine software, published under the COSL license.
+@item CFEngine Enterprise	
+Refers to commercial (paid) editions of the CFEngine software, published under the COSL license. CFEngine Nova was renamed to CFEngine Enterprise in version 2.2 (2012).
 
 @item CFEngine Nova	
-The lowest level enterprise edition of CFEngine, that automatically creates a simple `star network'
-mangement model for hosts in an environment.
+The first enterprise edition of CFEngine, that automatically creates a simple `star network'
+mangement model for hosts in an environment. Was renamed to CFEngine Enterprise in version 2.2 (2012).
 
 @item ChangeLog
 A file used to describe the changes made since the last version of the software.
@@ -157,10 +152,10 @@ UNIX terminology for a computer the runs `guest programs'. In practice, `host'
 is a synonym for `computer'.
 
 @item Hub
-A software component in CFE Nova and CFE Constellation that works as a
+A host that works as a
 single point of management in a local `star-network'. The term hub is
-sometimes used to mean policy distribution server, but more commonly a
-running @code{cf-hub} process that does report collection from all CFEngine
+sometimes used to mean policy distribution server. In CFEngine Enterprise a
+separate software component, @code{cf-hub}, does report collection from all CFEngine
 managed hosts. The
 term hub means the centre of a wheel, from which multiple spokes
 emerge.

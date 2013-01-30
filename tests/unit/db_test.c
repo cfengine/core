@@ -128,6 +128,12 @@ int main()
 
 /* STUBS */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     fail();

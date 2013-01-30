@@ -1,9 +1,12 @@
+
 @verbatim
+
 bundle edit_xml example
   {
   delete_tree:
     "<Host name=\"cfe_host\"></Host>"
 
-    select_xpath_region => "/Server/Service/Engine";
+    select_xpath => "/Server/Service/Engine";
   }
+
 @end verbatim

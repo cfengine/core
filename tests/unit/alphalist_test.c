@@ -3,7 +3,7 @@
 #include <setjmp.h>
 #include <cmockery.h>
 
-#include "cf3.defs.h"
+#include "alphalist.h"
 
 static void test_create_destroy(void **state)
 {

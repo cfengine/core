@@ -1,4 +1,6 @@
 #include "cf3.defs.h"
+#include "string_lib.h"
+
 #include "conversion.h"
 
 #include <setjmp.h>
@@ -9,39 +11,47 @@ static const char *hi_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 static void test_mix_case_tolower(void **state)
 {
-    assert_string_equal(ToLowerStr("aBcD"), "abcd");
+    char str[] = "aBcD";
+    ToLowerStrInplace(str);
+
+    assert_string_equal(str, "abcd");
 }
 
 static void test_empty_tolower(void **state)
 {
-    assert_string_equal(ToLowerStr(""), "");
+    char str[] = "";
+    ToLowerStrInplace(str);
+
+    assert_string_equal(str, "");
 }
 
 static void test_weird_chars_tolower(void **state)
 {
     static const char *weirdstuff = "1345\0xff%$#@!";
 
-    assert_string_equal(ToLowerStr(weirdstuff), weirdstuff);
+    char weirdstuff_copy_lowercased[CF_MAXVARSIZE];
+    strncpy(weirdstuff_copy_lowercased, weirdstuff, CF_MAXVARSIZE);
+    ToLowerStrInplace(weirdstuff_copy_lowercased);
+
+    assert_string_equal(weirdstuff_copy_lowercased, weirdstuff);
 }
 
 static void test_alphabet_tolower(void **state)
 {
-    assert_string_equal(ToLowerStr(lo_alphabet), lo_alphabet);
+    char lo_alphabet_lowercased[CF_MAXVARSIZE];
+    strncpy(lo_alphabet_lowercased, lo_alphabet, CF_MAXVARSIZE);
+    ToLowerStrInplace(lo_alphabet_lowercased);
+
+    assert_string_equal(lo_alphabet_lowercased, lo_alphabet);
 }
 
 static void test_hi_alphabet_tolower(void **state)
 {
-    assert_string_equal(ToLowerStr(hi_alphabet), lo_alphabet);
-}
+    char hi_alphabet_lowercased[CF_MAXVARSIZE];
+    strncpy(hi_alphabet_lowercased, hi_alphabet, CF_MAXVARSIZE);
+    ToLowerStrInplace(hi_alphabet_lowercased);
 
-/* Demonstrates misfeature of original design */
-static void test_aliasing_tolower(void **state)
-{
-    char *abc = ToLowerStr("abc");
-    char *def = ToLowerStr("def");
-
-    assert_string_equal(abc, "def");
-    assert_string_equal(def, "def");
+    assert_string_equal(hi_alphabet_lowercased, lo_alphabet);
 }
 
 static void test_inplace_tolower(void **state)
@@ -58,39 +68,45 @@ static void test_inplace_tolower(void **state)
 
 static void test_mix_case_toupper(void **state)
 {
-    assert_string_equal(ToUpperStr("aBcD"), "ABCD");
+    char str[] = "aBcD";
+    ToUpperStrInplace(str);
+    assert_string_equal(str, "ABCD");
 }
 
 static void test_empty_toupper(void **state)
 {
-    assert_string_equal(ToUpperStr(""), "");
+    char str[] = "";
+    ToUpperStrInplace(str);
+    assert_string_equal(str, "");
 }
 
 static void test_weird_chars_toupper(void **state)
 {
     static const char *weirdstuff = "1345\0xff%$#@!";
 
-    assert_string_equal(ToUpperStr(weirdstuff), weirdstuff);
+    char weirdstuff_copy_uppercased[CF_MAXVARSIZE];
+    strncpy(weirdstuff_copy_uppercased, weirdstuff, CF_MAXVARSIZE);
+    ToUpperStrInplace(weirdstuff_copy_uppercased);
+
+    assert_string_equal(weirdstuff_copy_uppercased, weirdstuff);
 }
 
 static void test_alphabet_toupper(void **state)
 {
-    assert_string_equal(ToUpperStr(lo_alphabet), hi_alphabet);
+    char lo_alphabet_uppercased[CF_MAXVARSIZE];
+    strncpy(lo_alphabet_uppercased, lo_alphabet, CF_MAXVARSIZE);
+    ToUpperStrInplace(lo_alphabet_uppercased);
+
+    assert_string_equal(lo_alphabet_uppercased, hi_alphabet);
 }
 
 static void test_hi_alphabet_toupper(void **state)
 {
-    assert_string_equal(ToUpperStr(hi_alphabet), hi_alphabet);
-}
+    char hi_alphabet_uppercased[CF_MAXVARSIZE];
+    strncpy(hi_alphabet_uppercased, hi_alphabet, CF_MAXVARSIZE);
+    ToUpperStrInplace(hi_alphabet_uppercased);
 
-/* Demonstrates misfeature of original design */
-static void test_aliasing_toupper(void **state)
-{
-    char *abc = ToUpperStr("abc");
-    char *def = ToUpperStr("def");
-
-    assert_string_equal(abc, "DEF");
-    assert_string_equal(def, "DEF");
+    assert_string_equal(hi_alphabet_uppercased, hi_alphabet);
 }
 
 static void test_inplace_toupper(void **state)
@@ -350,6 +366,47 @@ static void test_escape_char_copy(void **state)
     free(out5);
 }
 
+static void test_chop_no_spaces(void **state)
+{
+    char s[] = "abc";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_single_space(void **state)
+{
+    char s[] = "abc ";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_two_spaces(void **state)
+{
+    char s[] = "abc  ";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("abc", s);
+}
+
+static void test_chop_empty(void **state)
+{
+    char s[] = "";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("", s);
+}
+
+static void test_chop_empty_single_space(void **state)
+{
+    char s[] = " ";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("", s);
+}
+
+static void test_chop_empty_two_spaces(void **state)
+{
+    char s[] = "  ";
+    Chop(s, CF_EXPANDSIZE);
+    assert_string_equal("", s);
+}
 
 int main()
 {
@@ -360,7 +417,6 @@ int main()
         unit_test(test_weird_chars_tolower),
         unit_test(test_alphabet_tolower),
         unit_test(test_hi_alphabet_tolower),
-        unit_test(test_aliasing_tolower),
         unit_test(test_inplace_tolower),
 
         unit_test(test_mix_case_toupper),
@@ -368,7 +424,6 @@ int main()
         unit_test(test_weird_chars_toupper),
         unit_test(test_alphabet_toupper),
         unit_test(test_hi_alphabet_toupper),
-        unit_test(test_aliasing_toupper),
         unit_test(test_inplace_toupper),
 
         unit_test(test_replace_empty_pattern),
@@ -399,8 +454,14 @@ int main()
 
         unit_test(test_encode_base64),
 
-        unit_test(test_escape_char_copy)
+        unit_test(test_escape_char_copy),
 
+        unit_test(test_chop_no_spaces),
+        unit_test(test_chop_single_space),
+        unit_test(test_chop_two_spaces),
+        unit_test(test_chop_empty),
+        unit_test(test_chop_empty_single_space),
+        unit_test(test_chop_empty_two_spaces),
     };
 
     return run_tests(tests);
@@ -410,7 +471,19 @@ int main()
 
 /* Stub out functions we do not use in test */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
+{
+    fail();
+    exit(42);
+}
+
+void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
 {
     fail();
     exit(42);

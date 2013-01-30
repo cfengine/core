@@ -1,5 +1,5 @@
 
-This authorizes the bundlesequence to contain possibly existent pluggable modules.
+This authorizes the bundlesequence to contain possibly "nonexistent" pluggable modules.
 It defaults to false, whereupon undefined bundles cause a fatal error in parsing, 
 and a transition to failsafe mode.
 

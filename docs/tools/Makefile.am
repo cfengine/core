@@ -1,5 +1,5 @@
 
-noinst_PROGRAMS = build-solutions-guide
+noinst_PROGRAMS = build-solutions-guide build-stdlib
 
 noinst_SCRIPTS = texi2pdfclean extract-images
 

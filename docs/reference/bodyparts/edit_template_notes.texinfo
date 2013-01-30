@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2012)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2012)
 
 The template format uses inline tags to mark regions and classes.
 Each line represents an @code{insert_lines} promise, unless the promises

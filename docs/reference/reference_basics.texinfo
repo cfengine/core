@@ -14,8 +14,7 @@ exist as both free open source and commercial enterprise versions:
 
 @itemize
 @item @b{Community Edition} - a free and gratis core of the software (available now).
-@item @b{Nova} - a commercial enhanced version for basic enterprise needs (available now).
-@item @b{Constellation} - a commercial enhancement for larger enterprises (coming 2012).
+@item @b{Enterprise} - a commercial enhanced version for basic enterprise needs (available now; previously known as Nova).
 @end itemize
 
 This document is valid for @b{all versions} of CFEngine.  Whenever a feature is only
@@ -2116,7 +2115,9 @@ first, followed by creation). The actual sequence continues for up to three
 iterations of the following, converging towards a final state:
 
 @verbatim
+   meta
    vars
+   defaults
    classes
    outputs
    interfaces

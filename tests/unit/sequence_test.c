@@ -3,16 +3,16 @@
 
 #include "alloc.h"
 
-static Sequence *SequenceCreateRange(size_t initialCapacity, size_t start, size_t end)
+static Seq *SequenceCreateRange(size_t initialCapacity, size_t start, size_t end)
 {
-    Sequence *seq = SequenceCreate(initialCapacity, free);
+    Seq *seq = SeqNew(initialCapacity, free);
 
     for (size_t i = start; i <= end; i++)
     {
         size_t *item = xmalloc(sizeof(size_t));
 
         *item = i;
-        SequenceAppend(seq, item);
+        SeqAppend(seq, item);
     }
 
     return seq;
@@ -20,18 +20,18 @@ static Sequence *SequenceCreateRange(size_t initialCapacity, size_t start, size_
 
 static void test_create_destroy(void **state)
 {
-    Sequence *seq = SequenceCreate(5, NULL);
+    Seq *seq = SeqNew(5, NULL);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 }
 
 static void test_append(void **state)
 {
-    Sequence *seq = SequenceCreate(2, free);
+    Seq *seq = SeqNew(2, free);
 
     for (size_t i = 0; i < 1000; i++)
     {
-        SequenceAppend(seq, xstrdup("snookie"));
+        SeqAppend(seq, xstrdup("snookie"));
     }
 
     assert_int_equal(seq->length, 1000);
@@ -41,7 +41,7 @@ static void test_append(void **state)
         assert_string_equal(seq->data[i], "snookie");
     }
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 }
 
 static int CompareNumbers(const void *a, const void *b, void *_user_data)
@@ -51,45 +51,45 @@ static int CompareNumbers(const void *a, const void *b, void *_user_data)
 
 static void test_lookup(void **state)
 {
-    Sequence *seq = SequenceCreateRange(10, 0, 9);
+    Seq *seq = SequenceCreateRange(10, 0, 9);
 
     size_t *key = xmalloc(sizeof(size_t));
 
     *key = 5;
 
-    size_t *result = SequenceLookup(seq, key, CompareNumbers);
+    size_t *result = SeqLookup(seq, key, CompareNumbers);
     assert_int_equal(*result, *key);
 
     *key = 17;
-    result = SequenceLookup(seq, key, CompareNumbers);
+    result = SeqLookup(seq, key, CompareNumbers);
     assert_int_equal(result, NULL);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
     free(key);
 }
 
 static void test_index_of(void **state)
 {
-    Sequence *seq = SequenceCreateRange(10, 0, 9);
+    Seq *seq = SequenceCreateRange(10, 0, 9);
 
     size_t *key = xmalloc(sizeof(size_t));
 
     *key = 5;
 
-    ssize_t index = SequenceIndexOf(seq, key, CompareNumbers);
+    ssize_t index = SeqIndexOf(seq, key, CompareNumbers);
     assert_int_equal(index, 5);
 
     *key = 17;
-    index = SequenceIndexOf(seq, key, CompareNumbers);
+    index = SeqIndexOf(seq, key, CompareNumbers);
     assert_true(index == -1);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
     free(key);
 }
 
 static void test_sort(void **state)
 {
-    Sequence *seq = SequenceCreate(5, NULL);
+    Seq *seq = SeqNew(5, NULL);
 
     size_t one = 1;
     size_t two = 2;
@@ -97,13 +97,13 @@ static void test_sort(void **state)
     size_t four = 4;
     size_t five = 5;
 
-    SequenceAppend(seq, &three);
-    SequenceAppend(seq, &two);
-    SequenceAppend(seq, &five);
-    SequenceAppend(seq, &one);
-    SequenceAppend(seq, &four);
+    SeqAppend(seq, &three);
+    SeqAppend(seq, &two);
+    SeqAppend(seq, &five);
+    SeqAppend(seq, &one);
+    SeqAppend(seq, &four);
 
-    SequenceSort(seq, CompareNumbers, NULL);
+    SeqSort(seq, CompareNumbers, NULL);
 
     assert_int_equal(seq->data[0], &one);
     assert_int_equal(seq->data[1], &two);
@@ -111,86 +111,114 @@ static void test_sort(void **state)
     assert_int_equal(seq->data[3], &four);
     assert_int_equal(seq->data[4], &five);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 }
 
 static void test_remove_range(void **state)
 {
 
-    Sequence *seq = SequenceCreateRange(10, 0, 9);
+    Seq *seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemoveRange(seq, 3, 9);
+    SeqRemoveRange(seq, 3, 9);
     assert_int_equal(seq->length, 3);
     assert_int_equal(*(size_t *) seq->data[0], 0);
     assert_int_equal(*(size_t *) seq->data[1], 1);
     assert_int_equal(*(size_t *) seq->data[2], 2);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
     seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemoveRange(seq, 0, 2);
+    SeqRemoveRange(seq, 0, 2);
     assert_int_equal(seq->length, 7);
     assert_int_equal(*(size_t *) seq->data[0], 3);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 
     seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemoveRange(seq, 5, 5);
+    SeqRemoveRange(seq, 5, 5);
     assert_int_equal(seq->length, 9);
     assert_int_equal(*(size_t *) seq->data[5], 6);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 }
 
 static void test_remove(void **state)
 {
 
-    Sequence *seq = SequenceCreateRange(10, 0, 9);
+    Seq *seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemove(seq, 5);
+    SeqRemove(seq, 5);
 
     assert_int_equal(seq->length, 9);
     assert_int_equal(*(size_t *) seq->data[5], 6);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
     seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemove(seq, 0);
+    SeqRemove(seq, 0);
     assert_int_equal(seq->length, 9);
     assert_int_equal(*(size_t *) seq->data[0], 1);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 
     seq = SequenceCreateRange(10, 0, 9);
 
-    SequenceRemove(seq, 9);
+    SeqRemove(seq, 9);
     assert_int_equal(seq->length, 9);
     assert_int_equal(*(size_t *) seq->data[8], 8);
 
-    SequenceDestroy(seq);
+    SeqDestroy(seq);
 }
 
 static void test_reverse(void **state)
 {
     {
-        Sequence *seq = SequenceCreateRange(2, 0, 1);
+        Seq *seq = SequenceCreateRange(2, 0, 1);
         assert_int_equal(0, *(size_t *)seq->data[0]);
         assert_int_equal(1, *(size_t *)seq->data[1]);
-        SequenceReverse(seq);
+        SeqReverse(seq);
         assert_int_equal(1, *(size_t *)seq->data[0]);
         assert_int_equal(0, *(size_t *)seq->data[1]);
-        SequenceDestroy(seq);
+        SeqDestroy(seq);
     }
 
     {
-        Sequence *seq = SequenceCreateRange(3, 0, 2);
-        SequenceReverse(seq);
+        Seq *seq = SequenceCreateRange(3, 0, 2);
+        SeqReverse(seq);
         assert_int_equal(2, *(size_t *)seq->data[0]);
         assert_int_equal(1, *(size_t *)seq->data[1]);
         assert_int_equal(0, *(size_t *)seq->data[2]);
-        SequenceDestroy(seq);
+        SeqDestroy(seq);
     }
+}
+
+static void test_len(void **state)
+{
+    Seq *seq = SeqNew(5, NULL);
+
+    size_t one = 1;
+    size_t two = 2;
+    size_t three = 3;
+    size_t four = 4;
+    size_t five = 5;
+
+    SeqAppend(seq, &three);
+    SeqAppend(seq, &two);
+    SeqAppend(seq, &five);
+    SeqAppend(seq, &one);
+    SeqAppend(seq, &four);
+
+    assert_int_equal(SeqLength(seq),5);
+
+    SeqDestroy(seq);
+}
+
+static void test_len_null(void **state)
+{
+    Seq *seq = NULL;
+
+    assert_int_equal(SeqLength(seq),0);
 }
 
 int main()
@@ -204,7 +232,9 @@ int main()
         unit_test(test_sort),
         unit_test(test_remove_range),
         unit_test(test_remove),
-        unit_test(test_reverse)
+        unit_test(test_reverse),
+        unit_test(test_len),
+        unit_test(test_len_null)
     };
 
     return run_tests(tests);

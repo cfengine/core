@@ -1,0 +1,5 @@
+
+Please note that when @code{build_xpath} is defined as an attribute, within
+an @code{edit_xml} promise body, the tree described by the specified XPath will
+be verified and built BEFORE other @code{edit_xml} promises within same promise
+body. Therefore, the file will not be empty during the execution of such promises.

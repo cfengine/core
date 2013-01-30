@@ -68,7 +68,7 @@ static void test_hostinnetgroup_not_found(void **state)
 int main()
 {
     const UnitTest tests[] =
-{
+    {
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
     };

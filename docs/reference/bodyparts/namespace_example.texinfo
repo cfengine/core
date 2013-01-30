@@ -8,3 +8,5 @@ namespace => "name1";
 }
 
 @end verbatim
+
+For fuller examples see @xref{Name spaces}.

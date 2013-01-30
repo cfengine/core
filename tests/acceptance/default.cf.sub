@@ -173,3 +173,23 @@ body contain useshell
   chdir => "/";
 }
 
+#######################################################
+
+# Test based on whether two strings are the same
+
+bundle agent default_check_strcmp(strA, strB, test, expected_difference)
+{
+  classes:
+      "equal" expression => strcmp("$(strA)", "$(strB)");
+      "expected_difference" or => { strcmp("$(expected_difference)", "yes"),
+                                    strcmp("$(expected_difference)", "true") };
+  reports:
+    equal.!expected_difference::
+      "$(test) Pass";
+    equal.expected_difference::
+      "$(test) FAIL";
+    !equal.!expected_difference::
+      "$(test) FAIL";
+    !equal.expected_difference::
+      "$(test) Pass";
+}

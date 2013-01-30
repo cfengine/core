@@ -7,12 +7,12 @@
 
 static void test_null_agent_type_to_string(void **state)
 {
-    assert_int_equal(Agent2Type(NULL), cf_noagent);
+    assert_int_equal(Agent2Type(NULL), AGENT_TYPE_NOAGENT);
 }
 
 static void test_invalid_agent_type_to_string(void **state)
 {
-    assert_int_equal(Agent2Type("InvalidAgentType"), cf_noagent);
+    assert_int_equal(Agent2Type("InvalidAgentType"), AGENT_TYPE_NOAGENT);
 }
 
 static void str_to_service_policy(void **state)
@@ -31,4 +31,3 @@ int main()
 
     return run_tests(tests);
 }
-

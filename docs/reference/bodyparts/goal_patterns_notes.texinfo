@@ -1,5 +1,5 @@
 
-@i{History}: Was introduced in version 3.1.5, Nova 2.1.0, Constellation 1.0 (2011)
+@i{History}: Was introduced in version 3.1.5, Nova 2.1.0 (2011)
 
 Used as identifier to mark business and organizational goals in
 commercial versions of CFEngine.  CFEngine uses this to match

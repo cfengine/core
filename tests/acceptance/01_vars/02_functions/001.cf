@@ -40,7 +40,7 @@ vars:
         "num_root" int => "0";
         "num_daemon" int => "2";
         "num_bin" int => "1";
-    freebsd::
+    freebsd|openbsd::
         "num_root" int => "0";
         "num_daemon" int => "1";
         "num_bin" int => "3";
@@ -48,7 +48,7 @@ vars:
         "num_root" int => "0";
         "num_daemon" int => "1";
 
-    !freebsd.!linux.!solaris.!darwin::
+    !freebsd.!linux.!solaris.!darwin.!openbsd::
         "num_root" string => "fixme";
         "num_daemon" string => "fixme";
         "num_bin" string => "fixme";

@@ -1,6 +1,95 @@
-3.4.0 (in development)
+3.5.0 - Alpha 1
+
+       New Features:
+
+       - Enable zeroconf-discovery of policy hubs for automatic bootstrapping
+         if Avahi is present
+
+       - Support for sys.cpus on more platforms than Linux & HPUX
+
+       Changes:
+
+       - Make parser output in GCC compatible format the only supported format 
+         (remove --gcc-brief-format flag)
+
+       - Silence license warnings in Enterprise Free25 installations
+
+       Bugfixes:
+
+       - Allocate memory dynamically to avoid out-of-buffer or out-of-hash
+         situations
+
+       - fix edit_xml update of existing attributes  (Redmine #2034)
+
+       - use failsafe policy from compile-time specified workdir (Redmine #1991)
+
+3.4.2   (Bugfix and Stability release)
+
+       Bugfixes:
+
+       - Fixes to policies in masterfiles (see masterfiles/Changelog for details)
+
+       - Fixes for OpenBSD (GitHub #278)
+
+       - Do not canonify values specified in abortbundleclasses/abortclasses (Redmine #1786)
+
+       - Fix build issues on NetBSD, SLES 12.2
+
+       - Improve error message when libxml2 support is not compiled (Redmine #1799)
+
+       - fix potential segmentation fault when trimming network socket data (GitHub #233)
+
+       - fix potential segmentation fault when address-lookups in lastseen db failed (GitHub #233)
+
+       - execute background promise serially when max_children was reached, rather
+         than skipping them (GitHub #233)
+
+       - fix segmentation fault in cf-promises when invoked with --reports (Redmine #1931)
+
+       - fix compilation with Sun Studio 12 (Redmine #1901)
+
+       - silence type-pun warning when building on HP-UX (GitHub #287)
+
+3.4.1   (Bugfix and Stability release)
+
+        New feature/behavior:
+
+        - cf-execd terminates agent processes that are not responsive
+          for a configurable amount of time (see agent_expireafter in body
+          executor control), defaulting to 1 week
+
+        Bugfixes:
+
+        - fix regression of classmatch() failing with hard classes (Redmine #1834)
+
+        - create promise-defined and persistent classes in correct
+          namespace (Redmine #1836)
+
+        - several fixes to namespace support
+
+        - fix several crash bugs caused by buffer overflow and race
+          conditions in cf-serverd
+
+        - regenerate time classes in cf-execd for each run (Redmine #1838)
+
+        - edit_xml: fix select_xpath implementation and update documentation
+          NOTE: code that uses select_xpath_region needs to be changed to
+          select_xpath
+
+        - edit_xml: make sure that text-modification functions don't overwrite
+          child nodes
+
+        - edit_xml: improve error logging
+
+3.4.0
 
 	New features:
+
+	- Added rpmvercmp utility to compare versions of RPM packages for
+	  accurate sorting of RPM packages for packages promises.
+
+	- Implement network timeout on server side to avoid keeping stale
+	  connections for hours.
 
 	- XML editing capabilities. See the documentation for edit_xml
 	  body. Note the new dependency: libxml2.
@@ -9,7 +98,7 @@
 	  "usebundle". By default classes are not inherited. See the
 	  examples/unit_inherit.cf for an example.
 
-	- Moved from Nova/Enterirpse:
+	- Moved from Nova/Enterprise:
 	  - POSIX ACL support,
 	  - "outputs" promise type,
 	  - remote syslog support.
@@ -20,6 +109,10 @@
 	- packages_version_less_command / packages_version_equal_command hooks
 	  in packages promises, to specify external command for native package
 	  manager versions comparison
+
+	- agent_expireafter in body executor control allows you to set a
+	  timeout on all cf-agent runs, to enforce a threshold on the
+	  number of concurrent agents
 
 	- Running in Solaris zone is now detected and classes "zone" and
 	  "zone_<name>" are created in this case.
@@ -42,6 +135,24 @@
 	- methods return values, initial implementation
 
 	- New format for cf-key -s, includes timestamp of last connection
+
+	- cf-promises --parse-tree option to parse policy file and dump it
+	  in JSON format
+
+	- Namespaces support for bundles and bodies. See the
+	  examples/unit_namespace*.cf for the usage.
+
+	- Default arguments for bundles. See the examples/unit_defaults.cf
+
+	- Metadata promise type. See the examples/unit_meta.cf
+
+	New semantics:
+
+	- Methods promises now return the status of promises
+	  kept within them. If any promise was not kept, the method is not
+	  kept, else if any promise is repaired, the method was repaired
+	  else it was kept.
+	- Remote variable access in namespaces by $(namespace:bundle.variable)
 
 	Changed functionality:
 
@@ -102,23 +213,33 @@
 	  functionality useful in Community, namely the reference manual
 	  generation, is provided by new compile-time cf-gendoc tool.
 
-        - Filename (for storing filechanges) changed
-          from file_change.log -> file_changes.log (in /var/cfengine/state)
+    - Filename (for storing filechanges) changed
+      from file_change.log -> file_changes.log (in /var/cfengine/state)
 
-          New format for storing file changes introduced:
-          [timestamp,filename,<N/C/S/R>,Message]
+      New format for storing file changes introduced:
+      [timestamp,filename,<N/C/S/R>,Message]
 
-          N = New file found
-          C = Content Changed
-          S = Stats changed
-          R = File removed
+      N = New file found
+      C = Content Changed
+      S = Stats changed
+      R = File removed
 
 	- Acceptance test suite passes on Mac OS X.
 
 	- Changed some port numbers to replace old services with imap(s)
 
+	- archlinux hard class on Arch Linux.
+
+	- Detect BSD Make and automatically switch to GNU Make during build.
+
 	Bugfixes:
 
+	- cfruncommand for cf-execd is an arbitrary shell command now (Mantis #1268).
+	- Fixed broken "daily" splayclasses (Mantis #1307).
+	- Allow filenames up to 4096 bytes in network transfers (Redmine #1199).
+	- Fix stale state preserved during cf-serverd reload (Redmine #1487).
+	- Free disk space calculation is fixed (Mantis #1120).
+	- Numerous portability bugfixes (especially OpenBSD, Solaris, AIX-related).
 	- Compatibility fixes for AIX, HP-UX, Solaris (Mantis #1185, Mantis #1177, Mantis #1109).
 	- Fixed broken socklen_t configure check under OpenBSD (Mantis #1168).
 	- Fixed hang in cf-promises under OpenBSD (Mantis #1113).
@@ -131,35 +252,43 @@
 	- Point-to-point network interfaces are detected and reported by CFEngine (Mantis #1246)
 	- Partial non-GNU userspace support in acceptance testsuite (Mantis #1255)
 
-	In alpha 1:
-
-	New features:
-
-	- cf-promises --parse-tree option to parse policy file and dump it
-	  in JSON format
-
-	- Namespaces support for bundles and bodies. See the
-	  examples/unit_namespace*.cf for the usage.
-
-	- Default arguments for bundles. See the examples/unit_defaults.cf
-
-	- Metadata promise type. See the examples/unit_meta.cf
-
-	New semantics:
-
-	- Methods promises now return the status of promises
-  	  kept within them. If any promise was not kept, the method is not
-	  kept, else if any promise is repaired, the method was repaired
-	  else it was kept.
-	- Remote variable access in namespaces by $(namespace:bundle.variable)
-
-	Misc:
-
-	- archlinux hard class on Arch Linux.
-	- Detect BSD Make and automatically switch to GNU Make during build.
-
 	Full list of issues fixed is available on
-	https://cfengine.com/bugtracker/changelog_page.php
+	https://cfengine.com/bugtracker/changelog_page.php (old bug tracker)
+	and https://cfengine.com/dev/projects/core/versions/34 (new bug tracker)
+
+3.3.9   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Do not lose hard classes in cf-serverd during policy reload
+	  (Mantis #1218).
+	- Implement recieve network timeout in cf-serverd. Prevents
+	  overloading cf-serverd with stale connections.
+
+3.3.8   (Bugfix and Stability release)
+
+	Versions 3.3.6, 3.3.7 were internal and weren't released.
+
+	Bugfixes:
+
+	- Propery set sys.domain variable if hostname is fully-qualified.
+	- Fixed several small memory leaks.
+	- Make network timeout for network reads configurable. Previously
+	  it was hardcoded to be 30 seconds, which was not enough for
+	  cf-runagent invoking cf-agent on big policies (Mantis #1028).
+
+3.3.5   (Bugfix and Stability release)
+
+	Bugfixes:
+
+	- Fixed cf-execd memory leak on hosts with cf-monitord running.
+	- Robustify against wrongly-sized entires in embedded databases.
+
+	Standard library:
+
+	- Bugfixes from upstream COPBL repository.
+	- standard_services bundle from upstream COPBL repository.
+
 
 3.3.4   (Bugfix and Stability release)
 

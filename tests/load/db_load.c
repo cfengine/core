@@ -1,5 +1,9 @@
 #include "cf3.defs.h"
+
 #include "dbm_api.h"
+#include "cfstream.h"
+#include "logging.h"
+
 #include <assert.h>
 
 #define MAX_THREADS 10000
@@ -200,6 +204,13 @@ int WriteReturnValues(int retvals[MAX_THREADS], pthread_t tids[MAX_THREADS], int
     return failures;
 }
 
+static void Cleanup(void)
+{
+    char cmd[CF_BUFSIZE];
+    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
+    system(cmd);
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -207,6 +218,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "Usage: db_load <num_threads>\n");
         exit(1);
     }
+
+    /* To clean up after databases are closed */
+    atexit(&Cleanup);
 
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/db_load.XXXXXX");
     mkdtemp(CFWORKDIR);
@@ -239,12 +253,6 @@ int main(int argc, char **argv)
     int retvals[MAX_THREADS];
 
     int failures = WriteReturnValues(retvals, tids, numthreads);
-
-    CloseAllDB();
-
-    char cmd[CF_BUFSIZE];
-    snprintf(cmd, CF_BUFSIZE, "rm -rf '%s'", CFWORKDIR);
-    system(cmd);
 
     exit(failures);
 }
@@ -284,6 +292,11 @@ static void DBWriteTestData(CF_DB *db)
 
 /* Stub out */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    exit(42);
+}
+
 void CfOut(enum cfreport level, const char *function, const char *fmt, ...)
 {
     va_list ap;
@@ -316,8 +329,6 @@ void FatalError(char *fmt, ...)
 }
 
 
-#if defined(HAVE_PTHREAD)
-
 pthread_mutex_t test_lock = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 int ThreadLock(pthread_mutex_t *t)
@@ -345,7 +356,6 @@ int ThreadUnlock(pthread_mutex_t *t)
 }
 
 pthread_mutex_t *cft_dbhandle;
-#endif
 
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};

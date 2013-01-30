@@ -1,13 +1,20 @@
 
-@i{History}: Was introduced in 3.3.0, Nova 2.2.0, Constellation 1.0.0 (2012)
+@i{History}: Was introduced in 3.3.0, Nova 2.2.0 (2012)
 
-A variable containing the number of CPU cores detected on local host, where possible.
-This is currently only guaranteed on Linux 2.6 kernels.
+A variable containing the number of CPU cores detected. On systems
+which provide virtual cores, it is set to the total number of virtual, not
+physical, cores. In addition, on a single-core system the class "1_cpu"
+is set, and on multi-core systems the class "@emph{n}_cpus" is set, where
+"@emph{n}" is the number of cores identified.
+
 @verbatim
 reports:
 
  cfengine_3::
 
    "Number of CPUS = $(sys.cpus)";
+
+ 8_cpus::
+   "This system has 8 processors.";
 
 @end verbatim

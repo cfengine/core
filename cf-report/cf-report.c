@@ -44,10 +44,10 @@
 #include "logging.h"
 
 #ifdef HAVE_NOVA
-#include "nova_reporting.h"
-#else
-#include "reporting.h"
+#include "nova_reports.h"
 #endif
+
+#include "reporting.h"
 
 #include <assert.h>
 
@@ -288,6 +288,69 @@ char *CFRH[][2] =
     {"<td>", "</td>\n"},
     {NULL, NULL}
 };
+
+
+#ifndef HAVE_NOVA
+
+void CSV2XML(Rlist *list)
+{
+    CfOut(cf_verbose, "", "# Format conversion feature is only available in version Nova and above\n");
+}
+
+static void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "",
+          "# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
+}
+
+static void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Variable reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
+                              char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePromiseNotKept(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
+                                   char *web)
+{
+    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# File change reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Setuid reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+}
+
+void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
+{
+    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
+}
+
+#endif
 
 /*****************************************************************************/
 

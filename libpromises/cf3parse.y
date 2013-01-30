@@ -155,7 +155,7 @@ bundlebody:            '{'
 
                            if (!INSTALL_SKIP)
                            {
-                               P.currentbundle = PolicyAppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                               P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
                                P.currentbundle->offset.line = P.line_no;
                                P.currentbundle->offset.start = P.offsets.last_block_id;
                            }
@@ -197,7 +197,7 @@ statement:             category
 
 bodybody:              '{'
                        {
-                           P.currentbody = PolicyAppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                           P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
                                P.currentbody->offset.line = P.line_no;
@@ -285,7 +285,8 @@ selection:             id                         /* BODY ONLY */
                                    }
                                    else
                                    {
-                                       PolicySetNameSpace(P.policy, P.rval.item);
+                                       free(P.current_namespace);
+                                       P.current_namespace = xstrdup(P.rval.item);
                                    }
                                }
                            }
@@ -341,9 +342,9 @@ promise:               promiser                    /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
-                                                                P.rval,
-                                                                P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype,CurrentNameSpace(P.policy));
+                                                                       P.rval,
+                                                                       P.currentclasses ? P.currentclasses : "any",
+                                                                       P.blockid, P.blocktype, P.current_namespace);
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -380,7 +381,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, CF_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype,CurrentNameSpace(P.policy));
+                                                                P.blockid, P.blocktype, P.current_namespace);
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -427,7 +428,7 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
+                               CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
                                if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);

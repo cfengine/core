@@ -200,7 +200,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
 
-    tp = AppendSubType(bp, "insert_lines");
+    tp = BundleAppendSubType(bp, "insert_lines");
 
 // Now parse the template file
 

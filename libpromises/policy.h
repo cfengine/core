@@ -93,16 +93,17 @@ void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 bool PolicyCheck(const Policy *policy, Seq *errors);
 
-void PolicySetNameSpace(Policy *policy, char *namespace);
-char *CurrentNameSpace(Policy *policy);
+Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
+Body *PolicyAppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
 
-Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
-Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args, const char *source_path);
-SubType *AppendSubType(Bundle *bundle, char *typename);
+SubType *BundleAppendSubType(Bundle *bundle, char *name);
+
+void PolicySetNameSpace(Policy *policy, char *ns);
+char *CurrentNameSpace(Policy *policy);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns);
 void PromiseDestroy(Promise *pp);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);

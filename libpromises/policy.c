@@ -139,14 +139,14 @@ Policy *PolicyMerge(Policy *a, Policy *b)
 
 /*************************************************************************/
 
-void PolicySetNameSpace(Policy *policy, char *namespace)
+void PolicySetNameSpace(Policy *policy, char *ns)
 {
     if (policy->current_namespace)
     {
         free(policy->current_namespace);
     }
 
-    policy->current_namespace = xstrdup(namespace);
+    policy->current_namespace = xstrdup(ns);
 }
 
 char *CurrentNameSpace(Policy *policy)
@@ -578,7 +578,7 @@ static void SubTypeDestroy(SubType *subtype)
     }
 }
 
-Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
+Bundle *PolicyAppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
     CfDebug("Appending new bundle %s %s (", type, name);
@@ -617,7 +617,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
 
 /*******************************************************************/
 
-Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args,
+Body *PolicyAppendBody(Policy *policy, const char *name, const char *type, Rlist *args,
                  const char *source_path)
 {
     CfDebug("Appending new promise body %s %s(", type, name);
@@ -653,9 +653,9 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     return body;
 }
 
-SubType *AppendSubType(Bundle *bundle, char *typename)
+SubType *BundleAppendSubType(Bundle *bundle, char *name)
 {
-    CfDebug("Appending new type section %s\n", typename);
+    CfDebug("Appending new type section %s\n", name);
 
     if (bundle == NULL)
     {
@@ -666,7 +666,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
     for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
         SubType *existing = SeqAt(bundle->subtypes, i);
-        if (strcmp(existing->name, typename) == 0)
+        if (strcmp(existing->name, name) == 0)
         {
             return existing;
         }
@@ -675,7 +675,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
     SubType *tp = xcalloc(1, sizeof(SubType));
 
     tp->parent_bundle = bundle;
-    tp->name = xstrdup(typename);
+    tp->name = xstrdup(name);
     tp->promises = SeqNew(10, PromiseDestroy);
 
     SeqAppend(bundle->subtypes, tp);
@@ -685,7 +685,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
 /*******************************************************************/
 
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace)
+Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns)
 {
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
@@ -735,7 +735,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup(bundle);
-    pp->namespace = xstrdup(namespace);
+    pp->namespace = xstrdup(ns);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;

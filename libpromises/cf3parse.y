@@ -155,7 +155,7 @@ bundlebody:            '{'
 
                            if (!INSTALL_SKIP)
                            {
-                               P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                               P.currentbundle = PolicyAppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                                P.currentbundle->offset.line = P.line_no;
                                P.currentbundle->offset.start = P.offsets.last_block_id;
                            }
@@ -197,7 +197,7 @@ statement:             category
 
 bodybody:              '{'
                        {
-                           P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                           P.currentbody = PolicyAppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
                                P.currentbody->offset.line = P.line_no;
@@ -319,7 +319,7 @@ category:              CATEGORY                  /* BUNDLE ONLY */
                            {
                                if (!INSTALL_SKIP)
                                {
-                                   P.currentstype = AppendSubType(P.currentbundle,P.currenttype);
+                                   P.currentstype = BundleAppendSubType(P.currentbundle,P.currenttype);
                                    P.currentstype->offset.line = P.line_no;
                                    P.currentstype->offset.start = P.offsets.last_subtype_id;
                                }

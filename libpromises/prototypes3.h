@@ -81,7 +81,6 @@ void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
 void NoteEfficiency(double e);
-void HistoryUpdate(Averages newvals);
 void GetObservable(int i, char *name, char *desc);
 void LookupObservable(int i, char *name, char *desc);
 void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
@@ -94,7 +93,6 @@ void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *
 void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
 void ReportPatches(PackageManager *list);
@@ -238,10 +236,6 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
 
 void VerifyInterface(Attributes a, Promise *pp);
 void VerifyInterfacesPromise(Promise *pp);
-
-/* verify_measurements.c */
-
-void VerifyMeasurementPromise(double *this, Promise *pp);
 
 /* verify_reports.c */
 

@@ -169,19 +169,9 @@ const EVP_CIPHER *CfengineCipher(char type)
 
 /* cf-monitord: env_monitor.c, verify_measurement.c */
 
-
-void HistoryUpdate(Averages newvals)
-{
-}
-
 void GetObservable(int i, char *name, char *desc)
 {
     strcpy(name, OBS[i][0]);
-}
-
-void VerifyMeasurement(double *this, Attributes a, Promise *pp)
-{
-    CfOut(cf_verbose, "", "# Custom monitoring feature is only available in version Nova and above\n");
 }
 
 void SetMeasurementPromises(Item **classlist)

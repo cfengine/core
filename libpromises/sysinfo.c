@@ -38,6 +38,7 @@
 #include "string_lib.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "cf3.extern.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -503,7 +504,11 @@ void GetNameInfo3()
 
 #endif /* !__MINGW32__ */
 
-    LoadSlowlyVaryingObservations();
+    if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR && !LOOKUP)
+    {
+        LoadSlowlyVaryingObservations();
+    }
+
     EnterpriseContext();
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);

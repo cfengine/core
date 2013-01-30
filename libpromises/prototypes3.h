@@ -106,7 +106,6 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
 void CacheUnreliableValue(char *caller, char *handle, char *buffer);
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
-void GrandSummary(void);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void NewPromiser(Promise *pp);

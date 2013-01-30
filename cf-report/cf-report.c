@@ -351,6 +351,11 @@ void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, c
     CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
 }
 
+static void GrandSummary(void)
+{
+    CfOut(cf_verbose, "", "# Reporting feature is only available in version Nova and above\n");
+}
+
 #endif
 
 /*****************************************************************************/

@@ -287,11 +287,6 @@ void LookupObservable(int i, char *name, char *desc)
     strcpy(name, OBS[i][0]);
 }
 
-void GrandSummary()
-{
-    CfOut(cf_verbose, "", "# Reporting feature is only available in version Nova and above\n");
-}
-
 void LongHaul(time_t current)
 {
 }

@@ -41,6 +41,7 @@
 #include "net.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "runagent.h"
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -477,7 +478,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
     if (strlen(MENU) > 0)
     {
 #if defined(HAVE_NOVA)
-        if (!Nova_ExecuteRunagent(conn, MENU))
+        if (!ExecuteRunagent(conn, MENU))
         {
             DisconnectServer(conn);
             DeleteRlist(a.copy.servers);

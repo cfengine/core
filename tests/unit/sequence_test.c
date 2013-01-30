@@ -193,6 +193,34 @@ static void test_reverse(void **state)
     }
 }
 
+static void test_len(void **state)
+{
+    Seq *seq = SeqNew(5, NULL);
+
+    size_t one = 1;
+    size_t two = 2;
+    size_t three = 3;
+    size_t four = 4;
+    size_t five = 5;
+
+    SeqAppend(seq, &three);
+    SeqAppend(seq, &two);
+    SeqAppend(seq, &five);
+    SeqAppend(seq, &one);
+    SeqAppend(seq, &four);
+
+    assert_int_equal(SeqLength(seq),5);
+
+    SeqDestroy(seq);
+}
+
+static void test_len_null(void **state)
+{
+    Seq *seq = NULL;
+
+    assert_int_equal(SeqLength(seq),0);
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -204,7 +232,9 @@ int main()
         unit_test(test_sort),
         unit_test(test_remove_range),
         unit_test(test_remove),
-        unit_test(test_reverse)
+        unit_test(test_reverse),
+        unit_test(test_len),
+        unit_test(test_len_null)
     };
 
     return run_tests(tests);

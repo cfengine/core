@@ -1404,12 +1404,18 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
     HashVariables(policy, NULL, report_context);
     HashControls(policy, config);
 
-    /* Now look once through the sequences bundles themselves */
     if (!config->bundlesequence)
     {
-        if (!VerifyBundleSequence(policy, config))
+        // only verify policy-defined bundlesequence for cf-agent, cf-know, cf-promises, cf-gendoc
+        if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_KNOW) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_COMMON) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_GENDOC))
         {
-            FatalError("Errors in promise bundles");
+            if (!VerifyBundleSequence(policy, config))
+            {
+                FatalError("Errors in promise bundles");
+            }
         }
     }
 }

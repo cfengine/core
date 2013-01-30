@@ -838,6 +838,62 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
     return NULL;
 }
 
+static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
+{
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
+        CfDebug("   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
+        break;
+    case CF_FNCALL:
+        CfDebug("   Appending a function call to rhs\n");
+        break;
+    case CF_LIST:
+        CfDebug("   Appending a list to rhs\n");
+    }
+
+    // Check class
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        PostCheckConstraint("none", "none", lval, rval);
+    }
+
+    Constraint *cp = xcalloc(1, sizeof(Constraint));
+
+    cp->lval = SafeStringDuplicate(lval);
+    cp->rval = rval;
+
+    cp->audit = AUDITPTR;
+    cp->classes = SafeStringDuplicate(classes);
+    cp->references_body = references_body;
+
+    return cp;
+}
+
+Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes,
+                                    bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_PROMISE;
+    cp->parent.promise = promise;
+
+    SeqAppend(promise->conlist, cp);
+
+    return cp;
+}
+
+Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes,
+                                 bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_BODY;
+    cp->parent.body = body;
+
+    SeqAppend(body->conlist, cp);
+
+    return cp;
+}
+
 /*******************************************************************/
 
 SubType *GetSubTypeForBundle(const char *type, Bundle *bp)

@@ -340,7 +340,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               P.currentpromise = AppendPromise(P.currentstype, P.promiser,
+                               P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                 P.rval,
                                                                 P.currentclasses ? P.currentclasses : "any",
                                                                 P.blockid, P.blocktype,CurrentNameSpace(P.policy));
@@ -377,7 +377,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               P.currentpromise = AppendPromise(P.currentstype, P.promiser,
+                               P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, CF_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any",
                                                                 P.blockid, P.blocktype,CurrentNameSpace(P.policy));

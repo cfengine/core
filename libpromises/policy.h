@@ -103,7 +103,7 @@ char *CurrentNameSpace(Policy *policy);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns);
+Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns);
 void PromiseDestroy(Promise *pp);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);

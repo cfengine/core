@@ -285,7 +285,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
             np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
-            ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
             free(promiser);
@@ -305,7 +305,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
                 np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
-                ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
     }

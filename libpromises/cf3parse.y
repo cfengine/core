@@ -259,11 +259,11 @@ selection:             id                         /* BODY ONLY */
 
                                if (P.currentclasses == NULL)
                                {
-                                   cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
-                                   cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
                                }
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
@@ -433,7 +433,7 @@ constraint:            id                        /* BUNDLE ONLY */
                                    ValidateClassSyntax(P.rval.item);
                                }
 
-                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                               cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
                                cp->offset.end = P.offsets.current;

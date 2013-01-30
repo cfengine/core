@@ -105,6 +105,10 @@ const char *NamespaceFromConstraint(const Constraint *cp);
 Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace);
 void PromiseDestroy(Promise *pp);
 
+Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
+Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
+
+
 // TODO: legacy
 
 Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);

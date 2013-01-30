@@ -172,7 +172,7 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
 
     for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
     {
-        if ((sp = GetSubTypeForBundle(EDITXMLTYPESEQUENCE[type], bp)) == NULL)
+        if ((sp = BundleGetSubType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
         {
             continue;
         }
@@ -190,7 +190,7 @@ int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise 
         {
             EditXmlClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(EDITXMLTYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = BundleGetSubType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }

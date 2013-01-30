@@ -875,7 +875,7 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
 
 /*******************************************************************/
 
-SubType *GetSubTypeForBundle(const char *type, Bundle *bp)
+SubType *BundleGetSubType(Bundle *bp, const char *name)
 {
     // TODO: hiding error, remove and see what will crash
     if (bp == NULL)
@@ -887,7 +887,7 @@ SubType *GetSubTypeForBundle(const char *type, Bundle *bp)
     {
         SubType *sp = SeqAt(bp->subtypes, i);
 
-        if (strcmp(type, sp->name) == 0)
+        if (strcmp(name, sp->name) == 0)
         {
             return sp;
         }

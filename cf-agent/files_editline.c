@@ -125,7 +125,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
 
     for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
     {
-        if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type], bp)) == NULL)
+        if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
         {
             continue;
         }
@@ -143,7 +143,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
         {
             EditClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }

@@ -1008,7 +1008,6 @@ promiser:              QSTRING
                               P.blockid, P.blocktype,CurrentNameSpace(P.policy)
                             ); 
 */
-                            
                             P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser, 
                                 P.rval, 
                                 P.currentclasses ? P.currentclasses : "any",

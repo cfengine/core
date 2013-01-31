@@ -608,13 +608,13 @@ static void Apoptosis()
     PrependRlist(&signals, "term", CF_SCALAR);
     PrependRlist(&owners, mypid, CF_SCALAR);
 
-    ConstraintAppendToPromise(&pp, "signals", (Rval) {signals, CF_LIST}, "any", false);
-    ConstraintAppendToPromise(&pp, "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&pp, "process_owner", (Rval) {owners, CF_LIST}, "any", false);
-    ConstraintAppendToPromise(&pp, "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&pp, "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&pp, "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
-    ConstraintAppendToPromise(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "signals", (Rval) {signals, CF_LIST}, "any", false);
+    PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_owner", (Rval) {owners, CF_LIST}, "any", false);
+    PromiseAppendConstraint(&pp, "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
 
     CfOut(cf_verbose, "", " -> Looking for cf-execd processes owned by %s", mypid);
 

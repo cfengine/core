@@ -225,7 +225,7 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
         default_bundle = NewFnCall("default:standard_services", args);
 
-        ConstraintAppendToPromise(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
         a.havebundle = true;
     }
 

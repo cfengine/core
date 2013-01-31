@@ -418,26 +418,17 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
     GetVariable("control_common", "version", &retval);
 
     snprintf(vbuff, CF_BUFSIZE - 1, "Expanded promises for %s", agents);
-    CfHtmlHeader(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], vbuff, STYLESHEET, WEBDRIVER, BANNER);
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
 
     ShowContext(report_context);
 
-    ReportHtmlPromiseBegin(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML]);
-
     VerifyPromises(policy, config, report_context);
-
-    ReportHtmlPromiseEnd(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML]);
 
     if (ag != AGENT_TYPE_COMMON)
     {
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
-        ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_HTML);
     }
-
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], "</div>\n");
-    CfHtmlFooter(report_context->report_writers[REPORT_OUTPUT_TYPE_HTML], FOOTER);
 
     return policy;
 }
@@ -857,7 +848,6 @@ ReportContext *OpenReports(const char *agents)
     char name[CF_BUFSIZE];
 
     FILE *freport_text = NULL;
-    FILE *freport_html = NULL;
     FILE *freport_knowledge = NULL;
 
     if (SHOWREPORTS)
@@ -869,15 +859,6 @@ ReportContext *OpenReports(const char *agents)
         {
             CfOut(cf_error, "fopen", "Cannot open output file %s", name);
             freport_text = fopen(NULLFILE, "w");
-        }
-
-        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.html", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
-                 agents);
-
-        if ((freport_html = fopen(name, "w")) == NULL)
-        {
-            CfOut(cf_error, "fopen", "Cannot open output file %s", name);
-            freport_html = fopen(NULLFILE, "w");
         }
 
         snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", workdir, FILE_SEPARATOR);
@@ -896,14 +877,9 @@ ReportContext *OpenReports(const char *agents)
         {
             FatalError("Cannot open output file %s", name);
         }
-
-        if ((freport_html = fopen(name, "w")) == NULL)
-        {
-            FatalError("Cannot open output file %s", name);
-        }
     }
 
-    if (!(freport_html && freport_text))
+    if (!freport_text)
     {
         FatalError("Unable to continue as the null-file is unwritable");
     }
@@ -911,7 +887,6 @@ ReportContext *OpenReports(const char *agents)
 
     ReportContext *context = ReportContextNew();
     ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
-    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_HTML, FileWriter(freport_html));
 
     if (freport_knowledge)
     {
@@ -1273,7 +1248,6 @@ void CompilationReport(Policy *policy, char *fname)
 #endif
 
     ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
-    ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_HTML, policy->bundles, policy->bodies);
 
     ReportContextDestroy(compilation_report_context);
 }
@@ -1303,7 +1277,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
     ReportContext *context = ReportContextNew();
     ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
-    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_HTML, FileWriter(freport_html));
 
     return context;
 }
@@ -1404,12 +1377,18 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
     HashVariables(policy, NULL, report_context);
     HashControls(policy, config);
 
-    /* Now look once through the sequences bundles themselves */
     if (!config->bundlesequence)
     {
-        if (!VerifyBundleSequence(policy, config))
+        // only verify policy-defined bundlesequence for cf-agent, cf-know, cf-promises, cf-gendoc
+        if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_KNOW) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_COMMON) ||
+            (THIS_AGENT_TYPE == AGENT_TYPE_GENDOC))
         {
-            FatalError("Errors in promise bundles");
+            if (!VerifyBundleSequence(policy, config))
+            {
+                FatalError("Errors in promise bundles");
+            }
         }
     }
 }

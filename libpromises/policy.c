@@ -58,8 +58,6 @@ Policy *PolicyNew(void)
 {
     Policy *policy = xcalloc(1, sizeof(Policy));
 
-    policy->current_namespace = xstrdup("default");
-
     policy->bundles = SeqNew(100, BundleDestroy);
     policy->bodies = SeqNew(100, BodyDestroy);
 
@@ -78,7 +76,6 @@ void PolicyDestroy(Policy *policy)
         SeqDestroy(policy->bundles);
         SeqDestroy(policy->bodies);
 
-        free(policy->current_namespace);
         free(policy);
     }
 }
@@ -135,23 +132,6 @@ Policy *PolicyMerge(Policy *a, Policy *b)
     free(b);
 
     return result;
-}
-
-/*************************************************************************/
-
-void PolicySetNameSpace(Policy *policy, char *namespace)
-{
-    if (policy->current_namespace)
-    {
-        free(policy->current_namespace);
-    }
-
-    policy->current_namespace = xstrdup(namespace);
-}
-
-char *CurrentNameSpace(Policy *policy)
-{
-    return policy->current_namespace;
 }
 
 const char *NamespaceFromConstraint(const Constraint *cp)
@@ -578,7 +558,7 @@ static void SubTypeDestroy(SubType *subtype)
     }
 }
 
-Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *args,
+Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
     CfDebug("Appending new bundle %s %s (", type, name);
@@ -595,19 +575,19 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
 
     SeqAppend(policy->bundles, bundle);
 
-    if (strcmp(policy->current_namespace,"default") == 0)
+    if (strcmp(ns, "default") == 0)
     {
         bundle->name = xstrdup(name);
     }
     else
     {
         char fqname[CF_BUFSIZE];
-        snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
+        snprintf(fqname,CF_BUFSIZE-1, "%s:%s", ns, name);
         bundle->name = xstrdup(fqname);
     }
 
     bundle->type = xstrdup(type);
-    bundle->namespace = xstrdup(policy->current_namespace);
+    bundle->namespace = xstrdup(ns);
     bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->subtypes = SeqNew(10, SubTypeDestroy);
@@ -617,8 +597,7 @@ Bundle *AppendBundle(Policy *policy, const char *name, const char *type, Rlist *
 
 /*******************************************************************/
 
-Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args,
-                 const char *source_path)
+Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path)
 {
     CfDebug("Appending new promise body %s %s(", type, name);
 
@@ -633,19 +612,19 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
 
     SeqAppend(policy->bodies, body);
 
-    if (strcmp(policy->current_namespace,"default") == 0)
-       {
-       body->name = xstrdup(name);
-       }
+    if (strcmp(ns, "default") == 0)
+    {
+        body->name = xstrdup(name);
+    }
     else
-       {
-       char fqname[CF_BUFSIZE];
-       snprintf(fqname,CF_BUFSIZE-1, "%s:%s",policy->current_namespace,name);
-       body->name = xstrdup(fqname);
-       }
+    {
+        char fqname[CF_BUFSIZE];
+        snprintf(fqname, CF_BUFSIZE-1, "%s:%s", ns, name);
+        body->name = xstrdup(fqname);
+    }
 
     body->type = xstrdup(type);
-    body->namespace = xstrdup(policy->current_namespace);
+    body->namespace = xstrdup(ns);
     body->args = CopyRlist(args);
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);
@@ -653,9 +632,9 @@ Body *AppendBody(Policy *policy, const char *name, const char *type, Rlist *args
     return body;
 }
 
-SubType *AppendSubType(Bundle *bundle, char *typename)
+SubType *BundleAppendSubType(Bundle *bundle, char *name)
 {
-    CfDebug("Appending new type section %s\n", typename);
+    CfDebug("Appending new type section %s\n", name);
 
     if (bundle == NULL)
     {
@@ -666,7 +645,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
     for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
     {
         SubType *existing = SeqAt(bundle->subtypes, i);
-        if (strcmp(existing->name, typename) == 0)
+        if (strcmp(existing->name, name) == 0)
         {
             return existing;
         }
@@ -675,7 +654,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
     SubType *tp = xcalloc(1, sizeof(SubType));
 
     tp->parent_bundle = bundle;
-    tp->name = xstrdup(typename);
+    tp->name = xstrdup(name);
     tp->promises = SeqNew(10, PromiseDestroy);
 
     SeqAppend(bundle->subtypes, tp);
@@ -685,7 +664,7 @@ SubType *AppendSubType(Bundle *bundle, char *typename)
 
 /*******************************************************************/
 
-Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *namespace)
+Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns)
 {
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
@@ -735,7 +714,7 @@ Promise *AppendPromise(SubType *type, char *promiser, Rval promisee, char *class
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup(bundle);
-    pp->namespace = xstrdup(namespace);
+    pp->namespace = xstrdup(ns);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
@@ -838,9 +817,65 @@ Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
     return NULL;
 }
 
+static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
+{
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
+        CfDebug("   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
+        break;
+    case CF_FNCALL:
+        CfDebug("   Appending a function call to rhs\n");
+        break;
+    case CF_LIST:
+        CfDebug("   Appending a list to rhs\n");
+    }
+
+    // Check class
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        PostCheckConstraint("none", "none", lval, rval);
+    }
+
+    Constraint *cp = xcalloc(1, sizeof(Constraint));
+
+    cp->lval = SafeStringDuplicate(lval);
+    cp->rval = rval;
+
+    cp->audit = AUDITPTR;
+    cp->classes = SafeStringDuplicate(classes);
+    cp->references_body = references_body;
+
+    return cp;
+}
+
+Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes,
+                                    bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_PROMISE;
+    cp->parent.promise = promise;
+
+    SeqAppend(promise->conlist, cp);
+
+    return cp;
+}
+
+Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes,
+                                 bool references_body)
+{
+    Constraint *cp = ConstraintNew(lval, rval, classes, references_body);
+    cp->type = POLICY_ELEMENT_TYPE_BODY;
+    cp->parent.body = body;
+
+    SeqAppend(body->conlist, cp);
+
+    return cp;
+}
+
 /*******************************************************************/
 
-SubType *GetSubTypeForBundle(const char *type, Bundle *bp)
+SubType *BundleGetSubType(Bundle *bp, const char *name)
 {
     // TODO: hiding error, remove and see what will crash
     if (bp == NULL)
@@ -852,7 +887,7 @@ SubType *GetSubTypeForBundle(const char *type, Bundle *bp)
     {
         SubType *sp = SeqAt(bp->subtypes, i);
 
-        if (strcmp(type, sp->name) == 0)
+        if (strcmp(name, sp->name) == 0)
         {
             return sp;
         }

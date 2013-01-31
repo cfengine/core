@@ -125,7 +125,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
 
     for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
     {
-        if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type], bp)) == NULL)
+        if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
         {
             continue;
         }
@@ -143,7 +143,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
         {
             EditClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(EDITLINETYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
@@ -200,7 +200,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
 
-    tp = AppendSubType(bp, "insert_lines");
+    tp = BundleAppendSubType(bp, "insert_lines");
 
 // Now parse the template file
 
@@ -284,8 +284,8 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            np = AppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
-            ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
+            PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
             free(promiser);
@@ -304,8 +304,8 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 {
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
-                np = AppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
-                ConstraintAppendToPromise(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
+                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
     }

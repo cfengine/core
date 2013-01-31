@@ -943,7 +943,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
         {
             ClassBanner(type);
 
-            if ((sp = GetSubTypeForBundle(AGENT_TYPESEQUENCE[type], bp)) == NULL)
+            if ((sp = BundleGetSubType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }

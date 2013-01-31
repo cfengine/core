@@ -23,6 +23,7 @@ struct Item
 
 void PrependItem(struct Item **liststart,char *itemstring,char *classes);
     struct Item *SortItemListNames(struct Item *list);
+int IncludeManualFile(FILE *fout,char *file);
 
     
 main(int argc, char *argv[])

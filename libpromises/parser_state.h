@@ -50,6 +50,7 @@ struct ParserState
     char *promiser;
     void *promisee;
 
+    char *current_namespace;
     char currentid[CF_MAXVARSIZE];
     char currenttype[CF_MAXVARSIZE];
     char *currentstring;

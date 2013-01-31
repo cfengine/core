@@ -730,7 +730,6 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
         {
         case AGENT_TYPE_COMMON:
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
-            ShowPromise(report_context, REPORT_OUTPUT_TYPE_HTML, pexp, 6);
             CheckRecursion(report_context, pexp);
             ReCheckAllConstraints(pexp);
             break;
@@ -1072,7 +1071,7 @@ static void SetAnyMissingDefaults(Promise *pp)
     {
         if (GetConstraint(pp, "package_method") == NULL)
         {
-            ConstraintAppendToPromise(pp, "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
+            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
         }
     }
 }
@@ -1692,7 +1691,7 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
 
         default_bundle = NewFnCall("standard_services", args);
 
-        ConstraintAppendToPromise(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
         a.havebundle = true;
     }
 

@@ -148,11 +148,11 @@ void SetPromiseOutputs(Promise *pp)
         {
             if (ip && ip->classes)
             {
-                ConstraintAppendToPromise(pp, "report_level", (Rval) {xstrdup(ip->classes), CF_SCALAR}, "any", false);
+                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup(ip->classes), CF_SCALAR}, "any", false);
             }
             else
             {
-                ConstraintAppendToPromise(pp, "report_level", (Rval) {xstrdup("verbose"), CF_SCALAR}, "any", false);
+                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup("verbose"), CF_SCALAR}, "any", false);
             }
         }
     }

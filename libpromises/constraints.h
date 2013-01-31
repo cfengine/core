@@ -48,9 +48,6 @@ struct Constraint_
 
 void ConstraintDestroy(Constraint *cp);
 
-Constraint *ConstraintAppendToPromise(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
-Constraint *ConstraintAppendToBody(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
-
 /**
  * @brief A sequence of constraints matching the l-value.
  * @param body Body to query
@@ -84,5 +81,6 @@ void ReCheckAllConstraints(Promise *pp);
 int GetBundleConstraint(const char *lval, const Promise *list);
 PromiseIdent *NewPromiseId(char *handle, Promise *pp);
 void DeleteAllPromiseIds(void);
+void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);;
 
 #endif

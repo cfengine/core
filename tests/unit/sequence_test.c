@@ -214,13 +214,6 @@ static void test_len(void **state)
     SeqDestroy(seq);
 }
 
-static void test_len_null(void **state)
-{
-    Seq *seq = NULL;
-
-    assert_int_equal(SeqLength(seq),0);
-}
-
 int main()
 {
     const UnitTest tests[] =
@@ -233,8 +226,7 @@ int main()
         unit_test(test_remove_range),
         unit_test(test_remove),
         unit_test(test_reverse),
-        unit_test(test_len),
-        unit_test(test_len_null)
+        unit_test(test_len)
     };
 
     return run_tests(tests);

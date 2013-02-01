@@ -38,6 +38,7 @@ struct DBPriv_
 {
 	MDB_env *env;
 	MDB_dbi dbi;
+	MDB_cursor *mc;
 };
 
 struct DBCursorPriv_
@@ -199,21 +200,30 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
 	MDB_txn *txn;
 	int rc;
 
-	rc = mdb_txn_begin(db->env, NULL, 0, &txn);
+	/* If there's an open cursor, use its txn */
+	if (db->mc) {
+		txn = mdb_cursor_txn(db->mc);
+		rc = MDB_SUCCESS;
+	} else {
+		rc = mdb_txn_begin(db->env, NULL, 0, &txn);
+	}
 	if (rc == MDB_SUCCESS) {
 		mkey.mv_data = (void *)key;
 		mkey.mv_size = key_size;
 		data.mv_data = (void *)value;
 		data.mv_size = value_size;
 		rc = mdb_put(txn, db->dbi, &mkey, &data, 0);
-		if (rc == MDB_SUCCESS) {
-			rc = mdb_txn_commit(txn);
-			if (rc) {
-				CfOut(cf_error, "", "!! could not commit: %s", mdb_strerror(rc));
+		/* don't commit here if there's a cursor */
+		if (!db->mc) {
+			if (rc == MDB_SUCCESS) {
+				rc = mdb_txn_commit(txn);
+				if (rc) {
+					CfOut(cf_error, "", "!! could not commit: %s", mdb_strerror(rc));
+				}
+			} else {
+				CfOut(cf_error, "", "!! could not write: %s", mdb_strerror(rc));
+				mdb_txn_abort(txn);
 			}
-		} else {
-			CfOut(cf_error, "", "!! could not write: %s", mdb_strerror(rc));
-			mdb_txn_abort(txn);
 		}
 	} else {
 		CfOut(cf_error, "", "!! could not create write txn: %s", mdb_strerror(rc));
@@ -227,19 +237,28 @@ bool DBPrivDelete(DBPriv *db, const void *key, int key_size)
 	MDB_txn *txn;
 	int rc;
 
-	rc = mdb_txn_begin(db->env, NULL, 0, &txn);
+	/* If there's an open cursor, use its txn */
+	if (db->mc) {
+		txn = mdb_cursor_txn(db->mc);
+		rc = MDB_SUCCESS;
+	} else {
+		rc = mdb_txn_begin(db->env, NULL, 0, &txn);
+	}
 	if (rc == MDB_SUCCESS) {
 		mkey.mv_data = (void *)key;
 		mkey.mv_size = key_size;
 		rc = mdb_del(txn, db->dbi, &mkey, NULL);
-		if (rc == MDB_SUCCESS) {
-			rc = mdb_txn_commit(txn);
-			if (rc) {
-				CfOut(cf_error, "", "!! could not commit: %s", mdb_strerror(rc));
+		/* don't commit here if there's a cursor */
+		if (!db->mc) {
+			if (rc == MDB_SUCCESS) {
+				rc = mdb_txn_commit(txn);
+				if (rc) {
+					CfOut(cf_error, "", "!! could not commit: %s", mdb_strerror(rc));
+				}
+			} else {
+				CfOut(cf_error, "", "!! could not delete: %s", mdb_strerror(rc));
+				mdb_txn_abort(txn);
 			}
-		} else {
-			CfOut(cf_error, "", "!! could not delete: %s", mdb_strerror(rc));
-			mdb_txn_abort(txn);
 		}
 	} else {
 		CfOut(cf_error, "", "!! could not create write txn: %s", mdb_strerror(rc));
@@ -251,16 +270,15 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 {
     DBCursorPriv *cursor = NULL;
 	MDB_txn *txn;
-	MDB_cursor *mc;
 	int rc;
 
 	rc = mdb_txn_begin(db->env, NULL, 0, &txn);
 	if (rc == MDB_SUCCESS) {
-		rc = mdb_cursor_open(txn, db->dbi, &mc);
+		rc = mdb_cursor_open(txn, db->dbi, &db->mc);
 		if (rc == MDB_SUCCESS) {
 			cursor = xcalloc(1, sizeof(DBCursorPriv));
 			cursor->db = db;
-			cursor->mc = mc;
+			cursor->mc = db->mc;
 		} else {
 			CfOut(cf_error, "", "!! could not open cursor: %s", mdb_strerror(rc));
 			mdb_txn_abort(txn);
@@ -332,6 +350,7 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 	if (cursor->pending_delete)
 		mdb_cursor_del(cursor->mc, 0);
 
+	cursor->db->mc = NULL;
 	txn = mdb_cursor_txn(cursor->mc);
 	mdb_cursor_close(cursor->mc);
 	rc = mdb_txn_commit(txn);

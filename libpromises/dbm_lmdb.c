@@ -303,8 +303,10 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
 
 bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor)
 {
-	cursor->pending_delete = true;
-	return true;
+	int rc = mdb_cursor_get(cursor->mc, &cursor->delkey, NULL, MDB_GET_CURRENT);
+	if (rc == MDB_SUCCESS)
+		cursor->pending_delete = true;
+	return rc == MDB_SUCCESS;
 }
 
 bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_size)

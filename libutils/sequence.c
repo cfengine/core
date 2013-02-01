@@ -231,11 +231,6 @@ void SeqReverse(Seq *seq)
 
 size_t SeqLength(const Seq *seq)
 {
-    if (!seq)
-    {
-        return 0;
-    }
-
     return seq->length;
 }
 

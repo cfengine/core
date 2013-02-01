@@ -46,6 +46,7 @@ struct DBCursorPriv_
     DBPriv *db;
 	MDB_cursor *mc;
 	MDB_val delkey;
+	void *curkv;
 	bool pending_delete;
 };
 
@@ -298,11 +299,18 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
 	int rc;
 	bool retval = false;
 
+	if (cursor->curkv) {
+		free(cursor->curkv);
+		cursor->curkv = NULL;
+	}
 	if ((rc = mdb_cursor_get(cursor->mc, &mkey, &data, MDB_NEXT)) == MDB_SUCCESS) {
-		*key = mkey.mv_data;
+		cursor->curkv = xmalloc(mkey.mv_size + data.mv_size);
+		memcpy(cursor->curkv, mkey.mv_data, mkey.mv_size);
+		*key = cursor->curkv;
 		*key_size = mkey.mv_size;
-		*value = data.mv_data;
 		*value_size = data.mv_size;
+		memcpy((char *)cursor->curkv+mkey.mv_size, data.mv_data, data.mv_size);
+		*value = (char *)cursor->curkv + mkey.mv_size;
 		retval = true;
 	} else if (rc != MDB_NOTFOUND) {
 		CfOut(cf_error, "", "!! could not advance cursor: %s", mdb_strerror(rc));
@@ -346,6 +354,9 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 {
 	MDB_txn *txn;
 	int rc;
+
+	if (cursor->curkv)
+		free(cursor->curkv);
 
 	if (cursor->pending_delete)
 		mdb_cursor_del(cursor->mc, 0);

@@ -1063,6 +1063,25 @@ void GetNaked(char *s2, const char *s1)
 
 /*********************************************************************/
 
+bool IsVarList(const char *var)
+{
+    if ('@' != var[0])
+    {
+        return false;
+    }
+    /*
+     * Minimum size for a list is 4:
+     * '@' + '(' + name + ')'
+     */
+    if (strlen(var) < 4)
+    {
+        return false;
+    }
+    return true;
+}
+
+/*********************************************************************/
+
 static void SetAnyMissingDefaults(Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */

@@ -957,7 +957,7 @@ static FnCallResult FnCallRegList(FnCall *fp, Rlist *finalargs)
     char *listvar = ScalarValue(finalargs);
     char *regex = ScalarValue(finalargs->next);
 
-    if (*listvar == '@')
+    if (IsVarList(listvar))
     {
         GetNaked(naked, listvar);
     }
@@ -1745,14 +1745,13 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
     char *maxbytes = ScalarValue(finalargs->next->next->next->next);
     char *array_lval = ScalarValue(finalargs->next->next->next->next->next);
 
-    if (*listvar == '@')
+    if (IsVarList(listvar))
     {
         GetNaked(naked, listvar);
     }
     else
     {
-        CfOut(cf_verbose, "", "Function selectservers was promised a list called \"%s\" but this was not found\n",
-              listvar);
+        CfOut(cf_verbose, "", "Function reglist was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -3482,14 +3481,13 @@ static FnCallResult FnCallFileSexist(FnCall *fp, Rlist *finalargs)
 
     char *listvar = ScalarValue(finalargs);
 
-    if (*listvar == '@')
+    if (IsVarList(listvar))
     {
         GetNaked(naked, listvar);
     }
     else
     {
-        CfOut(cf_verbose, "", "Function filesexist was promised a list called \"%s\" but this was not found\n",
-              listvar);
+        CfOut(cf_verbose, "", "Function reglist was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 

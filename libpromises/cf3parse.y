@@ -210,7 +210,10 @@ bundle_body:         BLOCK_OPEN
                         INSTALL_SKIP = false; 
                         if (!INSTALL_SKIP) 
                         {
+                        /*
                             P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                        */
+                            P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename); 
                             P.currentbundle->offset.line = P.line_no;
                             P.currentbundle->offset.start = P.offsets.last_block_id;
                         }
@@ -287,7 +290,10 @@ category:           category_type
                        if (!INSTALL_SKIP)
                        {
                           ParserDebug("\tP: inside bundle\n");
+                          /*
                           P.currentstype = AppendSubType(P.currentbundle,P.currenttype); 
+                          */
+                          P.currentstype = BundleAppendSubType(P.currentbundle,P.currenttype);
                           P.currentstype->offset.line = P.line_no;
                           P.currentstype->offset.start = P.offsets.last_subtype_id;
                        }
@@ -426,7 +432,10 @@ promiser_type:       promiser_id
                            if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
                               found = true; 
-                              break; 
+                              P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
+                              P.currentbundle->offset.line = P.line_no;
+                              P.currentbundle->offset.start = P.offsets.last_block_id;
+                              break;
                            }
                            else
                            {
@@ -515,8 +524,17 @@ rval_bundle_statement:   rval_type
                                    ParserDebug("\tAdd Constraint to promiser: %s\n\n", P.promiser);
                                    Constraint *cp = NULL;
                                    SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
+                                   /*
                                    CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
-                                   cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                                   cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body); 
+                                   */
+                                   CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
+                                   if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                   {
+                                      ValidateClassSyntax(P.rval.item);
+                                   }
+                                   cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+
                                    cp->offset.line = P.line_no;
                                    cp->offset.start = P.offsets.last_id;
                                    cp->offset.end = P.offsets.current;
@@ -616,7 +634,10 @@ body_id_syntax:      typeid
 body_body:          BLOCK_OPEN
                     {
                            ParserDebug("\tP: Body Block open\n");
+                           /*
                            P.currentbody = AppendBody(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
+                           */
+                           P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
                            {
                                P.currentbody->offset.line = P.line_no;
@@ -679,12 +700,12 @@ selection:             selection_id
                                if (P.currentclasses == NULL)
                                {
                                    ParserDebug("\tAdd Constraint to body: %s\n\n", P.blockid);
-                                   cp = ConstraintAppendToBody(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
                                }
                                else
                                {
                                    ParserDebug("\tAdd Constraint to body: %s for class %s\n", P.blockid, P.currentclasses);
-                                   cp = ConstraintAppendToBody(P.currentbody,P.lval,P.rval,P.currentclasses,P.references_body);
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
                                }
 
                                cp->offset.line = P.line_no;
@@ -720,8 +741,6 @@ selection:             selection_id
                            parse_error("check previous statement, expected ';'\n");
                        }
 
-
-
 selection_id:          id
                        {
                            if ( !BodyTypeSyntaxLookup(P.blocktype, P.blockid, yytext) )
@@ -743,13 +762,13 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, CurrentNameSpace(P.policy), P.blockid, P.lval, P.rval, ss);
+                               CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
                                if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
 
-                               cp = ConstraintAppendToPromise(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                               cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
                                cp->offset.line = P.line_no;
                                cp->offset.start = P.offsets.last_id;
                                cp->offset.end = P.offsets.current;
@@ -776,7 +795,6 @@ constraint:            id                        /* BUNDLE ONLY */
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
->>>>>>> 3f23508... fixed a small merge problem with upstream:src/cf3parse.y
 
 class:                 CLASS
                        {
@@ -982,11 +1000,18 @@ promiser:              QSTRING
                            ParserDebug("\tP:%s:%s:%s:%s:%s Promising object name \'%s\'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
                             
 
+/*
                            P.currentpromise = AppendPromise(
                               P.currentstype, P.promiser, 
                               (Rval) { NULL, CF_NOPROMISEE },
                               P.currentclasses ? P.currentclasses : "any", 
                               P.blockid, P.blocktype,CurrentNameSpace(P.policy)
+                            ); 
+*/
+                            P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser, 
+                                P.rval, 
+                                P.currentclasses ? P.currentclasses : "any",
+                                P.blockid, P.blocktype, P.current_namespace
                             ); 
 
                             P.currentpromise->offset.line = P.line_no;
@@ -1394,6 +1419,10 @@ void parse_error(const char *s)
     exit(1);
 }
 
+void yyerror(const char *s)
+{
+}
+
 static int RelevantBundle(const char *agent, const char *blocktype)
 {
     Item *ip;
@@ -1418,7 +1447,4 @@ static int RelevantBundle(const char *agent, const char *blocktype)
 
     DeleteItemList(ip);
     return false;
-
-void yyerror(const char *s)
-{
 }

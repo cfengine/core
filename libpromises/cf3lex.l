@@ -56,8 +56,9 @@ int  cf_block_open=0;
 #define malloc xmalloc
 #define realloc xrealloc
 
-static int DeEscapeQuotedString(const char *from, char *to);
 #define ParserDebug if (DEBUG) printf
+
+static int DeEscapeQuotedString(const char *from, char *to);
 
 int yywrap(void)
 {
@@ -554,4 +555,6 @@ static int DeEscapeQuotedString(const char *from, char *to)
     *(cp) = '\0';
     return 0;
 }
+
+
 /* EOF */

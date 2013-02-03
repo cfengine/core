@@ -9,8 +9,8 @@
 #define true 1
 
 #include <stdio.h>
-#include <malloc.h>
 #include <string.h>
+#include "platform.h"
 
 struct Item
    {

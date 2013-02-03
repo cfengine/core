@@ -26,7 +26,7 @@ void PrependItem(struct Item **liststart,char *itemstring,char *classes);
 int IncludeManualFile(FILE *fout,char *file);
 
     
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 
 { FILE *fin,*fout = NULL;
   struct Item *ip,*contents = NULL;
@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 if ((fin = fopen(argv[1],"r")) == NULL)
    {
    printf("Could not open the %s file\n", argv[1]);
-   return;
+   return 1;
    }
 
    
@@ -67,7 +67,7 @@ while(!feof(fin))
       if ((fout = fopen(name,"w")) == NULL)
          {
          printf("Could not open output file %s\n",name);
-         return;
+         return 2;
          }
 
       fprintf(fout,"%s",buffer);
@@ -92,7 +92,7 @@ if (fout)
 if ((fout = fopen("CfengineStdLibrary.texinfo","w")) == NULL)
    {
    printf("Could not open the CfengineStdLibrary.texinfo file\n");
-   return;
+   return 3;
    }
 
 IncludeManualFile(fout,"preamble.texinfo");
@@ -125,13 +125,13 @@ fclose(fout);
 
 int IncludeManualFile(FILE *fout,char *file)
 
-{ char buffer[1024],filename[1024];
+{ char buffer[1024];
   FILE *fp;
 
 if ((fp = fopen(file,"r")) == NULL)
    {
    printf("Could not read %s\n",file);
-   return;
+   return 1;
    }
 
 while(!feof(fp))
@@ -142,6 +142,8 @@ while(!feof(fp))
    }
 
 fclose(fp);
+
+return 0;
 }
 
 

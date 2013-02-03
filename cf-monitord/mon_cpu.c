@@ -61,12 +61,15 @@ void MonCPUGatherData(double *cf_this)
     {
         if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
         {
-            CfOut(cf_error, "", "Failed to read line from stream");
             break;
         }
 
-        sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
-               &softirq);
+        if (sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
+               &softirq) != 8)
+        {
+            CfOut(cf_verbose, "", "Could not scan /proc/stat line: %60s", buf);
+            continue;
+        }
 
         total_time = (userticks + niceticks + systemticks + idle);
 
@@ -86,6 +89,10 @@ void MonCPUGatherData(double *cf_this)
                 {
                     continue;
                 }
+            }
+            else
+            {
+                continue;
             }
             slot = ob_cpu0 + cpuidx;
         }

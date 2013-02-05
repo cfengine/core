@@ -1751,7 +1751,7 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        CfOut(cf_verbose, "", "Function reglist was promised a list called \"%s\" but this was not found\n", listvar);
+        CfOut(cf_verbose, "", "Function selectservers was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -3487,7 +3487,7 @@ static FnCallResult FnCallFileSexist(FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        CfOut(cf_verbose, "", "Function reglist was promised a list called \"%s\" but this was not found\n", listvar);
+        CfOut(cf_verbose, "", "Function filesexist was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 

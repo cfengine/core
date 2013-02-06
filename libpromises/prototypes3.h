@@ -80,26 +80,10 @@ void RegisterBundleDependence(char *absscope, const Promise *pp);
 void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);
 void Nova_ShowTopicRepresentation(FILE *fp);
-void NoteEfficiency(double e);
-void HistoryUpdate(Averages newvals);
 void GetObservable(int i, char *name, char *desc);
 void LookupObservable(int i, char *name, char *desc);
-void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                              char *web);
-void SummarizePromiseNotKept(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                             char *web);
-void SummarizeCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                                   char *web);
-void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void VerifyMeasurement(double *this, Attributes a, Promise *pp);
 void SetMeasurementPromises(Item **classlist);
 void LongHaul(time_t current);
-void ReportPatches(PackageManager *list);
-void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
 void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
 void LoadSlowlyVaryingObservations(void);
 void MonOtherInit(void);
@@ -115,8 +99,6 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 #endif
 void NoteVarUsage(void);
 void NoteVarUsageDB(void);
-void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web);
-void CSV2XML(Rlist *list);
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
@@ -238,10 +220,6 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
 
 void VerifyInterface(Attributes a, Promise *pp);
 void VerifyInterfacesPromise(Promise *pp);
-
-/* verify_measurements.c */
-
-void VerifyMeasurementPromise(double *this, Promise *pp);
 
 /* verify_reports.c */
 

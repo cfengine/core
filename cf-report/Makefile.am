@@ -3,6 +3,10 @@ sbin_PROGRAMS = cf-report
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
 	$(NOVA_CPPFLAGS)
 
+if HAVE_NOVA
+AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfreport
+endif
+
 AM_CFLAGS = @CFLAGS@ \
 	$(NOVA_CFLAGS)
 

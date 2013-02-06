@@ -68,7 +68,7 @@
 #endif
 
 #ifdef HAVE_NOVA
-#include "nova_reporting.h"
+#include "agent_reports.h"
 #else
 #include "reporting.h"
 #endif
@@ -87,6 +87,27 @@ static int CFA_BACKGROUND = 0;
 static int CFA_BACKGROUND_LIMIT = 1;
 
 static Item *PROCESSREFRESH;
+
+static const char *AGENT_TYPESEQUENCE[] =
+{
+    "meta",
+    "vars",
+    "defaults",
+    "classes",                  /* Maelstrom order 2 */
+    "outputs",
+    "interfaces",
+    "files",
+    "packages",
+    "guest_environments",
+    "methods",
+    "processes",
+    "services",
+    "commands",
+    "storage",
+    "databases",
+    "reports",
+    NULL
+};
 
 /*******************************************************************/
 /* Agent specific variables                                        */
@@ -155,6 +176,12 @@ static const char *HINTS[15] =
     "Output the version of the software",
     NULL
 };
+
+#ifndef HAVE_NOVA
+void NoteEfficiency(double e)
+{
+}
+#endif
 
 /*******************************************************************/
 

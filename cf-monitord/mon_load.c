@@ -24,7 +24,7 @@
 
 #include "cf3.defs.h"
 
-#include "monitoring.h"
+#include "mon.h"
 #include "cfstream.h"
 
 #ifdef HAVE_SYS_LOADAVG_H

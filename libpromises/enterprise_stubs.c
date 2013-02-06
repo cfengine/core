@@ -169,19 +169,9 @@ const EVP_CIPHER *CfengineCipher(char type)
 
 /* cf-monitord: env_monitor.c, verify_measurement.c */
 
-
-void HistoryUpdate(Averages newvals)
-{
-}
-
 void GetObservable(int i, char *name, char *desc)
 {
     strcpy(name, OBS[i][0]);
-}
-
-void VerifyMeasurement(double *this, Attributes a, Promise *pp)
-{
-    CfOut(cf_verbose, "", "# Custom monitoring feature is only available in version Nova and above\n");
 }
 
 void SetMeasurementPromises(Item **classlist)
@@ -190,24 +180,9 @@ void SetMeasurementPromises(Item **classlist)
 
 /* cf-agent: cf-agent.c */
 
-
-void NoteEfficiency(double e)
-{
-}
-
 void LastSawBundle(const Bundle *bundle, double comp)
 {
 }
-
-
-/* cf-agent: verify_packages.c */
-
-
-void ReportPatches(PackageManager *list)
-{
-    CfOut(cf_verbose, "", "# Patch reporting feature is only available in version Nova and above\n");
-}
-
 
 /* cf-agent: evalfunction.c */
 
@@ -312,76 +287,16 @@ void LookupObservable(int i, char *name, char *desc)
     strcpy(name, OBS[i][0]);
 }
 
-void SummarizeCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizeValue(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "",
-          "# Value reporting feature is only available in version Nova and above - use the state/cf_value.log\n");
-}
-
-void SummarizePromiseRepaired(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                              char *web)
-{
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizePromiseNotKept(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
-}
-
 void GrandSummary()
 {
     CfOut(cf_verbose, "", "# Reporting feature is only available in version Nova and above\n");
-}
-
-void CSV2XML(Rlist *list)
-{
-    CfOut(cf_verbose, "", "# Format conversion feature is only available in version Nova and above\n");
-}
-
-void SummarizeVariables(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Variable reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizePerPromiseCompliance(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot,
-                                   char *web)
-{
-    CfOut(cf_verbose, "", "# Compliance reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizeFileChanges(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# File change reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizeSetuid(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Setuid reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizeSoftware(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
-}
-
-void SummarizeUpdates(int xml, int html, int csv, int embed, char *stylesheet, char *head, char *foot, char *web)
-{
-    CfOut(cf_verbose, "", "# Software summary reporting feature is only available in version Nova and above\n");
 }
 
 void LongHaul(time_t current)
 {
 }
 
-
 /* cf-serverd: server_transform.c, cf-serverd.c */
-
 
 void TranslatePath(char *new, const char *old)
 {

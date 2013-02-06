@@ -59,7 +59,6 @@ extern char VSHIFT[];
 
 extern const char *CLASSTEXT[];
 extern int AUDIT;
-extern char PURGE;
 
 extern int ERRORCOUNT;
 extern time_t CFSTARTTIME;
@@ -138,8 +137,6 @@ extern int CSV;
 
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
-
-extern const char *AGENT_TYPESEQUENCE[];
 
 extern int CFA_MAXTHREADS;
 extern const char *THIS_BUNDLE;

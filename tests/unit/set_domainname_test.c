@@ -297,6 +297,7 @@ char *VEXPORTS[1];
 char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
 const char *CLASSTEXT[1] = { };
+int LOOKUP;
 
 char VIPADDRESS[18];
 

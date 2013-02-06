@@ -1,3 +1,10 @@
+3.5.0 - Alpha 2
+
+       Changes:
+
+       - process promises don't log if processes are out of range unless you 
+         run in verbose mode
+
 3.5.0 - Alpha 1
 
        New Features:

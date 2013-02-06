@@ -27,7 +27,7 @@
 #include "sysinfo.h"
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "monitoring.h"
+#include "mon.h"
 #include "item_lib.h"
 #include "cfstream.h"
 #include "communication.h"

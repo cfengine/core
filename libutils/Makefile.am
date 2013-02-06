@@ -1,13 +1,5 @@
 noinst_LTLIBRARIES = libutils.la
 
-AM_CPPFLAGS = @CPPFLAGS@ \
-	$(NOVA_CPPFLAGS)
-
-AM_CFLAGS = @CFLAGS@ \
-	$(NOVA_CFLAGS)
-
-AM_LDFLAGS =
-
 libutils_la_LIBADD = ../pub/libcfpub.la
 
 libutils_la_SOURCES = \

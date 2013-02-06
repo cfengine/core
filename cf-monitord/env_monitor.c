@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 
 #include "env_context.h"
-#include "monitoring.h"
+#include "mon.h"
 #include "granules.h"
 #include "dbm_api.h"
 #include "policy.h"
@@ -43,8 +43,16 @@
 #include "generic_agent.h" // WritePID
 #include "files_lib.h"
 #include "unix.h"
+#include "verify_measurements.h"
+#ifdef HAVE_NOVA
+#include "history.h"
+#endif
 
 #include <math.h>
+
+#ifndef HAVE_NOVA
+static void HistoryUpdate(Averages newvals);
+#endif
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -1225,3 +1233,8 @@ void MonOtherGatherData(double *cf_this)
 #endif
 }
 
+#ifndef HAVE_NOVA
+static void HistoryUpdate(Averages newvals)
+{
+}
+#endif

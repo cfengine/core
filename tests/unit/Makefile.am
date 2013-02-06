@@ -144,6 +144,13 @@ CLEANFILES = *.gcno *.gcda
 
 package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c
 
+package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
+package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
+if HAVE_NOVA
+package_versions_compare_test_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent
+package_versions_compare_test_LDADD += ../../nova/libcfagent/libcfagent.la
+endif
+
 sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la
 

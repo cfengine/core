@@ -24,7 +24,7 @@
 
 #include "cf3.defs.h"
 
-#include "monitoring.h"
+#include "mon.h"
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"

@@ -22,8 +22,8 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_MONITORING_H
-#define CFENGINE_MONITORING_H
+#ifndef CFENGINE_MON_H
+#define CFENGINE_MON_H
 
 /* mon_entropy.c */
 

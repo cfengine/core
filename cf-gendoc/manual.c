@@ -136,10 +136,19 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
         if (!IsItemIn(done, st->bundle_type)) /* Avoid multiple reading if several modules */
         {
+            char bundle_filename[CF_BUFSIZE];
+            if (strcmp(st->bundle_type, "*") == 0)
+            {
+                strcpy(bundle_filename, "common");
+            }
+            else
+            {
+                strlcpy(bundle_filename, st->bundle_type, CF_BUFSIZE);
+            }
             PrependItem(&done, st->bundle_type, NULL);
-            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_example.texinfo", st->bundle_type);
+            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_example.texinfo", bundle_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_notes.texinfo", st->bundle_type);
+            snprintf(filename, CF_BUFSIZE - 1, "bundletypes/%s_notes.texinfo", bundle_filename);
             IncludeManualFile(source_dir, fout, filename);
 
             fprintf(fout, "@menu\n");
@@ -414,11 +423,22 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
                 fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
                     st[j].bundle_type, st[j].subtype, st[j].bundle_type);
             }
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].subtype);
+
+            char subtype_filename[CF_BUFSIZE];
+            if (strcmp("*", st[j].subtype))
+            {
+                strcpy(subtype_filename, "common");
+            }
+            else
+            {
+                strlcpy(subtype_filename, st[j].subtype, CF_BUFSIZE);
+            }
+
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", subtype_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", st[j].subtype);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", subtype_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", st[j].subtype);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", subtype_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
         TexinfoBodyParts(source_dir, fout, st[j].bs, st[j].subtype);

@@ -140,7 +140,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
     {
         if (matches < a.process_count.min_range || matches > a.process_count.max_range)
         {
-            cfPS(cf_error, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            cfPS(cf_verbose, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
             AddEphemeralClasses(a.process_count.out_of_range_define, pp->namespace);
             out_of_range = true;
         }

@@ -47,7 +47,9 @@ body delete init_delete
 bundle agent test
 {
 vars:
-    "mode" int => "0600";
+    "mode" string => execresult(
+    "/usr/bin/stat --printf=%a $(g.source)",
+    "noshell");
 
 files:
         "$(G.testfile)"

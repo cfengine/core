@@ -107,7 +107,6 @@ static bool SanityCheckTextDeletions(Attributes a, Promise *pp);
 static bool SanityCheckTextSet(Attributes a);
 static bool SanityCheckTextInsertions(Attributes a);
 
-static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp);
 static bool XmlNodesCompare(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
 static bool XmlNodesCompareAttributes(xmlNodePtr node1, xmlNodePtr node2, Attributes a, Promise *pp);
@@ -366,8 +365,8 @@ static void KeepEditXmlPromise(Promise *pp)
 static void VerifyTreeDeletions(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
-    xmlDocPtr doc;
-    xmlNodePtr docnode;
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
 
     Attributes a = { {0} };
     CfLock thislock;
@@ -379,7 +378,7 @@ static void VerifyTreeDeletions(Promise *pp)
     if (!SanityCheckTreeDeletions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree deletion (%s) is inconsistent", pp->promiser);
+             " !! The promised tree deletion:\n\"%s\"\nis inconsistent", pp->promiser);
         return;
     }
 
@@ -391,6 +390,9 @@ static void VerifyTreeDeletions(Promise *pp)
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -418,8 +420,8 @@ static void VerifyTreeDeletions(Promise *pp)
 static void VerifyTreeInsertions(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
-    xmlDocPtr doc;
-    xmlNodePtr docnode;
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
 
     Attributes a = { {0} };
     CfLock thislock;
@@ -431,19 +433,22 @@ static void VerifyTreeInsertions(Promise *pp)
     if (!SanityCheckTreeInsertions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree insertion (%s) breaks its own promises", pp->promiser);
+             " !! The promised tree insertion:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
 
     if ((doc = pp->edcontext->xmldoc) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to load XML document");
         return;
     }
 
     //if file is not empty: select an edit node, for tree insertion
     if (a.xml.haveselectxpath && !XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -456,7 +461,7 @@ static void VerifyTreeInsertions(Promise *pp)
     }
 
     //insert tree into empty file or selected node
-    if (!a.xml.haveselectxpath && !xmlDocGetRootElement(doc))
+    if (!a.xml.haveselectxpath)
     {
         if (InsertTreeInFile(pp->promiser, doc, docnode, a, pp))
         {
@@ -479,8 +484,8 @@ static void VerifyTreeInsertions(Promise *pp)
 static void VerifyAttributeDeletions(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
-    xmlDocPtr doc = pp->edcontext->xmldoc;
-    xmlNodePtr docnode;
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
 
     Attributes a = { {0} };
     CfLock thislock;
@@ -492,18 +497,21 @@ static void VerifyAttributeDeletions(Promise *pp)
     if (!SanityCheckAttributeDeletions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute deletion (%s) is inconsistent", pp->promiser);
+             " !! The promised attribute deletion: \"%s\", is inconsistent", pp->promiser);
         return;
     }
 
-    if (doc == NULL)
+    if ((doc = pp->edcontext->xmldoc) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -531,8 +539,8 @@ static void VerifyAttributeDeletions(Promise *pp)
 static void VerifyAttributeSet(Promise *pp)
 {
 #ifdef HAVE_LIBXML2
-    xmlDocPtr doc = pp->edcontext->xmldoc;
-    xmlNodePtr docnode;
+    xmlDocPtr doc = NULL;
+    xmlNodePtr docnode = NULL;
 
     Attributes a = { {0} };
     CfLock thislock;
@@ -544,18 +552,21 @@ static void VerifyAttributeSet(Promise *pp)
     if (!SanityCheckAttributeSet(a))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute set (%s) breaks its own promises", pp->promiser);
+             " !! The promised attribute set: \"%s\", breaks its own promises", pp->promiser);
         return;
     }
 
-    if (doc == NULL)
+    if ((doc = pp->edcontext->xmldoc) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! Unable to load xml document");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -596,7 +607,7 @@ static void VerifyTextDeletions(Promise *pp)
     if (!SanityCheckTextDeletions(a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text deletion (%s) is inconsistent", pp->promiser);
+             " !! The promised text deletion:\n\"%s\"\nis inconsistent", pp->promiser);
         return;
     }
 
@@ -608,6 +619,9 @@ static void VerifyTextDeletions(Promise *pp)
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -648,7 +662,7 @@ static void VerifyTextSet(Promise *pp)
     if (!SanityCheckTextSet(a))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text set (%s) breaks its own promises", pp->promiser);
+             " !! The promised text set:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
 
@@ -660,6 +674,9 @@ static void VerifyTextSet(Promise *pp)
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -700,7 +717,7 @@ static void VerifyTextInsertions(Promise *pp)
     if (!SanityCheckTextInsertions(a))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text insertion (%s) breaks its own promises", pp->promiser);
+             " !! The promised text insertion:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
 
@@ -712,6 +729,9 @@ static void VerifyTextInsertions(Promise *pp)
 
     if (!XmlSelectNode(a.xml.select_xpath, doc, &docnode, a, pp))
     {
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+            " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
+             a.xml.select_xpath, pp->this_server);
         return;
     }
 
@@ -763,19 +783,19 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     if (!XmlXPathConvergent(rawxpath, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! select_xpath expression (%s) is not convergent", a.xml.select_xpath);
+             " !! select_xpath expression: \"%s\", is NOT convergent", rawxpath);
         return false;
     }
 
     if ((xpathExpr = CharToXmlChar(rawxpath)) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to create new XPath expression");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to create new XPath expression: \"%s\"", rawxpath);
         return false;
     }
 
     if ((xpathCtx = xmlXPathNewContext(doc)) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to create new XPath context");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to create new XPath context: \"%s\"", rawxpath);
         return false;
     }
 
@@ -796,8 +816,8 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
     if (size > 1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! Current select_xpath expression \"%s\" returns (%d) edit nodes, please modify to select a unique edit node",
-             xpathExpr, size);
+             " !! Current select_xpath expression: \"%s\", returns (%d) edit nodes in XML document(%s), please modify expression to select a unique edit node",
+             xpathExpr, size, pp->this_server);
         valid = false;
     }
 
@@ -815,8 +835,8 @@ static bool XmlSelectNode(char *rawxpath, xmlDocPtr doc, xmlNodePtr *docnode, At
 
         if (cur == NULL)
         {
-            cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-                 " !! The promised xpath pattern (%s) was not found when selecting edit node in %s",
+            cfPS(cf_error, CF_INTERPT, "", pp, a,
+                 " !! The promised XPath pattern: \"%s\", was NOT found when selecting an edit node, in XML document(%s)",
                  xpathExpr, pp->this_server);
             valid = false;
         }
@@ -840,50 +860,65 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be inserted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtree, pp->this_server);
         return false;
     }
 
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be inserted was not parsed successfully");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), was NOT parsed successfully",
+             rawtree, pp->this_server);
         return false;
     }
 
     if (treenode == NULL || (treenode->name) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! The promised tree to be inserted is empty");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), is empty",
+             rawtree, pp->this_server);
         return false;
     }
 
     //verify treenode does not already exist inside docnode
     if ((rootnode = xmlDocGetRootElement(doc)) != NULL)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised xmldoc exists and contains a root element in %s (promise kept)",
-             pp->this_server);
+        if (!XmlNodesCompare(treenode, rootnode, a, pp))
+        {
+            cfPS(cf_error, CF_INTERPT, "", pp, a,
+                 " !! The promised tree:\n\"%s\"\nis to be inserted into an empty XML document (%s),"
+                 " however XML document is NOT empty and tree to be inserted does NOT match existing content."
+                 " If you would like to insert into a non-empty XML document, please specify select_xpath expression",
+                 rawtree, pp->this_server);
+        }
+        else
+        {
+            cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised XML document (%s) already exists and contains a root element (promise kept)",
+                 pp->this_server);
+        }
+
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to create the promised xmldoc \"%s\" in %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to insert the promised tree:\n\"%s\"\ninto an empty XML document (%s) - but only a warning was promised",
+             rawtree, pp->this_server);
         return true;
     }
 
-    //insert the content into new xml document
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    //insert the content into new XML document
+    cfPS(cf_verbose, CF_CHG, "", pp, a, "\n -> Inserting tree:\n\"%s\"\ninto an empty XML document (%s)",
+         rawtree, pp->this_server);
     if (xmlDocSetRootElement(doc, treenode) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, into an empty XML document (%s)",
+             rawtree, pp->this_server);
         return false;
     }
 
@@ -891,8 +926,8 @@ static bool InsertTreeInFile(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     if (((rootnode = xmlDocGetRootElement(doc)) == NULL) || !XmlNodesCompare(treenode, rootnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, into an empty XML document (%s)",
+             rawtree, pp->this_server);
         return false;
     }
 
@@ -910,38 +945,40 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be deleted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be deleted was not parsed successfully");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT parsed successfully",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     //verify treenode exists inside docnode
     if ((deletetree = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp)) == NULL)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be deleted: \n\n(%s) \n\ndoes not exists in %s (promise kept)",
-             pp->promiser, pp->this_server);
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be deleted:\n\"%s\"\ndoes NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to delete the promised tree \"%s\" from %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to delete the promised tree:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
-    //remove the subtree from xml document
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting tree \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    //remove the subtree from XML document
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+         rawtree, a.xml.select_xpath, pp->this_server);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
 
@@ -949,8 +986,8 @@ static bool DeleteTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree to be deleted(%s) was not successfully deleted, in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised tree to be deleted:\n\"%s\"\nwas NOT successfully deleted, at XPath (%s) in XML document (%s)",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -967,49 +1004,52 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be inserted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Tree to be inserted was not parsed successfully");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT parsed successfully",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (treenode == NULL || (treenode->name) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a, " !! The promised tree to be inserted is empty");
+        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), is empty",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     //verify treenode does not already exist inside docnode
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be inserted: \n\n(%s) \n\nexists in %s (promise kept)",
-             pp->promiser, pp->this_server);
+        cfPS(cf_verbose, CF_NOP, "", pp, a, " !! The promised tree to be inserted:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to insert the promised tree \"%s\" to %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to insert the promised tree:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
-    //insert the subtree into xml document
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    //insert the subtree into XML document
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)\n",
+         rawtree, a.xml.select_xpath, pp->this_server);
     if (!xmlAddChild(docnode, treenode))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1017,8 +1057,8 @@ static bool InsertTreeInNode(char *rawtree, xmlDocPtr doc, xmlNodePtr docnode, A
     if (!XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised tree (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
+             rawtree, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1034,8 +1074,9 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Name of attribute to be deleted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Name of attribute to be deleted: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawname, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1043,26 +1084,27 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     if ((attr = xmlHasProp(docnode, name)) == NULL)
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " !! The promised attribute to be deleted (%s) does not exists in %s (promise kept)",
-             pp->promiser, pp->this_server);
+             " !! The promised attribute to be deleted: \"%s\", does NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
+             rawname, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to delete the promised attribute \"%s\" from %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to delete the promised attribute: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawname, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
     //delete attribute from docnode
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting attribute \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting attribute: \"%s\", at XPath (%s) in XML document (%s)",
+             rawname, a.xml.select_xpath, pp->this_server);
     if ((xmlRemoveProp(attr)) == -1)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute to be deleted was not deleted successfully.");
+             " !! The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s).",
+             rawname, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1070,8 +1112,8 @@ static bool DeleteAttributeInNode(char *rawname, xmlDocPtr doc, xmlNodePtr docno
     if ((attr = xmlHasProp(docnode, name)) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute to be deleted (%s) was not deleted from edit node in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s)",
+             rawname, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1088,15 +1130,17 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Name of attribute to be set was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Name of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawname, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Value of attribute to be set was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Value of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawvalue, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1104,26 +1148,27 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode, a, pp)) != NULL)
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " !! The promised attribute to be set (%s) with value (%s) exists in %s (promise kept)",
-             pp->promiser, a.xml.attribute_value, pp->this_server);
+             " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", already exists, at XPath (%s) in XML document (%s) (promise kept)",
+             rawname, rawvalue, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to set the promised attribute \"%s\" to %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to set the promised attribute, with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawname, rawvalue, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
     //set attribute in docnode
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting attribute \"%s\" in %s", pp->promiser,
-          pp->this_server);
-    if ((attr = xmlNewProp(docnode, name, value)) == NULL)
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting attribute with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s)",
+         rawname, rawvalue, a.xml.select_xpath, pp->this_server);
+    if ((attr = xmlSetProp(docnode, name, value)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Attribute was not successfully set in xml document");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
+             rawname, rawvalue, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1131,8 +1176,8 @@ static bool SetAttributeInNode(char *rawname, char *rawvalue, xmlDocPtr doc, xml
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode, a, pp)) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised attribute (%s) with value (%s) was not set in %s",
-             pp->promiser, a.xml.attribute_value, pp->this_server);
+             " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
+             rawname, rawvalue, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1148,8 +1193,9 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Text to be deleted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Text to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1157,22 +1203,22 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " !! The promised text to be deleted (%s) does not exist in %s (promise kept)",
-             pp->promiser, pp->this_server);
+             " !! The promised text to be deleted:\n\"%s\"\ndoes NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to delete the promised text \"%s\" to %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to delete the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
     //delete text from docnode
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting text \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+         rawtext, a.xml.select_xpath, pp->this_server);
 
     //node contains text
     if (xmlNodeIsText(docnode->children))
@@ -1197,8 +1243,8 @@ static bool DeleteTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) was not deleted successfully from %s",
-             pp->promiser, pp->this_server);
+             " !! The promised text:\n\"%s\"\nwas NOT deleted successfully, at XPath (%s) in XML document (%s)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1214,8 +1260,9 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Text to be set was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Text to be set:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1223,22 +1270,22 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) != NULL)
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " !! The promised text to be set (%s) exists in %s (promise kept)",
-             pp->promiser, pp->this_server);
+             " !! The promised text to be set:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to set the promised text \"%s\" to %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to set the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
     //set text in docnode
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting text \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Setting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+         rawtext, a.xml.select_xpath, pp->this_server);
 
     //node already contains text
     if (xmlNodeIsText(docnode->children))
@@ -1263,8 +1310,8 @@ static bool SetTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, Attr
     if (XmlVerifyTextInNodeExact(text, docnode, a, pp) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) was not set successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised text:\n\"%s\"\nwas NOT set successfully, at XPath (%s) in XML document (%s)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1280,8 +1327,9 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
-             " !! Text to be inserted was not successfully loaded into an xml buffer");
+        cfPS(cf_error, CF_INTERPT, "", pp, a,
+             " !! Text to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1289,22 +1337,22 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) != NULL)
     {
         cfPS(cf_verbose, CF_NOP, "", pp, a,
-             " !! The promised text to be inserted (%s) exists in %s (promise kept)",
-             pp->promiser, pp->this_server);
+             " !! The promised text to be inserted:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
         cfPS(cf_error, CF_WARN, "", pp, a,
-             " -> Need to insert the promised text \"%s\" to %s - but only a warning was promised",
-             pp->promiser, pp->this_server);
+             " -> Need to insert the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return true;
     }
 
     //insert text into docnode
-    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting text \"%s\" in %s", pp->promiser,
-          pp->this_server);
+    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+         rawtext, a.xml.select_xpath, pp->this_server);
 
     //node already contains text
     if (xmlNodeIsText(docnode->children))
@@ -1329,8 +1377,8 @@ static bool InsertTextInNode(char *rawtext, xmlDocPtr doc, xmlNodePtr docnode, A
     if (XmlVerifyTextInNodeSubstring(text, docnode, a, pp) == NULL)
     {
         cfPS(cf_error, CF_INTERPT, "", pp, a,
-             " !! The promised text (%s) was not inserted successfully in %s",
-             pp->promiser, pp->this_server);
+             " !! The promised text:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
+             rawtext, a.xml.select_xpath, pp->this_server);
         return false;
     }
 
@@ -1362,10 +1410,10 @@ static bool SanityCheckTreeInsertions(Attributes a, Promise *pp)
         return false;
     }
 
-    else if ((!a.xml.haveselectxpath &&  xmlDocGetRootElement(pp->edcontext->xmldoc)))
+    else if (!a.xml.haveselectxpath)
     {
-        CfOut(cf_error, "Tree insertion requires select_xpath to be specified, unless inserting into an empty file",
-              " !! ");
+        CfOut(cf_error, "",
+              "!! Tree insertion requires select_xpath to be specified, unless inserting into an empty file");
         return false;
     }
 
@@ -1479,42 +1527,6 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp)
     return true;
 }
 
-/*********************************************************************/
-
-static bool XmlDocsEqualContent(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)
-{
-    xmlNodePtr root1 = NULL;
-    xmlNodePtr root2 = NULL;
-    xmlNodePtr copynode1 = NULL;
-    xmlNodePtr copynode2 = NULL;
-    int equal = true;
-
-    if (!doc1 && !doc2)
-    {
-        return true;
-    }
-
-    if (!doc1 || !doc2)
-    {
-        return false;
-    }
-
-    root1 = xmlDocGetRootElement(doc1);
-    root2 = xmlDocGetRootElement(doc2);
-
-    copynode1 = xmlCopyNode(root1, 1);
-    copynode2 = xmlCopyNode(root2, 1);
-
-    if (!XmlNodesCompare(copynode1, copynode2, a, pp))
-    {
-        equal = false;
-    }
-
-    xmlFree(copynode1);
-    xmlFree(copynode2);
-
-    return equal;
-}
 /*********************************************************************/
 
 static bool XmlDocsEqualMem(xmlDocPtr doc1, xmlDocPtr doc2, int warnings, Attributes a, Promise *pp)

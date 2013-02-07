@@ -6,7 +6,7 @@
 
 body common control
 {
- bundlesequence => { "update" };
+ bundlesequence => { "cfe_internal_update" };
  version => "Community Update.cf 3.4.1";
 }
 
@@ -20,7 +20,7 @@ body agent control
 
 #############################################################################
 
-bundle agent update
+bundle agent cfe_internal_update
 {
  vars:
 

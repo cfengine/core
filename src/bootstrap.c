@@ -242,6 +242,13 @@ void CreateFailSafe(char *name)
     CfOut(cf_cmdout, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
+            "################################################################################\n"
+            "# THIS FILE REPRESENTS A FALL-BACK SOLUTION FOR THE PRIMARY FAILSAFE FILE.\n"
+            "# IF THE PRIMARY FAILSAFE/UPDATE LOSES FUNCTIONALITY DUE TO MODIFICATIONS MADE\n"
+            "# BY THE USER, CFENGINE WILL RECOVER BY USING THIS FALL-BACK BOOTSTRAPPED FILE.\n"
+            "# NEVER EDIT THIS FILE, YOU WILL HAVE TO LOG ON TO EVERY NODE MANAGED BY\n"
+            "# CFENGINE TO RECTIFY POTENTIAL ERRORS IF SOMETHING GOES WRONG.\n"
+            "################################################################################\n"
             "body common control\n"
             "{\n"
             "bundlesequence => { \"cfe_internal_update\" };\n"

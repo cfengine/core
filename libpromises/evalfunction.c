@@ -1616,7 +1616,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
 
     if (dirh == NULL)
     {
-        CfOut(cf_verbose, "opendir", " !! Directory \"%s\" could not be accessed in lsdir()", dirname);
+        CfOut(cf_error, "opendir", " !! Directory \"%s\" could not be accessed in lsdir()", dirname);
         snprintf(retval, CF_SMALLBUF - 1, "0");
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), CF_SCALAR } };
     }

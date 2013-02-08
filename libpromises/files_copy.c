@@ -75,10 +75,21 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
         unlink(destination);
         return false;
     }
+    /*
+     * We need to stat the file in order to get the right source permissions.
+     */
+    struct stat statbuf;
+
+    if (cfstat(source, &statbuf) == -1)
+    {
+        CfOut(cf_inform, "stat", "Can't copy %s!\n", source);
+        unlink(destination);
+        return false;
+    }
 
     unlink(destination);                /* To avoid link attacks */
 
-    if ((dd = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
+    if ((dd = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, statbuf.st_mode)) == -1)
     {
         close(sd);
         unlink(destination);

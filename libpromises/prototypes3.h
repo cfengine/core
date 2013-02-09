@@ -56,11 +56,6 @@ void ConnectionsCleanup(void);
 
 void SetSkipIdentify(bool enabled);
 
-/* dtypes.c */
-
-int IsSocketType(char *s);
-int IsTCPType(char *s);
-
 /* enterprise_stubs.c */
 
 void SyntaxExport(void);

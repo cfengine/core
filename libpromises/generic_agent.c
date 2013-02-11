@@ -64,7 +64,6 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
 static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context);
@@ -382,12 +381,8 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
-                     const ReportContext *report_context)
+Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    Rval retval;
-    char vbuff[CF_BUFSIZE];
-
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
     Policy *policy = Cf3ParseFiles(config, report_context);
@@ -411,13 +406,20 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
     strncpy(STYLESHEET, "/cf_enterprise.css", CF_BUFSIZE - 1);
     strncpy(WEBDRIVER, "", CF_MAXVARSIZE - 1);
 
-/* Make the compilation reports*/
+    {
+        Rval rval = { 0 };
 
-    SetAuditVersion();
+        switch (GetVariable("control_common", "cfinputs_version", &rval))
+        {
+        case cf_str:
+            AUDITPTR->version = xstrdup((char *) rval.item);
+            break;
 
-    GetVariable("control_common", "version", &retval);
-
-    snprintf(vbuff, CF_BUFSIZE - 1, "Expanded promises for %s", agents);
+        default:
+            AUDITPTR->version = xstrdup("no specified version");
+            break;
+        }
+    }
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
 
@@ -1543,26 +1545,6 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         }
         
         DeleteRvalItem(returnval);
-    }
-}
-
-/*******************************************************************/
-
-static void SetAuditVersion()
-{
-    Rval rval = { NULL, 'x' };  /* FIXME: why it is initialized? */
-
-    /* In addition, each bundle can have its own version */
-
-    switch (GetVariable("control_common", "cfinputs_version", &rval))
-    {
-    case cf_str:
-        AUDITPTR->version = xstrdup((char *) rval.item);
-        break;
-
-    default:
-        AUDITPTR->version = xstrdup("no specified version");
-        break;
     }
 }
 

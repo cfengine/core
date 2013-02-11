@@ -260,6 +260,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
         {
             CfOut(cf_error, "",
                   "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+            HardClass("failsafe_fallback");
             GenericAgentConfigSetInputFile(config, "failsafe.cf");
             policy = ReadPromises(ag, agents, config, report_context);
         }

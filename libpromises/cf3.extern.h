@@ -117,7 +117,6 @@ extern Item *EDIT_ANCHORS;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
-extern Rlist *SUBBUNDLES;
 extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;

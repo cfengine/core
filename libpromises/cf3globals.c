@@ -89,9 +89,8 @@ double METER_REPAIRED[meter_endmark];
 /*****************************************************************************/
 
 Scope *VSCOPE = NULL;
-Rlist *SUBBUNDLES = NULL;
 
-Rlist *CF_STCK = NULL;
+Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
 Item *EDIT_ANCHORS = NULL;
 

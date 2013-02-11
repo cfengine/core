@@ -57,6 +57,16 @@ Policy *PolicyMerge(Policy *a, Policy *b);
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name);
 
 /**
+ * @brief Query a policy for a bundle
+ * @param policy The policy to query
+ * @param ns Namespace filter (optionally NULL)
+ * @param type Bundle type filter
+ * @param name Bundle name filter
+ * @return Bundle child object if found, otherwise NULL
+ */
+Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name);
+
+/**
  * @brief Check to see if a policy is runnable (contains body common control)
  * @param policy Policy to check
  * @return True if policy is runnable
@@ -91,8 +101,22 @@ PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const c
 void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
 
+/**
+ * @brief Check a partial policy DOM for errors
+ * @param policy Policy to check
+ * @param errors Sequence of PolicyError to append errors to
+ * @return True if no new errors are found
+ */
 bool PolicyCheckPartial(const Policy *policy, Seq *errors);
-bool PolicyCheckRunnable(const Policy *policy, Seq *errors);
+
+/**
+ * @brief Check a runnable policy DOM for errors
+ * @param policy Policy to check
+ * @param errors Sequence of PolicyError to append errors to
+ * @param ignore_missing_bundles Whether to ignore missing bundle references
+ * @return True if no new errors are found
+ */
+bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);

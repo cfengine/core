@@ -442,7 +442,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
 
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
-        if (!PolicyCheckRunnable(policy, errors))
+        if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))
         {
             Writer *writer = FileWriter(stderr);
             for (size_t i = 0; i < errors->length; i++)
@@ -1317,36 +1317,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-
-
-/* Check for undefined subbundles */
-
-    for (const Rlist *rp = SUBBUNDLES; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case CF_SCALAR:
-
-            if (!config->ignore_missing_bundles && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
-            {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
-                ERRORCOUNT++;
-            }
-            break;
-
-        case CF_FNCALL:
-            {
-                const FnCall *fp = rp->item;
-
-                if (!config->ignore_missing_bundles && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
-                {
-                    CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
-                    ERRORCOUNT++;
-                }
-                break;
-            }
-        }
-    }
 
 /* Now look once through ALL the bundles themselves */
 

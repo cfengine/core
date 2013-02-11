@@ -184,7 +184,6 @@ void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, Su
                     {
                         CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
                                 rval.rtype);
-                        PrependRlist(&SUBBUNDLES, rval.item, rval.rtype);
                         return;
                     }
                     else

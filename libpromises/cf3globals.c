@@ -89,7 +89,6 @@ double METER_REPAIRED[meter_endmark];
 /*****************************************************************************/
 
 Scope *VSCOPE = NULL;
-Rlist *BODYPARTS = NULL;
 Rlist *SUBBUNDLES = NULL;
 
 Rlist *CF_STCK = NULL;

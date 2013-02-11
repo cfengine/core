@@ -389,7 +389,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
     Policy *policy = Cf3ParseFiles(config, report_context);
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
-        if (!PolicyCheck(policy, errors))
+        if (!PolicyCheckPartial(policy, errors))
         {
             Writer *writer = FileWriter(stderr);
             for (size_t i = 0; i < errors->length; i++)
@@ -438,6 +438,21 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
                 break;
             }
         }
+    }
+
+    {
+        Seq *errors = SeqNew(100, PolicyErrorDestroy);
+        if (!PolicyCheckRunnable(policy, errors))
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+        }
+
+        SeqDestroy(errors);
     }
 
     VerifyPromises(policy, config, report_context);
@@ -1302,30 +1317,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    for (const Rlist *rp = BODYPARTS; rp != NULL; rp = rp->next)
-    {
-        char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
-        char fqname[CF_BUFSIZE];
 
-        // This is a bit messy because tracking the namespace is not natural with the existing structures here
-
-        sscanf((char *)rp->item,"%[^:]:%s",namespace,name); 
-
-        if (strcmp(namespace,"default") == 0)
-        {
-            strcpy(fqname,name);
-        }
-        else
-        {
-            strcpy(fqname,(char *)rp->item);
-        }
-    
-        if (!IsBody(policy->bodies, namespace, fqname))
-        {
-            CfOut(cf_error, "", "Undeclared unparameterized promise body \"%s()\" was referenced in a promise in namespace \"%s\"\n", fqname, namespace);
-            ERRORCOUNT++;
-        }
-    }
 
 /* Check for undefined subbundles */
 

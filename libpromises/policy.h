@@ -90,7 +90,9 @@ typedef struct
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
 void PolicyErrorWrite(Writer *writer, const PolicyError *error);
-bool PolicyCheck(const Policy *policy, Seq *errors);
+
+bool PolicyCheckPartial(const Policy *policy, Seq *errors);
+bool PolicyCheckRunnable(const Policy *policy, Seq *errors);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);

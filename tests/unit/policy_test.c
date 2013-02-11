@@ -10,7 +10,7 @@ static Seq *LoadAndCheck(const char *filename)
     Policy *p = ParserParseFile(path);
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
-    PolicyCheck(p, errs);
+    PolicyCheckPartial(p, errs);
 
     return errs;
 }

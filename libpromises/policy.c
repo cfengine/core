@@ -34,6 +34,8 @@
 #include "transaction.h"
 #include "cfstream.h"
 #include "misc_lib.h"
+#include "mod_files.h"
+#include "vars.h"
 
 #include <assert.h>
 
@@ -45,7 +47,9 @@ static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable conta
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
 static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
+static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
 static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
+static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
 static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type category for %s bundle";
 static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
 
@@ -85,6 +89,27 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         Body *bp = SeqAt(policy->bodies, i);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        {
+            // allow namespace to be optionally matched
+            if (ns && strcmp(bp->namespace, ns) != 0)
+            {
+                continue;
+            }
+
+            return bp;
+        }
+    }
+
+    return NULL;
+}
+
+Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, const char *name)
+{
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bp = SeqAt(policy->bundles, i);
 
         if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
         {
@@ -332,7 +357,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 
 /*************************************************************************/
 
-bool PolicyCheck(const Policy *policy, Seq *errors)
+bool PolicyCheckPartial(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
@@ -386,6 +411,226 @@ bool PolicyCheck(const Policy *policy, Seq *errors)
                 }            
             }
         }
+    }
+
+    return success;
+}
+
+static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
+{
+    if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
+    {
+        ProgrammingError("Attempted to get the syntax for a constraint not belonging to a promise");
+    }
+
+    const Promise *promise = constraint->parent.promise;
+    const SubType *subtype = promise->parent_subtype;
+    const Bundle *bundle = subtype->parent_bundle;
+
+    const SubTypeSyntax subtype_syntax = SubTypeSyntaxLookup(bundle->type, subtype->name);
+
+    for (size_t i = 0; subtype_syntax.bs[i].lval != NULL; i++)
+    {
+        const BodySyntax *body_syntax = &subtype_syntax.bs[i];
+        if (strcmp(body_syntax->lval, constraint->lval) == 0)
+        {
+            return body_syntax;
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_BODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_BODIES[i];
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_EDITBODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_EDITBODIES[i];
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_XMLBODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_XMLBODIES[i];
+        }
+    }
+
+    return NULL;
+}
+
+/**
+ * @return A reference to the full symbol value of the Rval regardless of type, e.g. "foo:bar" -> "foo:bar"
+ */
+static const char *RvalFullSymbol(const Rval *rval)
+{
+    switch (rval->rtype)
+    {
+    case CF_SCALAR:
+        return rval->item;
+        break;
+
+    case CF_FNCALL:
+        return ((FnCall *)rval->item)->name;
+
+    default:
+        ProgrammingError("Cannot get full symbol value from Rval of type %c", rval->rtype);
+        return NULL;
+    }
+}
+
+/**
+ * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar" -> "foo"
+ */
+static char *RvalNamespaceComponent(const Rval *rval)
+{
+    if (strchr(RvalFullSymbol(rval), CF_NS))
+    {
+        char ns[CF_BUFSIZE] = { 0 };
+        sscanf(RvalFullSymbol(rval), "%[^:]", ns);
+
+        return xstrdup(ns);
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+/**
+ * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar" -> "bar"
+ */
+static char *RvalSymbolComponent(const Rval *rval)
+{
+    char *sep = strchr(RvalFullSymbol(rval), CF_NS);
+    if (sep)
+    {
+        return xstrdup(sep + 1);
+    }
+    else
+    {
+        return xstrdup(RvalFullSymbol(rval));
+    }
+}
+
+static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
+{
+    bool success = true;
+
+    for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, bpi);
+
+        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        {
+            SubType *subtype = SeqAt(bundle->subtypes, sti);
+
+            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            {
+                Promise *promise = SeqAt(subtype->promises, ppi);
+
+                for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
+                {
+                    Constraint *constraint = SeqAt(promise->conlist, cpi);
+
+                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
+                    if (syntax->dtype == cf_body)
+                    {
+                        char *ns = RvalNamespaceComponent(&constraint->rval);
+                        char *symbol = RvalSymbolComponent(&constraint->rval);
+
+                        Body *referenced_body = PolicyGetBody(policy, ns, constraint->lval, symbol);
+                        if (!referenced_body)
+                        {
+                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                                             POLICY_ERROR_BODY_UNDEFINED, symbol, constraint->lval));
+                            success = false;
+                        }
+
+                        free(ns);
+                        free(symbol);
+                    }
+                } // constraints
+            } // promises
+        } // subtypes
+    } // bundles
+
+    return success;
+}
+
+static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
+{
+    bool success = true;
+
+    for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, bpi);
+
+        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        {
+            SubType *subtype = SeqAt(bundle->subtypes, sti);
+
+            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            {
+                Promise *promise = SeqAt(subtype->promises, ppi);
+
+                for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
+                {
+                    Constraint *constraint = SeqAt(promise->conlist, cpi);
+
+                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
+                    if (syntax->dtype == cf_bundle && !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
+                    {
+                        char *ns = RvalNamespaceComponent(&constraint->rval);
+                        char *symbol = RvalSymbolComponent(&constraint->rval);
+
+                        const Bundle *referenced_bundle = NULL;
+                        if (strcmp(constraint->lval, "usebundle") == 0)
+                        {
+                            referenced_bundle = PolicyGetBundle(policy, ns, "agent", symbol);
+                            if (!referenced_bundle)
+                            {
+                                referenced_bundle = PolicyGetBundle(policy, ns, "common", symbol);
+                            }
+                        }
+                        else
+                        {
+                            referenced_bundle = PolicyGetBundle(policy, ns, constraint->lval, symbol);
+                        }
+
+                        if (!referenced_bundle)
+                        {
+                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                                             POLICY_ERROR_BUNDLE_UNDEFINED, symbol, constraint->lval));
+                            success = false;
+                        }
+
+                        free(ns);
+                        free(symbol);
+                    }
+                } // constraints
+            } // promises
+        } // subtypes
+    } // bundles
+
+    return success;
+}
+
+bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles)
+{
+    bool success = true;
+
+    success &= PolicyCheckUndefinedBodies(policy, errors);
+
+    if (!ignore_missing_bundles)
+    {
+        success &= PolicyCheckUndefinedBundles(policy, errors);
     }
 
     return success;

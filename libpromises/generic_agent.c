@@ -119,7 +119,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 {
     AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
-    int ok = false;
 
 #ifdef HAVE_NOVA
     CF_DEFAULT_DIGEST = cf_sha256;
@@ -199,6 +198,8 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
     if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
     {
+        bool policy_check_ok = false;
+
         if (!MissingInputFile(config->input_file))
         {
             bool check_promises = false;
@@ -228,26 +229,26 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
             {
                 if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
                 {
-                    ok = true;
+                    policy_check_ok = true;
                 }
                 else
                 {
-                    ok = CheckPromises(config->input_file, report_context);
+                    policy_check_ok = CheckPromises(config->input_file, report_context);
                 }
-                if (BOOTSTRAP && !ok)
+                if (BOOTSTRAP && !policy_check_ok)
                 {
                     CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
-                    ok = true;
+                    policy_check_ok = true;
                 }
             }
             else
             {
                 CfOut(cf_verbose, "", " -> Policy is already validated");
-                ok = true;
+                policy_check_ok = true;
             }
         }
 
-        if (ok)
+        if (policy_check_ok)
         {
             policy = ReadPromises(ag, agents, config, report_context);
         }

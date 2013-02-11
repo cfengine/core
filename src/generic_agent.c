@@ -1841,7 +1841,7 @@ void WritePID(char *filename)
         return;
     }
 
-    fprintf(fp, "%d\n", getpid());
+    fprintf(fp, "%" PRIuMAX "\n", (uintmax_t)getpid());
 
     fclose(fp);
 }

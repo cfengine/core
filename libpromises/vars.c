@@ -453,7 +453,7 @@ bool StringContainsVar(const char *s, const char *v)
 
 /*********************************************************************/
 
-int IsCf3VarString(const char *str)
+bool IsCf3VarString(const char *str)
 {
     char left = 'x', right = 'x';
     int dollar = false;

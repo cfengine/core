@@ -139,7 +139,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
 
 /*********************************************************/
 
-void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval rval, SubTypeSyntax ss)
+void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss)
 {
     int lmatch = false;
     int i, l, allowed = false;
@@ -177,45 +177,13 @@ void CheckConstraint(char *type, char *namespace, char *name, char *lval, Rval r
 
                     if (bs[l].dtype == cf_body)
                     {
-                    char fqname[CF_BUFSIZE];
-                    FnCall *fp;
-                    
-                    CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
-
-                    switch (rval.rtype)
-                       {
-                       case CF_SCALAR:
-                           if (strchr((char *)rval.item, CF_NS))
-                           {
-                               strcpy(fqname,(char *)rval.item);
-                           }
-                           else
-                           {
-                               snprintf(fqname,CF_BUFSIZE-1,"%s%c%s", namespace, CF_NS, (char *)rval.item);
-                           }
-                           break;
-                           
-                       case CF_FNCALL:
-                           fp = (FnCall *) rval.item;
-                           if (strchr(fp->name, CF_NS))
-                           {
-                               strcpy(fqname,fp->name);
-                           }
-                           else
-                           {                              
-                               snprintf(fqname,CF_BUFSIZE-1,"%s%c%s", namespace, CF_NS, fp->name);
-                           }
-                           break;
-                       }
-                        
-                        PrependRlist(&BODYPARTS, fqname, CF_SCALAR);
+                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
                         return;
                     }
                     else if (bs[l].dtype == cf_bundle)
                     {
                         CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
                                 rval.rtype);
-                        PrependRlist(&SUBBUNDLES, rval.item, rval.rtype);
                         return;
                     }
                     else

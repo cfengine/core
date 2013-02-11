@@ -64,7 +64,6 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void SetAuditVersion(void);
 static void CheckWorkingDirectories(const ReportContext *report_context);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
 static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context);
@@ -120,7 +119,6 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 {
     AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
-    int ok = false;
 
 #ifdef HAVE_NOVA
     CF_DEFAULT_DIGEST = cf_sha256;
@@ -200,6 +198,8 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
     if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
     {
+        bool policy_check_ok = false;
+
         if (!MissingInputFile(config->input_file))
         {
             bool check_promises = false;
@@ -229,26 +229,26 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
             {
                 if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
                 {
-                    ok = true;
+                    policy_check_ok = true;
                 }
                 else
                 {
-                    ok = CheckPromises(config->input_file, report_context);
+                    policy_check_ok = CheckPromises(config->input_file, report_context);
                 }
-                if (BOOTSTRAP && !ok)
+                if (BOOTSTRAP && !policy_check_ok)
                 {
                     CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
-                    ok = true;
+                    policy_check_ok = true;
                 }
             }
             else
             {
                 CfOut(cf_verbose, "", " -> Policy is already validated");
-                ok = true;
+                policy_check_ok = true;
             }
         }
 
-        if (ok)
+        if (policy_check_ok)
         {
             policy = ReadPromises(ag, agents, config, report_context);
         }
@@ -382,18 +382,14 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
-                     const ReportContext *report_context)
+Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    Rval retval;
-    char vbuff[CF_BUFSIZE];
-
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
     Policy *policy = Cf3ParseFiles(config, report_context);
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
-        if (!PolicyCheck(policy, errors))
+        if (!PolicyCheckPartial(policy, errors))
         {
             Writer *writer = FileWriter(stderr);
             for (size_t i = 0; i < errors->length; i++)
@@ -411,17 +407,53 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config,
     strncpy(STYLESHEET, "/cf_enterprise.css", CF_BUFSIZE - 1);
     strncpy(WEBDRIVER, "", CF_MAXVARSIZE - 1);
 
-/* Make the compilation reports*/
+    {
+        Rval rval = { 0 };
 
-    SetAuditVersion();
+        switch (GetVariable("control_common", "cfinputs_version", &rval))
+        {
+        case cf_str:
+            AUDITPTR->version = xstrdup((char *) rval.item);
+            break;
 
-    GetVariable("control_common", "version", &retval);
-
-    snprintf(vbuff, CF_BUFSIZE - 1, "Expanded promises for %s", agents);
+        default:
+            AUDITPTR->version = xstrdup("no specified version");
+            break;
+        }
+    }
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
 
     ShowContext(report_context);
+
+    if (REQUIRE_COMMENTS == CF_UNDEFINED)
+    {
+        for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+        {
+            Body *bdp = SeqAt(policy->bodies, i);
+
+            if ((strcmp(bdp->name, "control") == 0) && (strcmp(bdp->type, "common") == 0))
+            {
+                REQUIRE_COMMENTS = GetRawBooleanConstraint("require_comments", bdp->conlist);
+                break;
+            }
+        }
+    }
+
+    {
+        Seq *errors = SeqNew(100, PolicyErrorDestroy);
+        if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+        }
+
+        SeqDestroy(errors);
+    }
 
     VerifyPromises(policy, config, report_context);
 
@@ -1285,73 +1317,6 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    if (REQUIRE_COMMENTS == CF_UNDEFINED)
-    {
-        for (size_t i = 0; i < SeqLength(policy->bodies); i++)
-        {
-            Body *bdp = SeqAt(policy->bodies, i);
-
-            if ((strcmp(bdp->name, "control") == 0) && (strcmp(bdp->type, "common") == 0))
-            {
-                REQUIRE_COMMENTS = GetRawBooleanConstraint("require_comments", bdp->conlist);
-                break;
-            }
-        }
-    }
-
-    for (const Rlist *rp = BODYPARTS; rp != NULL; rp = rp->next)
-    {
-        char namespace[CF_BUFSIZE],name[CF_BUFSIZE];
-        char fqname[CF_BUFSIZE];
-
-        // This is a bit messy because tracking the namespace is not natural with the existing structures here
-
-        sscanf((char *)rp->item,"%[^:]:%s",namespace,name); 
-
-        if (strcmp(namespace,"default") == 0)
-        {
-            strcpy(fqname,name);
-        }
-        else
-        {
-            strcpy(fqname,(char *)rp->item);
-        }
-    
-        if (!IsBody(policy->bodies, namespace, fqname))
-        {
-            CfOut(cf_error, "", "Undeclared unparameterized promise body \"%s()\" was referenced in a promise in namespace \"%s\"\n", fqname, namespace);
-            ERRORCOUNT++;
-        }
-    }
-
-/* Check for undefined subbundles */
-
-    for (const Rlist *rp = SUBBUNDLES; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case CF_SCALAR:
-
-            if (!config->ignore_missing_bundles && !IsCf3VarString(rp->item) && !IsBundle(policy->bundles, (char *) rp->item))
-            {
-                CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", (char *) rp->item);
-                ERRORCOUNT++;
-            }
-            break;
-
-        case CF_FNCALL:
-            {
-                const FnCall *fp = rp->item;
-
-                if (!config->ignore_missing_bundles && !IsCf3VarString(fp->name) && !IsBundle(policy->bundles, fp->name))
-                {
-                    CfOut(cf_error, "", "Undeclared promise bundle \"%s()\" was referenced in a promise\n", fp->name);
-                    ERRORCOUNT++;
-                }
-                break;
-            }
-        }
-    }
 
 /* Now look once through ALL the bundles themselves */
 
@@ -1543,26 +1508,6 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         }
         
         DeleteRvalItem(returnval);
-    }
-}
-
-/*******************************************************************/
-
-static void SetAuditVersion()
-{
-    Rval rval = { NULL, 'x' };  /* FIXME: why it is initialized? */
-
-    /* In addition, each bundle can have its own version */
-
-    switch (GetVariable("control_common", "cfinputs_version", &rval))
-    {
-    case cf_str:
-        AUDITPTR->version = xstrdup((char *) rval.item);
-        break;
-
-    default:
-        AUDITPTR->version = xstrdup("no specified version");
-        break;
     }
 }
 

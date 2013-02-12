@@ -710,7 +710,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
         NewScalar("this", "promiser_gid", v, cf_int);
 
         NewScalar("this", "bundle", pp->bundle, cf_str);
-        NewScalar("this", "namespace", pp->namespace, cf_str);
+        NewScalar("this", "namespace", pp->ns, cf_str);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -1113,7 +1113,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         return;
     }
 
-    if (IsExcluded(pp->classes, pp->namespace))
+    if (IsExcluded(pp->classes, pp->ns))
     {
         return;
     }
@@ -1140,7 +1140,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             {
             case CF_SCALAR:
 
-                if (IsExcluded(cp->rval.item, pp->namespace))
+                if (IsExcluded(cp->rval.item, pp->ns))
                 {
                     return;
                 }
@@ -1162,7 +1162,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     return;
                 }
 
-                excluded = IsExcluded(res.item, pp->namespace);
+                excluded = IsExcluded(res.item, pp->ns);
 
                 DeleteRvalItem(res);
 
@@ -1228,7 +1228,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
-    if (strcmp(pp->namespace, "default") == 0)
+    if (strcmp(pp->ns, "default") == 0)
     {
         result = BufferSet(qualified_scope, scope, strlen(scope));
         if (result < 0)
@@ -1246,7 +1246,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     {
         if (strchr(scope, ':') == NULL)
         {
-            result = BufferPrintf(qualified_scope, "%s:%s", pp->namespace, scope);
+            result = BufferPrintf(qualified_scope, "%s:%s", pp->ns, scope);
             if (result < 0)
             {
                 /*

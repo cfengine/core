@@ -132,7 +132,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
-    pcopy->namespace = xstrdup(pp->namespace);
+    pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
@@ -168,14 +168,14 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
             bodyname = (char *) cp->rval.item;
             if (cp->references_body)
             {
-                bp = IsBody(bodies, pp->namespace, bodyname);
+                bp = IsBody(bodies, pp->ns, bodyname);
             }
             fp = NULL;
             break;
         case CF_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
-            bp = IsBody(bodies, pp->namespace, bodyname);
+            bp = IsBody(bodies, pp->ns, bodyname);
             break;
         default:
             bp = NULL;
@@ -321,7 +321,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
-    pcopy->namespace = xstrdup(pp->namespace);
+    pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
@@ -425,7 +425,7 @@ Bundle *IsBundle(Seq *bundles, const char *key)
     {
         Bundle *bp = SeqAt(bundles, i);
 
-        if (strcmp(bp->namespace,"default") == 0)
+        if (strcmp(bp->ns, "default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'
             {
@@ -436,13 +436,13 @@ Bundle *IsBundle(Seq *bundles, const char *key)
                 strcpy(fqname,key);
             }        
         }
-        else if (strncmp(bp->namespace,key,strlen(bp->namespace)) == 0)
+        else if (strncmp(bp->ns, key, strlen(bp->ns)) == 0)
         {
             strcpy(fqname,key);
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", bp->namespace, CF_NS, key);
+            snprintf(fqname, CF_BUFSIZE-1, "%s%c%s", bp->ns, CF_NS, key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -466,7 +466,7 @@ Promise *NewPromise(char *typename, char *promiser)
 
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup("cfe_internal_bundle_hardcoded");
-    pp->namespace = xstrdup("default");
+    pp->ns = xstrdup("default");
     pp->promiser = xstrdup(promiser);
     pp->conlist = SeqNew(10, ConstraintDestroy);
 

@@ -337,7 +337,7 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
         switch (cp->rval.rtype)
         {
         case CF_SCALAR:
-            if ((bp = IsBody(policy->bodies, pp->namespace, (char *) cp->rval.item)))
+            if ((bp = IsBody(policy->bodies, pp->ns, (char *) cp->rval.item)))
             {
                 ShowBodyText(writer, bp, 15);
             }
@@ -358,7 +358,7 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
             {
                 const FnCall *fp = (FnCall *) cp->rval.item;
 
-                if ((bp = IsBody(policy->bodies, pp->namespace, fp->name)))
+                if ((bp = IsBody(policy->bodies, pp->ns, fp->name)))
                 {
                     ShowBodyText(writer, bp, 15);
                 }

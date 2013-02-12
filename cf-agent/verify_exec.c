@@ -333,7 +333,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
 
                 if (a.module)
                 {
-                    ModuleProtocol(cmdline, line, !a.contain.nooutput, pp->namespace);
+                    ModuleProtocol(cmdline, line, !a.contain.nooutput, pp->ns);
                 }
                 else if ((!a.contain.nooutput) && (NonEmptyLine(line)))
                 {

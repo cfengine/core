@@ -151,7 +151,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
     {
         for (ip = ec->file_classes; ip != NULL; ip = ip->next)
         {
-            NewClass(ip->name, pp->namespace);
+            NewClass(ip->name, pp->ns);
         }
 
         DeleteItemList(ec->file_classes);

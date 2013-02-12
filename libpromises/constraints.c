@@ -139,7 +139,7 @@ int GetBooleanConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -245,7 +245,7 @@ int GetBundleConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -286,7 +286,7 @@ int GetIntConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_NOINT)
                 {
@@ -326,7 +326,7 @@ double GetRealConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_NODOUBLE)
                 {
@@ -387,7 +387,7 @@ mode_t GetOctalConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != 077)
                 {
@@ -437,7 +437,7 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -490,7 +490,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -532,7 +532,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != NULL)
                 {
@@ -582,7 +582,7 @@ Constraint *GetConstraint(const Promise *pp, const char *lval)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->namespace))
+            if (IsDefinedClass(cp->classes, pp->ns))
             {
                 if (retval != NULL)
                 {
@@ -649,7 +649,7 @@ void ReCheckAllConstraints(Promise *pp)
         NewPromiser(pp);
     }
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         return;
     }
@@ -667,7 +667,7 @@ void ReCheckAllConstraints(Promise *pp)
             return;
         }
 
-        if ((prid = PromiseIdExists(pp->namespace, handle)))
+        if ((prid = PromiseIdExists(pp->ns, handle)))
         {
             if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
             {
@@ -887,7 +887,7 @@ PromiseIdent *NewPromiseId(char *handle, Promise *pp)
     char name[CF_BUFSIZE];
     ptr = xmalloc(sizeof(PromiseIdent));
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", pp->namespace, CF_NS, handle);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, handle);
     ptr->filename = xstrdup(pp->audit->filename);
     ptr->line_number = pp->offset.line;
     ptr->handle = xstrdup(name);

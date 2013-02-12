@@ -235,7 +235,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(pp->classes, pp->namespace))
+    if ((pp != NULL) && !IsDefinedClass(pp->classes, pp->ns))
     {
         return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
     }
@@ -250,11 +250,11 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
 
     if (pp != NULL)
     {
-        fp->namespace = pp->namespace;
+        fp->ns = pp->ns;
     }
     else
     {
-        fp->namespace = "default";
+        fp->ns = "default";
     }
     
     FnCallResult result = CallFunction(this, fp, expargs);

@@ -488,7 +488,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->namespace, NULL, NULL);
+                AugmentScope(scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -533,7 +533,7 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->namespace, NULL, NULL);
+                AugmentScope(scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -553,7 +553,7 @@ static void KeepServerPromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         CfOut(cf_verbose, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
@@ -645,7 +645,7 @@ void KeepFileAccessPromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->namespace))
+        if (!IsDefinedClass(cp->classes, pp->ns))
         {
             continue;
         }
@@ -759,7 +759,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->namespace))
+        if (!IsDefinedClass(cp->classes, pp->ns))
         {
             continue;
         }
@@ -837,7 +837,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->namespace))
+        if (!IsDefinedClass(cp->classes, pp->ns))
         {
             continue;
         }
@@ -902,7 +902,7 @@ static void KeepServerRolePromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->namespace))
+        if (!IsDefinedClass(cp->classes, pp->ns))
         {
             continue;
         }

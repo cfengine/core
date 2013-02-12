@@ -86,22 +86,41 @@ void PolicyDestroy(Policy *policy)
     }
 }
 
+static char *StripNamespace(const char *full_symbol)
+{
+    char *sep = strchr(full_symbol, CF_NS);
+    if (sep)
+    {
+        return xstrdup(sep + 1);
+    }
+    else
+    {
+        return xstrdup(full_symbol);
+    }
+}
+
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name)
 {
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         Body *bp = SeqAt(policy->bodies, i);
 
-        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        char *body_symbol = StripNamespace(bp->name);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(body_symbol, name) == 0)
         {
+            free(body_symbol);
+
             // allow namespace to be optionally matched
-            if (ns && strcmp(bp->namespace, ns) != 0)
+            if (ns && strcmp(bp->ns, ns) != 0)
             {
                 continue;
             }
 
             return bp;
         }
+
+        free(body_symbol);
     }
 
     return NULL;
@@ -113,16 +132,22 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        char *bundle_symbol = StripNamespace(bp->name);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(bundle_symbol, name) == 0)
         {
+            free(bundle_symbol);
+
             // allow namespace to be optionally matched
-            if (ns && strcmp(bp->namespace, ns) != 0)
+            if (ns && strcmp(bp->ns, ns) != 0)
             {
                 continue;
             }
 
             return bp;
         }
+
+        free(bundle_symbol);
     }
 
     return NULL;
@@ -166,10 +191,10 @@ const char *NamespaceFromConstraint(const Constraint *cp)
     switch (cp->type)
     {
     case POLICY_ELEMENT_TYPE_BODY:
-        return cp->parent.body->namespace;
+        return cp->parent.body->ns;
 
     case POLICY_ELEMENT_TYPE_PROMISE:
-        return cp->parent.promise->parent_subtype->parent_bundle->namespace;
+        return cp->parent.promise->parent_subtype->parent_bundle->ns;
 
     default:
         ProgrammingError("Constraint has parent type: %d", cp->type);
@@ -201,8 +226,8 @@ char *BundleQualifiedName(const Bundle *bundle)
 
     if (bundle->name)
     {
-        const char *namespace = bundle->namespace ? bundle->namespace : DEFAULT_NAMESPACE;
-        return StringConcatenate(3, namespace, ":", bundle->name);  // CF_NS == ':'
+        const char *ns = bundle->ns ? bundle->ns : DEFAULT_NAMESPACE;
+        return StringConcatenate(3, ns, ":", bundle->name);  // CF_NS == ':'
     }
 
     return NULL;
@@ -738,6 +763,11 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
 
     switch (type)
     {
+        case POLICY_ELEMENT_TYPE_POLICY:
+        {
+            return (SourceOffset) { 0 };
+        }
+
         case POLICY_ELEMENT_TYPE_BUNDLE:
         {
             const Bundle *bundle = (const Bundle *)element;
@@ -776,12 +806,15 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
 
 /*************************************************************************/
 
-static char *PolicyElementSourceFile(PolicyElementType type, const void *element)
+static const char *PolicyElementSourceFile(PolicyElementType type, const void *element)
 {
     assert(element);
 
     switch (type)
     {
+        case POLICY_ELEMENT_TYPE_POLICY:
+            return "";
+
         case POLICY_ELEMENT_TYPE_BUNDLE:
         {
             const Bundle *bundle = (const Bundle *)element;
@@ -901,7 +934,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
     }
 
     bundle->type = xstrdup(type);
-    bundle->namespace = xstrdup(ns);
+    bundle->ns = xstrdup(ns);
     bundle->args = CopyRlist(args);
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->subtypes = SeqNew(10, SubTypeDestroy);
@@ -938,7 +971,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     }
 
     body->type = xstrdup(type);
-    body->namespace = xstrdup(ns);
+    body->ns = xstrdup(ns);
     body->args = CopyRlist(args);
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);
@@ -1028,7 +1061,7 @@ Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
     pp->bundle = xstrdup(bundle);
-    pp->namespace = xstrdup(ns);
+    pp->ns = xstrdup(ns);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
@@ -1087,7 +1120,7 @@ void PromiseDestroy(Promise *pp)
         free(pp->bundle);
         free(pp->bundletype);
         free(pp->classes);
-        free(pp->namespace);
+        free(pp->ns);
 
         // ref and agentsubtype are only references, do not free
         SeqDestroy(pp->conlist);

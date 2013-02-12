@@ -934,7 +934,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             NewScope(namespace);
 
             SetBundleOutputs(bp->name);
-            AugmentScope(bp->name, bp->namespace, bp->args, params);
+            AugmentScope(bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle
@@ -1086,7 +1086,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");

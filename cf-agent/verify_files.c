@@ -410,7 +410,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass("repaired" , pp->namespace))
+            if (!IsDefinedClass("repaired" , pp->ns))
             {
                 cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
@@ -521,9 +521,9 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         {
             method_deref = strchr(edit_bundle_name, CF_NS) + 1;
         }
-        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(pp->namespace, "default") != 0))
+        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(pp->ns, "default") != 0))
         {
-            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", pp->namespace, CF_NS, edit_bundle_name);
+            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, edit_bundle_name);
             method_deref = qualified_edit;
         }
         else            
@@ -542,7 +542,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->namespace, bp->args, params);
+            AugmentScope(bp->name, bp->ns, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditLineOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();
@@ -594,7 +594,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             NewScope(bp->name);
             HashVariables(policy, bp->name, report_context);
 
-            AugmentScope(bp->name, bp->namespace, bp->args, params);
+            AugmentScope(bp->name, bp->ns, bp->args, params);
             PushPrivateClassContext(a.edits.inherit);
             retval = ScheduleEditXmlOperations(filename, bp, a, pp, report_context);
             PopPrivateClassContext();

@@ -1,3 +1,7 @@
+3.3.10  (Bugfix and Stability release)
+	Bugfixes:
+
+	- Use portable PRIuMAX/PRIdMAX/PRIoMAX to print [u]intmax_t (Mantis #1677).
 3.3.9   (Bugfix and Stability release)
 
 	Bugfixes:

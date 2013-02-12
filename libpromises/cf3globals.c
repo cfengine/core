@@ -38,7 +38,6 @@ int SHOWREPORTS = false;
 int VERBOSE = false;
 int INFORM = false;
 int PARSING = false;
-int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
 int FIPS_MODE = false;
 

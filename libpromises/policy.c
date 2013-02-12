@@ -52,6 +52,7 @@ static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of bod
 static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
 static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type category for %s bundle";
 static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
+static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
 
 //************************************************************************
 
@@ -622,10 +623,66 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
     return success;
 }
 
+static bool PolicyCheckRequiredComments(const Policy *policy, Seq *errors)
+{
+    const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
+    if (common_control)
+    {
+        bool require_comments = GetRawBooleanConstraint("require_comments", common_control->conlist);
+        if (!require_comments)
+        {
+            return true;
+        }
+
+        bool success = true;
+
+        for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
+        {
+            Bundle *bundle = SeqAt(policy->bundles, bpi);
+
+            for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+            {
+                SubType *subtype = SeqAt(bundle->subtypes, sti);
+
+                for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+                {
+                    Promise *promise = SeqAt(subtype->promises, ppi);
+
+                    bool promise_has_comment = false;
+                    for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
+                    {
+                        Constraint *constraint = SeqAt(promise->conlist, cpi);
+
+                        if (strcmp(constraint->lval, "comment") == 0)
+                        {
+                            promise_has_comment = true;
+                            break;
+                        }
+                    } // constraints
+
+                    if (!promise_has_comment)
+                    {
+                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, promise,
+                                                         POLICY_ERROR_PROMISE_UNCOMMENTED));
+                        success = false;
+                    }
+                } // promises
+            } // subtypes
+        } // bundles
+
+        return success;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
     bool success = true;
 
+    success &= PolicyCheckRequiredComments(policy, errors);
     success &= PolicyCheckUndefinedBodies(policy, errors);
 
     if (!ignore_missing_bundles)

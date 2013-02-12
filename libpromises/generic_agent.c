@@ -427,20 +427,6 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
 
     ShowContext(report_context);
 
-    if (REQUIRE_COMMENTS == CF_UNDEFINED)
-    {
-        for (size_t i = 0; i < SeqLength(policy->bodies); i++)
-        {
-            Body *bdp = SeqAt(policy->bodies, i);
-
-            if ((strcmp(bdp->name, "control") == 0) && (strcmp(bdp->type, "common") == 0))
-            {
-                REQUIRE_COMMENTS = GetRawBooleanConstraint("require_comments", bdp->conlist);
-                break;
-            }
-        }
-    }
-
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))

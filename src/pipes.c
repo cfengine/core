@@ -358,7 +358,7 @@ static FILE *Unix_cf_popensetuid(char *command, char *type, uid_t uid, gid_t gid
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("Unix_cf_popensetuid(%s,%s,%d,%d)\n", command, type, uid, gid);
+    CfDebug("cf_popensetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
     {
@@ -645,7 +645,7 @@ static FILE *Unix_cf_popen_shsetuid(char *command, char *type, uid_t uid, gid_t 
     pid_t pid;
     FILE *pp = NULL;
 
-    CfDebug("Unix_cf_popen_shsetuid(%s,%s,%d,%d)\n", command, type, uid, gid);
+    CfDebug("cf_popen_shsetuid(%s,%s,%" PRIuMAX ",%" PRIuMAX ")\n", command, type, (uintmax_t)uid, (uintmax_t)gid);
 
     if ((*type != 'r' && *type != 'w') || (type[1] != '\0'))
     {
@@ -796,7 +796,7 @@ int cf_pwait(pid_t pid)
 {
     int status;
 
-    CfDebug("cf_pwait - Waiting for process %d\n", pid);
+    CfDebug("cf_pwait - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 
@@ -941,7 +941,7 @@ static int Unix_cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
         return -1;
     }
 
-    CfDebug("Unix_cf_pclose_def - Waiting for process %d\n", pid);
+    CfDebug("cf_pclose_def - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
 # ifdef HAVE_WAITPID
 

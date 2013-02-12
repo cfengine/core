@@ -573,7 +573,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp)
 
             if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
             {
-                sprintf(stamp, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+                snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
                 strcat(saved, stamp);
             }
 
@@ -607,7 +607,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp)
             saved[0] = '\0';
             strcpy(saved, from);
 
-            sprintf(stamp, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+            snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
             strcat(saved, stamp);
             strcat(saved, CF_SAVED);
             strcat(saved, ".dir");
@@ -1470,7 +1470,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             }
             else if (cfstat(currentpath, &statbuf) == -1)
             {
-                CfDebug("cfengine: Making directory %s, mode %o\n", currentpath, DEFAULTMODE);
+                CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
 
                 if (!DONTDO)
                 {
@@ -1846,7 +1846,7 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
     uid_t uid = CF_SAME_OWNER;
     gid_t gid = CF_SAME_GROUP;
 
-    CfDebug("Unix_VerifyOwner: %jd\n", (uintmax_t) sb->st_uid);
+    CfDebug("VerifyOwner: %" PRIdMAX "\n", (uintmax_t) sb->st_uid);
 
     for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
     {
@@ -1920,12 +1920,12 @@ static int Unix_VerifyOwner(char *file, Promise *pp, Attributes attr, struct sta
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    CfDebug("(Change owner to uid %d if possible)\n", uid);
+                    CfDebug("(Change owner to uid %" PRIuMAX " if possible)\n", (uintmax_t)uid);
                 }
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    CfDebug("Change group to gid %d if possible)\n", gid);
+                    CfDebug("Change group to gid %" PRIuMAX " if possible)\n", (uintmax_t)gid);
                 }
             }
 
@@ -2173,7 +2173,7 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
 
-        CfDebug("Unix_VerifyFileAttributes(%s -> %o)\n", file, newperm);
+        CfDebug("VerifyFileAttributes(%s -> %" PRIoMAX ")\n", file, (uintmax_t)newperm);
 
         /* directories must have x set if r set, regardless  */
 
@@ -2245,12 +2245,12 @@ static void Unix_VerifyFileAttributes(char *file, struct stat *dstat, Attributes
 
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
-        CfDebug("File okay, newperm = %o, stat = %o\n", (newperm & 07777), (dstat->st_mode & 07777));
+        CfDebug("File okay, newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
         cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
     }
     else
     {
-        CfDebug("Trying to fix mode...newperm = %o, stat = %o\n", (newperm & 07777), (dstat->st_mode & 07777));
+        CfDebug("Trying to fix mode...newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
 
         switch (attr.transaction.action)
         {
@@ -2356,7 +2356,7 @@ static void Unix_VerifyCopiedFileAttributes(char *file, struct stat *dstat, stru
 
 // If we get here, there is both a src and dest file
 
-    CfDebug("VerifyCopiedFile(%s,+%o,-%o)\n", file, attr.perms.plus, attr.perms.minus);
+    CfDebug("VerifyCopiedFile(%s,+%" PRIoMAX ",-%" PRIoMAX ")\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
 
     save_uid = (attr.perms.owners)->uid;
     save_gid = (attr.perms.groups)->gid;

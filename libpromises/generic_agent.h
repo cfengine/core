@@ -34,7 +34,8 @@ typedef struct
     Rlist *bundlesequence;
     char *input_file;
     bool check_not_writable_by_others;
-    bool tty_interactive; //agent is running interactively, via tty/terminal interface
+    bool check_runnable;
+    bool tty_interactive; // agent is running interactively, via tty/terminal interface
 
     // change to evaluation behavior from the policy itself
     bool ignore_missing_bundles;

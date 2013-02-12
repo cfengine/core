@@ -348,7 +348,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile, pp->namespace);
+                    FileAutoDefine(destfile, pp->ns);
                 }
             }
             else
@@ -464,7 +464,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
                 {
-                    FileAutoDefine(destfile, pp->namespace);
+                    FileAutoDefine(destfile, pp->ns);
                 }
 
                 if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
@@ -2625,7 +2625,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
 
     if (changed)
     {
-        NewPersistentContext(pp->namespace, "checksum_alerts", CF_PERSISTENCE, cfpreserve);
+        NewPersistentContext(pp->ns, "checksum_alerts", CF_PERSISTENCE, cfpreserve);
         LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 

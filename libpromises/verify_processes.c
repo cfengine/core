@@ -152,12 +152,12 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
             cfPS(cf_verbose, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
-            AddEphemeralClasses(a.process_count.out_of_range_define, pp->namespace);
+            AddEphemeralClasses(a.process_count.out_of_range_define, pp->ns);
             out_of_range = true;
         }
         else
         {
-            AddEphemeralClasses(a.process_count.in_range_define, pp->namespace);
+            AddEphemeralClasses(a.process_count.in_range_define, pp->ns);
             cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
@@ -233,7 +233,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         else
         {
             cfPS(cf_inform, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
-            NewClass(a.restart_class, pp->namespace);
+            NewClass(a.restart_class, pp->ns);
         }
     }
 }

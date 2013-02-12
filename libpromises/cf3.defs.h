@@ -1077,7 +1077,7 @@ struct Bundle_
 
     char *type;
     char *name;
-    char *namespace;
+    char *ns;
     Rlist *args;
 
     Seq *subtypes;
@@ -1096,7 +1096,7 @@ struct Body_
 
     char *type;
     char *name;
-    char *namespace;
+    char *ns;
     Rlist *args;
 
     Seq *conlist;
@@ -1152,7 +1152,7 @@ struct Promise_
 
     char *agentsubtype;         /* cache the promise subtype */
     char *bundletype;           /* cache the agent type */
-    char *namespace;            /* cache the namespace */
+    char *ns;                   /* cache the namespace */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */
     int makeholes;
@@ -1198,7 +1198,7 @@ struct FnCall_
 {
     char *name;
     Rlist *args;
-    char *namespace;
+    char *ns;
 };
 
 /*******************************************************************/

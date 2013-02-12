@@ -190,7 +190,7 @@ static FnCallResult FnCallAnd(FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (!IsDefinedClass(ScalarValue(arg), fp->namespace))
+        if (!IsDefinedClass(ScalarValue(arg), fp->ns))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), CF_SCALAR } };
         }
@@ -711,7 +711,7 @@ static FnCallResult FnCallDirname(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassify(FnCall *fp, Rlist *finalargs)
 {
-    bool is_defined = IsDefinedClass(CanonifyName(ScalarValue(finalargs)), fp->namespace);
+    bool is_defined = IsDefinedClass(CanonifyName(ScalarValue(finalargs)), fp->ns);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(is_defined ? "any" : "!any"), CF_SCALAR } };
 }
@@ -821,7 +821,7 @@ static FnCallResult FnCallUseModule(FnCall *fp, Rlist *finalargs)
     snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
     CfOut(cf_verbose, "", "Executing and using module [%s]\n", modulecmd);
 
-    if (!ExecModule(modulecmd, fp->namespace))
+    if (!ExecModule(modulecmd, fp->ns))
     {
         return (FnCallResult) { FNCALL_FAILURE};
     }
@@ -855,7 +855,7 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
-    if (IsDefinedClass(class, fp->namespace))
+    if (IsDefinedClass(class, fp->ns))
     {
         strcpy(buffer, "any");
     }
@@ -1843,11 +1843,11 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             NewScalar(CONTEXTID, buffer, rp->item, cf_str);
 
-            if (IsDefinedClass(CanonifyName(rp->item), fp->namespace))
+            if (IsDefinedClass(CanonifyName(rp->item), fp->ns))
             {
                 CfOut(cf_verbose, "", "This host is in the list and has promised to join the class %s - joined\n",
                       array_lval);
-                NewClass(array_lval, fp->namespace);
+                NewClass(array_lval, fp->ns);
             }
 
             count++;
@@ -2316,7 +2316,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, (char *) rp->item);
-                NewBundleClass(class, THIS_BUNDLE, fp->namespace);
+                NewBundleClass(class, THIS_BUNDLE, fp->ns);
             }
             DeleteRlist(classlist);
         }
@@ -2926,7 +2926,7 @@ static FnCallResult FnCallOr(FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (IsDefinedClass(ScalarValue(arg), fp->namespace))
+        if (IsDefinedClass(ScalarValue(arg), fp->ns))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), CF_SCALAR } };
         }
@@ -3082,7 +3082,7 @@ static FnCallResult FnCallAccumulatedDate(FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallNot(FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ScalarValue(finalargs), fp->namespace) ? "!any" : "any"), CF_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ScalarValue(finalargs), fp->ns) ? "!any" : "any"), CF_SCALAR } };
 }
 
 /*********************************************************************/

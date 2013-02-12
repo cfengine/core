@@ -74,7 +74,7 @@ static void test_util_bundle_qualified_name(void **state)
     assert_string_equal("default:bar", fqname);
     free(fqname);
 
-    b->namespace = "foo";
+    b->ns = "foo";
     fqname = BundleQualifiedName(b);
     assert_string_equal("foo:bar", fqname);
     free(fqname);

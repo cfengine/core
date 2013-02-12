@@ -257,7 +257,7 @@ static void KeepEditXmlPromise(Promise *pp)
     char *sp = NULL;
     Attributes a = { {0} };
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");

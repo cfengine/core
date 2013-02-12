@@ -87,7 +87,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         CfOut(cf_error, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         return false;
     }
@@ -97,7 +97,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (IsDefinedClass(pp->promiser, pp->namespace))
+    if (IsDefinedClass(pp->promiser, pp->ns))
     {
         if (GetIntConstraint("persistence", pp) == 0)
         {
@@ -143,7 +143,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item, pp->namespace))
+        if (IsDefinedClass((char *) cp->rval.item, pp->ns))
         {
             return true;
         }
@@ -160,7 +160,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item, pp->namespace))
+        if (IsDefinedClass((char *) cp->rval.item, pp->ns))
         {
             return false;
         }
@@ -200,7 +200,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                NewClass(rp->item, pp->namespace);
+                NewClass(rp->item, pp->ns);
                 return true;
             }
         }
@@ -251,7 +251,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        result = IsDefinedClass((char *) (rp->item), pp->namespace);
+        result = IsDefinedClass((char *) (rp->item), pp->ns);
 
         result_and = result_and && result;
         result_or = result_or || result;
@@ -269,11 +269,11 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
                 if (strcmp(pp->bundletype, "common") == 0)
                 {
-                    NewClass(buffer, pp->namespace);
+                    NewClass(buffer, pp->ns);
                 }
                 else
                 {
-                    NewBundleClass(buffer, pp->bundle, pp->namespace);
+                    NewBundleClass(buffer, pp->bundle, pp->ns);
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -347,13 +347,13 @@ void KeepClassContextPromise(Promise *pp)
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    NewPersistentContext(pp->promiser, pp->namespace, a.context.persistent, cfreset);
-                    NewClass(pp->promiser, pp->namespace);
+                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, cfreset);
+                    NewClass(pp->promiser, pp->ns);
                 }
                 else
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    NewClass(pp->promiser, pp->namespace);
+                    NewClass(pp->promiser, pp->ns);
                 }
             }
         }
@@ -383,13 +383,13 @@ void KeepClassContextPromise(Promise *pp)
                           a.context.persistent);
                     CfOut(cf_verbose, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    NewPersistentContext(pp->promiser, pp->namespace, a.context.persistent, cfreset);
-                    NewClass(pp->promiser, pp->namespace);
+                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, cfreset);
+                    NewClass(pp->promiser, pp->ns);
                 }
                 else
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(pp->promiser, pp->bundle, pp->namespace);
+                    NewBundleClass(pp->promiser, pp->bundle, pp->ns);
                 }
             }
         }
@@ -1595,7 +1595,7 @@ int VarClassExcluded(Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(*classes, pp->namespace))
+    if (*classes && IsDefinedClass(*classes, pp->ns))
     {
         return false;
     }
@@ -1738,7 +1738,7 @@ void MarkPromiseHandleDone(const Promise *pp)
        return;
     }
     
-    snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, handle);
+    snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, handle);
     IdempPrependAlphaList(&VHANDLES, name);
 
 }
@@ -1763,7 +1763,7 @@ int MissingDependencies(const Promise *pp)
           }
        else
           {
-          snprintf(name, CF_BUFSIZE, "%s:%s", pp->namespace, (char *)rp->item);
+          snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, (char *)rp->item);
           d = name;
           }
 

@@ -284,7 +284,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
+            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->ns);
             PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
@@ -304,7 +304,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 {
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
-                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->namespace);
+                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->ns);
                 PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
@@ -343,7 +343,7 @@ static void KeepEditLinePromise(Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes, pp->namespace))
+    if (!IsDefinedClass(pp->classes, pp->ns))
     {
         CfOut(cf_verbose, "", "\n");
         CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");

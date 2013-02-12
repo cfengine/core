@@ -127,8 +127,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("executor");
-    Policy *policy = GenericInitialize("executor", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    Policy *policy = GenericInitialize(config, report_context, false);
     ThisAgentInit();
 
     ExecConfig exec_config = {
@@ -735,7 +735,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
-        *policy = ReadPromises(AGENT_TYPE_EXECUTOR, CF_EXECC, config, report_context);
+        *policy = ReadPromises(AGENT_TYPE_EXECUTOR, config, report_context);
         KeepPromises(*policy, exec_config);
     }
     else

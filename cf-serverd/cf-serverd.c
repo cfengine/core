@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("server");
-    Policy *policy = GenericInitialize("server", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    Policy *policy = GenericInitialize(config, report_context, false);
     ThisAgentInit();
     KeepPromises(policy, config, report_context);
     Summarize();

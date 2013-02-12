@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("gendoc");
-    GenericInitialize("gendoc", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericInitialize(config, report_context, false);
 
     if (GENERATE_XML)
     {

@@ -63,6 +63,7 @@ static const struct option OPTIONS[] =
     {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
     {"parse-tree", no_argument, 0, 'p'},
+    {"full-check", no_argument, 0, 'c'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -82,7 +83,7 @@ static const char *HINTS[] =
     "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
     "Print a parse tree for the policy file in JSON format",
-    "Use the GCC brief-format for output",
+    "Ensure full policy integrity checks",
     NULL
 };
 
@@ -133,10 +134,14 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pcg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'c':
+            config->check_runnable = true;
+            break;
+
         case 'f':
 
             if (optarg && (strlen(optarg) < 5))

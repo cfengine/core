@@ -86,14 +86,31 @@ void PolicyDestroy(Policy *policy)
     }
 }
 
+static char *StripNamespace(const char *full_symbol)
+{
+    char *sep = strchr(full_symbol, CF_NS);
+    if (sep)
+    {
+        return xstrdup(sep + 1);
+    }
+    else
+    {
+        return xstrdup(full_symbol);
+    }
+}
+
 Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, const char *name)
 {
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
         Body *bp = SeqAt(policy->bodies, i);
 
-        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        char *body_symbol = StripNamespace(bp->name);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(body_symbol, name) == 0)
         {
+            free(body_symbol);
+
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->namespace, ns) != 0)
             {
@@ -102,6 +119,8 @@ Body *PolicyGetBody(const Policy *policy, const char *ns, const char *type, cons
 
             return bp;
         }
+
+        free(body_symbol);
     }
 
     return NULL;
@@ -113,8 +132,12 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        if (strcmp(bp->type, type) == 0 && strcmp(bp->name, name) == 0)
+        char *bundle_symbol = StripNamespace(bp->name);
+
+        if (strcmp(bp->type, type) == 0 && strcmp(bundle_symbol, name) == 0)
         {
+            free(bundle_symbol);
+
             // allow namespace to be optionally matched
             if (ns && strcmp(bp->namespace, ns) != 0)
             {
@@ -123,6 +146,8 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
             return bp;
         }
+
+        free(bundle_symbol);
     }
 
     return NULL;
@@ -738,6 +763,11 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
 
     switch (type)
     {
+        case POLICY_ELEMENT_TYPE_POLICY:
+        {
+            return (SourceOffset) { 0 };
+        }
+
         case POLICY_ELEMENT_TYPE_BUNDLE:
         {
             const Bundle *bundle = (const Bundle *)element;
@@ -776,12 +806,15 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
 
 /*************************************************************************/
 
-static char *PolicyElementSourceFile(PolicyElementType type, const void *element)
+static const char *PolicyElementSourceFile(PolicyElementType type, const void *element)
 {
     assert(element);
 
     switch (type)
     {
+        case POLICY_ELEMENT_TYPE_POLICY:
+            return "";
+
         case POLICY_ELEMENT_TYPE_BUNDLE:
         {
             const Bundle *bundle = (const Bundle *)element;

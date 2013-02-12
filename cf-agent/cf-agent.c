@@ -203,8 +203,8 @@ int main(int argc, char *argv[])
     }
 #endif
 #endif
-    ReportContext *report_context = OpenReports("agent");
-    Policy *policy = GenericInitialize("agent", config, report_context, ALWAYS_VALIDATE);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    Policy *policy = GenericInitialize(config, report_context, ALWAYS_VALIDATE);
     ThisAgentInit();
     BeginAudit();
     KeepPromises(policy, config, report_context);

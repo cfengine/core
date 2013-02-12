@@ -31,6 +31,8 @@
 
 typedef struct
 {
+    AgentType agent_type;
+
     Rlist *bundlesequence;
     char *input_file;
     bool check_not_writable_by_others;
@@ -42,13 +44,13 @@ typedef struct
     bool ignore_missing_inputs;
 } GenericAgentConfig;
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
+Policy *GenericInitialize(GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
 void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file, const ReportContext *report_context);
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
@@ -75,7 +77,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname);
 void CheckLicenses(void);
 void ReloadPromises(AgentType ag);
 
-ReportContext *OpenReports(const char *agents);
+ReportContext *OpenReports(AgentType agent_type);
 void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);

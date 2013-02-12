@@ -364,11 +364,11 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("reporter");
+    ReportContext *report_context = OpenReports(config->agent_type);
     Policy *policy = NULL;
     if (!HUBQUERY)
     {
-        policy = GenericInitialize("reporter", config, report_context, false);
+        policy = GenericInitialize(config, report_context, false);
     }
     else
     {

@@ -141,9 +141,9 @@ int main(int argc, char *argv[])
 #endif
 
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    ReportContext *report_context = OpenReports("runagent");
+    ReportContext *report_context = OpenReports(config->agent_type);
 
-    Policy *policy = GenericInitialize("runagent", config, report_context, false);
+    Policy *policy = GenericInitialize(config, report_context, false);
     ThisAgentInit();
     KeepControlPromises(policy);      // Set RUNATTR using copy
 

@@ -504,22 +504,9 @@ enum cfdatatype Typename2Datatype(char *name)
 
 /****************************************************************************/
 
-AgentType Agent2Type(const char *name)
-/* convert abstract data type names: int, ilist etc */
+const char *AgentTypeToString(AgentType agent_type)
 {
-    int i;
-
-    CfDebug("Agent2Type(%s)\n", name);
-
-    for (i = 0; i < (int) AGENT_TYPE_NOAGENT; i++)
-    {
-        if (name && (strcmp(CF_AGENTTYPES[i], name) == 0))
-        {
-            break;
-        }
-    }
-
-    return (AgentType) i;
+    return CF_AGENTTYPES[agent_type];
 }
 
 /****************************************************************************/

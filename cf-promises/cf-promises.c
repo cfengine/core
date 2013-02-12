@@ -94,9 +94,9 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    ReportContext *report_context = OpenReports("common");
+    ReportContext *report_context = OpenReports(config->agent_type);
     
-    Policy *policy = GenericInitialize("common", config, report_context, false);
+    Policy *policy = GenericInitialize(config, report_context, false);
 
     if (SHOW_PARSE_TREE)
     {

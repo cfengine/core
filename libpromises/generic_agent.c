@@ -115,9 +115,8 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
+Policy *GenericInitialize(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
 {
-    AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
 
 #ifdef HAVE_NOVA
@@ -134,7 +133,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
     SetStartTime();
     SanitizeEnvironment();
 
-    THIS_AGENT_TYPE = ag;
+    THIS_AGENT_TYPE = config->agent_type;
     HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
@@ -162,7 +161,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
     NewScope("match");
     NewScope("mon");
     GetNameInfo3();
-    GetInterfacesInfo(ag);
+    GetInterfacesInfo(config->agent_type);
 
     Get3Environment();
     BuiltinClasses();
@@ -196,7 +195,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
     Policy *policy = NULL;
 
-    if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
+    if (config->agent_type != AGENT_TYPE_KEYGEN && config->agent_type != AGENT_TYPE_GENDOC)
     {
         bool policy_check_ok = false;
 
@@ -227,7 +226,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
             if (check_promises)
             {
-                if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
+                if ((config->agent_type != AGENT_TYPE_AGENT) && (config->agent_type != AGENT_TYPE_EXECUTOR) && (config->agent_type != AGENT_TYPE_SERVER))
                 {
                     policy_check_ok = true;
                 }
@@ -250,7 +249,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
 
         if (policy_check_ok)
         {
-            policy = ReadPromises(ag, agents, config, report_context);
+            policy = ReadPromises(config->agent_type, config, report_context);
         }
         else if (config->tty_interactive)
         {
@@ -262,10 +261,10 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
                   "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
             HardClass("failsafe_fallback");
             GenericAgentConfigSetInputFile(config, "failsafe.cf");
-            policy = ReadPromises(ag, agents, config, report_context);
+            policy = ReadPromises(config->agent_type, config, report_context);
         }
 
-        if (SHOWREPORTS && (ag == AGENT_TYPE_COMMON))
+        if (SHOWREPORTS && (config->agent_type == AGENT_TYPE_COMMON))
         {
             CompilationReport(policy, config->input_file);
         }
@@ -383,7 +382,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
@@ -423,7 +422,8 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
         }
     }
 
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n",
+                 AgentTypeToString(agent_type));
 
     ShowContext(report_context);
 
@@ -451,7 +451,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
 
     VerifyPromises(policy, config, report_context);
 
-    if (ag != AGENT_TYPE_COMMON)
+    if (agent_type != AGENT_TYPE_COMMON)
     {
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
     }
@@ -866,7 +866,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
 /*******************************************************************/
 
-ReportContext *OpenReports(const char *agents)
+ReportContext *OpenReports(AgentType agent_type)
 {
     const char *workdir = GetWorkDir();
     char name[CF_BUFSIZE];
@@ -877,7 +877,7 @@ ReportContext *OpenReports(const char *agents)
     if (SHOWREPORTS)
     {
         snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.txt", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
-                 agents);
+                 AgentTypeToString(agent_type));
 
         if ((freport_text = fopen(name, "w")) == NULL)
         {
@@ -1811,6 +1811,8 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
+
+    config->agent_type = agent_type;
 
     config->bundlesequence = NULL;
     config->input_file = NULL;

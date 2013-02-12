@@ -94,10 +94,10 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    THIS_AGENT_TYPE = AGENT_TYPE_KEYGEN;
+    THIS_AGENT_TYPE = config->agent_type;
 
-    ReportContext *report_context = OpenReports("keygenerator");
-    GenericInitialize("keygenerator", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericInitialize(config, report_context, false);
 
     if (SHOWHOSTS)
     {

@@ -43,6 +43,7 @@
 
 static const char *DEFAULT_NAMESPACE = "default";
 
+static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
@@ -680,6 +681,17 @@ static bool PolicyCheckRequiredComments(const Policy *policy, Seq *errors)
 
 bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
+    // check has body common control
+    {
+        const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
+        if (!common_control)
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_POLICY, policy,
+                                             POLICY_ERROR_POLICY_NOT_RUNNABLE));
+            return false;
+        }
+    }
+
     bool success = true;
 
     success &= PolicyCheckRequiredComments(policy, errors);

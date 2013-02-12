@@ -83,6 +83,7 @@ char *BundleQualifiedName(const Bundle *bundle);
 
 typedef enum
 {
+    POLICY_ELEMENT_TYPE_POLICY,
     POLICY_ELEMENT_TYPE_BUNDLE,
     POLICY_ELEMENT_TYPE_BODY,
     POLICY_ELEMENT_TYPE_SUBTYPE,

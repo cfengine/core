@@ -304,7 +304,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /* If we are cf-agent, check syntax before attempting to run */
 
-    snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
+    snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
 
     outsideRepo = IsFileOutsideDefaultRepository(input_file);
 
@@ -427,7 +427,10 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
 
     ShowContext(report_context);
 
+    if (config->check_runnable || PolicyIsRunnable(policy))
     {
+        CfOut(cf_inform, "", "Running full policy integrity checks");
+
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))
         {
@@ -437,8 +440,12 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
                 PolicyErrorWrite(writer, errors->data[i]);
             }
             WriterClose(writer);
-        }
 
+            // TODO: exiting here because it does not make sense to continue.
+            // however, this condition should be bubbled up somehow, rather than exiting.
+            // need to restructure a bit first, separating reading from checking.
+            exit(EXIT_FAILURE);
+        }
         SeqDestroy(errors);
     }
 
@@ -638,55 +645,53 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
 
     Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
-    if (!PolicyIsRunnable(main_policy))
-    {
-        FatalError("Policy cannot be run because it is missing required body common control");
-    }
-
     HashVariables(main_policy, NULL, report_context);
     HashControls(main_policy, config);
 
-    for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
+    if (PolicyIsRunnable(main_policy))
     {
-        // TODO: ad-hoc validation, necessary?
-        if (rp->type != CF_SCALAR)
+        for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
         {
-            CfOut(cf_error, "", "Non-file object in inputs list\n");
-        }
-        else
-        {
-            Rval returnval;
-
-            if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+            // TODO: ad-hoc validation, necessary?
+            if (rp->type != CF_SCALAR)
             {
-                continue;
+                CfOut(cf_error, "", "Non-file object in inputs list\n");
+            }
+            else
+            {
+                Rval returnval;
+
+                if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+                {
+                    continue;
+                }
+
+                returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
+
+                switch (returnval.rtype)
+                {
+                    case CF_SCALAR:
+                    {
+                        Policy *policy = Cf3ParseFile(config, returnval.item);
+                        main_policy = PolicyMerge(main_policy, policy);
+                    }
+                    break;
+
+                    case CF_LIST:
+                    for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
+                    {
+                        Policy *policy = Cf3ParseFile(config, sl->item);
+                        main_policy = PolicyMerge(main_policy, policy);
+                    }
+                    break;
+                }
+
+                DeleteRvalItem(returnval);
             }
 
-            returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
-
-            switch (returnval.rtype)
-            {
-                case CF_SCALAR:
-                {
-                    Policy *policy = Cf3ParseFile(config, returnval.item);
-                    main_policy = PolicyMerge(main_policy, policy);
-                }
-                break;
-
-                case CF_LIST:
-                for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
-                {
-                    Policy *policy = Cf3ParseFile(config, sl->item);
-                    main_policy = PolicyMerge(main_policy, policy);
-                }
-                break;
-            }
-
-            DeleteRvalItem(returnval);
+            HashVariables(main_policy, NULL, report_context);
+            HashControls(main_policy, config);
         }
-
-        HashVariables(main_policy, NULL, report_context);
-        HashControls(main_policy, config);
     }
 
     HashVariables(main_policy, NULL, report_context);
@@ -1321,7 +1326,8 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
     HashVariables(policy, NULL, report_context);
     HashControls(policy, config);
 
-    if (!config->bundlesequence)
+    // TODO: need to move this inside PolicyCheckRunnable eventually.
+    if (!config->bundlesequence && config->check_runnable)
     {
         // only verify policy-defined bundlesequence for cf-agent, cf-know, cf-promises, cf-gendoc
         if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
@@ -1809,6 +1815,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->bundlesequence = NULL;
     config->input_file = NULL;
     config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
+    config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
 

@@ -49,8 +49,4 @@ void SyntaxPrintAsJson(Writer *writer);
 /* print a parse tree of the given policy (bundles, bodies) */
 void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies);
 
-/* print language elements using official formatting */
-void BodyPrettyPrint(Writer *writer, Body *body);
-void BundlePrettyPrint(Writer *writer, Bundle *bundle);
-
 #endif

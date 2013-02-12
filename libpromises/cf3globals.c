@@ -38,7 +38,6 @@ int SHOWREPORTS = false;
 int VERBOSE = false;
 int INFORM = false;
 int PARSING = false;
-int REQUIRE_COMMENTS = CF_UNDEFINED;
 int LOOKUP = false;
 int FIPS_MODE = false;
 
@@ -89,10 +88,8 @@ double METER_REPAIRED[meter_endmark];
 /*****************************************************************************/
 
 Scope *VSCOPE = NULL;
-Rlist *BODYPARTS = NULL;
-Rlist *SUBBUNDLES = NULL;
 
-Rlist *CF_STCK = NULL;
+Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
 Item *EDIT_ANCHORS = NULL;
 

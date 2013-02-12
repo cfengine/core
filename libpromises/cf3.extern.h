@@ -97,7 +97,6 @@ extern const char *OBS[CF_OBSERVABLES][2];
 extern const char *CF_DIGEST_TYPES[10][2];
 extern const int CF_DIGEST_SIZES[10];
 
-extern int REQUIRE_COMMENTS;
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int LICENSES;
@@ -117,8 +116,6 @@ extern Item *EDIT_ANCHORS;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
-extern Rlist *BODYPARTS;
-extern Rlist *SUBBUNDLES;
 extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;

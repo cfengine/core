@@ -78,10 +78,10 @@ void BufferSetGeneralMemoryCap(unsigned int cap);
   @brief Buffer initialization routine.
   Initializes the internals of a buffer. By default it is initialized to emulate a C string, but that can be
   changed at run time if needed. The default size of the buffer is set to DEFAULT_BUFFER_SIZE (4096).
-  @param buffer Buffer to be initialized.
-  @return 0 if the initialization was successful, -1 otherwise.
+  @return Pointer to initialized Buffer if the initialization was successful,
+          otherwise terminate with message to stderr.
   */
-int BufferNew(Buffer **buffer);
+Buffer* BufferNew(void);
 /**
   @brief Destroys a buffer and frees the memory associated with it.
   @param buffer Buffer to be destroyed.

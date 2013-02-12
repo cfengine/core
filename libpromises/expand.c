@@ -1226,17 +1226,8 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     a.classes = GetClassDefinitionConstraints(pp);
 
     enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
-    Buffer *qualified_scope = NULL;
+    Buffer *qualified_scope = BufferNew();
     int result = 0;
-    result = BufferNew(&qualified_scope);
-    if (result < 0)
-    {
-        /*
-         * Extremely seldom, but we better take care of this.
-         */
-        UnexpectedError("Buffer initialization problems");
-        return;
-    }
     if (strcmp(pp->namespace, "default") == 0)
     {
         result = BufferSet(qualified_scope, scope, strlen(scope));
@@ -1312,18 +1303,8 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         }
         else
         {
-            Buffer *conv = NULL;
-            result = BufferNew(&conv);
-            if (result < 0)
-            {
-                /*
-                 * Even though there will be no problems with memory allocation, there
-                 * might be other problems.
-                 */
-                UnexpectedError("Problems initializating buffer");
-                BufferDestroy(&qualified_scope);
-                return;
-            }
+            Buffer *conv = BufferNew();
+
             if (strcmp(cp->lval, "int") == 0)
             {
                 result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));

@@ -685,15 +685,6 @@ void ReCheckAllConstraints(Promise *pp)
         ThreadUnlock(cft_policy);
     }
 
-    if (REQUIRE_COMMENTS == true)
-    {
-        if (pp->ref == NULL && strcmp(pp->agentsubtype, "vars") != 0)
-        {
-            CfOut(cf_error, "", " !! Un-commented promise found, but comments have been required by policy\n");
-            PromiseRef(cf_error, pp);
-        }
-    }
-
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);

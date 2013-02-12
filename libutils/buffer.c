@@ -42,23 +42,19 @@ void BufferSetGeneralMemoryCap(unsigned int cap)
     general_memory_cap = cap;
 }
 
-int BufferNew(Buffer **buffer)
+Buffer *BufferNew(void)
 {
-    if (!buffer)
-    {
-        return -1;
-    }
-    *buffer = (Buffer *)xmalloc(sizeof(Buffer));
-    (*buffer)->capacity = DEFAULT_BUFFER_SIZE;
-    (*buffer)->buffer = (char *)xmalloc((*buffer)->capacity);
-    (*buffer)->mode = BUFFER_BEHAVIOR_CSTRING;
-    (*buffer)->used = 0;
-    (*buffer)->beginning = 0;
-    (*buffer)->end = 0;
-    (*buffer)->memory_cap = general_memory_cap;
-    RefCountNew(&(*buffer)->ref_count);
-    RefCountAttach((*buffer)->ref_count, (*buffer));
-    return 0;
+    Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
+    buffer->capacity = DEFAULT_BUFFER_SIZE;
+    buffer->buffer = (char *)xmalloc(buffer->capacity);
+    buffer->mode = BUFFER_BEHAVIOR_CSTRING;
+    buffer->used = 0;
+    buffer->beginning = 0;
+    buffer->end = 0;
+    buffer->memory_cap = general_memory_cap;
+    RefCountNew(&(buffer->ref_count));
+    RefCountAttach(buffer->ref_count, buffer);
+    return buffer;
 }
 
 int BufferDestroy(Buffer **buffer)

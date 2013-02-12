@@ -1,3 +1,11 @@
+3.5.0 - Alpha 3
+
+        New features:
+
+        - Class "failsafe_fallback" is defined in failsafe.cf when main policy contains errors and
+          failsafe is run because of this
+
+
 3.5.0 - Alpha 2
 
        Changes:

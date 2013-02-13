@@ -1283,7 +1283,7 @@ static JsonElement *AttributeValueToJson(Rval rval)
         Rlist *argp = NULL;
         FnCall *call = (FnCall *) rval.item;
 
-        JsonObjectAppendString(json_attribute, "type", "function-call");
+        JsonObjectAppendString(json_attribute, "type", "functionCall");
         JsonObjectAppendString(json_attribute, "name", call->name);
 
         {
@@ -1313,7 +1313,7 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
 
     JsonObjectAppendString(json, "name", name);
     JsonObjectAppendInteger(json, "offset", offset);
-    JsonObjectAppendInteger(json, "offset-end", offset_end);
+    JsonObjectAppendInteger(json, "offsetEnd", offset_end);
     JsonObjectAppendArray(json, children_name, children);
 
     return json;
@@ -1334,7 +1334,7 @@ static JsonElement *BodyClassesToJson(const Seq *constraints)
         JsonElement *json_attribute = JsonObjectCreate(10);
 
         JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
-        JsonObjectAppendInteger(json_attribute, "offset-end", cp->offset.end);
+        JsonObjectAppendInteger(json_attribute, "offsetEnd", cp->offset.end);
 
         context_offset_start = cp->offset.context;
         context_offset_end = cp->offset.end;
@@ -1385,7 +1385,7 @@ static JsonElement *BundleClassesToJson(const Seq *promises)
                 JsonElement *json_attribute = JsonObjectCreate(10);
 
                 JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
-                JsonObjectAppendInteger(json_attribute, "offset-end", cp->offset.end);
+                JsonObjectAppendInteger(json_attribute, "offsetEnd", cp->offset.end);
 
                 context_offset_end = cp->offset.end;
 
@@ -1394,7 +1394,7 @@ static JsonElement *BundleClassesToJson(const Seq *promises)
                 JsonArrayAppendObject(json_promise_attributes, json_attribute);
             }
 
-            JsonObjectAppendInteger(json_promise, "offset-end", context_offset_end);
+            JsonObjectAppendInteger(json_promise, "offsetEnd", context_offset_end);
 
             JsonObjectAppendString(json_promise, "promiser", pp->promiser);
 
@@ -1441,11 +1441,15 @@ static JsonElement *BundleToJson(const Bundle *bundle)
 {
     JsonElement *json_bundle = JsonObjectCreate(10);
 
+    if (bundle->source_path)
+    {
+        JsonObjectAppendString(json_bundle, "sourcePath", bundle->source_path);
+    }
     JsonObjectAppendInteger(json_bundle, "offset", bundle->offset.start);
-    JsonObjectAppendInteger(json_bundle, "offset-end", bundle->offset.end);
+    JsonObjectAppendInteger(json_bundle, "offsetEnd", bundle->offset.end);
 
     JsonObjectAppendString(json_bundle, "name", bundle->name);
-    JsonObjectAppendString(json_bundle, "bundle-type", bundle->type);
+    JsonObjectAppendString(json_bundle, "bundleType", bundle->type);
 
     {
         JsonElement *json_args = JsonArrayCreate(10);
@@ -1469,14 +1473,14 @@ static JsonElement *BundleToJson(const Bundle *bundle)
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
             JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
-            JsonObjectAppendInteger(json_promise_type, "offset-end", sp->offset.end);
+            JsonObjectAppendInteger(json_promise_type, "offsetEnd", sp->offset.end);
             JsonObjectAppendString(json_promise_type, "name", sp->name);
             JsonObjectAppendArray(json_promise_type, "classes", BundleClassesToJson(sp->promises));
 
             JsonArrayAppendObject(json_promise_types, json_promise_type);
         }
 
-        JsonObjectAppendArray(json_bundle, "promise-types", json_promise_types);
+        JsonObjectAppendArray(json_bundle, "promiseTypes", json_promise_types);
     }
 
     return json_bundle;
@@ -1488,10 +1492,10 @@ static JsonElement *BodyToJson(const Body *body)
     JsonElement *json_body = JsonObjectCreate(10);
 
     JsonObjectAppendInteger(json_body, "offset", body->offset.start);
-    JsonObjectAppendInteger(json_body, "offset-end", body->offset.end);
+    JsonObjectAppendInteger(json_body, "offsetEnd", body->offset.end);
 
     JsonObjectAppendString(json_body, "name", body->name);
-    JsonObjectAppendString(json_body, "body-type", body->type);
+    JsonObjectAppendString(json_body, "bodyType", body->type);
 
     {
         JsonElement *json_args = JsonArrayCreate(10);

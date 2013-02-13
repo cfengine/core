@@ -103,7 +103,6 @@ int main(int argc, char *argv[])
     }
 
     CheckLicenses();
-    XML = false;
 
     switch (config->agent_specific.common.policy_output_format)
     {

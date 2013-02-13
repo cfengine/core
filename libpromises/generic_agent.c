@@ -400,9 +400,6 @@ Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const Rep
 
 /* Now import some web variables that are set in cf-know/control for the report options */
 
-    strncpy(STYLESHEET, "/cf_enterprise.css", CF_BUFSIZE - 1);
-    strncpy(WEBDRIVER, "", CF_MAXVARSIZE - 1);
-
     {
         Rval rval = { 0 };
 

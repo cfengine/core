@@ -998,7 +998,6 @@ AC_CONFIG_FILES([Makefile
 	cf-gendoc/Makefile
 	cf-key/Makefile
 	cf-monitord/Makefile
-	cf-report/Makefile
 	cf-runagent/Makefile
 	cf-serverd/Makefile
 	ext/Makefile

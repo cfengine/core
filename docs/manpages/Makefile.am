@@ -6,7 +6,6 @@ man_MANS = \
     cf-key.8 \
     cf-monitord.8 \
     cf-promises.8 \
-    cf-report.8 \
     cf-runagent.8 \
     cf-serverd.8
 

@@ -156,14 +156,7 @@ int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
 
 void ShowFnCall(FILE *fout, const FnCall *fp)
 {
-    if (XML)
-    {
-        fprintf(fout, "%s(", fp->name);
-    }
-    else
-    {
-        fprintf(fout, "%s(", fp->name);
-    }
+    fprintf(fout, "%s(", fp->name);
 
     for (const Rlist *rp = fp->args; rp != NULL; rp = rp->next)
     {
@@ -183,14 +176,7 @@ void ShowFnCall(FILE *fout, const FnCall *fp)
         }
     }
 
-    if (XML)
-    {
-        fprintf(fout, ")");
-    }
-    else
-    {
-        fprintf(fout, ")");
-    }
+    fprintf(fout, ")");
 }
 
 /*******************************************************************/

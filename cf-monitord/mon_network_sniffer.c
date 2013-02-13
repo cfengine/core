@@ -42,6 +42,17 @@
 
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 
+static const char *TCPNAMES[CF_NETATTR] =
+{
+    "icmp",
+    "udp",
+    "dns",
+    "tcpsyn",
+    "tcpack",
+    "tcpfin",
+    "misc"
+};
+
 /* Global variables */
 
 static bool TCPDUMP;

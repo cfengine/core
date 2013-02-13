@@ -1201,13 +1201,13 @@ static void KeepMonitorPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(pp);
         return;
     }
 
-    if (strcmp("measurements", pp->agentsubtype) == 0)
+    if (strcmp("measurements", pp->parent_subtype->name) == 0)
     {
         VerifyMeasurementPromise(CF_THIS, pp);
         *pp->donep = false;

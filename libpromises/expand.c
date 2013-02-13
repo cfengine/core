@@ -743,12 +743,12 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
             break;
         }
 
-        if (strcmp(pp->agentsubtype, "vars") == 0)
+        if (strcmp(pp->parent_subtype->name, "vars") == 0)
         {
             ConvergeVarHashPromise(pp->bundle, pexp, true);
         }
 
-        if (strcmp(pp->agentsubtype, "meta") == 0)
+        if (strcmp(pp->parent_subtype->name, "meta") == 0)
            {
            char namespace[CF_BUFSIZE];
            snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
@@ -1086,7 +1086,7 @@ static void SetAnyMissingDefaults(Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
 {
-    if (strcmp(pp->agentsubtype, "packages") == 0)
+    if (strcmp(pp->parent_subtype->name, "packages") == 0)
     {
         if (GetConstraint(pp, "package_method") == NULL)
         {
@@ -1596,7 +1596,7 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
 
     // Check for recursion of bundles so that knowledge map will reflect these cases
 
-    if (strcmp("services", pp->agentsubtype) == 0)
+    if (strcmp("services", pp->parent_subtype->name) == 0)
        {
        ParseServices(report_context, pp);
        }

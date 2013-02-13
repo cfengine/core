@@ -6,6 +6,8 @@
 
        - don't create symlinks to cf-know in update policy
 
+       - don't enable xml support if libxml2 is too old (Redmine #1937)
+
 3.4.3   (Bugfix and Stability release)
 
        Bugfixes:

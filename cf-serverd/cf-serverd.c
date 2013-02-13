@@ -33,6 +33,10 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports(config->agent_type);
     GenericAgentDiscoverContext(config, report_context);
     Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
+
+    CheckLicenses();
+    XML = false;
+
     ThisAgentInit();
     KeepPromises(policy, config, report_context);
     Summarize();

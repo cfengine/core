@@ -194,6 +194,34 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     SetPolicyServer(POLICY_SERVER);
 }
 
+static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
+{
+    bool check_policy = false;
+
+    if (SHOWREPORTS)
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
+    }
+    if (IsFileOutsideDefaultRepository(config->input_file))
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
+    }
+    if (NewPromiseProposals(config->input_file, NULL))
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
+    }
+    if (force_validation)
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
+    }
+
+    return check_policy;
+}
+
 Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
 {
     Policy *policy = NULL;
@@ -202,30 +230,7 @@ Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *
 
     if (!MissingInputFile(config->input_file))
     {
-        bool check_promises = false;
-
-        if (SHOWREPORTS)
-        {
-            check_promises = true;
-            CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
-        }
-        if (IsFileOutsideDefaultRepository(config->input_file))
-        {
-            check_promises = true;
-            CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
-        }
-        if (NewPromiseProposals(config->input_file, NULL))
-        {
-            check_promises = true;
-            CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
-        }
-        if (force_validation)
-        {
-            check_promises = true;
-            CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
-        }
-
-        if (check_promises)
+        if (IsPolicyPrecheckNeeded(config, force_validation))
         {
             if ((config->agent_type != AGENT_TYPE_AGENT) && (config->agent_type != AGENT_TYPE_EXECUTOR) && (config->agent_type != AGENT_TYPE_SERVER))
             {
@@ -235,6 +240,7 @@ Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *
             {
                 policy_check_ok = CheckPromises(config->input_file, report_context);
             }
+
             if (BOOTSTRAP && !policy_check_ok)
             {
                 CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
@@ -258,21 +264,11 @@ Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *
     }
     else
     {
-        CfOut(cf_error, "",
-              "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         HardClass("failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = ReadPromises(config->agent_type, config, report_context);
     }
-
-    if (SHOWREPORTS && (config->agent_type == AGENT_TYPE_COMMON))
-    {
-        CompilationReport(policy, config->input_file);
-    }
-
-    CheckLicenses();
-
-    XML = 0;
 
     return policy;
 }

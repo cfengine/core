@@ -204,8 +204,14 @@ int main(int argc, char *argv[])
 #endif
 #endif
     ReportContext *report_context = OpenReports(config->agent_type);
+
     GenericAgentDiscoverContext(config, report_context);
     Policy *policy = GenericAgentLoadPolicy(config, report_context, ALWAYS_VALIDATE);
+
+    CheckLicenses();
+    XML = false;
+
+
     ThisAgentInit();
     BeginAudit();
     KeepPromises(policy, config, report_context);

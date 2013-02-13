@@ -99,6 +99,14 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(config, report_context);
     Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
 
+    if (SHOWREPORTS)
+    {
+        CompilationReport(policy, config->input_file);
+    }
+
+    CheckLicenses();
+    XML = false;
+
     if (SHOW_PARSE_TREE)
     {
         Writer *writer = FileWriter(stdout);

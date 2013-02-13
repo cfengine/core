@@ -1792,7 +1792,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
             continue;
         }
 
-        if (!config->ignore_missing_bundles && !GetBundle(policy, name, NULL))
+        if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
         {
             CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
             ok = false;

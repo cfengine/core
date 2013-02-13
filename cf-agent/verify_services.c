@@ -252,7 +252,13 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
         break;
     }
 
-    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
+    const Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", default_bundle->name);
+    if (!bp)
+    {
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
+    }
+
+    if (default_bundle && bp == NULL)
     {
         cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }

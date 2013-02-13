@@ -80,7 +80,6 @@ const Rlist *InputFiles(Policy *policy);
 
 
 void SetFacility(const char *retval);
-Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 void CheckBundleParameters(char *scope, Rlist *args);
 void PromiseBanner(Promise *pp);
 void BannerBundle(Bundle *bp, Rlist *args);

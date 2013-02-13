@@ -134,7 +134,7 @@ Bundle *PolicyGetBundle(const Policy *policy, const char *ns, const char *type, 
 
         char *bundle_symbol = StripNamespace(bp->name);
 
-        if (strcmp(bp->type, type) == 0 && strcmp(bundle_symbol, name) == 0)
+        if ((!type || strcmp(bp->type, type) == 0) && ((strcmp(bundle_symbol, name) == 0) || (strcmp(bp->name, name) == 0)))
         {
             free(bundle_symbol);
 
@@ -280,7 +280,11 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
             if (cp->rval.rtype == CF_FNCALL)
             {
                 const FnCall *call = (const FnCall *)cp->rval.item;
-                const Bundle *callee = GetBundle(PolicyFromPromise(pp), call->name, "agent");
+                const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
+                if (!callee)
+                {
+                    callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", call->name);
+                }
 
                 if (callee)
                 {
@@ -1131,38 +1135,6 @@ void PromiseDestroy(Promise *pp)
 }
 
 /*******************************************************************/
-
-Bundle *GetBundle(const Policy *policy, const char *name, const char *agent)
-{
-
-    // We don't need to check for the namespace here, as it is prefixed to the name already
-
-    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
-    {
-        Bundle *bp = SeqAt(policy->bundles, i);
-
-        if (strcmp(bp->name, name) == 0)
-        {
-            if (agent)
-            {
-                if ((strcmp(bp->type, agent) == 0) || (strcmp(bp->type, "common") == 0))
-                {
-                    return bp;
-                }
-                else
-                {
-                    CfOut(cf_verbose, "", "The bundle called %s is not of type %s\n", name, agent);
-                }
-            }
-            else
-            {
-                return bp;
-            }
-        }
-    }
-
-    return NULL;
-}
 
 static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
 {

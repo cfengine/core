@@ -309,11 +309,11 @@ bool PolicyCheckPromise(const Promise *pp, Seq *errors)
 {
     bool success = true;
 
-    if (StringSafeCompare(pp->agentsubtype, "vars") == 0)
+    if (StringSafeCompare(pp->parent_subtype->name, "vars") == 0)
     {
         success &= PolicyCheckPromiseVars(pp, errors);
     }
-    else if (StringSafeCompare(pp->agentsubtype, "methods") == 0)
+    else if (StringSafeCompare(pp->parent_subtype->name, "methods") == 0)
     {
         success &= PolicyCheckPromiseMethods(pp, errors);
     }
@@ -1075,7 +1075,6 @@ Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char
     pp->org_pp = NULL;
 
     pp->bundletype = xstrdup(bundletype);       /* cache agent,common,server etc */
-    pp->agentsubtype = type->name;      /* Cache the typename */
     pp->ref_alloc = 'n';
 
     return pp;

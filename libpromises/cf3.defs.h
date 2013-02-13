@@ -1150,7 +1150,6 @@ struct Promise_
 
     /* Runtime bus for private flags and work space */
 
-    char *agentsubtype;         /* cache the promise subtype */
     char *bundletype;           /* cache the agent type */
     char *ns;                   /* cache the namespace */
     int done;                   /* this needs to be preserved across runs */

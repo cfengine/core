@@ -624,7 +624,7 @@ void ReCheckAllConstraints(Promise *pp)
     Item *ptr;
     int in_class_any = false;
 
-    if (strcmp(pp->agentsubtype, "reports") == 0 && strcmp(pp->classes, "any") == 0)
+    if (strcmp(pp->parent_subtype->name, "reports") == 0 && strcmp(pp->classes, "any") == 0)
     {
         char *cl = GetConstraintValue("ifvarclass", pp, CF_SCALAR);
 
@@ -688,10 +688,10 @@ void ReCheckAllConstraints(Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        PostCheckConstraint(pp->agentsubtype, pp->bundle, cp->lval, cp->rval);
+        PostCheckConstraint(pp->parent_subtype->name, pp->bundle, cp->lval, cp->rval);
     }
 
-    if (strcmp(pp->agentsubtype, "insert_lines") == 0)
+    if (strcmp(pp->parent_subtype->name, "insert_lines") == 0)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 

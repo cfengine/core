@@ -600,7 +600,6 @@ static void Apoptosis()
     pp.bundletype = "agent";
     pp.bundle = "exec_apoptosis";
     pp.ref = "Programmed death";
-    pp.agentsubtype = "processes";
     pp.done = false;
     pp.cache = NULL;
     pp.inode_cache = NULL;

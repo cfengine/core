@@ -42,12 +42,14 @@ static bool SuspiciousFile(const char *filename)
     return IsItemIn(SUSPICIOUSLIST, filename);
 }
 
-
-/*********************************************************************/
-/* Files to be ignored when parsing directories                      */
-/*********************************************************************/
-
-/*********************************************************************/
+static const char *SKIPFILES[] =
+{
+    ".",
+    "..",
+    "lost+found",
+    ".cfengine.rm",
+    NULL
+};
 
 int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 {
@@ -55,14 +57,6 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
     struct stat statbuf;
     const char *sp;
 
-    static char *skipfiles[] =
-{
-        ".",
-        "..",
-        "lost+found",
-        ".cfengine.rm",
-        NULL
-    };
 
     if (strlen(nodename) < 1)
     {
@@ -90,9 +84,9 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         return true;
     }
 
-    for (i = 0; skipfiles[i] != NULL; i++)
+    for (i = 0; SKIPFILES[i] != NULL; i++)
     {
-        if (strcmp(nodename, skipfiles[i]) == 0)
+        if (strcmp(nodename, SKIPFILES[i]) == 0)
         {
             CfDebug("Filename %s/%s is classified as ignorable\n", path, nodename);
             return false;

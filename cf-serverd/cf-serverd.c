@@ -35,7 +35,6 @@ int main(int argc, char *argv[])
     Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
 
     CheckLicenses();
-    XML = false;
 
     ThisAgentInit();
     KeepPromises(policy, config, report_context);

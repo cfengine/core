@@ -43,8 +43,6 @@ int FIPS_MODE = false;
 
 struct utsname VSYSNAME;
 
-int XML = false;
-
 int CFA_MAXTHREADS = 10;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
@@ -62,7 +60,6 @@ char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 
 // These are used to measure graph complexity in know/agent
 
-int CSV = false;
 int CF_TOPICS = 0;              // objects
 int CF_OCCUR = 0;               // objects
 
@@ -97,11 +94,6 @@ int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
 char POLICY_SERVER[CF_BUFSIZE] = { 0 };
-
-char WEBDRIVER[CF_MAXVARSIZE] = { 0 };
-char BANNER[2 * CF_BUFSIZE] = { 0 };
-char FOOTER[CF_BUFSIZE] = { 0 };
-char STYLESHEET[CF_BUFSIZE] = { 0 };
 
 /*****************************************************************************/
 /* Compatability infrastructure                                              */

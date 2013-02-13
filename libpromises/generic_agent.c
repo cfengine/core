@@ -1820,6 +1820,16 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     // TODO: system state, perhaps pull out as param
     config->tty_interactive = isatty(0) && isatty(1);
 
+    switch (agent_type)
+    {
+    case AGENT_TYPE_COMMON:
+        config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
+        break;
+
+    default:
+        break;
+    }
+
     return config;
 }
 

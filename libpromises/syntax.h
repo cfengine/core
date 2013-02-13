@@ -46,7 +46,4 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);
 
-/* print a parse tree of the given policy (bundles, bodies) */
-void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies);
-
 #endif

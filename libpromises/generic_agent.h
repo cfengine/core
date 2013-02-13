@@ -42,6 +42,18 @@ typedef struct
     // change to evaluation behavior from the policy itself
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
+
+    union
+    {
+        struct
+        {
+            enum
+            {
+                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE,
+                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
+            } policy_output_format;
+        } common;
+    } agent_specific;
 } GenericAgentConfig;
 
 void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);

@@ -1242,3 +1242,309 @@ SubType *BundleGetSubType(Bundle *bp, const char *name)
 
     return NULL;
 }
+
+/****************************************************************************/
+
+static JsonElement *AttributeValueToJson(Rval rval)
+{
+    JsonElement *json_attribute = JsonObjectCreate(10);
+
+    switch (rval.rtype)
+    {
+    case CF_SCALAR:
+    {
+        char buffer[CF_BUFSIZE];
+
+        EscapeQuotes((const char *) rval.item, buffer, sizeof(buffer));
+
+        JsonObjectAppendString(json_attribute, "type", "string");
+        JsonObjectAppendString(json_attribute, "value", buffer);
+    }
+        return json_attribute;
+
+    case CF_LIST:
+    {
+        Rlist *rp = NULL;
+        JsonElement *list = JsonArrayCreate(10);
+
+        JsonObjectAppendString(json_attribute, "type", "list");
+
+        for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+        {
+            JsonArrayAppendObject(list, AttributeValueToJson((Rval) {rp->item, rp->type}));
+        }
+
+        JsonObjectAppendArray(json_attribute, "value", list);
+        return json_attribute;
+    }
+
+    case CF_FNCALL:
+    {
+        Rlist *argp = NULL;
+        FnCall *call = (FnCall *) rval.item;
+
+        JsonObjectAppendString(json_attribute, "type", "function-call");
+        JsonObjectAppendString(json_attribute, "name", call->name);
+
+        {
+            JsonElement *arguments = JsonArrayCreate(10);
+
+            for (argp = call->args; argp != NULL; argp = argp->next)
+            {
+                JsonArrayAppendObject(arguments, AttributeValueToJson((Rval) {argp->item, argp->type}));
+            }
+
+            JsonObjectAppendArray(json_attribute, "arguments", arguments);
+        }
+
+        return json_attribute;
+    }
+
+    default:
+        FatalError("Attempted to export attribute of type: %c", rval.rtype);
+        return NULL;
+    }
+}
+
+static JsonElement *CreateContextAsJson(const char *name, size_t offset,
+                                        size_t offset_end, const char *children_name, JsonElement *children)
+{
+    JsonElement *json = JsonObjectCreate(10);
+
+    JsonObjectAppendString(json, "name", name);
+    JsonObjectAppendInteger(json, "offset", offset);
+    JsonObjectAppendInteger(json, "offset-end", offset_end);
+    JsonObjectAppendArray(json, children_name, children);
+
+    return json;
+}
+
+static JsonElement *BodyClassesToJson(const Seq *constraints)
+{
+    JsonElement *json_contexts = JsonArrayCreate(10);
+    JsonElement *json_attributes = JsonArrayCreate(10);
+    char *current_context = "any";
+    size_t context_offset_start = -1;
+    size_t context_offset_end = -1;
+
+    for (size_t i = 0; i < SeqLength(constraints); i++)
+    {
+        Constraint *cp = SeqAt(constraints, i);
+
+        JsonElement *json_attribute = JsonObjectCreate(10);
+
+        JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
+        JsonObjectAppendInteger(json_attribute, "offset-end", cp->offset.end);
+
+        context_offset_start = cp->offset.context;
+        context_offset_end = cp->offset.end;
+
+        JsonObjectAppendString(json_attribute, "lval", cp->lval);
+        JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval));
+        JsonArrayAppendObject(json_attributes, json_attribute);
+
+
+
+        if (i == (SeqLength(constraints) - 1) || strcmp(current_context, ((Constraint *)SeqAt(constraints, i + 1))->classes) != 0)
+        {
+            JsonArrayAppendObject(json_contexts,
+                                  CreateContextAsJson(current_context,
+                                                      context_offset_start,
+                                                      context_offset_end, "attributes", json_attributes));
+
+            current_context = cp->classes;
+        }
+    }
+
+    return json_contexts;
+}
+
+static JsonElement *BundleClassesToJson(const Seq *promises)
+{
+    JsonElement *json_contexts = JsonArrayCreate(10);
+    JsonElement *json_promises = JsonArrayCreate(10);
+    char *current_context = "any";
+    size_t context_offset_start = -1;
+    size_t context_offset_end = -1;
+
+    for (size_t ppi = 0; ppi < SeqLength(promises); ppi++)
+    {
+        Promise *pp = SeqAt(promises, ppi);
+
+        JsonElement *json_promise = JsonObjectCreate(10);
+
+        JsonObjectAppendInteger(json_promise, "offset", pp->offset.start);
+
+        {
+            JsonElement *json_promise_attributes = JsonArrayCreate(10);
+
+            for (size_t k = 0; k < SeqLength(pp->conlist); k++)
+            {
+                Constraint *cp = SeqAt(pp->conlist, k);
+
+                JsonElement *json_attribute = JsonObjectCreate(10);
+
+                JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
+                JsonObjectAppendInteger(json_attribute, "offset-end", cp->offset.end);
+
+                context_offset_end = cp->offset.end;
+
+                JsonObjectAppendString(json_attribute, "lval", cp->lval);
+                JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval));
+                JsonArrayAppendObject(json_promise_attributes, json_attribute);
+            }
+
+            JsonObjectAppendInteger(json_promise, "offset-end", context_offset_end);
+
+            JsonObjectAppendString(json_promise, "promiser", pp->promiser);
+
+            switch (pp->promisee.rtype)
+            {
+            case CF_SCALAR:
+                JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
+                break;
+
+            case CF_LIST:
+                {
+                    JsonElement *promisee_list = JsonArrayCreate(10);
+                    for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)
+                    {
+                        JsonArrayAppendString(promisee_list, ScalarValue(rp));
+                    }
+                    JsonObjectAppendArray(json_promise, "promisee", promisee_list);
+                }
+                break;
+
+            default:
+                break;
+            }
+
+            JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);
+        }
+        JsonArrayAppendObject(json_promises, json_promise);
+
+        if (ppi == (SeqLength(promises) - 1) || strcmp(current_context, ((Promise *)SeqAt(promises, ppi + 1))->classes) != 0)
+        {
+            JsonArrayAppendObject(json_contexts,
+                                  CreateContextAsJson(current_context,
+                                                      context_offset_start,
+                                                      context_offset_end, "promises", json_promises));
+
+            current_context = pp->classes;
+        }
+    }
+
+    return json_contexts;
+}
+
+static JsonElement *BundleToJson(const Bundle *bundle)
+{
+    JsonElement *json_bundle = JsonObjectCreate(10);
+
+    JsonObjectAppendInteger(json_bundle, "offset", bundle->offset.start);
+    JsonObjectAppendInteger(json_bundle, "offset-end", bundle->offset.end);
+
+    JsonObjectAppendString(json_bundle, "name", bundle->name);
+    JsonObjectAppendString(json_bundle, "bundle-type", bundle->type);
+
+    {
+        JsonElement *json_args = JsonArrayCreate(10);
+        Rlist *argp = NULL;
+
+        for (argp = bundle->args; argp != NULL; argp = argp->next)
+        {
+            JsonArrayAppendString(json_args, argp->item);
+        }
+
+        JsonObjectAppendArray(json_bundle, "arguments", json_args);
+    }
+
+    {
+        JsonElement *json_promise_types = JsonArrayCreate(10);
+
+        for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+        {
+            const SubType *sp = SeqAt(bundle->subtypes, i);
+
+            JsonElement *json_promise_type = JsonObjectCreate(10);
+
+            JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
+            JsonObjectAppendInteger(json_promise_type, "offset-end", sp->offset.end);
+            JsonObjectAppendString(json_promise_type, "name", sp->name);
+            JsonObjectAppendArray(json_promise_type, "classes", BundleClassesToJson(sp->promises));
+
+            JsonArrayAppendObject(json_promise_types, json_promise_type);
+        }
+
+        JsonObjectAppendArray(json_bundle, "promise-types", json_promise_types);
+    }
+
+    return json_bundle;
+}
+
+
+static JsonElement *BodyToJson(const Body *body)
+{
+    JsonElement *json_body = JsonObjectCreate(10);
+
+    JsonObjectAppendInteger(json_body, "offset", body->offset.start);
+    JsonObjectAppendInteger(json_body, "offset-end", body->offset.end);
+
+    JsonObjectAppendString(json_body, "name", body->name);
+    JsonObjectAppendString(json_body, "body-type", body->type);
+
+    {
+        JsonElement *json_args = JsonArrayCreate(10);
+        Rlist *argp = NULL;
+
+        for (argp = body->args; argp != NULL; argp = argp->next)
+        {
+            JsonArrayAppendString(json_args, argp->item);
+        }
+
+        JsonObjectAppendArray(json_body, "arguments", json_args);
+    }
+
+    JsonObjectAppendArray(json_body, "classes", BodyClassesToJson(body->conlist));
+
+    return json_body;
+}
+
+JsonElement *PolicyToJson(const Policy *policy)
+{
+    JsonElement *json_policy = JsonObjectCreate(10);
+
+    {
+        JsonElement *json_bundles = JsonArrayCreate(10);
+
+        for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+        {
+            const Bundle *bp = SeqAt(policy->bundles, i);
+            JsonArrayAppendObject(json_bundles, BundleToJson(bp));
+        }
+
+        JsonObjectAppendArray(json_policy, "bundles", json_bundles);
+    }
+
+    {
+        JsonElement *json_bodies = JsonArrayCreate(10);
+
+        for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+        {
+            const Body *bdp = SeqAt(policy->bodies, i);
+
+            JsonArrayAppendObject(json_bodies, BodyToJson(bdp));
+        }
+
+        JsonObjectAppendArray(json_policy, "bodies", json_bodies);
+    }
+
+    return json_policy;
+}
+
+/****************************************************************************/
+
+void PolicyPrint(const Policy *policy, Writer *writer)
+{
+    ProgrammingError("Not implemented");
+}

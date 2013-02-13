@@ -215,7 +215,7 @@ JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter)
     return child->type;
 }
 
-JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter)
+JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter)
 {
     assert(iter);
 

@@ -897,7 +897,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
 
         if (!config->ignore_missing_bundles)
         {
-            if (!(GetBundle(policy, name, "agent") || (GetBundle(policy, name, "common"))))
+            if (!(PolicyGetBundle(policy, NULL, "agent", name) || (PolicyGetBundle(policy, NULL, "common", name))))
             {
                 CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence was not found\n", name);
                 ok = false;
@@ -934,7 +934,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             break;
         }
 
-        if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
+        if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
             char namespace[CF_BUFSIZE];
             snprintf(namespace,CF_BUFSIZE,"%s_meta", name);

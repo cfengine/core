@@ -534,7 +534,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
         // add current filename to context - already there?
-        if ((bp = GetBundle(policy, method_deref, "edit_line")))
+        if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
             BannerSubBundle(bp, params);
 
@@ -586,7 +586,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
         
         CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
 
-        if ((bp = GetBundle(policy, method_deref, "edit_xml")))
+        if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))
         {
             BannerSubBundle(bp, params);
 

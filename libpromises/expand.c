@@ -1633,8 +1633,17 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
                continue;
         }
 
-       if ((bp = GetBundle(PolicyFromPromise(pp), scope, type)))
-       {
+        {
+            Policy *policy = PolicyFromPromise(pp);
+            bp = PolicyGetBundle(policy, NULL, type, scope);
+            if (!bp)
+            {
+                bp = PolicyGetBundle(policy, NULL, "common", scope);
+            }
+        }
+
+        if (bp)
+        {
            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
            {
                SubType *sbp = SeqAt(bp->subtypes, j);
@@ -1645,7 +1654,7 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
                    ExpandPromise(AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
                }
            }
-       }
+        }
     }
 }
 
@@ -1718,14 +1727,18 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
         break;
     }
 
-    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
+    Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", default_bundle->name);
+    if (!bp)
+    {
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
+    }
+
+    if (default_bundle && bp == NULL)
     {
         return;
     }
 
-    Bundle *bp = NULL;
-
-    if ((bp = GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent")))
+    if (bp)
     {
         MapBodyArgs(bp->name, args, bp->args);
 

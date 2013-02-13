@@ -97,7 +97,8 @@ int main(int argc, char *argv[])
     THIS_AGENT_TYPE = config->agent_type;
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericInitialize(config, report_context, false);
+    GenericAgentDiscoverContext(config, report_context);
+    XML = false;
 
     if (SHOWHOSTS)
     {

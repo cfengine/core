@@ -396,20 +396,6 @@ enum cfreport String2ReportLevel(char *s)
 
 /***************************************************************************/
 
-enum cfhashes String2HashType(char *typestr)
-{
-    int i;
-
-    for (i = 0; CF_DIGEST_TYPES[i][0] != NULL; i++)
-    {
-        if (typestr && (strcmp(typestr, CF_DIGEST_TYPES[i][0]) == 0))
-        {
-            return (enum cfhashes) i;
-        }
-    }
-
-    return cf_nohash;
-}
 
 /****************************************************************************/
 

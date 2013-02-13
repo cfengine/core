@@ -42,5 +42,6 @@ char *HashPrintSafe(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1
 char *SkipHashType(char *hash);
 const char *FileHashName(enum cfhashes id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type);
+enum cfhashes String2HashType(char *typestr);
 
 #endif

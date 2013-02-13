@@ -370,6 +370,9 @@ int main(int argc, char *argv[])
     {
         GenericAgentDiscoverContext(config, report_context);
         policy = GenericAgentLoadPolicy(config, report_context, false);
+
+        CheckLicenses();
+        XML = false;
     }
     else
     {

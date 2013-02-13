@@ -145,6 +145,10 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(config, report_context);
     Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
+
+    CheckLicenses();
+    XML = false;
+
     ThisAgentInit();
     KeepControlPromises(policy);      // Set RUNATTR using copy
 

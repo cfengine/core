@@ -101,34 +101,6 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
 /* These string lengths should not exceed CF_MAXDIGESTNAMELEN
    characters for packing */
 
-const char *CF_DIGEST_TYPES[10][2] =
-{
-    {"md5", "m"},
-    {"sha224", "c"},
-    {"sha256", "C"},
-    {"sha384", "h"},
-    {"sha512", "H"},
-    {"sha1", "S"},
-    {"sha", "s"},               /* Should come last, since substring */
-    {"best", "b"},
-    {"crypt", "o"},
-    {NULL, NULL}
-};
-
-const int CF_DIGEST_SIZES[10] =
-{
-    CF_MD5_LEN,
-    CF_SHA224_LEN,
-    CF_SHA256_LEN,
-    CF_SHA384_LEN,
-    CF_SHA512_LEN,
-    CF_SHA1_LEN,
-    CF_SHA_LEN,
-    CF_BEST_LEN,
-    CF_CRYPT_LEN,
-    0
-};
-
 /*******************************************************************/
 /* Anomaly                                                         */
 /*******************************************************************/

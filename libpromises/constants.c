@@ -129,17 +129,6 @@ const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
     {"631", "ipp", ob_ipp_in, ob_ipp_out},
 };
 
-const char *TCPNAMES[CF_NETATTR] =
-{
-    "icmp",
-    "udp",
-    "dns",
-    "tcpsyn",
-    "tcpack",
-    "tcpfin",
-    "misc"
-};
-
 const char *OBS[CF_OBSERVABLES][2] =
 {
     {"users", "Users with active processes - including system users"},

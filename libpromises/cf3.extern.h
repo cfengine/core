@@ -32,7 +32,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 extern const Sock ECGSOCKS[ATTR];
-extern const char *TCPNAMES[CF_NETATTR];
 
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;

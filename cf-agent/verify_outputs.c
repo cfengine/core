@@ -96,8 +96,8 @@ void VerifyOutputsPromise(Promise *pp)
 
 void SetPromiseOutputs(Promise *pp)
 {
-    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
-    char *setting = GetConstraintValue("report_level", pp, CF_SCALAR);
+    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
+    char *setting = GetConstraintValue("report_level", pp, RVAL_TYPE_SCALAR);
     enum cfreport report_level = String2ReportLevel(setting);
     int verbose = false, inform = false;
     Item *ip;
@@ -148,11 +148,11 @@ void SetPromiseOutputs(Promise *pp)
         {
             if (ip && ip->classes)
             {
-                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup(ip->classes), CF_SCALAR}, "any", false);
+                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup(ip->classes), RVAL_TYPE_SCALAR}, "any", false);
             }
             else
             {
-                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup("verbose"), CF_SCALAR}, "any", false);
+                PromiseAppendConstraint(pp, "report_level", (Rval) {xstrdup("verbose"), RVAL_TYPE_SCALAR}, "any", false);
             }
         }
     }

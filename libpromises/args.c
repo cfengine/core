@@ -94,20 +94,20 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
         switch (rpg->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             lval = (char *) rpt->item;
             rval = rpg->item;
             CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char *) rval);
-            AddVariableHash(scopeid, lval, (Rval) {rval, CF_SCALAR}, dtg, NULL, 0);
+            AddVariableHash(scopeid, lval, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg, NULL, 0);
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
             lval = (char *) rpt->item;
             rval = rpg->item;
-            AddVariableHash(scopeid, lval, (Rval) {rval, CF_LIST}, dtg, NULL, 0);
+            AddVariableHash(scopeid, lval, (Rval) { rval, RVAL_TYPE_LIST }, dtg, NULL, 0);
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rpg->item;
             dtg = FunctionReturnType(fp->name);
             FnCallResult res = EvaluateFunctionCall(fp, NULL);
@@ -128,12 +128,12 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
                 DeleteFnCall(fp);
 
                 rpg->item = res.rval.item;
-                rpg->type = res.rval.rtype;
+                rpg->type = res.rval.type;
 
                 lval = (char *) rpt->item;
                 rval = rpg->item;
 
-                AddVariableHash(scopeid, lval, (Rval) {rval, CF_SCALAR}, dtg, NULL, 0);
+                AddVariableHash(scopeid, lval, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg, NULL, 0);
             }
 
             break;
@@ -175,7 +175,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
     {
         switch (rp->type)
         {
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             subfp = (FnCall *) rp->item;
             rval = EvaluateFunctionCall(subfp, pp).rval;
             break;
@@ -185,7 +185,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
         }
 
         CfDebug("EXPARG: %s.%s\n", CONTEXTID, (char *) rval.item);
-        AppendRlist(&newargs, rval.item, rval.rtype);
+        AppendRlist(&newargs, rval.item, rval.type);
         DeleteRvalItem(rval);
     }
 
@@ -214,7 +214,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
 
     for (argnum = 0; rp != NULL && argtemplate[argnum].pattern != NULL; argnum++)
     {
-        if (rp->type != CF_FNCALL)
+        if (rp->type != RVAL_TYPE_FNCALL)
         {
             /* Nested functions will not match to lval so don't bother checking */
             CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);

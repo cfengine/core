@@ -239,7 +239,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'r':
-            PrependRScalar(&GOALS, "goal.*", CF_SCALAR);
+            PrependRScalar(&GOALS, "goal.*", RVAL_TYPE_SCALAR);
             SHOWREPORTS = true;
             break;
 

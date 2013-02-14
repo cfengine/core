@@ -41,7 +41,7 @@ int IsBuiltinFnCall(Rval rval)
 {
     FnCall *fp;
 
-    if (rval.rtype != CF_FNCALL)
+    if (rval.type != RVAL_TYPE_FNCALL)
     {
         return false;
     }
@@ -128,11 +128,11 @@ int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             Join(buffer, (char *) rp->item, bufsize);
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             PrintFnCall(work, CF_MAXVARSIZE, (FnCall *) rp->item);
             Join(buffer, work, bufsize);
             break;
@@ -169,11 +169,11 @@ void ShowFnCall(FILE *fout, const FnCall *fp)
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             fprintf(fout, "%s,", (char *) rp->item);
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             ShowFnCall(fout, (FnCall *) rp->item);
             break;
 
@@ -230,14 +230,14 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
             CfOut(cf_error, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
         }
 
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
     }
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
     if ((pp != NULL) && !IsDefinedClass(pp->classes, pp->ns))
     {
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
     }
 
     expargs = NewExpArgs(fp, pp);
@@ -245,7 +245,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
     if (UnresolvedArgs(expargs))
     {
         DeleteExpArgs(expargs);
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
     }
 
     if (pp != NULL)
@@ -263,7 +263,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
     {
         /* We do not assign variables to failed function calls */
         DeleteExpArgs(expargs);
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), CF_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
     }
 
     DeleteExpArgs(expargs);
@@ -295,11 +295,11 @@ void FnCallPrint(Writer *writer, const FnCall *call)
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             WriterWriteF(writer, "%s,", (const char *) rp->item);
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             FnCallPrint(writer, (FnCall *) rp->item);
             break;
 
@@ -327,11 +327,11 @@ JsonElement *FnCallToJson(const FnCall *fp)
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             JsonArrayAppendString(argsArray, (const char *) rp->item);
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *) rp->item));
             break;
 

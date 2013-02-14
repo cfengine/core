@@ -390,8 +390,8 @@ static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq 
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     NewScalar("sys", name, hw_mac, cf_str);
-    AppendRlist(hardware, hw_mac, CF_SCALAR);
-    AppendRlist(interfaces, ifp->ifr_name, CF_SCALAR);
+    AppendRlist(hardware, hw_mac, RVAL_TYPE_SCALAR);
+    AppendRlist(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     HardClass(name);
@@ -561,7 +561,7 @@ void GetInterfacesInfo(AgentType ag)
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
-                    AppendRlist(&ips, VIPADDRESS, CF_SCALAR);
+                    AppendRlist(&ips, VIPADDRESS, RVAL_TYPE_SCALAR);
 
                     for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                     {
@@ -600,7 +600,7 @@ void GetInterfacesInfo(AgentType ag)
                 }
 
                 AppendItem(&IPADDRESSES, inet_ntoa(sin->sin_addr), "");
-                AppendRlist(&ips, inet_ntoa(sin->sin_addr), CF_SCALAR);
+                AppendRlist(&ips, inet_ntoa(sin->sin_addr), RVAL_TYPE_SCALAR);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                 {
@@ -777,7 +777,7 @@ static void InitIgnoreInterfaces()
 
         if (scanCount != 0 && *regex != '\0')
         {
-           IdempPrependRScalar(&IGNORE_INTERFACES,regex,CF_SCALAR);
+           IdempPrependRScalar(&IGNORE_INTERFACES,regex, RVAL_TYPE_SCALAR);
         }
     }
  

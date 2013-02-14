@@ -107,9 +107,9 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         return false;
     }
 
-    switch (cp->rval.rtype)
+    switch (cp->rval.type)
     {
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
 
         fp = (FnCall *) cp->rval.item;  /* Special expansion of functions for control, best effort only */
         FnCallResult res = EvaluateFunctionCall(fp, pp);
@@ -118,13 +118,13 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         cp->rval = res.rval;
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
             rval = EvaluateFinalRval("this", (Rval) {rp->item, rp->type}, true, pp);
             DeleteRvalItem((Rval) {rp->item, rp->type});
             rp->item = rval.item;
-            rp->type = rval.rtype;
+            rp->type = rval.type;
         }
         break;
 
@@ -138,7 +138,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
     if (strcmp(cp->lval, "expression") == 0)
     {
-        if (cp->rval.rtype != CF_SCALAR)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
             return false;
         }
@@ -155,7 +155,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
     if (strcmp(cp->lval, "not") == 0)
     {
-        if (cp->rval.rtype != CF_SCALAR)
+        if (cp->rval.type != RVAL_TYPE_SCALAR)
         {
             return false;
         }
@@ -237,7 +237,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
 /* If we get here, anything remaining on the RHS must be a clist */
 
-    if (cp->rval.rtype != CF_LIST)
+    if (cp->rval.type != RVAL_TYPE_LIST)
     {
         CfOut(cf_error, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
         PromiseRef(cf_error, pp);
@@ -246,7 +246,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             return false;
         }
@@ -658,7 +658,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
 
     if (context == NULL)
     {
-        PrependRScalar(&list, "any", CF_SCALAR);
+        PrependRScalar(&list, "any", RVAL_TYPE_SCALAR);
     }
     else
     {
@@ -682,7 +682,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
             {
                 // Fully bracketed atom (protected)
                 cbuff[strlen(cbuff) - 1] = '\0';
-                PrependRScalar(&list, cbuff + 1, CF_SCALAR);
+                PrependRScalar(&list, cbuff + 1, RVAL_TYPE_SCALAR);
             }
             else
             {
@@ -730,12 +730,12 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
                         for (rp = orlist; rp != NULL; rp = rp->next)
                         {
                             snprintf(buff, CF_MAXVARSIZE, "%s.%s", (char *) rp->item, andstring);
-                            PrependRScalar(&list, buff, CF_SCALAR);
+                            PrependRScalar(&list, buff, RVAL_TYPE_SCALAR);
                         }
                     }
                     else
                     {
-                        PrependRScalar(&list, andstring, CF_SCALAR);
+                        PrependRScalar(&list, andstring, RVAL_TYPE_SCALAR);
                     }
 
                     DeleteRlist(orlist);
@@ -744,7 +744,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
                 else
                 {
                     // Clean atom
-                    PrependRScalar(&list, cbuff, CF_SCALAR);
+                    PrependRScalar(&list, cbuff, RVAL_TYPE_SCALAR);
                 }
             }
 
@@ -1582,7 +1582,7 @@ int VarClassExcluded(Promise *pp, char **classes)
         return false;
     }
 
-    *classes = (char *) GetConstraintValue("ifvarclass", pp, CF_SCALAR);
+    *classes = (char *) GetConstraintValue("ifvarclass", pp, RVAL_TYPE_SCALAR);
 
     if (*classes == NULL)
     {
@@ -1731,7 +1731,7 @@ void MarkPromiseHandleDone(const Promise *pp)
     }
 
     char name[CF_BUFSIZE];
-    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
 
     if (handle == NULL)
     {

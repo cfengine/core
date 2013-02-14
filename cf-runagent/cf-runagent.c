@@ -641,7 +641,7 @@ static Promise *MakeDefaultRunAgentPromise()
 
     pp->bundle = xstrdup("implicit internal bundle for runagent");
     pp->promiser = xstrdup("runagent");
-    pp->promisee = (Rval) {NULL, CF_NOPROMISEE};
+    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
     return pp;

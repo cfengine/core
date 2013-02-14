@@ -177,13 +177,13 @@ void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, Su
 
                     if (bs[l].dtype == cf_body)
                     {
-                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.rtype);
+                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.type);
                         return;
                     }
                     else if (bs[l].dtype == cf_bundle)
                     {
                         CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
-                                rval.rtype);
+                                rval.type);
                         return;
                     }
                     else
@@ -432,16 +432,16 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
     }
     else
     {
-        CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n", lval, CF_DATATYPES[dt], rval.rtype,
+        CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n", lval, CF_DATATYPES[dt], rval.type,
                 range);
     }
     CfDebug(" ------------------------------------------------\n");
 
 /* Get type of lval */
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         switch (dt)
         {
         case cf_slist:
@@ -462,7 +462,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
         }
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
 
         switch (dt)
         {
@@ -486,7 +486,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
         return;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
 
         /* Fn-like objects are assumed to be parameterized bundles in these... */
 
@@ -499,6 +499,9 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
         DeleteItemList(checklist);
         return;
+
+    default:
+        break;
     }
 
 /* If we get here, we have a literal scalar type */
@@ -582,7 +585,7 @@ vars:
         {
             if ((dtype = GetVariable(scopeid, var, &rval)) != cf_notype)
             {
-                if (rval.rtype == CF_LIST)
+                if (rval.type == RVAL_TYPE_LIST)
                 {
                     if (!islist)
                     {

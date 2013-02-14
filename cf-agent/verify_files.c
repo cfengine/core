@@ -65,7 +65,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     int count = 0, lastnode = false, expandregex = false;
     uid_t agentuid = getuid();
     int create = GetBooleanConstraint("create", pp);
-    char *pathtype = GetConstraintValue("pathtype", pp, CF_SCALAR);
+    char *pathtype = GetConstraintValue("pathtype", pp, RVAL_TYPE_SCALAR);
 
     CfDebug("LocateFilePromiserGroup(%s)\n", wildpath);
 
@@ -499,13 +499,13 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditline)
     {
-        if ((vp = GetConstraintValue("edit_line", pp, CF_FNCALL)))
+        if ((vp = GetConstraintValue("edit_line", pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
             strcpy(edit_bundle_name, fp->name);
             params = fp->args;
         }
-        else if ((vp = GetConstraintValue("edit_line", pp, CF_SCALAR)))
+        else if ((vp = GetConstraintValue("edit_line", pp, RVAL_TYPE_SCALAR)))
         {
             strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
@@ -557,13 +557,13 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (a.haveeditxml)
     {
-        if ((vp = GetConstraintValue("edit_xml", pp, CF_FNCALL)))
+        if ((vp = GetConstraintValue("edit_xml", pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
             strcpy(edit_bundle_name, fp->name);
             params = fp->args;
         }
-        else if ((vp = GetConstraintValue("edit_xml", pp, CF_SCALAR)))
+        else if ((vp = GetConstraintValue("edit_xml", pp, RVAL_TYPE_SCALAR)))
         {
             strcpy(edit_bundle_name, (char *) vp);
             params = NULL;
@@ -648,7 +648,7 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
 
 static void FindFilePromiserObjects(Promise *pp, const ReportContext *report_context)
 {
-    char *val = GetConstraintValue("pathtype", pp, CF_SCALAR);
+    char *val = GetConstraintValue("pathtype", pp, RVAL_TYPE_SCALAR);
     int literal = (GetBooleanConstraint("copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
 
 /* Check if we are searching over a regular expression */

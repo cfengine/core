@@ -575,7 +575,7 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
-    sp = (char *) GetConstraintValue("resource_type", pp, CF_SCALAR);
+    sp = (char *) GetConstraintValue("resource_type", pp, RVAL_TYPE_SCALAR);
 
     if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
@@ -650,9 +650,9 @@ void KeepFileAccessPromise(Promise *pp)
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
             {
@@ -661,7 +661,7 @@ void KeepFileAccessPromise(Promise *pp)
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
@@ -685,7 +685,7 @@ void KeepFileAccessPromise(Promise *pp)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -698,7 +698,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {
@@ -764,9 +764,9 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
             {
@@ -775,7 +775,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
@@ -799,7 +799,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -842,9 +842,9 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
             if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
             {
@@ -853,7 +853,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
@@ -877,7 +877,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -907,9 +907,9 @@ static void KeepServerRolePromise(Promise *pp)
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
@@ -921,7 +921,7 @@ static void KeepServerRolePromise(Promise *pp)
             }
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             /* Shouldn't happen */
             break;
 

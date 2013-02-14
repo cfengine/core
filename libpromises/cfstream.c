@@ -209,7 +209,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             v = "not specified";
         }
 
-        if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+        if ((sp = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
         {
             strncpy(handle, sp, CF_MAXVARSIZE - 1);
         }
@@ -238,18 +238,21 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
         if (pp != NULL)
         {
-            switch (pp->promisee.rtype)
+            switch (pp->promisee.type)
             {
-            case CF_SCALAR:
+            case RVAL_TYPE_SCALAR:
                 snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
                 AppendItem(&mess, output, NULL);
                 break;
 
-            case CF_LIST:
+            case RVAL_TYPE_LIST:
                 
                 snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to (stakeholders): ");
                 PrintRlist(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
                 AppendItem(&mess, output, NULL);
+                break;
+
+            default:
                 break;
             }
             
@@ -340,7 +343,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (pp != NULL)
     {
-        LogPromiseResult(pp->promiser, pp->promisee.rtype, pp->promisee.item, status, attr.transaction.log_level, mess);
+        LogPromiseResult(pp->promiser, pp->promisee.type, pp->promisee.item, status, attr.transaction.log_level, mess);
     }
 
 /* Now complete the exits status classes and auditing */

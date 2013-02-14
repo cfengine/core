@@ -349,7 +349,7 @@ void PromiseBanner(Promise *pp)
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+    if ((sp = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }

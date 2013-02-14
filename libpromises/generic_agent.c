@@ -649,7 +649,7 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
         for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
         {
             // TODO: ad-hoc validation, necessary?
-            if (rp->type != CF_SCALAR)
+            if (rp->type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "", "Non-file object in inputs list\n");
             }
@@ -664,21 +664,24 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
 
                 returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
 
-                switch (returnval.rtype)
+                switch (returnval.type)
                 {
-                    case CF_SCALAR:
+                    case RVAL_TYPE_SCALAR:
                     {
                         Policy *policy = Cf3ParseFile(config, returnval.item);
                         main_policy = PolicyMerge(main_policy, policy);
                     }
                     break;
 
-                    case CF_LIST:
+                    case RVAL_TYPE_LIST:
                     for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
                     {
                         Policy *policy = Cf3ParseFile(config, sl->item);
                         main_policy = PolicyMerge(main_policy, policy);
                     }
+                    break;
+
+                    case RVAL_TYPE_FNCALL:
                     break;
                 }
 
@@ -792,7 +795,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
     for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             CfOut(cf_error, "", "Non file object %s in list\n", (char *) rp->item);
         }
@@ -800,9 +803,9 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
         {
             Rval returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true, NULL);
 
-            switch (returnval.rtype)
+            switch (returnval.type)
             {
-            case CF_SCALAR:
+            case RVAL_TYPE_SCALAR:
 
                 if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
                 {
@@ -815,10 +818,9 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
                 {
                     result = true;
                 }
-
                 break;
 
-            case CF_LIST:
+            case RVAL_TYPE_LIST:
 
                 for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                 {
@@ -835,7 +837,9 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
                         break;
                     }
                 }
+                break;
 
+            case RVAL_TYPE_FNCALL:
                 break;
             }
 
@@ -1482,7 +1486,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             GOALS = NULL;
             for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
             {
-                PrependRScalar(&GOALS, rp->item, CF_SCALAR);
+                PrependRScalar(&GOALS, rp->item, RVAL_TYPE_SCALAR);
             }
             CfOut(cf_verbose, "", "SET goal_patterns list\n");
             continue;
@@ -1760,7 +1764,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
         return false;
     }
 
-    if (retval.rtype != CF_LIST)
+    if (retval.type != RVAL_TYPE_LIST)
     {
         FatalError("Promised bundlesequence was not a list");
     }
@@ -1769,11 +1773,11 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             name = (char *) rp->item;
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
             break;

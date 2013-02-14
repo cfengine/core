@@ -753,9 +753,9 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
 
         if (strcmp(pp->agentsubtype, "meta") == 0)
            {
-           char namespace[CF_BUFSIZE];
-           snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
-           ConvergeVarHashPromise(namespace, pp, true);
+           char ns[CF_BUFSIZE];
+           snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+           ConvergeVarHashPromise(ns, pp, true);
            }
         
         PromiseDestroy(pexp);

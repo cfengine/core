@@ -127,9 +127,9 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         NewScope(bp->name);
         HashVariables(PolicyFromPromise(pp), bp->name, report_context);
 
-        char namespace[CF_BUFSIZE];
-        snprintf(namespace,CF_BUFSIZE,"%s_meta",method_name);
-        NewScope(namespace);
+        char ns[CF_BUFSIZE];
+        snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
+        NewScope(ns);
         SetBundleOutputs(bp->name);
 
         AugmentScope(method_deref, pp->ns, bp->args, params);

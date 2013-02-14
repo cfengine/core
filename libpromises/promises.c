@@ -341,7 +341,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Seq *bodies, const char *namespace, const char *key)
+Body *IsBody(Seq *bodies, const char *ns, const char *key)
 {
     char fqname[CF_BUFSIZE];
 
@@ -350,7 +350,7 @@ Body *IsBody(Seq *bodies, const char *namespace, const char *key)
         Body *bp = SeqAt(bodies, i);
 
         // bp->namespace is where the body belongs, namespace is where we are now
-        if (strchr(key, CF_NS) || strcmp(namespace,"default") == 0)
+        if (strchr(key, CF_NS) || strcmp(ns,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
             {
@@ -363,7 +363,7 @@ Body *IsBody(Seq *bodies, const char *namespace, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", namespace, CF_NS, key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", ns, CF_NS, key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -416,7 +416,7 @@ Bundle *IsBundle(Seq *bundles, const char *key)
 
 /*****************************************************************************/
 
-Promise *NewPromise(char *typename, char *promiser)
+Promise *NewPromise(char *type, char *promiser)
 {
     Promise *pp;
 
@@ -435,7 +435,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
-    pp->agentsubtype = typename;        /* cache this, do not copy string */
+    pp->agentsubtype = type;        /* cache this, do not copy string */
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 

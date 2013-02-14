@@ -934,9 +934,9 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            char namespace[CF_BUFSIZE];
-            snprintf(namespace,CF_BUFSIZE,"%s_meta", name);
-            NewScope(namespace);
+            char ns[CF_BUFSIZE];
+            snprintf(ns,CF_BUFSIZE,"%s_meta", name);
+            NewScope(ns);
 
             SetBundleOutputs(bp->name);
             AugmentScope(bp->name, bp->ns, bp->args, params);
@@ -1126,10 +1126,10 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
 
     if (strcmp("meta", pp->agentsubtype) == 0)
     {
-        char namespace[CF_BUFSIZE];
-        snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
-        NewScope(namespace);
-        ConvergeVarHashPromise(namespace, pp, true);
+        char ns[CF_BUFSIZE];
+        snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+        NewScope(ns);
+        ConvergeVarHashPromise(ns, pp, true);
         return;
     }
 

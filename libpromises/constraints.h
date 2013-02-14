@@ -81,6 +81,6 @@ void ReCheckAllConstraints(Promise *pp);
 int GetBundleConstraint(const char *lval, const Promise *list);
 PromiseIdent *NewPromiseId(char *handle, Promise *pp);
 void DeleteAllPromiseIds(void);
-void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);;
+void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
 
 #endif

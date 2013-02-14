@@ -61,7 +61,7 @@
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, enum cfdatatype type, int intIndex);
-static int ExecModule(char *command, const char*namespace);
+static int ExecModule(char *command, const char *ns);
 static int CheckID(char *id);
 
 static void *CfReadFile(char *filename, int maxsize);
@@ -3980,7 +3980,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
 
 /*********************************************************************/
 
-static int ExecModule(char *command, const char *namespace)
+static int ExecModule(char *command, const char *ns)
 {
     FILE *pp;
     char *sp, line[CF_BUFSIZE];
@@ -4028,7 +4028,7 @@ static int ExecModule(char *command, const char *namespace)
             }
         }
 
-        ModuleProtocol(command, line, print, namespace);
+        ModuleProtocol(command, line, print, ns);
     }
 
     cf_pclose(pp);
@@ -4039,7 +4039,7 @@ static int ExecModule(char *command, const char *namespace)
 /* Level                                                             */
 /*********************************************************************/
 
-void ModuleProtocol(char *command, char *line, int print, const char *namespace)
+void ModuleProtocol(char *command, char *line, int print, const char *ns)
 {
     char name[CF_BUFSIZE], content[CF_BUFSIZE], context[CF_BUFSIZE];
     char arg0[CF_BUFSIZE];
@@ -4066,7 +4066,7 @@ void ModuleProtocol(char *command, char *line, int print, const char *namespace)
         CfOut(cf_verbose, "", "Activated classes: %s\n", line + 1);
         if (CheckID(line + 1))
         {
-             NewClass(line + 1, namespace);
+             NewClass(line + 1, ns);
         }
         break;
     case '-':

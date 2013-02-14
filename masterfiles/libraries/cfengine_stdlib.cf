@@ -404,6 +404,7 @@ vars:
   # Be careful if the index string contains funny chars
 
   "cindex[$(index)]" string => canonify("$(index)");
+  "cv"               string => canonify("$(v)");
 
 field_edits:
 
@@ -412,7 +413,7 @@ field_edits:
   "\s*$(index)\s*=.*"
 
      edit_field => col("=","2","$($(v)[$(index)])","set"),
-        classes => if_ok("$(cindex[$(index)])_in_file"),
+        classes => if_ok("$(cv)_$(cindex[$(index)])_in_file"),
         comment => "Match a line starting like key = something";
 
 insert_lines:
@@ -420,7 +421,7 @@ insert_lines:
   "$(index)=$($(v)[$(index)])",
 
          comment => "Insert a variable definition",
-      ifvarclass => "!$(cindex[$(index)])_in_file";
+      ifvarclass => "!$(cv)_$(cindex[$(index)])_in_file";
 }
 
 bundle edit_line set_config_values(v)

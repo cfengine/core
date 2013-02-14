@@ -1536,6 +1536,9 @@ static int CompareRval(Rval rval1, Rval rval2)
 
     case RVAL_TYPE_FNCALL:
         return -1;
+
+    default:
+        return -1;
     }
 
     return true;

@@ -1147,6 +1147,9 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
         break;
     case RVAL_TYPE_LIST:
         CfDebug("   Appending a list to rhs\n");
+        break;
+    default:
+        break;
     }
 
     // Check class

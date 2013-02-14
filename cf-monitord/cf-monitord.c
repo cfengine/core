@@ -98,8 +98,13 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("monitor");
-    Policy *policy = GenericInitialize("monitor", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericAgentDiscoverContext(config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
+
+    CheckLicenses();
+    XML = false;
+
     ThisAgentInit();
     KeepPromises(policy, report_context);
 

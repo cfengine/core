@@ -31,6 +31,8 @@
 
 typedef struct
 {
+    AgentType agent_type;
+
     Rlist *bundlesequence;
     char *input_file;
     bool check_not_writable_by_others;
@@ -40,15 +42,28 @@ typedef struct
     // change to evaluation behavior from the policy itself
     bool ignore_missing_bundles;
     bool ignore_missing_inputs;
+
+    union
+    {
+        struct
+        {
+            enum
+            {
+                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE,
+                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
+            } policy_output_format;
+        } common;
+    } agent_specific;
 } GenericAgentConfig;
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
+void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);
+Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
 void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file, const ReportContext *report_context);
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
@@ -65,7 +80,6 @@ const Rlist *InputFiles(Policy *policy);
 
 
 void SetFacility(const char *retval);
-Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
 void CheckBundleParameters(char *scope, Rlist *args);
 void PromiseBanner(Promise *pp);
 void BannerBundle(Bundle *bp, Rlist *args);
@@ -75,7 +89,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname);
 void CheckLicenses(void);
 void ReloadPromises(AgentType ag);
 
-ReportContext *OpenReports(const char *agents);
+ReportContext *OpenReports(AgentType agent_type);
 void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);

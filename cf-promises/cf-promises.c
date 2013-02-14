@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -34,8 +34,6 @@
 
 /*******************************************************************/
 
-static bool SHOW_PARSE_TREE;
-
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
@@ -62,7 +60,7 @@ static const struct option OPTIONS[] =
     {"diagnostic", no_argument, 0, 'x'},
     {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
-    {"parse-tree", no_argument, 0, 'p'},
+    {"policy-output-format", required_argument, 0, 'p'},
     {"full-check", no_argument, 0, 'c'},
     {NULL, 0, 0, '\0'}
 };
@@ -82,7 +80,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
-    "Print a parse tree for the policy file in JSON format",
+    "Output the parsed policy. Possible values: 'none', 'json'. Default is 'none'",
     "Ensure full policy integrity checks",
     NULL
 };
@@ -94,15 +92,32 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
-    ReportContext *report_context = OpenReports("common");
+    ReportContext *report_context = OpenReports(config->agent_type);
     
-    Policy *policy = GenericInitialize("common", config, report_context, false);
+    GenericAgentDiscoverContext(config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
 
-    if (SHOW_PARSE_TREE)
+    if (SHOWREPORTS)
     {
-        Writer *writer = FileWriter(stdout);
-        PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
-        WriterClose(writer);
+        CompilationReport(policy, config->input_file);
+    }
+
+    CheckLicenses();
+    XML = false;
+
+    switch (config->agent_specific.common.policy_output_format)
+    {
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
+        {
+            JsonElement *json_policy = PolicyToJson(policy);
+            Writer *writer = FileWriter(stdout);
+            JsonElementPrint(writer, json_policy, 2);
+            WriterClose(writer);
+            JsonElementDestroy(json_policy);
+        }
+
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
+        break;
     }
 
     ThisAgentInit();
@@ -134,7 +149,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pcg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:p:cg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -165,6 +180,22 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 GenericAgentConfigSetBundleSequence(config, bundlesequence);
                 DeleteRlist(bundlesequence);
                 CBUNDLESEQUENCE_STR = optarg; // TODO: wtf is this
+            }
+            break;
+
+        case 'p':
+            if (strcmp("none", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
+            }
+            else if (strcmp("json", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON;
+            }
+            else
+            {
+                CfOut(cf_error, "", "Invalid policy output format: '%s'. Possible values are 'none', 'json'", optarg);
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -219,10 +250,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'a':
             printf("Self-analysis is not yet implemented.\n");
             exit(0);
-            break;
-
-        case 'p':
-            SHOW_PARSE_TREE = true;
             break;
 
         default:

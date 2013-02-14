@@ -127,8 +127,13 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports("executor");
-    Policy *policy = GenericInitialize("executor", config, report_context, false);
+    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericAgentDiscoverContext(config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
+
+    CheckLicenses();
+    XML = false;
+
     ThisAgentInit();
 
     ExecConfig exec_config = {
@@ -595,7 +600,6 @@ static void Apoptosis()
     pp.bundletype = "agent";
     pp.bundle = "exec_apoptosis";
     pp.ref = "Programmed death";
-    pp.agentsubtype = "processes";
     pp.done = false;
     pp.cache = NULL;
     pp.inode_cache = NULL;
@@ -735,7 +739,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
-        *policy = ReadPromises(AGENT_TYPE_EXECUTOR, CF_EXECC, config, report_context);
+        *policy = ReadPromises(AGENT_TYPE_EXECUTOR, config, report_context);
         KeepPromises(*policy, exec_config);
     }
     else

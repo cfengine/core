@@ -343,8 +343,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                        P.rval,
-                                                                       P.currentclasses ? P.currentclasses : "any",
-                                                                       P.blockid, P.blocktype, P.current_namespace);
+                                                                       P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -380,8 +379,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, CF_NOPROMISEE },
-                                                                P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype, P.current_namespace);
+                                                                P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -503,7 +501,7 @@ rval:                  IDSYNTAX
 
                            if (P.currentpromise)
                            {
-                               if (LvalWantsBody(P.currentpromise->agentsubtype,P.lval))
+                               if (LvalWantsBody(P.currentpromise->parent_subtype->name,P.lval))
                                {
                                    yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
                                }

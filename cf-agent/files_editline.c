@@ -284,7 +284,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->ns);
+            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context);
             PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
 
             DeleteItemList(lines);
@@ -304,7 +304,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 {
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
-                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context, bundlename, "edit_line", pp->ns);
+                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context);
                 PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
             }
         }
@@ -369,37 +369,37 @@ static void KeepEditLinePromise(Promise *pp)
 
     PromiseBanner(pp);
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(pp);
         return;
     }
 
-    if (strcmp("delete_lines", pp->agentsubtype) == 0)
+    if (strcmp("delete_lines", pp->parent_subtype->name) == 0)
     {
         VerifyLineDeletions(pp);
         return;
     }
 
-    if (strcmp("field_edits", pp->agentsubtype) == 0)
+    if (strcmp("field_edits", pp->parent_subtype->name) == 0)
     {
         VerifyColumnEdits(pp);
         return;
     }
 
-    if (strcmp("insert_lines", pp->agentsubtype) == 0)
+    if (strcmp("insert_lines", pp->parent_subtype->name) == 0)
     {
         VerifyLineInsertions(pp);
         return;
     }
 
-    if (strcmp("replace_patterns", pp->agentsubtype) == 0)
+    if (strcmp("replace_patterns", pp->parent_subtype->name) == 0)
     {
         VerifyPatterns(pp);
         return;
     }
 
-    if (strcmp("reports", pp->agentsubtype) == 0)
+    if (strcmp("reports", pp->parent_subtype->name) == 0)
     {
         VerifyReportPromise(pp);
         return;

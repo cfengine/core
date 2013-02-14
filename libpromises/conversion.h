@@ -28,6 +28,7 @@
 
 #include "cf3.defs.h"
 
+const char *AgentTypeToString(AgentType agent_type);
 char *EscapeJson(char *s, char *out, int outSz);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -46,7 +47,6 @@ enum cfcomparison String2Comparison(char *s);
 enum cflinktype String2LinkType(char *s);
 enum cfdatatype Typename2Datatype(char *name);
 enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp);
-AgentType Agent2Type(const char *name);
 enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);
 int GetBoolean(const char *val);

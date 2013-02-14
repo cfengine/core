@@ -122,21 +122,29 @@ bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 
+/**
+ * @brief Serialize a policy as JSON
+ * @param policy The policy to serialize
+ * @return A JsonElement representing the input policy
+ */
+JsonElement *PolicyToJson(const Policy *policy);
+
+/**
+ * @brief Pretty-print a policy
+ * @param policy The policy to print
+ * @param writer Writer to write into
+ */
+void PolicyPrint(const Policy *policy, Writer *writer);
+
 SubType *BundleAppendSubType(Bundle *bundle, char *name);
 SubType *BundleGetSubType(Bundle *bp, const char *name);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
-Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns);
+Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes);
 void PromiseDestroy(Promise *pp);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
-
-
-// TODO: legacy
-
-Bundle *GetBundle(const Policy *policy, const char *name, const char *agent);
-
 
 #endif

@@ -203,8 +203,15 @@ int main(int argc, char *argv[])
     }
 #endif
 #endif
-    ReportContext *report_context = OpenReports("agent");
-    Policy *policy = GenericInitialize("agent", config, report_context, ALWAYS_VALIDATE);
+    ReportContext *report_context = OpenReports(config->agent_type);
+
+    GenericAgentDiscoverContext(config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(config, report_context, ALWAYS_VALIDATE);
+
+    CheckLicenses();
+    XML = false;
+
+
     ThisAgentInit();
     BeginAudit();
     KeepPromises(policy, config, report_context);
@@ -890,7 +897,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
 
         if (!config->ignore_missing_bundles)
         {
-            if (!(GetBundle(policy, name, "agent") || (GetBundle(policy, name, "common"))))
+            if (!(PolicyGetBundle(policy, NULL, "agent", name) || (PolicyGetBundle(policy, NULL, "common", name))))
             {
                 CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence was not found\n", name);
                 ok = false;
@@ -927,7 +934,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             break;
         }
 
-        if ((bp = GetBundle(policy, name, "agent")) || (bp = GetBundle(policy, name, "common")))
+        if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
             char namespace[CF_BUFSIZE];
             snprintf(namespace,CF_BUFSIZE,"%s_meta", name);
@@ -1119,7 +1126,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     
 // Record promises examined for efficiency calc
 
-    if (strcmp("meta", pp->agentsubtype) == 0)
+    if (strcmp("meta", pp->parent_subtype->name) == 0)
     {
         char namespace[CF_BUFSIZE];
         snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
@@ -1128,26 +1135,26 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
-    if (strcmp("vars", pp->agentsubtype) == 0)
+    if (strcmp("vars", pp->parent_subtype->name) == 0)
     {
         ConvergeVarHashPromise(pp->bundle, pp, true);
         return;
     }
 
-    if (strcmp("defaults", pp->agentsubtype) == 0)
+    if (strcmp("defaults", pp->parent_subtype->name) == 0)
     {
         DefaultVarPromise(pp);
         return;
     }
 
     
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(pp);
         return;
     }
 
-    if (strcmp("outputs", pp->agentsubtype) == 0)
+    if (strcmp("outputs", pp->parent_subtype->name) == 0)
     {
         VerifyOutputsPromise(pp);
         return;
@@ -1155,33 +1162,33 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
 
     SetPromiseOutputs(pp);
 
-    if (strcmp("interfaces", pp->agentsubtype) == 0)
+    if (strcmp("interfaces", pp->parent_subtype->name) == 0)
     {
         VerifyInterfacesPromise(pp);
         return;
     }
 
-    if (strcmp("processes", pp->agentsubtype) == 0)
+    if (strcmp("processes", pp->parent_subtype->name) == 0)
     {
         VerifyProcessesPromise(pp);
         return;
     }
 
-    if (strcmp("storage", pp->agentsubtype) == 0)
+    if (strcmp("storage", pp->parent_subtype->name) == 0)
     {
         FindAndVerifyStoragePromises(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("packages", pp->agentsubtype) == 0)
+    if (strcmp("packages", pp->parent_subtype->name) == 0)
     {
         VerifyPackagesPromise(pp);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("files", pp->agentsubtype) == 0)
+    if (strcmp("files", pp->parent_subtype->name) == 0)
     {
         if (GetBooleanConstraint("background", pp))
         {
@@ -1196,42 +1203,42 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
-    if (strcmp("commands", pp->agentsubtype) == 0)
+    if (strcmp("commands", pp->parent_subtype->name) == 0)
     {
         VerifyExecPromise(pp);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("databases", pp->agentsubtype) == 0)
+    if (strcmp("databases", pp->parent_subtype->name) == 0)
     {
         VerifyDatabasePromises(pp);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("methods", pp->agentsubtype) == 0)
+    if (strcmp("methods", pp->parent_subtype->name) == 0)
     {
         VerifyMethodsPromise(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("services", pp->agentsubtype) == 0)
+    if (strcmp("services", pp->parent_subtype->name) == 0)
     {
         VerifyServicesPromise(pp, report_context);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("guest_environments", pp->agentsubtype) == 0)
+    if (strcmp("guest_environments", pp->parent_subtype->name) == 0)
     {
         VerifyEnvironmentsPromise(pp);
         EndMeasurePromise(start, pp);
         return;
     }
 
-    if (strcmp("reports", pp->agentsubtype) == 0)
+    if (strcmp("reports", pp->parent_subtype->name) == 0)
     {
         VerifyReportPromise(pp);
         return;

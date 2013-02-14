@@ -115,9 +115,8 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
+void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context)
 {
-    AgentType ag = Agent2Type(agents);
     char vbuff[CF_BUFSIZE];
 
 #ifdef HAVE_NOVA
@@ -134,7 +133,7 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
     SetStartTime();
     SanitizeEnvironment();
 
-    THIS_AGENT_TYPE = ag;
+    THIS_AGENT_TYPE = config->agent_type;
     HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
@@ -156,13 +155,13 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
         ShowTopicRepresentation(report_context);
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
-    }       
-    
+    }
+
     NewScope("const");
     NewScope("match");
     NewScope("mon");
     GetNameInfo3();
-    GetInterfacesInfo(ag);
+    GetInterfacesInfo(config->agent_type);
 
     Get3Environment();
     BuiltinClasses();
@@ -193,87 +192,83 @@ Policy *GenericInitialize(char *agents, GenericAgentConfig *config, const Report
     }
 
     SetPolicyServer(POLICY_SERVER);
+}
 
+static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
+{
+    bool check_policy = false;
+
+    if (SHOWREPORTS)
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
+    }
+    if (IsFileOutsideDefaultRepository(config->input_file))
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
+    }
+    if (NewPromiseProposals(config->input_file, NULL))
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
+    }
+    if (force_validation)
+    {
+        check_policy = true;
+        CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
+    }
+
+    return check_policy;
+}
+
+Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
+{
     Policy *policy = NULL;
 
-    if (ag != AGENT_TYPE_KEYGEN && ag != AGENT_TYPE_GENDOC)
+    bool policy_check_ok = false;
+
+    if (!MissingInputFile(config->input_file))
     {
-        bool policy_check_ok = false;
-
-        if (!MissingInputFile(config->input_file))
+        if (IsPolicyPrecheckNeeded(config, force_validation))
         {
-            bool check_promises = false;
-
-            if (SHOWREPORTS)
+            if ((config->agent_type != AGENT_TYPE_AGENT) && (config->agent_type != AGENT_TYPE_EXECUTOR) && (config->agent_type != AGENT_TYPE_SERVER))
             {
-                check_promises = true;
-                CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
-            }
-            if (IsFileOutsideDefaultRepository(config->input_file))
-            {
-                check_promises = true;
-                CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
-            }
-            if (NewPromiseProposals(config->input_file, NULL))
-            {
-                check_promises = true;
-                CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
-            }
-            if (force_validation)
-            {
-                check_promises = true;
-                CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
-            }
-
-            if (check_promises)
-            {
-                if ((ag != AGENT_TYPE_AGENT) && (ag != AGENT_TYPE_EXECUTOR) && (ag != AGENT_TYPE_SERVER))
-                {
-                    policy_check_ok = true;
-                }
-                else
-                {
-                    policy_check_ok = CheckPromises(config->input_file, report_context);
-                }
-                if (BOOTSTRAP && !policy_check_ok)
-                {
-                    CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
-                    policy_check_ok = true;
-                }
+                policy_check_ok = true;
             }
             else
             {
-                CfOut(cf_verbose, "", " -> Policy is already validated");
+                policy_check_ok = CheckPromises(config->input_file, report_context);
+            }
+
+            if (BOOTSTRAP && !policy_check_ok)
+            {
+                CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
                 policy_check_ok = true;
             }
         }
-
-        if (policy_check_ok)
-        {
-            policy = ReadPromises(ag, agents, config, report_context);
-        }
-        else if (config->tty_interactive)
-        {
-            FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
-        }
         else
         {
-            CfOut(cf_error, "",
-                  "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-            HardClass("failsafe_fallback");
-            GenericAgentConfigSetInputFile(config, "failsafe.cf");
-            policy = ReadPromises(ag, agents, config, report_context);
+            CfOut(cf_verbose, "", " -> Policy is already validated");
+            policy_check_ok = true;
         }
-
-        if (SHOWREPORTS && (ag == AGENT_TYPE_COMMON))
-        {
-            CompilationReport(policy, config->input_file);
-        }
-
-        CheckLicenses();
     }
 
-    XML = 0;
+    if (policy_check_ok)
+    {
+        policy = ReadPromises(config->agent_type, config, report_context);
+    }
+    else if (config->tty_interactive)
+    {
+        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+    }
+    else
+    {
+        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        HardClass("failsafe_fallback");
+        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        policy = ReadPromises(config->agent_type, config, report_context);
+    }
 
     return policy;
 }
@@ -383,7 +378,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 
@@ -423,7 +418,8 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
         }
     }
 
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n", agents);
+    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n",
+                 AgentTypeToString(agent_type));
 
     ShowContext(report_context);
 
@@ -451,7 +447,7 @@ Policy *ReadPromises(AgentType ag, char *agents, GenericAgentConfig *config, con
 
     VerifyPromises(policy, config, report_context);
 
-    if (ag != AGENT_TYPE_COMMON)
+    if (agent_type != AGENT_TYPE_COMMON)
     {
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
     }
@@ -866,7 +862,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
 /*******************************************************************/
 
-ReportContext *OpenReports(const char *agents)
+ReportContext *OpenReports(AgentType agent_type)
 {
     const char *workdir = GetWorkDir();
     char name[CF_BUFSIZE];
@@ -877,7 +873,7 @@ ReportContext *OpenReports(const char *agents)
     if (SHOWREPORTS)
     {
         snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.txt", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
-                 agents);
+                 AgentTypeToString(agent_type));
 
         if ((freport_text = fopen(name, "w")) == NULL)
         {
@@ -1796,7 +1792,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
             continue;
         }
 
-        if (!config->ignore_missing_bundles && !GetBundle(policy, name, NULL))
+        if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
         {
             CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
             ok = false;
@@ -1812,6 +1808,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
     GenericAgentConfig *config = xmalloc(sizeof(GenericAgentConfig));
 
+    config->agent_type = agent_type;
+
     config->bundlesequence = NULL;
     config->input_file = NULL;
     config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
@@ -1821,6 +1819,16 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     // TODO: system state, perhaps pull out as param
     config->tty_interactive = isatty(0) && isatty(1);
+
+    switch (agent_type)
+    {
+    case AGENT_TYPE_COMMON:
+        config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
+        break;
+
+    default:
+        break;
+    }
 
     return config;
 }

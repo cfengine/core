@@ -1,7 +1,8 @@
 3.5.0 - Alpha 3
 
         New features:
-
+        - cf-promises flag --parse-tree is replaced by --policy-output-format=, requiring the
+          user to specify the output format.
         - Class "failsafe_fallback" is defined in failsafe.cf when main policy contains errors and
           failsafe is run because of this
 

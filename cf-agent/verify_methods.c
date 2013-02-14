@@ -111,7 +111,13 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
          method_deref = method_name;
     }
     
-    if ((bp = GetBundle(PolicyFromPromise(pp), method_deref, "agent")))
+    bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", method_deref);
+    if (!bp)
+    {
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", method_deref);
+    }
+
+    if (bp)
     {
         const char *bp_stack = THIS_BUNDLE;
 

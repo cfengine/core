@@ -54,7 +54,7 @@ char *BodyName(const Promise *pp)
 
     name = xmalloc(CF_MAXVARSIZE);
 
-    sp = pp->parent_subtype->name;
+    sp = pp->agentsubtype;
 
     if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
     {
@@ -135,6 +135,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
     pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
+    pcopy->agentsubtype = pp->agentsubtype;
     pcopy->done = pp->done;
     pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;
@@ -323,6 +324,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
     pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
+    pcopy->agentsubtype = pp->agentsubtype;
     pcopy->cache = pp->cache;
     pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;
@@ -473,6 +475,7 @@ Promise *NewPromise(char *typename, char *promiser)
     pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
+    pp->agentsubtype = typename;        /* cache this, do not copy string */
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 

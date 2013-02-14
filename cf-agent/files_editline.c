@@ -369,37 +369,37 @@ static void KeepEditLinePromise(Promise *pp)
 
     PromiseBanner(pp);
 
-    if (strcmp("classes", pp->parent_subtype->name) == 0)
+    if (strcmp("classes", pp->agentsubtype) == 0)
     {
         KeepClassContextPromise(pp);
         return;
     }
 
-    if (strcmp("delete_lines", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_lines", pp->agentsubtype) == 0)
     {
         VerifyLineDeletions(pp);
         return;
     }
 
-    if (strcmp("field_edits", pp->parent_subtype->name) == 0)
+    if (strcmp("field_edits", pp->agentsubtype) == 0)
     {
         VerifyColumnEdits(pp);
         return;
     }
 
-    if (strcmp("insert_lines", pp->parent_subtype->name) == 0)
+    if (strcmp("insert_lines", pp->agentsubtype) == 0)
     {
         VerifyLineInsertions(pp);
         return;
     }
 
-    if (strcmp("replace_patterns", pp->parent_subtype->name) == 0)
+    if (strcmp("replace_patterns", pp->agentsubtype) == 0)
     {
         VerifyPatterns(pp);
         return;
     }
 
-    if (strcmp("reports", pp->parent_subtype->name) == 0)
+    if (strcmp("reports", pp->agentsubtype) == 0)
     {
         VerifyReportPromise(pp);
         return;

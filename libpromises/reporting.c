@@ -314,13 +314,13 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
     IndentText(writer, indent);
     if (pp->promisee.item != NULL)
     {
-        WriterWriteF(writer, "%s promise by \'%s\' -> ", pp->parent_subtype->name, pp->promiser);
+        WriterWriteF(writer, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
         RvalPrint(writer, pp->promisee);
         WriterWriteF(writer, " if context is %s\n\n", pp->classes);
     }
     else
     {
-        WriterWriteF(writer, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->parent_subtype->name, pp->promiser,
+        WriterWriteF(writer, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
                 pp->classes);
     }
 

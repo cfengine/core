@@ -278,13 +278,13 @@ static void KeepEditXmlPromise(Promise *pp)
 
     PromiseBanner(pp);
 
-    if (strcmp("classes", pp->parent_subtype->name) == 0)
+    if (strcmp("classes", pp->agentsubtype) == 0)
     {
         KeepClassContextPromise(pp);
         return;
     }
 
-    if (strcmp("build_xpath", pp->parent_subtype->name) == 0)
+    if (strcmp("build_xpath", pp->agentsubtype) == 0)
     {
         a = GetInsertionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -297,7 +297,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("delete_tree", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_tree", pp->agentsubtype) == 0)
     {
         a = GetDeletionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -310,7 +310,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("insert_tree", pp->parent_subtype->name) == 0)
+    if (strcmp("insert_tree", pp->agentsubtype) == 0)
     {
         a = GetInsertionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -323,7 +323,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("delete_attribute", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_attribute", pp->agentsubtype) == 0)
     {
         a = GetDeletionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -336,7 +336,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("set_attribute", pp->parent_subtype->name) == 0)
+    if (strcmp("set_attribute", pp->agentsubtype) == 0)
     {
         a = GetInsertionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -349,7 +349,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("delete_text", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_text", pp->agentsubtype) == 0)
     {
         a = GetDeletionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -362,7 +362,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("set_text", pp->parent_subtype->name) == 0)
+    if (strcmp("set_text", pp->agentsubtype) == 0)
     {
         a = GetInsertionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -375,7 +375,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("insert_text", pp->parent_subtype->name) == 0)
+    if (strcmp("insert_text", pp->agentsubtype) == 0)
     {
         a = GetInsertionAttributes(pp);
 #ifdef HAVE_LIBXML2
@@ -388,7 +388,7 @@ static void KeepEditXmlPromise(Promise *pp)
         return;
     }
 
-    if (strcmp("reports", pp->parent_subtype->name) == 0)
+    if (strcmp("reports", pp->agentsubtype) == 0)
     {
         VerifyReportPromise(pp);
         return;
@@ -1579,7 +1579,7 @@ static bool SanityCheckXPathBuild(Attributes a, Promise *pp)
         strcpy(rawxpath, pp->promiser);
     }
 
-    if ((strcmp("build_xpath", pp->parent_subtype->name) == 0) && (a.xml.havebuildxpath))
+    if ((strcmp("build_xpath", pp->agentsubtype) == 0) && (a.xml.havebuildxpath))
     {
         CfOut(cf_error, "", " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
         return false;

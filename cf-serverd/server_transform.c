@@ -569,7 +569,7 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
-    if (strcmp(pp->parent_subtype->name, "classes") == 0)
+    if (strcmp(pp->agentsubtype, "classes") == 0)
     {
         KeepClassContextPromise(pp);
         return;
@@ -577,25 +577,25 @@ static void KeepServerPromise(Promise *pp)
 
     sp = (char *) GetConstraintValue("resource_type", pp, RVAL_TYPE_SCALAR);
 
-    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
         KeepLiteralAccessPromise(pp, "literal");
         return;
     }
 
-    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
         KeepLiteralAccessPromise(pp, "variable");
         return;
     }
     
-    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(pp, "query");
         return;
     }
 
-    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "context") == 0))
+    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
         KeepLiteralAccessPromise(pp, "context");
         return;
@@ -603,13 +603,13 @@ static void KeepServerPromise(Promise *pp)
 
 /* Default behaviour is file access */
 
-    if (strcmp(pp->parent_subtype->name, "access") == 0)
+    if (strcmp(pp->agentsubtype, "access") == 0)
     {
         KeepFileAccessPromise(pp);
         return;
     }
 
-    if (strcmp(pp->parent_subtype->name, "roles") == 0)
+    if (strcmp(pp->agentsubtype, "roles") == 0)
     {
         KeepServerRolePromise(pp);
         return;

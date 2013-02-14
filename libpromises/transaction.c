@@ -23,11 +23,11 @@
 
 */
 
-#include "cf3.defs.h"
+#include "transaction.h"
 
 #include "env_context.h"
 #include "promises.h"
-#include "transaction.h"
+#include "constraints.h"
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -123,6 +123,44 @@ static void RegisterLockCleanup(void)
 }
 
 /*****************************************************************************/
+
+static char *BodyName(const Promise *pp)
+{
+    char *name, *sp;
+    int size = 0;
+
+/* Return a type template for the promise body for lock-type identification */
+
+    name = xmalloc(CF_MAXVARSIZE);
+
+    sp = pp->agentsubtype;
+
+    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+    {
+        strcpy(name, sp);
+        strcat(name, ".");
+        size += strlen(sp);
+    }
+
+    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+        {
+            continue;
+        }
+
+        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+        {
+            strcat(name, cp->lval);
+            strcat(name, ".");
+            size += strlen(cp->lval);
+        }
+    }
+
+    return name;
+}
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {

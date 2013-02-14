@@ -45,46 +45,6 @@ static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
-char *BodyName(const Promise *pp)
-{
-    char *name, *sp;
-    int size = 0;
-
-/* Return a type template for the promise body for lock-type identification */
-
-    name = xmalloc(CF_MAXVARSIZE);
-
-    sp = pp->agentsubtype;
-
-    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
-    {
-        strcpy(name, sp);
-        strcat(name, ".");
-        size += strlen(sp);
-    }
-
-    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
-        {
-            continue;
-        }
-
-        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
-        {
-            strcat(name, cp->lval);
-            strcat(name, ".");
-            size += strlen(cp->lval);
-        }
-    }
-
-    return name;
-}
-
-/*****************************************************************************/
-
 Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;

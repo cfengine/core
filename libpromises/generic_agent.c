@@ -678,7 +678,7 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
                     }
                     break;
 
-                    case RVAL_TYPE_FNCALL:
+                    default:
                     break;
                 }
 
@@ -836,7 +836,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
                 }
                 break;
 
-            case RVAL_TYPE_FNCALL:
+            default:
                 break;
             }
 

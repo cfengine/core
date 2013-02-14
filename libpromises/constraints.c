@@ -39,7 +39,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 
-static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
+static PromiseIdent *PromiseIdExists(char *ns, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
 
@@ -931,12 +931,12 @@ void DeleteAllPromiseIds(void)
 
 /*****************************************************************************/
 
-static PromiseIdent *PromiseIdExists(char *namespace, char *handle)
+static PromiseIdent *PromiseIdExists(char *ns, char *handle)
 {
     PromiseIdent *key;
     char name[CF_BUFSIZE];
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", namespace, CF_NS, handle);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, handle);
     
     for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
     {

@@ -633,7 +633,7 @@ void GetNameInfo3()
 
 void Get3Environment()
 {
-    char env[CF_BUFSIZE], class[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
+    char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
     struct stat statbuf;
     time_t now = time(NULL);
@@ -675,13 +675,13 @@ void Get3Environment()
 
     while (!feof(fp))
     {
-        class[0] = '\0';
+        context[0] = '\0';
         name[0] = '\0';
         value[0] = '\0';
 
-        if (fgets(class, CF_BUFSIZE, fp) == NULL)
+        if (fgets(context, CF_BUFSIZE, fp) == NULL)
         {
-            if (strlen(class))
+            if (strlen(context))
             {
                 UnexpectedError("Failed to read line from stream");
             }
@@ -693,10 +693,10 @@ void Get3Environment()
         }
 
 
-        if (*class == '@')
+        if (*context == '@')
         {
             Rlist *list = NULL;
-            sscanf(class + 1, "%[^=]=%[^\n]", name, value);
+            sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
             CfDebug(" -> Setting new monitoring list %s => %s", name, value);
             list = ParseShownRlist(value);
@@ -705,9 +705,9 @@ void Get3Environment()
 
             DeleteRlist(list);
         }
-        else if (strstr(class, "="))
+        else if (strstr(context, "="))
         {
-            sscanf(class, "%255[^=]=%255[^\n]", name, value);
+            sscanf(context, "%255[^=]=%255[^\n]", name, value);
 
             if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR)
             {
@@ -718,7 +718,7 @@ void Get3Environment()
         }
         else
         {
-            HardClass(class);
+            HardClass(context);
         }
     }
 
@@ -927,9 +927,9 @@ void OSClasses(void)
         }
     }
 
-    char class[CF_BUFSIZE];
-    snprintf(class, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    SetFlavour(class);
+    char context[CF_BUFSIZE];
+    snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
+    SetFlavour(context);
 
 #endif
 

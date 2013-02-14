@@ -118,7 +118,7 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
+void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -156,7 +156,7 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
 
             if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
             {
-                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", namespace, CF_NS, naked);
+                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
             }
             
             vtype = GetVariable(scope, qnaked, &retval); 

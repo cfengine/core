@@ -2720,13 +2720,13 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
     return false;
 }
 
-static void FileAutoDefine(char *destfile, const char *namespace)
+static void FileAutoDefine(char *destfile, const char *ns)
 {
-    char class[CF_MAXVARSIZE];
+    char context[CF_MAXVARSIZE];
 
-    snprintf(class, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
-    NewClass(class,  namespace);
-    CfOut(cf_inform, "", "Auto defining class %s\n", class);
+    snprintf(context, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
+    NewClass(context,  ns);
+    CfOut(cf_inform, "", "Auto defining class %s\n", context);
 }
 
 #ifndef __MINGW32__

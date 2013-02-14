@@ -1015,7 +1015,7 @@ SubType *BundleAppendSubType(Bundle *bundle, char *name)
 
 /*******************************************************************/
 
-Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes, char *bundle, char *bundletype, char *ns)
+Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes)
 {
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
@@ -1028,7 +1028,7 @@ Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char
 
 /* Check here for broken promises - or later with more info? */
 
-    CfDebug("Appending Promise from bundle %s %s if context %s\n", bundle, promiser, classes);
+    CfDebug("Appending Promise from bundle %s %s if context %s\n", type->parent_bundle->name, promiser, classes);
 
     Promise *pp = xcalloc(1, sizeof(Promise));
 
@@ -1064,8 +1064,8 @@ Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char
 
     pp->parent_subtype = type;
     pp->audit = AUDITPTR;
-    pp->bundle = xstrdup(bundle);
-    pp->ns = xstrdup(ns);
+    pp->bundle = xstrdup(type->parent_bundle->name);
+    pp->ns = xstrdup(type->parent_bundle->ns);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
@@ -1074,7 +1074,7 @@ Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = NULL;
 
-    pp->bundletype = xstrdup(bundletype);       /* cache agent,common,server etc */
+    pp->bundletype = xstrdup(type->parent_bundle->type);       /* cache agent,common,server etc */
     pp->ref_alloc = 'n';
 
     return pp;

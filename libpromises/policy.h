@@ -141,7 +141,7 @@ SubType *BundleGetSubType(Bundle *bp, const char *name);
 
 const char *NamespaceFromConstraint(const Constraint *cp);
 
-Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes);
+Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes);
 void PromiseDestroy(Promise *pp);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);

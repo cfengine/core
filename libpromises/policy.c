@@ -1015,7 +1015,7 @@ SubType *BundleAppendSubType(Bundle *bundle, char *name)
 
 /*******************************************************************/
 
-Promise *SubTypeAppendPromise(SubType *type, char *promiser, Rval promisee, char *classes)
+Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes)
 {
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];

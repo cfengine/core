@@ -1042,10 +1042,10 @@ static void CheckParseOpts(const char *lval, const char *s, const char *range)
 
 /****************************************************************************/
 
-int CheckParseVariableName(char *name)
+int CheckParseVariableName(const char *name)
 {
     const char *reserved[] = { "promiser", "handle", "promise_filename", "promise_linenumber", "this", NULL };
-    char *sp, scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
+    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE];
     int count = 0, level = 0;
 
     if (IsStrIn(name, reserved))
@@ -1057,7 +1057,7 @@ int CheckParseVariableName(char *name)
 
     if (strchr(name, '.'))
     {
-        for (sp = name; *sp != '\0'; sp++)
+        for (const char *sp = name; *sp != '\0'; sp++)
         {
             switch (*sp)
             {

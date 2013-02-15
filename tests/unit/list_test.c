@@ -1,7 +1,6 @@
 #include <setjmp.h>
 #include <sys/types.h>
 #include <stdarg.h>
-#include <string.h>
 #include "cmockery.h"
 #include "list.c"
 #include "list.h"
@@ -119,7 +118,7 @@ static void test_prependToList(void **state)
 static void test_appendToList(void **state)
 {
     List *list = NULL;
-    list = ListNew(NULL, NULL, testDestroyer);
+    list = ListNew(NULL, NULL, NULL);
     assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
@@ -177,7 +176,7 @@ static void copyFunction(const void *s, void **d)
     const char *source = s;
     char **destination = (char **)d;
 
-    *destination = strdup(source);
+    *destination = xstrdup(source);
 }
 
 
@@ -356,8 +355,8 @@ static void test_copyList(void **state)
     char element1[] = "another test string";
     char element2[] = "yet another test string";
 
-    list = ListNew(compareFunction, copyFunction, NULL);
-    assert_true(list != NULL);
+    list1 = ListNew(compareFunction, copyFunction, NULL);
+    assert_true(list1 != NULL);
     assert_int_not_equal(list1, NULL);
     assert_int_equal(list1->first, NULL);
     assert_int_equal(list1->list, NULL);
@@ -407,8 +406,8 @@ static void test_copyList(void **state)
     List *list7 = NULL;
     List *list8 = NULL;
 
-    list = ListNew(compareFunction, NULL, testDestroyer);
-    assert_true(list != NULL);
+    list5 = ListNew(compareFunction, NULL, testDestroyer);
+    assert_true(list5 != NULL);
     assert_int_not_equal(list5, NULL);
     assert_int_equal(list5->first, NULL);
     assert_int_equal(list5->list, NULL);

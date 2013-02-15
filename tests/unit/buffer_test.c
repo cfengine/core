@@ -20,6 +20,23 @@ static void test_createBuffer(void **state)
     assert_int_equal(buffer->ref_count->user_count, 1);    
 }
 
+static void test_createBufferFrom(void **state)
+{
+    const char data[] = "this is some data";
+    unsigned int dataLength = strlen(data);
+    Buffer *buffer = BufferNewFrom(data, dataLength);
+    assert_true(buffer != NULL);
+    assert_true(buffer->buffer != NULL);
+    assert_string_equal(data, buffer->buffer);
+    assert_int_equal(buffer->mode, BUFFER_BEHAVIOR_CSTRING);
+    assert_int_equal(buffer->capacity, DEFAULT_BUFFER_SIZE);
+    assert_int_equal(buffer->used, dataLength);
+    assert_int_equal(buffer->beginning, 0);
+    assert_int_equal(buffer->end, 0);
+    assert_true(buffer->ref_count != NULL);
+    assert_int_equal(buffer->ref_count->user_count, 1);
+}
+
 static void test_destroyBuffer(void **state)
 {
     Buffer *buffer = BufferNew();
@@ -591,6 +608,7 @@ int main()
 {
     const UnitTest tests[] = {
         unit_test(test_createBuffer)
+        , unit_test(test_createBufferFrom)
         , unit_test(test_destroyBuffer)
         , unit_test(test_zeroBuffer)
         , unit_test(test_copyEqualBuffer)

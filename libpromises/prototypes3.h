@@ -40,10 +40,6 @@ void yyerror(const char *s);
 
 int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
 
-/* agentdiagnostic.c */
-
-void AgentDiagnostic(void);
-
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
 
@@ -135,10 +131,6 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
 /* full_write.c */
 
 int FullWrite(int desc, const char *ptr, size_t len);
-
-/* interfaces.c */
-
-void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
 
 /* manual.c */
 

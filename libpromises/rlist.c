@@ -43,7 +43,7 @@
 
 char *ScalarValue(const Rlist *rlist)
 {
-    if (rlist->type != CF_SCALAR)
+    if (rlist->type != RVAL_TYPE_SCALAR)
     {
         ProgrammingError("Internal error: Rlist value contains type %c instead of expected scalar", rlist->type);
     }
@@ -55,7 +55,7 @@ char *ScalarValue(const Rlist *rlist)
 
 FnCall *FnCallValue(const Rlist *rlist)
 {
-    if (rlist->type != CF_FNCALL)
+    if (rlist->type != RVAL_TYPE_FNCALL)
     {
         ProgrammingError("Internal error: Rlist value contains type %c instead of expected FnCall", rlist->type);
     }
@@ -67,7 +67,7 @@ FnCall *FnCallValue(const Rlist *rlist)
 
 Rlist *ListValue(const Rlist *rlist)
 {
-    if (rlist->type != CF_LIST)
+    if (rlist->type != RVAL_TYPE_LIST)
     {
         ProgrammingError("Internal error: Rlist value contains type %c instead of expected List", rlist->type);
     }
@@ -79,9 +79,9 @@ Rlist *ListValue(const Rlist *rlist)
 
 char *ScalarRvalValue(Rval rval)
 {
-    if (rval.rtype != CF_SCALAR)
+    if (rval.type != RVAL_TYPE_SCALAR)
     {
-        ProgrammingError("Internal error: Rval contains type %c instead of expected scalar", rval.rtype);
+        ProgrammingError("Internal error: Rval contains type %c instead of expected scalar", rval.type);
     }
 
     return rval.item;
@@ -91,9 +91,9 @@ char *ScalarRvalValue(Rval rval)
 
 FnCall *FnCallRvalValue(Rval rval)
 {
-    if (rval.rtype != CF_FNCALL)
+    if (rval.type != RVAL_TYPE_FNCALL)
     {
-        ProgrammingError("Internal error: Rval contains type %c instead of expected FnCall", rval.rtype);
+        ProgrammingError("Internal error: Rval contains type %c instead of expected FnCall", rval.type);
     }
 
     return rval.item;
@@ -103,9 +103,9 @@ FnCall *FnCallRvalValue(Rval rval)
 
 Rlist *ListRvalValue(Rval rval)
 {
-    if (rval.rtype != CF_LIST)
+    if (rval.type != RVAL_TYPE_LIST)
     {
-        ProgrammingError("Internal error: Rval contain type %c instead of expected List", rval.rtype);
+        ProgrammingError("Internal error: Rval contain type %c instead of expected List", rval.type);
     }
 
     return rval.item;
@@ -117,7 +117,7 @@ Rlist *KeyInRlist(Rlist *list, char *key)
 {
     for (Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
@@ -142,7 +142,7 @@ bool IsStringIn(const Rlist *list, const char *s)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
@@ -171,7 +171,7 @@ bool IsIntIn(const Rlist *list, int i)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
@@ -196,7 +196,7 @@ bool IsInListOfRegex(const Rlist *list, const char *str)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (rp->type != CF_SCALAR)
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
             continue;
         }
@@ -217,35 +217,38 @@ Rval CopyRvalItem(Rval rval)
     Rlist *rp, *srp, *start = NULL;
     FnCall *fp;
 
-    CfDebug("CopyRvalItem(%c)\n", rval.rtype);
+    CfDebug("CopyRvalItem(%c)\n", rval.type);
 
     if (rval.item == NULL)
     {
-        switch (rval.rtype)
+        switch (rval.type)
         {
-        case CF_SCALAR:
-            return (Rval) {xstrdup(""), CF_SCALAR};
+        case RVAL_TYPE_SCALAR:
+            return (Rval) {xstrdup(""), RVAL_TYPE_SCALAR};
 
-        case CF_LIST:
-            return (Rval) {NULL, CF_LIST};
+        case RVAL_TYPE_LIST:
+            return (Rval) {NULL, RVAL_TYPE_LIST};
+
+        default:
+            break;
         }
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         /* the rval is just a string */
-        return (Rval) {xstrdup((char *) rval.item), CF_SCALAR};
+        return (Rval) {xstrdup((char *) rval.item), RVAL_TYPE_SCALAR};
 
-    case CF_ASSOC:
-        return (Rval) {CopyAssoc((CfAssoc *) rval.item), CF_ASSOC};
+    case RVAL_TYPE_ASSOC:
+        return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         /* the rval is a fncall */
         fp = (FnCall *) rval.item;
-        return (Rval) {CopyFnCall(fp), CF_FNCALL};
+        return (Rval) {CopyFnCall(fp), RVAL_TYPE_FNCALL};
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         /* The rval is an embedded rlist (2d) */
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
@@ -255,12 +258,12 @@ Rval CopyRvalItem(Rval rval)
             {
                 GetNaked(naked, rp->item);
 
-                Rval rv = { NULL, CF_SCALAR };  /* FIXME: why it needs to be initialized? */
+                Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
                 if (GetVariable(CONTEXTID, naked, &rv) != cf_notype)
                 {
-                    switch (rv.rtype)
+                    switch (rv.type)
                     {
-                    case CF_LIST:
+                    case RVAL_TYPE_LIST:
                         for (srp = (Rlist *) rv.item; srp != NULL; srp = srp->next)
                         {
                             AppendRlist(&start, srp->item, srp->type);
@@ -283,11 +286,14 @@ Rval CopyRvalItem(Rval rval)
             }
         }
 
-        return (Rval) {start, CF_LIST};
+        return (Rval) {start, RVAL_TYPE_LIST};
+
+    default:
+        break;
     }
 
-    CfOut(cf_verbose, "", "Unknown type %c in CopyRvalItem - should not happen", rval.rtype);
-    return (Rval) {NULL, rval.rtype};
+    CfOut(cf_verbose, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
+    return (Rval) {NULL, rval.type};
 }
 
 /*******************************************************************/
@@ -340,7 +346,7 @@ Rlist *IdempAppendRScalar(Rlist **start, void *item, char type)
 {
     char *scalar = item;
 
-    if (type != CF_SCALAR)
+    if (type != RVAL_TYPE_SCALAR)
     {
         ProgrammingError("Cannot append non-scalars to lists");
     }
@@ -361,7 +367,7 @@ Rlist *IdempPrependRScalar(Rlist **start, void *item, char type)
 {
     char *scalar = item;
 
-    if (type != CF_SCALAR)
+    if (type != RVAL_TYPE_SCALAR)
     {
         ProgrammingError("Cannot append non-scalars to lists");
     }
@@ -382,7 +388,7 @@ Rlist *IdempAppendRlist(Rlist **start, void *item, char type)
 {
     Rlist *rp, *ins = NULL;
 
-    if (type == CF_LIST)
+    if (type == RVAL_TYPE_LIST)
     {
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
@@ -407,7 +413,7 @@ Rlist *AppendRScalar(Rlist **start, void *item, char type)
 {
     char *scalar = item;
 
-    if (type != CF_SCALAR)
+    if (type != RVAL_TYPE_SCALAR)
     {
         ProgrammingError("Cannot append non-scalars to lists");
     }
@@ -421,7 +427,7 @@ Rlist *PrependRScalar(Rlist **start, void *item, char type)
 {
     char *scalar = item;
 
-    if (type != CF_SCALAR)
+    if (type != RVAL_TYPE_SCALAR)
     {
         ProgrammingError("Cannot append non-scalars to lists");
     }
@@ -439,15 +445,15 @@ Rlist *AppendRlist(Rlist **start, const void *item, char type)
 
     switch (type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         CfDebug("Appending scalar to rval-list [%s]\n", (char *) item);
         break;
 
-    case CF_ASSOC:
+    case RVAL_TYPE_ASSOC:
         CfDebug("Appending assoc to rval-list [%s]\n", (char *) item);
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         CfDebug("Appending function to rval-list function call: ");
         fp = (FnCall *) item;
         if (DEBUG)
@@ -457,7 +463,7 @@ Rlist *AppendRlist(Rlist **start, const void *item, char type)
         CfDebug("\n");
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         CfDebug("Expanding and appending list object\n");
 
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
@@ -492,7 +498,7 @@ Rlist *AppendRlist(Rlist **start, const void *item, char type)
 
     ThreadLock(cft_lock);
 
-    if (type == CF_LIST)
+    if (type == RVAL_TYPE_LIST)
     {
         rp->state_ptr = rp->item;
     }
@@ -518,11 +524,11 @@ Rlist *PrependRlist(Rlist **start, void *item, char type)
 
     switch (type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         CfDebug("Prepending scalar to rval-list [%s]\n", (char *) item);
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
 
         CfDebug("Expanding and prepending list (ends up in reverse)\n");
 
@@ -532,7 +538,7 @@ Rlist *PrependRlist(Rlist **start, void *item, char type)
         }
         return lp;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         CfDebug("Prepending function to rval-list function call: ");
         fp = (FnCall *) item;
         if (DEBUG)
@@ -556,7 +562,7 @@ Rlist *PrependRlist(Rlist **start, void *item, char type)
     rp->item = CopyRvalItem((Rval) {item, type}).item;
     rp->type = type;            /* scalar, builtin function */
 
-    if (type == CF_LIST)
+    if (type == RVAL_TYPE_LIST)
     {
         rp->state_ptr = rp->item;
     }
@@ -583,7 +589,7 @@ Rlist *OrthogAppendRlist(Rlist **start, void *item, char type)
 
     switch (type)
     {
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         CfDebug("Expanding and appending list object, orthogonally\n");
         break;
     default:
@@ -613,12 +619,12 @@ Rlist *OrthogAppendRlist(Rlist **start, void *item, char type)
 // Note, we pad all iterators will a blank so the ptr arithmetic works
 // else EndOfIteration will not see lists with only one element
 
-    lp = PrependRlist((Rlist **) &(cp->rval), CF_NULL_VALUE, CF_SCALAR);
+    lp = PrependRlist((Rlist **) &(cp->rval), CF_NULL_VALUE, RVAL_TYPE_SCALAR);
     rp->state_ptr = lp->next;   // Always skip the null value
-    AppendRlist((Rlist **) &(cp->rval), CF_NULL_VALUE, CF_SCALAR);
+    AppendRlist((Rlist **) &(cp->rval), CF_NULL_VALUE, RVAL_TYPE_SCALAR);
 
     rp->item = item;
-    rp->type = CF_LIST;
+    rp->type = RVAL_TYPE_LIST;
     rp->next = NULL;
     return rp;
 }
@@ -651,7 +657,7 @@ Rlist *ParseShownRlist(char *string)
     for (rp = splitlist; rp != NULL; rp = rp->next)
     {
         sscanf(rp->item, "%*[{ '\"]%255[^'\"]", value);
-        AppendRlist(&newlist, value, CF_SCALAR);
+        AppendRlist(&newlist, value, RVAL_TYPE_SCALAR);
     }
 
     DeleteRlist(splitlist);
@@ -730,13 +736,13 @@ int PrintRval(char *buffer, int bufsize, Rval rval)
         return 0;
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         return JoinSilent(buffer, (const char *) rval.item, bufsize);
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         return PrintRlist(buffer, bufsize, (Rlist *) rval.item);
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         return PrintFnCall(buffer, bufsize, (FnCall *) rval.item);
     default:
         return 0;
@@ -753,15 +759,15 @@ static JsonElement *RlistToJson(Rlist *list)
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             JsonArrayAppendString(array, (const char *) rp->item);
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
             JsonArrayAppendArray(array, RlistToJson((Rlist *) rp->item));
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             JsonArrayAppendObject(array, FnCallToJson((FnCall *) rp->item));
             break;
 
@@ -778,13 +784,13 @@ JsonElement *RvalToJson(Rval rval)
 {
     assert(rval.item);
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         return JsonStringCreate((const char *) rval.item);
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         return RlistToJson((Rlist *) rval.item);
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         return FnCallToJson((FnCall *) rval.item);
     default:
         assert(false && "Invalid rval type");
@@ -803,23 +809,26 @@ void ShowRval(FILE *fp, Rval rval)
         return;
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         EscapeQuotes((const char *) rval.item, buf, sizeof(buf));
         fprintf(fp, "%s", buf);
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         ShowRlist(fp, (Rlist *) rval.item);
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         ShowFnCall(fp, (FnCall *) rval.item);
         break;
 
-    case CF_NOPROMISEE:
+    case RVAL_TYPE_NOPROMISEE:
         fprintf(fp, "(no-one)");
+        break;
+
+    default:
         break;
     }
 }
@@ -830,7 +839,7 @@ void DeleteRvalItem(Rval rval)
 {
     Rlist *clist, *next = NULL;
 
-    CfDebug("DeleteRvalItem(%c)", rval.rtype);
+    CfDebug("DeleteRvalItem(%c)", rval.type);
 
     if (DEBUG)
     {
@@ -845,21 +854,20 @@ void DeleteRvalItem(Rval rval)
         return;
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
 
         ThreadLock(cft_lock);
         free((char *) rval.item);
         ThreadUnlock(cft_lock);
         break;
 
-    case CF_ASSOC:             /* What? */
-
+    case RVAL_TYPE_ASSOC:             /* What? */
         DeleteAssoc((CfAssoc *) rval.item);
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
 
         /* rval is now a list whose first item is clist->item */
 
@@ -878,7 +886,7 @@ void DeleteRvalItem(Rval rval)
 
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
 
         DeleteFnCall((FnCall *) rval.item);
         break;
@@ -944,7 +952,7 @@ Rlist *AppendRlistAlien(Rlist **start, void *item)
     }
 
     rp->item = item;
-    rp->type = CF_SCALAR;
+    rp->type = RVAL_TYPE_SCALAR;
 
     ThreadLock(cft_lock);
 
@@ -970,7 +978,7 @@ Rlist *PrependRlistAlien(Rlist **start, void *item)
     ThreadUnlock(cft_lock);
 
     rp->item = item;
-    rp->type = CF_SCALAR;
+    rp->type = RVAL_TYPE_SCALAR;
     return rp;
 }
 
@@ -1055,7 +1063,7 @@ Rlist *SplitStringAsRList(const char *string, char sep)
 
         sp += SubStrnCopyChr(node, sp, CF_MAXVARSIZE, sep);
 
-        AppendRScalar(&liststart, node, CF_SCALAR);
+        AppendRScalar(&liststart, node, RVAL_TYPE_SCALAR);
     }
 
     return liststart;
@@ -1095,7 +1103,7 @@ Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int bla
 
         if (blanks || strlen(node) > 0)
         {
-            AppendRScalar(&liststart, node, CF_SCALAR);
+            AppendRScalar(&liststart, node, RVAL_TYPE_SCALAR);
             count++;
         }
 
@@ -1109,7 +1117,7 @@ Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int bla
 
         if ((blanks && sp != string) || strlen(node) > 0)
         {
-            AppendRScalar(&liststart, node, CF_SCALAR);
+            AppendRScalar(&liststart, node, RVAL_TYPE_SCALAR);
         }
     }
 
@@ -1189,9 +1197,9 @@ void RvalPrint(Writer *writer, Rval rval)
         return;
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
     {
         size_t buffer_size = (strlen((const char *) rval.item) * 2) + 1;
         char *buffer = xcalloc(buffer_size, sizeof(char));
@@ -1202,16 +1210,20 @@ void RvalPrint(Writer *writer, Rval rval)
     }
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         RlistPrint(writer, (Rlist *) rval.item);
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         FnCallPrint(writer, (FnCall *) rval.item);
         break;
 
-    case CF_NOPROMISEE:
+    case RVAL_TYPE_NOPROMISEE:
         WriterWrite(writer, "(no-one)");
+        break;
+
+    case RVAL_TYPE_ASSOC:
+        // TODO: do something here, but not handled previously
         break;
     }
 }

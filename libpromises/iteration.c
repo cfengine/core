@@ -68,25 +68,25 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 
         /* Make a copy of list references in scope only, without the names */
 
-        if (retval.rtype == CF_LIST)
+        if (retval.type == RVAL_TYPE_LIST)
         {
             for (rps = (Rlist *) retval.item; rps != NULL; rps = rps->next)
             {
-                if (rps->type == CF_FNCALL)
+                if (rps->type == RVAL_TYPE_FNCALL)
                 {
                     FnCall *fp = (FnCall *) rps->item;
 
                     newret = EvaluateFunctionCall(fp, NULL).rval;
                     DeleteFnCall(fp);
                     rps->item = newret.item;
-                    rps->type = newret.rtype;
+                    rps->type = newret.type;
                 }
             }
         }
 
         if ((new = NewAssoc(rp->item, retval, dtype)))
         {
-            OrthogAppendRlist(&deref_listoflists, new, CF_LIST);
+            OrthogAppendRlist(&deref_listoflists, new, RVAL_TYPE_LIST);
             rp->state_ptr = new->rval.item;
 
             while ((rp->state_ptr) && (strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0))

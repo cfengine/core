@@ -277,7 +277,7 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
         // ensure: if call and callee are resolved, then they have matching arity
         if (StringSafeEqual(cp->lval, "usebundle"))
         {
-            if (cp->rval.rtype == CF_FNCALL)
+            if (cp->rval.type == RVAL_TYPE_FNCALL)
             {
                 const FnCall *call = (const FnCall *)cp->rval.item;
                 const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
@@ -501,17 +501,17 @@ static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
  */
 static const char *RvalFullSymbol(const Rval *rval)
 {
-    switch (rval->rtype)
+    switch (rval->type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         return rval->item;
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         return ((FnCall *)rval->item)->name;
 
     default:
-        ProgrammingError("Cannot get full symbol value from Rval of type %c", rval->rtype);
+        ProgrammingError("Cannot get full symbol value from Rval of type %c", rval->type);
         return NULL;
     }
 }
@@ -1137,15 +1137,15 @@ void PromiseDestroy(Promise *pp)
 
 static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
 {
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         CfDebug("   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
         break;
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         CfDebug("   Appending a function call to rhs\n");
         break;
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         CfDebug("   Appending a list to rhs\n");
     }
 
@@ -1220,9 +1220,9 @@ static JsonElement *AttributeValueToJson(Rval rval)
 {
     JsonElement *json_attribute = JsonObjectCreate(10);
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
     {
         char buffer[CF_BUFSIZE];
 
@@ -1233,7 +1233,7 @@ static JsonElement *AttributeValueToJson(Rval rval)
     }
         return json_attribute;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
     {
         Rlist *rp = NULL;
         JsonElement *list = JsonArrayCreate(10);
@@ -1249,7 +1249,7 @@ static JsonElement *AttributeValueToJson(Rval rval)
         return json_attribute;
     }
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
     {
         Rlist *argp = NULL;
         FnCall *call = (FnCall *) rval.item;
@@ -1272,7 +1272,7 @@ static JsonElement *AttributeValueToJson(Rval rval)
     }
 
     default:
-        FatalError("Attempted to export attribute of type: %c", rval.rtype);
+        FatalError("Attempted to export attribute of type: %c", rval.type);
         return NULL;
     }
 }
@@ -1369,13 +1369,13 @@ static JsonElement *BundleClassesToJson(const Seq *promises)
 
             JsonObjectAppendString(json_promise, "promiser", pp->promiser);
 
-            switch (pp->promisee.rtype)
+            switch (pp->promisee.type)
             {
-            case CF_SCALAR:
+            case RVAL_TYPE_SCALAR:
                 JsonObjectAppendString(json_promise, "promisee", pp->promisee.item);
                 break;
 
-            case CF_LIST:
+            case RVAL_TYPE_LIST:
                 {
                     JsonElement *promisee_list = JsonArrayCreate(10);
                     for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)

@@ -58,7 +58,7 @@ void EndMeasurePromise(struct timespec start, Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
-    mid = GetConstraintValue("measurement_class", pp, CF_SCALAR);
+    mid = GetConstraintValue("measurement_class", pp, RVAL_TYPE_SCALAR);
 
     if (mid)
     {

@@ -343,7 +343,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (SINGLE_COPY_LIST)
                 {
-                    IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, CF_SCALAR);
+                    IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
                 }
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
@@ -485,7 +485,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                     if (IsInListOfRegex(SINGLE_COPY_LIST, destfile))
                     {
-                        IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, CF_SCALAR);
+                        IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
                     }
                 }
                 else
@@ -511,7 +511,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
             if (IsInListOfRegex(SINGLE_COPY_LIST, destfile))
             {
-                IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, CF_SCALAR);
+                IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
             }
 
             cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File %s is an up to date copy of source\n", destfile);
@@ -3417,7 +3417,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
             mode_t saveumask = umask(0);
             mode_t filemode = 0600;     /* Decide the mode for filecreation */
 
-            if (GetConstraintValue("mode", pp, CF_SCALAR) == NULL)
+            if (GetConstraintValue("mode", pp, RVAL_TYPE_SCALAR) == NULL)
             {
                 /* Relying on umask is risky */
                 filemode = 0600;

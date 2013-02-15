@@ -591,7 +591,7 @@ static void Apoptosis()
 #endif
 
     pp.promiser = promiser_buf;
-    pp.promisee = (Rval) {"cfengine", CF_SCALAR};
+    pp.promisee = (Rval) {"cfengine", RVAL_TYPE_SCALAR};
     pp.classes = "any";
     pp.offset.line = 0;
     pp.audit = NULL;
@@ -609,16 +609,16 @@ static void Apoptosis()
 
     GetCurrentUserName(mypid, 31);
 
-    PrependRlist(&signals, "term", CF_SCALAR);
-    PrependRlist(&owners, mypid, CF_SCALAR);
+    PrependRlist(&signals, "term", RVAL_TYPE_SCALAR);
+    PrependRlist(&owners, mypid, RVAL_TYPE_SCALAR);
 
-    PromiseAppendConstraint(&pp, "signals", (Rval) {signals, CF_LIST}, "any", false);
-    PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_owner", (Rval) {owners, CF_LIST}, "any", false);
-    PromiseAppendConstraint(&pp, "ifelapsed", (Rval) {xstrdup("0"), CF_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_count", (Rval) {xstrdup("true"), CF_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "match_range", (Rval) {xstrdup("0,2"), CF_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), CF_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
+    PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_owner", (Rval) {owners, RVAL_TYPE_LIST }, "any", false);
+    PromiseAppendConstraint(&pp, "ifelapsed", (Rval) {xstrdup("0"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_count", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "match_range", (Rval) {xstrdup("0,2"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), RVAL_TYPE_SCALAR}, "any", false);
 
     CfOut(cf_verbose, "", " -> Looking for cf-execd processes owned by %s", mypid);
 

@@ -195,37 +195,37 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
 // Need to set up the default service pack to eliminate syntax
 
-    if (GetConstraintValue("service_bundle", pp, CF_SCALAR) == NULL)
+    if (GetConstraintValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {
         case cfsrv_start:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "start", CF_SCALAR);
+            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            AppendRlist(&args, "start", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_restart:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_reload:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
             break;
             
         case cfsrv_stop:
         case cfsrv_disable:
         default:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "stop", CF_SCALAR);
+            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            AppendRlist(&args, "stop", RVAL_TYPE_SCALAR);
             break;
 
         }
 
         default_bundle = NewFnCall("default:standard_services", args);
 
-        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, "any", false);
         a.havebundle = true;
     }
 

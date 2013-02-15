@@ -848,7 +848,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
     if (config->bundlesequence)
     {
         CfOut(cf_inform, "", " >> Using command line specified bundlesequence");
-        retval = (Rval) { config->bundlesequence, CF_LIST};
+        retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
     else if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
     {
@@ -860,7 +860,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
     }
 
     // TODO: should've been checked a long time ago, remove?
-    if (retval.rtype != CF_LIST)
+    if (retval.type != RVAL_TYPE_LIST)
     {
         FatalError("Promised bundlesequence was not a list");
     }
@@ -869,7 +869,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
     {
         switch (rp->type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             name = (char *) rp->item;
             params = NULL;
 
@@ -879,7 +879,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             }
 
             break;
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
             params = (Rlist *) fp->args;
@@ -923,7 +923,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
     {
         switch (rp->type)
         {
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rp->item;
             name = (char *) fp->name;
             params = (Rlist *) fp->args;

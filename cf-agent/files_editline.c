@@ -284,8 +284,8 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, CF_NOPROMISEE }, context);
-            PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+            PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
 
             DeleteItemList(lines);
             free(promiser);
@@ -304,8 +304,8 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 {
                     CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
                 }
-                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, CF_NOPROMISEE }, context);
-                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), CF_SCALAR }, "any", false);
+                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
             }
         }
     }
@@ -1557,7 +1557,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             for (i = 0; i < (a.column.select_column - count); i++)
             {
-                AppendRScalar(columns, xstrdup(""), CF_SCALAR);
+                AppendRScalar(columns, xstrdup(""), RVAL_TYPE_SCALAR);
             }
 
             count = 0;
@@ -1803,14 +1803,14 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
         CfOut(cf_inform, "", " -> Setting field sub-value %s in %s", a.column.column_value, pp->this_server);
         DeleteRlist(*columns);
         *columns = NULL;
-        IdempPrependRScalar(columns, a.column.column_value, CF_SCALAR);
+        IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR);
 
         return true;
     }
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "prepend") == 0)
     {
-        if (IdempPrependRScalar(columns, a.column.column_value, CF_SCALAR))
+        if (IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
         {
             CfOut(cf_inform, "", " -> Prepending field sub-value %s in %s", a.column.column_value, pp->this_server);
             return true;
@@ -1823,7 +1823,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "alphanum") == 0)
     {
-        if (IdempPrependRScalar(columns, a.column.column_value, CF_SCALAR))
+        if (IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
         {
             retval = true;
         }
@@ -1835,7 +1835,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
 /* default operation is append */
 
-    if (IdempAppendRScalar(columns, a.column.column_value, CF_SCALAR))
+    if (IdempAppendRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
     {
         return true;
     }

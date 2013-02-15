@@ -161,9 +161,9 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         Policy *policy = PolicyFromPromise(pp);
         Seq *bodies = policy ? policy->bodies : NULL;
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             bodyname = (char *) cp->rval.item;
             if (cp->references_body)
             {
@@ -171,7 +171,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
             }
             fp = NULL;
             break;
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
             bp = IsBody(bodies, pp->ns, bodyname);
@@ -197,7 +197,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
             /* Keep the referent body type as a boolean for convenience when checking later */
 
-            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), CF_SCALAR}, cp->classes, false);
+            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
 
             CfDebug("Handling body-lval \"%s\"\n", cp->lval);
 
@@ -287,7 +287,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
     pcopy = xcalloc(1, sizeof(Promise));
 
-    returnval = ExpandPrivateRval("this", (Rval) {pp->promiser, CF_SCALAR});
+    returnval = ExpandPrivateRval("this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
     pcopy->promiser = (char *) returnval.item;
 
     if (pp->promisee.item)
@@ -296,7 +296,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
     }
     else
     {
-        pcopy->promisee = (Rval) {NULL, CF_NOPROMISEE};
+        pcopy->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     }
 
     if (pp->classes)
@@ -354,11 +354,11 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
         if (strcmp(cp->lval, "comment") == 0)
         {
-            if (final.rtype != CF_SCALAR)
+            if (final.type != RVAL_TYPE_SCALAR)
             {
                 char err[CF_BUFSIZE];
 
-                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects (not %c in \"%s\")", final.rtype,
+                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects (not %c in \"%s\")", final.type,
                          pp->promiser);
                 yyerror(err);
             }
@@ -470,7 +470,7 @@ Promise *NewPromise(char *typename, char *promiser)
 
     ThreadUnlock(cft_policy);
 
-    pp->promisee = (Rval) {NULL, CF_NOPROMISEE};
+    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
     pp->ref_alloc = 'n';
@@ -478,7 +478,7 @@ Promise *NewPromise(char *typename, char *promiser)
 
     PromiseAppendConstraint(pp, "handle",
                             (Rval) {xstrdup("cfe_internal_promise_hardcoded"),
-                            CF_SCALAR}, NULL, false);
+                            RVAL_TYPE_SCALAR }, NULL, false);
 
     return pp;
 }
@@ -521,12 +521,12 @@ void PromiseRef(enum cfreport level, const Promise *pp)
         CfOut(level, "", "Comment: %s\n", pp->ref);
     }
 
-    switch (pp->promisee.rtype)
+    switch (pp->promisee.type)
     {
-       case CF_SCALAR:
+       case RVAL_TYPE_SCALAR:
            CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
            break;
-       case CF_LIST:
+       case RVAL_TYPE_LIST:
            PrintRlist(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
            CfOut(level, "", "This was a promise to: %s",buffer);
            break;
@@ -596,20 +596,20 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
             for (rp = cp->rval.item; rp != NULL; rp = rp->next)
             {
                 EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
             }
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
 
             /* Body or bundle */
 
@@ -621,6 +621,9 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
             {
                 EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
             }
+            break;
+
+        default:
             break;
         }
     }

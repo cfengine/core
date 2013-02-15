@@ -773,7 +773,7 @@ static void KeepReportsControlPromises(Policy *policy)
             {
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    IdempPrependRScalar(&REPORTS, rp->item, CF_SCALAR);
+                    IdempPrependRScalar(&REPORTS, rp->item, RVAL_TYPE_SCALAR);
                     CfOut(cf_inform, "", "Adding %s to the reports...\n", ScalarValue(rp));
                 }
                 continue;
@@ -783,7 +783,7 @@ static void KeepReportsControlPromises(Policy *policy)
             {
                 for (rp = ListValue(retval.item); rp != NULL; rp = rp->next)
                 {
-                    IdempPrependRScalar(&CSVLIST, rp->item, CF_SCALAR);
+                    IdempPrependRScalar(&CSVLIST, rp->item, RVAL_TYPE_SCALAR);
                     CfOut(cf_inform, "", "Adding %s to the csv2xml list...\n", ScalarValue(rp));
                 }
                 continue;

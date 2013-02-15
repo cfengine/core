@@ -135,7 +135,7 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
-                           AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
+                           AppendRlist(&(P.useargs),P.currentid, RVAL_TYPE_SCALAR);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -252,7 +252,7 @@ selection:             id                         /* BODY ONLY */
                            {
                                Constraint *cp = NULL;
 
-                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
@@ -279,7 +279,7 @@ selection:             id                         /* BODY ONLY */
                            {
                                if (strcmp(P.lval,"namespace") == 0)
                                {
-                                   if (P.rval.rtype != CF_SCALAR)
+                                   if (P.rval.type != RVAL_TYPE_SCALAR)
                                    {
                                        yyerror("namespace must be a constant scalar string");
                                    }
@@ -378,7 +378,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
-                                                                (Rval) { NULL, CF_NOPROMISEE },
+                                                                (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
@@ -427,7 +427,7 @@ constraint:            id                        /* BUNDLE ONLY */
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
                                CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
-                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
@@ -481,19 +481,19 @@ id:                    IDSYNTAX
 
 rval:                  IDSYNTAX
                        {
-                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | BLOCKID
                        {
-                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
                        {
-                           P.rval = (Rval) { P.currentstring, CF_SCALAR };
+                           P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
@@ -509,7 +509,7 @@ rval:                  IDSYNTAX
                        }
                      | NAKEDVAR
                        {
-                           P.rval = (Rval) { P.currentstring, CF_SCALAR };
+                           P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
@@ -517,14 +517,14 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
-                           P.rval = (Rval) { CopyRlist(P.currentRlist), CF_LIST };
+                           P.rval = (Rval) { CopyRlist(P.currentRlist), RVAL_TYPE_LIST };
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
                            P.references_body = false;
                        }
                      | usefunction
                        {
-                           P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL };
                            P.references_body = false;
                        };
 
@@ -546,19 +546,19 @@ litems_int:            litem
 
 litem:                 IDSYNTAX
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
+                           AppendRlist((Rlist **)&P.currentRlist,P.currentid, RVAL_TYPE_SCALAR);
                        }
 
                      | QSTRING
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
 
                      | NAKEDVAR
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -566,7 +566,7 @@ litem:                 IDSYNTAX
                      | usefunction
                        {
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
+                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        };
 
@@ -640,13 +640,13 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
+                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid, RVAL_TYPE_SCALAR);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -654,7 +654,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -662,8 +662,8 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                           DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
+                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                        };
 
 %%

@@ -36,6 +36,17 @@
 #include "string_lib.h"
 #include "misc_lib.h"
 
+typedef enum
+{
+    IP_TYPES_ICMP,
+    IP_TYPES_UDP,
+    IP_TYPES_DNS,
+    IP_TYPES_TCP_SYN,
+    IP_TYPES_TCP_ACK,
+    IP_TYPES_TCP_FIN,
+    IP_TYPES_TCP_MISC
+} IPTypes;
+
 /* Constants */
 
 #define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
@@ -259,12 +270,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpsyn_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpsyn]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_SYN]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpsyn_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpsyn]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_SYN]), dest);
             }
             break;
 
@@ -273,12 +284,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpfin_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpfin]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_FIN]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpfin_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpfin]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_FIN]), dest);
             }
             break;
 
@@ -288,12 +299,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpack_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpack]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_ACK]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpack_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_ACK]), dest);
             }
             break;
         }
@@ -310,12 +321,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_dns_in]++;
-            IncrementCounter(&(NETIN_DIST[dns]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_DNS]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_dns_out]++;
-            IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_ACK]), dest);
         }
     }
     else if (strstr(arrival, "proto UDP"))
@@ -330,12 +341,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_udp_in]++;
-            IncrementCounter(&(NETIN_DIST[udp]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_UDP]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_udp_out]++;
-            IncrementCounter(&(NETOUT_DIST[udp]), dest);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_UDP]), dest);
         }
     }
     else if (strstr(arrival, "proto ICMP"))
@@ -351,12 +362,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_icmp_in]++;
-            IncrementCounter(&(NETIN_DIST[icmp]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_ICMP]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_icmp_out]++;
-            IncrementCounter(&(NETOUT_DIST[icmp]), src);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_ICMP]), src);
         }
     }
     else
@@ -389,7 +400,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         {
             strncpy(dest, src, 60);
         }
-        IncrementCounter(&(NETIN_DIST[tcpmisc]), dest);
+        IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_MISC]), dest);
     }
 }
 

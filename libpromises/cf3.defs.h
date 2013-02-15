@@ -296,17 +296,6 @@ enum classes
 
 /*******************************************************************/
 
-enum iptypes
-{
-    icmp,
-    udp,
-    dns,
-    tcpsyn,
-    tcpack,
-    tcpfin,
-    tcpmisc
-};
-
 enum observables
 {
     ob_users,

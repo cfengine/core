@@ -561,12 +561,6 @@ typedef enum
     DATA_TYPE_NONE
 } DataType;
 
-enum cfx_formatindex
-{
-    cfb,
-    cfe,
-};
-
 enum cfx_format
 {
     cfx_head,
@@ -585,7 +579,7 @@ enum cfx_format
     cfx_qstring,
     cfx_rlist,
     cfx_function,
-    cfx_line,
+    cfx_line
 };
 
 /*************************************************************************/

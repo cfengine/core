@@ -348,7 +348,7 @@ void KeepClassContextPromise(Promise *pp)
                 {
                     CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, cfreset);
+                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     NewClass(pp->promiser, pp->ns);
                 }
                 else
@@ -384,7 +384,7 @@ void KeepClassContextPromise(Promise *pp)
                           a.context.persistent);
                     CfOut(cf_verbose, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, cfreset);
+                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     NewClass(pp->promiser, pp->ns);
                 }
                 else
@@ -1286,7 +1286,7 @@ void PopPrivateClassContext()
 
 /*****************************************************************************/
 
-void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int ttl_minutes, enum statepolicy policy)
+void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
 {
     CF_DB *dbp;
     CfState state;
@@ -1302,7 +1302,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
     
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
-        if (state.policy == cfpreserve)
+        if (state.policy == CONTEXT_STATE_POLICY_PRESERVE)
         {
             if (now < state.expires)
             {
@@ -1665,7 +1665,7 @@ void DeleteAllClasses(const Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(const char *ns, const Rlist *list, int persist, enum statepolicy policy)
+void AddAllClasses(const char *ns, const Rlist *list, int persist, ContextStatePolicy policy)
 {
     if (list == NULL)
     {

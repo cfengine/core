@@ -2630,7 +2630,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
 
     if (changed)
     {
-        NewPersistentContext(pp->ns, "checksum_alerts", CF_PERSISTENCE, cfpreserve);
+        NewPersistentContext(pp->ns, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         LogHashChange(file, cf_file_content_changed, "Content changed", pp);
     }
 

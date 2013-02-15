@@ -293,11 +293,11 @@ enum cfsizes
 
 /*******************************************************************/
 
-enum statepolicy
+typedef enum
 {
-    cfreset,                    /* Policy when trying to add already defined persistent states */
-    cfpreserve
-};
+    CONTEXT_STATE_POLICY_RESET,                    /* Policy when trying to add already defined persistent states */
+    CONTEXT_STATE_POLICY_PRESERVE
+} ContextStatePolicy;
 
 /*******************************************************************/
 
@@ -1584,7 +1584,7 @@ typedef struct
     Rlist *kept;
     Rlist *interrupt;
     int persist;
-    enum statepolicy timer;
+    ContextStatePolicy timer;
     Rlist *del_change;
     Rlist *del_kept;
     Rlist *del_notkept;
@@ -1732,7 +1732,7 @@ typedef struct
 typedef struct
 {
     unsigned int expires;
-    enum statepolicy policy;
+    ContextStatePolicy policy;
 } CfState;
 
 /*************************************************************************/

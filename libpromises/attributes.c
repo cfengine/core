@@ -754,11 +754,11 @@ DefineClasses GetClassDefinitionConstraints(const Promise *pp)
 
     if (pt && (strncmp(pt, "abs", 3) == 0))
     {
-        c.timer = cfpreserve;
+        c.timer = CONTEXT_STATE_POLICY_PRESERVE;
     }
     else
     {
-        c.timer = cfreset;
+        c.timer = CONTEXT_STATE_POLICY_RESET;
     }
 
     return c;

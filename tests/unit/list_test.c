@@ -3,13 +3,15 @@
 #include <stdarg.h>
 #include <string.h>
 #include "cmockery.h"
+#include "list.c"
 #include "list.h"
 
 // Simple initialization test
 static void test_initList(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, NULL, NULL, NULL), 0);
+    list = ListNew(NULL, NULL, NULL);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -31,7 +33,8 @@ void testDestroyer(void *element) {
 static void test_destroyer(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, NULL, NULL, testDestroyer), 0);
+    list = ListNew(NULL, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -63,7 +66,8 @@ static void test_destroyer(void **state)
 static void test_prependToList(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, NULL, NULL, testDestroyer), 0);
+    list = ListNew(NULL, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -115,7 +119,8 @@ static void test_prependToList(void **state)
 static void test_appendToList(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, NULL, NULL, NULL), 0);
+    list = ListNew(NULL, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -179,7 +184,8 @@ static void copyFunction(const void *s, void **d)
 static void test_removeFromList(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, compareFunction, NULL, testDestroyer), 0);
+    list = ListNew(compareFunction, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -323,7 +329,8 @@ static void test_removeFromList(void **state)
 static void test_destroyList(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, NULL, NULL, NULL), 0);
+    list = ListNew(NULL, NULL, NULL);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -349,7 +356,8 @@ static void test_copyList(void **state)
     char element1[] = "another test string";
     char element2[] = "yet another test string";
 
-    assert_int_equal(ListNew(&list1, compareFunction, copyFunction, NULL), 0);
+    list = ListNew(compareFunction, copyFunction, NULL);
+    assert_true(list != NULL);
     assert_int_not_equal(list1, NULL);
     assert_int_equal(list1->first, NULL);
     assert_int_equal(list1->list, NULL);
@@ -399,7 +407,8 @@ static void test_copyList(void **state)
     List *list7 = NULL;
     List *list8 = NULL;
 
-    assert_int_equal(ListNew(&list5, compareFunction, NULL, NULL), 0);
+    list = ListNew(compareFunction, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list5, NULL);
     assert_int_equal(list5->first, NULL);
     assert_int_equal(list5->list, NULL);
@@ -446,7 +455,8 @@ static void test_copyList(void **state)
 static void test_iterator(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, compareFunction, NULL, testDestroyer), 0);
+    list = ListNew(compareFunction, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);
@@ -617,7 +627,8 @@ static void test_iterator(void **state)
 static void test_mutableIterator(void **state)
 {
     List *list = NULL;
-    assert_int_equal(ListNew(&list, compareFunction, NULL, testDestroyer), 0);
+    list = ListNew(compareFunction, NULL, testDestroyer);
+    assert_true(list != NULL);
     assert_int_not_equal(list, NULL);
     assert_int_equal(list->first, NULL);
     assert_int_equal(list->list, NULL);

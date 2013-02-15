@@ -25,6 +25,45 @@
 #include "alloc.h"
 #include "list.h"
 
+struct ListNode {
+    void *payload;
+    struct ListNode *next;
+    struct ListNode *previous;
+};
+typedef struct ListNode ListNode;
+struct ListMutableIterator {
+    int valid;
+    ListNode *current;
+    List *origin;
+};
+struct List {
+    // Number of nodes
+    int node_count;
+    // Incremental number that keeps track of the state of the list, only used for light iterators
+    unsigned int state;
+    // Nodes
+    ListNode *list;
+    // Link to the first element
+    ListNode *first;
+    // Link to the last element
+    ListNode *last;
+    // This function is used to compare two elements
+    int (*compare)(const void *a, const void *b);
+    // This function is used whenever there is need to perform a deep copy
+    void (*copy)(const void *source, void **destination);
+    // This function can be used to destroy the elements at destruction time
+    void (*destroy)(void *element);
+    // Reference counting
+    RefCount *ref_count;
+    // Mutable iterator.
+    ListMutableIterator *iterator;
+};
+struct ListIterator {
+    ListNode *current;
+    List *origin;
+    unsigned int state;
+};
+
 #define IsIteratorValid(iterator) \
     iterator->state != iterator->origin->state
 #define IsMutableIteratorValid(iterator) \
@@ -94,25 +133,22 @@ static void ListDetach(List *list)
     }
 }
 
-int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *))
+List *ListNew(int (*compare)(const void *, const void *), void (*copy)(const void *, void **), void (*destroy)(void *))
 {
-    if (!list)
-    {
-        return -1;
-    }
-    *list = (List *)xmalloc(sizeof(List));
-    (*list)->list = NULL;
-    (*list)->first = NULL;
-    (*list)->last = NULL;
-    (*list)->node_count = 0;
-    (*list)->iterator = NULL;
-    (*list)->state = 0;
-    (*list)->compare = compare;
-    (*list)->destroy = destroy;
-    (*list)->copy = copy;
-    RefCountNew(&(*list)->ref_count);
-    RefCountAttach((*list)->ref_count, (*list));
-    return 0;
+    List *list = NULL;
+    list = (List *)xmalloc(sizeof(List));
+    list->list = NULL;
+    list->first = NULL;
+    list->last = NULL;
+    list->node_count = 0;
+    list->iterator = NULL;
+    list->state = 0;
+    list->compare = compare;
+    list->destroy = destroy;
+    list->copy = copy;
+    RefCountNew(&list->ref_count);
+    RefCountAttach(list->ref_count, list);
+    return list;
 }
 
 int ListDestroy(List **list)

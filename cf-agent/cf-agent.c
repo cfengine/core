@@ -209,7 +209,23 @@ int main(int argc, char *argv[])
     ReportContext *report_context = OpenReports(config->agent_type);
 
     GenericAgentDiscoverContext(config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(config, report_context, ALWAYS_VALIDATE);
+
+    Policy *policy = NULL;
+    if (GenericAgentCheckPolicy(config, report_context, ALWAYS_VALIDATE))
+    {
+        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+    }
+    else if (config->tty_interactive)
+    {
+        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+    }
+    else
+    {
+        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        HardClass("failsafe_fallback");
+        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+    }
 
     CheckLicenses();
 

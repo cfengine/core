@@ -57,7 +57,9 @@ typedef struct
 } GenericAgentConfig;
 
 void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);
-Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_valdiation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation);
+Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+
 void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);

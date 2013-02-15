@@ -225,55 +225,29 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     return check_policy;
 }
 
-Policy *GenericAgentLoadPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
 {
-    Policy *policy = NULL;
-
-    bool policy_check_ok = false;
-
     if (!MissingInputFile(config->input_file))
     {
         if (IsPolicyPrecheckNeeded(config, force_validation))
         {
-            if ((config->agent_type != AGENT_TYPE_AGENT) && (config->agent_type != AGENT_TYPE_EXECUTOR) && (config->agent_type != AGENT_TYPE_SERVER))
-            {
-                policy_check_ok = true;
-            }
-            else
-            {
-                policy_check_ok = CheckPromises(config->input_file, report_context);
-            }
+            bool policy_check_ok = CheckPromises(config->input_file, report_context);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
                 CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
-                policy_check_ok = true;
+                return true;
             }
+
+            return policy_check_ok;
         }
         else
         {
             CfOut(cf_verbose, "", " -> Policy is already validated");
-            policy_check_ok = true;
+            return true;
         }
     }
-
-    if (policy_check_ok)
-    {
-        policy = ReadPromises(config->agent_type, config, report_context);
-    }
-    else if (config->tty_interactive)
-    {
-        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
-    }
-    else
-    {
-        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass("failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = ReadPromises(config->agent_type, config, report_context);
-    }
-
-    return policy;
+    return false;
 }
 
 /*****************************************************************************/
@@ -381,7 +355,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /*****************************************************************************/
 
-Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
     DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
 

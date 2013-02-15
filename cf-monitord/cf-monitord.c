@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
     ReportContext *report_context = OpenReports(config->agent_type);
     GenericAgentDiscoverContext(config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
+    Policy *policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
 
     CheckLicenses();
 

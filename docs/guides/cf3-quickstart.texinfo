@@ -25,7 +25,7 @@
 @titlepage
 @title CFEngine Quick Start Guide
 @subtitle A CFEngine Handbook
-@subtitle Updated 9. December 2012 @c also update in ifnottex section below
+@subtitle Updated 15. February 2013 @c also update in ifnottex section below
 @author CFEngine AS
 
 
@@ -58,7 +58,7 @@ Copyright @copyright{} 2011- CFEngine AS
 @end ifinfo
 
 @ifnottex
-Updated 9. December 2012
+Updated 15. February 2012
 @node Top, Welcome to CFEngine!, (dir), (dir)
 @top CFEngine Quick Start Guide
 
@@ -498,7 +498,25 @@ root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.1
 root@@cfhost# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.134
 @end smallexample
 
-@item Ensure that the bootstrap was successful
+Ensure that the bootstrap was successful. If you have problems with this step, the most common issues are related to:
+
+@table @i
+@item Firewall
+Make sure port 5308 is open for both incoming and outgoing traffic.
+@item Policy access control list (acl)
+By default, the hub is available to clients that reside in the same class B network. If some clients are not part of that network, make sure the IPs are added to the acl in @file{/var/cfengine/masterfiles/def.cf}, @code{bundle common def}:
+@verbatim
+     "acl"     slist => {
+
+                       # Assume /16 LAN clients to start with 
+                         "$(sys.policy_hub)/16",
+		       # Add clients' IP addresses (or IP range) here (for example: an acl of 
+		       # 192.168.0.0/16 would allow all clients that have an IP address that 
+		       # starts with 192.168 to connect to the hub)
+@end verbatim
+@item cf-serverd is not running on the hub
+The CFEngine component @code{cf-serverd} takes care of all CFEngine communication. It can take a few minutes after you bootstrapped the hub to itself before this component is started, just wait a bit and retry.
+@end table
 
 @item On cfhub, go to the /var/cfengine/masterfiles directory, create a new file and name it cftest1.cf,  then copy the following lines into it:
 

@@ -36,6 +36,7 @@
 #include "misc_lib.h"
 #include "mod_files.h"
 #include "vars.h"
+#include "fncall.h"
 
 #include <assert.h>
 

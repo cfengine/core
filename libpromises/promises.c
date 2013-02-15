@@ -38,6 +38,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "fncall.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 

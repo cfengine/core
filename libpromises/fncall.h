@@ -27,6 +27,13 @@
 
 #include "cf3.defs.h"
 
+struct FnCall_
+{
+    char *name;
+    Rlist *args;
+    char *ns;
+};
+
 int IsBuiltinFnCall(Rval rval);
 FnCall *NewFnCall(const char *name, Rlist *args);
 FnCall *CopyFnCall(const FnCall *f);

@@ -39,6 +39,7 @@
 #include "string_lib.h"
 #include "evalfunction.h"
 #include "misc_lib.h"
+#include "fncall.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"

@@ -52,6 +52,7 @@
 #include "exec_tools.h"
 #include "list.h"
 #include "misc_lib.h"
+#include "fncall.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"

@@ -39,6 +39,7 @@
 #include "logging.h"
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
+#include "fncall.h"
 
 static void GetReturnValue(char *scope, Promise *pp);
     

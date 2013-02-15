@@ -60,6 +60,7 @@
 #include "nfs.h"
 #include "processes_select.h"
 #include "list.h"
+#include "fncall.h"
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H

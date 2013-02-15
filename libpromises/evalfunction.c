@@ -55,6 +55,7 @@
 #include "exec_tools.h"
 #include "policy.h"
 #include "misc_lib.h"
+#include "fncall.h"
 
 #include <libgen.h>
 

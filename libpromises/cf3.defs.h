@@ -1174,28 +1174,6 @@ typedef struct PromiseIdent_
     struct PromiseIdent_ *next;
 } PromiseIdent;
 
-/*************************************************************************/
-/* Rvalues and lists - basic workhorse structure                         */
-/*************************************************************************/
-
-/*
-  In an OO language one would probably think of Rval as a parent class
-  and CF_SCALAR, CF_LIST and CF_FNCALL as children. There is more or
-  less a sub-type polymorphism going on in the code around these structures,
-  but it is not a proper inheritance relationship as lists could
-  contain functions which return lists or scalars etc..
-
-*/
-
-/*************************************************************************/
-
-struct FnCall_
-{
-    char *name;
-    Rlist *args;
-    char *ns;
-};
-
 /*******************************************************************/
 /* Variable processing                                             */
 /*******************************************************************/

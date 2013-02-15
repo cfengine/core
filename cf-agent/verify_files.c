@@ -48,6 +48,7 @@
 #include "logging.h"
 #include "generic_agent.h" // HashVariables
 #include "misc_lib.h"
+#include "fncall.h"
 
 
 static void LoadSetuid(Attributes a, Promise *pp);

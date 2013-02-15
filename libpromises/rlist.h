@@ -67,7 +67,7 @@ Rlist *ListRvalValue(Rval rval);
 JsonElement *RvalToJson(Rval rval);
 
 int PrintRval(char *buffer, int bufsize, Rval rval);
-int PrintRlist(char *buffer, int bufsize, Rlist *list);
+int PrintRlist(char *buffer, int bufsize, const Rlist *list);
 Rlist *ParseShownRlist(char *string);
 bool IsStringIn(const Rlist *list, const char *s);
 bool IsIntIn(const Rlist *list, int i);

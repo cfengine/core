@@ -686,13 +686,11 @@ void ShowRlist(FILE *fp, const Rlist *list)
 
 /*******************************************************************/
 
-int PrintRlist(char *buffer, int bufsize, Rlist *list)
+int PrintRlist(char *buffer, int bufsize, const Rlist *list)
 {
-    Rlist *rp;
-
     StartJoin(buffer, "{", bufsize);
 
-    for (rp = list; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (!JoinSilent(buffer, "'", bufsize))
         {
@@ -728,6 +726,41 @@ int PrintRlist(char *buffer, int bufsize, Rlist *list)
 }
 
 /*******************************************************************/
+
+static int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
+{
+    Rlist *rp;
+    char work[CF_MAXVARSIZE];
+
+    snprintf(buffer, bufsize, "%s(", fp->name);
+
+    for (rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            Join(buffer, (char *) rp->item, bufsize);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            PrintFnCall(work, CF_MAXVARSIZE, (FnCall *) rp->item);
+            Join(buffer, work, bufsize);
+            break;
+
+        default:
+            break;
+        }
+
+        if (rp->next != NULL)
+        {
+            strcat(buffer, ",");
+        }
+    }
+
+    strcat(buffer, ")");
+
+    return strlen(buffer);
+}
 
 int PrintRval(char *buffer, int bufsize, Rval rval)
 {

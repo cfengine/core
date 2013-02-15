@@ -30,12 +30,12 @@
 int IsBuiltinFnCall(Rval rval);
 FnCall *NewFnCall(const char *name, Rlist *args);
 FnCall *CopyFnCall(const FnCall *f);
-int PrintFnCall(char *buffer, int bufsize, const FnCall *fp);
 void DeleteFnCall(FnCall *fp);
 void ShowFnCall(FILE *fout, const FnCall *fp);
 FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
+
 void FnCallPrint(Writer *writer, const FnCall *fp);
 
 #endif

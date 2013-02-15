@@ -115,42 +115,6 @@ FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked)
     return NewFnCall(f->name, ExpandList(contextid, f->args, false));
 }
 
-/*******************************************************************/
-
-int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
-{
-    Rlist *rp;
-    char work[CF_MAXVARSIZE];
-
-    snprintf(buffer, bufsize, "%s(", fp->name);
-
-    for (rp = fp->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            Join(buffer, (char *) rp->item, bufsize);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            PrintFnCall(work, CF_MAXVARSIZE, (FnCall *) rp->item);
-            Join(buffer, work, bufsize);
-            break;
-
-        default:
-            break;
-        }
-
-        if (rp->next != NULL)
-        {
-            strcat(buffer, ",");
-        }
-    }
-
-    strcat(buffer, ")");
-
-    return strlen(buffer);
-}
 
 /*******************************************************************/
 

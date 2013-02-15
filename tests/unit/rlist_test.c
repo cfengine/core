@@ -239,6 +239,11 @@ int IsNakedVar(const char *str, char vtype)
     fail();
 }
 
+int Join(char *path, const char *leaf, int bufsize)
+{
+    fail();
+}
+
 int JoinSilent(char *path, const char *leaf, int bufsize)
 {
     fail();

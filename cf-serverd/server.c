@@ -42,6 +42,32 @@
 #include "logging.h"
 #include "net.h"
 #include "rlist.h"
+#include "misc_lib.h"
+
+typedef enum
+{
+    PROTOCOL_COMMAND_EXEC,
+    PROTOCOL_COMMAND_AUTH,
+    PROTOCOL_COMMAND_GET,
+    PROTOCOL_COMMAND_OPENDIR,
+    PROTOCOL_COMMAND_SYNC,
+    PROTOCOL_COMMAND_CONTEXTS,
+    PROTOCOL_COMMAND_MD5,
+    PROTOCOL_COMMAND_MD5_SECURE,
+    PROTOCOL_COMMAND_AUTH_CLEAR,
+    PROTOCOL_COMMAND_AUTH_SECURE,
+    PROTOCOL_COMMAND_SYNC_SECURE,
+    PROTOCOL_COMMAND_GET_SECURE,
+    PROTOCOL_COMMAND_VERSION,
+    PROTOCOL_COMMAND_OPENDIR_SECURE,
+    PROTOCOL_COMMAND_VAR,
+    PROTOCOL_COMMAND_VAR_SECURE,
+    PROTOCOL_COMMAND_CONTEXT,
+    PROTOCOL_COMMAND_CONTEXT_SECURE,
+    PROTOCOL_COMMAND_QUERY_SECURE,
+    PROTOCOL_COMMAND_CALL_ME_BACK,
+    PROTOCOL_COMMAND_BAD
+} ProtocolCommand;
 
 //******************************************************************
 // GLOBAL STATE
@@ -90,7 +116,7 @@ static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(ServerConnectionState *conn);
 static int MatchClasses(ServerConnectionState *conn);
 static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args);
-static int GetCommand(char *str);
+static ProtocolCommand GetCommand(char *str);
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
 static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg);
 static int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
@@ -430,7 +456,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
     switch (GetCommand(recvbuffer))
     {
-    case cfd_exec:
+    case PROTOCOL_COMMAND_EXEC:
         memset(args, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "EXEC %255[^\n]", args);
 
@@ -473,7 +499,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         Terminate(conn->sd_reply);
         return false;
 
-    case cfd_version:
+    case PROTOCOL_COMMAND_VERSION:
 
         if (!conn->id_verified)
         {
@@ -485,7 +511,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         SendTransaction(conn->sd_reply, conn->output, 0, CF_DONE);
         return conn->id_verified;
 
-    case cfd_cauth:
+    case PROTOCOL_COMMAND_AUTH_CLEAR:
 
         conn->id_verified = VerifyConnection(conn, (char *) (recvbuffer + strlen("CAUTH ")));
 
@@ -497,7 +523,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         return conn->id_verified;       /* are we finished yet ? */
 
-    case cfd_sauth:            /* This is where key agreement takes place */
+    case PROTOCOL_COMMAND_AUTH_SECURE:            /* This is where key agreement takes place */
 
         if (!conn->id_verified)
         {
@@ -515,7 +541,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         return true;
 
-    case cfd_get:
+    case PROTOCOL_COMMAND_GET:
 
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "GET %d %[^\n]", &(get_args.buf_size), filename);
@@ -557,7 +583,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         return true;
 
-    case cfd_sget:
+    case PROTOCOL_COMMAND_GET_SECURE:
 
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SGET %u %d", &len, &(get_args.buf_size));
@@ -619,7 +645,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         CfEncryptGetFile(&get_args);
         return true;
 
-    case cfd_sopendir:
+    case PROTOCOL_COMMAND_OPENDIR_SECURE:
 
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SOPENDIR %u", &len);
@@ -669,7 +695,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         CfSecOpenDirectory(conn, sendbuffer, filename);
         return true;
 
-    case cfd_opendir:
+    case PROTOCOL_COMMAND_OPENDIR:
 
         memset(filename, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "OPENDIR %[^\n]", filename);
@@ -691,7 +717,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         CfOpenDirectory(conn, sendbuffer, filename);
         return true;
 
-    case cfd_ssynch:
+    case PROTOCOL_COMMAND_SYNC_SECURE:
 
         memset(buffer, 0, CF_BUFSIZE);
         sscanf(recvbuffer, "SSYNCH %u", &len);
@@ -729,7 +755,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         /* roll through, no break */
 
-    case cfd_synch:
+    case PROTOCOL_COMMAND_SYNC:
 
         if (!conn->id_verified)
         {
@@ -780,7 +806,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         return true;
 
-    case cfd_smd5:
+    case PROTOCOL_COMMAND_MD5_SECURE:
 
         sscanf(recvbuffer, "SMD5 %u", &len);
 
@@ -803,7 +829,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         /* roll through, no break */
 
-    case cfd_md5:
+    case PROTOCOL_COMMAND_MD5:
 
         if (!conn->id_verified)
         {
@@ -815,7 +841,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         CompareLocalHash(conn, sendbuffer, recvbuffer);
         return true;
 
-    case cfd_svar:
+    case PROTOCOL_COMMAND_VAR_SECURE:
 
         sscanf(recvbuffer, "SVAR %u", &len);
 
@@ -839,7 +865,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         /* roll through, no break */
 
-    case cfd_var:
+    case PROTOCOL_COMMAND_VAR:
 
         if (!conn->id_verified)
         {
@@ -858,7 +884,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         GetServerLiteral(conn, sendbuffer, recvbuffer, encrypted);
         return true;
 
-    case cfd_scontext:
+    case PROTOCOL_COMMAND_CONTEXT_SECURE:
 
         sscanf(recvbuffer, "SCONTEXT %u", &len);
 
@@ -882,7 +908,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         /* roll through, no break */
 
-    case cfd_context:
+    case PROTOCOL_COMMAND_CONTEXT:
 
         if (!conn->id_verified)
         {
@@ -901,7 +927,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
         ReplyServerContext(conn, sendbuffer, recvbuffer, encrypted, classes);
         return true;
 
-    case cfd_squery:
+    case PROTOCOL_COMMAND_QUERY_SECURE:
 
         sscanf(recvbuffer, "SQUERY %u", &len);
 
@@ -943,7 +969,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         break;
 
-    case cfd_call_me_back:
+    case PROTOCOL_COMMAND_CALL_ME_BACK:
 
         sscanf(recvbuffer, "SCALLBACK %u", &len);
 
@@ -983,6 +1009,10 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
+    case PROTOCOL_COMMAND_AUTH:
+    case PROTOCOL_COMMAND_CONTEXTS:
+    case PROTOCOL_COMMAND_BAD:
+        ProgrammingError("Unexpected protocol command");
     }
 
     sprintf(sendbuffer, "BAD: Request denied\n");
@@ -1208,7 +1238,7 @@ static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
 
 /**************************************************************/
 
-static int GetCommand(char *str)
+static ProtocolCommand GetCommand(char *str)
 {
     int i;
     char op[CF_BUFSIZE];

@@ -203,35 +203,6 @@ typedef struct
 # define EXEC_SUFFIX ""
 #endif /* !__MINGW32__ */
 
-/*******************************************************************/
-/* Client server defines                                           */
-/*******************************************************************/
-
-enum PROTOS
-{
-    cfd_exec,
-    cfd_auth,
-    cfd_get,
-    cfd_opendir,
-    cfd_synch,
-    cfd_classes,
-    cfd_md5,
-    cfd_smd5,
-    cfd_cauth,
-    cfd_sauth,
-    cfd_ssynch,
-    cfd_sget,
-    cfd_version,
-    cfd_sopendir,
-    cfd_var,
-    cfd_svar,
-    cfd_context,
-    cfd_scontext,
-    cfd_squery,
-    cfd_call_me_back,
-    cfd_bad
-};
-
 #define CF_WORDSIZE 8           /* Number of bytes in a word */
 
 /*******************************************************************/

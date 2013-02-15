@@ -314,13 +314,13 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
     IndentText(writer, indent);
     if (pp->promisee.item != NULL)
     {
-        WriterWriteF(writer, "%s promise by \'%s\' -> ", pp->parent_subtype->name, pp->promiser);
+        WriterWriteF(writer, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
         RvalPrint(writer, pp->promisee);
         WriterWriteF(writer, " if context is %s\n\n", pp->classes);
     }
     else
     {
-        WriterWriteF(writer, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->parent_subtype->name, pp->promiser,
+        WriterWriteF(writer, "%s promise by \'%s\' (implicit) if context is %s\n\n", pp->agentsubtype, pp->promiser,
                 pp->classes);
     }
 
@@ -334,9 +334,9 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
         Policy *policy = PolicyFromPromise(pp);
 
         const Body *bp = NULL;
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             if ((bp = IsBody(policy->bodies, pp->ns, (char *) cp->rval.item)))
             {
                 ShowBodyText(writer, bp, 15);
@@ -347,14 +347,14 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
             }
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
             {
                 const Rlist *rp = (Rlist *) cp->rval.item;
                 RlistPrint(writer, rp);
                 break;
             }
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             {
                 const FnCall *fp = (FnCall *) cp->rval.item;
 
@@ -368,9 +368,12 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
                 }
                 break;
             }
+
+        default:
+            break;
         }
 
-        if (cp->rval.rtype != CF_FNCALL)
+        if (cp->rval.type != RVAL_TYPE_FNCALL)
         {
             IndentText(writer, indent);
             WriterWriteF(writer, " if body context %s\n", cp->classes);
@@ -416,7 +419,7 @@ static void PrintVariablesInScope(Writer *writer, const Scope *scope)
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        WriterWriteF(writer, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.rtype, assoc->lval);
+        WriterWriteF(writer, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.type, assoc->lval);
         RvalPrint(writer, assoc->rval);
         WriterWriteF(writer, "\n");
     }
@@ -537,7 +540,7 @@ static void ShowBodyText(Writer *writer, const Body *body, int indent)
 
         for (const Rlist *rp = body->args; rp != NULL; rp = rp->next)
         {
-            if (rp->type != CF_SCALAR)
+            if (rp->type != RVAL_TYPE_SCALAR)
             {
                 ProgrammingError("ShowBody - non-scalar parameter container");
             }

@@ -282,15 +282,6 @@ void SyntaxExport(void)
     WriterClose(writer);
 }
 
-void LookupObservable(int i, char *name, char *desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-void LongHaul(time_t current)
-{
-}
-
 /* cf-serverd: server_transform.c, cf-serverd.c */
 
 void TranslatePath(char *new, const char *old)

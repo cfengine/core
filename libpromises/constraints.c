@@ -39,7 +39,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 
-static PromiseIdent *PromiseIdExists(char *namespace, char *handle);
+static PromiseIdent *PromiseIdExists(char *ns, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
 
@@ -109,7 +109,7 @@ void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval)
         if (strcmp(lval, cp->lval) == 0)
         {
             DeleteRvalItem(cp->rval);
-            cp->rval = (Rval) {xstrdup(rval), CF_SCALAR};
+            cp->rval = (Rval) { xstrdup(rval), RVAL_TYPE_SCALAR };
             return;
         }
     }
@@ -152,10 +152,10 @@ int GetBooleanConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "", " !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",
-                      cp->rval.rtype, lval);
+                      cp->rval.type, lval);
                 PromiseRef(cf_error, pp);
                 FatalError("Aborted");
             }
@@ -205,10 +205,10 @@ int GetRawBooleanConstraint(const char *lval, const Seq *constraints)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "", " !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",
-                      cp->rval.rtype, lval);
+                      cp->rval.type, lval);
                 FatalError("Aborted");
             }
 
@@ -258,11 +258,11 @@ int GetBundleConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (!(cp->rval.rtype == CF_FNCALL || cp->rval.rtype == CF_SCALAR))
+            if (!(cp->rval.type == RVAL_TYPE_FNCALL || cp->rval.type == RVAL_TYPE_SCALAR))
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - type (%c) for bundle constraint %s did not match internals\n",
-                      cp->rval.rtype, lval);
+                      cp->rval.type, lval);
                 PromiseRef(cf_error, pp);
                 FatalError("Aborted");
             }
@@ -299,7 +299,7 @@ int GetIntConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
@@ -338,7 +338,7 @@ double GetRealConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
@@ -400,7 +400,7 @@ mode_t GetOctalConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
@@ -450,7 +450,7 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - expected type for owner constraint %s did not match internals\n",
@@ -503,7 +503,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_SCALAR)
+            if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
                 CfOut(cf_error, "",
                       "Anomalous type mismatch - expected type for group constraint %s did not match internals\n",
@@ -545,7 +545,7 @@ Rlist *GetListConstraint(const char *lval, const Promise *pp)
                 continue;
             }
 
-            if (cp->rval.rtype != CF_LIST)
+            if (cp->rval.type != RVAL_TYPE_LIST)
             {
                 CfOut(cf_error, "", " !! Type mismatch on rhs - expected type for list constraint \"%s\" \n", lval);
                 PromiseRef(cf_error, pp);
@@ -601,11 +601,11 @@ Constraint *GetConstraint(const Promise *pp, const char *lval)
 
 /*****************************************************************************/
 
-void *GetConstraintValue(const char *lval, const Promise *pp, char rtype)
+void *GetConstraintValue(const char *lval, const Promise *pp, RvalType rtype)
 {
     const Constraint *constraint = GetConstraint(pp, lval);
 
-    if (constraint && constraint->rval.rtype == rtype)
+    if (constraint && constraint->rval.type == rtype)
     {
         return constraint->rval.item;
     }
@@ -619,14 +619,14 @@ void *GetConstraintValue(const char *lval, const Promise *pp, char rtype)
 
 void ReCheckAllConstraints(Promise *pp)
 {
-    char *sp, *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+    char *sp, *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
     PromiseIdent *prid;
     Item *ptr;
     int in_class_any = false;
 
-    if (strcmp(pp->parent_subtype->name, "reports") == 0 && strcmp(pp->classes, "any") == 0)
+    if (strcmp(pp->agentsubtype, "reports") == 0 && strcmp(pp->classes, "any") == 0)
     {
-        char *cl = GetConstraintValue("ifvarclass", pp, CF_SCALAR);
+        char *cl = GetConstraintValue("ifvarclass", pp, RVAL_TYPE_SCALAR);
 
         if (cl == NULL || strcmp(cl, "any") == 0)
         {
@@ -688,14 +688,14 @@ void ReCheckAllConstraints(Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        PostCheckConstraint(pp->parent_subtype->name, pp->bundle, cp->lval, cp->rval);
+        PostCheckConstraint(pp->agentsubtype, pp->bundle, cp->lval, cp->rval);
     }
 
-    if (strcmp(pp->parent_subtype->name, "insert_lines") == 0)
+    if (strcmp(pp->agentsubtype, "insert_lines") == 0)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
-        if ((sp = GetConstraintValue("select_line_matching", pp, CF_SCALAR)))
+        if ((sp = GetConstraintValue("select_line_matching", pp, RVAL_TYPE_SCALAR)))
         {
             if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
             {
@@ -931,12 +931,12 @@ void DeleteAllPromiseIds(void)
 
 /*****************************************************************************/
 
-static PromiseIdent *PromiseIdExists(char *namespace, char *handle)
+static PromiseIdent *PromiseIdExists(char *ns, char *handle)
 {
     PromiseIdent *key;
     char name[CF_BUFSIZE];
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", namespace, CF_NS, handle);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, handle);
     
     for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
     {

@@ -362,7 +362,7 @@ if test "x$with_libxml2" != xno; then
    fi
 
     CF3_WITH_LIBRARY(libxml2, [
-      AC_CHECK_LIB(xml2, xmlXPathNewContext, [], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
+      AC_CHECK_LIB(xml2, xmlFirstElementChild, [], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
       AC_CHECK_HEADERS([libxml/xmlwriter.h], [break], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
     ])
 fi
@@ -970,7 +970,7 @@ else
   AC_MSG_RESULT([-> libacl: disabled])
 fi
 
-if test "x$ac_cv_lib_xml2_xmlXPathNewContext" = xyes; then
+if test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes; then
   AC_MSG_RESULT([-> libxml2: $LIBXML2_PATH])
 else
   AC_MSG_RESULT([-> libxml2: disabled])
@@ -998,7 +998,6 @@ AC_CONFIG_FILES([Makefile
 	cf-gendoc/Makefile
 	cf-key/Makefile
 	cf-monitord/Makefile
-	cf-report/Makefile
 	cf-runagent/Makefile
 	cf-serverd/Makefile
 	ext/Makefile

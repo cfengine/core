@@ -68,7 +68,7 @@ Constraint *EffectiveConstraint(Seq *constraints);
 
 Constraint *GetConstraint(const Promise *promise, const char *lval);
 void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval);
-void *GetConstraintValue(const char *lval, const Promise *promise, char type);
+void *GetConstraintValue(const char *lval, const Promise *promise, RvalType type);
 int GetBooleanConstraint(const char *lval, const Promise *list);
 int GetRawBooleanConstraint(const char *lval, const Seq *constraints);
 int GetIntConstraint(const char *lval, const Promise *list);
@@ -81,6 +81,6 @@ void ReCheckAllConstraints(Promise *pp);
 int GetBundleConstraint(const char *lval, const Promise *list);
 PromiseIdent *NewPromiseId(char *handle, Promise *pp);
 void DeleteAllPromiseIds(void);
-void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);;
+void PostCheckConstraint(const char *type, const char *bundle, const char *lval, Rval rval);
 
 #endif

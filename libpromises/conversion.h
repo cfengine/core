@@ -42,7 +42,6 @@ enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(Rlist *list, char *sep);
 int Signal2Int(char *s);
 enum cfreport String2ReportLevel(char *typestr);
-enum cfhashes String2HashType(char *typestr);
 enum cfcomparison String2Comparison(char *s);
 enum cflinktype String2LinkType(char *s);
 enum cfdatatype Typename2Datatype(char *name);

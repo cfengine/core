@@ -30,7 +30,6 @@
 
 AgentConnection *NewAgentConn(void);
 void DeleteAgentConn(AgentConnection *ap);
-void DePort(char *address);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
 const char *Hostname2IPString(const char *hostname);

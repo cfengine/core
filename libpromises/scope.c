@@ -118,7 +118,7 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
+void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -156,7 +156,7 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
 
             if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
             {
-                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", namespace, CF_NS, naked);
+                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
             }
             
             vtype = GetVariable(scope, qnaked, &retval); 
@@ -166,7 +166,7 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
             case cf_slist:
             case cf_ilist:
             case cf_rlist:
-                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
+                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, cf_slist);
                 break;
             default:
                 CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
@@ -180,26 +180,26 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
         Promise *pp = NULL; // This argument should really get passed down.
         
         switch(rpr->type)
-           {
-           case CF_SCALAR:
-               NewScalar(scope, lval, rpr->item, cf_str);
-               break;
-               
-           case CF_FNCALL:
-               subfp = (FnCall *) rpr->item;
-               Rval rval = EvaluateFunctionCall(subfp, pp).rval;
-               if (rval.rtype == CF_SCALAR)
-               {
-                   NewScalar(scope, lval, rval.item, cf_str);
-               }
-               else
-               {
-                   CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
-               }
-               break;
-           default:
-               ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
-           }
+        {
+        case RVAL_TYPE_SCALAR:
+            NewScalar(scope, lval, rpr->item, cf_str);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            subfp = (FnCall *) rpr->item;
+            Rval rval = EvaluateFunctionCall(subfp, pp).rval;
+            if (rval.type == RVAL_TYPE_SCALAR)
+            {
+                NewScalar(scope, lval, rval.item, cf_str);
+            }
+            else
+            {
+                CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
+            }
+            break;
+        default:
+            ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
+        }
 
         }
     }

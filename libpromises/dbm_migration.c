@@ -31,7 +31,7 @@
 extern DBMigrationFunction dbm_migration_plan_bundles[];
 extern DBMigrationFunction dbm_migration_plan_lastseen[];
 
-static DBMigrationFunction *dbm_migration_plans[dbid_max] = {
+static const DBMigrationFunction *dbm_migration_plans[dbid_max] = {
     [dbid_bundles] = dbm_migration_plan_bundles,
     [dbid_lastseen] = dbm_migration_plan_lastseen
 };

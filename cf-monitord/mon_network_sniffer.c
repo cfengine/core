@@ -42,6 +42,17 @@
 
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
 
+static const char *TCPNAMES[CF_NETATTR] =
+{
+    "icmp",
+    "udp",
+    "dns",
+    "tcpsyn",
+    "tcpack",
+    "tcpfin",
+    "misc"
+};
+
 /* Global variables */
 
 static bool TCPDUMP;
@@ -55,6 +66,7 @@ static Item *NETOUT_DIST[CF_NETATTR];
 
 static void Sniff(long iteration, double *cf_this);
 static void AnalyzeArrival(long iteration, char *arrival, double *cf_this);
+static void DePort(char *address);
 
 /* Implementation */
 
@@ -484,4 +496,67 @@ void MonNetworkSnifferGatherData(double *cf_this)
         DeleteItemList(NETOUT_DIST[i]);
         NETOUT_DIST[i] = NULL;
     }
+}
+
+void DePort(char *address)
+{
+    char *sp, *chop, *fc = NULL, *fd = NULL, *ld = NULL;
+    int ccount = 0, dcount = 0;
+
+/* Start looking for ethernet/ipv6 addresses */
+
+    for (sp = address; *sp != '\0'; sp++)
+    {
+        if (*sp == ':')
+        {
+            if (!fc)
+            {
+                fc = sp;
+            }
+            ccount++;
+        }
+
+        if (*sp == '.')
+        {
+            if (!fd)
+            {
+                fd = sp;
+            }
+
+            ld = sp;
+
+            dcount++;
+        }
+    }
+
+    if (!fd)
+    {
+        /* This does not look like an IP address+port, maybe ethernet */
+        return;
+    }
+
+    if (dcount == 4)
+    {
+        chop = ld;
+    }
+    else if ((dcount > 1) && (fc != NULL))
+    {
+        chop = fc;
+    }
+    else if ((ccount > 1) && (fd != NULL))
+    {
+        chop = fd;
+    }
+    else
+    {
+        /* Don't recognize address */
+        return;
+    }
+
+    if (chop < address + strlen(address))
+    {
+        *chop = '\0';
+    }
+
+    return;
 }

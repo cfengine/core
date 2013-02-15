@@ -131,7 +131,8 @@ int ListHubs(List **list)
     AvahiServiceBrowser *sb = NULL;
     int error;
 
-    if (ListNew(&hublist, &CompareHosts, NULL, &free) < 0)
+    hublist = ListNew(&CompareHosts, NULL, &free);
+    if (!hublist)
     {
         return -1;
     }

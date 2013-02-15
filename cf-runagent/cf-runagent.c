@@ -147,7 +147,6 @@ int main(int argc, char *argv[])
     Policy *policy = GenericAgentLoadPolicy(config, report_context, false);
 
     CheckLicenses();
-    XML = false;
 
     ThisAgentInit();
     KeepControlPromises(policy);      // Set RUNATTR using copy
@@ -641,7 +640,7 @@ static Promise *MakeDefaultRunAgentPromise()
 
     pp->bundle = xstrdup("implicit internal bundle for runagent");
     pp->promiser = xstrdup("runagent");
-    pp->promisee = (Rval) {NULL, CF_NOPROMISEE};
+    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
     return pp;

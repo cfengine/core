@@ -563,15 +563,10 @@ typedef struct
 /* Fundamental (meta) types                                              */
 /*************************************************************************/
 
-#define CF_SCALAR 's'
-#define CF_LIST   'l'
-#define CF_FNCALL 'f'
 #define CF_STACK  'k'
-#define CF_ASSOC  'a'
 
 #define CF_MAPPEDLIST '#'
 
-#define CF_NOPROMISEE 'X'
 #define CF_UNDEFINED -1
 #define CF_NODOUBLE -123.45
 #define CF_NOINT    -678L
@@ -1150,6 +1145,7 @@ struct Promise_
 
     /* Runtime bus for private flags and work space */
 
+    char *agentsubtype;         /* cache the promise subtype */
     char *bundletype;           /* cache the agent type */
     char *ns;                   /* cache the namespace */
     int done;                   /* this needs to be preserved across runs */

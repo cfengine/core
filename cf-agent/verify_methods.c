@@ -69,13 +69,13 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     if (a.havebundle)
     {
-        if ((vp = GetConstraintValue(attrname, pp, CF_FNCALL)))
+        if ((vp = GetConstraintValue(attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
             ExpandScalar(fp->name, method_name);
             params = fp->args;
         }
-        else if ((vp = GetConstraintValue(attrname, pp, CF_SCALAR)))
+        else if ((vp = GetConstraintValue(attrname, pp, RVAL_TYPE_SCALAR)))
         {
             ExpandScalar((char *) vp, method_name);
             params = NULL;
@@ -127,9 +127,9 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         NewScope(bp->name);
         HashVariables(PolicyFromPromise(pp), bp->name, report_context);
 
-        char namespace[CF_BUFSIZE];
-        snprintf(namespace,CF_BUFSIZE,"%s_meta",method_name);
-        NewScope(namespace);
+        char ns[CF_BUFSIZE];
+        snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
+        NewScope(ns);
         SetBundleOutputs(bp->name);
 
         AugmentScope(method_deref, pp->ns, bp->args, params);
@@ -190,7 +190,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
 static void GetReturnValue(char *scope, Promise *pp)
 {
-    char *result = GetConstraintValue("useresult", pp, CF_SCALAR);
+    char *result = GetConstraintValue("useresult", pp, RVAL_TYPE_SCALAR);
 
     if (result)
     {

@@ -136,7 +136,7 @@ void EndAudit(int background_tasks)
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_STATUS_TYPES));
+    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_STATUS_TYPES));
 }
 
 /*****************************************************************************/
@@ -148,7 +148,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_LOG_TYPES));
+    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_LOG_TYPES));
 }
 
 /*****************************************************************************/
@@ -349,7 +349,7 @@ void PromiseBanner(Promise *pp)
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+    if ((sp = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }

@@ -1395,7 +1395,7 @@ static void MarkServerOffline(const char *server)
 
 /* If no existing connection, get one .. */
 
-    rp = PrependRlist(&SERVERLIST, "nothing", CF_SCALAR);
+    rp = PrependRlist(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
 
     svp = xmalloc(sizeof(ServerItem));
 
@@ -1427,7 +1427,7 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
 
     strlcpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE);
 
-    rp = PrependRlist(&SERVERLIST, "nothing", CF_SCALAR);
+    rp = PrependRlist(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
     free(rp->item);
     svp = xmalloc(sizeof(ServerItem));
     rp->item = svp;

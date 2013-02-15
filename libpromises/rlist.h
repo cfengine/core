@@ -25,10 +25,19 @@
 #ifndef CFENGINE_RLIST_H
 #define CFENGINE_RLIST_H
 
+typedef enum
+{
+    RVAL_TYPE_SCALAR = 's',
+    RVAL_TYPE_LIST = 'l',
+    RVAL_TYPE_FNCALL = 'f',
+    RVAL_TYPE_ASSOC = 'a',
+    RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
+} RvalType;
+
 typedef struct
 {
     void *item;                 /* (char *), (Rlist *), or (FnCall)  */
-    char rtype;                 /* Points to CF_SCALAR, CF_LIST, CF_FNCALL usually */
+    RvalType type;
 } Rval;
 
 typedef struct Rlist_ Rlist;

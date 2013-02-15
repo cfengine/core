@@ -58,11 +58,11 @@ void EndMeasurePromise(struct timespec start, Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
-    mid = GetConstraintValue("measurement_class", pp, CF_SCALAR);
+    mid = GetConstraintValue("measurement_class", pp, RVAL_TYPE_SCALAR);
 
     if (mid)
     {
-        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_subtype->name, pp->promiser);
+        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->agentsubtype, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
             CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");

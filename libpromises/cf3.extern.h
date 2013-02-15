@@ -32,7 +32,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 extern const Sock ECGSOCKS[ATTR];
-extern const char *TCPNAMES[CF_NETATTR];
 
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
@@ -94,19 +93,12 @@ extern int VEXPIREAFTER;
 
 extern const char *OBS[CF_OBSERVABLES][2];
 
-extern const char *CF_DIGEST_TYPES[10][2];
-extern const int CF_DIGEST_SIZES[10];
-
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int LICENSES;
 extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
-extern char WEBDRIVER[CF_MAXVARSIZE];
-extern char BANNER[2 * CF_BUFSIZE];
-extern char FOOTER[CF_BUFSIZE];
-extern char STYLESHEET[CF_BUFSIZE];
 extern int CF_TOPICS;
 extern int CF_OCCUR;
 extern enum cfhashes CF_DEFAULT_DIGEST;
@@ -129,8 +121,6 @@ extern int AM_BACKGROUND_PROCESS;
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;
-extern int XML;
-extern int CSV;
 
 extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];

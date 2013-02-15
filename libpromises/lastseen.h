@@ -31,9 +31,15 @@ typedef struct
     QPoint Q;
 } KeyHostSeen;
 
+typedef enum
+{
+    LAST_SEEN_ROLE_CONNECT,
+    LAST_SEEN_ROLE_ACCEPT
+} LastSeenRole;
+
 bool Address2Hostkey(const char *address, char *hostkey);
 
-void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role);
+void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role);
 bool RemoveHostFromLastSeen(const char *hostkey);
 
 /*

@@ -70,7 +70,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 /*****************************************************************************/
 
-void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role)
+void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role)
 {
     char databuf[CF_BUFSIZE];
     char *mapip;
@@ -89,7 +89,7 @@ void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum ro
 
     mapip = MapAddress(ipaddress);
 
-    UpdateLastSawHost(databuf, mapip, role == cf_accept, time(NULL));
+    UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
 /*****************************************************************************/

@@ -489,7 +489,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         CfOut(cf_verbose, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
               HashPrint(CF_DEFAULT_DIGEST, conn->digest));
         SavePublicKey(conn->username, conn->remoteip, HashPrint(CF_DEFAULT_DIGEST, conn->digest), server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->digest, cf_connect);
+        LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);

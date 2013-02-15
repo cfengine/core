@@ -171,7 +171,7 @@ void LoadSecretKeys()
     if ((stat(name, &sb) == -1) && (stat(guard, &sb) != -1))
         // copy localhost.pub to root-HASH.pub on policy server
     {
-        LastSaw(POLICY_SERVER, digest, cf_connect);
+        LastSaw(POLICY_SERVER, digest, LAST_SEEN_ROLE_CONNECT);
 
         if (!LinkOrCopy(source, name, false))
         {

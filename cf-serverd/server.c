@@ -2197,7 +2197,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         ThreadUnlock(cft_output);
     }
 
-    LastSaw(conn->ipaddr, conn->digest, cf_accept);
+    LastSaw(conn->ipaddr, conn->digest, LAST_SEEN_ROLE_ACCEPT);
 
     if (!CheckStoreKey(conn, newkey))   /* conceals proposition S1 */
     {

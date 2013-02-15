@@ -224,7 +224,7 @@ int ThreadUnlock(pthread_mutex_t *name)
     return true;
 }
 
-void ShowFnCall(FILE *fout, const FnCall *fp)
+void FnCallShow(FILE *fout, const FnCall *fp)
 {
     fail();
 }
@@ -274,7 +274,7 @@ CfAssoc *CopyAssoc(CfAssoc *old)
     fail();
 }
 
-FnCall *CopyFnCall(const FnCall *f)
+FnCall *FnCallCopy(const FnCall *f)
 {
     fail();
 }
@@ -289,7 +289,7 @@ char *EscapeQuotes(const char *s, char *out, int outSz)
     fail();
 }
 
-void DeleteFnCall(FnCall *fp)
+void FnCallDestroy(FnCall *fp)
 {
     fail();
 }

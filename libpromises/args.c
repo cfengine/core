@@ -109,8 +109,16 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) rpg->item;
-            dtg = FunctionReturnType(fp->name);
-            FnCallResult res = EvaluateFunctionCall(fp, NULL);
+            dtg = DATA_TYPE_NONE;
+            {
+                const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+                if (fncall_type)
+                {
+                    dtg = fncall_type->dtype;
+                }
+            }
+
+            FnCallResult res = FnCallEvaluate(fp, NULL);
 
             if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
             {
@@ -119,13 +127,13 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
                 {
                     printf
                         (" !! Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
-                    ShowFnCall(stdout, fp);
+                    FnCallShow(stdout, fp);
                     printf(" (try simplifying)\n");
                 }
             }
             else
             {
-                DeleteFnCall(fp);
+                FnCallDestroy(fp);
 
                 rpg->item = res.rval.item;
                 rpg->type = res.rval.type;
@@ -156,7 +164,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
     Rval rval;
     Rlist *newargs = NULL;
     FnCall *subfp;
-    const FnCallType *fn = FindFunction(fp->name);
+    const FnCallType *fn = FnCallTypeGet(fp->name);
 
     len = RlistLen(fp->args);
 
@@ -177,7 +185,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
         {
         case RVAL_TYPE_FNCALL:
             subfp = (FnCall *) rp->item;
-            rval = EvaluateFunctionCall(subfp, pp).rval;
+            rval = FnCallEvaluate(subfp, pp).rval;
             break;
         default:
             rval = ExpandPrivateRval(CONTEXTID, (Rval) {rp->item, rp->type});
@@ -208,7 +216,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
     int argnum, i;
     Rlist *rp = fp->args;
     char id[CF_BUFSIZE], output[CF_BUFSIZE];
-    const FnCallType *fn = FindFunction(fp->name);
+    const FnCallType *fn = FnCallTypeGet(fp->name);
 
     snprintf(id, CF_MAXVARSIZE, "built-in FnCall %s-arg", fp->name);
 

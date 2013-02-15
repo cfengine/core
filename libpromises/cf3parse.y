@@ -567,7 +567,7 @@ litem:                 IDSYNTAX
                        {
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
-                           DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
+                           FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -620,7 +620,7 @@ givearglist:           '('
                        ')'
                        {
                            CfDebug("End args level %d\n",P.arg_nesting);
-                           P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
+                           P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
                            free(P.currentfnid[P.arg_nesting]);

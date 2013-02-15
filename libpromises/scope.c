@@ -187,7 +187,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 
         case RVAL_TYPE_FNCALL:
             subfp = (FnCall *) rpr->item;
-            Rval rval = EvaluateFunctionCall(subfp, pp).rval;
+            Rval rval = FnCallEvaluate(subfp, pp).rval;
             if (rval.type == RVAL_TYPE_SCALAR)
             {
                 NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);

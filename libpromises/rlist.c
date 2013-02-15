@@ -246,7 +246,7 @@ Rval CopyRvalItem(Rval rval)
     case RVAL_TYPE_FNCALL:
         /* the rval is a fncall */
         fp = (FnCall *) rval.item;
-        return (Rval) {CopyFnCall(fp), RVAL_TYPE_FNCALL};
+        return (Rval) {FnCallCopy(fp), RVAL_TYPE_FNCALL};
 
     case RVAL_TYPE_LIST:
         /* The rval is an embedded rlist (2d) */
@@ -458,7 +458,7 @@ Rlist *AppendRlist(Rlist **start, const void *item, char type)
         fp = (FnCall *) item;
         if (DEBUG)
         {
-            ShowFnCall(stdout, fp);
+            FnCallShow(stdout, fp);
         }
         CfDebug("\n");
         break;
@@ -543,7 +543,7 @@ Rlist *PrependRlist(Rlist **start, void *item, char type)
         fp = (FnCall *) item;
         if (DEBUG)
         {
-            ShowFnCall(stdout, fp);
+            FnCallShow(stdout, fp);
         }
         CfDebug("\n");
         break;
@@ -887,7 +887,7 @@ void ShowRval(FILE *fp, Rval rval)
         break;
 
     case RVAL_TYPE_FNCALL:
-        ShowFnCall(fp, (FnCall *) rval.item);
+        FnCallShow(fp, (FnCall *) rval.item);
         break;
 
     case RVAL_TYPE_NOPROMISEE:
@@ -954,7 +954,7 @@ void DeleteRvalItem(Rval rval)
 
     case RVAL_TYPE_FNCALL:
 
-        DeleteFnCall((FnCall *) rval.item);
+        FnCallDestroy((FnCall *) rval.item);
         break;
 
     default:

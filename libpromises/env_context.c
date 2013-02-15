@@ -112,9 +112,9 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     case RVAL_TYPE_FNCALL:
 
         fp = (FnCall *) cp->rval.item;  /* Special expansion of functions for control, best effort only */
-        FnCallResult res = EvaluateFunctionCall(fp, pp);
+        FnCallResult res = FnCallEvaluate(fp, pp);
 
-        DeleteFnCall(fp);
+        FnCallDestroy(fp);
         cp->rval = res.rval;
         break;
 

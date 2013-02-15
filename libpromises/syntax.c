@@ -1125,7 +1125,7 @@ static void CheckFnCallType(const char *lval, const char *s, DataType dtype, con
         return;
     }
 
-    fn = FindFunction(s);
+    fn = FnCallTypeGet(s);
 
     if (fn)
     {

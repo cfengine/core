@@ -34,13 +34,16 @@ struct FnCall_
     char *ns;
 };
 
-int IsBuiltinFnCall(Rval rval);
-FnCall *NewFnCall(const char *name, Rlist *args);
-FnCall *CopyFnCall(const FnCall *f);
-void DeleteFnCall(FnCall *fp);
-void ShowFnCall(FILE *fout, const FnCall *fp);
-FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
-DataType FunctionReturnType(const char *name);
-const FnCallType *FindFunction(const char *name);
+bool FnCallIsBuiltIn(Rval rval);
+
+FnCall *FnCallNew(const char *name, Rlist *args);
+FnCall *FnCallCopy(const FnCall *f);
+void FnCallDestroy(FnCall *fp);
+FnCallResult FnCallEvaluate(FnCall *fp, const Promise *pp);
+
+const FnCallType *FnCallTypeGet(const char *name);
+
+// TODO: should probably demolish this eventually
+void FnCallShow(FILE *fout, const FnCall *fp);
 
 #endif

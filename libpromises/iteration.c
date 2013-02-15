@@ -76,8 +76,8 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
                 {
                     FnCall *fp = (FnCall *) rps->item;
 
-                    newret = EvaluateFunctionCall(fp, NULL).rval;
-                    DeleteFnCall(fp);
+                    newret = FnCallEvaluate(fp, NULL).rval;
+                    FnCallDestroy(fp);
                     rps->item = newret.item;
                     rps->type = newret.type;
                 }

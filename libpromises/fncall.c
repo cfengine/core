@@ -37,7 +37,7 @@
 
 /*******************************************************************/
 
-int IsBuiltinFnCall(Rval rval)
+bool FnCallIsBuiltIn(Rval rval)
 {
     FnCall *fp;
 
@@ -48,7 +48,7 @@ int IsBuiltinFnCall(Rval rval)
 
     fp = (FnCall *) rval.item;
 
-    if (FindFunction(fp->name))
+    if (FnCallTypeGet(fp->name))
     {
         CfDebug("%s is a builtin function\n", fp->name);
         return true;
@@ -61,7 +61,7 @@ int IsBuiltinFnCall(Rval rval)
 
 /*******************************************************************/
 
-FnCall *NewFnCall(const char *name, Rlist *args)
+FnCall *FnCallNew(const char *name, Rlist *args)
 {
     FnCall *fp;
 
@@ -75,7 +75,7 @@ FnCall *NewFnCall(const char *name, Rlist *args)
     CfDebug("Installed ");
     if (DEBUG)
     {
-        ShowFnCall(stdout, fp);
+        FnCallShow(stdout, fp);
     }
     CfDebug("\n\n");
     return fp;
@@ -83,27 +83,30 @@ FnCall *NewFnCall(const char *name, Rlist *args)
 
 /*******************************************************************/
 
-FnCall *CopyFnCall(const FnCall *f)
+FnCall *FnCallCopy(const FnCall *f)
 {
     CfDebug("CopyFnCall()\n");
-    return NewFnCall(f->name, CopyRlist(f->args));
+    return FnCallNew(f->name, CopyRlist(f->args));
 }
 
 /*******************************************************************/
 
-void DeleteFnCall(FnCall *fp)
+void FnCallDestroy(FnCall *fp)
 {
-    if (fp->name)
+    if (fp)
     {
-        free(fp->name);
-    }
+        if (fp->name)
+        {
+            free(fp->name);
+        }
 
-    if (fp->args)
-    {
-        DeleteRlist(fp->args);
-    }
+        if (fp->args)
+        {
+            DeleteRlist(fp->args);
+        }
 
-    free(fp);
+        free(fp);
+    }
 }
 
 /*********************************************************************/
@@ -111,14 +114,13 @@ void DeleteFnCall(FnCall *fp)
 FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked)
 {
     CfDebug("ExpandFnCall()\n");
-//return NewFnCall(f->name,ExpandList(contextid,f->args,expandnaked));
-    return NewFnCall(f->name, ExpandList(contextid, f->args, false));
+    return FnCallNew(f->name, ExpandList(contextid, f->args, false));
 }
 
 
 /*******************************************************************/
 
-void ShowFnCall(FILE *fout, const FnCall *fp)
+void FnCallShow(FILE *fout, const FnCall *fp)
 {
     fprintf(fout, "%s(", fp->name);
 
@@ -131,7 +133,7 @@ void ShowFnCall(FILE *fout, const FnCall *fp)
             break;
 
         case RVAL_TYPE_FNCALL:
-            ShowFnCall(fout, (FnCall *) rp->item);
+            FnCallShow(fout, (FnCall *) rp->item);
             break;
 
         default:
@@ -145,26 +147,17 @@ void ShowFnCall(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-DataType FunctionReturnType(const char *name)
-{
-    const FnCallType *fn = FindFunction(name);
-
-    return fn ? fn->dtype : DATA_TYPE_NONE;
-}
-
-/*******************************************************************/
-
-FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
+FnCallResult FnCallEvaluate(FnCall *fp, const Promise *pp)
 {
     Rlist *expargs;
-    const FnCallType *this = FindFunction(fp->name);
+    const FnCallType *this = FnCallTypeGet(fp->name);
 
     if (this)
     {
         if (DEBUG)
         {
             printf("EVALUATE FN CALL %s\n", fp->name);
-            ShowFnCall(stdout, fp);
+            FnCallShow(stdout, fp);
             printf("\n");
         }
     }
@@ -180,14 +173,14 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
             CfOut(cf_error, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
         }
 
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
     if ((pp != NULL) && !IsDefinedClass(pp->classes, pp->ns))
     {
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
     expargs = NewExpArgs(fp, pp);
@@ -195,7 +188,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
     if (UnresolvedArgs(expargs))
     {
         DeleteExpArgs(expargs);
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
     if (pp != NULL)
@@ -213,7 +206,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
     {
         /* We do not assign variables to failed function calls */
         DeleteExpArgs(expargs);
-        return (FnCallResult) { FNCALL_FAILURE, { CopyFnCall(fp), RVAL_TYPE_FNCALL } };
+        return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
     DeleteExpArgs(expargs);
@@ -222,7 +215,7 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp)
 
 /*******************************************************************/
 
-const FnCallType *FindFunction(const char *name)
+const FnCallType *FnCallTypeGet(const char *name)
 {
     int i;
 

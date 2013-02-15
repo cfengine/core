@@ -800,7 +800,7 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
         }
         else
         {
-            if (IsBuiltinFnCall(rval))
+            if (FnCallIsBuiltIn(rval))
             {
                 returnval = CopyRvalItem(rval);
             }
@@ -822,9 +822,9 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
             if (rp->type == RVAL_TYPE_FNCALL)
             {
                 fp = (FnCall *) rp->item;
-                FnCallResult res = EvaluateFunctionCall(fp, pp);
+                FnCallResult res = FnCallEvaluate(fp, pp);
 
-                DeleteFnCall(fp);
+                FnCallDestroy(fp);
                 rp->item = res.rval.item;
                 rp->type = res.rval.type;
                 CfDebug("Replacing function call with new type (%c)\n", rp->type);
@@ -852,8 +852,8 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
 
         // Also have to eval function now
         fp = (FnCall *) returnval.item;
-        returnval = EvaluateFunctionCall(fp, pp).rval;
-        DeleteFnCall(fp);
+        returnval = FnCallEvaluate(fp, pp).rval;
+        FnCallDestroy(fp);
         break;
 
     default:
@@ -1156,7 +1156,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
                 /* eval it: e.g. ifvarclass => not("a_class") */
 
-                res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
+                res = FnCallEvaluate(cp->rval.item, NULL).rval;
 
                 /* Don't continue unless function was evaluated properly */
                 if (res.type != RVAL_TYPE_SCALAR)
@@ -1290,7 +1290,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 return;
             }
 
-            FnCallResult res = EvaluateFunctionCall(fp, pp);
+            FnCallResult res = FnCallEvaluate(fp, pp);
 
             if (res.status == FNCALL_FAILURE)
             {
@@ -1710,7 +1710,7 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
 
         }
 
-        default_bundle = NewFnCall("standard_services", args);
+        default_bundle = FnCallNew("standard_services", args);
 
         PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL}, "any", false);
         a.havebundle = true;

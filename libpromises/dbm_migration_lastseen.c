@@ -84,11 +84,6 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         bool incoming = key[0] == '-';
         const char *hostkey = key + 1;
 
-        /* Properly align the data */
-        const char *old_data_address = (const char *)value;
-        QPoint0 old_data_q;
-        memcpy(&old_data_q, (const char *)value + QPOINT0_OFFSET, sizeof(QPoint0));
-
         /* Only migrate sane data */
 
         if (vsize != QPOINT0_OFFSET + sizeof(QPoint0))
@@ -98,6 +93,11 @@ static bool LastseenMigrationVersion0(DBHandle *db)
             DBCursorDeleteEntry(cursor);
             continue;
         }
+
+        /* Properly align the data */
+        const char *old_data_address = (const char *)value;
+        QPoint0 old_data_q;
+        memcpy(&old_data_q, (const char *)value + QPOINT0_OFFSET, sizeof(QPoint0));
 
         char hostkey_key[CF_BUFSIZE];
         snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);

@@ -39,6 +39,7 @@ libpromises_la_SOURCES = \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \
         dbm_migration_bundles.c \
+        dbm_lmdb.c \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \

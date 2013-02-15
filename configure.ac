@@ -253,12 +253,26 @@ if test $WITH_QDBM = 1; then
   ])
 fi
 
+dnl OpenLDAP Lightning MDB
+
+AC_ARG_WITH([lmdb],
+    [AS_HELP_STRING([--with-lmdb[[=PATH]]], [use Lightning MDB to store runtime data])])
+AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_lmdb" || test "x$with_lmdb" != "xno")], [WITH_LMDB=1], [WITH_LMDB=0])
+
+if test $WITH_LMDB = 1; then
+  CF3_WITH_LIBRARY(lmdb, [
+    AC_CHECK_LIB(lmdb, mdb_dbi_open, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_CHECK_HEADERS(lmdb.h, [], [AC_MSG_ERROR(Cannot find Lightning MDB)])
+    AC_DEFINE(LMDB, 1, [Define if Lightning MDB is available])
+  ])
+fi
+
 dnl Tokyo Cabinet
 
 AC_ARG_WITH([tokyocabinet],
     [AS_HELP_STRING([--with-tokyocabinet[[=PATH]]], [use Tokyo Cabinet to store runtime data])])
 
-AS_IF([test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
+AS_IF([test $WITH_LMDB -eq 0 && test $WITH_QDBM -eq 0 && (! test -n "$with_tokyocabinet" || test "x$with_tokyocabinet" != "xno")], [WITH_TOKYO=1], [WITH_TOKYO=0])
 
 if test $WITH_TOKYO = 1; then
   CF3_WITH_LIBRARY(tokyocabinet, [
@@ -269,8 +283,8 @@ if test $WITH_TOKYO = 1; then
   ])
 fi
 
-if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0; then
-   AC_MSG_ERROR(Either Tokyo Cabinet or QDBM must be selected to compile CFEngine)
+if test $WITH_QDBM -eq 0 && test $WITH_TOKYO -eq 0 && test $WITH_LMDB -eq 0; then
+   AC_MSG_ERROR(Either Tokyo Cabinet, LMDB, or QDBM must be selected to compile CFEngine)
 fi
 
 dnl
@@ -685,10 +699,10 @@ dnl ######################################################################
 dnl Collect all the options
 dnl ######################################################################
 
-CPPFLAGS="$CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS"
-CFLAGS="$CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS"
-LDFLAGS="$LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS"
-LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS"
+CPPFLAGS="$CPPFLAGS $LMDB_CPPFLAGS $TOKYOCABINET_CPPFLAGS $QDBM_CPPFLAGS $PCRE_CPPFLAGS $OPENSSL_CPPFLAGS $MONGO_CPPFLAGS $SQLITE3_CPPFLAGS"
+CFLAGS="$CFLAGS $LMDB_CFLAGS $TOKYOCABINET_CFLAGS $QDBM_CFLAGS $PCRE_CFLAGS $OPENSSL_CFLAGS $MONGO_CFLAGS $SQLITE3_CFLAGS"
+LDFLAGS="$LDFLAGS $LMDB_LDFLAGS $TOKYOCABINET_LDFLAGS $QDBM_LDFLAGS $PCRE_LDFLAGS $OPENSSL_LDFLAGS $MONGO_LDFLAGS $SQLITE3_LDFLAGS"
+LIBS="$LIBS $LMDB_LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $SQLITE3_LIBS"
 
 dnl ######################################################################
 dnl OS specific stuff
@@ -952,7 +966,9 @@ else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
 fi
 
-if test $WITH_TOKYO = 1; then
+if test $WITH_LMDB = 1; then
+  AC_MSG_RESULT([-> DB: Lightning MDB: $LMDB_PATH])
+elif test $WITH_TOKYO = 1; then
   AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
 elif test $WITH_QDBM = 1; then
   AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])

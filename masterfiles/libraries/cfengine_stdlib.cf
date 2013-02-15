@@ -1421,6 +1421,10 @@ newname => "$(file)";
 ##-------------------------------------------------------
 
 body file_select name_age(name,days)
+# Select file matching $(name) older than $(days) 
+# name - regular expression matching file name
+#        example: ".*\.pdf" 
+# days - integer
 {
 leaf_name   => { "$(name)" };
 mtime       => irange(0,ago(0,0,"$(days)",0,0,0));  

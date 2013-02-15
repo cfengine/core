@@ -98,7 +98,7 @@ str_test_LDADD = libstr.la
 xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
-list_test_SOURCES = list_test.c ../../libutils/list.c
+list_test_SOURCES = list_test.c 
 
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 

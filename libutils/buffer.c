@@ -57,6 +57,57 @@ Buffer *BufferNew(void)
     return buffer;
 }
 
+Buffer* BufferNewFrom(const char *data, unsigned int length)
+{
+    /*
+     * Are we going to go over the limit?
+     */
+    if (length > general_memory_cap)
+    {
+        return NULL;
+    }
+    Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
+    buffer->capacity = DEFAULT_BUFFER_SIZE;
+    buffer->buffer = (char *)xmalloc(buffer->capacity);
+    /*
+     * Check if we have enough space, otherwise create a larger buffer
+     */
+    if (length >= buffer->capacity)
+    {
+        unsigned int required_blocks = (length / DEFAULT_BUFFER_SIZE) + 1;
+        buffer->buffer = (char *)xrealloc(buffer->buffer, required_blocks * DEFAULT_BUFFER_SIZE);
+        buffer->capacity = required_blocks * DEFAULT_BUFFER_SIZE;
+        buffer->used = 0;
+    }
+    buffer->mode = BUFFER_BEHAVIOR_CSTRING;
+    buffer->used = 0;
+    buffer->beginning = 0;
+    buffer->end = 0;
+    buffer->memory_cap = general_memory_cap;
+    RefCountNew(&(buffer->ref_count));
+    RefCountAttach(buffer->ref_count, buffer);
+    /*
+     * We have a buffer that is large enough, copy the data.
+     */
+    unsigned int c = 0;
+    unsigned int total = 0;
+    for (c = 0; c < length; ++c)
+    {
+        buffer->buffer[c] = data[c];
+        if ((data[c] == '\0') && (buffer->mode = BUFFER_BEHAVIOR_CSTRING))
+        {
+            break;
+        }
+        ++total;
+    }
+    buffer->used = total;
+    if (buffer->mode == BUFFER_BEHAVIOR_CSTRING)
+    {
+        buffer->buffer[buffer->used] = '\0';
+    }
+    return buffer;
+}
+
 int BufferDestroy(Buffer **buffer)
 {
     // If already NULL don't bother.

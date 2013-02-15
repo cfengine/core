@@ -1322,7 +1322,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&conv);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.type});
+                rval = CopyRvalItem((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else if (strcmp(cp->lval, "real") == 0)
             {
@@ -1338,7 +1338,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&qualified_scope);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.type});
+                rval = CopyRvalItem((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else
             {

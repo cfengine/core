@@ -136,11 +136,6 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
 
 int FullWrite(int desc, const char *ptr, size_t len);
 
-/* html.c */
-
-void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
-void CfHtmlFooter(Writer *writer, char *footer);
-
 /* interfaces.c */
 
 void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);

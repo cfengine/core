@@ -57,7 +57,6 @@ libpromises_la_SOURCES = \
         full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
-        html.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
         iteration.c iteration.h \

@@ -50,11 +50,9 @@ struct Rlist_
     Rlist *next;
 };
 
-#include "platform.h"
+#include "cf3.defs.h"
 #include "writer.h"
 #include "json.h"
-
-struct FnCall_;
 
 char *ScalarValue(const Rlist *rlist);
 struct FnCall_ *FnCallValue(const Rlist *rlist);

@@ -30,6 +30,11 @@
 #include "sequence.h"
 #include "writer.h"
 
+struct ReportContext_
+{
+    Writer *report_writers[REPORT_OUTPUT_TYPE_MAX];
+};
+
 ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);

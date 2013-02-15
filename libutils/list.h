@@ -26,7 +26,6 @@
 #define CFENGINE_LIST_H
 
 #include <stdlib.h>
-#include "list_p.h"
 #include "refcount.h"
 
 /**
@@ -67,49 +66,16 @@
   the list, either by using remove or via the mutable iterator will invalidate all the normal iterators.
   */
 typedef struct List List;
-struct ListMutableIterator {
-    int valid;
-    ListNode *current;
-    List *origin;
-};
 typedef struct ListMutableIterator ListMutableIterator;
-struct List {
-    // Number of nodes
-    int node_count;
-    // Incremental number that keeps track of the state of the list, only used for light iterators
-    unsigned int state;
-    // Nodes
-    ListNode *list;
-    // Link to the first element
-    ListNode *first;
-    // Link to the last element
-    ListNode *last;
-    // This function is used to compare two elements
-    int (*compare)(const void *a, const void *b);
-    // This function is used whenever there is need to perform a deep copy
-    void (*copy)(const void *source, void **destination);
-    // This function can be used to destroy the elements at destruction time
-    void (*destroy)(void *element);
-    // Reference counting
-    RefCount *ref_count;
-    // Mutable iterator.
-    ListMutableIterator *iterator;
-};
-struct ListIterator {
-    ListNode *current;
-    List *origin;
-    unsigned int state;
-};
 typedef struct ListIterator ListIterator;
 /**
   @brief Initialization of a linked list.
-  @param list List to be initialized.
   @param compare Compare functions for the elements of the list. Same semantic as strcmp.
   @param copy Copies one element into a new element.
   @param destroy Destroys an element.
-  @return 0 if initialized, -1 otherwise.
+  @return A fully initialized list ready to be used or -1 in case of error.
   */
-int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *));
+List *ListNew(int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *));
 /**
   @brief Destroy a linked list.
   @param list List to be destroyed. It can be a NULL pointer.

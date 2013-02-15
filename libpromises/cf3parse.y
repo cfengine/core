@@ -79,7 +79,7 @@ bundle:                BUNDLE
                            DebugBanner("Bundle");
                            P.block = "bundle";
                            P.rval = (Rval) { NULL, '\0' };
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blockid,"");
@@ -93,7 +93,7 @@ body:                  BODY
                            DebugBanner("Body");
                            P.block = "body";
                            strcpy(P.blockid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blocktype,"");
@@ -106,7 +106,7 @@ typeid:                IDSYNTAX
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
                            CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
                        };
 
@@ -135,7 +135,7 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
-                           AppendRlist(&(P.useargs),P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppend(&(P.useargs),P.currentid, RVAL_TYPE_SCALAR);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -164,7 +164,7 @@ bundlebody:            '{'
                                P.currentbundle = NULL;
                            }
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
                        }
 
@@ -204,7 +204,7 @@ bodybody:              '{'
                                P.currentbody->offset.start = P.offsets.last_block_id;
                            }
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
 
                            strcpy(P.currentid,"");
@@ -272,7 +272,7 @@ selection:             id                         /* BODY ONLY */
                            }
                            else
                            {
-                               DeleteRvalItem(P.rval);
+                               RvalDestroy(P.rval);
                            }
 
                            if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
@@ -358,7 +358,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            CfDebug("End implicit promise %s\n\n",P.promiser);
                            strcpy(P.currentid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -396,7 +396,7 @@ promise:               promiser                    /* BUNDLE ONLY */
 
                            /* Don't free these */
                            strcpy(P.currentid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -449,12 +449,12 @@ constraint:            id                        /* BUNDLE ONLY */
 
                                P.rval = (Rval) { NULL, '\0' };
                                strcpy(P.lval,"no lval");
-                               DeleteRlist(P.currentRlist);
+                               RlistDestroy(P.currentRlist);
                                P.currentRlist = NULL;
                            }
                            else
                            {
-                               DeleteRvalItem(P.rval);
+                               RvalDestroy(P.rval);
                            }
                        };
 
@@ -471,7 +471,7 @@ class:                 CLASS
 id:                    IDSYNTAX
                        {
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
                        };
@@ -517,8 +517,8 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
-                           P.rval = (Rval) { CopyRlist(P.currentRlist), RVAL_TYPE_LIST };
-                           DeleteRlist(P.currentRlist);
+                           P.rval = (Rval) { RlistCopy(P.currentRlist), RVAL_TYPE_LIST };
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.references_body = false;
                        }
@@ -546,19 +546,19 @@ litems_int:            litem
 
 litem:                 IDSYNTAX
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppend((Rlist **)&P.currentRlist,P.currentid, RVAL_TYPE_SCALAR);
                        }
 
                      | QSTRING
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
 
                      | NAKEDVAR
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -566,7 +566,7 @@ litem:                 IDSYNTAX
                      | usefunction
                        {
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
                            FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
                        };
 
@@ -640,13 +640,13 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentid, RVAL_TYPE_SCALAR);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -654,7 +654,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -662,8 +662,8 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
-                           DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
+                           RlistAppend(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                        };
 
 %%

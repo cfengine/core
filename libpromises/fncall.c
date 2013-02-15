@@ -86,7 +86,7 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 FnCall *FnCallCopy(const FnCall *f)
 {
     CfDebug("CopyFnCall()\n");
-    return FnCallNew(f->name, CopyRlist(f->args));
+    return FnCallNew(f->name, RlistCopy(f->args));
 }
 
 /*******************************************************************/
@@ -102,7 +102,7 @@ void FnCallDestroy(FnCall *fp)
 
         if (fp->args)
         {
-            DeleteRlist(fp->args);
+            RlistDestroy(fp->args);
         }
 
         free(fp);

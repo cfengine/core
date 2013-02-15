@@ -160,8 +160,8 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
     PopThisScope();
 
     PromiseDestroy(pcopy);
-    DeleteRlist(scalarvars);
-    DeleteRlist(listvars);
+    RlistDestroy(scalarvars);
+    RlistDestroy(listvars);
 }
 
 /*********************************************************************/
@@ -182,12 +182,12 @@ Rval ExpandDanglers(const char *scopeid, Rval rval, const Promise *pp)
         }
         else
         {
-            final = CopyRvalItem(rval);
+            final = RvalCopy(rval);
         }
         break;
 
     default:
-        final = CopyRvalItem(rval);
+        final = RvalCopy(rval);
         break;
     }
 
@@ -308,17 +308,17 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
                         if (level > 0)
                         {
-                            IdempPrependRScalar(its, exp, RVAL_TYPE_SCALAR);
+                            RlistPrependScalarIdemp(its, exp, RVAL_TYPE_SCALAR);
                         }
                         else
                         {
-                            IdempAppendRScalar(its, exp, RVAL_TYPE_SCALAR);
+                            RlistAppendScalarIdemp(its, exp, RVAL_TYPE_SCALAR);
                         }
                     }
                     else if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         CfDebug("Scalar variable $(%s) found\n", var);
-                        IdempAppendRScalar(scal, var, RVAL_TYPE_SCALAR);
+                        RlistAppendScalarIdemp(scal, var, RVAL_TYPE_SCALAR);
                     }
                 }
                 else
@@ -384,8 +384,8 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
             returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
         }
 
-        AppendRlist(&start, returnval.item, returnval.type);
-        DeleteRvalItem(returnval);
+        RlistAppend(&start, returnval.item, returnval.type);
+        RvalDestroy(returnval);
     }
 
     return start;
@@ -802,7 +802,7 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
         {
             if (FnCallIsBuiltIn(rval))
             {
-                returnval = CopyRvalItem(rval);
+                returnval = RvalCopy(rval);
             }
             else
             {
@@ -902,7 +902,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             GetVariable(orgscope, orgname, &retval);
 
-            NewList(scope, rp->item, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+            NewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1161,13 +1161,13 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 /* Don't continue unless function was evaluated properly */
                 if (res.type != RVAL_TYPE_SCALAR)
                 {
-                    DeleteRvalItem(res);
+                    RvalDestroy(res);
                     return;
                 }
 
                 excluded = IsExcluded(res.item, pp->ns);
 
-                DeleteRvalItem(res);
+                RvalDestroy(res);
 
                 if (excluded)
                 {
@@ -1295,7 +1295,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             if (res.status == FNCALL_FAILURE)
             {
                 /* We do not assign variables to failed fn calls */
-                DeleteRvalItem(res.rval);
+                RvalDestroy(res.rval);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1322,7 +1322,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&conv);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {(char *)BufferData(conv), cp->rval.type});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else if (strcmp(cp->lval, "real") == 0)
             {
@@ -1338,11 +1338,11 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&qualified_scope);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {(char *)BufferData(conv), cp->rval.type});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else
             {
-                rval = CopyRvalItem(cp->rval);
+                rval = RvalCopy(cp->rval);
             }
             BufferDestroy(&conv);
         }
@@ -1358,7 +1358,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
             Rval returnval = EvaluateFinalRval(BufferData(qualified_scope), rval, true, pp);
 
-            DeleteRvalItem(rval);
+            RvalDestroy(rval);
 
             // freed before function exit
             rval = returnval;
@@ -1376,7 +1376,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 {
                 case RVAL_TYPE_SCALAR:
                     CfOut(cf_verbose, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
-                          pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
+                          pp->promiser, RvalScalarValue(retval), RvalScalarValue(rval));
                     PromiseRef(cf_verbose, pp);
                     break;
 
@@ -1384,9 +1384,9 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     {
                         char valbuf[CF_BUFSIZE];
                         CfOut(cf_verbose, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
-                        PrintRlist(valbuf, CF_BUFSIZE, retval.item);
+                        RlistPrint(valbuf, CF_BUFSIZE, retval.item);
                         CfOut(cf_verbose, "", "Old value: %s", valbuf);
-                        PrintRlist(valbuf, CF_BUFSIZE, rval.item);
+                        RlistPrint(valbuf, CF_BUFSIZE, rval.item);
                         CfOut(cf_verbose, "", " New value: %s", valbuf);
                         PromiseRef(cf_verbose, pp);
                     }
@@ -1401,7 +1401,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (IsCf3VarString(pp->promiser))
         {
             // Unexpanded variables, we don't do anything with
-            DeleteRvalItem(rval);
+            RvalDestroy(rval);
             BufferDestroy(&qualified_scope);
             return;
         }
@@ -1410,7 +1410,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             CfOut(cf_error, "", " !! Variable identifier contains illegal characters");
             PromiseRef(cf_error, pp);
-            DeleteRvalItem(rval);
+            RvalDestroy(rval);
             BufferDestroy(&qualified_scope);
             return;
         }
@@ -1446,7 +1446,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
     BufferDestroy(&qualified_scope);
-    DeleteRvalItem(rval);
+    RvalDestroy(rval);
 }
 
 /*********************************************************************/
@@ -1687,25 +1687,25 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
         switch (a.service.service_policy)
         {
         case cfsrv_start:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "start", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_restart:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_reload:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_stop:
         case cfsrv_disable:
         default:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "stop", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
             break;
 
         }

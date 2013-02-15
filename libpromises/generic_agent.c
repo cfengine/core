@@ -685,7 +685,7 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
                     break;
                 }
 
-                DeleteRvalItem(returnval);
+                RvalDestroy(returnval);
             }
 
             HashVariables(main_policy, NULL, report_context);
@@ -843,7 +843,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
                 break;
             }
 
-            DeleteRvalItem(returnval);
+            RvalDestroy(returnval);
 
             if (result)
             {
@@ -1102,7 +1102,7 @@ void BannerBundle(Bundle *bp, Rlist *params)
     if (params && (VERBOSE || DEBUG))
     {
         printf("(");
-        ShowRlist(stdout, params);
+        RlistShow(stdout, params);
         printf(" )\n");
     }
     else
@@ -1471,13 +1471,13 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
         {
-            CfOut(cf_verbose, "", "SET ignore_missing_inputs %s\n", ScalarRvalValue(cp->rval));
+            CfOut(cf_verbose, "", "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_inputs = GetBoolean(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
         {
-            CfOut(cf_verbose, "", "SET ignore_missing_bundles %s\n", ScalarRvalValue(cp->rval));
+            CfOut(cf_verbose, "", "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_bundles = GetBoolean(cp->rval.item);
         }
 
@@ -1486,13 +1486,13 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             GOALS = NULL;
             for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
             {
-                PrependRScalar(&GOALS, rp->item, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&GOALS, rp->item, RVAL_TYPE_SCALAR);
             }
             CfOut(cf_verbose, "", "SET goal_patterns list\n");
             continue;
         }
         
-        DeleteRvalItem(returnval);
+        RvalDestroy(returnval);
     }
 }
 
@@ -1785,7 +1785,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
         default:
             name = NULL;
             CfOut(cf_error, "", "Illegal item found in bundlesequence: ");
-            ShowRval(stdout, (Rval) {rp->item, rp->type});
+            RvalShow(stdout, (Rval) {rp->item, rp->type});
             printf(" = %c\n", rp->type);
             ok = false;
             break;
@@ -1841,7 +1841,7 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
 {
     if (config)
     {
-        DeleteRlist(config->bundlesequence);
+        RlistDestroy(config->bundlesequence);
         free(config->input_file);
     }
 }
@@ -1854,6 +1854,6 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *inpu
 
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence)
 {
-    DeleteRlist(config->bundlesequence);
-    config->bundlesequence = CopyRlist(bundlesequence);
+    RlistDestroy(config->bundlesequence);
+    config->bundlesequence = RlistCopy(bundlesequence);
 }

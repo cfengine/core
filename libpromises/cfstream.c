@@ -249,7 +249,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             case RVAL_TYPE_LIST:
                 
                 snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to (stakeholders): ");
-                PrintRlist(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
+                RlistPrint(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
                 AppendItem(&mess, output, NULL);
                 break;
 

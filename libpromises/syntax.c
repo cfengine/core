@@ -151,7 +151,7 @@ void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, Su
 
     if (DEBUG)
     {
-        ShowRval(stdout, rval);
+        RvalShow(stdout, rval);
     }
 
     CfDebug(")\n");
@@ -306,7 +306,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 
     if (DEBUG)
     {
-        ShowRval(stdout, rval);
+        RvalShow(stdout, rval);
     }
 
     CfDebug(")\n");
@@ -1365,7 +1365,7 @@ static void IndentPrint(Writer *writer, int indent_level)
 static void RvalPrettyPrint(Writer *writer, Rval rval)
 {
 /* FIX: prettify */
-    RvalPrint(writer, rval);
+    RvalWrite(writer, rval);
 }
 
 /****************************************************************************/

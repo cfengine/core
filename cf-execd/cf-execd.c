@@ -392,7 +392,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
             {
-                int time = Str2Int(ScalarRvalValue(retval));
+                int time = Str2Int(RvalScalarValue(retval));
 
                 SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
             }
@@ -610,8 +610,8 @@ static void Apoptosis()
 
     GetCurrentUserName(mypid, 31);
 
-    PrependRlist(&signals, "term", RVAL_TYPE_SCALAR);
-    PrependRlist(&owners, mypid, RVAL_TYPE_SCALAR);
+    RlistPrepend(&signals, "term", RVAL_TYPE_SCALAR);
+    RlistPrepend(&owners, mypid, RVAL_TYPE_SCALAR);
 
     PromiseAppendConstraint(&pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
     PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);

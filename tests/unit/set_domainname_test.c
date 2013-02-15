@@ -264,7 +264,7 @@ void DeleteVariable(const char *scope, const char *id)
     fail();
 }
 
-Rlist *ParseShownRlist(char *string)
+Rlist *RlistParseShown(char *string)
 {
     fail();
 }
@@ -274,7 +274,7 @@ void NewList(const char *scope, const char *lval, void *rval, DataType dt)
     fail();
 }
 
-void DeleteRlist(Rlist *list)
+void RlistDestroy(Rlist *list)
 {
     fail();
 }

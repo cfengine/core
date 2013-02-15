@@ -607,7 +607,7 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
         }
     }
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 /*******************************************************************/
@@ -626,7 +626,7 @@ static void TexinfoShowRange(FILE *fout, char *s, DataType type)
 
     if ((type == DATA_TYPE_OPTION) || (type == DATA_TYPE_OPTION_LIST))
     {
-        list = SplitStringAsRList(s, ',');
+        list = RlistFromSplitString(s, ',');
         fprintf(fout, "@noindent @b{Allowed input range}: @*\n@example");
 
         for (rp = list; rp != NULL; rp = rp->next)
@@ -635,7 +635,7 @@ static void TexinfoShowRange(FILE *fout, char *s, DataType type)
         }
 
         fprintf(fout, "\n@end example\n");
-        DeleteRlist(list);
+        RlistDestroy(list);
     }
     else
     {

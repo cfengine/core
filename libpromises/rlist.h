@@ -37,54 +37,46 @@ struct Rlist_
     Rlist *next;
 };
 
-char *ScalarValue(const Rlist *rlist);
-FnCall *FnCallValue(const Rlist *rlist);
-Rlist *ListValue(const Rlist *rlist);
-
-char *ScalarRvalValue(Rval rval);
-FnCall *FnCallRvalValue(Rval rval);
-Rlist *ListRvalValue(Rval rval);
-
+char *RvalScalarValue(Rval rval);
+FnCall *RvalFnCallValue(Rval rval);
+Rlist *RvalRlistValue(Rval rval);
+Rval RvalCopy(Rval rval);
+void RvalDestroy(Rval rval);
+int RvalPrint(char *buffer, int bufsize, Rval rval);
 JsonElement *RvalToJson(Rval rval);
+void RvalShow(FILE *fp, Rval rval);
+void RvalWrite(Writer *writer, Rval rval);
 
-int PrintRval(char *buffer, int bufsize, Rval rval);
-int PrintRlist(char *buffer, int bufsize, const Rlist *list);
-Rlist *ParseShownRlist(char *string);
-bool IsStringIn(const Rlist *list, const char *s);
-bool IsIntIn(const Rlist *list, int i);
-Rlist *KeyInRlist(Rlist *list, char *key);
+
+Rlist *RlistCopy(const Rlist *list);
+void RlistDestroy(Rlist *list);
+void RlistDestroyEntry(Rlist **liststart, Rlist *entry);
+char *RlistScalarValue(const Rlist *rlist);
+FnCall *RlistFnCallValue(const Rlist *rlist);
+Rlist *RlistRlistValue(const Rlist *rlist);
+Rlist *RlistParseShown(char *string);
+bool RlistIsStringIn(const Rlist *list, const char *s);
+bool RlistIsIntIn(const Rlist *list, int i);
+Rlist *RlistKeyIn(Rlist *list, char *key);
 int RlistLen(const Rlist *start);
-void PopStack(Rlist **liststart, void **item, size_t size);
-void PushStack(Rlist **liststart, void *item);
-bool IsInListOfRegex(const Rlist *list, const char *str);
-
-Rval CopyRvalItem(Rval rval);
-void DeleteRvalItem(Rval rval);
-Rlist *CopyRlist(const Rlist *list);
-void DeleteRlist(Rlist *list);
-void DeleteRlistEntry(Rlist **liststart, Rlist *entry);
-Rlist *AppendRlistAlien(Rlist **start, void *item);
-Rlist *PrependRlistAlien(Rlist **start, void *item);
-Rlist *OrthogAppendRlist(Rlist **start, void *item, char type);
-Rlist *IdempAppendRScalar(Rlist **start, void *item, char type);
-Rlist *AppendRScalar(Rlist **start, void *item, char type);
-Rlist *IdempAppendRlist(Rlist **start, void *item, char type);
-Rlist *IdempPrependRScalar(Rlist **start, void *item, char type);
-Rlist *PrependRScalar(Rlist **start, void *item, char type);
-Rlist *PrependRlist(Rlist **start, void *item, char type);
-Rlist *AppendRlist(Rlist **start, const void *item, char type);
-Rlist *PrependRlist(Rlist **start, void *item, char type);
-Rlist *SplitStringAsRList(const char *string, char sep);
-Rlist *SplitRegexAsRList(const char *string, const char *regex, int max, int purge);
-
-Rlist *RlistAppendReference(Rlist **start, void *item, char type);
-
-void ShowRlist(FILE *fp, const Rlist *list);
-void ShowRval(FILE *fp, Rval rval);
-
-void RvalPrint(Writer *writer, Rval rval);
-void RlistPrint(Writer *writer, const Rlist *list);
-
+void RlistPopStack(Rlist **liststart, void **item, size_t size);
+void RlistPushStack(Rlist **liststart, void *item);
+bool RlistIsInListOfRegex(const Rlist *list, const char *str);
+Rlist *RlistAppendAlien(Rlist **start, void *item);
+Rlist *RlistPrependAlien(Rlist **start, void *item);
+Rlist *RlistAppendOrthog(Rlist **start, void *item, char type);
+Rlist *RlistAppendScalarIdemp(Rlist **start, void *item, char type);
+Rlist *RlistAppendScalar(Rlist **start, void *item, char type);
+Rlist *RlistAppendIdemp(Rlist **start, void *item, char type);
+Rlist *RlistPrependScalarIdemp(Rlist **start, void *item, char type);
+Rlist *RlistPrependScalar(Rlist **start, void *item, char type);
+Rlist *RlistPrepend(Rlist **start, void *item, char type);
+Rlist *RlistAppend(Rlist **start, const void *item, char type);
+Rlist *RlistFromSplitString(const char *string, char sep);
+Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
+void RlistShow(FILE *fp, const Rlist *list);
+void RlistWrite(Writer *writer, const Rlist *list);
+int RlistPrint(char *buffer, int bufsize, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 

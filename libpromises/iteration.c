@@ -60,7 +60,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 
         if (dtype == DATA_TYPE_NONE)
         {
-            CfOut(cf_error, "", " !! Couldn't locate variable %s apparently in %s\n", ScalarValue(rp), scopeid);
+            CfOut(cf_error, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
             CfOut(cf_error, "",
                   " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
@@ -86,7 +86,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 
         if ((new = NewAssoc(rp->item, retval, dtype)))
         {
-            OrthogAppendRlist(&deref_listoflists, new, RVAL_TYPE_LIST);
+            RlistAppendOrthog(&deref_listoflists, new, RVAL_TYPE_LIST);
             rp->state_ptr = new->rval.item;
 
             while ((rp->state_ptr) && (strcmp(rp->state_ptr->item, CF_NULL_VALUE) == 0))

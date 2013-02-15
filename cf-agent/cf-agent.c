@@ -275,7 +275,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'b':
             if (optarg)
             {
-                config->bundlesequence = SplitStringAsRList(optarg, ',');
+                config->bundlesequence = RlistFromSplitString(optarg, ',');
                 CBUNDLESEQUENCE_STR = optarg;
             }
             break;
@@ -582,7 +582,7 @@ void KeepControlPromises(Policy *policy)
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    CfOut(cf_verbose, "", " -> ... %s\n", ScalarValue(rp));
+                    CfOut(cf_verbose, "", " -> ... %s\n", RlistScalarValue(rp));
                     NewClass(rp->item, NULL);
                 }
 
@@ -671,7 +671,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_fautodefine].lval) == 0)
             {
-                SetFileAutoDefineList(ListRvalValue(retval));
+                SetFileAutoDefineList(RvalRlistValue(retval));
                 CfOut(cf_verbose, "", "SET file auto define list\n");
                 continue;
             }
@@ -700,7 +700,7 @@ void KeepControlPromises(Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_repository].lval) == 0)
             {
                 SetRepositoryLocation(retval.item);
-                CfOut(cf_verbose, "", "SET repository = %s\n", ScalarRvalValue(retval));
+                CfOut(cf_verbose, "", "SET repository = %s\n", RvalScalarValue(retval));
                 continue;
             }
 
@@ -718,8 +718,8 @@ void KeepControlPromises(Policy *policy)
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    AddFilenameToListOfSuspicious(ScalarValue(rp));
-                    CfOut(cf_verbose, "", "-> Considering %s as suspicious file", ScalarValue(rp));
+                    AddFilenameToListOfSuspicious(RlistScalarValue(rp));
+                    CfOut(cf_verbose, "", "-> Considering %s as suspicious file", RlistScalarValue(rp));
                 }
 
                 continue;
@@ -798,7 +798,7 @@ void KeepControlPromises(Policy *policy)
                 {
                     if (putenv(rp->item) != 0)
                     {
-                        CfOut(cf_error, "putenv", "Failed to set environment variable %s", ScalarValue(rp));
+                        CfOut(cf_error, "putenv", "Failed to set environment variable %s", RlistScalarValue(rp));
                     }
                 }
 
@@ -821,7 +821,7 @@ void KeepControlPromises(Policy *policy)
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(Str2Int(retval.item));
-        CfOut(cf_verbose, "", "SET syslog_port to %s", ScalarRvalValue(retval));
+        CfOut(cf_verbose, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != DATA_TYPE_NONE)
@@ -890,7 +890,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             name = NULL;
             params = NULL;
             CfOut(cf_error, "", "Illegal item found in bundlesequence: ");
-            ShowRval(stdout, (Rval) {rp->item, rp->type});
+            RvalShow(stdout, (Rval) {rp->item, rp->type});
             printf(" = %c\n", rp->type);
             ok = false;
             break;
@@ -914,7 +914,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
     if (VERBOSE || DEBUG)
     {
         printf("%s> -> Bundlesequence => ", VPREFIX);
-        ShowRval(stdout, retval);
+        RvalShow(stdout, retval);
         printf("\n");
     }
 
@@ -1068,7 +1068,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
             if (!access)
             {
                 CfOut(cf_error, "", "File %s is not owned by an authorized user (security exception)",
-                      ScalarValue(rp));
+                      RlistScalarValue(rp));
                 exit(1);
             }
         }
@@ -1076,7 +1076,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
         {
             if (sb.st_uid != getuid())
             {
-                CfOut(cf_error, "", "File %s is not owned by uid %ju (security exception)", ScalarValue(rp),
+                CfOut(cf_error, "", "File %s is not owned by uid %ju (security exception)", RlistScalarValue(rp),
                       (uintmax_t)getuid());
                 exit(1);
             }

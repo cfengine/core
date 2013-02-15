@@ -222,7 +222,7 @@ DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
 
     if (DEBUG)
     {
-        ShowRval(stdout, assoc->rval);
+        RvalShow(stdout, assoc->rval);
     }
     CfDebug("}\n");
 
@@ -942,8 +942,8 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
                       lval, CONTEXTID);
             }
 
-            DeleteRlist(scalarvars);
-            DeleteRlist(listvars);
+            RlistDestroy(scalarvars);
+            RlistDestroy(listvars);
         }
     }
 
@@ -970,8 +970,8 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
                     CfOut(cf_inform, "", " !! in bundle parameterization\n");
                 }
             }
-            DeleteRvalItem(assoc->rval);
-            assoc->rval = CopyRvalItem(rval);
+            RvalDestroy(assoc->rval);
+            assoc->rval = RvalCopy(rval);
             assoc->dtype = dtype;
             CfDebug("Stored \"%s\" in context %s\n", lval, scope);
         }
@@ -1037,7 +1037,7 @@ void DeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
                             (char *) rp->state_ptr->item);
 
                     // must first free existing rval in scope, then allocate new (should always be string)
-                    DeleteRvalItem(assoc->rval);
+                    RvalDestroy(assoc->rval);
 
                     // avoids double free - borrowing value from lol (freed in DeleteScope())
                     assoc->rval.item = xstrdup(rp->state_ptr->item);

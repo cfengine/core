@@ -210,7 +210,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         {
             if (strlen(rp->item) > CF_MAXVARSIZE - 1)
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a, " !! The repository path \"%s\" is too long", ScalarValue(rp));
+                cfPS(cf_error, CF_FAIL, "", pp, a, " !! The repository path \"%s\" is too long", RlistScalarValue(rp));
                 return false;
             }
         }
@@ -726,9 +726,9 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
     for (rp = repositories; rp != NULL; rp = rp->next)
     {
 
-        if ((dirh = OpenDirLocal(ScalarValue(rp))) == NULL)
+        if ((dirh = OpenDirLocal(RlistScalarValue(rp))) == NULL)
         {
-            CfOut(cf_error, "opendir", "!! Can't open local directory \"%s\"\n", ScalarValue(rp));
+            CfOut(cf_error, "opendir", "!! Can't open local directory \"%s\"\n", RlistScalarValue(rp));
             continue;
         }
 
@@ -1468,8 +1468,8 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
-                CfOut(cf_verbose, "", " ... trying listed arch %s\n", ScalarValue(rp));
-                CheckPackageState(a, pp, package, a.packages.package_version, ScalarValue(rp), false);
+                CfOut(cf_verbose, "", " ... trying listed arch %s\n", RlistScalarValue(rp));
+                CheckPackageState(a, pp, package, a.packages.package_version, RlistScalarValue(rp), false);
             }
         }
     }
@@ -1509,7 +1509,7 @@ static void VerifyPromisedPackage(Attributes a, Promise *pp)
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
-                CfOut(cf_verbose, "", " ... trying listed arch %s\n", ScalarValue(rp));
+                CfOut(cf_verbose, "", " ... trying listed arch %s\n", RlistScalarValue(rp));
                 CheckPackageState(a, pp, package, "*", rp->item, true);
             }
         }

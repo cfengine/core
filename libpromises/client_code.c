@@ -203,7 +203,7 @@ AgentConnection *NewServerConnection(Attributes attr, Promise *pp)
 
             if (conn == NULL)
             {
-                cfPS(cf_inform, CF_FAIL, "", pp, attr, "Unable to establish connection with %s\n", ScalarValue(rp));
+                cfPS(cf_inform, CF_FAIL, "", pp, attr, "Unable to establish connection with %s\n", RlistScalarValue(rp));
                 MarkServerOffline(rp->item);
             }
             else
@@ -1288,14 +1288,14 @@ static bool ServerOffline(const char *server)
  */
 void DestroyServerConnection(AgentConnection *conn)
 {
-    Rlist *entry = KeyInRlist(SERVERLIST, conn->remoteip);
+    Rlist *entry = RlistKeyIn(SERVERLIST, conn->remoteip);
 
     DisconnectServer(conn);
 
     if (entry != NULL)
     {
         entry->item = NULL;     /* Has been freed by DisconnectServer */
-        DeleteRlistEntry(&SERVERLIST, entry);
+        RlistDestroyEntry(&SERVERLIST, entry);
     }
 }
 
@@ -1396,7 +1396,7 @@ static void MarkServerOffline(const char *server)
 
 /* If no existing connection, get one .. */
 
-    rp = PrependRlist(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
+    rp = RlistPrepend(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
 
     svp = xmalloc(sizeof(ServerItem));
 
@@ -1428,7 +1428,7 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
 
     strlcpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE);
 
-    rp = PrependRlist(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
+    rp = RlistPrepend(&SERVERLIST, "nothing", RVAL_TYPE_SCALAR);
     free(rp->item);
     svp = xmalloc(sizeof(ServerItem));
     rp->item = svp;
@@ -1533,7 +1533,7 @@ void ConnectionsCleanup(void)
         rp->item = NULL;
     }
 
-    DeleteRlist(SERVERLIST);
+    RlistDestroy(SERVERLIST);
     SERVERLIST = NULL;
 }
 

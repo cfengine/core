@@ -149,18 +149,18 @@ static void XmlExportVariables(Writer *writer, const char *scope)
     for (rp = list; rp != NULL; rp = rp->next)
     {
         /* START XML ELEMENT -- VARIABLE */
-        XmlAttribute var_name_attr = { "name", ScalarValue(rp) };
+        XmlAttribute var_name_attr = { "name", RlistScalarValue(rp) };
         XmlStartTag(writer, XMLTAG_VARIABLE, 1, var_name_attr);
 
         /* XML ELEMENT -- LONG-DESCRIPTION */
-        filebuffer = ReadTexinfoFileF("vars/%s_%s.texinfo", scope, ScalarValue(rp));
+        filebuffer = ReadTexinfoFileF("vars/%s_%s.texinfo", scope, RlistScalarValue(rp));
         XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
         free(filebuffer);
 
         /* END XML ELEMENT -- VARIABLE */
         XmlEndTag(writer, XMLTAG_VARIABLE);
     }
-    DeleteRlist(list);
+    RlistDestroy(list);
 
 /* END XML ELEMENT -- VARIABLE-SCOPE */
     XmlEndTag(writer, XMLTAG_VARSCOPE);
@@ -418,19 +418,19 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
             /* XML ELEMENT -- MIN/MAX */
             int i = 0;
 
-            list = SplitStringAsRList((char *) range, ',');
+            list = RlistFromSplitString((char *) range, ',');
             for (rp = list; rp != NULL; rp = rp->next, i++)
             {
                 if (i == 0)
                 {
-                    XmlTag(writer, XMLTAG_MIN, ScalarValue(rp), 0);
+                    XmlTag(writer, XMLTAG_MIN, RlistScalarValue(rp), 0);
                 }
                 else
                 {
-                    XmlTag(writer, XMLTAG_MAX, ScalarValue(rp), 0);
+                    XmlTag(writer, XMLTAG_MAX, RlistScalarValue(rp), 0);
                 }
             }
-            DeleteRlist(list);
+            RlistDestroy(list);
 
             /* END XML ELEMENT -- RANGE */
             XmlEndTag(writer, XMLTAG_RANGE);
@@ -446,12 +446,12 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
             XmlStartTag(writer, XMLTAG_OPTIONS, 0);
 
             /* XML ELEMENT -- VALUE */
-            list = SplitStringAsRList((char *) range, ',');
+            list = RlistFromSplitString((char *) range, ',');
             for (rp = list; rp != NULL; rp = rp->next)
             {
-                XmlTag(writer, XMLTAG_VALUE, ScalarValue(rp), 0);
+                XmlTag(writer, XMLTAG_VALUE, RlistScalarValue(rp), 0);
             }
-            DeleteRlist(list);
+            RlistDestroy(list);
 
             /* END XML ELEMENT -- OPTIONS */
             XmlEndTag(writer, XMLTAG_OPTIONS);

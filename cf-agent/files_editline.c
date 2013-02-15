@@ -1131,7 +1131,7 @@ static int EditColumns(Item *file_start, Item *file_end, Attributes a, Promise *
         strncpy(separator, ip->name + s, e - s);
         separator[e - s] = '\0';
 
-        columns = SplitRegexAsRList(ip->name, a.column.column_separator, CF_INFINITY, a.column.blanks_ok);
+        columns = RlistFromSplitRegex(ip->name, a.column.column_separator, CF_INFINITY, a.column.blanks_ok);
         retval = EditLineByColumn(&columns, a, pp);
 
         if (retval)
@@ -1140,7 +1140,7 @@ static int EditColumns(Item *file_start, Item *file_end, Attributes a, Promise *
             ip->name = Rlist2String(columns, separator);
         }
 
-        DeleteRlist(columns);
+        RlistDestroy(columns);
     }
 
     return retval;
@@ -1558,7 +1558,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             for (i = 0; i < (a.column.select_column - count); i++)
             {
-                AppendRScalar(columns, xstrdup(""), RVAL_TYPE_SCALAR);
+                RlistAppendScalar(columns, xstrdup(""), RVAL_TYPE_SCALAR);
             }
 
             count = 0;
@@ -1585,7 +1585,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         }
         else
         {
-            this_column = SplitStringAsRList(rp->item, a.column.value_separator);
+            this_column = RlistFromSplitString(rp->item, a.column.value_separator);
             retval = DoEditColumn(&this_column, a, pp);
         }
 
@@ -1612,7 +1612,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
             cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No need to edit field in %s", pp->this_server);
         }
 
-        DeleteRlist(this_column);
+        RlistDestroy(this_column);
         return retval;
     }
     else
@@ -1624,13 +1624,13 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
             if (a.transaction.action == cfa_warn)
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
-                     " -> Need to delete field field value %s in %s but only a warning was promised", ScalarValue(rp),
+                     " -> Need to delete field field value %s in %s but only a warning was promised", RlistScalarValue(rp),
                      pp->this_server);
                 return false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, a, " -> Deleting column field value %s in %s", ScalarValue(rp),
+                cfPS(cf_inform, CF_CHG, "", pp, a, " -> Deleting column field value %s in %s", RlistScalarValue(rp),
                      pp->this_server);
                 (pp->edcontext->num_edits)++;
                 free(rp->item);
@@ -1644,13 +1644,13 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
             {
                 cfPS(cf_error, CF_WARN, "", pp, a,
                      " -> Need to set column field value %s to %s in %s but only a warning was promised",
-                     ScalarValue(rp), a.column.column_value, pp->this_server);
+                     RlistScalarValue(rp), a.column.column_value, pp->this_server);
                 return false;
             }
             else
             {
                 cfPS(cf_inform, CF_CHG, "", pp, a, " -> Setting whole column field value %s to %s in %s",
-                     ScalarValue(rp), a.column.column_value, pp->this_server);
+                     RlistScalarValue(rp), a.column.column_value, pp->this_server);
                 free(rp->item);
                 rp->item = xstrdup(a.column.column_value);
                 (pp->edcontext->num_edits)++;
@@ -1777,11 +1777,11 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "delete") == 0)
     {
-        if ((found = KeyInRlist(*columns, a.column.column_value)))
+        if ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
             CfOut(cf_inform, "", " -> Deleting column field sub-value %s in %s", a.column.column_value,
                   pp->this_server);
-            DeleteRlistEntry(columns, found);
+            RlistDestroyEntry(columns, found);
             return true;
         }
         else
@@ -1802,16 +1802,16 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
         }
 
         CfOut(cf_inform, "", " -> Setting field sub-value %s in %s", a.column.column_value, pp->this_server);
-        DeleteRlist(*columns);
+        RlistDestroy(*columns);
         *columns = NULL;
-        IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR);
+        RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR);
 
         return true;
     }
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "prepend") == 0)
     {
-        if (IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+        if (RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
         {
             CfOut(cf_inform, "", " -> Prepending field sub-value %s in %s", a.column.column_value, pp->this_server);
             return true;
@@ -1824,7 +1824,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "alphanum") == 0)
     {
-        if (IdempPrependRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+        if (RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
         {
             retval = true;
         }
@@ -1836,7 +1836,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
 /* default operation is append */
 
-    if (IdempAppendRScalar(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+    if (RlistAppendScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
     {
         return true;
     }

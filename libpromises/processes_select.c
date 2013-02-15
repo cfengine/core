@@ -236,7 +236,7 @@ int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
 
         if (pid == 1)
         {
-            if ((RlistLen(a.signals) == 1) && (IsStringIn(a.signals, "hup")))
+            if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
             {
                 CfOut(cf_verbose, "", "(Okay to send only HUP to init)\n");
             }

@@ -56,7 +56,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         CfDebug("CopyPromise(%s->", pp->promiser);
         if (DEBUG)
         {
-            ShowRval(stdout, pp->promisee);
+            RvalShow(stdout, pp->promisee);
         }
         CfDebug("\n");
     }
@@ -74,7 +74,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = CopyRvalItem(pp->promisee);
+        pcopy->promisee = RvalCopy(pp->promisee);
     }
 
     if (pp->classes)
@@ -211,7 +211,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                         Constraint *scp = SeqAt(bp->conlist, k);
 
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
-                        Rval newrv = CopyRvalItem(scp->rval);
+                        Rval newrv = RvalCopy(scp->rval);
 
                         PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
                     }
@@ -229,7 +229,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                       bodyname, pp->offset.line, (pp->audit)->filename);
             }
 
-            Rval newrv = CopyRvalItem(cp->rval);
+            Rval newrv = RvalCopy(cp->rval);
 
             PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
         }
@@ -310,7 +310,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
         {
             returnval = EvaluateFinalRval(scopeid, cp->rval, false, pp);
             final = ExpandDanglers(scopeid, returnval, pp);
-            DeleteRvalItem(returnval);
+            RvalDestroy(returnval);
         }
 
         PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
@@ -491,7 +491,7 @@ void PromiseRef(enum cfreport level, const Promise *pp)
            CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
            break;
        case RVAL_TYPE_LIST:
-           PrintRlist(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
+           RlistPrint(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
            CfOut(level, "", "This was a promise to: %s",buffer);
            break;
        default:

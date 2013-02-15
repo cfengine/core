@@ -45,7 +45,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         snprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
 
-        if (KeyInRlist(a.classes.retcode_kept, retcodeStr))
+        if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
             cfPS(cf_inform, CF_NOP, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
@@ -54,7 +54,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
             matched = true;
         }
 
-        if (KeyInRlist(a.classes.retcode_repaired, retcodeStr))
+        if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
             cfPS(cf_inform, CF_CHG, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
@@ -63,7 +63,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
             matched = true;
         }
 
-        if (KeyInRlist(a.classes.retcode_failed, retcodeStr))
+        if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
             cfPS(cf_inform, CF_FAIL, "", pp, a,
                  "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,

@@ -443,9 +443,9 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
 
     for (Rlist *rp = a.database.rows; rp != NULL; rp = rp->next)
     {
-        if (CountChar(ScalarValue(rp), ',') != 2)
+        if (CountChar(RlistScalarValue(rp), ',') != 2)
         {
-            CfOut(cf_error, "", "Registry row format should be NAME,REG_SZ,VALUE, not \"%s\"", ScalarValue(rp));
+            CfOut(cf_error, "", "Registry row format should be NAME,REG_SZ,VALUE, not \"%s\"", RlistScalarValue(rp));
             retval = false;
         }
     }
@@ -708,7 +708,7 @@ static int TableExists(CfdbConn *cfdb, char *name)
         }
     }
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 
     return match;
 }
@@ -785,7 +785,7 @@ static Rlist *GetSQLTables(CfdbConn *cfdb)
 
     while (CfFetchRow(cfdb))
     {
-        PrependRScalar(&list, CfFetchColumn(cfdb, 0), RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&list, CfFetchColumn(cfdb, 0), RVAL_TYPE_SCALAR);
     }
 
     CfDeleteQuery(cfdb);
@@ -881,7 +881,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
     {
         (*done)[i] = 0;
 
-        cols = SplitStringAsRList((char *) rp->item, ',');
+        cols = RlistFromSplitString((char *) rp->item, ',');
 
         if (!cols)
         {
@@ -930,7 +930,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
             }
         }
 
-        DeleteRlist(cols);
+        RlistDestroy(cols);
     }
 
     return true;

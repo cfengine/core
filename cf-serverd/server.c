@@ -1972,13 +1972,13 @@ static int AuthorizeRoles(ServerConnectionState *conn, char *args)
         sp++;
     }
 
-    defines = SplitRegexAsRList(sp, "[,:;]", 99, false);
+    defines = RlistFromSplitRegex(sp, "[,:;]", 99, false);
 
 /* For each user-defined class attempt, check RBAC */
 
     for (rp = defines; rp != NULL; rp = rp->next)
     {
-        CfOut(cf_verbose, "", " -> Verifying %s\n", ScalarValue(rp));
+        CfOut(cf_verbose, "", " -> Verifying %s\n", RlistScalarValue(rp));
 
         for (ap = ROLES; ap != NULL; ap = ap->next)
         {
@@ -1991,13 +1991,13 @@ static int AuthorizeRoles(ServerConnectionState *conn, char *args)
                     (IsRegexItemIn(ap->accesslist, userid2)) ||
                     (IsRegexItemIn(ap->accesslist, conn->username)))
                 {
-                    CfOut(cf_verbose, "", "Attempt to define role/class %s is permitted", ScalarValue(rp));
+                    CfOut(cf_verbose, "", "Attempt to define role/class %s is permitted", RlistScalarValue(rp));
                     permitted = true;
                 }
                 else
                 {
-                    CfOut(cf_verbose, "", "Attempt to define role/class %s is denied", ScalarValue(rp));
-                    DeleteRlist(defines);
+                    CfOut(cf_verbose, "", "Attempt to define role/class %s is denied", RlistScalarValue(rp));
+                    RlistDestroy(defines);
                     return false;
                 }
             }
@@ -2014,7 +2014,7 @@ static int AuthorizeRoles(ServerConnectionState *conn, char *args)
         CfOut(cf_verbose, "", "Role activation disallowed - abort execution\n");
     }
 
-    DeleteRlist(defines);
+    RlistDestroy(defines);
     return permitted;
 }
 

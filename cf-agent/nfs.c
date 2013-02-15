@@ -290,7 +290,7 @@ static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mount
         entry->options = xstrdup(options);
     }
 
-    AppendRlistAlien(list, (void *) entry);
+    RlistAppendAlien(list, (void *) entry);
 }
 
 /*******************************************************************/

@@ -132,9 +132,9 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
     {
         CfOut(cf_error, "", "While constructing scope \"%s\"\n", scope);
         fprintf(stderr, "Formal = ");
-        ShowRlist(stderr, lvals);
+        RlistShow(stderr, lvals);
         fprintf(stderr, ", Actual = ");
-        ShowRlist(stderr, rvals);
+        RlistShow(stderr, rvals);
         fprintf(stderr, "\n");
         FatalError("Augment scope, formal and actual parameter mismatch is fatal");
     }
@@ -167,7 +167,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                NewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
@@ -215,7 +215,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
     {
         retval = ExpandPrivateRval(scope, assoc->rval);
         // Retain the assoc, just replace rval
-        DeleteRvalItem(assoc->rval);
+        RvalDestroy(assoc->rval);
         assoc->rval = retval;
     }
 
@@ -368,7 +368,7 @@ void PushThisScope()
     }
 
     CF_STCKFRAME++;
-    PushStack(&CF_STCK, (void *) op);
+    RlistPushStack(&CF_STCK, (void *) op);
     snprintf(name, CF_MAXVARSIZE, "this_%d", CF_STCKFRAME);
     free(op->scope);
     op->scope = xstrdup(name);
@@ -383,7 +383,7 @@ void PopThisScope()
     if (CF_STCKFRAME > 0)
     {
         DeleteScope("this");
-        PopStack(&CF_STCK, (void *) &op, sizeof(op));
+        RlistPopStack(&CF_STCK, (void *) &op, sizeof(op));
         if (op == NULL)
         {
             return;

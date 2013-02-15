@@ -21,12 +21,12 @@ static void test_prepend_scalar(void **state)
 {
     Rlist *list = NULL;
 
-    PrependRScalar(&list, "stuff", RVAL_TYPE_SCALAR);
-    PrependRScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
 
     assert_string_equal(list->item, "more-stuff");
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_length(void **state)
@@ -35,89 +35,89 @@ static void test_length(void **state)
 
     assert_int_equal(RlistLen(list), 0);
 
-    PrependRScalar(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 1);
 
-    PrependRScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
     assert_int_equal(RlistLen(list), 2);
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_prepend_scalar_idempotent(void **state)
 {
     Rlist *list = NULL;
 
-    IdempPrependRScalar(&list, "stuff", RVAL_TYPE_SCALAR);
-    IdempPrependRScalar(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalarIdemp(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalarIdemp(&list, "stuff", RVAL_TYPE_SCALAR);
 
     assert_string_equal(list->item, "stuff");
     assert_int_equal(RlistLen(list), 1);
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_copy(void **state)
 {
     Rlist *list = NULL, *copy = NULL;
 
-    PrependRScalar(&list, "stuff", RVAL_TYPE_SCALAR);
-    PrependRScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
 
-    copy = CopyRlist(list);
+    copy = RlistCopy(list);
 
     assert_string_equal(list->item, copy->item);
     assert_string_equal(list->next->item, copy->next->item);
 
-    DeleteRlist(list);
-    DeleteRlist(copy);
+    RlistDestroy(list);
+    RlistDestroy(copy);
 }
 
 static void test_rval_to_scalar(void **state)
 {
     Rval rval = { "abc", RVAL_TYPE_SCALAR };
-    assert_string_equal("abc", ScalarRvalValue(rval));
+    assert_string_equal("abc", RvalScalarValue(rval));
 }
 
 static void test_rval_to_scalar2(void **state)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
-    expect_assert_failure(ScalarRvalValue(rval));
+    expect_assert_failure(RvalScalarValue(rval));
 }
 
 static void test_rval_to_list(void **state)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
-    expect_assert_failure(ListRvalValue(rval));
+    expect_assert_failure(RvalRlistValue(rval));
 }
 
 static void test_rval_to_list2(void **state)
 {
     Rval rval = { NULL, RVAL_TYPE_LIST };
-    assert_false(ListRvalValue(rval));
+    assert_false(RvalRlistValue(rval));
 }
 
 static void test_rval_to_fncall(void **state)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
-    expect_assert_failure(FnCallRvalValue(rval));
+    expect_assert_failure(RvalFnCallValue(rval));
 }
 
 static void test_rval_to_fncall2(void **state)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
-    assert_false(FnCallRvalValue(rval));
+    assert_false(RvalFnCallValue(rval));
 }
 
 static void test_last(void **state)
 {
     Rlist *l = NULL;
     assert_true(RlistLast(l) == NULL);
-    AppendRlist(&l, "a", RVAL_TYPE_SCALAR);
-    assert_string_equal("a", ScalarValue(RlistLast(l)));
-    AppendRlist(&l, "b", RVAL_TYPE_SCALAR);
-    assert_string_equal("b", ScalarValue(RlistLast(l)));
-    DeleteRlist(l);
+    RlistAppend(&l, "a", RVAL_TYPE_SCALAR);
+    assert_string_equal("a", RlistScalarValue(RlistLast(l)));
+    RlistAppend(&l, "b", RVAL_TYPE_SCALAR);
+    assert_string_equal("b", RlistScalarValue(RlistLast(l)));
+    RlistDestroy(l);
 }
 
 static bool is_even(void *item, void *data)
@@ -134,7 +134,7 @@ static void test_filter(void **state)
     for (int i = 0; i < 10; i++)
     {
         void *item = xmemdup(&i, sizeof(int));
-        AppendRlistAlien(&list, item);
+        RlistAppendAlien(&list, item);
     }
 
     assert_int_equal(10, RlistLen(list));
@@ -154,7 +154,7 @@ static void test_filter(void **state)
         i += 2;
     }
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_filter_everything(void **state)
@@ -163,7 +163,7 @@ static void test_filter_everything(void **state)
     for (int i = 1; i < 10; i += 2)
     {
         void *item = xmemdup(&i, sizeof(int));
-        AppendRlistAlien(&list, item);
+        RlistAppendAlien(&list, item);
     }
 
     assert_int_equal(5, RlistLen(list));

@@ -167,10 +167,10 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
         }
     }
 
-    DeleteRlist(numbers_pr);
-    DeleteRlist(numbers_in);
-    DeleteRlist(separators_pr);
-    DeleteRlist(separators_in);
+    RlistDestroy(numbers_pr);
+    RlistDestroy(numbers_in);
+    RlistDestroy(separators_pr);
+    RlistDestroy(separators_in);
 
     if (version_matched)
     {
@@ -205,7 +205,7 @@ static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)
 
         /* Append to end up with left->right (major->minor) comparison */
 
-        AppendRScalar(num, numeral, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(num, numeral, RVAL_TYPE_SCALAR);
 
         if (*sp == '\0')
         {
@@ -213,6 +213,6 @@ static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)
         }
 
         sscanf(sp, "%1[^0-9a-zA-Z]", separator);
-        AppendRScalar(sep, separator, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(sep, separator, RVAL_TYPE_SCALAR);
     }
 }

@@ -918,7 +918,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 
     if (DEBUG)
     {
-        ShowRlist(stdout, args);
+        RlistShow(stdout, args);
     }
     CfDebug(")\n");
 
@@ -941,7 +941,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 
     bundle->type = xstrdup(type);
     bundle->ns = xstrdup(ns);
-    bundle->args = CopyRlist(args);
+    bundle->args = RlistCopy(args);
     bundle->source_path = SafeStringDuplicate(source_path);
     bundle->subtypes = SeqNew(10, SubTypeDestroy);
 
@@ -978,7 +978,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 
     body->type = xstrdup(type);
     body->ns = xstrdup(ns);
-    body->args = CopyRlist(args);
+    body->args = RlistCopy(args);
     body->source_path = SafeStringDuplicate(source_path);
     body->conlist = SeqNew(10, ConstraintDestroy);
 
@@ -1092,7 +1092,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->name);
         free(bundle->type);
 
-        DeleteRlist(bundle->args);
+        RlistDestroy(bundle->args);
         SeqDestroy(bundle->subtypes);
         free(bundle);
     }
@@ -1105,7 +1105,7 @@ static void BodyDestroy(Body *body)
         free(body->name);
         free(body->type);
 
-        DeleteRlist(body->args);
+        RlistDestroy(body->args);
         SeqDestroy(body->conlist);
         free(body);
     }
@@ -1122,7 +1122,7 @@ void PromiseDestroy(Promise *pp)
 
         if (pp->promisee.item)
         {
-            DeleteRvalItem(pp->promisee);
+            RvalDestroy(pp->promisee);
         }
 
         free(pp->bundle);
@@ -1388,7 +1388,7 @@ static JsonElement *BundleClassesToJson(const Seq *promises)
                     JsonElement *promisee_list = JsonArrayCreate(10);
                     for (const Rlist *rp = pp->promisee.item; rp; rp = rp->next)
                     {
-                        JsonArrayAppendString(promisee_list, ScalarValue(rp));
+                        JsonArrayAppendString(promisee_list, RlistScalarValue(rp));
                     }
                     JsonObjectAppendArray(json_promise, "promisee", promisee_list);
                 }

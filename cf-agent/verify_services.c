@@ -201,25 +201,25 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
         switch (a.service.service_policy)
         {
         case cfsrv_start:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "start", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_restart:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
             break;
 
         case cfsrv_reload:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
             break;
             
         case cfsrv_stop:
         case cfsrv_disable:
         default:
-            AppendRlist(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            AppendRlist(&args, "stop", RVAL_TYPE_SCALAR);
+            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
+            RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
             break;
 
         }

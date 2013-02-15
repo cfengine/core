@@ -109,7 +109,7 @@ void EditScalarConstraint(Seq *conlist, const char *lval, const char *rval)
 
         if (strcmp(lval, cp->lval) == 0)
         {
-            DeleteRvalItem(cp->rval);
+            RvalDestroy(cp->rval);
             cp->rval = (Rval) { xstrdup(rval), RVAL_TYPE_SCALAR };
             return;
         }
@@ -120,7 +120,7 @@ void ConstraintDestroy(Constraint *cp)
 {
     if (cp)
     {
-        DeleteRvalItem(cp->rval);
+        RvalDestroy(cp->rval);
         free(cp->lval);
         free(cp->classes);
 
@@ -731,7 +731,7 @@ void PostCheckConstraint(const char *type, const char *bundle, const char *lval,
 
     if (DEBUG)
     {
-        ShowRval(stdout, rval);
+        RvalShow(stdout, rval);
         printf("\n");
     }
 

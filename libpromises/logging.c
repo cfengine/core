@@ -377,7 +377,7 @@ void PromiseBanner(Promise *pp)
         if (VERBOSE)
         {
             printf("\n%s>     Promise made to (stakeholders): ", VPREFIX);
-            ShowRval(stdout, pp->promisee);
+            RvalShow(stdout, pp->promisee);
         }
     }
 
@@ -411,7 +411,7 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
     if (params && (VERBOSE || DEBUG))
     {
         printf("(");
-        ShowRlist(stdout, params);
+        RlistShow(stdout, params);
         printf(" )\n");
     }
     else

@@ -123,7 +123,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
             rval = EvaluateFinalRval("this", (Rval) {rp->item, rp->type}, true, pp);
-            DeleteRvalItem((Rval) {rp->item, rp->type});
+            RvalDestroy((Rval) {rp->item, rp->type});
             rp->item = rval.item;
             rp->type = rval.type;
         }
@@ -132,7 +132,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     default:
 
         rval = ExpandPrivateRval("this", cp->rval);
-        DeleteRvalItem(cp->rval);
+        RvalDestroy(cp->rval);
         cp->rval = rval;
         break;
     }
@@ -659,7 +659,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
 
     if (context == NULL)
     {
-        PrependRScalar(&list, "any", RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&list, "any", RVAL_TYPE_SCALAR);
     }
     else
     {
@@ -683,13 +683,13 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
             {
                 // Fully bracketed atom (protected)
                 cbuff[strlen(cbuff) - 1] = '\0';
-                PrependRScalar(&list, cbuff + 1, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&list, cbuff + 1, RVAL_TYPE_SCALAR);
             }
             else
             {
                 if (HasBrackets(cbuff, pp))
                 {
-                    Rlist *andlist = SplitRegexAsRList(cbuff, "[.&]+", 99, false);
+                    Rlist *andlist = RlistFromSplitRegex(cbuff, "[.&]+", 99, false);
                     Rlist *rp, *orlist = NULL;
                     char buff[CF_MAXVARSIZE];
                     char orstring[CF_MAXVARSIZE] = { 0 };
@@ -726,26 +726,26 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
 
                     if (strlen(orstring) > 0)
                     {
-                        orlist = SplitRegexAsRList(orstring, "[|]+", 99, false);
+                        orlist = RlistFromSplitRegex(orstring, "[|]+", 99, false);
 
                         for (rp = orlist; rp != NULL; rp = rp->next)
                         {
                             snprintf(buff, CF_MAXVARSIZE, "%s.%s", (char *) rp->item, andstring);
-                            PrependRScalar(&list, buff, RVAL_TYPE_SCALAR);
+                            RlistPrependScalar(&list, buff, RVAL_TYPE_SCALAR);
                         }
                     }
                     else
                     {
-                        PrependRScalar(&list, andstring, RVAL_TYPE_SCALAR);
+                        RlistPrependScalar(&list, andstring, RVAL_TYPE_SCALAR);
                     }
 
-                    DeleteRlist(orlist);
-                    DeleteRlist(andlist);
+                    RlistDestroy(orlist);
+                    RlistDestroy(andlist);
                 }
                 else
                 {
                     // Clean atom
-                    PrependRScalar(&list, cbuff, RVAL_TYPE_SCALAR);
+                    RlistPrependScalar(&list, cbuff, RVAL_TYPE_SCALAR);
                 }
             }
 
@@ -1260,7 +1260,7 @@ void PushPrivateClassContext(int inherit)
     AlphaList *ap = xmalloc(sizeof(AlphaList));
 
 // copy to heap
-    PushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
+    RlistPushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
 
     InitAlphaList(&VADDCLASSES);
 
@@ -1279,7 +1279,7 @@ void PopPrivateClassContext()
     AlphaList *ap;
 
     DeleteAlphaList(&VADDCLASSES);
-    PopStack(&PRIVCLASSHEAP, (void *) &ap, sizeof(VADDCLASSES));
+    RlistPopStack(&PRIVCLASSHEAP, (void *) &ap, sizeof(VADDCLASSES));
     CopyAlphaListPointers(&VADDCLASSES, ap);
     free(ap);
 }
@@ -1650,7 +1650,7 @@ void DeleteAllClasses(const Rlist *list)
         if (IsHardClass((char *) rp->item))
         {
             CfOut(cf_error, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
-                  ScalarValue(rp));
+                  RlistScalarValue(rp));
         }
 
         string = (char *) (rp->item);

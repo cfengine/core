@@ -193,8 +193,8 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
         }
 
         CfDebug("EXPARG: %s.%s\n", CONTEXTID, (char *) rval.item);
-        AppendRlist(&newargs, rval.item, rval.type);
-        DeleteRvalItem(rval);
+        RlistAppend(&newargs, rval.item, rval.type);
+        RvalDestroy(rval);
     }
 
     return newargs;
@@ -205,7 +205,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
 void DeleteExpArgs(Rlist *args)
 {
 
-    DeleteRlist(args);
+    RlistDestroy(args);
 
 }
 
@@ -235,7 +235,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
         ReportError(output);
-        ShowRlist(stderr, realargs);
+        RlistShow(stderr, realargs);
         fprintf(stderr, ")\n");
 
         for (i = 0, rp = realargs; i < argnum; i++)
@@ -243,7 +243,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
             printf("  arg[%d] range %s\t", i, argtemplate[i].pattern);
             if (rp != NULL)
             {
-                ShowRval(stdout, (Rval) {rp->item, rp->type});
+                RvalShow(stdout, (Rval) {rp->item, rp->type});
                 rp = rp->next;
             }
             else

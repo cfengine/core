@@ -391,8 +391,8 @@ static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq 
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     NewScalar("sys", name, hw_mac, DATA_TYPE_STRING);
-    AppendRlist(hardware, hw_mac, RVAL_TYPE_SCALAR);
-    AppendRlist(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
+    RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+    RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     HardClass(name);
@@ -562,7 +562,7 @@ void GetInterfacesInfo(AgentType ag)
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
-                    AppendRlist(&ips, VIPADDRESS, RVAL_TYPE_SCALAR);
+                    RlistAppend(&ips, VIPADDRESS, RVAL_TYPE_SCALAR);
 
                     for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                     {
@@ -601,7 +601,7 @@ void GetInterfacesInfo(AgentType ag)
                 }
 
                 AppendItem(&IPADDRESSES, inet_ntoa(sin->sin_addr), "");
-                AppendRlist(&ips, inet_ntoa(sin->sin_addr), RVAL_TYPE_SCALAR);
+                RlistAppend(&ips, inet_ntoa(sin->sin_addr), RVAL_TYPE_SCALAR);
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                 {
@@ -660,9 +660,9 @@ void GetInterfacesInfo(AgentType ag)
     NewList("sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
     NewList("sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
-    DeleteRlist(interfaces);
-    DeleteRlist(hardware);
-    DeleteRlist(ips);
+    RlistDestroy(interfaces);
+    RlistDestroy(hardware);
+    RlistDestroy(ips);
 
     FindV6InterfacesInfo();
 }
@@ -778,7 +778,7 @@ static void InitIgnoreInterfaces()
 
         if (scanCount != 0 && *regex != '\0')
         {
-           IdempPrependRScalar(&IGNORE_INTERFACES,regex, RVAL_TYPE_SCALAR);
+           RlistPrependScalarIdemp(&IGNORE_INTERFACES,regex, RVAL_TYPE_SCALAR);
         }
     }
  

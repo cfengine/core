@@ -299,7 +299,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'H':
-            HOSTLIST = SplitStringAsRList(optarg, ',');
+            HOSTLIST = RlistFromSplitString(optarg, ',');
             break;
 
         case 'o':
@@ -460,7 +460,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 
 #endif /* !__MINGW32__ */
 
-    a.copy.servers = SplitStringAsRList(peer, '*');
+    a.copy.servers = RlistFromSplitString(peer, '*');
 
     if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
     {
@@ -473,7 +473,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 
         if (conn == NULL)
         {
-            DeleteRlist(a.copy.servers);
+            RlistDestroy(a.copy.servers);
             CfOut(cf_verbose, "", " -> No suitable server responded to hail\n");
             return false;
         }
@@ -489,7 +489,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
         if (!ExecuteRunagent(conn, MENU))
         {
             DisconnectServer(conn);
-            DeleteRlist(a.copy.servers);
+            RlistDestroy(a.copy.servers);
             return false;
         }
 #endif
@@ -499,7 +499,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
         HailExec(conn, peer, recvbuffer, sendbuffer);
     }
 
-    DeleteRlist(a.copy.servers);
+    RlistDestroy(a.copy.servers);
 
     return true;
 }
@@ -673,7 +673,7 @@ static void SendClassData(AgentConnection *conn)
     Rlist *classes, *rp;
     char sendbuffer[CF_BUFSIZE];
 
-    classes = SplitRegexAsRList(SENDCLASSES, "[,: ]", 99, false);
+    classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {

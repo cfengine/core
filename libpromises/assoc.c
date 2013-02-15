@@ -36,7 +36,7 @@ CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt)
 /* Make a private copy because promises are ephemeral in expansion phase */
 
     ap->lval = xstrdup(lval);
-    ap->rval = CopyRvalItem(rval);
+    ap->rval = RvalCopy(rval);
     ap->dtype = dt;
 
     return ap;
@@ -54,7 +54,7 @@ void DeleteAssoc(CfAssoc *ap)
     CfDebug(" ----> Delete variable association %s\n", ap->lval);
 
     free(ap->lval);
-    DeleteRvalItem(ap->rval);
+    RvalDestroy(ap->rval);
 
     free(ap);
 
@@ -506,6 +506,6 @@ void HashToList(Scope *sp, Rlist **list)
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        PrependRScalar(list, assoc->lval, RVAL_TYPE_SCALAR);
+        RlistPrependScalar(list, assoc->lval, RVAL_TYPE_SCALAR);
     }
 }

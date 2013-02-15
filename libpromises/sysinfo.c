@@ -700,11 +700,11 @@ void Get3Environment()
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
             CfDebug(" -> Setting new monitoring list %s => %s", name, value);
-            list = ParseShownRlist(value);
+            list = RlistParseShown(value);
             DeleteVariable("mon", name);
             NewList("mon", name, list, DATA_TYPE_STRING_LIST);
 
-            DeleteRlist(list);
+            RlistDestroy(list);
         }
         else if (strstr(context, "="))
         {

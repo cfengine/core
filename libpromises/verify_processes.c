@@ -71,7 +71,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
     if (a.restart_class)
     {
-        if ((IsStringIn(a.signals, "term")) || (IsStringIn(a.signals, "kill")))
+        if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
         {
             CfOut(cf_inform, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
                   pp->promiser);
@@ -278,19 +278,19 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
                 if (kill((pid_t) pid, signal) < 0)
                 {
                     cfPS(cf_verbose, CF_FAIL, "kill", pp, a,
-                         " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", ScalarValue(rp),
+                         " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", RlistScalarValue(rp),
                          signal, (intmax_t)pid);
                 }
                 else
                 {
                     cfPS(cf_inform, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
-                         ScalarValue(rp), signal, (intmax_t)pid, ip->name);
+                         RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else
             {
                 CfOut(cf_error, "", " -> Need to keep signal promise \'%s\' in process entry %s",
-                      ScalarValue(rp), ip->name);
+                      RlistScalarValue(rp), ip->name);
             }
         }
     }

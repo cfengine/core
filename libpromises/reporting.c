@@ -40,6 +40,7 @@
 #include "evalfunction.h"
 #include "misc_lib.h"
 #include "fncall.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
@@ -316,7 +317,7 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
     if (pp->promisee.item != NULL)
     {
         WriterWriteF(writer, "%s promise by \'%s\' -> ", pp->agentsubtype, pp->promiser);
-        RvalPrint(writer, pp->promisee);
+        RvalWrite(writer, pp->promisee);
         WriterWriteF(writer, " if context is %s\n\n", pp->classes);
     }
     else
@@ -344,14 +345,14 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
             }
             else
             {
-                RvalPrint(writer, cp->rval);        /* literal */
+                RvalWrite(writer, cp->rval);        /* literal */
             }
             break;
 
         case RVAL_TYPE_LIST:
             {
                 const Rlist *rp = (Rlist *) cp->rval.item;
-                RlistPrint(writer, rp);
+                RlistWrite(writer, rp);
                 break;
             }
 
@@ -365,7 +366,7 @@ static void ShowPromiseInReportText(const ReportContext *context, const char *ve
                 }
                 else
                 {
-                    RvalPrint(writer, cp->rval);        /* literal */
+                    RvalWrite(writer, cp->rval);        /* literal */
                 }
                 break;
             }
@@ -421,7 +422,7 @@ static void PrintVariablesInScope(Writer *writer, const Scope *scope)
     while ((assoc = HashIteratorNext(&i)))
     {
         WriterWriteF(writer, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.type, assoc->lval);
-        RvalPrint(writer, assoc->rval);
+        RvalWrite(writer, assoc->rval);
         WriterWriteF(writer, "\n");
     }
 }
@@ -562,7 +563,7 @@ static void ShowBodyText(Writer *writer, const Body *body, int indent)
 
         IndentText(writer, indent);
         WriterWriteF(writer, "%s => ", cp->lval);
-        RvalPrint(writer, cp->rval);        /* literal */
+        RvalWrite(writer, cp->rval);        /* literal */
 
         if (cp->classes != NULL)
         {

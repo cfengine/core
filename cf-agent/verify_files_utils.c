@@ -212,7 +212,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         return;
     }
 
-    if (IsInListOfRegex(SINGLE_COPY_CACHE, destfile))
+    if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
     {
         CfOut(cf_inform, "", " -> Skipping single-copied file %s\n", destfile);
         return;
@@ -348,7 +348,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (SINGLE_COPY_LIST)
                 {
-                    IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                    RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
                 }
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
@@ -488,9 +488,9 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                         VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
                     }
 
-                    if (IsInListOfRegex(SINGLE_COPY_LIST, destfile))
+                    if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
                     {
-                        IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                        RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
                     }
                 }
                 else
@@ -514,9 +514,9 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                otherwise we can get oscillations between multipe versions if type
                is based on a checksum */
 
-            if (IsInListOfRegex(SINGLE_COPY_LIST, destfile))
+            if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
             {
-                IdempPrependRScalar(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
             }
 
             cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File %s is an up to date copy of source\n", destfile);

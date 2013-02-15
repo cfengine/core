@@ -44,7 +44,9 @@
 #include "files_lib.h"
 #include "unix.h"
 #include "verify_measurements.h"
+
 #ifdef HAVE_NOVA
+#include "cf.nova.h"
 #include "history.h"
 #endif
 

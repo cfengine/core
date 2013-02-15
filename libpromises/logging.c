@@ -35,6 +35,10 @@
 #include "transaction.h"
 #include "constraints.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #define CF_VALUE_LOG      "cf_value.log"
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };

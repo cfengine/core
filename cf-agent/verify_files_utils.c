@@ -53,6 +53,10 @@
 #include "constraints.h"
 #include "files_lib.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #define CF_RECURSION_LIMIT 100
 
 static Rlist *AUTO_DEFINE_LIST;

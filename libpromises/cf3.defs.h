@@ -2300,10 +2300,5 @@ extern const BodySyntax CF_CLASSBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const BodySyntax CFEX_CONTROLBODY[];
 
-#ifdef HAVE_NOVA
-# include <cf.nova.h>
-#endif
-
-
 #endif
 

@@ -55,6 +55,7 @@
 #include "fncall.h"
 
 #ifdef HAVE_NOVA
+#include "cf.nova.h"
 #include "nova_reporting.h"
 #else
 #include "reporting.h"

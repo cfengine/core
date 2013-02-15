@@ -69,6 +69,7 @@
 #endif
 
 #ifdef HAVE_NOVA
+#include "cf.nova.h"
 #include "agent_reports.h"
 #else
 #include "reporting.h"

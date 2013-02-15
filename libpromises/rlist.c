@@ -1256,6 +1256,27 @@ void RlistPrint(Writer *writer, const Rlist *list)
     WriterWriteChar(writer, '}');
 }
 
+static void FnCallPrint(Writer *writer, const FnCall *call)
+{
+    for (const Rlist *rp = call->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            WriterWriteF(writer, "%s,", (const char *) rp->item);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            FnCallPrint(writer, (FnCall *) rp->item);
+            break;
+
+        default:
+            WriterWrite(writer, "(** Unknown argument **)\n");
+            break;
+        }
+    }
+}
+
 void RvalPrint(Writer *writer, Rval rval)
 {
     if (rval.item == NULL)

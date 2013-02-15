@@ -36,6 +36,4 @@ FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
 
-void FnCallPrint(Writer *writer, const FnCall *fp);
-
 #endif

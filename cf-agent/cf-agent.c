@@ -63,6 +63,27 @@
 #include "fncall.h"
 #include "rlist.h"
 
+typedef enum
+{
+    TYPE_SEQUENCE_META,
+    TYPE_SEQUENCE_VARS,
+    TYPE_SEQUENCE_DEFAULTS,
+    TYPE_SEQUENCE_CONTEXTS,
+    TYPE_SEQUENCE_OUTPUTS,
+    TYPE_SEQUENCE_INTERFACES,
+    TYPE_SEQUENCE_FILES,
+    TYPE_SEQUENCE_PACKAGES,
+    TYPE_SEQUENCE_ENVIRONMENTS,
+    TYPE_SEQUENCE_METHODS,
+    TYPE_SEQUENCE_PROCESSES,
+    TYPE_SEQUENCE_SERVICES,
+    TYPE_SEQUENCE_COMMANDS,
+    TYPE_SEQUENCE_STORAGE,
+    TYPE_SEQUENCE_DATABASES,
+    TYPE_SEQUENCE_REPORTS,
+    TYPE_SEQUENCE_NONE
+} TypeSequence;
+
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
 #include "findhub.h"
@@ -121,9 +142,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(Policy *policy);
 static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
-static int NewTypeContext(enum typesequence type);
-static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context);
-static void ClassBanner(enum typesequence type);
+static int NewTypeContext(TypeSequence type);
+static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportContext *report_context);
+static void ClassBanner(TypeSequence type);
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
@@ -140,7 +161,7 @@ static int AutomaticBootstrap();
 /*******************************************************************/
 
 static const char *ID = "The main Cfengine agent is the instigator of change\n"
-    "in the system. In that sense it is the most important\n" "part of the Cfengine suite.\n";
+    "in the system. In that sense it is the most important\n" "part of the CFEngine suite.\n";
 
 static const struct option OPTIONS[15] =
 {
@@ -976,7 +997,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
     SubType *sp;
-    enum typesequence type;
+    TypeSequence type;
     int pass;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
@@ -1266,22 +1287,22 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(enum typesequence type)
+static int NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 
     switch (type)
     {
-    case kp_environments:
+    case TYPE_SEQUENCE_ENVIRONMENTS:
         NewEnvironmentsContext();
         break;
 
-    case kp_files:
+    case TYPE_SEQUENCE_FILES:
 
         ConnectionsInit();
         break;
 
-    case kp_processes:
+    case TYPE_SEQUENCE_PROCESSES:
 
         if (!LoadProcessTable(&PROCESSTABLE))
         {
@@ -1290,7 +1311,7 @@ static int NewTypeContext(enum typesequence type)
         }
         break;
 
-    case kp_storage:
+    case TYPE_SEQUENCE_STORAGE:
 
 #ifndef __MINGW32__                   // TODO: Run if implemented on Windows
         if (MOUNTEDFSLIST != NULL)
@@ -1312,27 +1333,27 @@ static int NewTypeContext(enum typesequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(Policy *policy, enum typesequence type, const ReportContext *report_context)
+static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportContext *report_context)
 {
     switch (type)
     {
-    case kp_classes:
+    case TYPE_SEQUENCE_CONTEXTS:
         HashVariables(policy, THIS_BUNDLE, report_context);
         break;
 
-    case kp_environments:
+    case TYPE_SEQUENCE_ENVIRONMENTS:
         DeleteEnvironmentsContext();
         break;
 
-    case kp_files:
+    case TYPE_SEQUENCE_FILES:
 
         ConnectionsCleanup();
         break;
 
-    case kp_processes:
+    case TYPE_SEQUENCE_PROCESSES:
         break;
 
-    case kp_storage:
+    case TYPE_SEQUENCE_STORAGE:
 #ifndef __MINGW32__
     {
         Attributes a = { {0} };
@@ -1358,7 +1379,7 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
 #endif /* !__MINGW32__ */
         break;
 
-    case kp_packages:
+    case TYPE_SEQUENCE_PACKAGES:
 
         ExecuteScheduledPackages();
 
@@ -1375,11 +1396,11 @@ static void DeleteTypeContext(Policy *policy, enum typesequence type, const Repo
 
 /**************************************************************/
 
-static void ClassBanner(enum typesequence type)
+static void ClassBanner(TypeSequence type)
 {
     const Item *ip;
 
-    if (type != kp_interfaces)  /* Just parsed all local classes */
+    if (type != TYPE_SEQUENCE_INTERFACES)  /* Just parsed all local classes */
     {
         return;
     }

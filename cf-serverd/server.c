@@ -41,6 +41,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "net.h"
+#include "rlist.h"
 
 //******************************************************************
 // GLOBAL STATE

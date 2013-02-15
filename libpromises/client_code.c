@@ -38,6 +38,7 @@
 #include "files_copy.h"
 #include "transaction.h"
 #include "logging.h"
+#include "rlist.h"
 
 typedef struct
 {

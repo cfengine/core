@@ -23,8 +23,9 @@
 
 */
 
-#include "cf3.defs.h"
 #include "sysinfo.h"
+
+#include "cf3.extern.h"
 
 #include "env_context.h"
 #include "files_names.h"
@@ -38,7 +39,7 @@
 #include "string_lib.h"
 #include "logging.h"
 #include "misc_lib.h"
-#include "cf3.extern.h"
+#include "rlist.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

@@ -53,6 +53,7 @@
 #include "list.h"
 #include "misc_lib.h"
 #include "fncall.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

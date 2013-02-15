@@ -44,6 +44,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "rlist.h"
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

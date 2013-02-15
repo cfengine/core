@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "cf3.defs.h"
+#include "rlist.h"
 
 #include "assoc.h"
 

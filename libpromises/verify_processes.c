@@ -36,6 +36,7 @@
 #include "transaction.h"
 #include "exec_tools.h"
 #include "logging.h"
+#include "rlist.h"
 
 static void VerifyProcesses(Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);

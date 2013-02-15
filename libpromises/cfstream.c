@@ -33,6 +33,7 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+#include "rlist.h"
 
 #include <stdarg.h>
 

@@ -39,6 +39,7 @@
 #include "files_interfaces.h"
 #include "assoc.h"
 #include "cfstream.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

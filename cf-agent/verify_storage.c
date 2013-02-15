@@ -37,6 +37,7 @@
 #include "transaction.h"
 #include "nfs.h"
 #include "logging.h"
+#include "rlist.h"
 
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;

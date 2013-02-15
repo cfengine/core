@@ -26,7 +26,6 @@
 #define CFENGINE_CF3_DEFS_H
 
 #include "platform.h"
-#include "rlist.h"
 #include "compiler.h"
 
 #ifdef HAVE_LIBXML2
@@ -992,6 +991,23 @@ enum cfeditorder
 #define SOFTWARE_PACKAGES_CACHE "software_packages.csv"
 
 /*************************************************************************/
+
+typedef enum
+{
+    RVAL_TYPE_SCALAR = 's',
+    RVAL_TYPE_LIST = 'l',
+    RVAL_TYPE_FNCALL = 'f',
+    RVAL_TYPE_ASSOC = 'a',
+    RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
+} RvalType;
+
+typedef struct
+{
+    void *item;
+    RvalType type;
+} Rval;
+
+typedef struct Rlist_ Rlist;
 
 typedef enum
 {

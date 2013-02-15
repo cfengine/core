@@ -37,6 +37,7 @@
 #include "mod_files.h"
 #include "vars.h"
 #include "fncall.h"
+#include "rlist.h"
 
 #include <assert.h>
 

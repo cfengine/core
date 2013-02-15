@@ -1,6 +1,8 @@
 #include "cf3.defs.h"
 #include "sort.h"
 
+#include "rlist.h"
+
 #include <setjmp.h>
 #include <cmockery.h>
 #include <stdarg.h>

@@ -52,6 +52,7 @@
 #include "string_lib.h"
 #include "constraints.h"
 #include "files_lib.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

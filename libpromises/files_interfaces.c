@@ -38,6 +38,7 @@
 #include "client_code.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "rlist.h"
 
 
 int cfstat(const char *path, struct stat *buf)

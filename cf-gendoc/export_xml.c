@@ -30,6 +30,7 @@
 #include "sort.h"
 #include "scope.h"
 #include "assoc.h"
+#include "rlist.h"
 
 static char *MANUAL_DIRECTORY;
 

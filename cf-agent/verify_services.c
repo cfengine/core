@@ -33,6 +33,7 @@
 #include "fncall.h"
 #include "transaction.h"
 #include "logging.h"
+#include "rlist.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

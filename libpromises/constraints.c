@@ -38,6 +38,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "rlist.h"
 
 static PromiseIdent *PromiseIdExists(char *ns, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);

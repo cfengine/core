@@ -36,6 +36,7 @@
 #include "pipes.h"
 #include "files_interfaces.h"
 #include "logging.h"
+#include "rlist.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

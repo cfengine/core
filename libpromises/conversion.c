@@ -32,6 +32,7 @@
 #include "reporting.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "rlist.h"
 
 #include <assert.h>
 

@@ -42,6 +42,8 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "string_lib.h"
+#include "rlist.h"
+
 #include "generic_agent.h" // HashControls
 
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);

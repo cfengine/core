@@ -26,7 +26,10 @@
 #define CFENGINE_POLICY_H
 
 #include "cf3.defs.h"
+
+#include "writer.h"
 #include "sequence.h"
+#include "json.h"
 
 struct Policy_
 {

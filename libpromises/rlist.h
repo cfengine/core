@@ -25,22 +25,9 @@
 #ifndef CFENGINE_RLIST_H
 #define CFENGINE_RLIST_H
 
-typedef enum
-{
-    RVAL_TYPE_SCALAR = 's',
-    RVAL_TYPE_LIST = 'l',
-    RVAL_TYPE_FNCALL = 'f',
-    RVAL_TYPE_ASSOC = 'a',
-    RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
-} RvalType;
-
-typedef struct
-{
-    void *item;                 /* (char *), (Rlist *), or (FnCall)  */
-    RvalType type;
-} Rval;
-
-typedef struct Rlist_ Rlist;
+#include "cf3.defs.h"
+#include "writer.h"
+#include "json.h"
 
 struct Rlist_
 {
@@ -50,16 +37,12 @@ struct Rlist_
     Rlist *next;
 };
 
-#include "cf3.defs.h"
-#include "writer.h"
-#include "json.h"
-
 char *ScalarValue(const Rlist *rlist);
-struct FnCall_ *FnCallValue(const Rlist *rlist);
+FnCall *FnCallValue(const Rlist *rlist);
 Rlist *ListValue(const Rlist *rlist);
 
 char *ScalarRvalValue(Rval rval);
-struct FnCall_ *FnCallRvalValue(Rval rval);
+FnCall *FnCallRvalValue(Rval rval);
 Rlist *ListRvalValue(Rval rval);
 
 JsonElement *RvalToJson(Rval rval);

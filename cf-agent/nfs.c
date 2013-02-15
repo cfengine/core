@@ -38,6 +38,7 @@
 #include "logging.h"
 #include "nfs.h"
 #include "misc_lib.h"
+#include "rlist.h"
 
 /* seconds */
 #define RPCTIMEOUT 60

@@ -34,6 +34,7 @@
 #include "string_lib.h"
 #include "transaction.h"
 #include "constraints.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

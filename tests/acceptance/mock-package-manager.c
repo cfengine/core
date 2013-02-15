@@ -1,5 +1,6 @@
 #include "cf3.defs.h"
 
+#include "rlist.h"
 #include "generic_agent.h" // Syntax()
 
 static char AVAILABLE_PACKAGES_FILE_NAME[PATH_MAX];

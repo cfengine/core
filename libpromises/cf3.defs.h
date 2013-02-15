@@ -457,20 +457,6 @@ struct GidList_
 
 /*******************************************************************/
 
-enum matchtypes
-{
-    literalStart,
-    literalComplete,
-    literalSomewhere,
-    regexComplete,
-    NOTliteralStart,
-    NOTliteralComplete,
-    NOTliteralSomewhere,
-    NOTregexComplete
-};
-
-/*******************************************************************/
-
 typedef struct Auth_ Auth;
 
 struct Auth_

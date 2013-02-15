@@ -25,6 +25,18 @@
 #ifndef CFENGINE_ITEM_LIB_H
 #define CFENGINE_ITEM_LIB_H
 
+typedef enum
+{
+    ITEM_MATCH_TYPE_LITERAL_START,
+    ITEM_MATCH_TYPE_LITERAL_COMPLETE,
+    ITEM_MATCH_TYPE_LITERAL_SOMEWHERE,
+    ITEM_MATCH_TYPE_REGEX_COMPLETE,
+    ITEM_MATCH_TYPE_LITERAL_START_NOT,
+    ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT,
+    ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT,
+    ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT
+} ItemMatchType;
+
 int PrintItemList(char *buffer, int bufsize, const Item *list);
 void PrependFullItem(Item **liststart, const char *itemstring, const char *classes, int counter, time_t t);
 Item *ReturnItemIn(Item *list, const char *item);
@@ -41,7 +53,7 @@ int NeighbourItemMatches(const Item *start, const Item *location, const char *st
 int RawSaveItemList(const Item *liststart, const char *file);
 Item *SplitStringAsItemList(const char *string, char sep);
 Item *SplitString(const char *string, char sep);
-int DeleteItemGeneral(Item **filestart, const char *string, enum matchtypes type);
+int DeleteItemGeneral(Item **filestart, const char *string, ItemMatchType type);
 int DeleteItemLiteral(Item **filestart, const char *string);
 int DeleteItemStarting(Item **list, const char *string);
 int DeleteItemNotStarting(Item **list, const char *string);

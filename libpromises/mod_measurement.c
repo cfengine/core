@@ -27,25 +27,25 @@
 static const BodySyntax CF_MATCHVALUE_BODY[] =
 {
     /* Row models */
-    {"select_line_matching", cf_str, CF_ANYSTRING, "Regular expression for matching line location"},
-    {"select_line_number", cf_int, CF_VALRANGE, "Read from the n-th line of the output (fixed format)"},
-    {"extraction_regex", cf_str, "",
+    {"select_line_matching", DATA_TYPE_STRING, CF_ANYSTRING, "Regular expression for matching line location"},
+    {"select_line_number", DATA_TYPE_INT, CF_VALRANGE, "Read from the n-th line of the output (fixed format)"},
+    {"extraction_regex", DATA_TYPE_STRING, "",
      "Regular expression that should contain a single backreference for extracting a value"},
-    {"track_growing_file", cf_opts, CF_BOOL,
+    {"track_growing_file", DATA_TYPE_OPTION, CF_BOOL,
      "If true, cfengine remembers the position to which is last read when opening the file, and resets to the start if the file has since been truncated"},
-    {"select_multiline_policy", cf_opts, "average,sum,first,last", "Regular expression for matching line location"},
-    {NULL, cf_notype, NULL, NULL}
+    {"select_multiline_policy", DATA_TYPE_OPTION, "average,sum,first,last", "Regular expression for matching line location"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_MEASURE_BODIES[] =
 {
-    {"stream_type", cf_opts, "pipe,file", "The datatype being collected."},
-    {"data_type", cf_opts, "counter,int,real,string,slist", "The datatype being collected."},
-    {"history_type", cf_opts, "weekly,scalar,static,log",
+    {"stream_type", DATA_TYPE_OPTION, "pipe,file", "The datatype being collected."},
+    {"data_type", DATA_TYPE_OPTION, "counter,int,real,string,slist", "The datatype being collected."},
+    {"history_type", DATA_TYPE_OPTION, "weekly,scalar,static,log",
      "Whether the data can be seen as a time-series or just an isolated value"},
-    {"units", cf_str, "", "The engineering dimensions of this value or a note about its intent used in plots"},
-    {"match_value", cf_body, CF_MATCHVALUE_BODY, "Criteria for extracting the measurement from a datastream"},
-    {NULL, cf_notype, NULL, NULL}
+    {"units", DATA_TYPE_STRING, "", "The engineering dimensions of this value or a note about its intent used in plots"},
+    {"match_value", DATA_TYPE_BODY, CF_MATCHVALUE_BODY, "Criteria for extracting the measurement from a datastream"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =

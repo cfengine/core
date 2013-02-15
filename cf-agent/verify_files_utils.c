@@ -121,7 +121,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
 /* We still need to augment the scope of context "this" for commands */
 
     DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, cf_str);        // Parameters may only be scalars
+    NewScalar("this", "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
 
     if (attr.transformer != NULL)
     {

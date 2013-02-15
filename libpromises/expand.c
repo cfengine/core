@@ -291,7 +291,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
-                if (GetVariable(absscope, var, &rval) != cf_notype)
+                if (GetVariable(absscope, var, &rval) != DATA_TYPE_NONE)
                 {
                     if (rval.type == RVAL_TYPE_LIST)
                     {
@@ -370,7 +370,7 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
         {
             GetNaked(naked, rp->item);
 
-            if (GetVariable(scopeid, naked, &returnval) != cf_notype)
+            if (GetVariable(scopeid, naked, &returnval) != DATA_TYPE_NONE)
             {
                 returnval = ExpandPrivateRval(scopeid, returnval);
             }
@@ -586,9 +586,9 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         switch (GetVariable(scopeid, currentitem, &rval))
         {
-        case cf_str:
-        case cf_int:
-        case cf_real:
+        case DATA_TYPE_STRING:
+        case DATA_TYPE_INT:
+        case DATA_TYPE_REAL:
 
             if (ExpandOverflow(buffer, (char *) rval.item))
             {
@@ -598,10 +598,10 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
             strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
             break;
 
-        case cf_slist:
-        case cf_ilist:
-        case cf_rlist:
-        case cf_notype:
+        case DATA_TYPE_STRING_LIST:
+        case DATA_TYPE_INT_LIST:
+        case DATA_TYPE_REAL_LIST:
+        case DATA_TYPE_NONE:
             CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
 
             if (varstring == '}')
@@ -693,27 +693,27 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
             // This ordering is necessary to get automated canonification
             ExpandScalar(handle,tmp);
             CanonifyNameInPlace(tmp);
-            NewScalar("this", "handle", tmp, cf_str);
+            NewScalar("this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            NewScalar("this", "handle", PromiseID(pp), cf_str);
+            NewScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         if (pp->audit && pp->audit->filename)
         {
-            NewScalar("this", "promise_filename", pp->audit->filename, cf_str);
+            NewScalar("this", "promise_filename", pp->audit->filename, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            NewScalar("this", "promise_linenumber", number, cf_str);
+            NewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        NewScalar("this", "promiser_uid", v, cf_int);
+        NewScalar("this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        NewScalar("this", "promiser_gid", v, cf_int);
+        NewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        NewScalar("this", "bundle", pp->bundle, cf_str);
-        NewScalar("this", "namespace", pp->ns, cf_str);
+        NewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
+        NewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -722,7 +722,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
 
         if (pp->has_subbundles)
         {
-            NewScalar("this", "promiser", pp->promiser, cf_str);
+            NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -782,7 +782,7 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
     {
         GetNaked(naked, rval.item);
 
-        if (GetVariable(scopeid, naked, &returnval) == cf_notype || returnval.type != RVAL_TYPE_LIST)
+        if (GetVariable(scopeid, naked, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
         {
             returnval = ExpandPrivateRval("this", rval);
         }
@@ -902,7 +902,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             GetVariable(orgscope, orgname, &retval);
 
-            NewList(scope, rp->item, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, cf_slist);
+            NewList(scope, rp->item, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1228,7 +1228,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 //a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(pp);
 
-    enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
+    DataType existing_var = GetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(pp->ns, "default") == 0)
@@ -1283,7 +1283,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
         if (cp->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_var != cf_notype)
+            if (existing_var != DATA_TYPE_NONE)
             {
                 // Already did this
                 BufferDestroy(&qualified_scope);
@@ -1364,7 +1364,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             rval = returnval;
         }
 
-        if (existing_var != cf_notype)
+        if (existing_var != DATA_TYPE_NONE)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
@@ -1721,21 +1721,21 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
     switch (a.service.service_policy)
     {
     case cfsrv_start:
-        NewScalar("this", "service_policy", "start", cf_str);
+        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case cfsrv_restart:
-        NewScalar("this", "service_policy", "restart", cf_str);
+        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case cfsrv_reload:
-        NewScalar("this", "service_policy", "reload", cf_str);
+        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case cfsrv_stop:
     case cfsrv_disable:
     default:
-        NewScalar("this", "service_policy", "stop", cf_str);
+        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

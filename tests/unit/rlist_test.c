@@ -259,7 +259,7 @@ void GetNaked(char *s1, const char *s2)
     fail();
 }
 
-enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
+DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
 {
     fail();
 }

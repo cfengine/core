@@ -207,7 +207,7 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
                 continue;
             }
 
-            if (GetVariable("control_monitor", cp->lval, &retval) == cf_notype)
+            if (GetVariable("control_monitor", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(cf_error, "", "Unknown lval %s in monitor control body", cp->lval);
                 continue;

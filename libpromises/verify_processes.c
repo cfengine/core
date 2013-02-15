@@ -128,7 +128,7 @@ static void VerifyProcesses(Attributes a, Promise *pp)
     }
 
     DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", pp->promiser, cf_str);
+    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(PROCESSTABLE, a, pp);
     DeleteScalar("this", "promiser");

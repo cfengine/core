@@ -253,7 +253,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
     }
 
     DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, cf_str); 
+    NewScalar("this", "promiser", path, DATA_TYPE_STRING); 
     
     thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
 
@@ -656,7 +656,7 @@ static void FindFilePromiserObjects(Promise *pp, const ReportContext *report_con
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        NewScalar("this", "promiser", pp->promiser, cf_str);
+        NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         VerifyFilePromise(pp->promiser, pp, report_context);
     }
     else                        // Default is to expand regex paths

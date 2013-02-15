@@ -529,7 +529,7 @@ static void KeepControlPromises(Policy *policy)
                 continue;
             }
 
-            if (GetVariable("control_runagent", cp->lval, &retval) == cf_notype)
+            if (GetVariable("control_runagent", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(cf_error, "", "Unknown lval %s in runagent control body", cp->lval);
                 continue;
@@ -621,7 +621,7 @@ static void KeepControlPromises(Policy *policy)
         }
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
     }

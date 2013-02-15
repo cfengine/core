@@ -389,14 +389,14 @@ static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq 
              (unsigned char) ifr->ifr_hwaddr.sa_data[3],
              (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
-    NewScalar("sys", name, hw_mac, cf_str);
+    NewScalar("sys", name, hw_mac, DATA_TYPE_STRING);
     AppendRlist(hardware, hw_mac, RVAL_TYPE_SCALAR);
     AppendRlist(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     HardClass(name);
 # else
-    NewScalar("sys", name, "mac_unknown", cf_str);
+    NewScalar("sys", name, "mac_unknown", DATA_TYPE_STRING);
     HardClass("mac_unknown");
 # endif
 }
@@ -499,7 +499,7 @@ void GetInterfacesInfo(AgentType ag)
 
             if (!first_address)
             {
-                NewScalar("sys", "interface", last_name, cf_str);
+                NewScalar("sys", "interface", last_name, DATA_TYPE_STRING);
                 first_address = true;
             }
         }
@@ -581,7 +581,7 @@ void GetInterfacesInfo(AgentType ag)
                         {
                             *sp = '\0';
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
-                            NewScalar("sys", name, ip, cf_str);
+                            NewScalar("sys", name, ip, DATA_TYPE_STRING);
                         }
                     }
                     continue;
@@ -594,7 +594,7 @@ void GetInterfacesInfo(AgentType ag)
                 if (!ipdefault)
                 {
                     ipdefault = true;
-                    NewScalar("sys", "ipv4", inet_ntoa(sin->sin_addr), cf_str);
+                    NewScalar("sys", "ipv4", inet_ntoa(sin->sin_addr), DATA_TYPE_STRING);
 
                     strcpy(VIPADDRESS, inet_ntoa(sin->sin_addr));
                 }
@@ -624,7 +624,7 @@ void GetInterfacesInfo(AgentType ag)
                     snprintf(name, CF_MAXVARSIZE - 1, "ipv4[interface_name]");
                 }
 
-                NewScalar("sys", name, ip, cf_str);
+                NewScalar("sys", name, ip, DATA_TYPE_STRING);
 
                 i = 3;
 
@@ -643,7 +643,7 @@ void GetInterfacesInfo(AgentType ag)
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[interface_name]", i--);
                         }
 
-                        NewScalar("sys", name, ip, cf_str);
+                        NewScalar("sys", name, ip, DATA_TYPE_STRING);
                     }
                 }
             }
@@ -655,9 +655,9 @@ void GetInterfacesInfo(AgentType ag)
 
     close(fd);
 
-    NewList("sys", "interfaces", interfaces, cf_slist);
-    NewList("sys", "hardware_addresses", hardware, cf_slist);
-    NewList("sys", "ip_addresses", ips, cf_slist);
+    NewList("sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    NewList("sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    NewList("sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     DeleteRlist(interfaces);
     DeleteRlist(hardware);

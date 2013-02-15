@@ -27,16 +27,16 @@
 
 static const BodySyntax CF_TCPIP_BODY[] =
 {
-    {"ipv4_address", cf_str, "[0-9.]+/[0-4]+", "IPv4 address for the interface"},
-    {"ipv4_netmask", cf_str, "[0-9.]+/[0-4]+", "Netmask for the interface"},
-    {"ipv6_address", cf_str, "[0-9a-fA-F:]+/[0-9]+", "IPv6 address for the interface"},
-    {NULL, cf_notype, NULL, NULL}
+    {"ipv4_address", DATA_TYPE_STRING, "[0-9.]+/[0-4]+", "IPv4 address for the interface"},
+    {"ipv4_netmask", DATA_TYPE_STRING, "[0-9.]+/[0-4]+", "Netmask for the interface"},
+    {"ipv6_address", DATA_TYPE_STRING, "[0-9a-fA-F:]+/[0-9]+", "IPv6 address for the interface"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_INTERFACES_BODIES[] =
 {
-    {"tcp_ip", cf_body, CF_TCPIP_BODY, "Interface tcp/ip properties"},
-    {NULL, cf_notype, NULL, NULL}
+    {"tcp_ip", DATA_TYPE_BODY, CF_TCPIP_BODY, "Interface tcp/ip properties"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_INTERFACES_SUBTYPES[] =

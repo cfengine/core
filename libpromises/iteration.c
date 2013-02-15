@@ -38,7 +38,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 {
     Rlist *rps, *deref_listoflists = NULL;
     Rval retval;
-    enum cfdatatype dtype;
+    DataType dtype;
     CfAssoc *new;
     Rval newret;
 
@@ -58,7 +58,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
     {
         dtype = GetVariable(scopeid, rp->item, &retval);
 
-        if (dtype == cf_notype)
+        if (dtype == DATA_TYPE_NONE)
         {
             CfOut(cf_error, "", " !! Couldn't locate variable %s apparently in %s\n", ScalarValue(rp), scopeid);
             CfOut(cf_error, "",

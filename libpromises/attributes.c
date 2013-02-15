@@ -1671,9 +1671,9 @@ Measurement GetMeasurementConstraint(const Promise *pp)
     value = GetConstraintValue("data_type", pp, RVAL_TYPE_SCALAR);
     m.data_type = Typename2Datatype(value);
 
-    if (m.data_type == cf_notype)
+    if (m.data_type == DATA_TYPE_NONE)
     {
-        m.data_type = cf_str;
+        m.data_type = DATA_TYPE_STRING;
     }
 
     m.history_type = GetConstraintValue("history_type", pp, RVAL_TYPE_SCALAR);

@@ -345,14 +345,14 @@ enum cfsbundle Type2Cfs(char *name)
 
 /****************************************************************************/
 
-enum cfdatatype Typename2Datatype(char *name)
+DataType Typename2Datatype(char *name)
 /* convert abstract data type names: int, ilist etc */
 {
     int i;
 
     CfDebug("typename2type(%s)\n", name);
 
-    for (i = 0; i < (int) cf_notype; i++)
+    for (i = 0; i < (int) DATA_TYPE_NONE; i++)
     {
         if (name && (strcmp(CF_DATATYPES[i], name) == 0))
         {
@@ -360,7 +360,7 @@ enum cfdatatype Typename2Datatype(char *name)
         }
     }
 
-    return (enum cfdatatype) i;
+    return (DataType) i;
 }
 
 /****************************************************************************/
@@ -372,7 +372,7 @@ const char *AgentTypeToString(AgentType agent_type)
 
 /****************************************************************************/
 
-enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp)
+DataType GetControlDatatype(const char *varname, const BodySyntax *bp)
 {
     int i = 0;
 
@@ -384,7 +384,7 @@ enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp)
         }
     }
 
-    return cf_notype;
+    return DATA_TYPE_NONE;
 }
 
 /****************************************************************************/
@@ -809,25 +809,25 @@ enum cf_srv_policy Str2ServicePolicy(char *string)
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, cfsrv_start, cfsrv_start);
 }
 
-char *Dtype2Str(enum cfdatatype dtype)
+char *Dtype2Str(DataType dtype)
 {
     switch (dtype)
     {
-    case cf_str:
+    case DATA_TYPE_STRING:
         return "s";
-    case cf_slist:
+    case DATA_TYPE_STRING_LIST:
         return "sl";
-    case cf_int:
+    case DATA_TYPE_INT:
         return "i";
-    case cf_ilist:
+    case DATA_TYPE_INT_LIST:
         return "il";
-    case cf_real:
+    case DATA_TYPE_REAL:
         return "r";
-    case cf_rlist:
+    case DATA_TYPE_REAL_LIST:
         return "rl";
-    case cf_opts:
+    case DATA_TYPE_OPTION:
         return "m";
-    case cf_olist:
+    case DATA_TYPE_OPTION_LIST:
         return "ml";
     default:
         return "D?";

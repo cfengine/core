@@ -119,7 +119,7 @@ int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise
     }
 
     NewScope("edit");
-    NewScalar("edit", "filename", filename, cf_str);
+    NewScalar("edit", "filename", filename, DATA_TYPE_STRING);
 
 /* Reset the done state for every call here, since bundle is reusable */
 

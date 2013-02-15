@@ -50,7 +50,7 @@ static void CheckParseReal(const char *lv, const char *s, const char *range);
 static void CheckParseRealRange(const char *lval, const char *s, const char *range);
 static void CheckParseIntRange(const char *lval, const char *s, const char *range);
 static void CheckParseOpts(const char *lv, const char *s, const char *range);
-static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range);
+static void CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range);
 
 
 /*********************************************************/
@@ -82,7 +82,7 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 
 /****************************************************************************/
 
-enum cfdatatype ExpectedDataType(char *lvalname)
+DataType ExpectedDataType(char *lvalname)
 {
     int i, j, k, l;
     const BodySyntax *bs, *bs2;
@@ -112,7 +112,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
 
             for (k = 0; bs[k].range != NULL; k++)
             {
-                if (bs[k].dtype == cf_body)
+                if (bs[k].dtype == DATA_TYPE_BODY)
                 {
                     bs2 = (const BodySyntax *) (bs[k].range);
 
@@ -121,7 +121,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
                         continue;
                     }
 
-                    for (l = 0; bs2[l].dtype != cf_notype; l++)
+                    for (l = 0; bs2[l].dtype != DATA_TYPE_NONE; l++)
                     {
                         if (strcmp(lvalname, bs2[l].lval) == 0)
                         {
@@ -134,7 +134,7 @@ enum cfdatatype ExpectedDataType(char *lvalname)
         }
     }
 
-    return cf_notype;
+    return DATA_TYPE_NONE;
 }
 
 /*********************************************************/
@@ -175,12 +175,12 @@ void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, Su
                     lmatch = true;
                     CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n", lval);
 
-                    if (bs[l].dtype == cf_body)
+                    if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.type);
                         return;
                     }
-                    else if (bs[l].dtype == cf_bundle)
+                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
                     {
                         CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
                                 rval.type);
@@ -275,7 +275,7 @@ int LvalWantsBody(char *stype, char *lval)
             {
                 if (strcmp(bs[l].lval, lval) == 0)
                 {
-                    if (bs[l].dtype == cf_body)
+                    if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         return true;
                     }
@@ -326,12 +326,12 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
                 {
                     CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
 
-                    if (bs[l].dtype == cf_body)
+                    if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
                         return;
                     }
-                    else if (bs[l].dtype == cf_bundle)
+                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
                     {
                         CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
                         return;
@@ -369,7 +369,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 
             for (l = 0; bs[l].range != NULL; l++)
             {
-                if (bs[l].dtype == cf_body)
+                if (bs[l].dtype == DATA_TYPE_BODY)
                 {
                     bs2 = (const BodySyntax *) (bs[l].range);
 
@@ -378,7 +378,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
                         continue;
                     }
 
-                    for (k = 0; bs2[k].dtype != cf_notype; k++)
+                    for (k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
                     {
                         /* Either module defined or common */
 
@@ -413,7 +413,7 @@ void CheckSelection(char *type, char *name, char *lval, Rval rval)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level)
+void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level)
 {
     Rlist *rp;
     Item *checklist;
@@ -426,7 +426,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
     CfDebug(" ------------------------------------------------\n");
 
-    if (dt == cf_bundle || dt == cf_body)
+    if (dt == DATA_TYPE_BUNDLE || dt == DATA_TYPE_BODY)
     {
         CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (bundle/body)\n", lval, CF_DATATYPES[dt]);
     }
@@ -444,11 +444,11 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
     case RVAL_TYPE_SCALAR:
         switch (dt)
         {
-        case cf_slist:
-        case cf_ilist:
-        case cf_rlist:
-        case cf_clist:
-        case cf_olist:
+        case DATA_TYPE_STRING_LIST:
+        case DATA_TYPE_INT_LIST:
+        case DATA_TYPE_REAL_LIST:
+        case DATA_TYPE_CONTEXT_LIST:
+        case DATA_TYPE_OPTION_LIST:
             if (level == 0)
             {
                 snprintf(output, CF_BUFSIZE, " !! Type mismatch -- rhs is a scalar, but lhs (%s) is not a scalar type",
@@ -466,11 +466,11 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
         switch (dt)
         {
-        case cf_slist:
-        case cf_ilist:
-        case cf_rlist:
-        case cf_clist:
-        case cf_olist:
+        case DATA_TYPE_STRING_LIST:
+        case DATA_TYPE_INT_LIST:
+        case DATA_TYPE_REAL_LIST:
+        case DATA_TYPE_CONTEXT_LIST:
+        case DATA_TYPE_OPTION_LIST:
             break;
         default:
             snprintf(output, CF_BUFSIZE, "!! Type mismatch -- rhs is a list, but lhs (%s) is not a list type",
@@ -508,41 +508,41 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
     switch (dt)
     {
-    case cf_str:
-    case cf_slist:
+    case DATA_TYPE_STRING:
+    case DATA_TYPE_STRING_LIST:
         CheckParseString(lval, (const char *) rval.item, range);
         break;
 
-    case cf_int:
-    case cf_ilist:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_INT_LIST:
         CheckParseInt(lval, (const char *) rval.item, range);
         break;
 
-    case cf_real:
-    case cf_rlist:
+    case DATA_TYPE_REAL:
+    case DATA_TYPE_REAL_LIST:
         CheckParseReal(lval, (const char *) rval.item, range);
         break;
 
-    case cf_body:
-    case cf_bundle:
+    case DATA_TYPE_BODY:
+    case DATA_TYPE_BUNDLE:
         CfDebug("Nothing to check for body reference\n");
         break;
 
-    case cf_opts:
-    case cf_olist:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_OPTION_LIST:
         CheckParseOpts(lval, (const char *) rval.item, range);
         break;
 
-    case cf_class:
-    case cf_clist:
+    case DATA_TYPE_CONTEXT:
+    case DATA_TYPE_CONTEXT_LIST:
         CheckParseClass(lval, (const char *) rval.item, range);
         break;
 
-    case cf_irange:
+    case DATA_TYPE_INT_RANGE:
         CheckParseIntRange(lval, (const char *) rval.item, range);
         break;
 
-    case cf_rrange:
+    case DATA_TYPE_REAL_RANGE:
         CheckParseRealRange(lval, (char *) rval.item, range);
         break;
 
@@ -556,9 +556,9 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, c
 
 /****************************************************************************/
 
-enum cfdatatype StringDataType(const char *scopeid, const char *string)
+DataType StringDataType(const char *scopeid, const char *string)
 {
-    enum cfdatatype dtype;
+    DataType dtype;
     Rval rval;
     int islist = false;
     char var[CF_BUFSIZE];
@@ -583,7 +583,7 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if ((dtype = GetVariable(scopeid, var, &rval)) != cf_notype)
+            if ((dtype = GetVariable(scopeid, var, &rval)) != DATA_TYPE_NONE)
             {
                 if (rval.type == RVAL_TYPE_LIST)
                 {
@@ -606,12 +606,12 @@ vars:
             else
             {
                 /* Must force non-pure substitution to be generic type CF_SCALAR.cf_str */
-                return cf_str;
+                return DATA_TYPE_STRING;
             }
         }
     }
 
-    return cf_str;
+    return DATA_TYPE_STRING;
 }
 
 /****************************************************************************/
@@ -1112,9 +1112,9 @@ bool IsDataType(const char *s)
 
 /****************************************************************************/
 
-static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dtype, const char *range)
+static void CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range)
 {
-    enum cfdatatype dt;
+    DataType dt;
     char output[CF_BUFSIZE];
     const FnCallType *fn;
 
@@ -1135,27 +1135,27 @@ static void CheckFnCallType(const char *lval, const char *s, enum cfdatatype dty
         {
             /* Ok to allow fn calls of correct element-type in lists */
 
-            if (dt == cf_str && dtype == cf_slist)
+            if (dt == DATA_TYPE_STRING && dtype == DATA_TYPE_STRING_LIST)
             {
                 return;
             }
 
-            if (dt == cf_int && dtype == cf_ilist)
+            if (dt == DATA_TYPE_INT && dtype == DATA_TYPE_INT_LIST)
             {
                 return;
             }
 
-            if (dt == cf_real && dtype == cf_rlist)
+            if (dt == DATA_TYPE_REAL && dtype == DATA_TYPE_REAL_LIST)
             {
                 return;
             }
 
-            if (dt == cf_opts && dtype == cf_olist)
+            if (dt == DATA_TYPE_OPTION && dtype == DATA_TYPE_OPTION_LIST)
             {
                 return;
             }
 
-            if (dt == cf_class && dtype == cf_clist)
+            if (dt == DATA_TYPE_CONTEXT && dtype == DATA_TYPE_CONTEXT_LIST)
             {
                 return;
             }
@@ -1230,7 +1230,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
             /* TODO: must handle edit_line somehow */
             continue;
         }
-        else if (attributes[i].dtype == cf_body)
+        else if (attributes[i].dtype == DATA_TYPE_BODY)
         {
             JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *) attributes[i].range);
 
@@ -1246,7 +1246,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
             {
                 JsonObjectAppendString(attribute, "pcre-range", ".*");
             }
-            else if (attributes[i].dtype == cf_opts || attributes[i].dtype == cf_olist)
+            else if (attributes[i].dtype == DATA_TYPE_OPTION || attributes[i].dtype == DATA_TYPE_OPTION_LIST)
             {
                 JsonElement *options = JsonArrayCreate(10);
                 char options_buffer[CF_BUFSIZE];

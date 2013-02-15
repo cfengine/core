@@ -168,7 +168,7 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
         return;
     }
 
-    NewScalar("this", "promiser", pp->promiser, cf_str);
+    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
@@ -234,21 +234,21 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
     switch (a.service.service_policy)
     {
     case cfsrv_start:
-        NewScalar("this", "service_policy", "start", cf_str);
+        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case cfsrv_restart:
-        NewScalar("this", "service_policy", "restart", cf_str);
+        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case cfsrv_reload:
-        NewScalar("this", "service_policy", "reload", cf_str);
+        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case cfsrv_stop:
     case cfsrv_disable:
     default:
-        NewScalar("this", "service_policy", "stop", cf_str);
+        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

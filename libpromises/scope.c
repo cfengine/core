@@ -149,7 +149,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 
         if (IsNakedVar(rpr->item, '@'))
         {
-            enum cfdatatype vtype;
+            DataType vtype;
             char qnaked[CF_MAXVARSIZE];
             
             GetNaked(naked, rpr->item);
@@ -163,14 +163,14 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 
             switch (vtype)
             {
-            case cf_slist:
-            case cf_ilist:
-            case cf_rlist:
-                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, cf_slist);
+            case DATA_TYPE_STRING_LIST:
+            case DATA_TYPE_INT_LIST:
+            case DATA_TYPE_REAL_LIST:
+                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
-                NewScalar(scope, lval, rpr->item, cf_str);
+                NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
                 break;
             }
         }
@@ -182,7 +182,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
         switch(rpr->type)
         {
         case RVAL_TYPE_SCALAR:
-            NewScalar(scope, lval, rpr->item, cf_str);
+            NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
             break;
 
         case RVAL_TYPE_FNCALL:
@@ -190,7 +190,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
             Rval rval = EvaluateFunctionCall(subfp, pp).rval;
             if (rval.type == RVAL_TYPE_SCALAR)
             {
-                NewScalar(scope, lval, rval.item, cf_str);
+                NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
             }
             else
             {

@@ -54,7 +54,7 @@ static void ShowBundleTypes(void);
 static void ShowPromiseTypesFor(const char *s);
 static void ShowBodyText(Writer *writer, const Body *body, int indent);
 static void ShowBodyParts(const BodySyntax *bs);
-static void ShowRange(const char *s, enum cfdatatype type);
+static void ShowRange(const char *s, DataType type);
 static void ShowBuiltinFunctions(void);
 static void ShowPromiseInReportText(const ReportContext *context, const char *version, const Promise *pp, int indent);
 static void ShowPromisesInReportText(const ReportContext *context, const Seq *bundles, const Seq *bodies);
@@ -283,7 +283,7 @@ void ShowPromise(const ReportContext *context, ReportOutputType type, const Prom
             char *v;
             Rval retval;
 
-            if (GetVariable("control_common", "version", &retval) != cf_notype)
+            if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
             {
                 v = (char *) retval.item;
             }
@@ -691,7 +691,7 @@ static void ShowBodyParts(const BodySyntax *bs)
             printf("<tr><td>%s</td><td>%s</td><td>(Separate Bundle)</td></tr>\n", bs[i].lval,
                    CF_DATATYPES[bs[i].dtype]);
         }
-        else if (bs[i].dtype == cf_body)
+        else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             printf("<tr><td>%s</td><td>%s</td><td>", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
             ShowBodyParts((const BodySyntax *) bs[i].range);
@@ -712,7 +712,7 @@ static void ShowBodyParts(const BodySyntax *bs)
 
 /*******************************************************************/
 
-static void ShowRange(const char *s, enum cfdatatype type)
+static void ShowRange(const char *s, DataType type)
 {
     if (strlen(s) == 0)
     {
@@ -722,8 +722,8 @@ static void ShowRange(const char *s, enum cfdatatype type)
 
     switch (type)
     {
-    case cf_opts:
-    case cf_olist:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_OPTION_LIST:
 
         for (const char *sp = s; *sp != '\0'; sp++)
         {

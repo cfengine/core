@@ -628,7 +628,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
             NewScope("sys");
 
             SetPolicyServer(POLICY_SERVER);
-            NewScalar("sys", "policy_hub", POLICY_SERVER, cf_str);
+            NewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
             if (EnterpriseExpiry())
             {

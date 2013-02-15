@@ -604,25 +604,25 @@ typedef struct FnCall_ FnCall;
 /* Abstract datatypes                                                    */
 /*************************************************************************/
 
-enum cfdatatype
+typedef enum
 {
-    cf_str,
-    cf_int,
-    cf_real,
-    cf_slist,
-    cf_ilist,
-    cf_rlist,
-    cf_opts,
-    cf_olist,
-    cf_body,
-    cf_bundle,
-    cf_class,
-    cf_clist,
-    cf_irange,
-    cf_rrange,
-    cf_counter,
-    cf_notype
-};
+    DATA_TYPE_STRING,
+    DATA_TYPE_INT,
+    DATA_TYPE_REAL,
+    DATA_TYPE_STRING_LIST,
+    DATA_TYPE_INT_LIST,
+    DATA_TYPE_REAL_LIST,
+    DATA_TYPE_OPTION,
+    DATA_TYPE_OPTION_LIST,
+    DATA_TYPE_BODY,
+    DATA_TYPE_BUNDLE,
+    DATA_TYPE_CONTEXT,
+    DATA_TYPE_CONTEXT_LIST,
+    DATA_TYPE_INT_RANGE,
+    DATA_TYPE_REAL_RANGE,
+    DATA_TYPE_COUNTER,
+    DATA_TYPE_NONE
+} DataType;
 
 enum cfx_formatindex
 {
@@ -1012,7 +1012,7 @@ typedef struct
 typedef struct
 {
     const char *lval;
-    const enum cfdatatype dtype;
+    const DataType dtype;
     const void *range;          /* either char or BodySyntax * */
     const char *description;
     const char *default_value;
@@ -1034,14 +1034,14 @@ typedef struct FnCallResult_ FnCallResult;
 typedef struct
 {
     const char *pattern;
-    enum cfdatatype dtype;
+    DataType dtype;
     const char *description;
 } FnCallArg;
 
 typedef struct
 {
     const char *name;
-    enum cfdatatype dtype;
+    DataType dtype;
     const FnCallArg *args;
               FnCallResult(*impl) (FnCall *, Rlist *);
     const char *description;
@@ -2066,7 +2066,7 @@ enum cfmeasurepolicy
 typedef struct
 {
     char *stream_type;
-    enum cfdatatype data_type;
+    DataType data_type;
     enum cfmeasurepolicy policy;
     char *history_type;
     char *select_line_matching;

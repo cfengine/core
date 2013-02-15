@@ -72,7 +72,7 @@ void VerifyReportPromise(Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        NewScalar(pp->bundle, unique_name, pp->promiser, cf_str);
+        NewScalar(pp->bundle, unique_name, pp->promiser, DATA_TYPE_STRING);
         return;
     }
        

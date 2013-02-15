@@ -105,7 +105,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }

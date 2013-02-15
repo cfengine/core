@@ -200,7 +200,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (level == cf_error)
     {
-        if (GetVariable("control_common", "version", &retval) != cf_notype)
+        if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
         {
             v = (char *) retval.item;
         }

@@ -32,13 +32,13 @@ typedef struct
 {
     char *lval;
     Rval rval;
-    enum cfdatatype dtype;
+    DataType dtype;
 } CfAssoc;
 
-CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt);
+CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt);
 void DeleteAssoc(CfAssoc *ap);
 CfAssoc *CopyAssoc(CfAssoc *old);
-CfAssoc *AssocNewReference(const char *lval, Rval rval, enum cfdatatype dtype);
+CfAssoc *AssocNewReference(const char *lval, Rval rval, DataType dtype);
 
 /* - hashtable operations - */
 
@@ -46,7 +46,7 @@ AssocHashTable *HashInit(void);
 
 /* Insert element if it does not exist in hash table. Returns false if element
    already exists in table or if table is full. */
-bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype);
+bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype);
 
 /* Deletes element from hashtable, returning whether element was found */
 bool HashDeleteElement(AssocHashTable *hashtable, const char *element);

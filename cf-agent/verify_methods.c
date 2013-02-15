@@ -236,7 +236,7 @@ static void GetReturnValue(char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                NewScalar(pp->bundle, newname, assoc->rval.item, cf_str);           
+                NewScalar(pp->bundle, newname, assoc->rval.item, DATA_TYPE_STRING);           
             }
         }
         

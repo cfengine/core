@@ -64,8 +64,8 @@ static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const
     char expanded_command[CF_EXPANDSIZE];
 
     SetNewScope("cf_pack_context");
-    NewScalar("cf_pack_context", "v1", v1, cf_str);
-    NewScalar("cf_pack_context", "v2", v2, cf_str);
+    NewScalar("cf_pack_context", "v1", v1, DATA_TYPE_STRING);
+    NewScalar("cf_pack_context", "v2", v2, DATA_TYPE_STRING);
     ExpandScalar(command, expanded_command);
     DeleteScope("cf_pack_context");
 

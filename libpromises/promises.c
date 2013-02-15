@@ -301,7 +301,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
         Rval returnval;
 
-        if (ExpectedDataType(cp->lval) == cf_bundle)
+        if (ExpectedDataType(cp->lval) == DATA_TYPE_BUNDLE)
         {
             final = ExpandBundleReference(scopeid, cp->rval);
         }
@@ -459,7 +459,7 @@ void PromiseRef(enum cfreport level, const Promise *pp)
         return;
     }
 
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }

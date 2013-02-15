@@ -337,7 +337,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
             }
 
             Rval retval;
-            if (GetVariable("control_executor", cp->lval, &retval) == cf_notype)
+            if (GetVariable("control_executor", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);
                 continue;
@@ -718,7 +718,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
         NewScope("sys");
 
         SetPolicyServer(POLICY_SERVER);
-        NewScalar("sys", "policy_hub", POLICY_SERVER, cf_str);
+        NewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
         NewScope("const");
         NewScope("this");

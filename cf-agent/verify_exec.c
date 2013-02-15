@@ -61,7 +61,7 @@ void VerifyExecPromise(Promise *pp)
 
     a = GetExecAttributes(pp);
 
-    NewScalar("this", "promiser", pp->promiser, cf_str);
+    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
     if (!SyntaxCheckExec(a, pp))
     {

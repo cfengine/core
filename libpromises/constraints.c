@@ -763,10 +763,10 @@ void PostCheckConstraint(const char *type, const char *bundle, const char *lval,
 
                     for (l = 0; bs[l].lval != NULL; l++)
                     {
-                        if (bs[l].dtype == cf_bundle)
+                        if (bs[l].dtype == DATA_TYPE_BUNDLE)
                         {
                         }
-                        else if (bs[l].dtype == cf_body)
+                        else if (bs[l].dtype == DATA_TYPE_BODY)
                         {
                             bs2 = (BodySyntax *) bs[l].range;
 
@@ -795,7 +795,7 @@ void PostCheckConstraint(const char *type, const char *bundle, const char *lval,
 
     for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
     {
-        if (CF_COMMON_BODIES[i].dtype == cf_body)
+        if (CF_COMMON_BODIES[i].dtype == DATA_TYPE_BODY)
         {
             continue;
         }
@@ -837,10 +837,10 @@ static int VerifyConstraintName(const char *lval)
 
                 for (l = 0; bs[l].lval != NULL; l++)
                 {
-                    if (bs[l].dtype == cf_bundle)
+                    if (bs[l].dtype == DATA_TYPE_BUNDLE)
                     {
                     }
-                    else if (bs[l].dtype == cf_body)
+                    else if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         bs2 = (BodySyntax *) bs[l].range;
 

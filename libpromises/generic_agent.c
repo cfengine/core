@@ -405,7 +405,7 @@ Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const Rep
 
         switch (GetVariable("control_common", "cfinputs_version", &rval))
         {
-        case cf_str:
+        case DATA_TYPE_STRING:
             AUDITPTR->version = xstrdup((char *) rval.item);
             break;
 
@@ -1460,8 +1460,8 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             DeleteScalar("sys", "domain");
             DeleteScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            NewScalar("sys", "fqhost", VFQNAME, cf_str);
-            NewScalar("sys", "domain", VDOMAIN, cf_str);
+            NewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+            NewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             DeleteClass("undefined_domain", NULL);
             HardClass(VDOMAIN);
         }
@@ -1755,7 +1755,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
     int ok = true;
     FnCall *fp;
 
-    if (GetVariable("control_common", "bundlesequence", &retval) == cf_notype)
+    if (GetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
     {
         CfOut(cf_error, "", " !!! No bundlesequence in the common control body");
         return false;

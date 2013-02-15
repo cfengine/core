@@ -27,34 +27,34 @@
 
 static const BodySyntax CF_RESOURCE_BODY[] =
 {
-    {"env_cpus", cf_int, CF_VALRANGE, "Number of virtual CPUs in the environment"},
-    {"env_memory", cf_int, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
-    {"env_disk", cf_int, CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"},
-    {"env_baseline", cf_str, CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"},
-    {"env_spec", cf_str, CF_ANYSTRING,
+    {"env_cpus", DATA_TYPE_INT, CF_VALRANGE, "Number of virtual CPUs in the environment"},
+    {"env_memory", DATA_TYPE_INT, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
+    {"env_disk", DATA_TYPE_INT, CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"},
+    {"env_baseline", DATA_TYPE_STRING, CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"},
+    {"env_spec", DATA_TYPE_STRING, CF_ANYSTRING,
      "A string containing a technology specific set of promises for the virtual instance"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_DESIGNATION_BODY[] =
 {
-    {"env_addresses", cf_slist, "", "The IP addresses of the environment's network interfaces"},
-    {"env_name", cf_str, "", "The hostname of the virtual environment"},
-    {"env_network", cf_str, "", "The hostname of the virtual network"},
-    {NULL, cf_notype, NULL, NULL}
+    {"env_addresses", DATA_TYPE_STRING_LIST, "", "The IP addresses of the environment's network interfaces"},
+    {"env_name", DATA_TYPE_STRING, "", "The hostname of the virtual environment"},
+    {"env_network", DATA_TYPE_STRING, "", "The hostname of the virtual network"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_ENVIRON_BODIES[] =
 {
-    {"environment_host", cf_str, "[a-zA-Z0-9_]+",
+    {"environment_host", DATA_TYPE_STRING, "[a-zA-Z0-9_]+",
      "A class indicating which physical node will execute this guest machine"},
-    {"environment_interface", cf_body, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
-    {"environment_resources", cf_body, CF_RESOURCE_BODY, "Virtual environment resource description"},
-    {"environment_state", cf_opts, "create,delete,running,suspended,down",
+    {"environment_interface", DATA_TYPE_BODY, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
+    {"environment_resources", DATA_TYPE_BODY, CF_RESOURCE_BODY, "Virtual environment resource description"},
+    {"environment_state", DATA_TYPE_OPTION, "create,delete,running,suspended,down",
      "The desired dynamical state of the specified environment"},
-    {"environment_type", cf_opts, "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
+    {"environment_type", DATA_TYPE_OPTION, "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
      "Virtual environment type"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =

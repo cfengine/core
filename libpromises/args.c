@@ -63,7 +63,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
     Rlist *rpg = NULL;
     const Rlist *rpt = NULL;
     FnCall *fp;
-    enum cfdatatype dtg = cf_notype, dtt = cf_notype;
+    DataType dtg = DATA_TYPE_NONE, dtt = DATA_TYPE_NONE;
     char *lval;
     void *rval;
     int len1, len2;

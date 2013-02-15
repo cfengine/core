@@ -30,16 +30,16 @@
 
 void LoadSystemConstants(void);
 void ForceScalar(char *lval, char *rval);
-void NewScalar(const char *scope, const char *lval, const char *rval, enum cfdatatype dt);
+void NewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
 void DeleteScalar(const char *scope, const char *lval);
-void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt);
+void NewList(const char *scope, const char *lval, void *rval, DataType dt);
 void DefaultVarPromise(Promise *pp);
 
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.
  */
-enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv);
+DataType GetVariable(const char *scope, const char *lval, Rval *returnv);
 
 void DeleteVariable(const char *scope, const char *id);
 bool StringContainsVar(const char *s, const char *v);
@@ -52,7 +52,7 @@ int UnresolvedArgs(Rlist *args);
 int UnresolvedVariables(CfAssoc *ap, char rtype);
 int IsQualifiedVariable(char *var);
 int IsCfList(char *type);
-int AddVariableHash(const char *scope, const char *lval, Rval rval, enum cfdatatype dtype, const char *fname, int no);
+int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 #endif

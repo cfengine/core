@@ -27,66 +27,66 @@
 
 static const BodySyntax CF_RELATE_BODY[] =
 {
-    {"forward_relationship", cf_str, "", "Name of forward association between promiser topic and associates"},
-    {"backward_relationship", cf_str, "", "Name of backward/inverse association from associates to promiser topic"},
-    {"associates", cf_slist, "", "List of associated topics by this forward relationship"},
-    {NULL, cf_notype, NULL, NULL}
+    {"forward_relationship", DATA_TYPE_STRING, "", "Name of forward association between promiser topic and associates"},
+    {"backward_relationship", DATA_TYPE_STRING, "", "Name of backward/inverse association from associates to promiser topic"},
+    {"associates", DATA_TYPE_STRING_LIST, "", "List of associated topics by this forward relationship"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_OCCUR_BODIES[] =
 {
-    {"about_topics", cf_slist, "",
+    {"about_topics", DATA_TYPE_STRING_LIST, "",
      "List of topics that the document or resource addresses"},    
-    {"represents", cf_slist, "",
+    {"represents", DATA_TYPE_STRING_LIST, "",
      "List of explanations for what relationship this document has to the topics it is about"},    
-    {"representation", cf_opts, "literal,url,db,file,web,image,portal",
+    {"representation", DATA_TYPE_OPTION, "literal,url,db,file,web,image,portal",
      "How to interpret the promiser string e.g. actual data or reference to data"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_TOPICS_BODIES[] =
 {
-    {"association", cf_body, CF_RELATE_BODY, "Declare associated topics"},
-    {"synonyms", cf_slist, "", "A list of words to be treated as equivalents in the defined context"},
-    {"generalizations", cf_slist, "",
+    {"association", DATA_TYPE_BODY, CF_RELATE_BODY, "Declare associated topics"},
+    {"synonyms", DATA_TYPE_STRING_LIST, "", "A list of words to be treated as equivalents in the defined context"},
+    {"generalizations", DATA_TYPE_STRING_LIST, "",
      "A list of words to be treated as super-sets for the current topic, used when reasoning"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_THING_BODIES[] =
 {
-    {"synonyms", cf_slist, "", "A list of words to be treated as equivalents in the defined context"},
-    {"affects", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"belongs_to", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"causes", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"certainty", cf_opts, "certain,uncertain,possible",
+    {"synonyms", DATA_TYPE_STRING_LIST, "", "A list of words to be treated as equivalents in the defined context"},
+    {"affects", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"belongs_to", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"causes", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"certainty", DATA_TYPE_OPTION, "certain,uncertain,possible",
      "Selects the level of certainty for the proposed knowledge, for use in inferential reasoning"},
-    {"determines", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"generalizations", cf_slist, "",
+    {"determines", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"generalizations", DATA_TYPE_STRING_LIST, "",
      "A list of words to be treated as super-sets for the current topic, used when reasoning"},
-    {"implements", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"involves", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_caused_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_connected_to", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_determined_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_followed_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_implemented_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_located_in", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_measured_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_part_of", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"is_preceded_by", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"measures", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"needs", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"provides", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {"uses", cf_slist, "", "Special fixed relation for describing topics that are things"},
-    {NULL, cf_notype, NULL, NULL}
+    {"implements", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"involves", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_caused_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_connected_to", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_determined_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_followed_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_implemented_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_located_in", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_measured_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_part_of", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"is_preceded_by", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"measures", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"needs", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"provides", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {"uses", DATA_TYPE_STRING_LIST, "", "Special fixed relation for describing topics that are things"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_INFER_BODIES[] =
 {
-    {"precedents", cf_slist, "", "The foundational vector for a trinary inference"},
-    {"qualifiers", cf_slist, "", "The second vector in a trinary inference"},
-    {NULL, cf_notype, NULL, NULL}
+    {"precedents", DATA_TYPE_STRING_LIST, "", "The foundational vector for a trinary inference"},
+    {"qualifiers", DATA_TYPE_STRING_LIST, "", "The second vector in a trinary inference"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_KNOWLEDGE_SUBTYPES[] =

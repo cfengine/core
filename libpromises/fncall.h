@@ -33,7 +33,7 @@ FnCall *CopyFnCall(const FnCall *f);
 void DeleteFnCall(FnCall *fp);
 void ShowFnCall(FILE *fout, const FnCall *fp);
 FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
-enum cfdatatype FunctionReturnType(const char *name);
+DataType FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
 
 #endif

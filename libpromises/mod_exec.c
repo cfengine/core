@@ -27,24 +27,24 @@
 
 static const BodySyntax CF_EXECCONTAIN_BODY[] =
 {
-    {"useshell", cf_opts, CF_BOOL, "true/false embed the command in a shell environment", "false"},
-    {"umask", cf_opts, "0,77,22,27,72,077,022,027,072", "The umask value for the child process"},
-    {"exec_owner", cf_str, "", "The user name or id under which to run the process"},
-    {"exec_group", cf_str, "", "The group name or id under which to run the process"},
-    {"exec_timeout", cf_int, "1,3600", "Timeout in seconds for command completion"},
-    {"chdir", cf_str, CF_ABSPATHRANGE, "Directory for setting current/base directory for the process"},
-    {"chroot", cf_str, CF_ABSPATHRANGE, "Directory of root sandbox for process"},
-    {"preview", cf_opts, CF_BOOL, "true/false preview command when running in dry-run mode (with -n)", "false"},
-    {"no_output", cf_opts, CF_BOOL, "true/false discard all output from the command", "false"},
-    {NULL, cf_notype, NULL, NULL}
+    {"useshell", DATA_TYPE_OPTION, CF_BOOL, "true/false embed the command in a shell environment", "false"},
+    {"umask", DATA_TYPE_OPTION, "0,77,22,27,72,077,022,027,072", "The umask value for the child process"},
+    {"exec_owner", DATA_TYPE_STRING, "", "The user name or id under which to run the process"},
+    {"exec_group", DATA_TYPE_STRING, "", "The group name or id under which to run the process"},
+    {"exec_timeout", DATA_TYPE_INT, "1,3600", "Timeout in seconds for command completion"},
+    {"chdir", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Directory for setting current/base directory for the process"},
+    {"chroot", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Directory of root sandbox for process"},
+    {"preview", DATA_TYPE_OPTION, CF_BOOL, "true/false preview command when running in dry-run mode (with -n)", "false"},
+    {"no_output", DATA_TYPE_OPTION, CF_BOOL, "true/false discard all output from the command", "false"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_EXEC_BODIES[] =
 {
-    {"args", cf_str, "", "Alternative string of arguments for the command (concatenated with promiser string)"},
-    {"contain", cf_body, CF_EXECCONTAIN_BODY, "Containment options for the execution process"},
-    {"module", cf_opts, CF_BOOL, "true/false whether to expect the cfengine module protocol", "false"},
-    {NULL, cf_notype, NULL, NULL}
+    {"args", DATA_TYPE_STRING, "", "Alternative string of arguments for the command (concatenated with promiser string)"},
+    {"contain", DATA_TYPE_BODY, CF_EXECCONTAIN_BODY, "Containment options for the execution process"},
+    {"module", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to expect the cfengine module protocol", "false"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_EXEC_SUBTYPES[] =

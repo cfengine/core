@@ -27,11 +27,11 @@
 
 static const BodySyntax CF_OUTPUTS_BODIES[] =
 {
-    {"output_level", cf_opts, "verbose,debug,inform",
+    {"output_level", DATA_TYPE_OPTION, "verbose,debug,inform",
      "Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
-    {"promiser_type", cf_opts, "promise,bundle",
+    {"promiser_type", DATA_TYPE_OPTION, "promise,bundle",
      "Output level to observe for the named promise or bundle (meta-promise)", "promise"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =

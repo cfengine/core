@@ -255,10 +255,10 @@ void DetectDomainName(const char *orig_nodename)
     HardClass(VUQNAME);
     HardClass(VDOMAIN);
 
-    NewScalar("sys", "host", nodename, cf_str);
-    NewScalar("sys", "uqhost", VUQNAME, cf_str);
-    NewScalar("sys", "fqhost", VFQNAME, cf_str);
-    NewScalar("sys", "domain", VDOMAIN, cf_str);
+    NewScalar("sys", "host", nodename, DATA_TYPE_STRING);
+    NewScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
+    NewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+    NewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
 }
 
 /*******************************************************************/
@@ -334,7 +334,7 @@ void GetNameInfo3()
                     found = true;
 
                     VSYSTEMHARDCLASS = (enum classes) i;
-                    NewScalar("sys", "class", CLASSTEXT[i], cf_str);
+                    NewScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
                     break;
                 }
             }
@@ -388,26 +388,26 @@ void GetNameInfo3()
         CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
     }
 
-    NewScalar("sys", "date", workbuf, cf_str);
-    NewScalar("sys", "cdate", CanonifyName(workbuf), cf_str);
-    NewScalar("sys", "os", VSYSNAME.sysname, cf_str);
-    NewScalar("sys", "release", VSYSNAME.release, cf_str);
-    NewScalar("sys", "version", VSYSNAME.version, cf_str);
-    NewScalar("sys", "arch", VSYSNAME.machine, cf_str);
-    NewScalar("sys", "workdir", CFWORKDIR, cf_str);
-    NewScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], cf_str);
-    NewScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], cf_str);
-    NewScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], cf_str);
-    NewScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], cf_str);
-    NewScalar("sys", "expires", EXPIRY, cf_str);
+    NewScalar("sys", "date", workbuf, DATA_TYPE_STRING);
+    NewScalar("sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
+    NewScalar("sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
+    NewScalar("sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
+    NewScalar("sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
+    NewScalar("sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
+    NewScalar("sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
+    NewScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    NewScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    NewScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    NewScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    NewScalar("sys", "expires", EXPIRY, DATA_TYPE_STRING);
 /* FIXME: type conversion */
-    NewScalar("sys", "cf_version", (char *) Version(), cf_str);
+    NewScalar("sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 
     if (PUBKEY)
     {
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         snprintf(PUBKEY_DIGEST, sizeof(PUBKEY_DIGEST), "%s", HashPrint(CF_DEFAULT_DIGEST, digest));
-        NewScalar("sys", "key_digest", PUBKEY_DIGEST, cf_str);
+        NewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", CanonifyName(HashPrint(CF_DEFAULT_DIGEST, digest)));
         HardClass(workbuf);
     }
@@ -437,7 +437,7 @@ void GetNameInfo3()
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            NewScalar("sys", shortname, quoteName, cf_str);
+            NewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
             have_component[i] = true;
         }
     }
@@ -458,7 +458,7 @@ void GetNameInfo3()
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            NewScalar("sys", shortname, quoteName, cf_str);
+            NewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
         }
     }
 
@@ -467,29 +467,29 @@ void GetNameInfo3()
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "windir", workbuf, cf_str);
+        NewScalar("sys", "windir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winsysdir", workbuf, cf_str);
+        NewScalar("sys", "winsysdir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winprogdir", workbuf, cf_str);
+        NewScalar("sys", "winprogdir", workbuf, DATA_TYPE_STRING);
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winprogdir86", workbuf, cf_str);
+        NewScalar("sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
     }
 
 # else/* NOT _WIN64 */
 
-    NewScalar("sys", "winprogdir86", "", cf_str);
+    NewScalar("sys", "winprogdir86", "", DATA_TYPE_STRING);
 
 # endif
 
@@ -497,10 +497,10 @@ void GetNameInfo3()
 
 // defs on Unix for manual-building purposes
 
-    NewScalar("sys", "windir", "/dev/null", cf_str);
-    NewScalar("sys", "winsysdir", "/dev/null", cf_str);
-    NewScalar("sys", "winprogdir", "/dev/null", cf_str);
-    NewScalar("sys", "winprogdir86", "/dev/null", cf_str);
+    NewScalar("sys", "windir", "/dev/null", DATA_TYPE_STRING);
+    NewScalar("sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
+    NewScalar("sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
+    NewScalar("sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
 
 #endif /* !__MINGW32__ */
 
@@ -565,13 +565,13 @@ void GetNameInfo3()
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    NewScalar("sys", "long_arch", sp, cf_str);
+    NewScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
     HardClass(sp);
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    NewScalar("sys", "ostype", sp, cf_str);
+    NewScalar("sys", "ostype", sp, DATA_TYPE_STRING);
     HardClass(sp);
     free(sp);
 
@@ -614,7 +614,7 @@ void GetNameInfo3()
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    NewScalar("sys", "zone", zone, cf_str);
+    NewScalar("sys", "zone", zone, DATA_TYPE_STRING);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     HardClass(vbuff);
 
@@ -663,7 +663,7 @@ void Get3Environment()
     }
 
     DeleteVariable("mon", "env_time");
-    NewScalar("mon", "env_time", value, cf_str);
+    NewScalar("mon", "env_time", value, DATA_TYPE_STRING);
 
     CfOut(cf_verbose, "", "Loading environment...\n");
 
@@ -701,7 +701,7 @@ void Get3Environment()
             CfDebug(" -> Setting new monitoring list %s => %s", name, value);
             list = ParseShownRlist(value);
             DeleteVariable("mon", name);
-            NewList("mon", name, list, cf_slist);
+            NewList("mon", name, list, DATA_TYPE_STRING_LIST);
 
             DeleteRlist(list);
         }
@@ -712,7 +712,7 @@ void Get3Environment()
             if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR)
             {
                 DeleteVariable("mon", name);
-                NewScalar("mon", name, value, cf_str);
+                NewScalar("mon", name, value, DATA_TYPE_STRING);
                 CfDebug(" -> Setting new monitoring scalar %s => %s", name, value);
             }
         }
@@ -781,8 +781,8 @@ void CreateHardClassesFromCanonification(const char *canonified)
 static void SetFlavour(const char *flavour)
 {
     HardClass(flavour);
-    NewScalar("sys", "flavour", flavour, cf_str);
-    NewScalar("sys", "flavor", flavour, cf_str);
+    NewScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
+    NewScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
 }
 
 void OSClasses(void)
@@ -974,7 +974,7 @@ void OSClasses(void)
         }
     }
 
-    NewScalar("sys", "crontab", "", cf_str);
+    NewScalar("sys", "crontab", "", DATA_TYPE_STRING);
 
 #endif /* __CYGWIN__ */
 
@@ -1023,7 +1023,7 @@ void OSClasses(void)
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
 
-        NewScalar("sys", "crontab", vbuff, cf_str);
+        NewScalar("sys", "crontab", vbuff, DATA_TYPE_STRING);
     }
 
 #endif
@@ -1045,17 +1045,17 @@ void OSClasses(void)
 
     if (IsDefinedClass("redhat", NULL))
     {
-        NewScalar("sys", "doc_root", "/var/www/html", cf_str);
+        NewScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass("SuSE", NULL))
     {
-        NewScalar("sys", "doc_root", "/srv/www/htdocs", cf_str);
+        NewScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass("debian", NULL))
     {
-        NewScalar("sys", "doc_root", "/var/www", cf_str);
+        NewScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
     }
 }
 
@@ -2285,11 +2285,11 @@ static void GetCPUInfo()
 
     if (count == 1) {
         HardClass(buf);  // "1_cpu" from init - change if buf is ever used above
-        NewScalar("sys", "cpus", "1", cf_str);
+        NewScalar("sys", "cpus", "1", DATA_TYPE_STRING);
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         HardClass(buf);
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        NewScalar("sys", "cpus", buf, cf_str);
+        NewScalar("sys", "cpus", buf, DATA_TYPE_STRING);
     }
 }

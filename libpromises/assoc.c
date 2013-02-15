@@ -26,7 +26,7 @@
 
 #include "hashes.h"
 
-CfAssoc *NewAssoc(const char *lval, Rval rval, enum cfdatatype dt)
+CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt)
 {
     CfAssoc *ap;
 
@@ -73,7 +73,7 @@ CfAssoc *CopyAssoc(CfAssoc *old)
 
 /*******************************************************************/
 
-CfAssoc *AssocNewReference(const char *lval, Rval rval, enum cfdatatype dtype)
+CfAssoc *AssocNewReference(const char *lval, Rval rval, DataType dtype)
 {
     CfAssoc *ap = NULL;
 
@@ -167,7 +167,7 @@ static void HashConvertToHuge(AssocHashTable *hashtable)
 
 /*******************************************************************/
 
-static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype)
+static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype)
 {
     int bucket = GetHash(element, CF_HASHTABLESIZE);
     int i = bucket;
@@ -197,7 +197,7 @@ static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element
 
 /*******************************************************************/
 
-static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype)
+static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype)
 {
     int i;
 
@@ -231,7 +231,7 @@ static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element
 
 /*******************************************************************/
 
-bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, enum cfdatatype dtype)
+bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype)
 {
     if (hashtable->huge)
     {

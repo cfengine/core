@@ -837,9 +837,9 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
         SetNewScope("cf_pack_context");
-        NewScalar("cf_pack_context", "name", name, cf_str);
-        NewScalar("cf_pack_context", "version", version, cf_str);
-        NewScalar("cf_pack_context", "arch", arch, cf_str);
+        NewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
+        NewScalar("cf_pack_context", "version", version, DATA_TYPE_STRING);
+        NewScalar("cf_pack_context", "arch", arch, DATA_TYPE_STRING);
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == cfa_deletepack))
         {
@@ -902,9 +902,9 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
                 ((a.packages.package_select == cfa_gt) || (a.packages.package_select == cfa_ge)))
             {
                 SetNewScope("cf_pack_context_anyver");
-                NewScalar("cf_pack_context_anyver", "name", name, cf_str);
-                NewScalar("cf_pack_context_anyver", "version", "(.*)", cf_str);
-                NewScalar("cf_pack_context_anyver", "arch", arch, cf_str);
+                NewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
+                NewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
+                NewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
                 ExpandScalar(a.packages.package_name_convention, refAnyVer);
                 DeleteScope("cf_pack_context_anyver");
 
@@ -1034,9 +1034,9 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             ((a.packages.package_select == cfa_gt) || (a.packages.package_select == cfa_ge)))
         {
             SetNewScope("cf_pack_context_anyver");
-            NewScalar("cf_pack_context_anyver", "name", name, cf_str);
-            NewScalar("cf_pack_context_anyver", "version", "(.*)", cf_str);
-            NewScalar("cf_pack_context_anyver", "arch", arch, cf_str);
+            NewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
+            NewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
+            NewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
             ExpandScalar(a.packages.package_name_convention, refAnyVer);
             DeleteScope("cf_pack_context_anyver");
 
@@ -1098,9 +1098,9 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
                     }
 
                     SetNewScope("cf_pack_context");
-                    NewScalar("cf_pack_context", "name", name, cf_str);
-                    NewScalar("cf_pack_context", "version", instVer, cf_str);
-                    NewScalar("cf_pack_context", "arch", instArch, cf_str);
+                    NewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
+                    NewScalar("cf_pack_context", "version", instVer, DATA_TYPE_STRING);
+                    NewScalar("cf_pack_context", "arch", instArch, DATA_TYPE_STRING);
                     ExpandScalar(a.packages.package_delete_convention, reference2);
                     id_del = reference2;
                     DeleteScope("cf_pack_context");

@@ -235,7 +235,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (GetVariable("control_server", cp->lval, &retval) == cf_notype)
+            if (GetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(cf_error, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
@@ -433,23 +433,23 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
         }
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(Str2Int(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = GetBoolean(retval.item);
         CfOut(cf_verbose, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
     }

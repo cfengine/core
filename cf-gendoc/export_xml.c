@@ -65,7 +65,7 @@ static void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st);
 static void XmlExportControl(Writer *writer, SubTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
 static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
-static void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range);
+static void XmlExportType(Writer *writer, DataType dtype, const void *range);
 
 /*****************************************************************************/
 
@@ -359,10 +359,10 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
 
     switch (bs->dtype)
     {
-    case cf_body:
-    case cf_bundle:
-    case cf_notype:
-    case cf_counter:
+    case DATA_TYPE_BODY:
+    case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_NONE:
+    case DATA_TYPE_COUNTER:
         /* NO ADDITIONAL INFO */
         break;
 
@@ -387,7 +387,7 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
+void XmlExportType(Writer *writer, DataType dtype, const void *range)
 {
     Rlist *list = NULL;
     Rlist *rp = NULL;
@@ -398,17 +398,17 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
 
     switch (dtype)
     {
-    case cf_body:
+    case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
         XmlExportConstraints(writer, (BodySyntax *) range);
         break;
 
-    case cf_int:
-    case cf_real:
-    case cf_ilist:
-    case cf_rlist:
-    case cf_irange:
-    case cf_rrange:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_REAL:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_REAL_LIST:
+    case DATA_TYPE_INT_RANGE:
+    case DATA_TYPE_REAL_RANGE:
         if (range != NULL)
         {
             /* START XML ELEMENT -- RANGE */
@@ -437,8 +437,8 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
             break;
         }
 
-    case cf_opts:
-    case cf_olist:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_OPTION_LIST:
         if (range != NULL)
         {
             /* START XML ELEMENT -- OPTIONS */
@@ -458,10 +458,10 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
             break;
         }
 
-    case cf_str:
-    case cf_slist:
-    case cf_class:
-    case cf_clist:
+    case DATA_TYPE_STRING:
+    case DATA_TYPE_STRING_LIST:
+    case DATA_TYPE_CONTEXT:
+    case DATA_TYPE_CONTEXT_LIST:
         /* XML ELEMENT -- ACCEPTED-VALUES */
         if (strlen((char *) range) == 0)
         {
@@ -474,9 +474,9 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
 
         break;
 
-    case cf_bundle:
-    case cf_notype:
-    case cf_counter:
+    case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_NONE:
+    case DATA_TYPE_COUNTER:
         /* NONE */
         break;
     }

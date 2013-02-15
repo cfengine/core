@@ -145,11 +145,11 @@ void ShowFnCall(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-enum cfdatatype FunctionReturnType(const char *name)
+DataType FunctionReturnType(const char *name)
 {
     const FnCallType *fn = FindFunction(name);
 
-    return fn ? fn->dtype : cf_notype;
+    return fn ? fn->dtype : DATA_TYPE_NONE;
 }
 
 /*******************************************************************/

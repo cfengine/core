@@ -571,7 +571,7 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
                     const BodySyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == cf_body)
+                    if (syntax->dtype == DATA_TYPE_BODY)
                     {
                         char *ns = RvalNamespaceComponent(&constraint->rval);
                         char *symbol = RvalSymbolComponent(&constraint->rval);
@@ -616,7 +616,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
                     const BodySyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == cf_bundle && !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
+                    if (syntax->dtype == DATA_TYPE_BUNDLE && !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
                         char *ns = RvalNamespaceComponent(&constraint->rval);
                         char *symbol = RvalSymbolComponent(&constraint->rval);

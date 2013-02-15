@@ -295,38 +295,3 @@ void FnCallPrint(Writer *writer, const FnCall *call)
         }
     }
 }
-
-/*****************************************************************************/
-
-JsonElement *FnCallToJson(const FnCall *fp)
-{
-    assert(fp);
-
-    JsonElement *object = JsonObjectCreate(3);
-
-    JsonObjectAppendString(object, "name", fp->name);
-    JsonObjectAppendString(object, "type", "function-call");
-
-    JsonElement *argsArray = JsonArrayCreate(5);
-
-    for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            JsonArrayAppendString(argsArray, (const char *) rp->item);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *) rp->item));
-            break;
-
-        default:
-            assert(false && "Unknown argument type");
-            break;
-        }
-    }
-    JsonObjectAppendArray(object, "arguments", argsArray);
-
-    return object;
-}

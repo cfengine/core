@@ -314,6 +314,21 @@ JsonElement *FnCallToJson(const FnCall *fp)
     fail();
 }
 
+JsonElement *JsonObjectCreate(size_t initialCapacity)
+{
+    fail();
+}
+
+void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
+{
+    fail();
+}
+
+void JsonObjectAppendString(JsonElement *obj, const char *key, const char *value)
+{
+    fail();
+}
+
 JsonElement *JsonArrayCreate(size_t initialCapacity)
 {
     fail();

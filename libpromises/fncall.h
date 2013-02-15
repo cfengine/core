@@ -27,8 +27,6 @@
 
 #include "cf3.defs.h"
 
-#include "json.h"
-
 int IsBuiltinFnCall(Rval rval);
 FnCall *NewFnCall(const char *name, Rlist *args);
 FnCall *CopyFnCall(const FnCall *f);
@@ -38,8 +36,6 @@ void ShowFnCall(FILE *fout, const FnCall *fp);
 FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
 enum cfdatatype FunctionReturnType(const char *name);
 const FnCallType *FindFunction(const char *name);
-void SetFnCallReturnStatus(char *fname, int status, char *message);
 void FnCallPrint(Writer *writer, const FnCall *fp);
-JsonElement *FnCallToJson(const FnCall *fp);
 
 #endif

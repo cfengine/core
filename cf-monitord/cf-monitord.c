@@ -34,7 +34,15 @@
 #include "cfstream.h"
 #include "signals.h"
 
-/*****************************************************************************/
+
+typedef enum
+{
+    MONITOR_CONTROL_FORGET_RATE,
+    MONITOR_CONTROL_MONITOR_FACILITY,
+    MONITOR_CONTROL_HISTOGRAMS,
+    MONITOR_CONTROL_TCP_DUMP,
+    MONITOR_CONTROL_NONE
+} MonitorControl;
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -213,17 +221,17 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_histograms].lval) == 0)
+            if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_HISTOGRAMS].lval) == 0)
             {
                 /* Keep accepting this option for backward compatibility. */
             }
 
-            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_tcpdump].lval) == 0)
+            if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_TCP_DUMP].lval) == 0)
             {
                 MonNetworkSnifferEnable(GetBoolean(retval.item));
             }
 
-            if (strcmp(cp->lval, CFM_CONTROLBODY[cfm_forgetrate].lval) == 0)
+            if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_FORGET_RATE].lval) == 0)
             {
                 sscanf(retval.item, "%lf", &FORGETRATE);
                 CfDebug("forget rate = %f\n", FORGETRATE);

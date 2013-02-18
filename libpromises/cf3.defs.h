@@ -681,17 +681,6 @@ enum cfexcontrol
 
 /*************************************************************************/
 
-enum cfmcontrol
-{
-    cfm_forgetrate,
-    cfm_monitorfacility,
-    cfm_histograms,
-    cfm_tcpdump,
-    cfm_notype,
-};
-
-/*************************************************************************/
-
 enum cfsbundle
 {
     cfs_access,

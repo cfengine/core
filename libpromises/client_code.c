@@ -39,6 +39,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "rlist.h"
+#include "policy.h"
 
 typedef struct
 {

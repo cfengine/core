@@ -30,6 +30,8 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "policy.h"
+
 #ifdef HAVE_NOVA
 #include "history.h"
 #endif

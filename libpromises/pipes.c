@@ -29,6 +29,7 @@
 #include "transaction.h"
 #include "exec_tools.h"
 #include "rlist.h"
+#include "policy.h"
 
 #ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);

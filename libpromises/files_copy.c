@@ -29,6 +29,7 @@
 #include "files_interfaces.h"
 #include "instrumentation.h"
 #include "cfstream.h"
+#include "policy.h"
 
 /*****************************************************************************/
 /* Local low level                                                           */

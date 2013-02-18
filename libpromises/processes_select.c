@@ -37,6 +37,7 @@
 #include "files_interfaces.h"
 #include "logging.h"
 #include "rlist.h"
+#include "policy.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

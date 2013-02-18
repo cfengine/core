@@ -40,6 +40,7 @@
 #include "exec_tools.h"
 #include "misc_lib.h"
 #include "writer.h"
+#include "policy.h"
 
 typedef enum
 {

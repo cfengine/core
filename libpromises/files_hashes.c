@@ -32,6 +32,7 @@
 #include "client_code.h"
 #include "files_lib.h"
 #include "rlist.h"
+#include "policy.h"
 
 static const char *CF_DIGEST_TYPES[10][2] =
 {

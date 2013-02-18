@@ -35,6 +35,7 @@
 #include "cf_sql.h"
 #include "logging.h"
 #include "rlist.h"
+#include "policy.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(Attributes a, Promise *pp);

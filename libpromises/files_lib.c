@@ -34,6 +34,7 @@
 #include "matching.h"
 #include "misc_lib.h"
 #include "dir.h"
+#include "policy.h"
 
 #include <assert.h>
 

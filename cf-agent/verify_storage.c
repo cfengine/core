@@ -38,6 +38,7 @@
 #include "nfs.h"
 #include "logging.h"
 #include "rlist.h"
+#include "policy.h"
 
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;

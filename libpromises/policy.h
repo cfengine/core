@@ -37,6 +37,80 @@ struct Policy_
     Seq *bodies;
 };
 
+struct Bundle_
+{
+    Policy *parent_policy;
+
+    char *type;
+    char *name;
+    char *ns;
+    Rlist *args;
+
+    Seq *subtypes;
+
+    char *source_path;
+    SourceOffset offset;
+};
+
+struct Body_
+{
+    Policy *parent_policy;
+
+    char *type;
+    char *name;
+    char *ns;
+    Rlist *args;
+
+    Seq *conlist;
+
+    char *source_path;
+    SourceOffset offset;
+};
+
+struct SubType_
+{
+    Bundle *parent_bundle;
+
+    char *name;
+    Seq *promises;
+
+    SourceOffset offset;
+};
+
+struct Promise_
+{
+    SubType *parent_subtype;
+
+    char *classes;
+    char *ref;                  /* comment */
+    char ref_alloc;
+    char *promiser;
+    Rval promisee;
+    char *bundle;
+    Audit *audit;
+
+    Seq *conlist;
+
+    /* Runtime bus for private flags and work space */
+    char *agentsubtype;         /* cache the promise subtype */
+    char *bundletype;           /* cache the agent type */
+    char *ns;                   /* cache the namespace */
+    int done;                   /* this needs to be preserved across runs */
+    int *donep;                 /* used by locks to mark as done */
+    int makeholes;
+    char *this_server;
+    int has_subbundles;
+    Stat *cache;
+    AgentConnection *conn;
+    CompressedArray *inode_cache;
+    EditContext *edcontext;
+    dev_t rootdevice;           /* for caching during work */
+    const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
+
+    SourceOffset offset;
+};
+
+
 Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);
 void PolicyDestroy(Policy *policy);

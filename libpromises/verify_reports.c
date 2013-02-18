@@ -39,6 +39,7 @@
 #include "string_lib.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "policy.h"
 
 static void PrintFile(Attributes a, Promise *pp);
 

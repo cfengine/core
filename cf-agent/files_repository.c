@@ -32,6 +32,7 @@
 #include "item_lib.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "policy.h"
 
 /*********************************************************************/
 

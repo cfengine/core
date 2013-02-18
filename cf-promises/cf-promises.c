@@ -82,7 +82,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
-    "Output the parsed policy. Possible values: 'none', 'json'. Default is 'none'",
+    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'",
     "Ensure full policy integrity checks",
     NULL
 };
@@ -108,6 +108,16 @@ int main(int argc, char *argv[])
 
     switch (config->agent_specific.common.policy_output_format)
     {
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+        {
+            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Writer *writer = FileWriter(stdout);
+            PolicyToString(policy, writer);
+            WriterClose(writer);
+            PolicyDestroy(output_policy);
+        }
+        break;
+
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
             Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
@@ -192,13 +202,17 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
             }
+            else if (strcmp("cf", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF;
+            }
             else if (strcmp("json", optarg) == 0)
             {
                 config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON;
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'json'", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;

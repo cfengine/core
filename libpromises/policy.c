@@ -1577,7 +1577,167 @@ JsonElement *PolicyToJson(const Policy *policy)
 
 /****************************************************************************/
 
-void PolicyPrint(const Policy *policy, Writer *writer)
+
+static void IndentPrint(Writer *writer, int indent_level)
 {
-    ProgrammingError("Not implemented");
+    static const int PRETTY_PRINT_SPACES_PER_INDENT = 2;
+
+    int i = 0;
+
+    for (i = 0; i < PRETTY_PRINT_SPACES_PER_INDENT * indent_level; i++)
+    {
+        WriterWriteChar(writer, ' ');
+    }
+}
+
+
+static void RvalToString(Writer *writer, Rval rval, bool symbolic_reference)
+{
+    if (rval.type == RVAL_TYPE_SCALAR && !symbolic_reference)
+    {
+        WriterWriteChar(writer, '"');
+        RvalWrite(writer, rval);
+        WriterWriteChar(writer, '"');
+    }
+    else
+    {
+        RvalWrite(writer, rval);
+    }
+}
+
+
+static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference, int indent_level)
+{
+    WriterWriteF(writer, "%s => ", attribute->lval);
+    RvalToString(writer, attribute->rval, symbolic_reference);
+}
+
+
+static void ArgumentsToString(Writer *writer, Rlist *args)
+{
+    Rlist *argp = NULL;
+
+    WriterWriteChar(writer, '(');
+    for (argp = args; argp != NULL; argp = argp->next)
+    {
+        WriterWriteF(writer, "%s", (char *) argp->item);
+
+        if (argp->next != NULL)
+        {
+            WriterWrite(writer, ", ");
+        }
+    }
+    WriterWriteChar(writer, ')');
+}
+
+
+void BodyToString(Writer *writer, Body *body)
+{
+    char *current_class = NULL;
+
+    WriterWriteF(writer, "body %s %s", body->type, body->name);
+    ArgumentsToString(writer, body->args);
+    WriterWrite(writer, "\n{");
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+
+        if (current_class == NULL || strcmp(cp->classes, current_class) != 0)
+        {
+            current_class = cp->classes;
+
+            if (strcmp(current_class, "any") == 0)
+            {
+                WriterWrite(writer, "\n");
+            }
+            else
+            {
+                WriterWriteF(writer, "\n\n%s::", current_class);
+            }
+        }
+
+        WriterWriteChar(writer, '\n');
+        IndentPrint(writer, 1);
+        AttributeToString(writer, cp, false, 2);
+    }
+
+    WriterWrite(writer, "\n}\n");
+}
+
+
+void BundleToString(Writer *writer, Bundle *bundle)
+{
+    WriterWriteF(writer, "bundle %s %s", bundle->type, bundle->name);
+    ArgumentsToString(writer, bundle->args);
+    WriterWrite(writer, "\n{");
+
+    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+    {
+        SubType *promise_type = SeqAt(bundle->subtypes, i);
+
+        WriterWriteF(writer, "\n%s:\n", promise_type->name);
+
+        for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
+        {
+            Promise *pp = SeqAt(promise_type->promises, ppi);
+            char *current_class = NULL;
+
+            if (current_class == NULL || strcmp(pp->classes, current_class) != 0)
+            {
+                current_class = pp->classes;
+
+                if (strcmp(current_class, "any") != 0)
+                {
+                    IndentPrint(writer, 1);
+                    WriterWriteF(writer, "%s::", current_class);
+                }
+            }
+
+            IndentPrint(writer, 2);
+            WriterWriteF(writer, "\"%s\"", pp->promiser);
+
+            /* FIX: add support
+             *
+             if (pp->promisee != NULL)
+             {
+             fprintf(out, " -> %s", pp->promisee);
+             }
+             */
+
+            for (size_t k = 0; k < SeqLength(pp->conlist); k++)
+            {
+                Constraint *cp = SeqAt(pp->conlist, k);
+
+                WriterWriteChar(writer, '\n');
+                IndentPrint(writer, 4);
+                AttributeToString(writer, cp, cp->references_body, 3);
+            }
+        }
+
+        if (i == (SeqLength(bundle->subtypes) - 1))
+        {
+            WriterWriteChar(writer, '\n');
+        }
+    }
+
+    WriterWrite(writer, "\n}\n");
+}
+
+void PolicyToString(const Policy *policy, Writer *writer)
+{
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, i);
+        BundleToString(writer, bundle);
+        WriterWriteChar(writer, '\n');
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        Body *body = SeqAt(policy->bodies, i);
+        BodyToString(writer, body);
+        WriterWriteChar(writer, '\n');
+    }
+
 }

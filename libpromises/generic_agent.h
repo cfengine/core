@@ -50,6 +50,7 @@ typedef struct
             enum
             {
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE,
+                GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF,
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
             } policy_output_format;
         } common;

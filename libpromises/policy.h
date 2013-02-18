@@ -211,7 +211,7 @@ JsonElement *PolicyToJson(const Policy *policy);
  * @param policy The policy to print
  * @param writer Writer to write into
  */
-void PolicyPrint(const Policy *policy, Writer *writer);
+void PolicyToString(const Policy *policy, Writer *writer);
 
 SubType *BundleAppendSubType(Bundle *bundle, char *name);
 SubType *BundleGetSubType(Bundle *bp, const char *name);

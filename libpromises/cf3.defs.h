@@ -806,15 +806,6 @@ enum cfsrole
     cfs_nortype
 };
 
-enum cfspromises
-{
-    cfs_admit,
-    cfs_deny,
-    cfs_maproot,
-    cfs_encrypted,
-    cfs_noptype
-};
-
 typedef enum
 {
     OUTPUT_LEVEL_INFORM,

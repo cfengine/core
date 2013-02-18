@@ -46,6 +46,15 @@
 
 #include "generic_agent.h" // HashControls
 
+typedef enum
+{
+    REMOTE_ACCESS_ADMIT,
+    REMOTE_ACCESS_DENY,
+    REMOTE_ACCESS_MAPROOT,
+    REMOTE_ACCESS_ENCRYPTED,
+    REMOTE_ACCESS_NONE
+} RemoteAccess;
+
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
@@ -656,7 +665,7 @@ void KeepFileAccessPromise(Promise *pp)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -667,19 +676,19 @@ void KeepFileAccessPromise(Promise *pp)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;
@@ -770,7 +779,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -781,19 +790,19 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;
@@ -848,7 +857,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
         {
         case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
@@ -859,19 +868,19 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;

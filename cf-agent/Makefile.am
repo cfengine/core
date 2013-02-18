@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cf-agent
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(NOVA_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \

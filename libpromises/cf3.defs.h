@@ -763,37 +763,6 @@ enum cfkcontrol
 
 /*************************************************************************/
 
-enum cfrecontrol
-{
-    cfre_aggregation_point,
-    cfre_autoscale,
-    cfre_builddir,
-    cfre_csv,
-    cfre_errorbars,
-    cfre_htmlbanner,
-    cfre_html_embed,
-    cfre_htmlfooter,
-    cfre_query_engine,
-    cfre_reports,
-    cfre_report_output,
-    cfre_stylesheet,
-    cfre_timestamps,
-    cfre_notype
-};
-
-/*************************************************************************/
-
-enum cfhcontrol
-{
-    cfh_export_zenoss,
-    cfh_exclude_hosts,
-    cfh_schedule,
-    cfh_port,
-    cfh_notype
-};
-
-/*************************************************************************/
-
 enum cfsbundle
 {
     cfs_access,

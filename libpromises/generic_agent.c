@@ -75,7 +75,6 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
 static void CheckVariablePromises(char *scope, Seq *var_promises);
 static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
-static char *InputLocation(const char *filename, const char *input_file);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -679,7 +678,7 @@ static bool MissingInputFile(const char *input_file)
     struct stat sb;
     char wfilename[CF_BUFSIZE];
 
-    strncpy(wfilename, InputLocation(input_file, input_file), CF_BUFSIZE);
+    strncpy(wfilename, GenericAgentResolveInputPath(input_file, input_file), CF_BUFSIZE);
 
     if (cfstat(wfilename, &sb) == -1)
     {
@@ -738,7 +737,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
         return true;
     }
 
-    strncpy(wfilename, InputLocation(input_file, input_file), CF_BUFSIZE);
+    strncpy(wfilename, GenericAgentResolveInputPath(input_file, input_file), CF_BUFSIZE);
 
     if (cfstat(wfilename, &sb) == -1)
     {
@@ -779,7 +778,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
             {
             case RVAL_TYPE_SCALAR:
 
-                if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
+                if (cfstat(GenericAgentResolveInputPath((char *) returnval.item, input_file), &sb) == -1)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
                     result = true;
@@ -796,7 +795,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
                 for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                 {
-                    if (cfstat(InputLocation((char *) sl->item, input_file), &sb) == -1)
+                    if (cfstat(GenericAgentResolveInputPath((char *) sl->item, input_file), &sb) == -1)
                     {
                         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
                         result = true;
@@ -930,7 +929,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
 
-    strncpy(wfilename, InputLocation(filename, config->input_file), CF_BUFSIZE);
+    strncpy(wfilename, GenericAgentResolveInputPath(filename, config->input_file), CF_BUFSIZE);
 
     if (cfstat(wfilename, &statbuf) == -1)
     {
@@ -1205,19 +1204,16 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
 }
 
-/*******************************************************************/
-/* Level 2                                                         */
-/*******************************************************************/
 
-static char *InputLocation(const char *filename, const char *input_file)
+const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file)
 {
     static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-    if (MINUSF && (filename != input_file) && IsFileOutsideDefaultRepository(input_file)
+    if (MINUSF && (filename != base_input_file) && IsFileOutsideDefaultRepository(base_input_file)
         && !IsAbsoluteFileName(filename))
     {
         /* If -f assume included relative files are in same directory */
-        strncpy(path, input_file, CF_BUFSIZE - 1);
+        strncpy(path, base_input_file, CF_BUFSIZE - 1);
         ChopLastNode(path);
         snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
     }
@@ -1786,15 +1782,15 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     config->agent_type = agent_type;
 
+    // TODO: system state, perhaps pull out as param
+    config->tty_interactive = isatty(0) && isatty(1);
+
     config->bundlesequence = NULL;
     config->input_file = NULL;
     config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
-
-    // TODO: system state, perhaps pull out as param
-    config->tty_interactive = isatty(0) && isatty(1);
 
     switch (agent_type)
     {

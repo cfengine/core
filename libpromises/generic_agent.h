@@ -56,6 +56,7 @@ typedef struct
     } agent_specific;
 } GenericAgentConfig;
 
+const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
 void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);
 bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation);
 Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);

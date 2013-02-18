@@ -32,6 +32,7 @@
 #include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
+#include "parser.h"
 
 /*******************************************************************/
 
@@ -109,12 +110,15 @@ int main(int argc, char *argv[])
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            JsonElement *json_policy = PolicyToJson(policy);
+            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
             JsonElementPrint(writer, json_policy, 2);
             WriterClose(writer);
             JsonElementDestroy(json_policy);
+            PolicyDestroy(output_policy);
         }
+        break;
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;

@@ -55,6 +55,7 @@ typedef struct
             } policy_output_format;
         } common;
     } agent_specific;
+
 } GenericAgentConfig;
 
 const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);

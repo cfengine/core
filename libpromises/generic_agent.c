@@ -962,7 +962,30 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         exit(1);
     }
 
-    return ParserParseFile(wfilename);
+    if (StringEndsWith(wfilename, ".json"))
+    {
+        char *contents = NULL;
+        if (FileReadMax(&contents, wfilename, SIZE_MAX) == -1)
+        {
+            FatalError("Error reading JSON input file");
+        }
+        JsonElement *json_policy = NULL;
+        const char *data = contents; // TODO: need to fix JSON parser signature, just silly
+        if (JsonParse(&data, &json_policy) != JSON_PARSE_OK)
+        {
+            FatalError("Error parsing JSON input file");
+        }
+        Policy *policy = PolicyFromJson(json_policy);
+
+        JsonElementDestroy(json_policy);
+        free(contents);
+
+        return policy;
+    }
+    else
+    {
+        return ParserParseFile(wfilename);
+    }
 }
 
 /*******************************************************************/

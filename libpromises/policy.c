@@ -1033,7 +1033,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
     return body;
 }
 
-SubType *BundleAppendSubType(Bundle *bundle, char *name)
+SubType *BundleAppendSubType(Bundle *bundle, const char *name)
 {
     CfDebug("Appending new type section %s\n", name);
 
@@ -1272,60 +1272,69 @@ SubType *BundleGetSubType(Bundle *bp, const char *name)
 
 /****************************************************************************/
 
-static JsonElement *AttributeValueToJson(Rval rval)
+static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
 {
     JsonElement *json_attribute = JsonObjectCreate(10);
 
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-    {
-        char buffer[CF_BUFSIZE];
+        {
+            char buffer[CF_BUFSIZE];
 
-        EscapeQuotes((const char *) rval.item, buffer, sizeof(buffer));
+            EscapeQuotes((const char *) rval.item, buffer, sizeof(buffer));
 
-        JsonObjectAppendString(json_attribute, "type", "string");
-        JsonObjectAppendString(json_attribute, "value", buffer);
-    }
-        return json_attribute;
+            if (symbolic_reference)
+            {
+                JsonObjectAppendString(json_attribute, "type", "symbol");
+            }
+            else
+            {
+                JsonObjectAppendString(json_attribute, "type", "string");
+            }
+            JsonObjectAppendString(json_attribute, "value", buffer);
+
+            return json_attribute;
+        }
+
 
     case RVAL_TYPE_LIST:
-    {
-        Rlist *rp = NULL;
-        JsonElement *list = JsonArrayCreate(10);
-
-        JsonObjectAppendString(json_attribute, "type", "list");
-
-        for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            JsonArrayAppendObject(list, AttributeValueToJson((Rval) {rp->item, rp->type}));
-        }
+            Rlist *rp = NULL;
+            JsonElement *list = JsonArrayCreate(10);
 
-        JsonObjectAppendArray(json_attribute, "value", list);
-        return json_attribute;
-    }
+            JsonObjectAppendString(json_attribute, "type", "list");
 
-    case RVAL_TYPE_FNCALL:
-    {
-        Rlist *argp = NULL;
-        FnCall *call = (FnCall *) rval.item;
-
-        JsonObjectAppendString(json_attribute, "type", "functionCall");
-        JsonObjectAppendString(json_attribute, "name", call->name);
-
-        {
-            JsonElement *arguments = JsonArrayCreate(10);
-
-            for (argp = call->args; argp != NULL; argp = argp->next)
+            for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
             {
-                JsonArrayAppendObject(arguments, AttributeValueToJson((Rval) {argp->item, argp->type}));
+                JsonArrayAppendObject(list, AttributeValueToJson((Rval) {rp->item, rp->type}, false));
             }
 
-            JsonObjectAppendArray(json_attribute, "arguments", arguments);
+            JsonObjectAppendArray(json_attribute, "value", list);
+            return json_attribute;
         }
 
-        return json_attribute;
-    }
+    case RVAL_TYPE_FNCALL:
+        {
+            Rlist *argp = NULL;
+            FnCall *call = (FnCall *) rval.item;
+
+            JsonObjectAppendString(json_attribute, "type", "functionCall");
+            JsonObjectAppendString(json_attribute, "name", call->name);
+
+            {
+                JsonElement *arguments = JsonArrayCreate(10);
+
+                for (argp = call->args; argp != NULL; argp = argp->next)
+                {
+                    JsonArrayAppendObject(arguments, AttributeValueToJson((Rval) {argp->item, argp->type}, false));
+                }
+
+                JsonObjectAppendArray(json_attribute, "arguments", arguments);
+            }
+
+            return json_attribute;
+        }
 
     default:
         FatalError("Attempted to export attribute of type: %c", rval.type);
@@ -1346,7 +1355,7 @@ static JsonElement *CreateContextAsJson(const char *name, size_t offset,
     return json;
 }
 
-static JsonElement *BodyClassesToJson(const Seq *constraints)
+static JsonElement *BodyContextsToJson(const Seq *constraints)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
     JsonElement *json_attributes = JsonArrayCreate(10);
@@ -1367,7 +1376,7 @@ static JsonElement *BodyClassesToJson(const Seq *constraints)
         context_offset_end = cp->offset.end;
 
         JsonObjectAppendString(json_attribute, "lval", cp->lval);
-        JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval));
+        JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval, false));
         JsonArrayAppendObject(json_attributes, json_attribute);
 
 
@@ -1386,17 +1395,22 @@ static JsonElement *BodyClassesToJson(const Seq *constraints)
     return json_contexts;
 }
 
-static JsonElement *BundleClassesToJson(const Seq *promises)
+static JsonElement *BundleContextsToJson(const Seq *promises)
 {
     JsonElement *json_contexts = JsonArrayCreate(10);
     JsonElement *json_promises = JsonArrayCreate(10);
-    char *current_context = "any";
+    char *current_context = NULL;
     size_t context_offset_start = -1;
     size_t context_offset_end = -1;
 
     for (size_t ppi = 0; ppi < SeqLength(promises); ppi++)
     {
         Promise *pp = SeqAt(promises, ppi);
+
+        if (!current_context)
+        {
+            current_context = pp->classes;
+        }
 
         JsonElement *json_promise = JsonObjectCreate(10);
 
@@ -1417,7 +1431,7 @@ static JsonElement *BundleClassesToJson(const Seq *promises)
                 context_offset_end = cp->offset.end;
 
                 JsonObjectAppendString(json_attribute, "lval", cp->lval);
-                JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval));
+                JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval, cp->references_body));
                 JsonArrayAppendObject(json_promise_attributes, json_attribute);
             }
 
@@ -1503,7 +1517,7 @@ static JsonElement *BundleToJson(const Bundle *bundle)
             JsonObjectAppendInteger(json_promise_type, "offset", sp->offset.start);
             JsonObjectAppendInteger(json_promise_type, "offsetEnd", sp->offset.end);
             JsonObjectAppendString(json_promise_type, "name", sp->name);
-            JsonObjectAppendArray(json_promise_type, "classes", BundleClassesToJson(sp->promises));
+            JsonObjectAppendArray(json_promise_type, "contexts", BundleContextsToJson(sp->promises));
 
             JsonArrayAppendObject(json_promise_types, json_promise_type);
         }
@@ -1538,7 +1552,7 @@ static JsonElement *BodyToJson(const Body *body)
         JsonObjectAppendArray(json_body, "arguments", json_args);
     }
 
-    JsonObjectAppendArray(json_body, "classes", BodyClassesToJson(body->conlist));
+    JsonObjectAppendArray(json_body, "contexts", BodyContextsToJson(body->conlist));
 
     return json_body;
 }
@@ -1740,4 +1754,213 @@ void PolicyToString(const Policy *policy, Writer *writer)
         WriterWriteChar(writer, '\n');
     }
 
+}
+
+//*****************************************************************************
+
+static Rval RvalFromJson(JsonElement *json_rval)
+{
+    const char *type = JsonObjectGetAsString(json_rval, "type");
+
+    if (strcmp("string", type) == 0 || strcmp("symbol", type) == 0)
+    {
+        const char *value = JsonObjectGetAsString(json_rval, "value");
+        return ((Rval) { xstrdup(value), RVAL_TYPE_SCALAR });
+    }
+    else if (strcmp("list", type) == 0)
+    {
+        JsonElement *json_list = JsonObjectGetAsArray(json_rval, "value");
+        Rlist *rlist = NULL;
+        for (size_t i = 0; i < JsonElementLength(json_list); i++)
+        {
+            Rval list_value = RvalFromJson(JsonArrayGetAsObject(json_list, i));
+            RlistAppend(&rlist, list_value.item, list_value.type);
+        }
+
+        return ((Rval) { rlist, RVAL_TYPE_LIST });
+    }
+    else if (strcmp("functionCall", type) == 0)
+    {
+        const char *name = JsonObjectGetAsString(json_rval, "name");
+        JsonElement *json_args = JsonObjectGetAsArray(json_rval, "arguments");
+        Rlist *args = NULL;
+        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        {
+            JsonElement *json_arg = JsonArrayGetAsObject(json_args, i);
+            Rval arg = RvalFromJson(json_arg);
+
+            RlistAppend(&args, arg.item, arg.type);
+        }
+
+        FnCall *fn = FnCallNew(name, args);
+
+        return ((Rval) { fn, RVAL_TYPE_FNCALL });
+    }
+    else
+    {
+        ProgrammingError("Unexpected rval type: %s", type);
+    }
+}
+
+static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *json_constraint, const char *context)
+{
+    const char *lval = JsonObjectGetAsString(json_constraint, "lval");
+
+    JsonElement *json_rval = JsonObjectGetAsObject(json_constraint, "rval");
+    const char *type = JsonObjectGetAsString(json_rval, "type");
+
+    Rval rval = RvalFromJson(json_rval);
+
+    Constraint *cp = PromiseAppendConstraint(promise, lval, rval, context, (strcmp("symbol", type) == 0));
+
+    return cp;
+}
+
+static Promise *SubTypeAppendPromiseJson(SubType *subtype, JsonElement *json_promise, const char *context)
+{
+    const char *promiser = JsonObjectGetAsString(json_promise, "promiser");
+
+    Promise *promise = SubTypeAppendPromise(subtype, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+
+    JsonElement *json_attributes = JsonObjectGetAsArray(json_promise, "attributes");
+    for (size_t i = 0; i < JsonElementLength(json_attributes); i++)
+    {
+        JsonElement *json_attribute = JsonArrayGetAsObject(json_attributes, i);
+        PromiseAppendConstraintJson(promise, json_attribute, context);
+    }
+
+    return promise;
+}
+
+static SubType *BundleAppendSubTypeJson(Bundle *bundle, JsonElement *json_subtype)
+{
+    const char *name = JsonObjectGetAsString(json_subtype, "name");
+
+    SubType *subtype = BundleAppendSubType(bundle, name);
+
+    JsonElement *json_contexts = JsonObjectGetAsArray(json_subtype, "contexts");
+    for (size_t i = 0; i < JsonElementLength(json_contexts); i++)
+    {
+        JsonElement *json_context = JsonArrayGetAsObject(json_contexts, i);
+
+        const char *context = JsonObjectGetAsString(json_context, "name");
+
+        JsonElement *json_context_promises = JsonObjectGetAsArray(json_context, "promises");
+        for (size_t j = 0; j < JsonElementLength(json_context_promises); j++)
+        {
+            JsonElement *json_promise = JsonArrayGetAsObject(json_context_promises, j);
+            SubTypeAppendPromiseJson(subtype, json_promise, context);
+        }
+    }
+
+    return subtype;
+}
+
+static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
+{
+    const char *ns = JsonObjectGetAsString(json_bundle, "namespace");
+    const char *name = JsonObjectGetAsString(json_bundle, "name");
+    const char *type = JsonObjectGetAsString(json_bundle, "bundleType");
+    const char *source_path = JsonObjectGetAsString(json_bundle, "sourcePath");
+
+    Rlist *args = NULL;
+    {
+        JsonElement *json_args = JsonObjectGetAsArray(json_bundle, "arguments");
+        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        {
+            RlistAppendScalar(&args, JsonArrayGetAsString(json_args, i));
+        }
+    }
+
+    Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path);
+
+    {
+        JsonElement *json_subtypes = JsonObjectGetAsArray(json_bundle, "promiseTypes");
+        for (size_t i = 0; i < JsonElementLength(json_subtypes); i++)
+        {
+            JsonElement *json_subtype = JsonArrayGetAsObject(json_subtypes, i);
+            BundleAppendSubTypeJson(bundle, json_subtype);
+        }
+    }
+
+    return bundle;
+}
+
+static Constraint *BodyAppendConstraintJson(Body *body, JsonElement *json_constraint, const char *context)
+{
+    const char *lval = JsonObjectGetAsString(json_constraint, "lval");
+
+    JsonElement *json_rval = JsonObjectGetAsObject(json_constraint, "rval");
+    const char *type = JsonObjectGetAsString(json_rval, "type");
+
+    Rval rval = RvalFromJson(json_rval);
+
+    Constraint *cp = BodyAppendConstraint(body, lval, rval, context, (strcmp("symbol", type) == 0));
+
+    return cp;
+}
+
+static Body *PolicyAppendBodyJson(Policy *policy, JsonElement *json_body)
+{
+    const char *ns = JsonObjectGetAsString(json_body, "namespace");
+    const char *name = JsonObjectGetAsString(json_body, "name");
+    const char *type = JsonObjectGetAsString(json_body, "bodyType");
+    const char *source_path = JsonObjectGetAsString(json_body, "sourcePath");
+
+    Rlist *args = NULL;
+    {
+        JsonElement *json_args = JsonObjectGetAsArray(json_body, "arguments");
+        for (size_t i = 0; i < JsonElementLength(json_args); i++)
+        {
+            RlistAppendScalar(&args, JsonArrayGetAsString(json_args, i));
+        }
+    }
+
+    Body *body = PolicyAppendBody(policy, ns, name, type, args, source_path);
+
+    {
+        JsonElement *json_contexts = JsonObjectGetAsArray(json_body, "contexts");
+        for (size_t i = 0; i < JsonElementLength(json_contexts); i++)
+        {
+            JsonElement *json_context = JsonArrayGetAsObject(json_contexts, i);
+            const char *context = JsonObjectGetAsString(json_context, "name");
+
+            {
+                JsonElement *json_attributes = JsonObjectGetAsArray(json_context, "attributes");
+                for (size_t j = 0; j < JsonElementLength(json_attributes); j++)
+                {
+                    JsonElement *json_attribute = JsonArrayGetAsObject(json_attributes, j);
+                    BodyAppendConstraintJson(body, json_attribute, context);
+                }
+            }
+        }
+    }
+
+    return body;
+}
+
+
+Policy *PolicyFromJson(JsonElement *json_policy)
+{
+    Policy *policy = PolicyNew();
+
+    {
+        JsonElement *json_bundles = JsonObjectGetAsArray(json_policy, "bundles");
+        for (size_t i = 0; i < JsonElementLength(json_bundles); i++)
+        {
+            JsonElement *json_bundle = JsonArrayGetAsObject(json_bundles, i);
+            PolicyAppendBundleJson(policy, json_bundle);
+        }
+    }
+
+    {
+        JsonElement *json_bodies = JsonObjectGetAsArray(json_policy, "bodies");
+        for (size_t i = 0; i < JsonElementLength(json_bodies); i++)
+        {
+            JsonElement *json_body = JsonArrayGetAsObject(json_bodies, i);
+            PolicyAppendBodyJson(policy, json_body);
+        }
+    }
+
+    return policy;
 }

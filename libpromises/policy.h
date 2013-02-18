@@ -207,13 +207,20 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 JsonElement *PolicyToJson(const Policy *policy);
 
 /**
+ * @brief Deserialize a policy from JSON
+ * @param json_policy JSON to deserialize
+ * @return A policy DOM
+ */
+Policy *PolicyFromJson(JsonElement *json_policy);
+
+/**
  * @brief Pretty-print a policy
  * @param policy The policy to print
  * @param writer Writer to write into
  */
 void PolicyToString(const Policy *policy, Writer *writer);
 
-SubType *BundleAppendSubType(Bundle *bundle, char *name);
+SubType *BundleAppendSubType(Bundle *bundle, const char *name);
 SubType *BundleGetSubType(Bundle *bp, const char *name);
 
 const char *NamespaceFromConstraint(const Constraint *cp);

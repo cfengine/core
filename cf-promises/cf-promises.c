@@ -82,7 +82,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
-    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'",
+    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Ensure full policy integrity checks",
     NULL
 };
@@ -163,7 +163,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:p:cg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {

@@ -1,0 +1,25 @@
+# This file is intended to have as much feature variation as possible,
+# while still being correct.
+
+body common control
+{
+  bundlesequence => { "main" };
+}
+
+bundle agent main
+{
+reports:
+  cfengine::
+    "Hello, world"
+      friend_pattern => hash("abc", "md5");
+
+files:
+  "/tmp/stuff"
+    create => "true",
+    perms => myperms;
+}
+
+body perms myperms
+{
+  mode => "555";
+}

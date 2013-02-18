@@ -113,7 +113,7 @@ Rlist *RvalRlistValue(Rval rval)
 
 /*******************************************************************/
 
-Rlist *RlistKeyIn(Rlist *list, char *key)
+Rlist *RlistKeyIn(Rlist *list, const char *key)
 {
     for (Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -238,7 +238,7 @@ Rval RvalCopy(Rval rval)
     {
     case RVAL_TYPE_SCALAR:
         /* the rval is just a string */
-        return (Rval) {xstrdup((char *) rval.item), RVAL_TYPE_SCALAR};
+        return (Rval) {xstrdup((const char *) rval.item), RVAL_TYPE_SCALAR};
 
     case RVAL_TYPE_ASSOC:
         return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
@@ -342,18 +342,11 @@ void RlistDestroy(Rlist *list)
 
 /*******************************************************************/
 
-Rlist *RlistAppendScalarIdemp(Rlist **start, void *item, char type)
+Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
 {
-    char *scalar = item;
-
-    if (type != RVAL_TYPE_SCALAR)
+    if (!RlistKeyIn(*start, scalar))
     {
-        ProgrammingError("Cannot append non-scalars to lists");
-    }
-
-    if (!RlistKeyIn(*start, (char *) item))
-    {
-        return RlistAppend(start, scalar, type);
+        return RlistAppend(start, scalar, RVAL_TYPE_SCALAR);
     }
     else
     {
@@ -363,18 +356,11 @@ Rlist *RlistAppendScalarIdemp(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistPrependScalarIdemp(Rlist **start, void *item, char type)
+Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar)
 {
-    char *scalar = item;
-
-    if (type != RVAL_TYPE_SCALAR)
+    if (!RlistKeyIn(*start, scalar))
     {
-        ProgrammingError("Cannot append non-scalars to lists");
-    }
-
-    if (!RlistKeyIn(*start, (char *) item))
-    {
-        return RlistPrepend(start, scalar, type);
+        return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
     }
     else
     {
@@ -384,7 +370,7 @@ Rlist *RlistPrependScalarIdemp(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistAppendIdemp(Rlist **start, void *item, char type)
+Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
 {
     Rlist *rp, *ins = NULL;
 
@@ -409,35 +395,21 @@ Rlist *RlistAppendIdemp(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistAppendScalar(Rlist **start, void *item, char type)
+Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 {
-    char *scalar = item;
-
-    if (type != RVAL_TYPE_SCALAR)
-    {
-        ProgrammingError("Cannot append non-scalars to lists");
-    }
-
-    return RlistAppend(start, scalar, type);
+    return RlistAppend(start, scalar, RVAL_TYPE_SCALAR);
 }
 
 /*******************************************************************/
 
-Rlist *RlistPrependScalar(Rlist **start, void *item, char type)
+Rlist *RlistPrependScalar(Rlist **start, const char *scalar)
 {
-    char *scalar = item;
-
-    if (type != RVAL_TYPE_SCALAR)
-    {
-        ProgrammingError("Cannot append non-scalars to lists");
-    }
-
-    return RlistPrepend(start, scalar, type);
+    return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
 }
 
 /*******************************************************************/
 
-Rlist *RlistAppend(Rlist **start, const void *item, char type)
+Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
    /* Allocates new memory for objects - careful, could leak!  */
 {
     Rlist *rp, *lp = *start;
@@ -516,7 +488,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistPrepend(Rlist **start, void *item, char type)
+Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
    /* heap memory for item must have already been allocated */
 {
     Rlist *rp, *lp = *start;
@@ -559,7 +531,7 @@ Rlist *RlistPrepend(Rlist **start, void *item, char type)
     ThreadUnlock(cft_system);
 
     rp->next = *start;
-    rp->item = RvalCopy((Rval) {item, type}).item;
+    rp->item = RvalCopy((Rval) { (void *)item, type}).item;
     rp->type = type;            /* scalar, builtin function */
 
     if (type == RVAL_TYPE_LIST)
@@ -579,7 +551,7 @@ Rlist *RlistPrepend(Rlist **start, void *item, char type)
 
 /*******************************************************************/
 
-Rlist *RlistAppendOrthog(Rlist **start, void *item, char type)
+Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
    /* Allocates new memory for objects - careful, could leak!  */
 {
     Rlist *rp, *lp;
@@ -1129,7 +1101,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
         sp += SubStrnCopyChr(node, sp, CF_MAXVARSIZE, sep);
 
-        RlistAppendScalar(&liststart, node, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(&liststart, node);
     }
 
     return liststart;
@@ -1169,7 +1141,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
 
         if (blanks || strlen(node) > 0)
         {
-            RlistAppendScalar(&liststart, node, RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&liststart, node);
             count++;
         }
 
@@ -1183,7 +1155,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
 
         if ((blanks && sp != string) || strlen(node) > 0)
         {
-            RlistAppendScalar(&liststart, node, RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&liststart, node);
         }
     }
 

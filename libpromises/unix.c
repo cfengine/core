@@ -778,7 +778,7 @@ static void InitIgnoreInterfaces()
 
         if (scanCount != 0 && *regex != '\0')
         {
-           RlistPrependScalarIdemp(&IGNORE_INTERFACES,regex, RVAL_TYPE_SCALAR);
+           RlistPrependScalarIdemp(&IGNORE_INTERFACES, regex);
         }
     }
  

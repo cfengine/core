@@ -786,7 +786,7 @@ static Rlist *GetSQLTables(CfdbConn *cfdb)
 
     while (CfFetchRow(cfdb))
     {
-        RlistPrependScalar(&list, CfFetchColumn(cfdb, 0), RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&list, CfFetchColumn(cfdb, 0));
     }
 
     CfDeleteQuery(cfdb);

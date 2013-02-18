@@ -659,7 +659,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
 
     if (context == NULL)
     {
-        RlistPrependScalar(&list, "any", RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&list, "any");
     }
     else
     {
@@ -683,7 +683,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
             {
                 // Fully bracketed atom (protected)
                 cbuff[strlen(cbuff) - 1] = '\0';
-                RlistPrependScalar(&list, cbuff + 1, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&list, cbuff + 1);
             }
             else
             {
@@ -731,12 +731,12 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
                         for (rp = orlist; rp != NULL; rp = rp->next)
                         {
                             snprintf(buff, CF_MAXVARSIZE, "%s.%s", (char *) rp->item, andstring);
-                            RlistPrependScalar(&list, buff, RVAL_TYPE_SCALAR);
+                            RlistPrependScalar(&list, buff);
                         }
                     }
                     else
                     {
-                        RlistPrependScalar(&list, andstring, RVAL_TYPE_SCALAR);
+                        RlistPrependScalar(&list, andstring);
                     }
 
                     RlistDestroy(orlist);
@@ -745,7 +745,7 @@ Rlist *SplitContextExpression(const char *context, Promise *pp)
                 else
                 {
                     // Clean atom
-                    RlistPrependScalar(&list, cbuff, RVAL_TYPE_SCALAR);
+                    RlistPrependScalar(&list, cbuff);
                 }
             }
 

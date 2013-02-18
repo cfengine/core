@@ -1558,7 +1558,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             for (i = 0; i < (a.column.select_column - count); i++)
             {
-                RlistAppendScalar(columns, xstrdup(""), RVAL_TYPE_SCALAR);
+                RlistAppendScalar(columns, xstrdup(""));
             }
 
             count = 0;
@@ -1804,14 +1804,14 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
         CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting field sub-value %s in %s", a.column.column_value, pp->this_server);
         RlistDestroy(*columns);
         *columns = NULL;
-        RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR);
+        RlistPrependScalarIdemp(columns, a.column.column_value);
 
         return true;
     }
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "prepend") == 0)
     {
-        if (RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+        if (RlistPrependScalarIdemp(columns, a.column.column_value))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", " -> Prepending field sub-value %s in %s", a.column.column_value, pp->this_server);
             return true;
@@ -1824,7 +1824,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
     if (a.column.column_operation && strcmp(a.column.column_operation, "alphanum") == 0)
     {
-        if (RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+        if (RlistPrependScalarIdemp(columns, a.column.column_value))
         {
             retval = true;
         }
@@ -1836,7 +1836,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
 
 /* default operation is append */
 
-    if (RlistAppendScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
+    if (RlistAppendScalarIdemp(columns, a.column.column_value))
     {
         return true;
     }

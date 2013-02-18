@@ -205,7 +205,7 @@ static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)
 
         /* Append to end up with left->right (major->minor) comparison */
 
-        RlistAppendScalar(num, numeral, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(num, numeral);
 
         if (*sp == '\0')
         {
@@ -213,6 +213,6 @@ static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep)
         }
 
         sscanf(sp, "%1[^0-9a-zA-Z]", separator);
-        RlistAppendScalar(sep, separator, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(sep, separator);
     }
 }

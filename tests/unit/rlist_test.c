@@ -21,8 +21,8 @@ static void test_prepend_scalar(void **state)
 {
     Rlist *list = NULL;
 
-    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
-    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff");
+    RlistPrependScalar(&list, "more-stuff");
 
     assert_string_equal(list->item, "more-stuff");
 
@@ -35,10 +35,10 @@ static void test_length(void **state)
 
     assert_int_equal(RlistLen(list), 0);
 
-    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff");
     assert_int_equal(RlistLen(list), 1);
 
-    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "more-stuff");
     assert_int_equal(RlistLen(list), 2);
 
     RlistDestroy(list);
@@ -48,8 +48,8 @@ static void test_prepend_scalar_idempotent(void **state)
 {
     Rlist *list = NULL;
 
-    RlistPrependScalarIdemp(&list, "stuff", RVAL_TYPE_SCALAR);
-    RlistPrependScalarIdemp(&list, "stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalarIdemp(&list, "stuff");
+    RlistPrependScalarIdemp(&list, "stuff");
 
     assert_string_equal(list->item, "stuff");
     assert_int_equal(RlistLen(list), 1);
@@ -61,8 +61,8 @@ static void test_copy(void **state)
 {
     Rlist *list = NULL, *copy = NULL;
 
-    RlistPrependScalar(&list, "stuff", RVAL_TYPE_SCALAR);
-    RlistPrependScalar(&list, "more-stuff", RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&list, "stuff");
+    RlistPrependScalar(&list, "more-stuff");
 
     copy = RlistCopy(list);
 

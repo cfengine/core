@@ -348,7 +348,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (SINGLE_COPY_LIST)
                 {
-                    RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                    RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
                 }
 
                 if (MatchRlistItem(AUTO_DEFINE_LIST, destfile))
@@ -490,7 +490,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                     if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
                     {
-                        RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                        RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
                     }
                 }
                 else
@@ -516,7 +516,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
             if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
             {
-                RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
+                RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile);
             }
 
             cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> File %s is an up to date copy of source\n", destfile);

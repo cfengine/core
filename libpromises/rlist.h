@@ -32,7 +32,7 @@
 struct Rlist_
 {
     void *item;
-    char type;
+    RvalType type;
     Rlist *state_ptr;           /* Points to "current" state/element of sub-list */
     Rlist *next;
 };
@@ -57,21 +57,21 @@ Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(char *string);
 bool RlistIsStringIn(const Rlist *list, const char *s);
 bool RlistIsIntIn(const Rlist *list, int i);
-Rlist *RlistKeyIn(Rlist *list, char *key);
+Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
 void RlistPopStack(Rlist **liststart, void **item, size_t size);
 void RlistPushStack(Rlist **liststart, void *item);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 Rlist *RlistAppendAlien(Rlist **start, void *item);
 Rlist *RlistPrependAlien(Rlist **start, void *item);
-Rlist *RlistAppendOrthog(Rlist **start, void *item, char type);
-Rlist *RlistAppendScalarIdemp(Rlist **start, void *item, char type);
-Rlist *RlistAppendScalar(Rlist **start, void *item, char type);
-Rlist *RlistAppendIdemp(Rlist **start, void *item, char type);
-Rlist *RlistPrependScalarIdemp(Rlist **start, void *item, char type);
-Rlist *RlistPrependScalar(Rlist **start, void *item, char type);
-Rlist *RlistPrepend(Rlist **start, void *item, char type);
-Rlist *RlistAppend(Rlist **start, const void *item, char type);
+Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type);
+Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar);
+Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
+Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type);
+Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar);
+Rlist *RlistPrependScalar(Rlist **start, const char *scalar);
+Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
+Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
 void RlistShow(FILE *fp, const Rlist *list);

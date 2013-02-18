@@ -308,17 +308,17 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
                         if (level > 0)
                         {
-                            RlistPrependScalarIdemp(its, exp, RVAL_TYPE_SCALAR);
+                            RlistPrependScalarIdemp(its, exp);
                         }
                         else
                         {
-                            RlistAppendScalarIdemp(its, exp, RVAL_TYPE_SCALAR);
+                            RlistAppendScalarIdemp(its, exp);
                         }
                     }
                     else if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         CfDebug("Scalar variable $(%s) found\n", var);
-                        RlistAppendScalarIdemp(scal, var, RVAL_TYPE_SCALAR);
+                        RlistAppendScalarIdemp(scal, var);
                     }
                 }
                 else

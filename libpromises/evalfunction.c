@@ -134,7 +134,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
             else
             {
                 CfDebug("Adding to list of aged hosts.\n");
-                RlistPrependScalarIdemp(&aged, address, RVAL_TYPE_SCALAR);
+                RlistPrependScalarIdemp(&aged, address);
             }
         }
         else
@@ -150,7 +150,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
             }
 
             CfDebug("Adding to list of recent hosts.\n");
-            RlistPrependScalarIdemp(&recent, address, RVAL_TYPE_SCALAR);
+            RlistPrependScalarIdemp(&recent, address);
         }
     }
 
@@ -159,7 +159,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         RlistDestroy(aged);
         if (recent == NULL)
         {
-            RlistAppendScalarIdemp(&recent, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+            RlistAppendScalarIdemp(&recent, CF_NULL_VALUE);
         }
         return recent;
     }
@@ -168,7 +168,7 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         RlistDestroy(recent);
         if (aged == NULL)
         {
-            RlistAppendScalarIdemp(&aged, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+            RlistAppendScalarIdemp(&aged, CF_NULL_VALUE);
         }
         return aged;
     }
@@ -356,7 +356,7 @@ static FnCallResult FnCallGetUsers(FnCall *fp, Rlist *finalargs)
     {
         if (!RlistIsStringIn(except_names, pw->pw_name) && !RlistIsIntIn(except_uids, (int) pw->pw_uid))
         {
-            RlistAppendScalarIdemp(&newlist, pw->pw_name, RVAL_TYPE_SCALAR);
+            RlistAppendScalarIdemp(&newlist, pw->pw_name);
         }
     }
 
@@ -1090,7 +1090,7 @@ static FnCallResult FnCallGetIndices(FnCall *fp, Rlist *finalargs)
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
               scopeid);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
     }
 
@@ -1117,14 +1117,14 @@ static FnCallResult FnCallGetIndices(FnCall *fp, Rlist *finalargs)
 
             if (strlen(index) > 0)
             {
-                RlistAppendScalarIdemp(&returnlist, index, RVAL_TYPE_SCALAR);
+                RlistAppendScalarIdemp(&returnlist, index);
             }
         }
     }
 
     if (returnlist == NULL)
     {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1163,7 +1163,7 @@ static FnCallResult FnCallGetValues(FnCall *fp, Rlist *finalargs)
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
               scopeid);
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
     }
 
@@ -1178,13 +1178,13 @@ static FnCallResult FnCallGetValues(FnCall *fp, Rlist *finalargs)
             switch (assoc->rval.type)
             {
             case RVAL_TYPE_SCALAR:
-                RlistAppendScalarIdemp(&returnlist, assoc->rval.item, RVAL_TYPE_SCALAR);
+                RlistAppendScalarIdemp(&returnlist, assoc->rval.item);
                 break;
 
             case RVAL_TYPE_LIST:
                 for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
                 {
-                    RlistAppendScalarIdemp(&returnlist, rp->item, RVAL_TYPE_SCALAR);
+                    RlistAppendScalarIdemp(&returnlist, rp->item);
                 }
                 break;
 
@@ -1196,7 +1196,7 @@ static FnCallResult FnCallGetValues(FnCall *fp, Rlist *finalargs)
 
     if (returnlist == NULL)
     {
-        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1249,13 +1249,13 @@ static FnCallResult FnCallGrep(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    RlistAppendScalar(&returnlist, CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
     for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         if (FullTextMatch(regex, rp->item))
         {
-            RlistAppendScalar(&returnlist, rp->item, RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&returnlist, rp->item);
         }
     }
 
@@ -1633,11 +1633,11 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
             {
                 snprintf(line, CF_BUFSIZE, "%s/%s", dirname, dirp->d_name);
                 MapName(line);
-                RlistPrependScalar(&newlist, line, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&newlist, line);
             }
             else
             {
-                RlistPrependScalar(&newlist, (char *) dirp->d_name, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&newlist, (char *) dirp->d_name);
             }
         }
     }
@@ -1646,7 +1646,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
 
     if (newlist == NULL)
     {
-        RlistPrependScalar(&newlist, "cf_null", RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&newlist, "cf_null");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
@@ -2386,7 +2386,7 @@ static FnCallResult FnCallPeers(FnCall *fp, Rlist *finalargs)
         }
         else
         {
-            RlistPrependScalar(&pruned, s, RVAL_TYPE_SCALAR);
+            RlistPrependScalar(&pruned, s);
         }
 
         if (i++ % groupsize == groupsize - 1)
@@ -2561,11 +2561,11 @@ static FnCallResult FnCallPeerLeaders(FnCall *fp, Rlist *finalargs)
         {
             if (strcmp(s, VFQNAME) == 0 || strcmp(s, VUQNAME) == 0)
             {
-                RlistPrependScalar(&pruned, "localhost", RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&pruned, "localhost");
             }
             else
             {
-                RlistPrependScalar(&pruned, s, RVAL_TYPE_SCALAR);
+                RlistPrependScalar(&pruned, s);
             }
         }
 
@@ -3464,7 +3464,7 @@ static FnCallResult FnCallSplitString(FnCall *fp, Rlist *finalargs)
 
     if (newlist == NULL)
     {
-        RlistPrependScalar(&newlist, "cf_null", RVAL_TYPE_SCALAR);
+        RlistPrependScalar(&newlist, "cf_null");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

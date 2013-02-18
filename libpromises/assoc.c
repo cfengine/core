@@ -506,6 +506,6 @@ void HashToList(Scope *sp, Rlist **list)
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        RlistPrependScalar(list, assoc->lval, RVAL_TYPE_SCALAR);
+        RlistPrependScalar(list, assoc->lval);
     }
 }

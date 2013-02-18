@@ -357,8 +357,6 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    DeleteAllPromiseIds();      // in case we are re-reading, delete old handles
-
     Policy *policy = Cf3ParseFiles(config, report_context);
     {
         Seq *errors = SeqNew(100, PolicyErrorDestroy);

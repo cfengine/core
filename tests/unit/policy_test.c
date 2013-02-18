@@ -63,6 +63,14 @@ static void test_methods_invalid_arity(void **state)
     SeqDestroy(errs);
 }
 
+static void test_promise_duplicate_handle(void **state)
+{
+    Seq *errs = LoadAndCheck("promise_duplicate_handle.cf");
+    assert_int_equal(1, errs->length);
+
+    SeqDestroy(errs);
+}
+
 static void test_util_bundle_qualified_name(void **state)
 {
     Bundle *b = xcalloc(1, sizeof(struct Bundle_));
@@ -92,6 +100,7 @@ int main()
         unit_test(test_subtype_invalid),
         unit_test(test_vars_multiple_types),
         unit_test(test_methods_invalid_arity),
+        unit_test(test_promise_duplicate_handle),
 
         unit_test(test_util_bundle_qualified_name)
     };

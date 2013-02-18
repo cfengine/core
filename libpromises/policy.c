@@ -38,6 +38,8 @@
 #include "vars.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "set.h"
+#include "hashes.h"
 
 #include <assert.h>
 
@@ -56,6 +58,7 @@ static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s
 static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type category for %s bundle";
 static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
 static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
+static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
 
 //************************************************************************
 
@@ -390,65 +393,6 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 
 /*************************************************************************/
 
-bool PolicyCheckPartial(const Policy *policy, Seq *errors)
-{
-    bool success = true;
-
-    // ensure bundle names are not duplicated
-    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
-    {
-        Bundle *bp = SeqAt(policy->bundles, i);
-
-        for (size_t j = 0; j < SeqLength(policy->bundles); j++)
-        {
-            Bundle *bp2 = SeqAt(policy->bundles, j);
-
-            if (bp != bp2 &&
-                StringSafeEqual(bp->name, bp2->name) &&
-                StringSafeEqual(bp->type, bp2->type))
-            {
-                SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
-                                                      POLICY_ERROR_BUNDLE_REDEFINITION,
-                                                      bp->name, bp->type));
-                success = false;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
-    {
-        Bundle *bp = SeqAt(policy->bundles, i);
-        success &= PolicyCheckBundle(bp, errors);
-    }
-
-    
-    // ensure body names are not duplicated
-    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
-    {
-        const Body *bp = SeqAt(policy->bodies, i);
-
-        for (size_t j = 0; j < SeqLength(policy->bodies); j++)
-        {
-            const Body *bp2 = SeqAt(policy->bodies, j);
-
-            if (bp != bp2 &&
-                StringSafeEqual(bp->name, bp2->name) &&
-                StringSafeEqual(bp->type, bp2->type))
-            {
-                if (strcmp(bp->type,"file") != 0)
-                {
-                    SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
-                                                      POLICY_ERROR_BODY_REDEFINITION,
-                                                      bp->name, bp->type));
-                    success = false;
-                }            
-            }
-        }
-    }
-
-    return success;
-}
-
 static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
 {
     if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
@@ -710,6 +654,47 @@ static bool PolicyCheckRequiredComments(const Policy *policy, Seq *errors)
     }
 }
 
+bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
+{
+    bool success = true;
+
+    Set *used_handles = SetNew((unsigned int (*)(const void*, unsigned int))GetHash, (bool (*)(const void *, const void *))StringSafeEqual, NULL);
+
+    for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
+    {
+        Bundle *bundle = SeqAt(policy->bundles, bpi);
+
+        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        {
+            SubType *subtype = SeqAt(bundle->subtypes, sti);
+
+            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            {
+                Promise *promise = SeqAt(subtype->promises, ppi);
+                char *handle = GetConstraintValue("handle", promise, RVAL_TYPE_SCALAR);
+
+                if (handle)
+                {
+                    if (SetContains(used_handles, handle))
+                    {
+                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, promise,
+                                                         POLICY_ERROR_PROMISE_DUPLICATE_HANDLE, handle));
+                        success = false;
+                    }
+                    else
+                    {
+                        SetAdd(used_handles, handle);
+                    }
+                }
+            }
+        }
+    }
+
+    SetDestroy(used_handles);
+
+    return success;
+}
+
 bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
     // check has body common control
@@ -732,6 +717,69 @@ bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_
     {
         success &= PolicyCheckUndefinedBundles(policy, errors);
     }
+
+    success &= PolicyCheckDuplicateHandles(policy, errors);
+
+    return success;
+}
+
+bool PolicyCheckPartial(const Policy *policy, Seq *errors)
+{
+    bool success = true;
+
+    // ensure bundle names are not duplicated
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bp = SeqAt(policy->bundles, i);
+
+        for (size_t j = 0; j < SeqLength(policy->bundles); j++)
+        {
+            Bundle *bp2 = SeqAt(policy->bundles, j);
+
+            if (bp != bp2 &&
+                StringSafeEqual(bp->name, bp2->name) &&
+                StringSafeEqual(bp->type, bp2->type))
+            {
+                SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BUNDLE, bp,
+                                                      POLICY_ERROR_BUNDLE_REDEFINITION,
+                                                      bp->name, bp->type));
+                success = false;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bundles); i++)
+    {
+        Bundle *bp = SeqAt(policy->bundles, i);
+        success &= PolicyCheckBundle(bp, errors);
+    }
+
+
+    // ensure body names are not duplicated
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        const Body *bp = SeqAt(policy->bodies, i);
+
+        for (size_t j = 0; j < SeqLength(policy->bodies); j++)
+        {
+            const Body *bp2 = SeqAt(policy->bodies, j);
+
+            if (bp != bp2 &&
+                StringSafeEqual(bp->name, bp2->name) &&
+                StringSafeEqual(bp->type, bp2->type))
+            {
+                if (strcmp(bp->type,"file") != 0)
+                {
+                    SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
+                                                      POLICY_ERROR_BODY_REDEFINITION,
+                                                      bp->name, bp->type));
+                    success = false;
+                }
+            }
+        }
+    }
+
+    success &= PolicyCheckDuplicateHandles(policy, errors);
 
     return success;
 }

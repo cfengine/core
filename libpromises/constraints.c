@@ -40,11 +40,6 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
-
-static PromiseIdent *PROMISE_ID_LIST = NULL;
-
-static PromiseIdent *PromiseIdExists(char *ns, char *handle);
-static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);
 
 /*******************************************************************/
@@ -623,8 +618,6 @@ void *GetConstraintValue(const char *lval, const Promise *pp, RvalType rtype)
 
 void ReCheckAllConstraints(Promise *pp)
 {
-    char *sp, *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
-    PromiseIdent *prid;
     Item *ptr;
     int in_class_any = false;
 
@@ -658,35 +651,10 @@ void ReCheckAllConstraints(Promise *pp)
         return;
     }
 
+    char *sp = NULL;
     if (VarClassExcluded(pp, &sp))
     {
         return;
-    }
-
-    if (handle)
-    {
-        if (!ThreadLock(cft_policy))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock cft_policy in ReCheckAllConstraints() -- aborting");
-            return;
-        }
-
-        if ((prid = PromiseIdExists(pp->ns, handle)))
-        {
-            if ((strcmp(prid->filename, pp->audit->filename) != 0) || (prid->line_number != pp->offset.line))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Duplicate promise handle '%s' -- previously used in file %s near line %d",
-                      handle, prid->filename, prid->line_number);
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-            }
-        }
-        else
-        {
-            NewPromiseId(handle, pp);
-        }
-
-        prid = NULL;            // we can't access this after unlocking
-        ThreadUnlock(cft_policy);
     }
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
@@ -877,78 +845,4 @@ static int VerifyConstraintName(const char *lval)
     }
 
     return false;
-}
-
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
-
-// NOTE: PROMISE_ID_LIST must be thread-safe here (locked by caller)
-
-PromiseIdent *NewPromiseId(char *handle, Promise *pp)
-{
-    PromiseIdent *ptr;
-    char name[CF_BUFSIZE];
-    ptr = xmalloc(sizeof(PromiseIdent));
-
-    snprintf(name, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, handle);
-    ptr->filename = xstrdup(pp->audit->filename);
-    ptr->line_number = pp->offset.line;
-    ptr->handle = xstrdup(name);
-    ptr->next = PROMISE_ID_LIST;
-    PROMISE_ID_LIST = ptr;
-    return ptr;
-}
-
-/*****************************************************************************/
-
-static void DeleteAllPromiseIdsRecurse(PromiseIdent *key)
-{
-    if (key->next != NULL)
-    {
-        DeleteAllPromiseIdsRecurse(key->next);
-    }
-
-    free(key->filename);
-    free(key->handle);
-    free(key);
-}
-
-/*****************************************************************************/
-
-void DeleteAllPromiseIds(void)
-{
-    if (!ThreadLock(cft_policy))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock cft_policy in DelteAllPromiseIds() -- aborting");
-        return;
-    }
-
-    if (PROMISE_ID_LIST)
-    {
-        DeleteAllPromiseIdsRecurse(PROMISE_ID_LIST);
-        PROMISE_ID_LIST = NULL;
-    }
-
-    ThreadUnlock(cft_policy);
-}
-
-/*****************************************************************************/
-
-static PromiseIdent *PromiseIdExists(char *ns, char *handle)
-{
-    PromiseIdent *key;
-    char name[CF_BUFSIZE];
-
-    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, handle);
-    
-    for (key = PROMISE_ID_LIST; key != NULL; key = key->next)
-    {
-        if (strcmp(name, key->handle) == 0)
-        {
-            return key;
-        }
-    }
-
-    return NULL;
 }

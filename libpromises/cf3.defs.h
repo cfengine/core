@@ -769,12 +769,6 @@ enum cfsbundle
     cfs_nobtype
 };
 
-enum cfsrole
-{
-    cfs_authorize,
-    cfs_nortype
-};
-
 typedef enum
 {
     OUTPUT_LEVEL_INFORM,

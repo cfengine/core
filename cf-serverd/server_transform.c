@@ -55,6 +55,12 @@ typedef enum
     REMOTE_ACCESS_NONE
 } RemoteAccess;
 
+typedef enum
+{
+    REMOTE_ROLE_AUTHORIZE,
+    REMOTE_ROLE_NONE
+} RemoteRole;
+
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
@@ -924,7 +930,7 @@ static void KeepServerRolePromise(Promise *pp)
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMROLE_BODIES[cfs_authorize].lval) == 0)
+                if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;

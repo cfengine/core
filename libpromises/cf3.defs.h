@@ -1963,16 +1963,6 @@ extern double METER_REPAIRED[meter_endmark];
 #define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
-// classes not interesting in reports
-#define IGNORECLASS(c)                                                         \
- (strncmp(c,"Min",3) == 0 || strncmp(c,"Hr",2) == 0 || strcmp(c,"Q1") == 0     \
-  || strcmp(c,"Q2") == 0 || strcmp(c,"Q3") == 0 || strcmp(c,"Q4") == 0         \
-  || strncmp(c,"GMT_Hr",6) == 0  || strncmp(c,"Yr",2) == 0                     \
-  || strncmp(c,"Day",3) == 0 || strcmp(c,"license_expired") == 0               \
-  || strcmp(c,"any") == 0 || strcmp(c,"from_cfexecd") == 0                     \
-  || IsStrIn(c,MONTH_TEXT) || IsStrIn(c,DAY_TEXT)                  \
-  || IsStrIn(c,SHIFT_TEXT)) || strncmp(c,"Lcycle",6) == 0
-
 #include "dbm_api.h"
 #include "prototypes3.h"
 #include "alloc.h"

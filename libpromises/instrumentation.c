@@ -151,6 +151,18 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
 /***************************************************************/
 
+static bool IsContextIgnorableForReporting(const char *context_name)
+{
+    return (strncmp(context_name,"Min",3) == 0 || strncmp(context_name,"Hr",2) == 0 || strcmp(context_name,"Q1") == 0
+     || strcmp(context_name,"Q2") == 0 || strcmp(context_name,"Q3") == 0 || strcmp(context_name,"Q4") == 0
+     || strncmp(context_name,"GMT_Hr",6) == 0  || strncmp(context_name,"Yr",2) == 0
+     || strncmp(context_name,"Day",3) == 0 || strcmp(context_name,"license_expired") == 0
+     || strcmp(context_name,"any") == 0 || strcmp(context_name,"from_cfexecd") == 0
+     || IsStrIn(context_name,MONTH_TEXT) || IsStrIn(context_name,DAY_TEXT)
+     || IsStrIn(context_name,SHIFT_TEXT)) || strncmp(context_name,"Lcycle",6) == 0;
+}
+
+
 void NoteClassUsage(AlphaList baselist, int purge)
 {
     CF_DB *dbp;
@@ -176,7 +188,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
 
     for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
     {
-        if ((IGNORECLASS(ip->name)))
+        if ((IsContextIgnorableForReporting(ip->name)))
         {
             CfDebug("Ignoring class %s (not packing)", ip->name);
             continue;

@@ -174,12 +174,12 @@ enum cfenvironment_state Str2EnvState(char *s)
     return FindTypeInArray(ENV_STATE_TYPES, s, cfvs_none, cfvs_create);
 }
 
-static const char *INSERT_MATCH_TYPES[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
-                                            "exact_match", NULL };
-
-enum insert_match String2InsertMatch(char *s)
+InsertMatchType String2InsertMatch(char *s)
 {
-    return FindTypeInArray(INSERT_MATCH_TYPES, s, cf_exact_match, cf_exact_match);
+    static const char *INSERT_MATCH_TYPES[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
+                                                "exact_match", NULL };
+
+    return FindTypeInArray(INSERT_MATCH_TYPES, s, INSERT_MATCH_TYPE_EXACT, INSERT_MATCH_TYPE_EXACT);
 }
 
 static const char *SYSLOG_PRIORITY_TYPES[] =

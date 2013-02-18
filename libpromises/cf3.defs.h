@@ -1238,13 +1238,13 @@ typedef enum
 }
 inherit_t;
 
-enum insert_match
+typedef enum
 {
-    cf_ignore_leading,
-    cf_ignore_trailing,
-    cf_ignore_embedded,
-    cf_exact_match
-};
+    INSERT_MATCH_TYPE_IGNORE_LEADING,
+    INSERT_MATCH_TYPE_IGNORE_TRAILING,
+    INSERT_MATCH_TYPE_IGNORE_EMBEDDED,
+    INSERT_MATCH_TYPE_EXACT
+} InsertMatchType;
 
 enum monitord_rep
 {

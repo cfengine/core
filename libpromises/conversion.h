@@ -34,7 +34,7 @@ char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
 enum cfmeasurepolicy MeasurePolicy2Value(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
-enum insert_match String2InsertMatch(char *s);
+InsertMatchType String2InsertMatch(char *s);
 long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
 int SyslogPriority2Int(char *s);

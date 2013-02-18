@@ -1154,7 +1154,7 @@ static int SanityCheckInsertions(Attributes a)
     long with = 0;
     long ok = true;
     Rlist *rp;
-    enum insert_match opt;
+    InsertMatchType opt;
     int exact = false, ignore_something = false;
     int preserve_block = a.sourcetype && strcmp(a.sourcetype, "preserve_block") == 0;
 
@@ -1208,7 +1208,7 @@ static int SanityCheckInsertions(Attributes a)
 
         switch (opt)
         {
-        case cf_exact_match:
+        case INSERT_MATCH_TYPE_EXACT:
             exact = true;
             break;
         default:

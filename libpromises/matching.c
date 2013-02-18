@@ -427,7 +427,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 {
     Rlist *rp;
     char *sp, *spto, *firstchar, *lastchar;
-    enum insert_match opt;
+    InsertMatchType opt;
     char work[CF_BUFSIZE], final[CF_BUFSIZE];
     Item *list = SplitString(camel, '\n'), *ip;
     int direct_cmp = false, ok = false, escaped = false;
@@ -455,7 +455,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 
             /* Exact match can be done immediately */
 
-            if (opt == cf_exact_match)
+            if (opt == INSERT_MATCH_TYPE_EXACT)
             {
                 if ((rp->next != NULL) || (rp != a.insert_match))
                 {
@@ -474,7 +474,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
             escaped = true;
             }
             
-            if (opt == cf_ignore_embedded)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
             {
                 memset(work, 0, CF_BUFSIZE);
 
@@ -516,7 +516,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
                 strcpy(final, work);
             }
 
-            if (opt == cf_ignore_leading)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
@@ -528,7 +528,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
                 }
             }
 
-            if (opt == cf_ignore_trailing)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
                 if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
                 {

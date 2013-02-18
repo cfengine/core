@@ -692,23 +692,6 @@ enum cfmcontrol
 
 /*************************************************************************/
 
-enum cfrcontrol
-{
-    cfr_hosts,
-    cfr_portnumber,
-    cfr_force_ipv4,
-    cfr_trustkey,
-    cfr_encrypt,
-    cfr_background,
-    cfr_maxchild,
-    cfr_output_to_file,
-    cfr_output_directory,
-    cfr_timeout,
-    cfr_notype
-};
-
-/*************************************************************************/
-
 enum cfsbundle
 {
     cfs_access,

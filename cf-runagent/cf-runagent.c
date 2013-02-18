@@ -47,6 +47,22 @@
 #include "runagent.h"
 #endif
 
+
+typedef enum
+{
+    RUNAGENT_CONTROL_HOSTS,
+    RUNAGENT_CONTROL_PORT_NUMBER,
+    RUNAGENT_CONTROL_FORCE_IPV4,
+    RUNAGENT_CONTROL_TRUSTKEY,
+    RUNAGENT_CONTROL_ENCRYPT,
+    RUNAGENT_CONTROL_BACKGROUND,
+    RUNAGENT_CONTROL_MAX_CHILD,
+    RUNAGENT_CONTROL_OUTPUT_TO_FILE,
+    RUNAGENT_CONTROL_OUTPUT_DIRECTORY,
+    RUNAGENT_CONTROL_TIMEOUT,
+    RUNAGENT_CONTROL_NONE
+} RunagentControl;
+
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
@@ -537,35 +553,35 @@ static void KeepControlPromises(Policy *policy)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_force_ipv4].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
                 RUNATTR.copy.force_ipv4 = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_trustkey].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TRUSTKEY].lval) == 0)
             {
                 RUNATTR.copy.trustkey = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET trustkey = %d\n", RUNATTR.copy.trustkey);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_encrypt].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_ENCRYPT].lval) == 0)
             {
                 RUNATTR.copy.encrypt = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET encrypt = %d\n", RUNATTR.copy.encrypt);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_portnumber].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
                 RUNATTR.copy.portnumber = (short) Str2Int(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_background].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_BACKGROUND].lval) == 0)
             {
                 /*
                  * Only process this option if are is no -b or -i options specified on
@@ -583,19 +599,19 @@ static void KeepControlPromises(Policy *policy)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_maxchild].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_MAX_CHILD].lval) == 0)
             {
                 MAXCHILD = (short) Str2Int(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_to_file].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_TO_FILE].lval) == 0)
             {
                 OUTPUT_TO_FILE = GetBoolean(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_output_directory].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_DIRECTORY].lval) == 0)
             {
                 if (IsAbsPath(retval.item))
                 {
@@ -605,13 +621,13 @@ static void KeepControlPromises(Policy *policy)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_timeout].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TIMEOUT].lval) == 0)
             {
                 RUNATTR.copy.timeout = (short) Str2Int(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFR_CONTROLBODY[cfr_hosts].lval) == 0)
+            if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_HOSTS].lval) == 0)
             {
                 if (HOSTLIST == NULL)       // Don't override if command line setting
                 {

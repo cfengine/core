@@ -1,4 +1,4 @@
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(top_srcdir)/libpromises
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(top_srcdir)/libpromises -I$(srcdir)/../../libutils
 
 noinst_PROGRAMS = mock-package-manager
 

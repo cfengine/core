@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cf-promises
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(NOVA_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ -I$(srcdir) \

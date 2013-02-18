@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cf-runagent
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA

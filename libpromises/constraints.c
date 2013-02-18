@@ -40,6 +40,9 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
+
+static PromiseIdent *PROMISE_ID_LIST = NULL;
+
 static PromiseIdent *PromiseIdExists(char *ns, char *handle);
 static void DeleteAllPromiseIdsRecurse(PromiseIdent *key);
 static int VerifyConstraintName(const char *lval);

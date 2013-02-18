@@ -108,7 +108,6 @@ extern Item *EDIT_ANCHORS;
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
-extern PromiseIdent *PROMISE_ID_LIST;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;

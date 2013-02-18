@@ -1787,7 +1787,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     config->bundlesequence = NULL;
     config->input_file = NULL;
-    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON;
+    config->check_not_writable_by_others = agent_type != AGENT_TYPE_COMMON && !config->tty_interactive;
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;

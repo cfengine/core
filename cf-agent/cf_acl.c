@@ -52,8 +52,8 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
-        PromiseRef(cf_error, pp);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
@@ -70,7 +70,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #elif defined(__MINGW32__)
         Nova_CheckNtACL(file, a.acl, a, pp);
 #else
-        CfOut(cf_inform, "", "!! ACLs are not yet supported on this system.");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "!! ACLs are not yet supported on this system.");
 #endif
         break;
 
@@ -79,7 +79,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #if defined(__linux__)
         CheckPosixLinuxACL(file, a.acl, a, pp);
 #else
-        CfOut(cf_inform, "", "!! Posix ACLs are not supported on this system");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "!! Posix ACLs are not supported on this system");
 #endif
         break;
 
@@ -88,12 +88,12 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #if defined(__MINGW32__)
         Nova_CheckNtACL(file, a.acl, a, pp);
 #else
-        CfOut(cf_inform, "", "!! NTFS ACLs are not supported on this system");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are not supported on this system");
 #endif
         break;
 
     default:
-        CfOut(cf_error, "", "!! Unknown ACL type - software error");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Unknown ACL type - software error");
         break;
     }
 }
@@ -165,8 +165,8 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            CfOut(cf_error, "", "The ACE \"%s\" contains errors", RlistScalarValue(rp));
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "The ACE \"%s\" contains errors", RlistScalarValue(rp));
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             break;
         }
     }
@@ -177,8 +177,8 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
         if (!valid)             // wrong syntax in this ace
         {
-            CfOut(cf_error, "", "The ACE \"%s\" contains errors", RlistScalarValue(rp));
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "The ACE \"%s\" contains errors", RlistScalarValue(rp));
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             break;
         }
     }
@@ -243,8 +243,8 @@ static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp)
         }
         else
         {
-            CfOut(cf_error, "", "acl_directory_inherit can only be set on directories.");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "acl_directory_inherit can only be set on directories.");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             valid = false;
         }
 
@@ -291,16 +291,16 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
         }
         else
         {
-            CfOut(cf_error, "", "This ACL type does not support mask ACE.");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "This ACL type does not support mask ACE.");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
 
     }
     else
     {
-        CfOut(cf_error, "", "ACE '%s' does not start with user:/group:/all", ace);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "ACE '%s' does not start with user:/group:/all", ace);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -308,7 +308,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
     {
         if (*str == ':')
         {
-            CfOut(cf_error, "", "ACE '%s': id cannot be empty or contain ':'", ace);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "ACE '%s': id cannot be empty or contain ':'", ace);
             return false;
         }
 
@@ -324,7 +324,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
             }
             else if (*str == '\0')
             {
-                CfOut(cf_error, "", "Nothing following id string in ACE '%s'", ace);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Nothing following id string in ACE '%s'", ace);
                 return false;
             }
         }
@@ -335,8 +335,8 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
 
     if (!valid_mode)
     {
-        CfOut(cf_error, "", "Malformed mode-string in ACE '%s'", ace);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Malformed mode-string in ACE '%s'", ace);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -352,7 +352,7 @@ static int CheckACESyntax(char *ace, char *valid_ops, char *valid_nperms, int de
 
     if (!valid_permt)
     {
-        CfOut(cf_error, "", "Malformed perm_type syntax in ACE '%s'", ace);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Malformed perm_type syntax in ACE '%s'", ace);
         return false;
     }
 
@@ -397,8 +397,8 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, P
             }
             else
             {
-                CfOut(cf_error, "", "Invalid native permission '%c', or missing native end separator", *mode);
-                PromiseRef(cf_error, pp);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid native permission '%c', or missing native end separator", *mode);
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 valid = false;
                 break;
             }
@@ -415,8 +415,8 @@ static int CheckModeSyntax(char **mode_p, char *valid_ops, char *valid_nperms, P
         }
         else
         {
-            CfOut(cf_error, "", "Mode string contains invalid characters");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Mode string contains invalid characters");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             valid = false;
             break;
         }
@@ -450,8 +450,8 @@ static int CheckPermTypeSyntax(char *permt, int deny_support, Promise *pp)
         }
         else
         {
-            CfOut(cf_error, "", "Deny permission not supported by this ACL type");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Deny permission not supported by this ACL type");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         }
     }
 

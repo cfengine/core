@@ -85,7 +85,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
     if (cp == NULL)
     {
-        CfOut(cf_error, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
     if (!IsDefinedClass(pp->classes, pp->ns))
@@ -102,7 +102,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     {
         if (GetIntConstraint("persistence", pp) == 0)
         {
-            CfOut(cf_verbose, "", " ?> Cancelling cached persistent class %s", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
             DeletePersistentContext(pp->promiser);
         }
         return false;
@@ -188,8 +188,8 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            CfOut(cf_error, "", " !! No classes to select on RHS");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! No classes to select on RHS");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
 
@@ -217,8 +217,8 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
             if (result < 0)
             {
-                CfOut(cf_error, "", " !! Non-positive integer in class distribution");
-                PromiseRef(cf_error, pp);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-positive integer in class distribution");
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 return false;
             }
 
@@ -227,8 +227,8 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            CfOut(cf_error, "", " !! An empty distribution was specified on RHS");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! An empty distribution was specified on RHS");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
     }
@@ -240,8 +240,8 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
     if (cp->rval.type != RVAL_TYPE_LIST)
     {
-        CfOut(cf_error, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return true;
     }
 
@@ -313,19 +313,19 @@ void KeepClassContextPromise(Promise *pp)
 
     if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
     {
-        CfOut(cf_verbose, "", "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
         snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
     }
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
         return;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
         return;
     }
 
@@ -335,25 +335,25 @@ void KeepClassContextPromise(Promise *pp)
     {
         if (EvalClassExpression(a.context.expression, pp))
         {
-            CfOut(cf_verbose, "", " ?> defining additional global class %s\n", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
 
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else
             {
                 if (a.context.persistent > 0)
                 {
-                    CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     NewClass(pp->promiser, pp->ns);
                 }
                 else
                 {
-                    CfOut(cf_verbose, "", " ?> defining explicit global class %s\n", pp->promiser);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
                     NewClass(pp->promiser, pp->ns);
                 }
             }
@@ -373,23 +373,23 @@ void KeepClassContextPromise(Promise *pp)
         {
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else
             {
                 if (a.context.persistent > 0)
                 {
-                    CfOut(cf_verbose, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    CfOut(cf_verbose, "",
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     NewClass(pp->promiser, pp->ns);
                 }
                 else
                 {
-                    CfOut(cf_verbose, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
                     NewBundleClass(pp->promiser, pp->bundle, pp->ns);
                 }
             }
@@ -413,7 +413,7 @@ void NewClass(const char *oclass, const char *ns)
     strcpy(canonclass, oclass);
     if (Chop(canonclass, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(canonclass);
     
@@ -435,13 +435,13 @@ void NewClass(const char *oclass, const char *ns)
 
     if (IsRegexItemIn(ABORTBUNDLEHEAP, context))
     {
-        CfOut(cf_error, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ABORTHEAP, context))
     {
-        CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
     }
 
@@ -456,7 +456,7 @@ void NewClass(const char *oclass, const char *ns)
     {
         if (IsDefinedClass(ip->name, ns))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }
@@ -467,7 +467,7 @@ void NewClass(const char *oclass, const char *ns)
         {
             if (IsDefinedClass(ip->name, ns))
             {
-                CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -511,7 +511,7 @@ void HardClass(const char *oclass)
     strcpy(context, oclass);
     if (Chop(context, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(context);
 
@@ -524,13 +524,13 @@ void HardClass(const char *oclass)
 
     if (IsRegexItemIn(ABORTBUNDLEHEAP, context))
     {
-        CfOut(cf_error, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ABORTHEAP, context))
     {
-        CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
     }
 
@@ -545,7 +545,7 @@ void HardClass(const char *oclass)
     {
         if (IsDefinedClass(ip->name, NULL))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
         }
     }
@@ -556,7 +556,7 @@ void HardClass(const char *oclass)
         {
             if (IsDefinedClass(ip->name, NULL))
             {
-                CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -593,7 +593,7 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
 
     if (Chop(copy, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     if (strlen(copy) == 0)
@@ -605,19 +605,19 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
     
     if (IsRegexItemIn(ABORTBUNDLEHEAP, copy))
     {
-        CfOut(cf_error, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ABORTHEAP, copy))
     {
-        CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
         exit(1);
     }
 
     if (InAlphaList(&VHEAP, copy))
     {
-        CfOut(cf_error, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
     }
 
     if (InAlphaList(&VADDCLASSES, copy))
@@ -631,7 +631,7 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
     {
         if (IsDefinedClass(ip->name, ns))
         {
-            CfOut(cf_error, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
             exit(1);
         }
     }
@@ -642,7 +642,7 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
         {
             if (IsDefinedClass(ip->name, ns))
             {
-                CfOut(cf_error, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -779,7 +779,7 @@ static int IsBracketed(const char *s)
 
     if (strstr(s, ")("))
     {
-        CfOut(cf_error, "", " !! Class expression \"%s\" has broken brackets", s);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has broken brackets", s);
         return false;
     }
 
@@ -791,7 +791,7 @@ static int IsBracketed(const char *s)
             level++;
             if (i > 0 && !strchr(".&|!(", s[i - 1]))
             {
-                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
             }
         }
 
@@ -801,14 +801,14 @@ static int IsBracketed(const char *s)
             level--;
             if (i < strlen(s) - 1 && !strchr(".&|!)", s[i + 1]))
             {
-                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator after of ')'", s);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator after of ')'", s);
             }
         }
     }
 
     if (level != 0)
     {
-        CfOut(cf_error, "", " !! Class expression \"%s\" has broken brackets", s);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has broken brackets", s);
         return false;           /* premature ) */
     }
 
@@ -869,7 +869,7 @@ static int HasBrackets(const char *s, Promise *pp)
             level++;
             if (i > 0 && !strchr(".&|!(", s[i - 1]))
             {
-                 CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
+                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
             }
         }
 
@@ -878,22 +878,22 @@ static int HasBrackets(const char *s, Promise *pp)
             level--;
             if (i < strlen(s) - 1 && !strchr(".&|!)", s[i + 1]))
             {
-                CfOut(cf_error, "", " !! Class expression \"%s\" has a missing operator after ')'", s);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator after ')'", s);
             }
         }
     }
 
     if (level != 0)
     {
-        CfOut(cf_error, "", " !! Class expression \"%s\" has unbalanced brackets", s);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has unbalanced brackets", s);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return true;
     }
 
     if (yes > 1)
     {
-        CfOut(cf_error, "", " !! Class expression \"%s\" has multiple brackets", s);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has multiple brackets", s);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
     else if (yes)
     {
@@ -1156,7 +1156,7 @@ bool IsDefinedClass(const char *context, const char *ns)
     {
         char *errexpr = HighlightExpressionError(context, res.position);
 
-        CfOut(cf_error, "", "Unable to parse class expression: %s", errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", errexpr);
         free(errexpr);
         return false;
     }
@@ -1199,7 +1199,7 @@ static bool EvalWithTokenFromList(const char *expr, AlphaList *token_list)
     {
         char *errexpr = HighlightExpressionError(expr, res.position);
 
-        CfOut(cf_error, "", "Syntax error in expression: %s", errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", errexpr);
         free(errexpr);
         return false;           /* FIXME: return error */
     }
@@ -1306,7 +1306,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
         {
             if (now < state.expires)
             {
-                CfOut(cf_verbose, "", " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -1315,7 +1315,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
     }
     else
     {
-        CfOut(cf_verbose, "", " -> New persistent state %s\n", name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New persistent state %s\n", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -1369,7 +1369,7 @@ void LoadPersistentContext()
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        CfOut(cf_inform, "", " !! Unable to scan persistence cache");
+        CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan persistence cache");
         return;
     }
 
@@ -1381,13 +1381,13 @@ void LoadPersistentContext()
 
         if (now > q.expires)
         {
-            CfOut(cf_verbose, "", " Persistent class %s expired\n", key);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Persistent class %s expired\n", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            CfOut(cf_verbose, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
-            CfOut(cf_verbose, "", " Adding persistent class %s to heap\n", key);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Adding persistent class %s to heap\n", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
@@ -1616,7 +1616,7 @@ void SaveClassEnvironment(void)
     snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
     if ((fp = fopen(file, "w")) == NULL)
     {
-        CfOut(cf_inform, "", "Could not open allclasses cache file");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
         return;
     }
 
@@ -1649,13 +1649,13 @@ void DeleteAllClasses(const Rlist *list)
 
         if (IsHardClass((char *) rp->item))
         {
-            CfOut(cf_error, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
                   RlistScalarValue(rp));
         }
 
         string = (char *) (rp->item);
 
-        CfOut(cf_verbose, "", " -> Cancelling class %s\n", string);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
         DeletePersistentContext(string);
         DeleteFromAlphaList(&VHEAP, CanonifyName(string));
         DeleteFromAlphaList(&VADDCLASSES, CanonifyName(string));
@@ -1680,17 +1680,17 @@ void AddAllClasses(const char *ns, const Rlist *list, int persist, ContextStateP
 
         if (IsHardClass(classname))
         {
-            CfOut(cf_error, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
         }
 
         if (persist > 0)
         {
-            CfOut(cf_verbose, "", " ?> defining persistent promise result class %s\n", classname);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
             NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
         }
         else
         {
-            CfOut(cf_verbose, "", " ?> defining promise result class %s\n", classname);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
         }
 
         NewClass(classname, ns);
@@ -1770,10 +1770,10 @@ int MissingDependencies(const Promise *pp)
 
        if (!InAlphaList(&VHANDLES, d))
           {
-          CfOut(cf_verbose, "", "\n");
-          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-          CfOut(cf_verbose, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
-          CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+          CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+          CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+          CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
+          CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
 
           return true;
           }

@@ -51,11 +51,11 @@ void MonCPUGatherData(double *cf_this)
 
     if ((fp = fopen("/proc/stat", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Didn't find proc data\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Didn't find proc data\n");
         return;
     }
 
-    CfOut(cf_verbose, "", "Reading /proc/stat utilization data -------\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reading /proc/stat utilization data -------\n");
 
     while (!feof(fp))
     {
@@ -67,7 +67,7 @@ void MonCPUGatherData(double *cf_this)
         if (sscanf(buf, "%s%ld%ld%ld%ld%ld%ld%ld", cpuname, &userticks, &niceticks, &systemticks, &idle, &iowait, &irq,
                &softirq) != 8)
         {
-            CfOut(cf_verbose, "", "Could not scan /proc/stat line: %60s", buf);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not scan /proc/stat line: %60s", buf);
             continue;
         }
 
@@ -77,7 +77,7 @@ void MonCPUGatherData(double *cf_this)
 
         if (strcmp(cpuname, "cpu") == 0)
         {
-            CfOut(cf_verbose, "", "Found aggregate CPU\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found aggregate CPU\n");
             slot = ob_cpuall;
             cpuidx = MON_CPU_MAX;
         }
@@ -98,7 +98,7 @@ void MonCPUGatherData(double *cf_this)
         }
         else
         {
-            CfOut(cf_verbose, "", "Found nothing (%s)\n", cpuname);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found nothing (%s)\n", cpuname);
             slot = ob_spare;
             fclose(fp);
             return;
@@ -115,7 +115,7 @@ void MonCPUGatherData(double *cf_this)
         LAST_CPU_Q[cpuidx] = q;
         LAST_CPU_T[cpuidx] = total_time;
 
-        CfOut(cf_verbose, "", "Set %s=%d to %.1lf after %ld 100ths of a second \n", OBS[slot][1], slot, cf_this[slot],
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set %s=%d to %.1lf after %ld 100ths of a second \n", OBS[slot][1], slot, cf_this[slot],
               total_time);
     }
 

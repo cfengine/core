@@ -80,7 +80,7 @@ void CheckAutoBootstrap()
     char name[CF_BUFSIZE];
     int repaired = false, have_policy = false, am_appliance = false;
 
-    CfOut(cf_cmdout, "", "** CFEngine BOOTSTRAP probe initiated");
+    CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
     PrintVersionBanner("CFEngine");
     printf("\n");
@@ -110,29 +110,29 @@ void CheckAutoBootstrap()
 
     if (cfstat(name, &sb) == -1)
     {
-        CfOut(cf_cmdout, "", " -> No previous policy has been cached on this host");
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No previous policy has been cached on this host");
     }
     else
     {
-        CfOut(cf_cmdout, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
         have_policy = true;
     }
 
     if (strlen(POLICY_SERVER) > 0)
     {
-        CfOut(cf_cmdout, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
               POLICY_SERVER);
     }
     else
     {
         if (have_policy)
         {
-            CfOut(cf_cmdout, "",
+            CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
         else if (repaired)
         {
-            CfOut(cf_cmdout, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
+            CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }
     }
 
@@ -214,7 +214,7 @@ void SetPolicyServer(char *name)
     {
         if ((fout = fopen(file, "w")) == NULL)
         {
-            CfOut(cf_error, "fopen", "Unable to write policy server file! (%s)", file);
+            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write policy server file! (%s)", file);
             return;
         }
 
@@ -259,11 +259,11 @@ static void CreateFailSafe(char *name)
 
     if ((fout = fopen(name, "w")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Unable to write failsafe file! (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write failsafe file! (%s)", name);
         return;
     }
 
-    CfOut(cf_cmdout, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
+    CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
             "################################################################################\n"
@@ -445,6 +445,6 @@ static void CreateFailSafe(char *name)
 
     if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(cf_error, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
     }
 }

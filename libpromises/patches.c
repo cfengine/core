@@ -215,8 +215,8 @@ int uname(struct utsname *sys)
 
     if (strcmp(buffer, AUTOCONF_HOSTNAME) != 0)
     {
-        CfOut(cf_verbose, "", "This binary was complied on a different host (%s).\n", AUTOCONF_HOSTNAME);
-        CfOut(cf_verbose, "", "This host does not have uname, so I can't tell if it is the exact same OS\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This binary was complied on a different host (%s).\n", AUTOCONF_HOSTNAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This host does not have uname, so I can't tell if it is the exact same OS\n");
     }
 
     strcpy(sys->sysname, AUTOCONF_SYSNAME);
@@ -252,7 +252,7 @@ int uname(struct utsname *sys)
 
 int putenv(char *s)
 {
-    CfOut(cf_verbose, "", "(This system does not have putenv: cannot update CFALLCLASSES\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have putenv: cannot update CFALLCLASSES\n");
     return 0;
 }
 
@@ -278,7 +278,7 @@ int seteuid(uid_t uid)
 # ifdef HAVE_SETREUID
     return setreuid(-1, uid);
 # else
-    CfOut(cf_verbose, "", "(This system does not have setreuid (patches.c)\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have setreuid (patches.c)\n");
     return -1;
 # endif
 }
@@ -294,7 +294,7 @@ int setegid(gid_t gid)
 # ifdef HAVE_SETREGID
     return setregid(-1, gid);
 # else
-    CfOut(cf_verbose, "", "(This system does not have setregid (patches.c)\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have setregid (patches.c)\n");
     return -1;
 # endif
 }
@@ -341,7 +341,7 @@ char *cf_strtimestamp_local(const time_t time, char *buf)
 
     if (localtime_r(&time, &tm) == NULL)
     {
-        CfOut(cf_verbose, "localtime_r", "Unable to parse passed timestamp");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "localtime_r", "Unable to parse passed timestamp");
         return NULL;
     }
 
@@ -356,7 +356,7 @@ char *cf_strtimestamp_utc(const time_t time, char *buf)
 
     if (gmtime_r(&time, &tm) == NULL)
     {
-        CfOut(cf_verbose, "gmtime_r", "Unable to parse passed timestamp");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "gmtime_r", "Unable to parse passed timestamp");
         return NULL;
     }
 
@@ -370,7 +370,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
     /* Security checks */
     if ((tm->tm_year < -2899) || (tm->tm_year > 8099))
     {
-        CfOut(cf_error, "", "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to format timestamp: passed year is out of range: %d", tm->tm_year + 1900);
         return NULL;
     }
 
@@ -380,7 +380,7 @@ static char *cf_format_strtimestamp(struct tm *tm, char *buf)
                  DAY_TEXT[tm->tm_wday ? (tm->tm_wday - 1) : 6], MONTH_TEXT[tm->tm_mon],
                  tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec, tm->tm_year + 1900) >= 26)
     {
-        CfOut(cf_error, "", "Unable to format timestamp: passed values are out of range");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to format timestamp: passed values are out of range");
         return NULL;
     }
 
@@ -401,7 +401,7 @@ int cf_closesocket(int sd)
 
     if (res != 0)
     {
-        CfOut(cf_error, "cf_closesocket", "!! Could not close socket");
+        CfOut(OUTPUT_LEVEL_ERROR, "cf_closesocket", "!! Could not close socket");
     }
 
     return res;

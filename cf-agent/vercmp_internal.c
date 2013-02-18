@@ -48,7 +48,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
 /* If the format of the version string doesn't match, we're already doomed */
 
-    CfOut(cf_verbose, "", " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
 
     for (rp_pr = separators_pr, rp_in = separators_in; (rp_pr != NULL) && (rp_in != NULL);
          rp_pr = rp_pr->next, rp_in = rp_in->next)
@@ -68,11 +68,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
     if (result)
     {
-        CfOut(cf_verbose, "", " -> Verified that versioning models are compatible\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verified that versioning models are compatible\n");
     }
     else
     {
-        CfOut(cf_verbose, "", " !! Versioning models for (%s,%s) were incompatible\n", v1, v2);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Versioning models for (%s,%s) were incompatible\n", v1, v2);
     }
 
     int version_equal = (strcmp(v2, v1) == 0);
@@ -174,11 +174,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
     if (version_matched)
     {
-        CfOut(cf_verbose, "", " -> Verified version constraint promise kept\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verified version constraint promise kept\n");
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Versions did not match\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Versions did not match\n");
     }
 
     return version_matched;

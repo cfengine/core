@@ -34,7 +34,7 @@ int SetServerListenState(size_t queue_size)
 {
     if (!SERVER_LISTEN)
     {
-        CfOut(cf_verbose, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
     }
 
     return InitServer(queue_size);

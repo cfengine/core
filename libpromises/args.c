@@ -75,7 +75,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
     if (len1 != len2)
     {
-        CfOut(cf_error, "", " !! Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
         return false;
     }
 
@@ -86,9 +86,9 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
         if (dtg != dtt)
         {
-            CfOut(cf_error, "", "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
                   (char *) rpt->item);
-            CfOut(cf_error, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, CF_DATATYPES[dtg],
+            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, CF_DATATYPES[dtg],
                   (char *) rpt->item, CF_DATATYPES[dtt]);
         }
 
@@ -172,9 +172,9 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
     {
         if (len != FnNumArgs(fn))
         {
-            CfOut(cf_error, "", "Arguments to function %s(.) do not tally. Expect %d not %d",
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Arguments to function %s(.) do not tally. Expect %d not %d",
                   fp->name, FnNumArgs(fn), len);
-            PromiseRef(cf_error, pp);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             exit(1);
         }
     }

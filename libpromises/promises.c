@@ -151,7 +151,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         {
             if (strcmp(bp->type, cp->lval) != 0)
             {
-                CfOut(cf_error, "",
+                CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
                       bodyname, pp->offset.line, (pp->audit)->filename, bp->type, cp->lval);
                 ERRORCOUNT++;
@@ -169,7 +169,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
                 if (fp == NULL || fp->args == NULL)
                 {
-                    CfOut(cf_error, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
@@ -178,7 +178,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                 if (fp && bp && fp->args && bp->args && !MapBodyArgs("body", fp->args, bp->args))
                 {
                     ERRORCOUNT++;
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
@@ -200,7 +200,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
                 if (fp != NULL)
                 {
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %zu of %s (possible unquoted literal value)",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
@@ -224,7 +224,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
             if (cp->references_body && !IsBundle(policy->bundles, bodyname))
             {
-                CfOut(cf_error, "",
+                CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",
                       bodyname, pp->offset.line, (pp->audit)->filename);
             }
@@ -449,7 +449,7 @@ Promise *NewPromise(char *type, char *promiser)
 
 /*****************************************************************************/
 
-void PromiseRef(enum cfreport level, const Promise *pp)
+void PromiseRef(OutputLevel level, const Promise *pp)
 {
     char *v;
     Rval retval;

@@ -94,7 +94,7 @@ void NewScope(const char *name)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -130,7 +130,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 
     if (RlistLen(lvals) != RlistLen(rvals))
     {
-        CfOut(cf_error, "", "While constructing scope \"%s\"\n", scope);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "While constructing scope \"%s\"\n", scope);
         fprintf(stderr, "Formal = ");
         RlistShow(stderr, lvals);
         fprintf(stderr, ", Actual = ");
@@ -143,7 +143,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
     {
         lval = (char *) rpl->item;
 
-        CfOut(cf_verbose, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
@@ -170,7 +170,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
                 NewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
                 NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
                 break;
             }
@@ -195,7 +195,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
             }
             else
             {
-                CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
             }
             break;
         default:
@@ -232,7 +232,7 @@ void DeleteAllScope()
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -267,7 +267,7 @@ void DeleteScope(char *name)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -338,7 +338,7 @@ void CopyScope(const char *new_scopename, const char *old_scopename)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 

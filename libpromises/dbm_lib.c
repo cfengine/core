@@ -44,13 +44,13 @@ int DBPathLock(const char *filename)
 
     if(fd == -1)
     {
-        CfOut(cf_error, "flock", "!! Unable to open database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file");
         return -1;
     }
 
     if (ExclusiveLockFile(fd) == -1)
     {
-        CfOut(cf_error, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
         close(fd);
         return -1;
     }
@@ -62,7 +62,7 @@ void DBPathUnLock(int fd)
 {
     if(ExclusiveUnlockFile(fd) != 0)
     {
-        CfOut(cf_error, "close", "!! Could not close db lock-file");
+        CfOut(OUTPUT_LEVEL_ERROR, "close", "!! Could not close db lock-file");
     }
 }
 
@@ -76,7 +76,7 @@ void DBPathMoveBroken(const char *filename)
 
     if(cf_rename(filename, filename_broken) != 0)
     {
-        CfOut(cf_error, "", "!! Failed moving broken db out of the way");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed moving broken db out of the way");
     }
 
     free(filename_broken);

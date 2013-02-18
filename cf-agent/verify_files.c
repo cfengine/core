@@ -74,13 +74,13 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
     if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
-        CfOut(cf_verbose, "", " -> Using literal pathtype for %s\n", wildpath);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using literal pathtype for %s\n", wildpath);
         (*fnptr) (wildpath, pp, report_context);
         return;
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
     }
 
     pbuffer[0] = '\0';
@@ -113,7 +113,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
 
         if (!JoinPath(pbuffer, ip->name))
         {
-            CfOut(cf_error, "", "Buffer has limited size in LocateFilePromiserGroup\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Buffer has limited size in LocateFilePromiserGroup\n");
             return;
         }
 
@@ -121,10 +121,10 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
         {
             if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {
-                CfOut(cf_inform, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
                       pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
-                PromiseRef(cf_inform, pp);
+                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             }
         }
     }
@@ -144,7 +144,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
         if ((dirh = OpenDirLocal(pbuffer)) == NULL)
         {
             // Could be a dummy directory to be created so this is not an error.
-            CfOut(cf_verbose, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
             (*fnptr) (wildpath, pp, report_context);
             DeleteItemList(path);
             return;
@@ -197,7 +197,7 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
                 {
                     Promise *pcopy;
 
-                    CfOut(cf_verbose, "", " -> Using expanded file base path %s\n", nextbuffer);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using expanded file base path %s\n", nextbuffer);
 
                     /* Now need to recompute any back references to get the complete path */
 
@@ -222,13 +222,13 @@ void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *p
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Using file base path %s\n", pbuffer);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using file base path %s\n", pbuffer);
         (*fnptr) (pbuffer, pp, report_context);
     }
 
     if (count == 0)
     {
-        CfOut(cf_verbose, "", "No promiser file objects matched as regular expression %s\n", wildpath);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No promiser file objects matched as regular expression %s\n", wildpath);
 
         if (create)
         {
@@ -289,14 +289,14 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" exists as promised", path);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> File \"%s\" exists as promised", path);
         }
         exists = true;
     }
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
     }
 
     if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */
@@ -316,7 +316,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         ChopLastNode(basedir);
         if (chdir(basedir))
         {
-            CfOut(cf_error, "", "Failed to chdir into '%s'\n", basedir);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to chdir into '%s'\n", basedir);
         }
     }
 
@@ -356,7 +356,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         {
             if (a.havedepthsearch)
             {
-                CfOut(cf_inform, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Warning: depth_search (recursion) is promised for a base object %s that is not a directory",
                       path);
                 SaveSetuid(a, pp, report_context);
@@ -374,7 +374,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
         {
             if (!S_ISDIR(dsb.st_mode))
             {
-                CfOut(cf_error, "", "Cannot promise to link the children of %s as it is not a directory!",
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link the children of %s as it is not a directory!",
                       a.link.source);
                 SaveSetuid(a, pp, report_context);
                 YieldCurrentLock(thislock);
@@ -413,7 +413,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
             /* unless child nodes were repaired, set a promise kept class */
             if (!IsDefinedClass("repaired" , pp->ns))
             {
-                cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
         }
 
@@ -490,7 +490,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
 
     if (pp->edcontext == NULL)
     {
-        cfPS(cf_error, CF_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
         FinishEditContext(pp->edcontext, a, pp, report_context);
         YieldCurrentLock(thislock);
         return false;
@@ -532,7 +532,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
             method_deref = edit_bundle_name;
         }        
 
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
         // add current filename to context - already there?
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
@@ -585,7 +585,7 @@ int ScheduleEditOperation(char *filename, Attributes a, Promise *pp, const Repor
            method_deref = edit_bundle_name;
            }
         
-        CfOut(cf_verbose, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
 
         if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))
         {
@@ -637,8 +637,8 @@ void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_contex
 
     if (AM_BACKGROUND_PROCESS && (!pp->done))
     {
-        CfOut(cf_verbose, "", "Exiting backgrounded promise");
-        PromiseRef(cf_verbose, pp);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
+        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
         exit(0);
     }
 
@@ -680,7 +680,7 @@ static void LoadSetuid(Attributes a, Promise *pp)
 
     if (!LoadFileAsItemList(&VSETUIDLIST, filename, b, pp))
     {
-        CfOut(cf_verbose, "", "Did not find any previous setuid log %s, creating a new one", filename);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Did not find any previous setuid log %s, creating a new one", filename);
     }
 }
 

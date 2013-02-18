@@ -87,7 +87,7 @@ void NewScalar(const char *scope, const char *lval, const char *rval, DataType d
 
     if (ptr == NULL)
     {
-        CfOut(cf_error, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
         return;
     }
 
@@ -870,7 +870,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
 
     if (lval == NULL || scope == NULL)
     {
-        CfOut(cf_error, "", "scope.value = %s.%s", scope, lval);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "scope.value = %s.%s", scope, lval);
         ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
     }
 
@@ -896,7 +896,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
 
             if (StringContainsVar((char *) rval.item, lval))
             {
-                CfOut(cf_error, "", "Scalar variable %s.%s contains itself (non-convergent): %s", scope, lval,
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", scope, lval,
                       (char *) rval.item);
                 return false;
             }
@@ -908,7 +908,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
             {
                 if (StringContainsVar((char *) rp->item, lval))
                 {
-                    CfOut(cf_error, "", "List variable %s contains itself (non-convergent)", lval);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval);
                     return false;
                 }
             }
@@ -938,7 +938,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
 
             if (listvars != NULL)
             {
-                CfOut(cf_error, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
                       lval, CONTEXTID);
             }
 
@@ -960,14 +960,14 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, rval.type))
             {
-                CfOut(cf_inform, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
                 if (fname)
                 {
-                    CfOut(cf_inform, "", " !! Rule from %s at/before line %d\n", fname, lineno);
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " !! Rule from %s at/before line %d\n", fname, lineno);
                 }
                 else
                 {
-                    CfOut(cf_inform, "", " !! in bundle parameterization\n");
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " !! in bundle parameterization\n");
                 }
             }
             RvalDestroy(assoc->rval);
@@ -1003,7 +1003,7 @@ void DeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
     if ((len = RlistLen(namelist)) != RlistLen(dereflist))
     {
-        CfOut(cf_error, "", " !! Name list %d, dereflist %d\n", len, RlistLen(dereflist));
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Name list %d, dereflist %d\n", len, RlistLen(dereflist));
         ProgrammingError("Software Error DeRefLists... correlated lists not same length");
     }
 

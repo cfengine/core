@@ -88,20 +88,20 @@ void EndAudit(int background_tasks)
         char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
         time_t now = time(NULL);
 
-        CfOut(cf_inform, "", " -> Recording promise valuations");
+        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
 
         snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
         snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
 
         if ((fout = fopen(name, "a")) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unable to write to the value log %s\n", name);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
             return;
         }
 
         if (Chop(datestr, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
         }
         fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
@@ -122,7 +122,7 @@ void EndAudit(int background_tasks)
     if (total == 0)
     {
         *string = '\0';
-        CfOut(cf_verbose, "", "Outcome of version %s: No checks were scheduled\n", sp);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Outcome of version %s: No checks were scheduled\n", sp);
         return;
     }
     else
@@ -339,7 +339,7 @@ void PromiseLog(char *s)
 
     if ((fout = fopen(filename, "a")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Could not open %s", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
         return;
     }
 
@@ -363,8 +363,8 @@ void PromiseBanner(Promise *pp)
         strcpy(handle, "(enterprise only)");
     }
 
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "    .........................................................\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -388,20 +388,20 @@ void PromiseBanner(Promise *pp)
 
     if (pp->ref)
     {
-        CfOut(cf_verbose, "", "\n");
-        CfOut(cf_verbose, "", "    Comment:  %s\n", pp->ref);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    Comment:  %s\n", pp->ref);
     }
 
-    CfOut(cf_verbose, "", "    .........................................................\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /************************************************************************/
 
 void BannerSubBundle(Bundle *bp, Rlist *params)
 {
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -419,8 +419,8 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
         if (VERBOSE || DEBUG)
             printf("\n");
     }
-    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /************************************************************************/
@@ -435,7 +435,7 @@ void FatalError(char *s, ...)
         va_start(ap, s);
         vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
         va_end(ap);
-        CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
     }
 
     EndAudit(0);

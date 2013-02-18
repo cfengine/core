@@ -131,7 +131,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
     }
 
     return config;

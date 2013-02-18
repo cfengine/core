@@ -72,7 +72,7 @@ int inet_pton(int af, const char *src, void *dst)
 
     if (getaddrinfo(src, NULL, &hints, &res) != 0)
     {
-        CfOut(cf_error, "getaddrinfo", "!! Could not resolve host \"%s\"", src);
+        CfOut(OUTPUT_LEVEL_ERROR, "getaddrinfo", "!! Could not resolve host \"%s\"", src);
         return -1;
     }
 

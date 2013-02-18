@@ -85,15 +85,15 @@ void VerifyReportPromise(Promise *pp)
 
     PromiseBanner(pp);
 
-    cfPS(cf_verbose, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
+    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
-        CfFOut(a.report.to_file, cf_error, "", "%s", pp->promiser);
+        CfFOut(a.report.to_file, OUTPUT_LEVEL_ERROR, "", "%s", pp->promiser);
     }
     else
     {
-        CfOut(cf_reporting, "", "R: %s", pp->promiser);
+        CfOut(OUTPUT_LEVEL_REPORTING, "", "R: %s", pp->promiser);
     }
 
     if (a.report.haveprintfile)
@@ -126,13 +126,13 @@ static void PrintFile(Attributes a, Promise *pp)
 
     if (a.report.filename == NULL)
     {
-        CfOut(cf_verbose, "", "Printfile promise was incomplete, with no filename.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Printfile promise was incomplete, with no filename.\n");
         return;
     }
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
         return;
     }
 
@@ -146,7 +146,7 @@ static void PrintFile(Attributes a, Promise *pp)
                 UnexpectedError("Failed to read line from stream");
             }
         }
-        CfOut(cf_error, "", "R: %s", buffer);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "R: %s", buffer);
         lines++;
     }
 

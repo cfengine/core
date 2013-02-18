@@ -49,7 +49,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
                 const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", "Windows does not support symbolic links (at VerifyLink())");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
     return CF_FAIL;
 }
 
@@ -95,8 +95,8 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
 
     if ((!source_file_exists) && (attr.link.when_no_file != cfa_force) && (attr.link.when_no_file != cfa_delete))
     {
-        CfOut(cf_inform, "", "Source %s for linking is absent", absto);
-        cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s, no source", destination, to);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Source %s for linking is absent", absto);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s, no source", destination, to);
         return CF_WARN;
     }
 
@@ -113,7 +113,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
 
         if (!MakeParentDirectory2(destination, attr.move_obstructions, report_context, EnforcePromise(attr.transaction.action)))
         {
-            cfPS(cf_error, CF_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
                  destination, to, EnforcePromise(attr.transaction.action));
             return CF_FAIL;
         }
@@ -121,7 +121,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
         {
             if (!MoveObstruction(destination, attr, pp, report_context))
             {
-                cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s", destination, to);
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s", destination, to);
                 return CF_FAIL;
             }
 
@@ -147,11 +147,11 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
             {
                 if (!DONTDO)
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, "Overriding incorrect link %s\n", destination);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, "Overriding incorrect link %s\n", destination);
 
                     if (unlink(destination) == -1)
                     {
-                        cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Link %s points to %s not %s - error removing link",
+                        cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Link %s points to %s not %s - error removing link",
                              destination, linkbuf, to);
                         return CF_FAIL;
                     }
@@ -160,20 +160,20 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
                 }
                 else
                 {
-                    CfOut(cf_error, "", " !! Must remove incorrect link %s\n", destination);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Must remove incorrect link %s\n", destination);
                     return CF_NOP;
                 }
             }
             else
             {
-                cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Link %s points to %s not %s - not authorized to override",
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Link %s points to %s not %s - not authorized to override",
                      destination, linkbuf, to);
                 return true;
             }
         }
         else
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Link %s points to %s - promise kept", destination, source);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> Link %s points to %s - promise kept", destination, source);
             return CF_NOP;
         }
     }
@@ -211,8 +211,8 @@ char VerifyAbsoluteLink(char *destination, const char *source, Attributes attr, 
     {
         if (!ExpandLinks(expand, absto, 0))     /* begin at level 1 and beam out at 15 */
         {
-            CfOut(cf_error, "", " !! Failed to make absolute link in\n");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to make absolute link in\n");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return CF_FAIL;
         }
         else
@@ -248,7 +248,7 @@ char VerifyRelativeLink(char *destination, const char *source, Attributes attr, 
 
     if (!CompressPath(linkto, source))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, attr, " !! Failed to link %s to %s\n", destination, source);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, " !! Failed to link %s to %s\n", destination, source);
         return CF_FAIL;
     }
 
@@ -257,7 +257,7 @@ char VerifyRelativeLink(char *destination, const char *source, Attributes attr, 
 
     if (strcmp(commonto, commonfrom) == 0)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, attr, " !! Failed to link %s to %s - can't link file %s to itself\n",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, " !! Failed to link %s to %s - can't link file %s to itself\n",
              destination, source, commonto);
         return CF_FAIL;
     }
@@ -339,13 +339,13 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 
     if (cfstat(absto, &ssb) == -1)
     {
-        cfPS(cf_inform, CF_INTERPT, "", pp, attr, " !! Source file %s doesn't exist\n", source);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, " !! Source file %s doesn't exist\n", source);
         return CF_WARN;
     }
 
     if (!S_ISREG(ssb.st_mode))
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr,
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr,
              " !! Source file %s is not a regular file, not appropriate to hard-link\n", to);
         return CF_WARN;
     }
@@ -363,12 +363,12 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 
     if ((dsb.st_ino != ssb.st_ino) && (dsb.st_dev != ssb.st_dev))
     {
-        CfOut(cf_verbose, "", " !! If this is POSIX, unable to determine if %s is hard link is correct\n", destination);
-        CfOut(cf_verbose, "", " !! since it points to a different filesystem!\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! If this is POSIX, unable to determine if %s is hard link is correct\n", destination);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! since it points to a different filesystem!\n");
 
         if ((dsb.st_mode == ssb.st_mode) && (dsb.st_size == ssb.st_size))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, attr, "Hard link (%s->%s) on different device APPEARS okay\n", destination,
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, "Hard link (%s->%s) on different device APPEARS okay\n", destination,
                  to);
             return CF_NOP;
         }
@@ -376,11 +376,11 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 
     if ((dsb.st_ino == ssb.st_ino) && (dsb.st_dev == ssb.st_dev))
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Hard link (%s->%s) exists and is okay\n", destination, to);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> Hard link (%s->%s) exists and is okay\n", destination, to);
         return CF_NOP;
     }
 
-    CfOut(cf_inform, "", " !! %s does not appear to be a hard link to %s\n", destination, to);
+    CfOut(OUTPUT_LEVEL_INFORM, "", " !! %s does not appear to be a hard link to %s\n", destination, to);
 
     if (!MoveObstruction(destination, attr, pp, report_context))
     {
@@ -398,8 +398,8 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 
 int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
 {
-    CfOut(cf_verbose, "", "Windows does not support symbolic links (at KillGhostLink())");
-    cfPS(cf_error, CF_FAIL, "", pp, attr, " !! Windows does not support killing link \"%s\"", name);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at KillGhostLink())");
+    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Windows does not support killing link \"%s\"", name);
     return false;
 }
 
@@ -418,7 +418,7 @@ int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
 
     if (readlink(name, linkbuf, CF_BUFSIZE - 1) == -1)
     {
-        CfOut(cf_verbose, "", " !! (Can't read link %s while checking for deadlinks)\n", name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! (Can't read link %s while checking for deadlinks)\n", name);
         return true;            /* ignore */
     }
 
@@ -439,13 +439,13 @@ int KillGhostLink(const char *name, Attributes attr, const Promise *pp)
     {
         if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {
-            CfOut(cf_verbose, "", " !! %s is a link which points to %s, but that file doesn't seem to exist\n", name,
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! %s is a link which points to %s, but that file doesn't seem to exist\n", name,
                   linkbuf);
 
             if (!DONTDO)
             {
                 unlink(name);   /* May not work on a client-mounted system ! */
-                cfPS(cf_inform, CF_CHG, "", pp, attr,
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr,
                      " -> Removing ghost %s - reference to something that is not there\n", name);
                 return true;
             }
@@ -463,19 +463,19 @@ static int MakeLink(const char *from, const char *to, Attributes attr, Promise *
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
-        CfOut(cf_error, "", " !! Need to link files %s -> %s\n", from, to);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Need to link files %s -> %s\n", from, to);
         return false;
     }
     else
     {
         if (symlink(to, from) == -1)
         {
-            cfPS(cf_error, CF_FAIL, "symlink", pp, attr, " !! Couldn't link %s to %s\n", to, from);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "symlink", pp, attr, " !! Couldn't link %s to %s\n", to, from);
             return false;
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Linked files %s -> %s\n", from, to);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Linked files %s -> %s\n", from, to);
             return true;
         }
     }
@@ -488,8 +488,8 @@ static int MakeLink(const char *from, const char *to, Attributes attr, Promise *
 
 int MakeHardLink(const char *from, const char *to, Attributes attr, const Promise *pp)
 {                               // TODO: Implement ?
-    CfOut(cf_verbose, "", "Hard links are not yet supported on Windows");
-    cfPS(cf_error, CF_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Hard links are not yet supported on Windows");
+    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
     return false;
 }
 
@@ -499,19 +499,19 @@ int MakeHardLink(const char *from, const char *to, Attributes attr, const Promis
 {
     if (DONTDO)
     {
-        CfOut(cf_error, "", " !! Need to hard link files %s -> %s\n", from, to);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Need to hard link files %s -> %s\n", from, to);
         return false;
     }
     else
     {
         if (link(to, from) == -1)
         {
-            cfPS(cf_error, CF_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "link", pp, attr, " !! Couldn't (hard) link %s to %s\n", to, from);
             return false;
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> (Hard) Linked files %s -> %s\n", from, to);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> (Hard) Linked files %s -> %s\n", from, to);
             return true;
         }
     }
@@ -528,7 +528,7 @@ int MakeHardLink(const char *from, const char *to, Attributes attr, const Promis
 
 int ExpandLinks(char *dest, const char *from, int level)
 {
-    CfOut(cf_error, "", "!! Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows does not support symbolic links (at ExpandLinks(%s,%s))", dest, from);
     return false;
 }
 
@@ -545,7 +545,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
     if (level >= CF_MAXLINKLEVEL)
     {
-        CfOut(cf_error, "", " !! Too many levels of symbolic links to evaluate absolute path\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Too many levels of symbolic links to evaluate absolute path\n");
         return false;
     }
 
@@ -585,7 +585,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
         if (lstat(dest, &statbuf) == -1)        /* File doesn't exist so we can stop here */
         {
-            CfOut(cf_error, "lstat", " !! Can't stat %s in ExpandLinks\n", dest);
+            CfOut(OUTPUT_LEVEL_ERROR, "lstat", " !! Can't stat %s in ExpandLinks\n", dest);
             return false;
         }
 
@@ -595,7 +595,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
             if (readlink(dest, buff, CF_BUFSIZE - 1) == -1)
             {
-                CfOut(cf_error, "readlink", " !! Expand links can't stat %s\n", dest);
+                CfOut(OUTPUT_LEVEL_ERROR, "readlink", " !! Expand links can't stat %s\n", dest);
                 return false;
             }
             else

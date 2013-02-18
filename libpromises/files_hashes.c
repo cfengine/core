@@ -88,7 +88,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, attr, "Unable to open the hash database!");
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Unable to open the hash database!");
         return false;
     }
 
@@ -125,7 +125,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
             }
         }
 
-        cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File hash for %s is correct", filename);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> File hash for %s is correct", filename);
         CloseDB(dbp);
         return false;
     }
@@ -208,7 +208,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
             if ((bytes1 != bytes2) || (memcmp(buff1, buff2, bytes1) != 0))
             {
-                CfOut(cf_verbose, "", "Binary Comparison mismatch...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Binary Comparison mismatch...\n");
                 close(fd2);
                 close(fd1);
                 return true;
@@ -242,7 +242,7 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cf
 
     if ((file = fopen(filename, "rb")) == NULL)
     {
-        CfOut(cf_inform, "fopen", "%s can't be opened\n", filename);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "%s can't be opened\n", filename);
     }
     else
     {
@@ -275,7 +275,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     switch (type)
     {
     case cf_crypt:
-        CfOut(cf_error, "", "The crypt support is not presently implemented, please use another algorithm instead");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use another algorithm instead");
         memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
 
@@ -284,7 +284,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
         if (md == NULL)
         {
-            CfOut(cf_inform, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -327,7 +327,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
     switch (type)
     {
     case cf_crypt:
-        CfOut(cf_error, "", "The crypt support is not presently implemented, please use sha256 instead");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use sha256 instead");
         break;
 
     default:
@@ -335,7 +335,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
 
         if (md == NULL)
         {
-            CfOut(cf_inform, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -460,7 +460,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        CfOut(cf_inform, "", " !! Unable to scan hash database");
+        CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan hash database");
         CloseDB(dbp);
         return;
     }
@@ -479,7 +479,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
             }
             else
             {
-                cfPS(cf_error, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
             LogHashChange(obj, cf_file_removed, "File removed", pp);

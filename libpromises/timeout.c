@@ -50,12 +50,12 @@ void TimeOut()
 
     if (ALARM_PID != -1)
     {
-        CfOut(cf_verbose, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
         GracefulTerminate(ALARM_PID);
     }
     else
     {
-        CfOut(cf_verbose, "", "%s> Time out\n", VPREFIX);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s> Time out\n", VPREFIX);
     }
 }
 
@@ -68,14 +68,14 @@ void SetReferenceTime(int setclasses)
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        CfOut(cf_error, "time", "Couldn't read system clock\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "time", "Couldn't read system clock\n");
     }
 
     CFSTARTTIME = tloc;
 
     snprintf(vbuff, CF_BUFSIZE, "%s", cf_ctime(&tloc));
 
-    CfOut(cf_verbose, "", "Reference time set to %s\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reference time set to %s\n", cf_ctime(&tloc));
 
     if (setclasses)
     {
@@ -92,7 +92,7 @@ void SetStartTime(void)
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        CfOut(cf_error, "time", "Couldn't read system clock\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "time", "Couldn't read system clock\n");
     }
 
     CFINITSTARTTIME = tloc;
@@ -110,7 +110,7 @@ static void RemoveTimeClass(time_t time)
 
     if (localtime_r(&time, &parsed_time) == NULL)
     {
-        CfOut(cf_error, "localtime_r", "Unable to parse passed time");
+        CfOut(OUTPUT_LEVEL_ERROR, "localtime_r", "Unable to parse passed time");
         return;
     }
 
@@ -213,13 +213,13 @@ static void AddTimeClass(time_t time)
 
     if (localtime_r(&time, &parsed_time) == NULL)
     {
-        CfOut(cf_error, "localtime_r", "Unable to parse passed time");
+        CfOut(OUTPUT_LEVEL_ERROR, "localtime_r", "Unable to parse passed time");
         return;
     }
 
     if (gmtime_r(&time, &gmt_parsed_time) == NULL)
     {
-        CfOut(cf_error, "gmtime_r", "Unable to parse passed date");
+        CfOut(OUTPUT_LEVEL_ERROR, "gmtime_r", "Unable to parse passed date");
         return;
     }
 
@@ -309,7 +309,7 @@ bool IsReadReady(int fd, int timeout_sec)
 
     if(ret < 0)
     {
-        CfOut(cf_error, "select", "!! IsReadReady: Failed checking for data");
+        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
         return false;
     }
 
@@ -324,7 +324,7 @@ bool IsReadReady(int fd, int timeout_sec)
     }
 
     // can we get here?
-    CfOut(cf_error, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
 
     return false;
 }

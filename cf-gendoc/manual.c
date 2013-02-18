@@ -71,7 +71,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
     if ((fout = fopen(output_file, "w")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Unable to open %s for writing\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to open %s for writing\n", filename);
         return;
     }
 
@@ -124,7 +124,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
             || (st == CF_KNOWLEDGE_SUBTYPES) || (st == CF_MEASUREMENT_SUBTYPES))
 
         {
-            CfOut(cf_verbose, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
             fprintf(fout, "@c *****************************************************\n");
             fprintf(fout, "@c * CHAPTER \n");
             fprintf(fout, "@c *****************************************************\n");
@@ -195,7 +195,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 /* Special functions */
 
-    CfOut(cf_verbose, "", "Dealing with chapter / bundle type - special functions\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type - special functions\n");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -224,7 +224,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 /* Special variables */
 
-    CfOut(cf_verbose, "", "Dealing with chapter / bundle type - special variables\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type - special variables\n");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -264,7 +264,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 // Log files
 
-    CfOut(cf_verbose, "", "Dealing with chapter / bundle type - Logs and records\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type - Logs and records\n");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -402,7 +402,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
 
     for (j = 0; st[j].bundle_type != NULL; j++)
     {
-        CfOut(cf_verbose, "", " - Dealing with promise type %s\n", st[j].subtype);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Dealing with promise type %s\n", st[j].subtype);
 
         if ((strcmp("*", st[j].subtype) == 0) && (strcmp("*", st[j].bundle_type) == 0))
         {
@@ -478,7 +478,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
 
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        CfOut(cf_verbose, "", " - -  Dealing with body type %s\n", bs[i].lval);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - -  Dealing with body type %s\n", bs[i].lval);
 
         if (bs[i].range == (void *) CF_BUNDLE)
         {
@@ -702,7 +702,7 @@ static bool GenerateStub(const char *filename)
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        CfOut(cf_inform, "fopen", "Could not write to manual source %s\n", filename);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Could not write to manual source %s\n", filename);
         return false;
     }
 
@@ -713,7 +713,7 @@ static bool GenerateStub(const char *filename)
 #endif
     fprintf(fp, "\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n", filename);
     fclose(fp);
-    CfOut(cf_verbose, "", "Created %s template\n", filename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Created %s template\n", filename);
     return true;
 }
 
@@ -741,7 +741,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
     {
         if (!GenerateStub(filename))
         {
-            CfOut(cf_inform, "", "Unable to write down stub for missing texinfo file");
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write down stub for missing texinfo file");
             free(filename);
             return NULL;
         }
@@ -749,7 +749,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        CfOut(cf_inform, "fopen", "Could not read manual source %s\n", filename);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Could not read manual source %s\n", filename);
         free(filename);
         return NULL;
     }
@@ -764,7 +764,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     if ((ferror(fp)) || (cnt != file_size))
     {
-        CfOut(cf_inform, "fread", "Could not read manual source %s\n", filename);
+        CfOut(OUTPUT_LEVEL_INFORM, "fread", "Could not read manual source %s\n", filename);
         free(buffer);
         fclose(fp);
         free(filename);

@@ -207,7 +207,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
     if ((fp = fopen(a.template,"r")) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Unable to open template file \"%s\" to make \"%s\"", a.template, pp->promiser);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Unable to open template file \"%s\" to make \"%s\"", a.template, pp->promiser);
         return NULL;   
     }
 
@@ -234,7 +234,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
 
             if (strcmp(brack, "%]") != 0)
             {
-                cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
+                cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
                 return NULL;
             }
 
@@ -244,7 +244,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
          
                 if (++level > 1)
                 {
-                    cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
                     return NULL;
                 }
 
@@ -303,7 +303,7 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
                 //install independent promise line
                 if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
                 {
-                    CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
                 }
                 np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                 PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
@@ -326,16 +326,16 @@ static void EditClassBanner(enum editlinetypesequence type)
         return;
     }
 
-    CfOut(cf_verbose, "", "     ??  Private class context\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
 
     AlphaListIterator i = AlphaListIteratorInit(&VADDCLASSES);
 
     for (const Item *ip = AlphaListIteratorNext(&i); ip != NULL; ip = AlphaListIteratorNext(&i))
     {
-        CfOut(cf_verbose, "", "     ??       %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /***************************************************************************/
@@ -346,10 +346,10 @@ static void KeepEditLinePromise(Promise *pp)
 
     if (!IsDefinedClass(pp->classes, pp->ns))
     {
-        CfOut(cf_verbose, "", "\n");
-        CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-        CfOut(cf_verbose, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
-        CfOut(cf_verbose, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         return;
     }
 
@@ -360,11 +360,11 @@ static void KeepEditLinePromise(Promise *pp)
 
     if (VarClassExcluded(pp, &sp))
     {
-        CfOut(cf_verbose, "", "\n");
-        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(cf_verbose, "", "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
               pp->promiser, sp);
-        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
@@ -426,7 +426,7 @@ static void VerifyLineDeletions(Promise *pp)
 
     if (!SanityCheckDeletions(a, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised line deletion (%s) is inconsistent", pp->promiser);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! The promised line deletion (%s) is inconsistent", pp->promiser);
         return;
     }
 
@@ -441,13 +441,13 @@ static void VerifyLineDeletions(Promise *pp)
     {
         if (a.region.include_end || a.region.include_start)
         {
-            cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a,
                  " !! The promised line deletion (%s) could not select an edit region in %s (this is a good thing, as policy suggests deleting the markers)",
                  pp->promiser, pp->this_server);
         }
         else
         {
-            cfPS(cf_inform, CF_INTERPT, "", pp, a,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a,
                  " !! The promised line deletion (%s) could not select an edit region in %s (but the delimiters were expected in the file)",
                  pp->promiser, pp->this_server);
         }
@@ -487,22 +487,22 @@ static void VerifyColumnEdits(Promise *pp)
 
     if (a.column.column_separator == NULL)
     {
-        cfPS(cf_error, CF_WARN, "", pp, a, "No field_separator in promise to edit by column for %s", pp->promiser);
-        PromiseRef(cf_error, pp);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, "No field_separator in promise to edit by column for %s", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
     if (a.column.select_column <= 0)
     {
-        cfPS(cf_error, CF_WARN, "", pp, a, "No select_field in promise to edit %s", pp->promiser);
-        PromiseRef(cf_error, pp);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, "No select_field in promise to edit %s", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
     if (!a.column.column_value)
     {
-        cfPS(cf_error, CF_WARN, "", pp, a, "No field_value is promised to column_edit %s", pp->promiser);
-        PromiseRef(cf_error, pp);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, "No field_value is promised to column_edit %s", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
@@ -515,7 +515,7 @@ static void VerifyColumnEdits(Promise *pp)
     }
     else if (!SelectRegion(*start, &begin_ptr, &end_ptr, a, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised column edit (%s) could not select an edit region in %s",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! The promised column edit (%s) could not select an edit region in %s",
              pp->promiser, pp->this_server);
         return;
     }
@@ -550,7 +550,7 @@ static void VerifyPatterns(Promise *pp)
 
 /* *(pp->donep) = true; */
 
-    CfOut(cf_verbose, "", " -> Looking at pattern %s\n", pp->promiser);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking at pattern %s\n", pp->promiser);
 
 /* Are we working in a restricted region? */
 
@@ -559,7 +559,7 @@ static void VerifyPatterns(Promise *pp)
 
     if (!a.replace.replace_value)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised pattern replace (%s) had no replacement string",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! The promised pattern replace (%s) had no replacement string",
              pp->promiser);
         return;
     }
@@ -571,7 +571,7 @@ static void VerifyPatterns(Promise *pp)
     }
     else if (!SelectRegion(*start, &begin_ptr, &end_ptr, a, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
              " !! The promised pattern replace (%s) could not select an edit region in %s", pp->promiser,
              pp->this_server);
         return;
@@ -614,7 +614,7 @@ static void VerifyLineInsertions(Promise *pp)
 
     if (!SanityCheckInsertions(a))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised line insertion (%s) breaks its own promises",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! The promised line insertion (%s) breaks its own promises",
              pp->promiser);
         return;
     }
@@ -628,7 +628,7 @@ static void VerifyLineInsertions(Promise *pp)
     }
     else if (!SelectRegion(*start, &begin_ptr, &end_ptr, a, pp))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
              " !! The promised line insertion (%s) could not select an edit region in %s", pp->promiser,
              pp->this_server);
         return;
@@ -655,7 +655,7 @@ static void VerifyLineInsertions(Promise *pp)
     {
         if (!SelectItemMatching(*start, a.location.line_matching, begin_ptr, end_ptr, &match, &prev, a.location.first_last))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a, " !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s", pp->promiser, a.location.line_matching, pp->this_server);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! The promised line insertion (%s) could not select a locator matching regex \"%s\" in %s", pp->promiser, a.location.line_matching, pp->this_server);
             YieldCurrentLock(thislock);
             return;
         }
@@ -696,7 +696,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
                 {
                     if (ip->next == NULL)
                     {
-                        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+                        cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a,
                              " !! The promised start pattern (%s) found an empty region at the end of file %s",
                              a.region.select_start, pp->this_server);
                         return false;
@@ -725,7 +725,7 @@ If no such region matches, begin_ptr and end_ptr should point to CF_UNDEFINED_IT
 
     if (beg == CF_UNDEFINED_ITEM && a.region.select_start)
     {
-        cfPS(cf_verbose, CF_INTERPT, "", pp, a,
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a,
              " !! The promised start pattern (%s) was not found when selecting edit region in %s",
              a.region.select_start, pp->this_server);
         return false;
@@ -874,7 +874,7 @@ static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Att
 
         if (matches)
         {
-            CfOut(cf_verbose, "", " -> Multi-line region (%d lines) matched text in the file", matches);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Multi-line region (%d lines) matched text in the file", matches);
         }
         else
         {
@@ -889,11 +889,11 @@ static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Att
 
         if (matches)
         {
-            CfOut(cf_verbose, "", " -> Delete chunk of %d lines\n", matches);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Delete chunk of %d lines\n", matches);
 
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -> Need to delete line \"%s\" from %s - but only a warning was promised", ip->name,
                      pp->this_server);
                 np = ip->next;
@@ -903,7 +903,7 @@ static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Att
             {
                 for (i = 1; i <= matches; i++)
                 {
-                    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Deleting the promised line %d \"%s\" from %s", i, ip->name,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Deleting the promised line %d \"%s\" from %s", i, ip->name,
                          pp->this_server);
                     retval = true;
                     noedits = false;
@@ -954,7 +954,7 @@ static int DeletePromisedLinesMatching(Item **start, Item *begin, Item *end, Att
 
     if (noedits)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No need to delete lines from %s, ok", pp->this_server);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No need to delete lines from %s, ok", pp->this_server);
     }
 
     return retval;
@@ -972,7 +972,7 @@ static int ReplacePatterns(Item *file_start, Item *file_end, Attributes a, Promi
 
     if (a.replace.occurrences && (strcmp(a.replace.occurrences, "first") == 0))
     {
-        CfOut(cf_inform, "", "WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
         once_only = true;
     }
 
@@ -992,20 +992,20 @@ static int ReplacePatterns(Item *file_start, Item *file_end, Attributes a, Promi
         {
             if (match_len == strlen(line_buff))
             {
-                CfOut(cf_verbose, "", " -> Improper convergent expression matches defacto convergence, so accepting");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Improper convergent expression matches defacto convergence, so accepting");
                 break;
             }
 
             if (cutoff++ > CF_MAX_REPLACE)
             {
-                CfOut(cf_verbose, "", " !! Too many replacements on this line");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Too many replacements on this line");
                 break;
             }
 
             match_len = end_off - start_off;
             ExpandScalar(a.replace.replace_value, replace);
 
-            CfOut(cf_verbose, "", " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
                   cutoff);
 
             before[0] = after[0] = '\0';
@@ -1024,25 +1024,25 @@ static int ReplacePatterns(Item *file_start, Item *file_end, Attributes a, Promi
 
             if (once_only)
             {
-                CfOut(cf_verbose, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
                 break;
             }
         }
 
         if (NotAnchored(pp->promiser) && BlockTextMatch(pp->promiser, line_buff, &start_off, &end_off))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                  " -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",
                  line_buff, ip->name, pp->promiser, pp->this_server);
-            CfOut(cf_error, "", "Because the regular expression \"%s\" still matches the replacement string \"%s\"",
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Because the regular expression \"%s\" still matches the replacement string \"%s\"",
                   pp->promiser, line_buff);
-            PromiseRef(cf_error, pp);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             break;
         }
 
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(cf_verbose, CF_WARN, "", pp, a,
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_WARN, "", pp, a,
                  " -> Need to replace line \"%s\" in %s - but only a warning was promised", pp->promiser,
                  pp->this_server);
             continue;
@@ -1051,35 +1051,35 @@ static int ReplacePatterns(Item *file_start, Item *file_end, Attributes a, Promi
         {
             free(ip->name);
             ip->name = xstrdup(line_buff);
-            cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Replaced pattern \"%s\" in %s", pp->promiser, pp->this_server);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Replaced pattern \"%s\" in %s", pp->promiser, pp->this_server);
             (pp->edcontext->num_edits)++;
             retval = true;
 
-            CfOut(cf_verbose, "", " -> << (%d)\"%s\"\n", cutoff, ip->name);
-            CfOut(cf_verbose, "", " -> >> (%d)\"%s\"\n", cutoff, line_buff);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> << (%d)\"%s\"\n", cutoff, ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> >> (%d)\"%s\"\n", cutoff, line_buff);
 
             if (once_only)
             {
-                CfOut(cf_verbose, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
                 break;
             }
 
             if (BlockTextMatch(pp->promiser, ip->name, &start_off, &end_off))
             {
-                cfPS(cf_inform, CF_INTERPT, "", pp, a,
+                cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a,
                      " -> Promised replacement \"%s\" for pattern \"%s\" is not properly convergent while editing %s",
                      ip->name, pp->promiser, pp->this_server);
-                CfOut(cf_inform, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Because the regular expression \"%s\" still matches the end-state replacement string \"%s\"",
                       pp->promiser, line_buff);
-                PromiseRef(cf_inform, pp);
+                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             }
         }
     }
 
     if (notfound)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No pattern \"%s\" in %s", pp->promiser, pp->this_server);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No pattern \"%s\" in %s", pp->promiser, pp->this_server);
     }
 
     return retval;
@@ -1112,19 +1112,19 @@ static int EditColumns(Item *file_start, Item *file_end, Attributes a, Promise *
         }
         else
         {
-            CfOut(cf_verbose, "", " - Matched line (%s)\n", ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Matched line (%s)\n", ip->name);
         }
 
         if (!BlockTextMatch(a.column.column_separator, ip->name, &s, &e))
         {
-            cfPS(cf_verbose, CF_INTERPT, "", pp, a, " ! Field edit - no fields found by promised pattern %s in %s",
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " ! Field edit - no fields found by promised pattern %s in %s",
                  a.column.column_separator, pp->this_server);
             return false;
         }
 
         if (e - s > CF_MAXVARSIZE / 2)
         {
-            CfOut(cf_error, "", " !! Line split criterion matches a huge part of the line -- seems to be in error");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Line split criterion matches a huge part of the line -- seems to be in error");
             return false;
         }
 
@@ -1190,14 +1190,14 @@ static int SanityCheckInsertions(Attributes a)
 
     if (not > 1)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               " !! Line insertion selection promise is meaningless - the alternatives are mutually exclusive (only one is allowed)");
         ok = false;
     }
 
     if (with && not)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               " !! Line insertion selection promise is meaningless - cannot mix positive and negative constraints");
         ok = false;
     }
@@ -1215,7 +1215,7 @@ static int SanityCheckInsertions(Attributes a)
             ignore_something = true;
             if (preserve_block)
             {
-                CfOut(cf_error, "", " !! Line insertion should not use whitespace policy with preserve_block");
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Line insertion should not use whitespace policy with preserve_block");
                 ok = false;
             }
             break;
@@ -1224,7 +1224,7 @@ static int SanityCheckInsertions(Attributes a)
 
     if (exact && ignore_something)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               " !! Line insertion selection promise is meaningless - cannot mix exact_match with other ignore whitespace options");
         ok = false;
     }
@@ -1240,7 +1240,7 @@ static int SanityCheckDeletions(Attributes a, Promise *pp)
     {
         if (a.not_matching)
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
         }
     }
@@ -1262,7 +1262,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
 
     if ((fin = fopen(pp->promiser, "r")) == NULL)
     {
-        cfPS(cf_error, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, "Could not read file %s", pp->promiser);
         return false;
     }
     
@@ -1280,7 +1280,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
         }
         if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "StripTrailingNewline was called on an overlong string");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
         }
         
         if (feof(fin) && strlen(buf) == 0)
@@ -1304,7 +1304,7 @@ static int InsertFileAtLocation(Item **start, Item *begin_ptr, Item *end_ptr, It
         
         if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a,
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a,
                  " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
             continue;
         }
@@ -1374,7 +1374,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
 
         if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a, pp))
            {
-           cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->this_server);
+           cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->this_server);
            continue;
            }
 
@@ -1426,7 +1426,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
             {
                 if (a.transaction.action == cfa_warn)
                 {
-                    cfPS(cf_error, CF_WARN, "", pp, a,
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                          " -> Need to insert the promised line \"%s\" in %s - but only a warning was promised", newline,
                          pp->this_server);
                     return true;
@@ -1435,7 +1435,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
                 {
                     PrependItemList(start, newline);
                     (pp->edcontext->num_edits)++;
-                    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s", newline,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s", newline,
                          pp->this_server);
                     return true;
                 }
@@ -1445,7 +1445,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
             {
                 if (a.transaction.action == cfa_warn)
                 {
-                    cfPS(cf_error, CF_WARN, "", pp, a,
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                          " -> Need to prepend the promised line \"%s\" to %s - but only a warning was promised",
                          newline, pp->this_server);
                     return true;
@@ -1454,14 +1454,14 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
                 {
                     PrependItemList(start, newline);
                     (pp->edcontext->num_edits)++;
-                    cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Prepending the promised line \"%s\" to %s", newline,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Prepending the promised line \"%s\" to %s", newline,
                          pp->this_server);
                     return true;
                 }
             }
             else
             {
-                cfPS(cf_verbose, CF_NOP, "", pp, a,
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a,
                      " -> Promised line \"%s\" exists at start of file %s (promise kept)", newline, pp->this_server);
                 return false;
             }
@@ -1472,7 +1472,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
     {    
         if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_before, a, pp))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
                  newline);
             return false;
         }
@@ -1480,7 +1480,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -> Need to insert line \"%s\" into %s but only a warning was promised", newline,
                      pp->this_server);
                 return true;
@@ -1489,7 +1489,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
             {
                 InsertAfter(start, prev, newline);
                 (pp->edcontext->num_edits)++;
-                cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s before locator",
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s before locator",
                      newline, pp->this_server);
                 return true;
             }
@@ -1499,7 +1499,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
     {
         if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_after, a, pp))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
                  newline);
                         printf("NEIGHMATCH %s\n",newline);
             return false;
@@ -1508,14 +1508,14 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -> Need to insert line \"%s\" in %s but only a warning was promised", newline, pp->this_server);
                 return true;
             }
             else
             {
                 InsertAfter(start, location, newline);
-                cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s after locator",
+                cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Inserting the promised line \"%s\" into %s after locator",
                      newline, pp->this_server);
                 (pp->edcontext->num_edits)++;
                 return true;
@@ -1540,7 +1540,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
 
         if (count == a.column.select_column)
         {
-            CfOut(cf_verbose, "", " -> Stopped at field %d\n", count);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Stopped at field %d\n", count);
             break;
         }
     }
@@ -1549,7 +1549,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
     {
         if (!a.column.extend_columns)
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                  " !! The file %s has only %d fields, but there is a promise for field %d", pp->this_server, count,
                  a.column.select_column);
             return false;
@@ -1568,7 +1568,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
                 count++;
                 if (count == a.column.select_column)
                 {
-                    CfOut(cf_verbose, "", " -> Stopped at column/field %d\n", count);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Stopped at column/field %d\n", count);
                     break;
                 }
             }
@@ -1593,13 +1593,13 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a, " -> Need to edit field in %s but only warning promised",
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " -> Need to edit field in %s but only warning promised",
                      pp->this_server);
                 retval = false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited field inside file object %s", pp->this_server);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Edited field inside file object %s", pp->this_server);
                 (pp->edcontext->num_edits)++;
                 free(rp->item);
                 sep[0] = a.column.value_separator;
@@ -1609,7 +1609,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         }
         else
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No need to edit field in %s", pp->this_server);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No need to edit field in %s", pp->this_server);
         }
 
         RlistDestroy(this_column);
@@ -1623,14 +1623,14 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -> Need to delete field field value %s in %s but only a warning was promised", RlistScalarValue(rp),
                      pp->this_server);
                 return false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, a, " -> Deleting column field value %s in %s", RlistScalarValue(rp),
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Deleting column field value %s in %s", RlistScalarValue(rp),
                      pp->this_server);
                 (pp->edcontext->num_edits)++;
                 free(rp->item);
@@ -1642,14 +1642,14 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             if (a.transaction.action == cfa_warn)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -> Need to set column field value %s to %s in %s but only a warning was promised",
                      RlistScalarValue(rp), a.column.column_value, pp->this_server);
                 return false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, a, " -> Setting whole column field value %s to %s in %s",
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting whole column field value %s to %s in %s",
                      RlistScalarValue(rp), a.column.column_value, pp->this_server);
                 free(rp->item);
                 rp->item = xstrdup(a.column.column_value);
@@ -1659,7 +1659,7 @@ static int EditLineByColumn(Rlist **columns, Attributes a, Promise *pp)
         }
     }
 
-    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No need to edit column field value %s in %s", a.column.column_value,
+    cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No need to edit column field value %s in %s", a.column.column_value,
          pp->this_server);
 
     return false;
@@ -1779,7 +1779,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
     {
         if ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
-            CfOut(cf_inform, "", " -> Deleting column field sub-value %s in %s", a.column.column_value,
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Deleting column field sub-value %s in %s", a.column.column_value,
                   pp->this_server);
             RlistDestroyEntry(columns, found);
             return true;
@@ -1796,12 +1796,12 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
         {
             if (strcmp((*columns)->item, a.column.column_value) == 0)
             {
-                CfOut(cf_verbose, "", " -> Field sub-value set as promised\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Field sub-value set as promised\n");
                 return false;
             }
         }
 
-        CfOut(cf_inform, "", " -> Setting field sub-value %s in %s", a.column.column_value, pp->this_server);
+        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting field sub-value %s in %s", a.column.column_value, pp->this_server);
         RlistDestroy(*columns);
         *columns = NULL;
         RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR);
@@ -1813,7 +1813,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp)
     {
         if (RlistPrependScalarIdemp(columns, a.column.column_value, RVAL_TYPE_SCALAR))
         {
-            CfOut(cf_inform, "", " -> Prepending field sub-value %s in %s", a.column.column_value, pp->this_server);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Prepending field sub-value %s in %s", a.column.column_value, pp->this_server);
             return true;
         }
         else

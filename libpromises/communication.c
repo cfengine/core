@@ -168,7 +168,7 @@ const char *Hostname2IPString(const char *hostname)
 
     if ((err = getaddrinfo(hostname, NULL, &query, &response)) != 0)
     {
-        CfOut(cf_inform, "", "Unable to lookup hostname (%s) or cfengine service: %s", hostname, gai_strerror(err));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to lookup hostname (%s) or cfengine service: %s", hostname, gai_strerror(err));
         return hostname;
     }
 
@@ -197,7 +197,7 @@ const char *Hostname2IPString(const char *hostname)
     {
         cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
         strncpy(ipbuffer, inet_ntoa(cin.sin_addr), CF_SMALLBUF - 1);
-        CfOut(cf_verbose, "", "Found address (%s) for host %s\n", ipbuffer, hostname);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found address (%s) for host %s\n", ipbuffer, hostname);
         return ipbuffer;
     }
 #endif
@@ -225,7 +225,7 @@ char *IPString2Hostname(const char *ipaddress)
 
     if ((err = getaddrinfo(ipaddress, NULL, &query, &response)) != 0)
     {
-        CfOut(cf_inform, "", "Unable to lookup IP address (%s): %s", ipaddress, gai_strerror(err));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to lookup IP address (%s): %s", ipaddress, gai_strerror(err));
         strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
         return hostbuffer;
     }
@@ -293,12 +293,12 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
         }
         else
         {
-            CfOut(cf_error, "gethostbyname", "!! Could not get host entry for local host");
+            CfOut(OUTPUT_LEVEL_ERROR, "gethostbyname", "!! Could not get host entry for local host");
         }
     }
     else
     {
-        CfOut(cf_error, "gethostname", "!! Could not get host name");
+        CfOut(OUTPUT_LEVEL_ERROR, "gethostname", "!! Could not get host name");
     }
 
     return false;
@@ -313,7 +313,7 @@ unsigned short SocketFamily(int sd)
 
    if (getsockname(sd, &sa, &len) == -1)
    {
-       CfOut(cf_error, "getsockname", "!! Could not get socket family");
+       CfOut(OUTPUT_LEVEL_ERROR, "getsockname", "!! Could not get socket family");
    }
 
    return sa.sa_family;

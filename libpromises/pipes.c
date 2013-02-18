@@ -47,7 +47,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
-            cfPS(cf_inform, CF_NOP, "", pp, a,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -56,7 +56,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
-            cfPS(cf_inform, CF_CHG, "", pp, a,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -65,7 +65,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
-            cfPS(cf_inform, CF_FAIL, "", pp, a,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                  "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
                  retcode);
             result = false;
@@ -74,7 +74,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (!matched)
         {
-            CfOut(cf_verbose, "",
+            CfOut(OUTPUT_LEVEL_VERBOSE, "",
                   "Command related to promiser \"%s\" returned code %d -- did not match any failed, repaired or kept lists",
                   pp->promiser, retcode);
         }
@@ -84,13 +84,13 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
     {
         if (retcode == 0)
         {
-            cfPS(cf_verbose, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
                  pp->promiser);
             result = true;
         }
         else
         {
-            cfPS(cf_inform, CF_FAIL, "", pp, a,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                  " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
                  retcode);
             result = false;
@@ -147,7 +147,7 @@ static void SetChildFD(int fd, pid_t pid)
 
     if (fd >= MAX_FD)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
                 "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
                 fd, (intmax_t)pid);
         new_fd = fd + 32;
@@ -251,7 +251,7 @@ FILE *cf_popen(const char *command, char *type)
 
         if (execv(argv[0], argv) == -1)
         {
-            CfOut(cf_error, "execv", "Couldn't run %s", argv[0]);
+            CfOut(OUTPUT_LEVEL_ERROR, "execv", "Couldn't run %s", argv[0]);
         }
 
         _exit(1);
@@ -341,7 +341,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
         {
             if (chroot(chrootv) == -1)
             {
-                CfOut(cf_error, "chroot", "Couldn't chroot to %s\n", chrootv);
+                CfOut(OUTPUT_LEVEL_ERROR, "chroot", "Couldn't chroot to %s\n", chrootv);
                 ArgFree(argv);
                 return NULL;
             }
@@ -351,7 +351,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
         {
             if (chdir(chdirv) == -1)
             {
-                CfOut(cf_error, "chdir", "Couldn't chdir to %s\n", chdirv);
+                CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Couldn't chdir to %s\n", chdirv);
                 ArgFree(argv);
                 return NULL;
             }
@@ -364,7 +364,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
         if (execv(argv[0], argv) == -1)
         {
-            CfOut(cf_error, "execv", "Couldn't run %s", argv[0]);
+            CfOut(OUTPUT_LEVEL_ERROR, "execv", "Couldn't run %s", argv[0]);
         }
 
         _exit(1);
@@ -534,7 +534,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
         {
             if (chroot(chrootv) == -1)
             {
-                CfOut(cf_error, "chroot", "Couldn't chroot to %s\n", chrootv);
+                CfOut(OUTPUT_LEVEL_ERROR, "chroot", "Couldn't chroot to %s\n", chrootv);
                 return NULL;
             }
         }
@@ -543,7 +543,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
         {
             if (chdir(chdirv) == -1)
             {
-                CfOut(cf_error, "chdir", "Couldn't chdir to %s\n", chdirv);
+                CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Couldn't chdir to %s\n", chdirv);
                 return NULL;
             }
         }
@@ -618,7 +618,7 @@ int cf_pwait(pid_t pid)
     {
         if (wait_result <= 0)
         {
-            CfOut(cf_inform, "wait", " !! Wait for child failed\n");
+            CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
             return -1;
         }
     }
@@ -664,7 +664,7 @@ int cf_pclose(FILE *pp)
 
     if (fd >= MAX_FD)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               "File descriptor %d of child higher than MAX_FD in cf_pclose, check for defunct children", fd);
         pid = -1;
     }
@@ -718,7 +718,7 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
     if (fd >= MAX_FD)
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               "File descriptor %d of child higher than MAX_FD in cf_pclose_def, check for defunct children", fd);
         fclose(pfp);
         return -1;
@@ -752,7 +752,7 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
     if (!WIFEXITED(status))
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 
@@ -766,20 +766,20 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
     {
         if (wait_result <= 0)
         {
-            CfOut(cf_inform, "wait", "Wait for child failed\n");
+            CfOut(OUTPUT_LEVEL_INFORM, "wait", "Wait for child failed\n");
             return -1;
         }
     }
 
     if (WIFSIGNALED(status))
     {
-        cfPS(cf_inform, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
         return -1;
     }
 
     if (!WIFEXITED(status))
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 
@@ -820,11 +820,11 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (gid != (gid_t) - 1)
     {
-        CfOut(cf_verbose, "", "Changing gid to %ju\n", (uintmax_t)gid);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Changing gid to %ju\n", (uintmax_t)gid);
 
         if (setgid(gid) == -1)
         {
-            CfOut(cf_error, "setgid", "Couldn't set gid to %ju\n", (uintmax_t)gid);
+            CfOut(OUTPUT_LEVEL_ERROR, "setgid", "Couldn't set gid to %ju\n", (uintmax_t)gid);
             return false;
         }
 
@@ -832,13 +832,13 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            CfOut(cf_error, "getpwuid", "Unable to get login groups when dropping privilege to %jd", (uintmax_t)uid);
+            CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", "Unable to get login groups when dropping privilege to %jd", (uintmax_t)uid);
             return false;
         }
 
         if (initgroups(pw->pw_name, pw->pw_gid) == -1)
         {
-            CfOut(cf_error, "initgroups", "Unable to set login groups when dropping privilege to %s=%ju", pw->pw_name,
+            CfOut(OUTPUT_LEVEL_ERROR, "initgroups", "Unable to set login groups when dropping privilege to %s=%ju", pw->pw_name,
                   (uintmax_t)uid);
             return false;
         }
@@ -846,11 +846,11 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (uid != (uid_t) - 1)
     {
-        CfOut(cf_verbose, "", "Changing uid to %ju\n", (uintmax_t)uid);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Changing uid to %ju\n", (uintmax_t)uid);
 
         if (setuid(uid) == -1)
         {
-            CfOut(cf_error, "setuid", "Couldn't set uid to %ju\n", (uintmax_t)uid);
+            CfOut(OUTPUT_LEVEL_ERROR, "setuid", "Couldn't set uid to %ju\n", (uintmax_t)uid);
             return false;
         }
     }

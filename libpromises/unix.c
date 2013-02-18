@@ -116,7 +116,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGINT) == -1)
     {
-        CfOut(cf_error, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
+        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
     }
 
     sleep(1);
@@ -124,7 +124,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGTERM) == -1)
     {
-        CfOut(cf_error, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
+        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
     }
 
     sleep(5);
@@ -132,7 +132,7 @@ void ProcessSignalTerminate(pid_t pid)
 
     if(kill(pid, SIGKILL) == -1)
     {
-        CfOut(cf_error, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
+        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
     }
 
     sleep(1);
@@ -154,7 +154,7 @@ static bool IsProcessRunning(pid_t pid)
         return false;
     }
 
-    CfOut(cf_error, "kill", "!! Failed checking for process existence");
+    CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Failed checking for process existence");
 
     return false;
 }
@@ -170,7 +170,7 @@ int GetCurrentUserName(char *userName, int userNameLen)
 
     if (user_ptr == NULL)
     {
-        CfOut(cf_error, "getpwuid", "Could not get user name of current process, using \"UNKNOWN\"");
+        CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", "Could not get user name of current process, using \"UNKNOWN\"");
         strncpy(userName, "UNKNOWN", userNameLen - 1);
         return false;
     }
@@ -189,14 +189,14 @@ int IsExecutable(const char *file)
 
     if (cfstat(file, &sb) == -1)
     {
-        CfOut(cf_error, "", "Proposed executable file \"%s\" doesn't exist", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Proposed executable file \"%s\" doesn't exist", file);
         return false;
     }
 
     if (sb.st_mode & 02)
     {
-        CfOut(cf_error, "", " !! SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
-        CfOut(cf_error, "", " !! SECURITY ALERT: cfengine will not execute this - requires human inspection");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! SECURITY ALERT: cfengine will not execute this - requires human inspection");
         return false;
     }
 
@@ -264,7 +264,7 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
         {
             if (execl(SHELL_PATH, "sh", "-c", comm, NULL) == -1)
             {
-                CfOut(cf_error, "execl", "Command %s failed", comm);
+                CfOut(OUTPUT_LEVEL_ERROR, "execl", "Command %s failed", comm);
                 exit(1);
             }
         }
@@ -274,7 +274,7 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
 
             if (execv(argv[0], argv) == -1)
             {
-                CfOut(cf_error, "execv", "Command %s failed", argv[0]);
+                CfOut(OUTPUT_LEVEL_ERROR, "execv", "Command %s failed", argv[0]);
                 exit(1);
             }
         }
@@ -304,7 +304,7 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
         {
             if (wait_result <= 0)
             {
-                CfOut(cf_inform, "wait", " !! Wait for child failed\n");
+                CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
                 return false;
             }
         }
@@ -353,7 +353,7 @@ static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
     {
         if (fbsd_jia.s_addr == inaddr->sin_addr.s_addr)
         {
-            CfOut(cf_verbose, "", "Interface %d belongs to a FreeBSD jail %s\n", ifaceidx, inet_ntoa(fbsd_jia));
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Interface %d belongs to a FreeBSD jail %s\n", ifaceidx, inet_ntoa(fbsd_jia));
             return true;
         }
     }
@@ -431,7 +431,7 @@ void GetInterfacesInfo(AgentType ag)
 
     if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
     {
-        CfOut(cf_error, "socket", "Couldn't open socket");
+        CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open socket");
         exit(1);
     }
 
@@ -444,7 +444,7 @@ void GetInterfacesInfo(AgentType ag)
     if ((ioctl(fd, OSIOCGIFCONF, &list) == -1) || (list.ifc_len < (sizeof(struct ifreq))))
 # endif
     {
-        CfOut(cf_error, "ioctl", "Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
+        CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "Couldn't get interfaces - old kernel? Try setting CF_IFREQ to 1024");
         exit(1);
     }
 
@@ -474,13 +474,13 @@ void GetInterfacesInfo(AgentType ag)
         if (strstr(ifp->ifr_name, ":"))
         {
 #ifdef __linux__
-            CfOut(cf_verbose, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
             continue;
 #endif
         }
         else
         {
-            CfOut(cf_verbose, "", "Interface %d: %s\n", j + 1, ifp->ifr_name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Interface %d: %s\n", j + 1, ifp->ifr_name);
         }
 
         // Ignore the loopback
@@ -515,7 +515,7 @@ void GetInterfacesInfo(AgentType ag)
 
             if (ioctl(fd, SIOCGIFFLAGS, &ifr) == -1)
             {
-                CfOut(cf_error, "ioctl", "No such network device");
+                CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "No such network device");
                 continue;
             }
 
@@ -525,7 +525,7 @@ void GetInterfacesInfo(AgentType ag)
 
                 if (IgnoreJailInterface(j + 1, sin))
                 {
-                    CfOut(cf_verbose, "", "Ignoring interface %d", j + 1);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Ignoring interface %d", j + 1);
                     continue;
                 }
 
@@ -548,7 +548,7 @@ void GetInterfacesInfo(AgentType ag)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
-                                CfOut(cf_verbose, "", "Adding alias %s..\n", hp->h_aliases[i]);
+                                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Adding alias %s..\n", hp->h_aliases[i]);
                                 HardClass(hp->h_aliases[i]);
                             }
                         }
@@ -558,7 +558,7 @@ void GetInterfacesInfo(AgentType ag)
                 if (strcmp(inet_ntoa(sin->sin_addr), "0.0.0.0") == 0)
                 {
                     // Maybe we need to do something windows specific here?
-                    CfOut(cf_verbose, "", " !! Cannot discover hardware IP, using DNS value");
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Cannot discover hardware IP, using DNS value");
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
@@ -681,7 +681,7 @@ static void FindV6InterfacesInfo(void)
    book shows the suggestion which has not been implemented...
 */
 
-    CfOut(cf_verbose, "", "Trying to locate my IPv6 address\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Trying to locate my IPv6 address\n");
 
 #if defined(__CYGWIN__)
     /* NT cannot do this */
@@ -689,19 +689,19 @@ static void FindV6InterfacesInfo(void)
 #elif defined(__hpux)
     if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find interface info\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #elif defined(_AIX)
     if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find interface info\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #else
     if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find interface info\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #endif
@@ -743,7 +743,7 @@ static void FindV6InterfacesInfo(void)
 
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
-                    CfOut(cf_verbose, "", "Found IPv6 address %s\n", ip->name);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
                     HardClass(ip->name);
                 }
@@ -767,7 +767,7 @@ static void InitIgnoreInterfaces()
 
     if ((fin = fopen(filename,"r")) == NULL)
     {
-        CfOut(cf_verbose, "", " -> No interface exception file %s",filename);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No interface exception file %s",filename);
         return;
     }
     
@@ -795,7 +795,7 @@ static bool IgnoreInterface(char *name)
     {
         if (FullTextMatch(rp->item,name))
         {
-            CfOut(cf_verbose, "", " -> Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
             return true;
         }    
     }

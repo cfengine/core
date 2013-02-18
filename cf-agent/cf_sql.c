@@ -60,7 +60,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 {
     DbMysqlConn *c;
 
-    CfOut(cf_verbose, "", " -> This is a MySQL database\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is a MySQL database\n");
 
     c = xcalloc(1, sizeof(DbMysqlConn));
 
@@ -68,7 +68,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 
     if (!mysql_real_connect(&c->conn, host, user, password, database, 0, NULL, 0))
     {
-        CfOut(cf_error, "", "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
         free(c);
         return NULL;
     }
@@ -92,7 +92,7 @@ static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 
     if (mysql_query(&mc->conn, query) != 0)
     {
-        CfOut(cf_inform, "", "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
     }
     else
     {
@@ -152,7 +152,7 @@ static void CfDeleteMysqlQuery(CfdbConn *c)
 
 static void *CfConnectMysqlDB(const char *host, const char *user, const char *password, const char *database)
 {
-    CfOut(cf_inform, "", "There is no MySQL support compiled into this version");
+    CfOut(OUTPUT_LEVEL_INFORM, "", "There is no MySQL support compiled into this version");
     return NULL;
 }
 
@@ -190,7 +190,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
     DbPostgresqlConn *c;
     char format[CF_BUFSIZE];
 
-    CfOut(cf_verbose, "", " -> This is a PotsgreSQL database\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is a PotsgreSQL database\n");
 
     c = xcalloc(1, sizeof(DbPostgresqlConn));
 
@@ -222,7 +222,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
 
     if (PQstatus(c->conn) == CONNECTION_BAD)
     {
-        CfOut(cf_error, "", "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
         free(c);
         return NULL;
     }
@@ -248,7 +248,7 @@ static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 
     if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
     {
-        CfOut(cf_inform, "", "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
     }
     else
     {
@@ -297,7 +297,7 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 static void *CfConnectPostgresqlDB(const char *host, const char *user, const char *password, const char *database)
 {
-    CfOut(cf_inform, "", "There is no PostgreSQL support compiled into this version");
+    CfOut(OUTPUT_LEVEL_INFORM, "", "There is no PostgreSQL support compiled into this version");
     return NULL;
 }
 
@@ -335,7 +335,7 @@ int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *db
         db = "no db specified";
     }
 
-    CfOut(cf_verbose, "", "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
           dbtype);
 
     switch (dbtype)
@@ -349,7 +349,7 @@ int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *db
         break;
 
     default:
-        CfOut(cf_verbose, "", "There is no SQL database selected");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
         break;
     }
 
@@ -380,7 +380,7 @@ void CfCloseDB(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(cf_verbose, "", "There is no SQL database selected");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
         break;
     }
 
@@ -426,7 +426,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
         break;
 
     default:
-        CfOut(cf_verbose, "", "There is no SQL database selected");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
         break;
     }
 
@@ -448,7 +448,7 @@ char **CfFetchRow(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(cf_verbose, "", "There is no SQL database selected");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
         break;
     }
 
@@ -485,7 +485,7 @@ void CfDeleteQuery(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(cf_verbose, "", "There is no SQL database selected");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
         break;
     }
 

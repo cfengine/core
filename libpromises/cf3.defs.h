@@ -815,16 +815,16 @@ enum cfspromises
     cfs_noptype
 };
 
-enum cfreport
+typedef enum
 {
-    cf_inform,
-    cf_verbose,
-    cf_error,
-    cf_log,
-    cf_reporting,
-    cf_cmdout,
-    cf_noreport
-};
+    OUTPUT_LEVEL_INFORM,
+    OUTPUT_LEVEL_VERBOSE,
+    OUTPUT_LEVEL_ERROR,
+    OUTPUT_LEVEL_LOG,
+    OUTPUT_LEVEL_REPORTING,
+    OUTPUT_LEVEL_CMDOUT,
+    OUTPUT_LEVEL_NONE
+} OutputLevel;
 
 enum cfeditorder
 {
@@ -1467,8 +1467,8 @@ typedef struct
     double value_notkept;
     double value_repaired;
     int audit;
-    enum cfreport report_level;
-    enum cfreport log_level;
+    OutputLevel report_level;
+    OutputLevel log_level;
 } TransactionContext;
 
 /*************************************************************************/

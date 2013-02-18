@@ -476,7 +476,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
     if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n", str2,
               str1);
         return true;
@@ -1055,7 +1055,7 @@ void GetNaked(char *s2, const char *s1)
 {
     if (strlen(s1) < 4)
     {
-        CfOut(cf_error, "", "Naked variable expected, but \"%s\" is malformed", s1);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Naked variable expected, but \"%s\" is malformed", s1);
         strncpy(s2, s1, CF_MAXVARSIZE - 1);
         return;
     }
@@ -1177,7 +1177,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 break;
 
             default:
-                CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.type);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.type);
                 continue;
             }
 
@@ -1212,15 +1212,15 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
     if (cp == NULL)
     {
-        CfOut(cf_inform, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
-        PromiseRef(cf_inform, pp);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_INFORM, pp);
         return;
     }
 
     if (num_values > 2)
     {
-        CfOut(cf_error, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
@@ -1349,7 +1349,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
         if (Epimenides(pp->promiser, rval, 0))
         {
-            CfOut(cf_error, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
         }
         else
@@ -1375,20 +1375,20 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    CfOut(cf_verbose, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
                           pp->promiser, RvalScalarValue(retval), RvalScalarValue(rval));
-                    PromiseRef(cf_verbose, pp);
+                    PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
                     {
                         char valbuf[CF_BUFSIZE];
-                        CfOut(cf_verbose, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
                         RlistPrint(valbuf, CF_BUFSIZE, retval.item);
-                        CfOut(cf_verbose, "", "Old value: %s", valbuf);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", valbuf);
                         RlistPrint(valbuf, CF_BUFSIZE, rval.item);
-                        CfOut(cf_verbose, "", " New value: %s", valbuf);
-                        PromiseRef(cf_verbose, pp);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " New value: %s", valbuf);
+                        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                     }
                     break;
 
@@ -1408,8 +1408,8 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
         if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
-            CfOut(cf_error, "", " !! Variable identifier contains illegal characters");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable identifier contains illegal characters");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             RvalDestroy(rval);
             BufferDestroy(&qualified_scope);
             return;
@@ -1430,20 +1430,20 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, Typename2Datatype(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
-            PromiseRef(cf_verbose, pp);
-            cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
+            PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+            cfPS(OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
         }
         else
         {
-            cfPS(cf_noreport, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
+            cfPS(OUTPUT_LEVEL_NONE, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
         }
     }
     else
     {
-        CfOut(cf_error, "", " !! Variable %s has no promised value\n", pp->promiser);
-        CfOut(cf_error, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
-        cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+        cfPS(OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
     BufferDestroy(&qualified_scope);
     RvalDestroy(rval);
@@ -1464,7 +1464,7 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         if (StringContainsVar(rval.item, var))
         {
-            CfOut(cf_error, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
             return true;
         }
 

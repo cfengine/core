@@ -117,7 +117,7 @@ Attributes GetFilesAttributes(const Promise *pp)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
         }
     }
 
@@ -125,14 +125,14 @@ Attributes GetFilesAttributes(const Promise *pp)
     {
         if (((attr.copy.compare) != (cfa_checksum)) && ((attr.copy.compare) != cfa_hash))
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
                   pp->promiser);
-            PromiseRef(cf_error, pp);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         }
         else
         {
-            CfOut(cf_verbose, "",
+            CfOut(OUTPUT_LEVEL_VERBOSE, "",
                   " !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",
                   pp->promiser);
         }
@@ -140,9 +140,9 @@ Attributes GetFilesAttributes(const Promise *pp)
 
     if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havelink))
     {
-        CfOut(cf_error, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
               pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     return attr;
@@ -521,8 +521,8 @@ FilePerms GetPermissionConstraints(const Promise *pp)
 
     if (!ParseModeString(value, &p.plus, &p.minus))
     {
-        CfOut(cf_error, "", "Problem validating a mode string");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     list = GetListConstraint("bsdflags", pp);
@@ -532,8 +532,8 @@ FilePerms GetPermissionConstraints(const Promise *pp)
 
     if (list && (!ParseFlagString(list, &p.plus_flags, &p.minus_flags)))
     {
-        CfOut(cf_error, "", "Problem validating a BSD flag string");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a BSD flag string");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
 #ifdef __MINGW32__
@@ -582,8 +582,8 @@ FileSelect GetSelectConstraints(const Promise *pp)
 
         if (!ParseModeString(value, &plus, &minus))
         {
-            CfOut(cf_error, "", "Problem validating a mode string");
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         }
     }
 
@@ -594,8 +594,8 @@ FileSelect GetSelectConstraints(const Promise *pp)
 
     if (!ParseFlagString(s.bsdflags, &fplus, &fminus))
     {
-        CfOut(cf_error, "", "Problem validating a BSD flag string");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a BSD flag string");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     if ((s.name) || (s.path) || (s.filetypes) || (s.issymlinkto) || (s.perms) || (s.bsdflags))
@@ -647,7 +647,7 @@ FileSelect GetSelectConstraints(const Promise *pp)
     {
         if (!entries)
         {
-            CfOut(cf_error, "", " !! file_select body missing its a file_result return value");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! file_select body missing its a file_result return value");
         }
     }
 
@@ -797,8 +797,8 @@ FileRename GetRenameConstraints(const Promise *pp)
 
     if (!ParseModeString(value, &r.plus, &r.minus))
     {
-        CfOut(cf_error, "", "Problem validating a mode string");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     r.disable = GetBooleanConstraint("disable", pp);
@@ -853,8 +853,8 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
 
     if (FIPS_MODE && (c.hash == cf_md5))
     {
-        CfOut(cf_error, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     value = (char *) GetConstraintValue("report_changes", pp, RVAL_TYPE_SCALAR);
@@ -1243,7 +1243,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
     {
         if (entries)
         {
-            CfOut(cf_error, "", " !! process_select body missing its a process_result return value");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! process_select body missing its a process_result return value");
         }
     }
 
@@ -1621,7 +1621,7 @@ Report GetReportConstraints(const Promise *pp)
 
     if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
-        CfOut(cf_error, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, pp->bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, pp->bundle);
     }
     
     return r;
@@ -1710,8 +1710,8 @@ Database GetDatabaseConstraints(const Promise *pp)
 
     if (value && ((d.db_server_type) == cfd_notype))
     {
-        CfOut(cf_error, "", "Unsupported database type \"%s\" in databases promise", value);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unsupported database type \"%s\" in databases promise", value);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     return d;

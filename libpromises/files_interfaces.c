@@ -81,7 +81,7 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
     //error checking
     if (!fp || ferror(fp))
     {
-        CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! NULL or corrupt inputs to CfReadLine");
         return -1;
     }
 

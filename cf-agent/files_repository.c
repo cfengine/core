@@ -75,7 +75,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
     if (!JoinPath(destination, file))
     {
-        CfOut(cf_error, "", "Internal limit: Buffer ran out of space for long filename\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space for long filename\n");
         return false;
     }
 
@@ -110,7 +110,7 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
 
     if (IsItemIn(VREPOSLIST, file))
     {
-        CfOut(cf_inform, "",
+        CfOut(OUTPUT_LEVEL_INFORM, "",
               "The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",
               file);
         return true;
@@ -140,12 +140,12 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
 
     if (pp && CopyRegularFileDisk(file, destination, pp->makeholes))
     {
-        CfOut(cf_inform, "", "Moved %s to repository location %s\n", file, destination);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Moved %s to repository location %s\n", file, destination);
         return true;
     }
     else
     {
-        CfOut(cf_inform, "", "Failed to move %s to repository location %s\n", file, destination);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to move %s to repository location %s\n", file, destination);
         return false;
     }
 }

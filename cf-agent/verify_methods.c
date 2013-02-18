@@ -149,15 +149,15 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         switch (retval)
         {
         case CF_FAIL:
-            cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
             break;
 
         case CF_CHG:
-            cfPS(cf_inform, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
             break;
 
         default:
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Method verified\n");
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Method verified\n");
             break;
 
         }
@@ -168,16 +168,16 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
     {
         if (IsCf3VarString(method_name))
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && (bp->name))
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                  " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }
@@ -203,7 +203,7 @@ static void GetReturnValue(char *scope, Promise *pp)
 
         if ((ptr = GetScope(scope)) == NULL)
         {
-            CfOut(cf_inform, "", " !! useresult was specified but the method returned no data");
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! useresult was specified but the method returned no data");
             return;
         }
     

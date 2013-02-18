@@ -41,7 +41,7 @@ int SyslogPriority2Int(char *s);
 enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(Rlist *list, char *sep);
 int Signal2Int(char *s);
-enum cfreport String2ReportLevel(char *typestr);
+OutputLevel String2ReportLevel(char *typestr);
 enum cfcomparison String2Comparison(char *s);
 enum cflinktype String2LinkType(char *s);
 DataType Typename2Datatype(char *name);

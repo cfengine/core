@@ -73,17 +73,17 @@ static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const
 
     if (pfp == NULL)
     {
-        cfPS(cf_error, CF_FAIL, "cf_popen", pp, a, "Can not start package version comparison command: %s", expanded_command);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_popen", pp, a, "Can not start package version comparison command: %s", expanded_command);
         return VERCMP_ERROR;
     }
 
-    CfOut(cf_verbose, "", "Executing %s", expanded_command);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Executing %s", expanded_command);
 
     int retcode = cf_pclose(pfp);
 
     if (retcode == -1)
     {
-        cfPS(cf_error, CF_FAIL, "cf_pclose", pp, a, "Error during package version comparison command execution: %s",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_pclose", pp, a, "Error during package version comparison command execution: %s",
             expanded_command);
         return VERCMP_ERROR;
     }

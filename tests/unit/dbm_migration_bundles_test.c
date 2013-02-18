@@ -181,7 +181,7 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
     if (errstr)

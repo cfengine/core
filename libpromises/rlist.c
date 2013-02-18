@@ -292,7 +292,7 @@ Rval RvalCopy(Rval rval)
         break;
     }
 
-    CfOut(cf_verbose, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
     return (Rval) {NULL, rval.type};
 }
 

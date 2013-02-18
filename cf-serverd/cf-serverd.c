@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         HardClass("failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);

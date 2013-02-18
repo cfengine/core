@@ -55,17 +55,17 @@ void VerifyOutputsPromise(Promise *pp)
         {
             if (strcmp(ip->classes, a.output.level) != 0)
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Promise for bundle \"%s\" conflicts with an existing outputs promise", pp->promiser);
             }
             else
             {
-                CfOut(cf_verbose, "", " -> Idempotent duplicate for bundle \"%s\"", pp->promiser);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Idempotent duplicate for bundle \"%s\"", pp->promiser);
             }
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, a, " -> Setting output level for bundle \"%s\"", pp->promiser);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for bundle \"%s\"", pp->promiser);
             PrependItem(&BUNDLE_OUTPUTS, pp->promiser, a.output.level);
         }
     }
@@ -75,18 +75,18 @@ void VerifyOutputsPromise(Promise *pp)
         {
             if (strcmp(ip->classes, a.output.level) != 0)
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Promise for handle \"%s\" conflicts with an existing outputs promise", pp->promiser);
             }
             else
             {
-                CfOut(cf_verbose, "", " -> Idempotent duplicate for promise with handle \"%s\"",
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Idempotent duplicate for promise with handle \"%s\"",
                       a.output.promiser_type);
             }
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, a, " -> Setting output level for promise handle \"%s\"", pp->promiser);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for promise handle \"%s\"", pp->promiser);
             PrependItem(&HANDLE_OUTPUTS, pp->promiser, a.output.level);
         }
     }
@@ -98,7 +98,7 @@ void SetPromiseOutputs(Promise *pp)
 {
     char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
     char *setting = GetConstraintValue("report_level", pp, RVAL_TYPE_SCALAR);
-    enum cfreport report_level = String2ReportLevel(setting);
+    OutputLevel report_level = String2ReportLevel(setting);
     int verbose = false, inform = false;
     Item *ip;
 
@@ -125,10 +125,10 @@ void SetPromiseOutputs(Promise *pp)
         {
             switch (report_level)
             {
-            case cf_verbose:
+            case OUTPUT_LEVEL_VERBOSE:
                 break;
 
-            case cf_inform:
+            case OUTPUT_LEVEL_INFORM:
                 if (verbose)
                 {
                     EditScalarConstraint(pp->conlist, "report_level", "verbose");
@@ -180,7 +180,7 @@ void SetBundleOutputs(char *name)
                 VERBOSE = true;
             }
 
-            CfOut(cf_inform, "", "%s Begin trace output on bundle %s\n", VPREFIX, name);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "%s Begin trace output on bundle %s\n", VPREFIX, name);
         }
     }
 }

@@ -46,7 +46,7 @@ struct timespec BeginMeasure()
 
     if (clock_gettime(CLOCK_REALTIME, &start) == -1)
     {
-        CfOut(cf_verbose, "clock_gettime", "Clock gettime failure");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
     }
 
     return start;
@@ -65,7 +65,7 @@ void EndMeasurePromise(struct timespec start, Promise *pp)
         snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->agentsubtype, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
         }
         EndMeasure(id, start);
     }
@@ -81,7 +81,7 @@ void EndMeasure(char *eventname, struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(cf_verbose, "clock_gettime", "Clock gettime failure");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
         measured_ok = false;
     }
 
@@ -141,7 +141,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
     }
     else
     {
-        CfOut(cf_verbose, "", "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
               sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }
@@ -230,7 +230,7 @@ void NoteClassUsage(AlphaList baselist, int purge)
 
         if (!NewDBCursor(dbp, &dbcp))
         {
-            CfOut(cf_inform, "", " !! Unable to scan class db");
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan class db");
             CloseDB(dbp);
             DeleteItemList(list);
             return;

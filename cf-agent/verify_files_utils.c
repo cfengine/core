@@ -101,7 +101,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
 #ifndef HAVE_NOVA
 static void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", "Logging file differences requires version Nova or above");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
 }
 #endif
 
@@ -121,7 +121,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
         return false;
     }
 
-    CfOut(cf_verbose, "", " -> Handling file existence constraints on %s\n", path);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file existence constraints on %s\n", path);
 
 /* We still need to augment the scope of context "this" for commands */
 
@@ -158,7 +158,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
         if (S_ISDIR(sb->st_mode) && attr.recursion.depth && !attr.recursion.include_basedir &&
             (strcmp(path, pp->promiser) == 0))
         {
-            CfOut(cf_verbose, "", " -> Promise to skip base directory %s\n", path);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Promise to skip base directory %s\n", path);
         }
         else
         {
@@ -184,7 +184,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 #ifdef __MINGW32__
     if (attr.copy.copy_links != NULL)
     {
-        CfOut(cf_verbose, "",
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "copy_from.copylink_patterns is ignored on Windows (source files cannot be symbolic links)");
     }
 #endif /* __MINGW32__ */
@@ -202,7 +202,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
     if ((strcmp(sourcefile, destfile) == 0) && server && (strcmp(server, "localhost") == 0))
     {
-        CfOut(cf_inform, "", " !! File copy promise loop: file/dir %s is its own source", sourcefile);
+        CfOut(OUTPUT_LEVEL_INFORM, "", " !! File copy promise loop: file/dir %s is its own source", sourcefile);
         return;
     }
 
@@ -214,7 +214,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
     if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
     {
-        CfOut(cf_inform, "", " -> Skipping single-copied file %s\n", destfile);
+        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Skipping single-copied file %s\n", destfile);
         return;
     }
 
@@ -226,16 +226,16 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         {
             if (MatchRlistItem(attr.copy.copy_links, lastnode))
             {
-                CfOut(cf_inform, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "File %s matches both copylink_patterns and linkcopy_patterns - promise loop (skipping)!",
                       sourcefile);
                 return;
             }
             else
             {
-                CfOut(cf_verbose, "", "Copy item %s marked for linking\n", sourcefile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Copy item %s marked for linking\n", sourcefile);
 #ifdef __MINGW32__
-                CfOut(cf_verbose, "", "Links are not yet supported on Windows - copying %s instead\n", sourcefile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Links are not yet supported on Windows - copying %s instead\n", sourcefile);
 #else
                 LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
                 return;
@@ -253,25 +253,25 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         {
             if ((!S_ISLNK(ssb.st_mode)) && ((attr.copy.type_check) && (attr.copy.link_type != cfa_notlinked)))
             {
-                cfPS(cf_error, CF_FAIL, "", pp, attr,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr,
                      "file image exists but destination type is silly (file/dir/link doesn't match)\n");
-                PromiseRef(cf_error, pp);
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 return;
             }
 
             if (DONTDO)
             {
-                CfOut(cf_verbose, "", "Need to remove old symbolic link %s to make way for copy\n", destfile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Need to remove old symbolic link %s to make way for copy\n", destfile);
             }
             else
             {
                 if (unlink(destfile) == -1)
                 {
-                    cfPS(cf_error, CF_FAIL, "unlink", pp, attr, "Couldn't remove link %s", destfile);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "unlink", pp, attr, "Couldn't remove link %s", destfile);
                     return;
                 }
 
-                CfOut(cf_verbose, "", "Removing old symbolic link %s to make way for copy\n", destfile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Removing old symbolic link %s to make way for copy\n", destfile);
                 found = -1;
             }
         }
@@ -285,7 +285,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
     {
         if ((ssb.st_size < attr.copy.min_size) || (ssb.st_size > attr.copy.max_size))
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> Source file %s size is not in the permitted safety range\n",
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> Source file %s size is not in the permitted safety range\n",
                  sourcefile);
             return;
         }
@@ -295,7 +295,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! Image file \"%s\" is non-existent and should be a copy of %s\n",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! Image file \"%s\" is non-existent and should be a copy of %s\n",
                  destfile, sourcefile);
             return;
         }
@@ -304,33 +304,33 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         {
             if (DONTDO)
             {
-                CfOut(cf_verbose, "", " -> %s wasn't at destination (needs copying)", destfile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> %s wasn't at destination (needs copying)", destfile);
                 return;
             }
             else
             {
-                CfOut(cf_verbose, "", " -> %s wasn't at destination (copying)", destfile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> %s wasn't at destination (copying)", destfile);
 
                 if (server)
                 {
-                    CfOut(cf_inform, "", " -> Copying from %s:%s\n", server, sourcefile);
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " -> Copying from %s:%s\n", server, sourcefile);
                 }
                 else
                 {
-                    CfOut(cf_inform, "", " -> Copying from localhost:%s\n", sourcefile);
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " -> Copying from localhost:%s\n", sourcefile);
                 }
             }
 
             if ((S_ISLNK(srcmode)) && (attr.copy.link_type != cfa_notlinked))
             {
-                CfOut(cf_verbose, "", " -> %s is a symbolic link\n", sourcefile);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> %s is a symbolic link\n", sourcefile);
                 LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
             }
             else if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
             {
                 if (cfstat(destfile, &dsb) == -1)
                 {
-                    CfOut(cf_error, "stat", "Can't stat destination file %s\n", destfile);
+                    CfOut(OUTPUT_LEVEL_ERROR, "stat", "Can't stat destination file %s\n", destfile);
                 }
                 else
                 {
@@ -339,11 +339,11 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
                 if (server)
                 {
-                    cfPS(cf_verbose, CF_CHG, "", pp, attr, " -> Updated file from %s:%s\n", server, sourcefile);
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, attr, " -> Updated file from %s:%s\n", server, sourcefile);
                 }
                 else
                 {
-                    cfPS(cf_verbose, CF_CHG, "", pp, attr, " -> Updated file from localhost:%s\n", sourcefile);
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, attr, " -> Updated file from localhost:%s\n", sourcefile);
                 }
 
                 if (SINGLE_COPY_LIST)
@@ -360,11 +360,11 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             {
                 if (server)
                 {
-                    cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Copy from %s:%s failed\n", server, sourcefile);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, " !! Copy from %s:%s failed\n", server, sourcefile);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Copy from localhost:%s failed\n", sourcefile);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, " !! Copy from localhost:%s failed\n", sourcefile);
                 }
             }
 
@@ -376,15 +376,15 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 #ifdef HAVE_MKFIFO
             if (DONTDO)
             {
-                CfOut(cf_inform, "", "Need to make FIFO %s\n", destfile);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Need to make FIFO %s\n", destfile);
             }
             else if (mkfifo(destfile, srcmode))
             {
-                cfPS(cf_error, CF_FAIL, "mkfifo", pp, attr, " !! Cannot create fifo `%s'", destfile);
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "mkfifo", pp, attr, " !! Cannot create fifo `%s'", destfile);
                 return;
             }
 
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created fifo %s", destfile);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Created fifo %s", destfile);
 #endif
         }
         else
@@ -394,15 +394,15 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             {
                 if (DONTDO)
                 {
-                    CfOut(cf_inform, "", "Make BLK/CHR/SOCK %s\n", destfile);
+                    CfOut(OUTPUT_LEVEL_INFORM, "", "Make BLK/CHR/SOCK %s\n", destfile);
                 }
                 else if (mknod(destfile, srcmode, ssb.st_rdev))
                 {
-                    cfPS(cf_error, CF_FAIL, "mknod", pp, attr, " !! Cannot create special file `%s'", destfile);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "mknod", pp, attr, " !! Cannot create special file `%s'", destfile);
                     return;
                 }
 
-                cfPS(cf_inform, CF_CHG, "mknod", pp, attr, " -> Created special file/device `%s'", destfile);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "mknod", pp, attr, " -> Created special file/device `%s'", destfile);
             }
 #endif /* !__MINGW32__ */
         }
@@ -416,11 +416,11 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
     {
         int ok_to_copy = false;
 
-        CfOut(cf_verbose, "", " -> Destination file \"%s\" already exists\n", destfile);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Destination file \"%s\" already exists\n", destfile);
 
         if (attr.copy.compare == cfa_exists)
         {
-            CfOut(cf_verbose, "", " -> Existence only is promised, no copying required\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Existence only is promised, no copying required\n");
             return;
         }
 
@@ -443,7 +443,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 ((S_ISFIFO(dsb.st_mode)) && (!S_ISFIFO(ssb.st_mode))) ||
                 ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(ssb.st_mode))))
             {
-                cfPS(cf_inform, CF_FAIL, "", pp, attr,
+                cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr,
                      "Promised file copy %s exists but type mismatch with source=%s\n", destfile, sourcefile);
                 return;
             }
@@ -451,9 +451,9 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
         if (ok_to_copy && (attr.transaction.action == cfa_warn))
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! Image file \"%s\" exists but is not up to date wrt %s\n",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! Image file \"%s\" exists but is not up to date wrt %s\n",
                  destfile, sourcefile);
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! Only a warning has been promised\n");
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! Only a warning has been promised\n");
             return;
         }
 
@@ -463,7 +463,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             {
                 if (DONTDO)
                 {
-                    CfOut(cf_error, "", "Should update file %s from source %s on %s", destfile, sourcefile, server);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Should update file %s from source %s on %s", destfile, sourcefile, server);
                     return;
                 }
 
@@ -476,13 +476,13 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 {
                     if (cfstat(destfile, &dsb) == -1)
                     {
-                        cfPS(cf_error, CF_INTERPT, "stat", pp, attr, "Can't stat destination %s\n", destfile);
+                        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "stat", pp, attr, "Can't stat destination %s\n", destfile);
                     }
                     else
                     {
                         char *source_host = server ? server : "localhost";
 
-                        cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Updated %s from source %s on %s", destfile,
+                        cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Updated %s from source %s on %s", destfile,
                              sourcefile, source_host);
 
                         VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
@@ -495,7 +495,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 }
                 else
                 {
-                    cfPS(cf_error, CF_FAIL, "", pp, attr, "Was not able to copy %s to %s\n", sourcefile, destfile);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Was not able to copy %s to %s\n", sourcefile, destfile);
                 }
 
                 return;
@@ -519,7 +519,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 RlistPrependScalarIdemp(&SINGLE_COPY_CACHE, destfile, RVAL_TYPE_SCALAR);
             }
 
-            cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File %s is an up to date copy of source\n", destfile);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> File %s is an up to date copy of source\n", destfile);
         }
     }
 }
@@ -536,7 +536,7 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
 
     if (strlen(localdir) < 2)
     {
-        CfOut(cf_error, "", "Purge of %s denied -- too dangerous!", localdir);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Purge of %s denied -- too dangerous!", localdir);
         return;
     }
 
@@ -544,13 +544,13 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
 
     if ((pp->conn) && (!pp->conn->authenticated))
     {
-        CfOut(cf_verbose, "", " !! Not purge local files %s - no authenticated contact with a source\n", localdir);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Not purge local files %s - no authenticated contact with a source\n", localdir);
         return;
     }
 
     if (!attr.havedepthsearch)
     {
-        CfOut(cf_verbose, "", " !! No depth search when copying %s so purging does not apply\n", localdir);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! No depth search when copying %s so purging does not apply\n", localdir);
         return;
     }
 
@@ -558,13 +558,13 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
 
     if (chdir(localdir) == -1)
     {
-        CfOut(cf_verbose, "chdir", "Can't chdir to local directory %s\n", localdir);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "chdir", "Can't chdir to local directory %s\n", localdir);
         return;
     }
 
     if ((dirh = OpenDirLocal(".")) == NULL)
     {
-        CfOut(cf_verbose, "opendir", "Can't open local directory %s\n", localdir);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open local directory %s\n", localdir);
         return;
     }
 
@@ -589,11 +589,11 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
             }
             else
             {
-                CfOut(cf_inform, "", " !! Purging %s in copy dest directory\n", filename);
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Purging %s in copy dest directory\n", filename);
 
                 if (lstat(filename, &sb) == -1)
                 {
-                    cfPS(cf_verbose, CF_INTERPT, "lstat", pp, attr, " !! Couldn't stat %s while purging\n", filename);
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "lstat", pp, attr, " !! Couldn't stat %s while purging\n", filename);
                 }
                 else if (S_ISDIR(sb.st_mode))
                 {
@@ -614,24 +614,24 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
 
                     if (!DepthSearch(filename, &sb, 0, purgeattr, pp, report_context))
                     {
-                        cfPS(cf_verbose, CF_INTERPT, "rmdir", pp, attr,
+                        cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "rmdir", pp, attr,
                              " !! Couldn't empty directory %s while purging\n", filename);
                     }
 
                     if (chdir("..") != 0)
                     {
-                        CfOut(cf_error, "chdir", "!! Can't step out of directory \"%s\" before deletion", filename);
+                        CfOut(OUTPUT_LEVEL_ERROR, "chdir", "!! Can't step out of directory \"%s\" before deletion", filename);
                     }
 
                     if (rmdir(filename) == -1)
                     {
-                        cfPS(cf_verbose, CF_INTERPT, "rmdir", pp, attr,
+                        cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "rmdir", pp, attr,
                              " !! Couldn't remove directory %s while purging\n", filename);
                     }
                 }
                 else if (unlink(filename) == -1)
                 {
-                    cfPS(cf_verbose, CF_FAIL, "", pp, attr, " !! Couldn't delete %s while purging\n", filename);
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Couldn't delete %s while purging\n", filename);
                 }
             }
         }
@@ -675,7 +675,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
         if (!MakeParentDirectory(newto, attr.move_obstructions, report_context))
         {
-            cfPS(cf_error, CF_FAIL, "", pp, attr, "Unable to make directory for %s in file-copy %s to %s\n", newto,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Unable to make directory for %s in file-copy %s to %s\n", newto,
                  attr.copy.source, attr.copy.destination);
             return;
         }
@@ -686,7 +686,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
         if (lstat(to, &tostat) != 0)
         {
-            cfPS(cf_error, CF_WARN, "lstat", pp, attr, "Unable to stat newly created directory %s", to);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "lstat", pp, attr, "Unable to stat newly created directory %s", to);
             return;
         }
 
@@ -697,7 +697,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
             if (!attr.move_obstructions)
             {
-                CfOut(cf_inform, "", "Path %s is a symlink. Unable to move it aside without move_obstructions is set",
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Path %s is a symlink. Unable to move it aside without move_obstructions is set",
                       to);
                 return;
             }
@@ -708,14 +708,14 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
             if (cf_rename(to, backup) == -1)
             {
-                CfOut(cf_inform, "", "Unable to backup old %s", to);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to backup old %s", to);
                 unlink(to);
             }
 
             mask = umask(0);
             if (cf_mkdir(to, DEFAULTMODE) == -1)
             {
-                CfOut(cf_error, "cf_mkdir", "Unable to make directory %s", to);
+                CfOut(OUTPUT_LEVEL_ERROR, "cf_mkdir", "Unable to make directory %s", to);
                 umask(mask);
                 return;
             }
@@ -725,7 +725,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
     if ((dirh = OpenDirForPromise(from, attr, pp)) == NULL)
     {
-        cfPS(cf_inform, CF_INTERPT, "", pp, attr, "copy can't open directory [%s]\n", from);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "copy can't open directory [%s]\n", from);
         return;
     }
 
@@ -757,7 +757,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
             if (cf_stat(newfrom, &sb, attr, pp) == -1)
             {
-                CfOut(cf_verbose, "cf_stat", " !! (Can't stat %s)\n", newfrom);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
             }
         }
@@ -765,7 +765,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
         {
             if (cf_lstat(newfrom, &sb, attr, pp) == -1)
             {
-                CfOut(cf_verbose, "cf_stat", " !! (Can't stat %s)\n", newfrom);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
             }
         }
@@ -791,7 +791,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
         if ((attr.recursion.xdev) && (DeviceBoundary(&sb, pp)))
         {
-            CfOut(cf_verbose, "", " !! Skipping %s on different device\n", newfrom);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Skipping %s on different device\n", newfrom);
             continue;
         }
 
@@ -799,7 +799,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
         {
             if (attr.recursion.travlinks)
             {
-                CfOut(cf_verbose, "", "Traversing directory links during copy is too dangerous, pruned");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Traversing directory links during copy is too dangerous, pruned");
                 continue;
             }
 
@@ -816,19 +816,19 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
             {
                 if (cf_mkdir(newto, 0700) == -1)
                 {
-                    cfPS(cf_error, CF_INTERPT, "cf_mkdir", pp, attr, " !! Can't make directory %s\n", newto);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "cf_mkdir", pp, attr, " !! Can't make directory %s\n", newto);
                     continue;
                 }
 
                 if (cfstat(newto, &dsb) == -1)
                 {
-                    cfPS(cf_error, CF_INTERPT, "stat", pp, attr,
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "stat", pp, attr,
                          " !! Can't stat local copy %s - failed to establish directory\n", newto);
                     continue;
                 }
             }
 
-            CfOut(cf_verbose, "", " ->>  Entering %s\n", newto);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s\n", newto);
 
             if (!attr.copy.collapse)
             {
@@ -880,7 +880,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
 
     if (found == -1)
     {
-        cfPS(cf_error, CF_FAIL, "", pp, attr, "Can't stat %s in verify copy\n", source);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Can't stat %s in verify copy\n", source);
         DeleteClientCache(attr, pp);
         return;
     }
@@ -899,7 +899,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
 
         if ((dirh = OpenDirForPromise(sourcedir, attr, pp)) == NULL)
         {
-            cfPS(cf_verbose, CF_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
             DeleteClientCache(attr, pp);
             return;
         }
@@ -908,7 +908,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
 
         if (cfstat(destdir, &dsb) == -1)
         {
-            cfPS(cf_error, CF_FAIL, "stat", pp, attr, "Can't stat directory %s\n", destdir);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "stat", pp, attr, "Can't stat directory %s\n", destdir);
         }
         else
         {
@@ -940,7 +940,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
             {
                 if (cf_stat(sourcefile, &ssb, attr, pp) == -1)
                 {
-                    cfPS(cf_inform, CF_FAIL, "stat", pp, attr, "Can't stat source file (notlinked) %s\n", sourcefile);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "stat", pp, attr, "Can't stat source file (notlinked) %s\n", sourcefile);
                     DeleteClientCache(attr, pp);
                     return;
                 }
@@ -949,7 +949,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
             {
                 if (cf_lstat(sourcefile, &ssb, attr, pp) == -1)
                 {
-                    cfPS(cf_inform, CF_FAIL, "lstat", pp, attr, "Can't stat source file %s\n", sourcefile);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "lstat", pp, attr, "Can't stat source file %s\n", sourcefile);
                     DeleteClientCache(attr, pp);
                     return;
                 }
@@ -975,8 +975,8 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 /* Link the file to the source, instead of copying */
 #ifdef __MINGW32__
 {
-    CfOut(cf_verbose, "", "Windows does not support symbolic links");
-    cfPS(cf_error, CF_FAIL, "", pp, attr, "Windows can't link \"%s\" to \"%s\"", sourcefile, destfile);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links");
+    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Windows can't link \"%s\" to \"%s\"", sourcefile, destfile);
 }
 #else                           /* !__MINGW32__ */
 {
@@ -989,12 +989,12 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 
     if ((S_ISLNK(sb->st_mode)) && (cf_readlink(sourcefile, linkbuf, CF_BUFSIZE, attr, pp) == -1))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, attr, "Can't readlink %s\n", sourcefile);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Can't readlink %s\n", sourcefile);
         return;
     }
     else if (S_ISLNK(sb->st_mode))
     {
-        CfOut(cf_verbose, "", "Checking link from %s to %s\n", destfile, linkbuf);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking link from %s to %s\n", destfile, linkbuf);
 
         if ((attr.copy.link_type == cfa_absolute) && (!IsAbsoluteFileName(linkbuf)))        /* Not absolute path - must fix */
         {
@@ -1019,7 +1019,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
         struct stat ssb;
 
         ExpandLinks(linkbuf, sourcefile, 0);
-        CfOut(cf_verbose, "", "cfengine: link item in copy %s marked for copying from %s instead\n", sourcefile,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine: link item in copy %s marked for copying from %s instead\n", sourcefile,
               linkbuf);
         cfstat(linkbuf, &ssb);
         CfCopyFile(linkbuf, destfile, ssb, attr, pp, report_context);
@@ -1061,7 +1061,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
     {
         if (lstat(destfile, &dsb) == -1)
         {
-            CfOut(cf_error, "lstat", "Can't lstat %s\n", destfile);
+            CfOut(OUTPUT_LEVEL_ERROR, "lstat", "Can't lstat %s\n", destfile);
         }
         else
         {
@@ -1070,15 +1070,15 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 
         if (status == CF_CHG)
         {
-            cfPS(cf_inform, status, "", pp, attr, " -> Created link %s", destfile);
+            cfPS(OUTPUT_LEVEL_INFORM, status, "", pp, attr, " -> Created link %s", destfile);
         }
         else if (status == CF_NOP)
         {
-            cfPS(cf_inform, status, "", pp, attr, " -> Link %s as promised", destfile);
+            cfPS(OUTPUT_LEVEL_INFORM, status, "", pp, attr, " -> Link %s as promised", destfile);
         }
         else
         {
-            cfPS(cf_inform, status, "", pp, attr, " -> Unable to create link %s", destfile);
+            cfPS(OUTPUT_LEVEL_INFORM, status, "", pp, attr, " -> Unable to create link %s", destfile);
         }
     }
 }
@@ -1127,7 +1127,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
     if (DONTDO)
     {
-        CfOut(cf_error, "", "Promise requires copy from %s to %s\n", source, dest);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Promise requires copy from %s to %s\n", source, dest);
         return false;
     }
 
@@ -1192,7 +1192,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
         if (!JoinSuffix(new, CF_NEW))
         {
-            CfOut(cf_error, "", "Unable to construct filename for copy");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to construct filename for copy");
             return false;
         }
 
@@ -1239,7 +1239,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         }
     }
 
-    CfOut(cf_verbose, "", " -> Copy of regular file succeeded %s to %s\n", source, new);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Copy of regular file succeeded %s to %s\n", source, new);
 
     backup[0] = '\0';
 
@@ -1305,13 +1305,13 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
     if (lstat(new, &dstat) == -1)
     {
-        cfPS(cf_inform, CF_FAIL, "stat", pp, attr, "Can't stat new file %s - another agent has picked it up?\n", new);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "stat", pp, attr, "Can't stat new file %s - another agent has picked it up?\n", new);
         return false;
     }
 
     if ((S_ISREG(dstat.st_mode)) && (dstat.st_size != sstat.st_size))
     {
-        cfPS(cf_error, CF_FAIL, "", pp, attr,
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr,
              " !! New file %s seems to have been corrupted in transit (dest %d and src %d), aborting!\n", new,
              (int) dstat.st_size, (int) sstat.st_size);
 
@@ -1325,11 +1325,11 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
     if (attr.copy.verify)
     {
-        CfOut(cf_verbose, "", " ?? Final verification of transmission ...\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?? Final verification of transmission ...\n");
 
         if (CompareFileHashes(source, new, &sstat, &dstat, attr, pp))
         {
-            cfPS(cf_verbose, CF_FAIL, "", pp, attr,
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr,
                  " !! New file %s seems to have been corrupted in transit, aborting!\n", new);
 
             if (backupok)
@@ -1341,7 +1341,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         }
         else
         {
-            CfOut(cf_verbose, "", " -> New file %s transmitted correctly - verified\n", new);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New file %s transmitted correctly - verified\n", new);
         }
     }
 
@@ -1353,7 +1353,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
         if (rsrcrd == -1 || rsrcwd == -1)
         {
-            CfOut(cf_inform, "open", "Open of Darwin resource fork rsrcrd/rsrcwd failed\n");
+            CfOut(OUTPUT_LEVEL_INFORM, "open", "Open of Darwin resource fork rsrcrd/rsrcwd failed\n");
             close(rsrcrd);
             close(rsrcwd);
             return (false);
@@ -1375,7 +1375,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
                 }
                 else
                 {
-                    CfOut(cf_inform, "read", "Read of Darwin resource fork rsrcrd failed\n");
+                    CfOut(OUTPUT_LEVEL_INFORM, "read", "Read of Darwin resource fork rsrcrd failed\n");
                     close(rsrcrd);
                     close(rsrcwd);
                     free(rsrcbuf);
@@ -1409,7 +1409,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
                     }
                     else
                     {
-                        CfOut(cf_inform, "write", "Write of Darwin resource fork rsrcwd failed\n");
+                        CfOut(OUTPUT_LEVEL_INFORM, "write", "Write of Darwin resource fork rsrcwd failed\n");
                         close(rsrcrd);
                         close(rsrcwd);
                         free(rsrcbuf);
@@ -1426,7 +1426,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
         if (cf_rename(new, dest) == -1)
         {
-            cfPS(cf_error, CF_FAIL, "cf_rename", pp, attr,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, attr,
                  " !! Could not install copy file as %s, directory in the way?\n", dest);
 
             if (backupok)
@@ -1443,7 +1443,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
     if ((!discardbackup) && backupisdir)
     {
-        CfOut(cf_inform, "", "Cannot move a directory to repository, leaving at %s", backup);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot move a directory to repository, leaving at %s", backup);
     }
     else if ((!discardbackup) && (ArchiveToRepository(backup, attr, pp, report_context)))
     {
@@ -1492,11 +1492,11 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
     }
 
     ExpandScalar(attr.transformer, comm);
-    CfOut(cf_inform, "", "I: Transforming: %s ", comm);
+    CfOut(OUTPUT_LEVEL_INFORM, "", "I: Transforming: %s ", comm);
 
     if (!IsExecutable(GetArg0(comm)))
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
         return false;
     }
 
@@ -1516,7 +1516,7 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
         if ((pop = cf_popen(comm, "r")) == NULL)
         {
-            cfPS(cf_inform, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
             YieldCurrentLock(thislock);
             return false;
         }
@@ -1530,11 +1530,11 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
             if (print)
             {
-                CfOut(cf_reporting, "", "%s", line);
+                CfOut(OUTPUT_LEVEL_REPORTING, "", "%s", line);
             }
             else
             {
-                CfOut(cf_inform, "", "%s", line);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "%s", line);
             }
         }
 
@@ -1542,18 +1542,18 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
 
         if (VerifyCommandRetcode(transRetcode, true, attr, pp))
         {
-            CfOut(cf_inform, "", "-> Transformer %s => %s seemed to work ok", file, comm);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "-> Transformer %s => %s seemed to work ok", file, comm);
         }
         else
         {
-            CfOut(cf_error, "", "-> Transformer %s => %s returned error", file, comm);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "-> Transformer %s => %s returned error", file, comm);
         }
 
         YieldCurrentLock(thislock);
     }
     else
     {
-        CfOut(cf_error, "", " -> Need to transform file \"%s\" with \"%s\"", file, comm);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " -> Need to transform file \"%s\" with \"%s\"", file, comm);
     }
 
     return true;
@@ -1567,14 +1567,14 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
 
     if (lstat(path, &dsb) == -1)
     {
-        cfPS(cf_inform, CF_NOP, "", pp, attr, "File object named %s is not there (promise kept)", path);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, attr, "File object named %s is not there (promise kept)", path);
         return;
     }
     else
     {
         if (attr.rename.disable)
         {
-            CfOut(cf_inform, "", " !! Warning - file object %s exists, contrary to promise\n", path);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Warning - file object %s exists, contrary to promise\n", path);
         }
     }
 
@@ -1582,7 +1582,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     {
         if (DONTDO)
         {
-            CfOut(cf_inform, "", " -> File %s should be renamed to %s to keep promise\n", path, attr.rename.newname);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> File %s should be renamed to %s to keep promise\n", path, attr.rename.newname);
             return;
         }
         else
@@ -1591,17 +1591,17 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
             {
                 if (cf_rename(path, attr.rename.newname) == -1)
                 {
-                    cfPS(cf_error, CF_FAIL, "cf_rename", pp, attr, " !! Error occurred while renaming %s\n", path);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, attr, " !! Error occurred while renaming %s\n", path);
                     return;
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Renaming file %s to %s\n", path, attr.rename.newname);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Renaming file %s to %s\n", path, attr.rename.newname);
                 }
             }
             else
             {
-                cfPS(cf_error, CF_WARN, "", pp, attr,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr,
                      " !! Rename to same destination twice? Would overwrite saved copy - aborting");
             }
         }
@@ -1617,16 +1617,16 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
             {
                 if (unlink(path) == -1)
                 {
-                    cfPS(cf_error, CF_FAIL, "unlink", pp, attr, " !! Unable to unlink %s\n", path);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "unlink", pp, attr, " !! Unable to unlink %s\n", path);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling symbolic link %s by deleting it\n", path);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Disabling symbolic link %s by deleting it\n", path);
                 }
             }
             else
             {
-                CfOut(cf_inform, "", " * Need to disable link %s to keep promise\n", path);
+                CfOut(OUTPUT_LEVEL_INFORM, "", " * Need to disable link %s to keep promise\n", path);
             }
 
             return;
@@ -1641,7 +1641,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
 
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be renamed",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! %s '%s' should be renamed",
                  S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             return;
         }
@@ -1696,7 +1696,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
 
         if (DONTDO)
         {
-            CfOut(cf_inform, "", " -> File %s should be renamed to %s to keep promise\n", path, newname);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> File %s should be renamed to %s to keep promise\n", path, newname);
             return;
         }
         else
@@ -1707,12 +1707,12 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
             {
                 if (cf_rename(path, newname) == -1)
                 {
-                    cfPS(cf_error, CF_FAIL, "cf_rename", pp, attr, "Error occurred while renaming %s\n", path);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, attr, "Error occurred while renaming %s\n", path);
                     return;
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %jo\n", path,
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %jo\n", path,
                          newname, (uintmax_t)newperm);
                 }
 
@@ -1723,7 +1723,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
             }
             else
             {
-                cfPS(cf_error, CF_WARN, "", pp, attr,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr,
                      " !! Disable required twice? Would overwrite saved copy - changing permissions only");
             }
         }
@@ -1735,16 +1735,16 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be truncated", path);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! File '%s' should be truncated", path);
         }
         else if (!DONTDO)
         {
             TruncateFile(path);
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Truncating (emptying) %s\n", path);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Truncating (emptying) %s\n", path);
         }
         else
         {
-            CfOut(cf_error, "", " * File %s needs emptying", path);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " * File %s needs emptying", path);
         }
         return;
     }
@@ -1753,16 +1753,16 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
     {
         if (attr.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File '%s' should be rotated", path);
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! File '%s' should be rotated", path);
         }
         else if (!DONTDO)
         {
             RotateFiles(path, attr.rename.rotate);
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Rotating files %s in %d fifo\n", path, attr.rename.rotate);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Rotating files %s in %d fifo\n", path, attr.rename.rotate);
         }
         else
         {
-            CfOut(cf_error, "", " * File %s needs rotating", path);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " * File %s needs rotating", path);
         }
 
         return;
@@ -1774,11 +1774,11 @@ static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *
     const char *lastnode = ReadLastNode(path);
     char buf[CF_MAXVARSIZE];
 
-    CfOut(cf_verbose, "", " -> Verifying file deletions for %s\n", path);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying file deletions for %s\n", path);
 
     if (DONTDO)
     {
-        CfOut(cf_inform, "", "Promise requires deletion of file object %s\n", path);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Promise requires deletion of file object %s\n", path);
     }
     else
     {
@@ -1786,7 +1786,7 @@ static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *
         {
         case cfa_warn:
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s '%s' should be deleted",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! %s '%s' should be deleted",
                  S_ISDIR(sb->st_mode) ? "Directory" : "File", path);
             break;
 
@@ -1796,18 +1796,18 @@ static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *
             {
                 if (unlink(lastnode) == -1)
                 {
-                    cfPS(cf_verbose, CF_FAIL, "unlink", pp, attr, "Couldn't unlink %s tidying\n", path);
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "unlink", pp, attr, "Couldn't unlink %s tidying\n", path);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted file %s\n", path);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Deleted file %s\n", path);
                 }
             }
             else                // directory
             {
                 if (!attr.delete.rmdirs)
                 {
-                    CfOut(cf_inform, "unlink", "Keeping directory %s\n", path);
+                    CfOut(OUTPUT_LEVEL_INFORM, "unlink", "Keeping directory %s\n", path);
                     return;
                 }
 
@@ -1831,12 +1831,12 @@ static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *
 
                 if (rmdir(buf) == -1)
                 {
-                    cfPS(cf_verbose, CF_FAIL, "rmdir", pp, attr,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "rmdir", pp, attr,
                          " !! Delete directory %s failed (cannot delete node called \"%s\")\n", path, buf);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Deleted directory %s\n", path);
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Deleted directory %s\n", path);
                 }
             }
 
@@ -1854,16 +1854,16 @@ static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp)
     {
         if (utime(path, NULL) != -1)
         {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touched (updated time stamps) %s\n", path);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Touched (updated time stamps) %s\n", path);
         }
         else
         {
-            cfPS(cf_inform, CF_FAIL, "utime", pp, attr, "Touch %s failed to update timestamps\n", path);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "utime", pp, attr, "Touch %s failed to update timestamps\n", path);
         }
     }
     else
     {
-        CfOut(cf_error, "", "Need to touch (update timestamps) %s\n", path);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Need to touch (update timestamps) %s\n", path);
     }
 }
 
@@ -1913,7 +1913,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
             }
             else
             {
-                CfOut(cf_verbose, "", "NB: rxdirs is set to false - x for r bits not checked\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "NB: rxdirs is set to false - x for r bits not checked\n");
             }
         }
     }
@@ -1967,7 +1967,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
         CfDebug("File okay, newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
-        cfPS(cf_verbose, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> File permissions on %s as promised\n", file);
     }
     else
     {
@@ -1977,7 +1977,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
         {
         case cfa_warn:
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -1987,12 +1987,12 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
             {
                 if (cf_chmod(file, newperm & 07777) == -1)
                 {
-                    CfOut(cf_error, "cf_chmod", "cf_chmod failed on %s\n", file);
+                    CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "cf_chmod failed on %s\n", file);
                     break;
                 }
             }
 
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -2023,7 +2023,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
         {
         case cfa_warn:
 
-            cfPS(cf_error, CF_WARN, "", pp, attr,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr,
                  " !! %s has flags %jo - [should be %jo]\n",
                  file, (uintmax_t)(dstat->st_mode & CHFLAGS_MASK),
                  (uintmax_t)(newflags & CHFLAGS_MASK));
@@ -2035,13 +2035,13 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
             {
                 if (chflags(file, newflags & CHFLAGS_MASK) == -1)
                 {
-                    cfPS(cf_error, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %jx on %s\n", (uintmax_t)newflags,
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_DENIED, "chflags", pp, attr, " !! Failed setting BSD flags %jx on %s\n", (uintmax_t)newflags,
                          file);
                     break;
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> %s had flags %jo, changed it to %jo\n", file,
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> %s had flags %jo, changed it to %jo\n", file,
                          (uintmax_t)(dstat->st_flags & CHFLAGS_MASK),
                          (uintmax_t)(newflags & CHFLAGS_MASK));
                 }
@@ -2060,11 +2060,11 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
     {
         if (utime(file, NULL) == -1)
         {
-            cfPS(cf_inform, CF_DENIED, "utime", pp, attr, " !! Touching file %s failed", file);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_DENIED, "utime", pp, attr, " !! Touching file %s failed", file);
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Touching file %s", file);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Touching file %s", file);
         }
     }
 
@@ -2092,7 +2092,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         ChopLastNode(basedir);
         if (chdir(basedir))
         {
-            CfOut(cf_error, "", "Failed to chdir into '%s'\n", basedir);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to chdir into '%s'\n", basedir);
             return false;
         }
         return VerifyFileLeaf(name, sb, attr, pp, report_context);
@@ -2100,13 +2100,13 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        CfOut(cf_error, "", "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
         return false;
     }
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        CfOut(cf_error, "", "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
         return false;
     }
 
@@ -2121,7 +2121,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
     if ((dirh = OpenDirLocal(".")) == NULL)
     {
-        CfOut(cf_inform, "opendir", "Could not open existing directory %s\n", name);
+        CfOut(OUTPUT_LEVEL_INFORM, "opendir", "Could not open existing directory %s\n", name);
         return false;
     }
 
@@ -2143,7 +2143,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
         if (lstat(dirp->d_name, &lsb) == -1)
         {
-            CfOut(cf_verbose, "lstat", "Recurse was looking at %s when an error occurred:\n", path);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Recurse was looking at %s when an error occurred:\n", path);
             continue;
         }
 
@@ -2165,7 +2165,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         {
             if ((lsb.st_uid != 0) && (lsb.st_uid != getuid()))
             {
-                CfOut(cf_inform, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "File %s is an untrusted link: cfengine will not follow it with a destructive operation", path);
                 continue;
             }
@@ -2174,14 +2174,14 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
             if (cfstat(dirp->d_name, &lsb) == -1)
             {
-                CfOut(cf_error, "stat", "Recurse was working on %s when this failed:\n", path);
+                CfOut(OUTPUT_LEVEL_ERROR, "stat", "Recurse was working on %s when this failed:\n", path);
                 continue;
             }
         }
 
         if ((attr.recursion.xdev) && (DeviceBoundary(&lsb, pp)))
         {
-            CfOut(cf_verbose, "", "Skipping %s on different device - use xdev option to change this\n", path);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping %s on different device - use xdev option to change this\n", path);
             continue;
         }
 
@@ -2194,7 +2194,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
 
             if ((attr.recursion.depth > 1) && (rlevel <= attr.recursion.depth))
             {
-                CfOut(cf_verbose, "", " ->>  Entering %s (%d)\n", path, rlevel);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s (%d)\n", path, rlevel);
                 goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp, report_context);
                 PopDirState(goback, name, sb, attr.recursion);
                 VerifyFileLeaf(path, &lsb, attr, pp, report_context);
@@ -2218,7 +2218,7 @@ static int PushDirState(char *name, struct stat *sb)
 {
     if (chdir(name) == -1)
     {
-        CfOut(cf_inform, "chdir", "Could not change to directory %s, mode %jo in tidy", name, (uintmax_t)(sb->st_mode & 07777));
+        CfOut(OUTPUT_LEVEL_INFORM, "chdir", "Could not change to directory %s, mode %jo in tidy", name, (uintmax_t)(sb->st_mode & 07777));
         return false;
     }
     else
@@ -2236,7 +2236,7 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
     {
         if (chdir(name) == -1)
         {
-            CfOut(cf_error, "chdir", "Error in backing out of recursive travlink descent securely to %s", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Error in backing out of recursive travlink descent securely to %s", name);
             FatalError("Terminating");
         }
 
@@ -2246,7 +2246,7 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
     {
         if (chdir("..") == -1)
         {
-            CfOut(cf_error, "chdir", "Error in backing out of recursive descent securely to %s", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Error in backing out of recursive descent securely to %s", name);
             FatalError("Terminating");
         }
     }
@@ -2260,13 +2260,13 @@ static void CheckLinkSecurity(struct stat *sb, char *name)
 
     if (cfstat(".", &security) == -1)
     {
-        CfOut(cf_error, "stat", "Could not stat directory %s after entering!", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", "Could not stat directory %s after entering!", name);
         return;
     }
 
     if ((sb->st_dev != security.st_dev) || (sb->st_ino != security.st_ino))
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               "SERIOUS SECURITY ALERT: path race exploited in recursion to/from %s. Not safe for agent to continue - aborting",
               name);
         FatalError("Terminating");
@@ -2290,7 +2290,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 
     if (attr.copy.preserve)
     {
-        CfOut(cf_verbose, "", " -> Attempting to preserve file permissions from the source: %jo",
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Attempting to preserve file permissions from the source: %jo",
               (uintmax_t)(sstat->st_mode & 07777));
 
         if ((attr.perms.owners)->uid == CF_SAME_OWNER)  /* Preserve uid and gid  */
@@ -2352,13 +2352,13 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
 
     if ((pp->conn != NULL) && (!pp->conn->authenticated))
     {
-        cfPS(cf_verbose, CF_FAIL, "", pp, attr, "No authenticated source %s in files.copyfrom promise\n", source);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, "No authenticated source %s in files.copyfrom promise\n", source);
         return NULL;
     }
 
     if (cf_stat(attr.copy.source, &ssb, attr, pp) == -1)
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Can't stat %s in files.copyfrom promise\n", source);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Can't stat %s in files.copyfrom promise\n", source);
         return NULL;
     }
 
@@ -2374,7 +2374,7 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
 
     if (!MakeParentDirectory(vbuff, attr.move_obstructions, report_context))
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Can't make directories for %s in files.copyfrom promise\n", vbuff);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Can't make directories for %s in files.copyfrom promise\n", vbuff);
         return NULL;
     }
 
@@ -2382,10 +2382,10 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
     {
         if (attr.copy.purge)
         {
-            CfOut(cf_verbose, "", " !! (Destination purging enabled)\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! (Destination purging enabled)\n");
         }
 
-        CfOut(cf_verbose, "", " ->>  Entering %s\n", source);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s\n", source);
         SetSearchDevice(&ssb, pp);
         SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp, report_context);
 
@@ -2415,11 +2415,11 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
 
     if (!attr.copy.source)
     {
-        CfOut(cf_verbose, "", " -> Copy file %s check\n", destination);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Copy file %s check\n", destination);
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
     }
 
     if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
@@ -2432,8 +2432,8 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
 
         if (conn == NULL)
         {
-            cfPS(cf_inform, CF_FAIL, "", pp, attr, " -> No suitable server responded to hail");
-            PromiseRef(cf_inform, pp);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, " -> No suitable server responded to hail");
+            PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             return false;
         }
     }
@@ -2464,7 +2464,7 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
 
     if (MatchRlistItem(attr.link.copy_patterns, lastnode))
     {
-        CfOut(cf_verbose, "", " -> Link %s matches copy_patterns\n", destination);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Link %s matches copy_patterns\n", destination);
         VerifyCopy(attr.link.source, destination, attr, pp, report_context);
         return true;
     }
@@ -2484,7 +2484,7 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
         VerifyAbsoluteLink(destination, source, attr, pp, report_context);
         break;
     default:
-        CfOut(cf_error, "", "Unknown link type - should not happen.\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown link type - should not happen.\n");
         break;
     }
 
@@ -2508,7 +2508,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
         }
         else if (!S_ISDIR(lsb.st_mode))
         {
-            CfOut(cf_error, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
                   destination);
             return false;
         }
@@ -2518,14 +2518,14 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
 
     if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath, pp, attr, report_context))
     {
-        CfOut(cf_error, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
               destination);
         return false;
     }
 
     if ((dirh = OpenDirLocal(source)) == NULL)
     {
-        cfPS(cf_error, CF_FAIL, "opendir", pp, attr, "Can't open source of children to link %s\n", attr.link.source);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "opendir", pp, attr, "Can't open source of children to link %s\n", attr.link.source);
         return false;
     }
 
@@ -2543,7 +2543,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
 
         if (!JoinPath(promiserpath, dirp->d_name))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Can't construct filename which verifying child links\n");
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Can't construct filename which verifying child links\n");
             CloseDir(dirh);
             return false;
         }
@@ -2553,7 +2553,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
 
         if (!JoinPath(sourcepath, dirp->d_name))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Can't construct filename while verifying child links\n");
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Can't construct filename while verifying child links\n");
             CloseDir(dirh);
             return false;
         }
@@ -2566,7 +2566,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
             }
             else
             {
-                CfOut(cf_verbose, "", "Have promised not to disturb %s\'s existing content", promiserpath);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Have promised not to disturb %s\'s existing content", promiserpath);
                 continue;
             }
         }
@@ -2606,8 +2606,8 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
             HashFile(file, digest1, cf_md5);
             HashFile(file, digest2, cf_sha1);
 
-            one = FileHashChanged(file, digest1, cf_error, cf_md5, attr, pp);
-            two = FileHashChanged(file, digest2, cf_error, cf_sha1, attr, pp);
+            one = FileHashChanged(file, digest1, OUTPUT_LEVEL_ERROR, cf_md5, attr, pp);
+            two = FileHashChanged(file, digest2, OUTPUT_LEVEL_ERROR, cf_sha1, attr, pp);
 
             if (one || two)
             {
@@ -2621,7 +2621,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
         {
             HashFile(file, digest1, attr.change.hash);
 
-            if (FileHashChanged(file, digest1, cf_error, attr.change.hash, attr, pp))
+            if (FileHashChanged(file, digest1, OUTPUT_LEVEL_ERROR, attr.change.hash, attr, pp))
             {
                 changed = true;
             }
@@ -2656,13 +2656,13 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
         }
         else
         {
-            CfOut(cf_verbose, "", "Checksum comparison replaced by ctime: files not regular\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checksum comparison replaced by ctime: files not regular\n");
             ok_to_copy = (dsb->st_ctime < ssb->st_ctime) || (dsb->st_mtime < ssb->st_mtime);
         }
 
         if (ok_to_copy)
         {
-            CfOut(cf_verbose, "", " !! Image file %s has a wrong digest/checksum (should be copy of %s)\n", destfile,
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Image file %s has a wrong digest/checksum (should be copy of %s)\n", destfile,
                   sourcefile);
             return ok_to_copy;
         }
@@ -2676,13 +2676,13 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
         }
         else
         {
-            CfOut(cf_verbose, "", "Byte comparison replaced by ctime: files not regular\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Byte comparison replaced by ctime: files not regular\n");
             ok_to_copy = (dsb->st_ctime < ssb->st_ctime) || (dsb->st_mtime < ssb->st_mtime);
         }
 
         if (ok_to_copy)
         {
-            CfOut(cf_verbose, "", " !! Image file %s has a wrong binary checksum (should be copy of %s)\n", destfile,
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Image file %s has a wrong binary checksum (should be copy of %s)\n", destfile,
                   sourcefile);
             return ok_to_copy;
         }
@@ -2694,7 +2694,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
         if (ok_to_copy)
         {
-            CfOut(cf_verbose, "", " !! Image file %s out of date (should be copy of %s)\n", destfile, sourcefile);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Image file %s out of date (should be copy of %s)\n", destfile, sourcefile);
             return ok_to_copy;
         }
         break;
@@ -2706,7 +2706,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
         if (ok_to_copy)
         {
-            CfOut(cf_verbose, "", " !! Image file %s seems out of date (should be copy of %s)\n", destfile, sourcefile);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Image file %s seems out of date (should be copy of %s)\n", destfile, sourcefile);
             return ok_to_copy;
         }
         break;
@@ -2716,7 +2716,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
         if (ok_to_copy)
         {
-            CfOut(cf_verbose, "", " !! Image file %s out of date (should be copy of %s)\n", destfile, sourcefile);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Image file %s out of date (should be copy of %s)\n", destfile, sourcefile);
             return ok_to_copy;
         }
         break;
@@ -2731,7 +2731,7 @@ static void FileAutoDefine(char *destfile, const char *ns)
 
     snprintf(context, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
     NewClass(context,  ns);
-    CfOut(cf_inform, "", "Auto defining class %s\n", context);
+    CfOut(OUTPUT_LEVEL_INFORM, "", "Auto defining class %s\n", context);
 }
 
 #ifndef __MINGW32__
@@ -2752,7 +2752,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
             {
                 if (amroot)
                 {
-                    cfPS(cf_error, CF_WARN, "", pp, attr, "NEW SETUID root PROGRAM %s\n", file);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, "NEW SETUID root PROGRAM %s\n", file);
                 }
 
                 PrependItem(&VSETUIDLIST, file, NULL);
@@ -2764,14 +2764,14 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
             {
             case cfa_fix:
 
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Removing setuid (root) flag from %s...\n\n", file);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Removing setuid (root) flag from %s...\n\n", file);
                 break;
 
             case cfa_warn:
 
                 if (amroot)
                 {
-                    cfPS(cf_error, CF_WARN, "", pp, attr, " !! WARNING setuid (root) flag on %s...\n\n", file);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! WARNING setuid (root) flag on %s...\n\n", file);
                 }
                 break;
             }
@@ -2792,7 +2792,7 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
                 {
                     if (amroot)
                     {
-                        cfPS(cf_error, CF_WARN, "", pp, attr, " !! NEW SETGID root PROGRAM %s\n", file);
+                        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! NEW SETGID root PROGRAM %s\n", file);
                     }
 
                     PrependItem(&VSETUIDLIST, file, NULL);
@@ -2805,12 +2805,12 @@ static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Prom
             {
             case cfa_fix:
 
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Removing setgid (root) flag from %s...\n\n", file);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Removing setgid (root) flag from %s...\n\n", file);
                 break;
 
             case cfa_warn:
 
-                cfPS(cf_inform, CF_WARN, "", pp, attr, " !! WARNING setgid (root) flag on %s...\n\n", file);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_WARN, "", pp, attr, " !! WARNING setgid (root) flag on %s...\n\n", file);
                 break;
 
             default:
@@ -2889,7 +2889,7 @@ static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Prom
 
             if (DONTDO)
             {
-                CfOut(cf_inform, "", "Promised to set Finder Type code of %s to %s\n", file, a.perms.findertype);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Promised to set Finder Type code of %s to %s\n", file, a.perms.findertype);
                 return 0;
             }
 
@@ -2900,18 +2900,18 @@ static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Prom
 
             if (retval >= 0)
             {
-                cfPS(cf_inform, CF_CHG, "", pp, a, "Setting Finder Type code of %s to %s\n", file, a.perms.findertype);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Setting Finder Type code of %s to %s\n", file, a.perms.findertype);
             }
             else
             {
-                cfPS(cf_error, CF_FAIL, "", pp, a, "Setting Finder Type code of %s to %s failed!!\n", file,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Setting Finder Type code of %s to %s failed!!\n", file,
                      a.perms.findertype);
             }
 
             return retval;
 
         case cfa_warn:
-            CfOut(cf_error, "", "Darwin FinderType does not match -- not fixing.\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Darwin FinderType does not match -- not fixing.\n");
             return 0;
 
         default:
@@ -2920,7 +2920,7 @@ static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Prom
     }
     else
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, "Finder Type code of %s to %s is as promised\n", file, a.perms.findertype);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, "Finder Type code of %s to %s is as promised\n", file, a.perms.findertype);
         return 0;
     }
 }
@@ -2940,7 +2940,7 @@ static void TruncateFile(char *name)
     {
         if ((fd = creat(name, 000)) == -1)      /* dummy mode ignored */
         {
-            CfOut(cf_error, "creat", "Failed to create or truncate file %s\n", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "creat", "Failed to create or truncate file %s\n", name);
         }
         else
         {
@@ -2956,17 +2956,17 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp)
         /* Not root hard link, remove to preserve consistency */
         if (DONTDO)
         {
-            CfOut(cf_verbose, "", " !! Need to remove old hard link %s to preserve structure..\n", value);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Need to remove old hard link %s to preserve structure..\n", value);
         }
         else
         {
             if (attr.transaction.action == cfa_warn)
             {
-                CfOut(cf_verbose, "", " !! Need to remove old hard link %s to preserve structure..\n", value);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Need to remove old hard link %s to preserve structure..\n", value);
             }
             else
             {
-                CfOut(cf_verbose, "", " -> Removing old hard link %s to preserve structure..\n", value);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Removing old hard link %s to preserve structure..\n", value);
                 unlink(value);
             }
         }
@@ -3011,8 +3011,8 @@ static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes
             {
                 if (strlen(sp->cf_readlink) + 1 > buffsize)
                 {
-                    cfPS(cf_error, CF_FAIL, "", pp, attr, "readlink value is too large in cfreadlink\n");
-                    CfOut(cf_error, "", "Contained [%s]]n", sp->cf_readlink);
+                    cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "readlink value is too large in cfreadlink\n");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Contained [%s]]n", sp->cf_readlink);
                     return -1;
                 }
                 else
@@ -3044,7 +3044,7 @@ static bool CopyRegularFileDiskReport(char *source, char *destination, Attribute
 
     if(!result)
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, "Failed copying file %s to %s", source, destination);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Failed copying file %s to %s", source, destination);
     }
 
     return result;
@@ -3058,7 +3058,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
     {
         if ((MatchRlistItem(r.exclude_dirs, path)) || (MatchRlistItem(r.exclude_dirs, lastnode)))
         {
-            CfOut(cf_verbose, "", "Skipping matched excluded directory %s\n", path);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping matched excluded directory %s\n", path);
             return true;
         }
     }
@@ -3067,7 +3067,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
     {
         if (!((MatchRlistItem(r.include_dirs, path)) || (MatchRlistItem(r.include_dirs, lastnode))))
         {
-            CfOut(cf_verbose, "", "Skipping matched non-included directory %s\n", path);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping matched non-included directory %s\n", path);
             return true;
         }
     }
@@ -3101,12 +3101,12 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 
     if (attr.perms.groups->next == NULL && attr.perms.groups->gid == CF_UNKNOWN_GROUP)  // Only one non.existent item
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown group");
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown group");
     }
 
     if (attr.perms.owners->next == NULL && attr.perms.owners->uid == CF_UNKNOWN_OWNER)  // Only one non.existent item
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown user");
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, " !! Unable to make file belong to an unknown user");
     }
 
     for (glp = attr.perms.groups; glp != NULL; glp = glp->next)
@@ -3155,7 +3155,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 
             if (uid == CF_SAME_OWNER && gid == CF_SAME_GROUP)
             {
-                CfOut(cf_verbose, "", " -> Touching %s\n", file);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Touching %s\n", file);
             }
             else
             {
@@ -3176,7 +3176,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
                 CfDebug("Using LCHOWN function\n");
                 if (lchown(file, uid, gid) == -1)
                 {
-                    CfOut(cf_inform, "lchown", " !! Cannot set ownership on link %s!\n", file);
+                    CfOut(OUTPUT_LEVEL_INFORM, "lchown", " !! Cannot set ownership on link %s!\n", file);
                 }
                 else
                 {
@@ -3188,13 +3188,13 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
             {
                 if (!uidmatch)
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Owner of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_uid,
                          (uintmax_t)uid);
                 }
 
                 if (!gidmatch)
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Group of %s was %ju, setting to %ju", file, (uintmax_t)sb->st_gid,
                          (uintmax_t)gid);
                 }
 
@@ -3202,7 +3202,7 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
                 {
                     if (chown(file, uid, gid) == -1)
                     {
-                        cfPS(cf_inform, CF_DENIED, "chown", pp, attr, " !! Cannot set ownership on file %s!\n", file);
+                        cfPS(OUTPUT_LEVEL_INFORM, CF_DENIED, "chown", pp, attr, " !! Cannot set ownership on file %s!\n", file);
                     }
                     else
                     {
@@ -3216,19 +3216,19 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 
             if ((pw = getpwuid(sb->st_uid)) == NULL)
             {
-                CfOut(cf_error, "", "File %s is not owned by anybody in the passwd database\n", file);
-                CfOut(cf_error, "", "(uid = %ju,gid = %ju)\n", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "File %s is not owned by anybody in the passwd database\n", file);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "(uid = %ju,gid = %ju)\n", (uintmax_t)sb->st_uid, (uintmax_t)sb->st_gid);
                 break;
             }
 
             if ((gp = getgrgid(sb->st_gid)) == NULL)
             {
-                cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is not owned by any group in group database\n",
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! File %s is not owned by any group in group database\n",
                      file);
                 break;
             }
 
-            cfPS(cf_error, CF_WARN, "", pp, attr, " !! File %s is owned by [%s], group [%s]\n", file, pw->pw_name,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! File %s is owned by [%s], group [%s]\n", file, pw->pw_name,
                  gp->gr_name);
             break;
         }
@@ -3306,7 +3306,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
-        CfOut(cf_error, "", "%s", message);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
@@ -3319,7 +3319,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "ALERT: owner for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_uid,
                  (uintmax_t) sb->st_uid);
-        CfOut(cf_error, "", "%s", message);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
@@ -3332,7 +3332,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     {
         snprintf(message, CF_BUFSIZE - 1, "ALERT: group for %s changed %jd -> %jd", file, (uintmax_t) cmpsb.st_gid,
                  (uintmax_t) sb->st_gid);
-        CfOut(cf_error, "", "%s", message);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
@@ -3343,13 +3343,13 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
 
     if (cmpsb.st_dev != sb->st_dev)
     {
-        CfOut(cf_error, "", "ALERT: device for %s changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: device for %s changed %jd -> %jd", file, (intmax_t) cmpsb.st_dev,
               (intmax_t) sb->st_dev);
     }
 
     if (cmpsb.st_ino != sb->st_ino)
     {
-        CfOut(cf_error, "", "ALERT: inode for %s changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: inode for %s changed %ju -> %ju", file, (uintmax_t) cmpsb.st_ino,
               (uintmax_t) sb->st_ino);
     }
 
@@ -3362,12 +3362,12 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         strcpy(to, cf_ctime(&(sb->st_mtime)));
         Chop(from, CF_MAXVARSIZE);
         Chop(to, CF_MAXVARSIZE);
-        CfOut(cf_error, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
     }
 
     if (pp->ref)
     {
-        CfOut(cf_error, "", "Preceding promise: %s", pp->ref);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->ref);
     }
 
     if (attr.change.update && !DONTDO)
@@ -3390,7 +3390,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
 
     if (!IsAbsoluteFileName(file))
     {
-        cfPS(cf_inform, CF_FAIL, "creat", pp, attr,
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "creat", pp, attr,
              " !! Cannot create a relative filename %s - has no invariant meaning\n", file);
         return false;
     }
@@ -3403,15 +3403,15 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
         {
             if (!MakeParentDirectory(file, attr.move_obstructions, report_context))
             {
-                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating directories for %s\n", file);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "creat", pp, attr, " !! Error creating directories for %s\n", file);
                 return false;
             }
 
-            cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created directory %s\n", file);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Created directory %s\n", file);
         }
         else
         {
-            CfOut(cf_error, "", " !! Warning promised, need to create directory %s", file);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Warning promised, need to create directory %s", file);
             return false;
         }
     }
@@ -3426,7 +3426,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
             {
                 /* Relying on umask is risky */
                 filemode = 0600;
-                CfOut(cf_verbose, "", " -> No mode was set, choose plain file default %ju\n", (uintmax_t)filemode);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No mode was set, choose plain file default %ju\n", (uintmax_t)filemode);
             }
             else
             {
@@ -3437,20 +3437,20 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
 
             if ((fd = creat(file, filemode)) == -1)
             {
-                cfPS(cf_inform, CF_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %ju\n", file, (uintmax_t)filemode);
                 umask(saveumask);
                 return false;
             }
             else
             {
-                cfPS(cf_inform, CF_CHG, "", pp, attr, " -> Created file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Created file %s, mode = %ju\n", file, (uintmax_t)filemode);
                 close(fd);
                 umask(saveumask);
             }
         }
         else
         {
-            CfOut(cf_error, "", " !! Warning promised, need to create file %s\n", file);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Warning promised, need to create file %s\n", file);
             return false;
         }
     }
@@ -3466,7 +3466,7 @@ static int DeviceBoundary(struct stat *sb, Promise *pp)
     }
     else
     {
-        CfOut(cf_verbose, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
         return true;
     }
 }

@@ -213,7 +213,7 @@ static void ShowLastSeenHosts()
 
     if (!ScanLastSeenQuality(ShowHost, &count))
     {
-        CfOut(cf_error, "", "Unable to show lastseen database");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to show lastseen database");
         return;
     }
 
@@ -236,18 +236,18 @@ static int RemoveKeys(const char *host)
 
     if ((removed_by_ip == -1) || (removed_by_digest == -1))
     {
-        CfOut(cf_error, "", "Unable to remove keys for the host %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to remove keys for the host %s",
               remove_keys_host);
         return 255;
     }
     else if (removed_by_ip + removed_by_digest == 0)
     {
-        CfOut(cf_error, "", "No keys for host %s were found", remove_keys_host);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "No keys for host %s were found", remove_keys_host);
         return 1;
     }
     else
     {
-        CfOut(cf_inform, "", "Removed %d key(s) for host %s",
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Removed %d key(s) for host %s",
               removed_by_ip + removed_by_digest, remove_keys_host);
         return 0;
     }
@@ -271,13 +271,13 @@ static void KeepKeyPromises(void)
 
     if (cfstat(CFPUBKEYFILE, &statbuf) != -1)
     {
-        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", CFPUBKEYFILE);
         return;
     }
 
     if (cfstat(CFPRIVKEYFILE, &statbuf) != -1)
     {
-        CfOut(cf_cmdout, "", "A key file already exists at %s\n", CFPRIVKEYFILE);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", CFPRIVKEYFILE);
         return;
     }
 
@@ -288,7 +288,7 @@ static void KeepKeyPromises(void)
     if (pair == NULL)
     {
         err = ERR_get_error();
-        CfOut(cf_error, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
         return;
     }
 
@@ -301,23 +301,23 @@ static void KeepKeyPromises(void)
 
     if (fd < 0)
     {
-        CfOut(cf_error, "open", "Open %s failed: %s.", CFPRIVKEYFILE, strerror(errno));
+        CfOut(OUTPUT_LEVEL_ERROR, "open", "Open %s failed: %s.", CFPRIVKEYFILE, strerror(errno));
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(cf_error, "fdopen", "Couldn't open private key %s.", CFPRIVKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Couldn't open private key %s.", CFPRIVKEYFILE);
         close(fd);
         return;
     }
 
-    CfOut(cf_verbose, "", "Writing private key to %s\n", CFPRIVKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing private key to %s\n", CFPRIVKEYFILE);
 
     if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
     {
         err = ERR_get_error();
-        CfOut(cf_error, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
         return;
     }
 
@@ -327,23 +327,23 @@ static void KeepKeyPromises(void)
 
     if (fd < 0)
     {
-        CfOut(cf_error, "open", "Unable to open public key %s.", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "open", "Unable to open public key %s.", CFPUBKEYFILE);
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(cf_error, "fdopen", "Open %s failed.", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Open %s failed.", CFPUBKEYFILE);
         close(fd);
         return;
     }
 
-    CfOut(cf_verbose, "", "Writing public key to %s\n", CFPUBKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing public key to %s\n", CFPUBKEYFILE);
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
         err = ERR_get_error();
-        CfOut(cf_error, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
         return;
     }
 
@@ -358,7 +358,7 @@ static void KeepKeyPromises(void)
 #ifndef HAVE_NOVA
 bool LicenseInstall(char *path_source)
 {
-    CfOut(cf_error, "", "!! License installation only applies to CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! License installation only applies to CFEngine Enterprise");
 
     return false;
 }

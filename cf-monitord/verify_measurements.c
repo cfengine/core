@@ -50,11 +50,11 @@ void VerifyMeasurementPromise(double *this, Promise *pp)
     {
         if (pp->ref)
         {
-            CfOut(cf_verbose, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->ref);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->ref);
         }
         else
         {
-            CfOut(cf_verbose, "", "Skipping static observation %s, already done", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s, already done", pp->promiser);
         }
 
         return;
@@ -80,16 +80,16 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
 
     if (!IsAbsPath(pp->promiser))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
              pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
 
     if (a.measure.data_type == DATA_TYPE_NONE)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
-        PromiseRef(cf_error, pp);
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
     else
@@ -105,9 +105,9 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
                 break;
 
             default:
-                cfPS(cf_error, CF_INTERPT, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                      "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
-                PromiseRef(cf_error, pp);
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 retval = false;
                 break;
             }
@@ -116,21 +116,21 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
 
     if ((a.measure.select_line_matching) && (a.measure.select_line_number != CF_NOINT))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
              "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
 
     if (!a.measure.extraction_regex)
     {
-        CfOut(cf_verbose, "", "No extraction regex, so assuming whole line is the value");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No extraction regex, so assuming whole line is the value");
     }
     else
     {
         if ((!strchr(a.measure.extraction_regex, '(')) && (!strchr(a.measure.extraction_regex, ')')))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                  "The extraction_regex must contain a single backreference for the extraction\n");
             retval = false;
         }

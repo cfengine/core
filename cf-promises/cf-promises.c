@@ -128,12 +128,12 @@ int main(int argc, char *argv[])
 
     if (ERRORCOUNT > 0)
     {
-        CfOut(cf_verbose, "", " !! Inputs are invalid\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
         exit(1);
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Inputs are valid\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
         exit(0);
     }
 }
@@ -194,7 +194,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
             else
             {
-                CfOut(cf_error, "", "Invalid policy output format: '%s'. Possible values are 'none', 'json'", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -244,7 +244,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'x':
-            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         case 'a':
@@ -261,7 +261,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
     }
 
     CfDebug("Set debugging\n");

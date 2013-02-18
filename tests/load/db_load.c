@@ -282,7 +282,7 @@ static void DBWriteTestData(CF_DB *db)
 
         if (!WriteComplexKeyDB(db, (const char *)&i, sizeof(i), &value_num, sizeof(value_num)))
         {
-            CfOut(cf_error, "", "Unable to write data to database");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write data to database");
             pthread_exit((void*)STATUS_ERROR);
         }
     }
@@ -297,7 +297,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void CfOut(enum cfreport level, const char *function, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
 {
     va_list ap;
     char buf[CF_BUFSIZE] = "";
@@ -318,11 +318,11 @@ void FatalError(char *fmt, ...)
         va_start(ap, fmt);
         vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
         va_end(ap);
-        CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
     }
     else
     {
-        CfOut(cf_error, "", "Fatal CFEngine error (no description)");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error (no description)");
     }
 
     exit(1);

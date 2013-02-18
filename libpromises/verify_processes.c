@@ -73,32 +73,32 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
     {
         if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
         {
-            CfOut(cf_inform, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
                   pp->promiser);
-            PromiseRef(cf_inform, pp);
+            PromiseRef(OUTPUT_LEVEL_INFORM, pp);
         }
 
         if (a.haveprocess_count)
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! process_count and restart_class should not be used in the same promise as this makes no sense");
-            PromiseRef(cf_inform, pp);
+            PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             ret = false;
         }
     }
 
     if (promised_zero && (a.restart_class))
     {
-        CfOut(cf_error, "", "Promise constraint conflicts - %s processes cannot have zero count if restarted",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Promise constraint conflicts - %s processes cannot have zero count if restarted",
               pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         ret = false;
     }
 
     if ((a.haveselect) && (!a.process_select.process_result))
     {
-        CfOut(cf_error, "", " !! Process select constraint body promised no result (check body definition)");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Process select constraint body promised no result (check body definition)");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -152,14 +152,14 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(cf_verbose, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
             AddEphemeralClasses(a.process_count.out_of_range_define, pp->ns);
             out_of_range = true;
         }
         else
         {
             AddEphemeralClasses(a.process_count.in_range_define, pp->ns);
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
+            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -190,7 +190,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         {
             if (DONTDO)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -- Need to keep process-stop promise for %s, but only a warning is promised", pp->promiser);
             }
             else
@@ -201,7 +201,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
                 }
                 else
                 {
-                    cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
                          "Process promise to stop %s could not be kept because %s the stop operator failed",
                          pp->promiser, a.process_stop);
                     DeleteItemList(killlist);
@@ -221,19 +221,19 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
     if (!need_to_restart)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
+        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
         return;
     }
     else
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                  " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
             NewClass(a.restart_class, pp->ns);
         }
     }
@@ -256,7 +256,7 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
     if (a.signals == NULL)
     {
-        CfOut(cf_verbose, "", " -> No signals to send for %s\n", pp->promiser);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No signals to send for %s\n", pp->promiser);
         return 0;
     }
 
@@ -277,19 +277,19 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(cf_verbose, CF_FAIL, "kill", pp, a,
+                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "kill", pp, a,
                          " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", RlistScalarValue(rp),
                          signal, (intmax_t)pid);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else
             {
-                CfOut(cf_error, "", " -> Need to keep signal promise \'%s\' in process entry %s",
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Need to keep signal promise \'%s\' in process entry %s",
                       RlistScalarValue(rp), ip->name);
             }
         }

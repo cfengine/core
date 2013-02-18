@@ -60,8 +60,8 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 
         if (dtype == DATA_TYPE_NONE)
         {
-            CfOut(cf_error, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
         }

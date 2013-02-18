@@ -88,7 +88,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 #ifdef __MINGW32__
     if (!a.havemount)
     {
-        CfOut(cf_verbose, "", "storage.mount is not supported on Windows");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "storage.mount is not supported on Windows");
     }
 #endif
 
@@ -98,18 +98,18 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
     {
         if ((a.mount.mount_source))
         {
-            CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-source information - probably an error\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! An unmount promise indicates a mount-source information - probably an error\n");
         }
         if ((a.mount.mount_server))
         {
-            CfOut(cf_verbose, "", " !! An unmount promise indicates a mount-server information - probably an error\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! An unmount promise indicates a mount-server information - probably an error\n");
         }
     }
     else if (a.havemount)
     {
         if ((a.mount.mount_source == NULL) || (a.mount.mount_server == NULL))
         {
-            CfOut(cf_error, "", " !! Insufficient specification in mount promise - need source and server\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Insufficient specification in mount promise - need source and server\n");
             return;
         }
     }
@@ -126,7 +126,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 #ifndef __MINGW32__
     if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
     {
-        CfOut(cf_error, "", "Couldn't obtain a list of mounted filesystems - aborting\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't obtain a list of mounted filesystems - aborting\n");
         YieldCurrentLock(thislock);
         return;
     }
@@ -170,7 +170,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
     long filecount = 0;
     char buff[CF_BUFSIZE];
 
-    CfOut(cf_verbose, "", " -> Checking required filesystem %s\n", name);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking required filesystem %s\n", name);
 
     if (cfstat(name, &statbuf) == -1)
     {
@@ -187,7 +187,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
     {
         if ((dirh = OpenDirLocal(name)) == NULL)
         {
-            CfOut(cf_error, "opendir", "Can't open directory %s which checking required/disk\n", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Can't open directory %s which checking required/disk\n", name);
             return false;
         }
 
@@ -217,7 +217,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
                     continue;
                 }
 
-                CfOut(cf_error, "lstat", "Can't stat volume %s\n", buff);
+                CfOut(OUTPUT_LEVEL_ERROR, "lstat", "Can't stat volume %s\n", buff);
                 continue;
             }
 
@@ -228,26 +228,26 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 
         if (sizeinbytes < 0)
         {
-            CfOut(cf_verbose, "", "Internal error: count of byte size was less than zero!\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Internal error: count of byte size was less than zero!\n");
             return true;
         }
 
         if (sizeinbytes < a.volume.sensible_size)
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
                  (intmax_t) sizeinbytes);
             return (false);
         }
 
         if (filecount < a.volume.sensible_count)
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
                  filecount);
             return (false);
         }
     }
 
-    cfPS(cf_inform, CF_NOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
+    cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
     return (true);
 }
 
@@ -260,13 +260,13 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 #ifdef __MINGW32__
     if (!a.volume.check_foreign)
     {
-        CfOut(cf_verbose, "", "storage.volume.check_foreign is not supported on Windows (checking every mount)");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "storage.volume.check_foreign is not supported on Windows (checking every mount)");
     }
 #endif /* __MINGW32__ */
 
     if (cfstat(file, &statbuf) == -1)
     {
-        CfOut(cf_error, "stat", "Couldn't stat %s checking diskspace\n", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", "Couldn't stat %s checking diskspace\n", file);
         return true;
     }
 
@@ -275,7 +275,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
     {
         if (IsForeignFileSystem(&statbuf, file))
         {
-            CfOut(cf_inform, "", "Filesystem %s is mounted from a foreign system, so skipping it", file);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Filesystem %s is mounted from a foreign system, so skipping it", file);
             return true;
         }
     }
@@ -288,7 +288,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 
         if (free_percentage < threshold_percentage)
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a,
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                  " !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",
                  threshold_percentage, file, free_percentage);
             return false;
@@ -301,7 +301,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 
         if (free_bytes < threshold)
         {
-            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
                  (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
@@ -314,7 +314,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
 {
-    CfOut(cf_verbose, "", "Scan arrival sequence . not yet implemented\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Scan arrival sequence . not yet implemented\n");
 }
 
 /*******************************************************************/
@@ -349,13 +349,13 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
 
             if ((a.mount.mount_source) && (strcmp(mp->source, a.mount.mount_source) != 0))
             {
-                CfOut(cf_inform, "", "A different file system (%s:%s) is mounted on %s than what is promised\n",
+                CfOut(OUTPUT_LEVEL_INFORM, "", "A different file system (%s:%s) is mounted on %s than what is promised\n",
                       mp->host, mp->source, name);
                 return false;
             }
             else
             {
-                CfOut(cf_verbose, "", " -> File system %s seems to be mounted correctly\n", mp->source);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> File system %s seems to be mounted correctly\n", mp->source);
                 break;
             }
         }
@@ -365,7 +365,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, At
     {
         if (!a.mount.unmount)
         {
-            CfOut(cf_verbose, "", " !! File system %s seems not to be mounted correctly\n", name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! File system %s seems not to be mounted correctly\n", name);
             CF_MOUNTALL = true;
         }
     }
@@ -397,7 +397,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
 
     if (cfstat(vbuff, &parentstat) == -1)
     {
-        CfOut(cf_verbose, "stat", " !! Unable to stat %s", vbuff);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " !! Unable to stat %s", vbuff);
         return (false);
     }
 
@@ -432,13 +432,13 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const Repor
     char dir[CF_BUFSIZE];
     int changes = 0;
 
-    CfOut(cf_verbose, "", " -> Verifying mounted file systems on %s\n", name);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying mounted file systems on %s\n", name);
 
     snprintf(dir, CF_BUFSIZE, "%s/.", name);
 
     if (!IsPrivileged())
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, "Only root can mount filesystems.\n");
+        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "Only root can mount filesystems.\n");
         return false;
     }
 
@@ -458,7 +458,7 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const Repor
             }
             else
             {
-                cfPS(cf_inform, CF_FAIL, "", pp, a,
+                cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                      " -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 // Mount explicitly
@@ -490,7 +490,7 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const Repor
         }
         else
         {
-            cfPS(cf_inform, CF_NOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
+            cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
         }
     }
 

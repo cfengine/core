@@ -229,7 +229,7 @@ void FnCallShow(FILE *fout, const FnCall *fp)
     fail();
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
 }

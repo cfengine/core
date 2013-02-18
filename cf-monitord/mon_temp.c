@@ -112,7 +112,7 @@ static bool GetAcpi(double *cf_this)
 
     if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
     {
-        CfOut(cf_verbose, "opendir", "Can't open directory %s\n", path);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
         return false;
     }
 
@@ -133,7 +133,7 @@ static bool GetAcpi(double *cf_this)
 
         if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
         {
-            CfOut(cf_error, "", "Failed to read line from stream '%s'", path);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }

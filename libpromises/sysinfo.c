@@ -291,7 +291,7 @@ void GetNameInfo3()
 
     if (uname(&VSYSNAME) == -1)
     {
-        CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
+        CfOut(OUTPUT_LEVEL_ERROR, "uname", "!!! Couldn't get kernel name info!");
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
@@ -372,21 +372,21 @@ void GetNameInfo3()
 
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
 
-    CfOut(cf_verbose, "", "%s", NameVersion());
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s", NameVersion());
 
-    CfOut(cf_verbose, "", "------------------------------------------------------------------------\n\n");
-    CfOut(cf_verbose, "", "Host name is: %s\n", VSYSNAME.nodename);
-    CfOut(cf_verbose, "", "Operating System Type is %s\n", VSYSNAME.sysname);
-    CfOut(cf_verbose, "", "Operating System Release is %s\n", VSYSNAME.release);
-    CfOut(cf_verbose, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
-    CfOut(cf_verbose, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
-    CfOut(cf_verbose, "", "The time is now %s\n\n", cf_ctime(&tloc));
-    CfOut(cf_verbose, "", "------------------------------------------------------------------------\n\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host name is: %s\n", VSYSNAME.nodename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Type is %s\n", VSYSNAME.sysname);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Release is %s\n", VSYSNAME.release);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", cf_ctime(&tloc));
     if (Chop(workbuf, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     NewScalar("sys", "date", workbuf, DATA_TYPE_STRING);
@@ -514,45 +514,45 @@ void GetNameInfo3()
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
     HardClass(workbuf);
-    CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
     HardClass(workbuf);
 
     HardClass(VSYSNAME.machine);
-    CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     HardClass(workbuf);
-    CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s_%s", VSYSNAME.sysname, VSYSNAME.machine, VSYSNAME.release);
     HardClass(workbuf);
-    CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
 # ifdef SI_ARCHITECTURE
     sz = sysinfo(SI_ARCHITECTURE, workbuf, CF_BUFSIZE);
     if (sz == -1)
     {
-        CfOut(cf_verbose, "", "cfengine internal: sysinfo returned -1\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: sysinfo returned -1\n");
     }
     else
     {
         HardClass(workbuf);
-        CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", workbuf);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
 # ifdef SI_PLATFORM
     sz = sysinfo(SI_PLATFORM, workbuf, CF_BUFSIZE);
     if (sz == -1)
     {
-        CfOut(cf_verbose, "", "cfengine internal: sysinfo returned -1\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: sysinfo returned -1\n");
     }
     else
     {
         HardClass(workbuf);
-        CfOut(cf_verbose, "", "Additional hard class defined as: %s\n", workbuf);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
 #endif
@@ -562,7 +562,7 @@ void GetNameInfo3()
 
     if (strlen(workbuf) > CF_MAXVARSIZE - 2)
     {
-        CfOut(cf_verbose, "", "cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
     }
 
     sp = xstrdup(CanonifyName(workbuf));
@@ -578,26 +578,26 @@ void GetNameInfo3()
 
     if (!found)
     {
-        CfOut(cf_error, "", "Cfengine: I don't understand what architecture this is!");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine: I don't understand what architecture this is!");
     }
 
     strcpy(workbuf, "compiled_on_");
     strcat(workbuf, CanonifyName(AUTOCONF_SYSNAME));
     HardClass(workbuf);
-    CfOut(cf_verbose, "", "GNU autoconf class from compile time: %s", workbuf);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "GNU autoconf class from compile time: %s", workbuf);
 
 /* Get IP address from nameserver */
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        CfOut(cf_verbose, "", "Hostname lookup failed on node name \"%s\"\n", VSYSNAME.nodename);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Hostname lookup failed on node name \"%s\"\n", VSYSNAME.nodename);
         return;
     }
     else
     {
         memset(&cin, 0, sizeof(cin));
         cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-        CfOut(cf_verbose, "", "Address given by nameserver: %s\n", inet_ntoa(cin.sin_addr));
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Address given by nameserver: %s\n", inet_ntoa(cin.sin_addr));
         strcpy(VIPADDRESS, inet_ntoa(cin.sin_addr));
 
         for (i = 0; hp->h_aliases[i] != NULL; i++)
@@ -621,11 +621,11 @@ void GetNameInfo3()
 
     if (strcmp(zone, "global") == 0)
     {
-        CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cfengine seems to be running inside a global solaris zone of name \"%s\"", zone);
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Cfengine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cfengine seems to be running inside a local solaris zone of name \"%s\"", zone);
     }
 #endif
 }
@@ -639,20 +639,20 @@ void Get3Environment()
     struct stat statbuf;
     time_t now = time(NULL);
 
-    CfOut(cf_verbose, "", "Looking for environment from cf-monitord...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for environment from cf-monitord...\n");
 
     snprintf(env, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
     MapName(env);
 
     if (cfstat(env, &statbuf) == -1)
     {
-        CfOut(cf_verbose, "", "Unable to detect environment from cf-monitord\n\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to detect environment from cf-monitord\n\n");
         return;
     }
 
     if (statbuf.st_mtime < (now - 60 * 60))
     {
-        CfOut(cf_verbose, "", "Environment data are too old - discarding\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Environment data are too old - discarding\n");
         unlink(env);
         return;
     }
@@ -660,17 +660,17 @@ void Get3Environment()
     snprintf(value, CF_MAXVARSIZE - 1, "%s", cf_ctime(&statbuf.st_mtime));
     if (Chop(value, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     DeleteVariable("mon", "env_time");
     NewScalar("mon", "env_time", value, DATA_TYPE_STRING);
 
-    CfOut(cf_verbose, "", "Loading environment...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Loading environment...\n");
 
     if ((fp = fopen(env, "r")) == NULL)
     {
-        CfOut(cf_verbose, "", "\nUnable to detect environment from cf-monitord\n\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\nUnable to detect environment from cf-monitord\n\n");
         return;
     }
 
@@ -724,7 +724,7 @@ void Get3Environment()
     }
 
     fclose(fp);
-    CfOut(cf_verbose, "", "Environment data loaded\n\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Environment data loaded\n\n");
 }
 
 /*******************************************************************/
@@ -825,7 +825,7 @@ void OSClasses(void)
 
     if (cfstat("/etc/generic-release", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This appears to be a sun cobalt system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a sun cobalt system.\n");
         SetFlavour("SunCobalt");
     }
 
@@ -852,31 +852,31 @@ void OSClasses(void)
 
     if (cfstat("/usr/bin/aptitude", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This system seems to have the aptitude package system\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This system seems to have the aptitude package system\n");
         HardClass("have_aptitude");
     }
 
     if (cfstat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This appears to be a UnitedLinux system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a UnitedLinux system.\n");
         SetFlavour("UnitedLinux");
     }
 
     if (cfstat("/etc/alpine-release", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This appears to be an AlpineLinux system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an AlpineLinux system.\n");
         SetFlavour("alpinelinux");
     }
 
     if (cfstat("/etc/gentoo-release", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This appears to be a gentoo system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a gentoo system.\n");
         SetFlavour("gentoo");
     }
 
     if (cfstat("/etc/arch-release", &statbuf) != -1)
     {
-        CfOut(cf_verbose, "", "This appears to be an Arch Linux system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an Arch Linux system.\n");
         SetFlavour("archlinux");
     }
 
@@ -908,7 +908,7 @@ void OSClasses(void)
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
-        CfOut(cf_verbose, "", "This appears to be a xen hv system.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen hv system.\n");
         HardClass("xen");
         HardClass("xen_domu_hv");
     }
@@ -945,31 +945,31 @@ void OSClasses(void)
             sp++;
             if (strncmp(sp, "5.0", 3) == 0)
             {
-                CfOut(cf_verbose, "", "This appears to be Windows 2000\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows 2000\n");
                 HardClass("Win2000");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
-                CfOut(cf_verbose, "", "This appears to be Windows XP\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows XP\n");
                 HardClass("WinXP");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
-                CfOut(cf_verbose, "", "This appears to be Windows Server 2003\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2003\n");
                 HardClass("WinServer2003");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
-                CfOut(cf_verbose, "", "This appears to be Windows Vista\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Vista\n");
                 HardClass("WinVista");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
-                CfOut(cf_verbose, "", "This appears to be Windows Server 2008\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2008\n");
                 HardClass("WinServer2008");
             }
         }
@@ -1009,7 +1009,7 @@ void OSClasses(void)
     struct passwd *pw;
     if ((pw = getpwuid(getuid())) == NULL)
     {
-        CfOut(cf_error, "getpwuid", " !! Unable to get username for uid %ju", (uintmax_t)getuid());
+        CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", " !! Unable to get username for uid %ju", (uintmax_t)getuid());
     }
     else
     {
@@ -1073,7 +1073,7 @@ static void Linux_Oracle_VM_Server_Version(void)
 #define ORACLE_VM_SERVER_REL_FILENAME "/etc/ovs-release"
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
-    CfOut(cf_verbose, "", "This appears to be Oracle VM Server");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle VM Server");
     HardClass("redhat");
     HardClass("oraclevmserver");
 
@@ -1084,13 +1084,13 @@ static void Linux_Oracle_VM_Server_Version(void)
 
     if (strncmp(relstring, ORACLE_VM_SERVER_ID, strlen(ORACLE_VM_SERVER_ID)))
     {
-        CfOut(cf_verbose, "", "Could not identify distribution from %s\n", ORACLE_VM_SERVER_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify distribution from %s\n", ORACLE_VM_SERVER_REL_FILENAME);
         return;
     }
 
     if ((r = strstr(relstring, "release ")) == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find distribution version in %s\n", ORACLE_VM_SERVER_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find distribution version in %s\n", ORACLE_VM_SERVER_REL_FILENAME);
         return;
     }
 
@@ -1132,7 +1132,7 @@ static void Linux_Oracle_Version(void)
 #define ORACLE_REL_FILENAME "/etc/oracle-release"
 #define ORACLE_ID "Oracle Linux Server"
 
-    CfOut(cf_verbose, "", "This appears to be Oracle Linux");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle Linux");
     HardClass("oracle");
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
@@ -1142,13 +1142,13 @@ static void Linux_Oracle_Version(void)
 
     if (strncmp(relstring, ORACLE_ID, strlen(ORACLE_ID)))
     {
-        CfOut(cf_verbose, "", "Could not identify distribution from %s\n", ORACLE_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify distribution from %s\n", ORACLE_REL_FILENAME);
         return;
     }
 
     if ((r = strstr(relstring, "release ")) == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find distribution version in %s\n", ORACLE_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find distribution version in %s\n", ORACLE_REL_FILENAME);
         return;
     }
 
@@ -1187,7 +1187,7 @@ static int Linux_Fedora_Version(void)
     int major = -1;
     char strmajor[CF_MAXVARSIZE];
 
-    CfOut(cf_verbose, "", "This appears to be a fedora system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a fedora system.\n");
     HardClass("redhat");
     HardClass("fedora");
 
@@ -1198,7 +1198,7 @@ static int Linux_Fedora_Version(void)
         return 1;
     }
 
-    CfOut(cf_verbose, "", "Looking for fedora core linux info...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for fedora core linux info...\n");
 
     if (!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
     {
@@ -1206,7 +1206,7 @@ static int Linux_Fedora_Version(void)
     }
     else
     {
-        CfOut(cf_verbose, "", "Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
         return 2;
     }
 
@@ -1218,7 +1218,7 @@ static int Linux_Fedora_Version(void)
 
     if (release == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find a numeric OS release in %s\n", FEDORA_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", FEDORA_REL_FILENAME);
         return 2;
     }
     else
@@ -1301,7 +1301,7 @@ static int Linux_Redhat_Version(void)
     int minor = -1;
     char strminor[CF_MAXVARSIZE];
 
-    CfOut(cf_verbose, "", "This appears to be a redhat (or redhat-based) system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a redhat (or redhat-based) system.\n");
     HardClass("redhat");
 
 /* Grab the first line from the file and then close it. */
@@ -1311,7 +1311,7 @@ static int Linux_Redhat_Version(void)
         return 1;
     }
 
-    CfOut(cf_verbose, "", "Looking for redhat linux info in \"%s\"\n", relstring);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for redhat linux info in \"%s\"\n", relstring);
 
 /* First, try to grok the vendor and the edition (if any) */
     if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
@@ -1388,7 +1388,7 @@ static int Linux_Redhat_Version(void)
     }
     else
     {
-        CfOut(cf_verbose, "", "Could not identify OS distro from %s\n", RH_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", RH_REL_FILENAME);
         return 2;
     }
 
@@ -1410,7 +1410,7 @@ static int Linux_Redhat_Version(void)
     release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find a numeric OS release in %s\n", RH_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", RH_REL_FILENAME);
         return 2;
     }
     else
@@ -1505,7 +1505,7 @@ static int Linux_Suse_Version(void)
     char strminor[CF_MAXVARSIZE];
     FILE *fp;
 
-    CfOut(cf_verbose, "", "This appears to be a SuSE system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a SuSE system.\n");
     HardClass("SuSE");
 
 /* Grab the first line from the file and then close it. */
@@ -1547,7 +1547,7 @@ static int Linux_Suse_Version(void)
 
     /* Check if it's a SuSE Enterprise version  */
 
-    CfOut(cf_verbose, "", "Looking for SuSE enterprise info in \"%s\"\n", relstring);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for SuSE enterprise info in \"%s\"\n", relstring);
 
     /* Convert relstring to lowercase to handle rename of SuSE to
      * SUSE with SUSE 10.0.
@@ -1626,7 +1626,7 @@ static int Linux_Suse_Version(void)
 
     if (release == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
         return 2;
     }
     else
@@ -1648,7 +1648,7 @@ static int Linux_Suse_Version(void)
                 strcat(classbuf, strminor);
                 HardClass(classbuf);
 
-                CfOut(cf_verbose, "", " -> Discovered SuSE version %s", classbuf);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
@@ -1670,13 +1670,13 @@ static int Linux_Suse_Version(void)
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 SetFlavour(classbuf);
 
-                CfOut(cf_verbose, "", " -> Discovered SuSE version %s", classbuf);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
     }
 
-    CfOut(cf_verbose, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
 
     return 0;
 }
@@ -1691,7 +1691,7 @@ static int Linux_Slackware_Version(char *filename)
     char classname[CF_MAXVARSIZE] = "";
     char buffer[CF_MAXVARSIZE];
 
-    CfOut(cf_verbose, "", "This appears to be a slackware system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a slackware system.\n");
     HardClass("slackware");
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
@@ -1699,26 +1699,26 @@ static int Linux_Slackware_Version(char *filename)
         return 1;
     }
 
-    CfOut(cf_verbose, "", "Looking for Slackware version...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Slackware version...\n");
     switch (sscanf(buffer, "Slackware %d.%d.%d", &major, &minor, &release))
     {
     case 3:
-        CfOut(cf_verbose, "", "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
         HardClass(classname);
         /* Fall-through */
     case 2:
-        CfOut(cf_verbose, "", "This appears to be a Slackware %u.%u system.", major, minor);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
         HardClass(classname);
         /* Fall-through */
     case 1:
-        CfOut(cf_verbose, "", "This appears to be a Slackware %u system.", major);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
         HardClass(classname);
         break;
     case 0:
-        CfOut(cf_verbose, "", "No Slackware version number found.\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No Slackware version number found.\n");
         return 2;
     }
     return 0;
@@ -1735,12 +1735,12 @@ static int Linux_Debian_Version(void)
     int result;
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
-    CfOut(cf_verbose, "", "This appears to be a debian system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a debian system.\n");
     HardClass("debian");
 
     buffer[0] = classname[0] = '\0';
 
-    CfOut(cf_verbose, "", "Looking for Debian version...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Debian version...\n");
 
     if (!ReadLine(DEBIAN_VERSION_FILENAME, buffer, sizeof(buffer)))
     {
@@ -1752,7 +1752,7 @@ static int Linux_Debian_Version(void)
     switch (result)
     {
     case 2:
-        CfOut(cf_verbose, "", "This appears to be a Debian %u.%u system.", major, release);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         HardClass(classname);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
@@ -1760,7 +1760,7 @@ static int Linux_Debian_Version(void)
         break;
         /* Fall-through */
     case 1:
-        CfOut(cf_verbose, "", "This appears to be a Debian %u system.", major);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         SetFlavour(classname);
         break;
@@ -1821,7 +1821,7 @@ static int Linux_Mandrake_Version(void)
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
 
-    CfOut(cf_verbose, "", "This appears to be a mandrake system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandrake system.\n");
     HardClass("Mandrake");
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
@@ -1829,7 +1829,7 @@ static int Linux_Mandrake_Version(void)
         return 1;
     }
 
-    CfOut(cf_verbose, "", "Looking for Mandrake linux info in \"%s\"\n", relstring);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Mandrake linux info in \"%s\"\n", relstring);
 
 /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
 
@@ -1848,7 +1848,7 @@ static int Linux_Mandrake_Version(void)
     }
     else
     {
-        CfOut(cf_verbose, "", "Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
         return 2;
     }
 
@@ -1867,7 +1867,7 @@ static int Linux_Mandriva_Version(void)
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
 
-    CfOut(cf_verbose, "", "This appears to be a mandriva system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandriva system.\n");
     HardClass("Mandrake");
     HardClass("Mandriva");
 
@@ -1876,7 +1876,7 @@ static int Linux_Mandriva_Version(void)
         return 1;
     }
 
-    CfOut(cf_verbose, "", "Looking for Mandriva linux info in \"%s\"\n", relstring);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Mandriva linux info in \"%s\"\n", relstring);
 
     if (!strncmp(relstring, MANDRIVA_ID, strlen(MANDRIVA_ID)))
     {
@@ -1884,7 +1884,7 @@ static int Linux_Mandriva_Version(void)
     }
     else
     {
-        CfOut(cf_verbose, "", "Could not identify OS distro from %s\n", MANDRIVA_REL_FILENAME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", MANDRIVA_REL_FILENAME);
         return 2;
     }
 
@@ -1907,7 +1907,7 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
     release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
-        CfOut(cf_verbose, "", "Could not find a numeric OS release in %s\n", filename);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", filename);
         return 2;
     }
     else
@@ -1920,7 +1920,7 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
         }
         else
         {
-            CfOut(cf_verbose, "", "Could not break down release version numbers in %s\n", filename);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not break down release version numbers in %s\n", filename);
         }
     }
 
@@ -2005,7 +2005,7 @@ static int VM_Version(void)
     int major, minor, bug;
     int sufficient = 0;
 
-    CfOut(cf_verbose, "", "This appears to be a VMware Server ESX/xSX system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a VMware Server ESX/xSX system.\n");
     HardClass("VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
@@ -2057,7 +2057,7 @@ static int Xen_Domain(void)
     char buffer[CF_BUFSIZE];
     int sufficient = 0;
 
-    CfOut(cf_verbose, "", "This appears to be a xen pv system.\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen pv system.\n");
     HardClass("xen");
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
@@ -2230,7 +2230,7 @@ const char *GetWorkDir(void)
 static void GetCPUInfo()
 {
 #if defined(MINGW) || defined(NT)
-    CfOut(cf_verbose, "", "!! cpu count not implemented on Windows platform\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "!! cpu count not implemented on Windows platform\n");
     return;
 #else
     char buf[CF_SMALLBUF] = "1_cpu";
@@ -2251,7 +2251,7 @@ static void GetCPUInfo()
     len = sizeof(count);
     if(sysctl(mib, 2, &count, &len, NULL, 0) < 0)
     {
-        CfOut(cf_error, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
+        CfOut(OUTPUT_LEVEL_ERROR, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
     }
 #endif
 
@@ -2279,10 +2279,10 @@ static void GetCPUInfo()
 
     if (count < 1)
     {
-        CfOut(cf_verbose, "", " !! invalid processor count: %d\n", count);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! invalid processor count: %d\n", count);
         return;
     }
-    CfOut(cf_verbose, "", "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
 
     if (count == 1) {
         HardClass(buf);  // "1_cpu" from init - change if buf is ever used above

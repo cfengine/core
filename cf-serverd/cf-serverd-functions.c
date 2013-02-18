@@ -175,7 +175,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
-            CfOut(cf_verbose, "", "Setting LD_LIBRARY_PATH=%s\n", optarg);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Setting LD_LIBRARY_PATH=%s\n", optarg);
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
             putenv(ld_library_path);
             break;
@@ -193,7 +193,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'x':
-            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
         case 'A':
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
@@ -220,7 +220,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
         FatalError("Aborted");
     }
 
@@ -279,18 +279,18 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
         return;
     }
 
-    CfOut(cf_inform, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
+    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
 
     if (sd != -1)
     {
-        CfOut(cf_verbose, "", "Listening for connections ...\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Listening for connections ...\n");
     }
 
 #ifdef __MINGW32__
 
     if (!NO_FORK)
     {
-        CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
     }
 
 #else /* !__MINGW32__ */
@@ -362,7 +362,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
                 }
                 else
                 {
-                    CfOut(cf_error, "select", "select failed");
+                    CfOut(OUTPUT_LEVEL_ERROR, "select", "select failed");
                     exit(1);
                 }
             }
@@ -371,7 +371,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
                 continue;
             }
 
-            CfOut(cf_verbose, "", " -> Accepting a connection\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Accepting a connection\n");
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
@@ -398,13 +398,13 @@ int InitServer(size_t queue_size)
 
     if ((sd = OpenReceiverChannel()) == -1)
     {
-        CfOut(cf_error, "", "Unable to start server");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to start server");
         exit(1);
     }
 
     if (listen(sd, queue_size) == -1)
     {
-        CfOut(cf_error, "listen", "listen failed");
+        CfOut(OUTPUT_LEVEL_ERROR, "listen", "listen failed");
         exit(1);
     }
 
@@ -446,7 +446,7 @@ int OpenReceiverChannel(void)
 
     if (getaddrinfo(ptr, STR_CFENGINEPORT, &query, &response) != 0)
     {
-        CfOut(cf_error, "getaddrinfo", "DNS/service lookup failure");
+        CfOut(OUTPUT_LEVEL_ERROR, "getaddrinfo", "DNS/service lookup failure");
         return -1;
     }
 
@@ -461,13 +461,13 @@ int OpenReceiverChannel(void)
 
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
         {
-            CfOut(cf_error, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
             exit(1);
         }
 
         if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
         {
-            CfOut(cf_error, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
             exit(1);
         }
 
@@ -488,14 +488,14 @@ int OpenReceiverChannel(void)
 #endif
         }
 
-        CfOut(cf_error, "bind", "Could not bind server address");
+        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
         cf_closesocket(sd);
         sd = -1;
     }
 
     if (sd < 0)
     {
-        CfOut(cf_error, "", "Couldn't open bind an open socket\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open bind an open socket\n");
         exit(1);
     }
 
@@ -521,25 +521,25 @@ int OpenReceiverChannel(void)
 
     if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-        CfOut(cf_error, "socket", "Couldn't open socket");
+        CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open socket");
         exit(1);
     }
 
     if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
     {
-        CfOut(cf_error, "sockopt", "Couldn't set socket options");
+        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
         exit(1);
     }
 
     if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
     {
-        CfOut(cf_error, "sockopt", "Couldn't set socket options");
+        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
         exit(1);
     }
 
     if (bind(sd, (struct sockaddr *) &sin, sizeof(sin)) == -1)
     {
-        CfOut(cf_error, "bind", "Couldn't bind to socket");
+        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Couldn't bind to socket");
         exit(1);
     }
 
@@ -556,18 +556,18 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
 {
     if (EnterpriseExpiry())
     {
-        CfOut(cf_error, "", "!! This enterprise license is invalid.");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
     }
 
     CfDebug("Checking file updates on %s\n", config->input_file);
 
     if (NewPromiseProposals(config->input_file, InputFiles(*policy)))
     {
-        CfOut(cf_verbose, "", " -> New promises detected...\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
         if (CheckPromises(config->input_file, report_context))
         {
-            CfOut(cf_inform, "", "Rereading config files %s..\n", config->input_file);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Rereading config files %s..\n", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
 
@@ -632,7 +632,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
 
             if (EnterpriseExpiry())
             {
-                CfOut(cf_error, "",
+                CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
             }
 
@@ -659,7 +659,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
         }
         else
         {
-            CfOut(cf_inform, "", " !! File changes contain errors -- ignoring");
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! File changes contain errors -- ignoring");
             PROMISETIME = time(NULL);
         }
     }
@@ -710,7 +710,7 @@ static int GenerateAvahiConfig(const char *path)
     fout = fopen(path, "w+");
     if (fout == NULL)
     {
-        CfOut(cf_error, "", "Unable to open %s", path);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open %s", path);
         return -1;
     }
     writer = FileWriter(fout);

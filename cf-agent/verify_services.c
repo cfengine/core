@@ -70,17 +70,17 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
     case cfsrv_disable:
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   "!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
                   pp->promiser, a.service.service_autostart_policy);
-            PromiseRef(cf_error, pp);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
         break;
 
     default:
-        CfOut(cf_error, "", "!! Invalid service policy for service \"%s\"", pp->promiser);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Invalid service policy for service \"%s\"", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -88,16 +88,16 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
     {
         if (strcmp(pp->promiser, dep->item) == 0)
         {
-            CfOut(cf_error, "", "!! Service promiser \"%s\" has itself as dependency", pp->promiser);
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
     }
 
     if (a.service.service_type == NULL)
     {
-        CfOut(cf_error, "", "!! Service type for service \"%s\" is not known", pp->promiser);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service type for service \"%s\" is not known", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -105,9 +105,9 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (strcmp(a.service.service_type, "windows") != 0)
     {
-        CfOut(cf_error, "", "!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
               pp->promiser, a.service.service_type);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -261,7 +261,7 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)

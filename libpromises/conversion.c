@@ -299,9 +299,9 @@ int Signal2Int(char *s)
 
 static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
 
-enum cfreport String2ReportLevel(char *s)
+OutputLevel String2ReportLevel(char *s)
 {
-    return FindTypeInArray(REPORT_LEVEL_TYPES, s, cf_noreport, cf_noreport);
+    return FindTypeInArray(REPORT_LEVEL_TYPES, s, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
 }
 
 static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
@@ -450,11 +450,11 @@ long Str2Int(const char *s)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            CfOut(cf_inform, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
                   s, "non-value", remainder);
             if (strchr(s, '$'))
             {
-                CfOut(cf_inform, "", " !! The variable might not yet be expandable - not necessarily an error");
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! The variable might not yet be expandable - not necessarily an error");
             }
         }
     }
@@ -483,7 +483,7 @@ long Str2Int(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(cf_error, "", "Percentage out of range (%ld)", a);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%ld)", a);
                 return CF_NOINT;
             }
             else
@@ -720,7 +720,7 @@ double Str2Double(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(cf_error, "", "Percentage out of range (%.2lf)", a);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
                 return CF_NOINT;
             }
             else
@@ -774,7 +774,7 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         FatalError("Could not make sense of integer range [%s]", intrange);
     }
 
@@ -1220,11 +1220,11 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                CfOut(cf_inform, "", " !! Unknown user in promise \'%s\'\n", ip->name);
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user in promise \'%s\'\n", ip->name);
 
                 if (pp != NULL)
                 {
-                    PromiseRef(cf_inform, pp);
+                    PromiseRef(OUTPUT_LEVEL_INFORM, pp);
                 }
 
                 uid = CF_UNKNOWN_OWNER; /* signal user not found */
@@ -1257,7 +1257,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unknown user %s in promise\n", uidbuff);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user %s in promise\n", uidbuff);
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1294,11 +1294,11 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
 
             if (pp)
             {
-                PromiseRef(cf_inform, pp);
+                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             }
 
             gid = CF_UNKNOWN_GROUP;

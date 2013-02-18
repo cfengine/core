@@ -434,9 +434,9 @@ void ShowScopedVariables(const ReportContext *context, ReportOutputType type)
 
 void Banner(const char *s)
 {
-    CfOut(cf_verbose, "", "***********************************************************\n");
-    CfOut(cf_verbose, "", " %s ", s);
-    CfOut(cf_verbose, "", "***********************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " %s ", s);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
 }
 
 /*******************************************************************/
@@ -452,11 +452,11 @@ static void ReportBannerText(Writer *writer, const char *s)
 
 void BannerSubType(const char *bundlename, const char *type, int pass)
 {
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "   =========================================================\n");
-    CfOut(cf_verbose, "", "   %s in bundle %s (%d)\n", type, bundlename, pass);
-    CfOut(cf_verbose, "", "   =========================================================\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   %s in bundle %s (%d)\n", type, bundlename, pass);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /**************************************************************/
@@ -468,7 +468,7 @@ void BannerSubSubType(const char *bundlename, const char *type)
 
         /* Just parsed all local classes */
 
-        CfOut(cf_verbose, "", "     ??? Local class context: \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??? Local class context: \n");
 
         AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
 
@@ -477,14 +477,14 @@ void BannerSubSubType(const char *bundlename, const char *type)
             printf("       %s\n", ip->name);
         }
 
-        CfOut(cf_verbose, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
     }
 
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-    CfOut(cf_verbose, "", "      %s in bundle %s\n", type, bundlename);
-    CfOut(cf_verbose, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      %s in bundle %s\n", type, bundlename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /*******************************************************************/
@@ -563,7 +563,7 @@ void ReportError(char *s)
     {
         if (Chop(s, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
         }
         FatalError("Validation: %s\n", s);
     }

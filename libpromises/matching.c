@@ -46,7 +46,7 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        CfOut(cf_error, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
               erroffset);
     }
 
@@ -374,10 +374,10 @@ int IsPathRegex(char *str)
 
                 if ((*sp == FILE_SEPARATOR) && (r || s))
                 {
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
                           FILE_SEPARATOR);
-                    CfOut(cf_error, "", "Use a work-around to avoid pathological behaviour\n");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Use a work-around to avoid pathological behaviour\n");
                     return false;
                 }
                 break;
@@ -459,8 +459,8 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
             {
                 if ((rp->next != NULL) || (rp != a.insert_match))
                 {
-                    CfOut(cf_error, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
-                    PromiseRef(cf_error, pp);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
+                    PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 }
 
                 ok = ok || direct_cmp;

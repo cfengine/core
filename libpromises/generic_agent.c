@@ -110,7 +110,7 @@ void CheckLicenses(void)
     if (stat(name, &sb) != -1)
     {
         HardClass("am_policy_hub");
-        CfOut(cf_verbose, "", " -> Additional class defined: am_policy_hub");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Additional class defined: am_policy_hub");
     }
 }
 
@@ -144,13 +144,13 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
 
     if (EnterpriseExpiry())
     {
-        CfOut(cf_error, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
     }
 
     if (AM_NOVA)
     {
-        CfOut(cf_verbose, "", " -> This is CFE Nova\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFE Nova\n");
     }
 
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
@@ -186,11 +186,11 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     {
         if (strlen(POLICY_SERVER) > 0)
         {
-            CfOut(cf_verbose, "", " -> Found a policy server (hub) on %s", POLICY_SERVER);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found a policy server (hub) on %s", POLICY_SERVER);
         }
         else
         {
-            CfOut(cf_verbose, "", " -> No policy server (hub) watch yet registered");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No policy server (hub) watch yet registered");
         }
     }
 
@@ -204,22 +204,22 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     if (SHOWREPORTS)
     {
         check_policy = true;
-        CfOut(cf_verbose, "", " -> Reports mode is enabled, force-validating policy");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Reports mode is enabled, force-validating policy");
     }
     if (IsFileOutsideDefaultRepository(config->input_file))
     {
         check_policy = true;
-        CfOut(cf_verbose, "", " -> Input file is outside default repository, validating it");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Input file is outside default repository, validating it");
     }
     if (NewPromiseProposals(config->input_file, NULL))
     {
         check_policy = true;
-        CfOut(cf_verbose, "", " -> Input file is changed since last validation, validating it");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Input file is changed since last validation, validating it");
     }
     if (force_validation)
     {
         check_policy = true;
-        CfOut(cf_verbose, "", " -> always_validate is set, forcing policy validation");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> always_validate is set, forcing policy validation");
     }
 
     return check_policy;
@@ -235,7 +235,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *re
 
             if (BOOTSTRAP && !policy_check_ok)
             {
-                CfOut(cf_verbose, "", " -> Policy is not valid, but proceeding with bootstrap");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Policy is not valid, but proceeding with bootstrap");
                 return true;
             }
 
@@ -243,7 +243,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *re
         }
         else
         {
-            CfOut(cf_verbose, "", " -> Policy is already validated");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Policy is already validated");
             return true;
         }
     }
@@ -262,14 +262,14 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
     int fd;
     bool outsideRepo = false;
 
-    CfOut(cf_verbose, "", " -> Verifying the syntax of the inputs...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying the syntax of the inputs...\n");
 
     snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
              EXEC_SUFFIX);
 
     if (cfstat(cfpromises, &sb) == -1)
     {
-        CfOut(cf_error, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
               EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
         return false;
     }
@@ -308,7 +308,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 /* Check if reloading policy will succeed */
 
-    CfOut(cf_verbose, "", "Checking policy with command \"%s\"", cmd);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking policy with command \"%s\"", cmd);
 
     if (ShellCommandReturnsZero(cmd, true))
     {
@@ -337,11 +337,11 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
                 fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
                 fclose(fp);
-                CfOut(cf_verbose, "", " -> Caching the state of validation\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Caching the state of validation\n");
             }
             else
             {
-                CfOut(cf_verbose, "creat", " -> Failed to cache the state of validation\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "creat", " -> Failed to cache the state of validation\n");
             }
         }
 
@@ -399,7 +399,7 @@ Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config,
 
     if (config->check_runnable || PolicyIsRunnable(policy))
     {
-        CfOut(cf_inform, "", "Running full policy integrity checks");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
 
         Seq *errors = SeqNew(100, PolicyErrorDestroy);
         if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))
@@ -487,8 +487,8 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
         HardClass("debug_mode");
     }
 
-    CfOut(cf_verbose, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
-    CfOut(cf_verbose, "", "------------------------------------------------------------------------\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n");
 
 /* Define trusted directories */
 
@@ -508,7 +508,7 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
     if (!LOOKUP)                /* cf-know should not do this in lookup mode */
     {
-        CfOut(cf_verbose, "", "Work directory is %s\n", CFWORKDIR);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Work directory is %s\n", CFWORKDIR);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, force, report_context);
@@ -625,7 +625,7 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *re
             // TODO: ad-hoc validation, necessary?
             if (rp->type != RVAL_TYPE_SCALAR)
             {
-                CfOut(cf_error, "", "Non-file object in inputs list\n");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Non-file object in inputs list\n");
             }
             else
             {
@@ -685,7 +685,7 @@ static bool MissingInputFile(const char *input_file)
 
     if (cfstat(wfilename, &sb) == -1)
     {
-        CfOut(cf_error, "stat", "There is no readable input file at %s", wfilename);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", "There is no readable input file at %s", wfilename);
         return true;
     }
 
@@ -727,13 +727,13 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
     if (validated_at > time(NULL))
     {
-        CfOut(cf_inform, "",
+        CfOut(OUTPUT_LEVEL_INFORM, "",
               "!! Clock seems to have jumped back in time - mtime of %s is newer than current time - touching it",
               filename);
 
         if (utime(filename, NULL) == -1)
         {
-            CfOut(cf_error, "utime", "!! Could not touch %s", filename);
+            CfOut(OUTPUT_LEVEL_ERROR, "utime", "!! Could not touch %s", filename);
         }
 
         validated_at = 0;
@@ -744,13 +744,13 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
     if (cfstat(wfilename, &sb) == -1)
     {
-        CfOut(cf_verbose, "stat", "There is no readable input file at %s", input_file);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "stat", "There is no readable input file at %s", input_file);
         return true;
     }
 
     if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
     {
-        CfOut(cf_verbose, "", " -> Promises seem to change");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Promises seem to change");
         return true;
     }
 
@@ -761,7 +761,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
     if (IsNewerFileTree(filename, PROMISETIME))
     {
-        CfOut(cf_verbose, "", " -> Quick search detected file changes");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Quick search detected file changes");
         return true;
     }
 
@@ -771,7 +771,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
     {
         if (rp->type != RVAL_TYPE_SCALAR)
         {
-            CfOut(cf_error, "", "Non file object %s in list\n", (char *) rp->item);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Non file object %s in list\n", (char *) rp->item);
         }
         else
         {
@@ -783,7 +783,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
 
                 if (cfstat(InputLocation((char *) returnval.item, input_file), &sb) == -1)
                 {
-                    CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
+                    CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
                     result = true;
                     break;
                 }
@@ -800,7 +800,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
                 {
                     if (cfstat(InputLocation((char *) sl->item, input_file), &sb) == -1)
                     {
-                        CfOut(cf_error, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
+                        CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
                         result = true;
                         break;
                     }
@@ -855,7 +855,7 @@ ReportContext *OpenReports(AgentType agent_type)
 
         if ((freport_text = fopen(name, "w")) == NULL)
         {
-            CfOut(cf_error, "fopen", "Cannot open output file %s", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open output file %s", name);
             freport_text = fopen(NULLFILE, "w");
         }
 
@@ -863,10 +863,10 @@ ReportContext *OpenReports(AgentType agent_type)
 
         if ((freport_knowledge = fopen(name, "w")) == NULL)
         {
-            CfOut(cf_error, "fopen", "Cannot open output file %s", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open output file %s", name);
         }
 
-        CfOut(cf_inform, "", " -> Writing knowledge output to %s", workdir);
+        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Writing knowledge output to %s", workdir);
     }
     else
     {
@@ -903,11 +903,11 @@ void CloseReports(const char *agents, ReportContext *report_context)
 #ifndef HAVE_NOVA
     if (SHOWREPORTS)
     {
-        CfOut(cf_verbose, "", "Wrote compilation report %s%creports%cpromise_output_%s.txt", CFWORKDIR, FILE_SEPARATOR,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote compilation report %s%creports%cpromise_output_%s.txt", CFWORKDIR, FILE_SEPARATOR,
               FILE_SEPARATOR, agents);
-        CfOut(cf_verbose, "", "Wrote compilation report %s%creports%cpromise_output_%s.html", CFWORKDIR, FILE_SEPARATOR,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote compilation report %s%creports%cpromise_output_%s.html", CFWORKDIR, FILE_SEPARATOR,
               FILE_SEPARATOR, agents);
-        CfOut(cf_verbose, "", "Wrote knowledge map %s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote knowledge map %s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
     }
 #endif
     
@@ -941,20 +941,20 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
             return PolicyNew();
         }
 
-        CfOut(cf_error, "stat", "Can't stat file \"%s\" for parsing\n", wfilename);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", "Can't stat file \"%s\" for parsing\n", wfilename);
         exit(1);
     }
 
 #ifndef _WIN32
     if (config->check_not_writable_by_others && (statbuf.st_mode & (S_IWGRP | S_IWOTH)))
     {
-        CfOut(cf_error, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", wfilename, (uintmax_t)statbuf.st_uid);
         exit(1);
     }
 #endif
 
     CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
-    CfOut(cf_verbose, "", "  > Parsing file %s\n", wfilename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  > Parsing file %s\n", wfilename);
     CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
     PrependAuditFile(wfilename);
@@ -1054,7 +1054,7 @@ static int ParseFacility(const char *name)
 
 void SetFacility(const char *retval)
 {
-    CfOut(cf_verbose, "", "SET Syslog FACILITY = %s\n", retval);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Syslog FACILITY = %s\n", retval);
 
     CloseLog();
     OpenLog(ParseFacility(retval));
@@ -1065,8 +1065,8 @@ void SetFacility(const char *retval)
 
 void BannerBundle(Bundle *bp, Rlist *params)
 {
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "*****************************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -1085,8 +1085,8 @@ void BannerBundle(Bundle *bp, Rlist *params)
             printf("\n");
     }
 
-    CfOut(cf_verbose, "", "*****************************************************************\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 
 }
 
@@ -1102,18 +1102,18 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 
     if (uname(&VSYSNAME) == -1)
     {
-        CfOut(cf_error, "uname", "!!! Couldn't get kernel name info!");
+        CfOut(OUTPUT_LEVEL_ERROR, "uname", "!!! Couldn't get kernel name info!");
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false, report_context);
 
-    CfOut(cf_verbose, "", "Making sure that locks are private...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Making sure that locks are private...\n");
 
     if (chown(CFWORKDIR, getuid(), getgid()) == -1)
     {
-        CfOut(cf_error, "chown", "Unable to set owner on %s to %ju.%ju", CFWORKDIR, (uintmax_t)getuid(), (uintmax_t)getgid());
+        CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %ju.%ju", CFWORKDIR, (uintmax_t)getuid(), (uintmax_t)getgid());
     }
 
     if (cfstat(CFWORKDIR, &statbuf) != -1)
@@ -1131,7 +1131,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
         snprintf(CFPUBKEYFILE, CF_BUFSIZE, "%s%cppkeys%clocalhost.pub", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     }
 
-    CfOut(cf_verbose, "", "Checking integrity of the state database\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking integrity of the state database\n");
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
 
     if (cfstat(vbuff, &statbuf) == -1)
@@ -1141,7 +1141,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            CfOut(cf_error, "chown", "Unable to set owner on %s to %jd.%jd", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
+            CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %jd.%jd", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
         cf_chmod(vbuff, (mode_t) 0755);
@@ -1151,13 +1151,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            CfOut(cf_error, "", "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
+            CfOut(OUTPUT_LEVEL_ERROR, "", "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
     }
 
-    CfOut(cf_verbose, "", "Checking integrity of the module directory\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking integrity of the module directory\n");
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cmodules", CFWORKDIR, FILE_SEPARATOR);
 
@@ -1168,7 +1168,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
-            CfOut(cf_error, "chown", "Unable to set owner on %s to %ju.%ju", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
+            CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %ju.%ju", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
         cf_chmod(vbuff, (mode_t) 0700);
@@ -1178,13 +1178,13 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            CfOut(cf_error, "", "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
+            CfOut(OUTPUT_LEVEL_ERROR, "", "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
     }
 
-    CfOut(cf_verbose, "", "Checking integrity of the PKI directory\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking integrity of the PKI directory\n");
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys", CFWORKDIR, FILE_SEPARATOR);
 
@@ -1258,7 +1258,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
     FILE *freport_text = NULL;
 
     snprintf(filename, CF_BUFSIZE - 1, "%s.txt", fname);
-    CfOut(cf_inform, "", "Summarizing promises as text to %s\n", filename);
+    CfOut(OUTPUT_LEVEL_INFORM, "", "Summarizing promises as text to %s\n", filename);
 
     if ((freport_text = fopen(filename, "w")) == NULL)
     {
@@ -1338,7 +1338,7 @@ static void PrependAuditFile(char *file)
     AUDITPTR->date = xstrdup(cf_ctime(&statbuf.st_mtime));
     if (Chop(AUDITPTR->date, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
     AUDITPTR->version = NULL;
     VAUDIT = AUDITPTR;
@@ -1365,7 +1365,7 @@ static void CheckVariablePromises(char *scope, Seq *var_promises)
 
 static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", " -> Checking common class promises...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking common class promises...\n");
 
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
@@ -1422,7 +1422,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         if (!AddVariableHash(scope, cp->lval, returnval,
                              GetControlDatatype(cp->lval, bp), cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_error, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)
@@ -1433,7 +1433,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_domain].lval) == 0)
         {
             strcpy(VDOMAIN, cp->rval.item);
-            CfOut(cf_verbose, "", "SET domain = %s\n", VDOMAIN);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET domain = %s\n", VDOMAIN);
             DeleteScalar("sys", "domain");
             DeleteScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
@@ -1445,13 +1445,13 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
         {
-            CfOut(cf_verbose, "", "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_inputs = GetBoolean(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
         {
-            CfOut(cf_verbose, "", "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_bundles = GetBoolean(cp->rval.item);
         }
 
@@ -1462,7 +1462,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             {
                 RlistPrependScalar(&GOALS, rp->item, RVAL_TYPE_SCALAR);
             }
-            CfOut(cf_verbose, "", "SET goal_patterns list\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET goal_patterns list\n");
             continue;
         }
         
@@ -1623,7 +1623,7 @@ static void CleanPidFile(void)
     {
         if (errno != ENOENT)
         {
-            CfOut(cf_error, "unlink", "Unable to remove pid file");
+            CfOut(OUTPUT_LEVEL_ERROR, "unlink", "Unable to remove pid file");
         }
     }
 }
@@ -1647,7 +1647,7 @@ void WritePID(char *filename)
 
     if ((fp = fopen(PIDFILE, "w")) == NULL)
     {
-        CfOut(cf_inform, "fopen", "Could not write to PID file %s\n", filename);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Could not write to PID file %s\n", filename);
         return;
     }
 
@@ -1660,7 +1660,7 @@ void WritePID(char *filename)
 
 void HashVariables(Policy *policy, const char *name, const ReportContext *report_context)
 {
-    CfOut(cf_verbose, "", "Initiate variable convergence...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Initiate variable convergence...\n");
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1734,7 +1734,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
 
     if (GetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
     {
-        CfOut(cf_error, "", " !!! No bundlesequence in the common control body");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !!! No bundlesequence in the common control body");
         return false;
     }
 
@@ -1758,7 +1758,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
 
         default:
             name = NULL;
-            CfOut(cf_error, "", "Illegal item found in bundlesequence: ");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal item found in bundlesequence: ");
             RvalShow(stdout, (Rval) {rp->item, rp->type});
             printf(" = %c\n", rp->type);
             ok = false;
@@ -1772,7 +1772,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
 
         if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
         {
-            CfOut(cf_error, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
             ok = false;
         }
     }

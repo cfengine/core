@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        CfOut(cf_error, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         HardClass("failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
@@ -274,7 +274,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'x':
-            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
@@ -286,7 +286,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
     }
 
     return config;
@@ -356,7 +356,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
             Rval retval;
             if (GetVariable("control_executor", cp->lval, &retval) == DATA_TYPE_NONE)
             {
-                CfOut(cf_error, "", "Unknown lval %s in exec control body", cp->lval);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
                 continue;
             }
 
@@ -492,14 +492,14 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
 
     if (!NO_FORK)
     {
-        CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
     }
 
 #else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        CfOut(cf_inform, "", "cf-execd starting %.24s\n", cf_ctime(&now));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", cf_ctime(&now));
         _exit(0);
     }
 
@@ -522,7 +522,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
 
     if (ONCE)
     {
-        CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
         sleep(SPLAYTIME);
         LocalExec(exec_config);
         CloseLog();
@@ -533,12 +533,12 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
         {
             if (ScheduleRun(&policy, config, exec_config, report_context))
             {
-                CfOut(cf_verbose, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
 
                 if (!LocalExecInThread(exec_config))
                 {
-                    CfOut(cf_inform, "", "Unable to run agent in thread, falling back to blocking execution");
+                    CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to run agent in thread, falling back to blocking execution");
                     LocalExec(exec_config);
                 }
             }
@@ -578,7 +578,7 @@ static bool LocalExecInThread(const ExecConfig *config)
     else
     {
         DestroyExecConfig(thread_config);
-        CfOut(cf_inform, "pthread_create", "Can't create thread!");
+        CfOut(OUTPUT_LEVEL_INFORM, "pthread_create", "Can't create thread!");
         return false;
     }
 }
@@ -598,7 +598,7 @@ static void Apoptosis()
     return;
 #endif
 
-    CfOut(cf_verbose, "", " !! Programmed pruning of the scheduler cluster");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Programmed pruning of the scheduler cluster");
 
 #ifdef __MINGW32__
     snprintf(promiser_buf, sizeof(promiser_buf), "cf-execd");     // using '\' causes regexp problems
@@ -637,7 +637,7 @@ static void Apoptosis()
     PromiseAppendConstraint(&pp, "match_range", (Rval) {xstrdup("0,2"), RVAL_TYPE_SCALAR}, "any", false);
     PromiseAppendConstraint(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), RVAL_TYPE_SCALAR}, "any", false);
 
-    CfOut(cf_verbose, "", " -> Looking for cf-execd processes owned by %s", mypid);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
@@ -648,7 +648,7 @@ static void Apoptosis()
 
     SeqDestroy(pp.conlist);
 
-    CfOut(cf_verbose, "", " !! Pruning complete");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Pruning complete");
 }
 
 /*****************************************************************************/
@@ -663,7 +663,7 @@ static Reload CheckNewPromises(const char *input_file, const Rlist *input_files,
 {
     if (NewPromiseProposals(input_file, input_files))
     {
-        CfOut(cf_verbose, "", " -> New promises detected...\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
         if (CheckPromises(input_file, report_context))
         {
@@ -671,7 +671,7 @@ static Reload CheckNewPromises(const char *input_file, const Rlist *input_files,
         }
         else
         {
-            CfOut(cf_inform, "", " !! New promises file contains syntax errors -- ignoring");
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! New promises file contains syntax errors -- ignoring");
             PROMISETIME = time(NULL);
         }
     }
@@ -687,14 +687,14 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
 {
     Item *ip;
 
-    CfOut(cf_verbose, "", "Sleeping...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping...\n");
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
 
 // recheck license (in case of license updates or expiry)
 
     if (EnterpriseExpiry())
     {
-        CfOut(cf_error, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
     }
 
@@ -706,7 +706,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
     {
         /* Full reload */
 
-        CfOut(cf_inform, "", "Re-reading promise file %s..\n", config->input_file);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Re-reading promise file %s..\n", config->input_file);
 
         DeleteAlphaList(&VHEAP);
         InitAlphaList(&VHEAP);
@@ -790,16 +790,16 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
 
     for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", "Checking schedule %s...\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking schedule %s...\n", ip->name);
 
         if (IsDefinedClass(ip->name, NULL))
         {
-            CfOut(cf_verbose, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), ip->name);
             return true;
         }
     }
 
-    CfOut(cf_verbose, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
     return false;
 }
 

@@ -138,7 +138,7 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     fail();
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
 }

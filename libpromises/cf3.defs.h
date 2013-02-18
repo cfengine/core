@@ -709,34 +709,6 @@ enum cfrcontrol
 
 /*************************************************************************/
 
-enum cfscontrol
-{
-    cfs_allowallconnects,
-    cfs_allowconnects,
-    cfs_allowusers,
-    cfs_auditing,
-    cfs_bindtointerface,
-    cfs_cfruncommand,
-    cfs_call_collect_interval,
-    cfs_collect_window,
-    cfs_denybadclocks,
-    cfs_denyconnects,
-    cfs_dynamicaddresses,
-    cfs_hostnamekeys,
-    cfs_keyttl,
-    cfs_logallconnections,
-    cfs_logencryptedtransfers,
-    cfs_maxconnections,
-    cfs_portnumber,
-    cfs_serverfacility,
-    cfs_skipverify,
-    cfs_trustkeysfrom,
-    cfs_listen,
-    cfs_notype,
-};
-
-/*************************************************************************/
-
 enum cfsbundle
 {
     cfs_access,

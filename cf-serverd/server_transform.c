@@ -61,6 +61,32 @@ typedef enum
     REMOTE_ROLE_NONE
 } RemoteRole;
 
+typedef enum
+{
+    SERVER_CONTROL_ALLOW_ALL_CONNECTS,
+    SERVER_CONTROL_ALLOW_CONNECTS,
+    SERVER_CONTROL_ALLOW_USERS,
+    SERVER_CONTROL_AUDITING,
+    SERVER_CONTROL_BIND_TO_INTERFACE,
+    SERVER_CONTROL_CF_RUN_COMMAND,
+    SERVER_CONTROL_CALL_COLLECT_INTERVAL,
+    SERVER_CONTROL_CALL_COLLECT_WINDOW,
+    SERVER_CONTROL_DENY_BAD_CLOCKS,
+    SERVER_CONTROL_DENY_CONNECTS,
+    SERVER_CONTROL_DYNAMIC_ADDRESSES,
+    SERVER_CONTROL_HOSTNAME_KEYS,
+    SERVER_CONTROL_KEY_TTL,
+    SERVER_CONTROL_LOG_ALL_CONNECTIONS,
+    SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS,
+    SERVER_CONTROL_MAX_CONNECTIONS,
+    SERVER_CONTROL_PORT_NUMBER,
+    SERVER_CONTROL_SERVER_FACILITY,
+    SERVER_CONTROL_SKIP_VERIFY,
+    SERVER_CONTROL_TRUST_KEYS_FROM,
+    SERVER_CONTROL_LISTEN,
+    SERVER_CONTROL_NONE
+} ServerControl;
+
 static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
@@ -258,34 +284,34 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {
                 SetFacility(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
                 DENYBADCLOCKS = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
                 LOGENCRYPT = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
                 SV.logconns = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGCONNS = %d\n", LOGCONNS);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_MAX_CONNECTIONS].lval) == 0)
             {
                 CFD_MAXPROCESSES = (int) Str2Int(retval.item);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
@@ -293,14 +319,14 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
                 COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
                 SERVER_LISTEN = GetBoolean(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET server listen = %s \n",
@@ -308,21 +334,21 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
                 COLLECT_WINDOW = (int) Str2Int(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
                 strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET cfruncommand = %s\n", CFRUNCOMMAND);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
@@ -339,7 +365,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
@@ -356,7 +382,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SKIP_VERIFY].lval) == 0)
             {
                 Rlist *rp;
 
@@ -374,7 +400,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
             }
 
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_ALL_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
@@ -391,7 +417,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_USERS].lval) == 0)
             {
                 Rlist *rp;
 
@@ -408,7 +434,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_TRUST_KEYS_FROM].lval) == 0)
             {
                 Rlist *rp;
 
@@ -425,7 +451,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
                 SHORT_CFENGINEPORT = (short) Str2Int(retval.item);
                 strncpy(STR_CFENGINEPORT, retval.item, 15);
@@ -435,13 +461,13 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_KEY_TTL].lval) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Ignoring deprecated option keycacheTTL");
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET bindtointerface = %s\n", BINDINTERFACE);

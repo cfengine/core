@@ -40,6 +40,8 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
+static Item *EDIT_ANCHORS = NULL;
+
 static int VerifyConstraintName(const char *lval);
 
 /*******************************************************************/

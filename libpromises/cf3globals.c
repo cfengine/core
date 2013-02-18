@@ -87,8 +87,6 @@ Scope *VSCOPE = NULL;
 
 Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
-Item *EDIT_ANCHORS = NULL;
-
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 

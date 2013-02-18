@@ -103,7 +103,6 @@ extern int CF_TOPICS;
 extern int CF_OCCUR;
 extern enum cfhashes CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
-extern Item *EDIT_ANCHORS;
 
 extern Scope *VSCOPE;
 extern Audit *AUDITPTR;

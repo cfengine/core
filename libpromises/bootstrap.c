@@ -160,9 +160,10 @@ void CheckAutoBootstrap()
         creat(name, 0600);
 
         char execstring[CF_BUFSIZE], buffer[CF_EXPANDSIZE];
-        
-        snprintf(execstring, CF_BUFSIZE, "%s/cf-execd --once", CFWORKDIR);
-        
+
+        snprintf(execstring, CF_BUFSIZE, "%s%cbin%ccf-execd%s --once",
+                 CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, EXEC_SUFFIX);
+
         if (GetExecOutput(execstring, buffer, false))
         {
             printf(" -> The agent might leave errors/messages for you as email to root@localhost.\n");
@@ -171,7 +172,7 @@ void CheckAutoBootstrap()
         {
             printf(" !! I was not able to execute %s -- this is not necessarily fatal, but it is unexpected\n", execstring);
         }
-        
+
     }
     else
     {

@@ -408,6 +408,14 @@ static void test_chop_empty_two_spaces(void **state)
     assert_string_equal("", s);
 }
 
+static void test_ends_with(void **state)
+{
+    assert_true(StringEndsWith("file.json", ".json"));
+    assert_true(StringEndsWith("file.json", "file.json"));
+    assert_false(StringEndsWith(".json", "file"));
+    assert_false(StringEndsWith("a", "aa"));
+}
+
 int main()
 {
     const UnitTest tests[] =
@@ -462,6 +470,8 @@ int main()
         unit_test(test_chop_empty),
         unit_test(test_chop_empty_single_space),
         unit_test(test_chop_empty_two_spaces),
+
+        unit_test(test_ends_with)
     };
 
     return run_tests(tests);

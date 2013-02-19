@@ -94,6 +94,19 @@ static int IPV4_parser(const char *source, struct IPV4Address *address)
     bool is_port = 0;
 
     /*
+     * For simplicity sake we initialize address (if not NULL).
+     */
+    if (address)
+    {
+        int i = 0;
+        for (i = 0; i < 4; ++i)
+        {
+            address->octets[i] = 0;
+        }
+        address->port = 0;
+    }
+
+    /*
      * IPV4 parsing has 6 states, of which:
      * 2 are end states
      * 4 are parsing states

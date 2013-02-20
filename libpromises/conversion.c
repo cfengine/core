@@ -291,7 +291,7 @@ enum cfsbundle Type2Cfs(char *name)
 
 /****************************************************************************/
 
-DataType Typename2Datatype(char *name)
+DataType DataTypeFromString(char *name)
 /* convert abstract data type names: int, ilist etc */
 {
     int i;

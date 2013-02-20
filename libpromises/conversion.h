@@ -36,6 +36,7 @@ DatabaseType DatabaseTypeFromString(char *s);
 OutputLevel OutputLevelFromString(char *level);
 FileComparator FileComparatorFromString(char *s);
 FileLinkType FileLinkTypeFromString(char *s);
+DataType DataTypeFromString(char *name);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -50,7 +51,7 @@ int Signal2Int(char *s);
 
 
 
-DataType Typename2Datatype(char *name);
+
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp);
 enum cfsbundle Type2Cfs(char *name);
 enum representations String2Representation(char *s);

@@ -1669,7 +1669,7 @@ Measurement GetMeasurementConstraint(const Promise *pp)
     m.stream_type = ConstraintGetRvalValue("stream_type", pp, RVAL_TYPE_SCALAR);
 
     value = ConstraintGetRvalValue("data_type", pp, RVAL_TYPE_SCALAR);
-    m.data_type = Typename2Datatype(value);
+    m.data_type = DataTypeFromString(value);
 
     if (m.data_type == DATA_TYPE_NONE)
     {

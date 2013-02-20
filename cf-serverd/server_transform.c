@@ -30,7 +30,6 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "mod_access.h"
-#include "constraints.h"
 #include "item_lib.h"
 #include "conversion.h"
 #include "reporting.h"
@@ -618,7 +617,7 @@ static void KeepServerPromise(Promise *pp)
         return;
     }
 
-    sp = (char *) GetConstraintValue("resource_type", pp, RVAL_TYPE_SCALAR);
+    sp = (char *) ConstraintGetRvalValue("resource_type", pp, RVAL_TYPE_SCALAR);
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
@@ -741,7 +740,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
+    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {

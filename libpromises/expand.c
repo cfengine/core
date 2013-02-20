@@ -33,7 +33,7 @@
 
 #include "misc_lib.h"
 #include "env_context.h"
-#include "constraints.h"
+#include "policy.h"
 #include "promises.h"
 #include "vars.h"
 #include "syntax.h"
@@ -649,7 +649,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
     Rlist *lol = NULL;
     Promise *pexp;
     const int cf_null_cutoff = 5;
-    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR), v[CF_MAXVARSIZE];
+    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR), v[CF_MAXVARSIZE];
     int cutoff = 0;
 
     lol = NewIterationContext(scopeid, listvars);
@@ -734,7 +734,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
         case AGENT_TYPE_COMMON:
             ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
             CheckRecursion(report_context, pexp);
-            ReCheckAllConstraints(pexp);
+            PromiseRecheckAllConstraints(pexp);
             break;
 
         default:
@@ -1091,7 +1091,7 @@ static void SetAnyMissingDefaults(Promise *pp)
 {
     if (strcmp(pp->agentsubtype, "packages") == 0)
     {
-        if (GetConstraint(pp, "package_method") == NULL)
+        if (PromiseGetConstraint(pp, "package_method") == NULL)
         {
             PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", RVAL_TYPE_SCALAR}, "any", true);
         }
@@ -1682,7 +1682,7 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
 
     // Need to set up the default service pack to eliminate syntax, analogous to verify_services.c
 
-    if (GetConstraintValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
+    if (ConstraintGetRvalValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {

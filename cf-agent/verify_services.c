@@ -25,7 +25,6 @@
 #include "verify_services.h"
 
 #include "verify_methods.h"
-#include "constraints.h"
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
@@ -34,6 +33,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "rlist.h"
+#include "policy.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
@@ -196,7 +196,7 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
 // Need to set up the default service pack to eliminate syntax
 
-    if (GetConstraintValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
+    if (ConstraintGetRvalValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {

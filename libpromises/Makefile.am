@@ -32,7 +32,6 @@ libpromises_la_SOURCES = \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
         constants.c \
-        constraints.c constraints.h \
         conversion.c conversion.h \
         crypto.c crypto.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \

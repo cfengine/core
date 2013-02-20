@@ -24,11 +24,11 @@
 
 #include "cf3.defs.h"
 
-#include "constraints.h"
 #include "item_lib.h"
 #include "conversion.h"
 #include "attributes.h"
 #include "cfstream.h"
+#include "policy.h"
 
 static Item *HANDLE_OUTPUTS = NULL;
 static Item *BUNDLE_OUTPUTS = NULL;
@@ -96,8 +96,8 @@ void VerifyOutputsPromise(Promise *pp)
 
 void SetPromiseOutputs(Promise *pp)
 {
-    char *handle = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR);
-    char *setting = GetConstraintValue("report_level", pp, RVAL_TYPE_SCALAR);
+    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
+    char *setting = ConstraintGetRvalValue("report_level", pp, RVAL_TYPE_SCALAR);
     OutputLevel report_level = String2ReportLevel(setting);
     int verbose = false, inform = false;
     Item *ip;
@@ -131,7 +131,7 @@ void SetPromiseOutputs(Promise *pp)
             case OUTPUT_LEVEL_INFORM:
                 if (verbose)
                 {
-                    EditScalarConstraint(pp->conlist, "report_level", "verbose");
+                    ConstraintSetScalarValue(pp->conlist, "report_level", "verbose");
                 }
 
                 break;
@@ -139,7 +139,7 @@ void SetPromiseOutputs(Promise *pp)
             default:
                 if (inform || verbose)
                 {
-                    EditScalarConstraint(pp->conlist, "report_level", ip->classes);
+                    ConstraintSetScalarValue(pp->conlist, "report_level", ip->classes);
                 }
                 break;
             }

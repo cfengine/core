@@ -26,7 +26,6 @@
 #include "cf3.defs.h"
 
 #include "env_context.h"
-#include "constraints.h"
 #include "promises.h"
 #include "files_names.h"
 #include "files_edit.h"
@@ -42,6 +41,7 @@
 #include "cfstream.h"
 #include "transaction.h"
 #include "logging.h"
+#include "policy.h"
 
 enum editxmltypesequence
 {

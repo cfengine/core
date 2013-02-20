@@ -50,9 +50,9 @@
 #include "exec_tools.h"
 #include "comparray.h"
 #include "string_lib.h"
-#include "constraints.h"
 #include "files_lib.h"
 #include "rlist.h"
+#include "policy.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -3422,7 +3422,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
             mode_t saveumask = umask(0);
             mode_t filemode = 0600;     /* Decide the mode for filecreation */
 
-            if (GetConstraintValue("mode", pp, RVAL_TYPE_SCALAR) == NULL)
+            if (ConstraintGetRvalValue("mode", pp, RVAL_TYPE_SCALAR) == NULL)
             {
                 /* Relying on umask is risky */
                 filemode = 0600;

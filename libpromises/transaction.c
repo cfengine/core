@@ -27,7 +27,6 @@
 
 #include "env_context.h"
 #include "promises.h"
-#include "constraints.h"
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -41,6 +40,7 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "policy.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 

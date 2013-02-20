@@ -25,12 +25,12 @@
 
 #include "instrumentation.h"
 
-#include "constraints.h"
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
 #include "cfstream.h"
 #include "string_lib.h"
+#include "policy.h"
 
 #include <math.h>
 
@@ -58,7 +58,7 @@ void EndMeasurePromise(struct timespec start, Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
-    mid = GetConstraintValue("measurement_class", pp, RVAL_TYPE_SCALAR);
+    mid = ConstraintGetRvalValue("measurement_class", pp, RVAL_TYPE_SCALAR);
 
     if (mid)
     {

@@ -26,7 +26,6 @@
 
 #include "env_context.h"
 #include "mod_files.h"
-#include "constraints.h"
 #include "promises.h"
 #include "files_names.h"
 #include "item_lib.h"
@@ -41,6 +40,7 @@
 #include "misc_lib.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "policy.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"

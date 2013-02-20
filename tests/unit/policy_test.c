@@ -1,7 +1,7 @@
 #include "test.h"
+
 #include "policy.h"
 #include "parser.h"
-#include "constraints.h"
 #include "rlist.h"
 #include "fncall.h"
 
@@ -114,14 +114,14 @@ static void test_policy_json_to_from(void **state)
                         assert_int_equal(2, SeqLength(promise->conlist));
 
                         {
-                            Constraint *create = GetConstraint(promise, "create");
+                            Constraint *create = PromiseGetConstraint(promise, "create");
                             assert_true(create);
                             assert_string_equal("create", create->lval);
                             assert_string_equal("true", RvalScalarValue(create->rval));
                         }
 
                         {
-                            Constraint *create = GetConstraint(promise, "perms");
+                            Constraint *create = PromiseGetConstraint(promise, "perms");
                             assert_true(create);
                             assert_string_equal("perms", create->lval);
                             assert_string_equal("myperms", RvalScalarValue(create->rval));
@@ -175,7 +175,7 @@ static void test_policy_json_to_from(void **state)
         assert_true(myperms);
 
         {
-            Seq *mode_cps = ConstraintGetFromBody(myperms, "mode");
+            Seq *mode_cps = BodyGetConstraint(myperms, "mode");
             assert_int_equal(1, SeqLength(mode_cps));
 
             Constraint *mode = SeqAt(mode_cps, 0);

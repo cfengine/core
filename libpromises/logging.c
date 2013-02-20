@@ -33,7 +33,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "transaction.h"
-#include "constraints.h"
+#include "policy.h"
 #include "rlist.h"
 
 #ifdef HAVE_NOVA
@@ -354,7 +354,7 @@ void PromiseBanner(Promise *pp)
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
+    if ((sp = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }

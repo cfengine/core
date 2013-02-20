@@ -127,7 +127,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
     exit(42);
 }
 
-void *GetConstraintValue(char *lval, Promise *promise, char type)
+void *ConstraintGetRvalValue(char *lval, Promise *promise, char type)
 {
     exit(42);
 }

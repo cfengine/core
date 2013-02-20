@@ -25,7 +25,6 @@
 
 #include "vars.h"
 
-#include "constraints.h"
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
@@ -37,6 +36,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "policy.h"
 
 static int IsCf3Scalar(char *str);
 static int CompareVariableValue(Rval rval, CfAssoc *ap);
@@ -288,7 +288,7 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap)
 void DefaultVarPromise(Promise *pp)
 
 {
-    char *regex = GetConstraintValue("if_match_regex", pp, RVAL_TYPE_SCALAR);
+    char *regex = ConstraintGetRvalValue("if_match_regex", pp, RVAL_TYPE_SCALAR);
     Rval rval;
     DataType dt;
     Rlist *rp;

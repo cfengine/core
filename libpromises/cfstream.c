@@ -26,7 +26,7 @@
 #include "cfstream.h"
 
 #include "files_names.h"
-#include "constraints.h"
+#include "policy.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "transaction.h"
@@ -210,7 +210,7 @@ void cfPS(OutputLevel level, char status, char *errstr, const Promise *pp, Attri
             v = "not specified";
         }
 
-        if ((sp = GetConstraintValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
+        if ((sp = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
         {
             strncpy(handle, sp, CF_MAXVARSIZE - 1);
         }

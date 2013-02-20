@@ -31,6 +31,23 @@
 #include "sequence.h"
 #include "json.h"
 
+typedef enum
+{
+    POLICY_ELEMENT_TYPE_POLICY,
+    POLICY_ELEMENT_TYPE_BUNDLE,
+    POLICY_ELEMENT_TYPE_BODY,
+    POLICY_ELEMENT_TYPE_SUBTYPE,
+    POLICY_ELEMENT_TYPE_PROMISE,
+    POLICY_ELEMENT_TYPE_CONSTRAINT
+} PolicyElementType;
+
+typedef struct
+{
+    PolicyElementType type;
+    const void *subject;
+    char *message;
+} PolicyError;
+
 struct Policy_
 {
     Seq *bundles;
@@ -110,6 +127,24 @@ struct Promise_
     SourceOffset offset;
 };
 
+struct Constraint_
+{
+    PolicyElementType type;
+    union {
+        Promise *promise;
+        Body *body;
+    } parent;
+
+    char *lval;
+    Rval rval;
+
+    char *classes;              /* only used within bodies */
+    bool references_body;
+    Audit *audit;
+
+    SourceOffset offset;
+};
+
 
 Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);
@@ -157,23 +192,6 @@ bool PolicyIsRunnable(const Policy *policy);
  */
 Policy *PolicyFromPromise(const Promise *promise);
 char *BundleQualifiedName(const Bundle *bundle);
-
-typedef enum
-{
-    POLICY_ELEMENT_TYPE_POLICY,
-    POLICY_ELEMENT_TYPE_BUNDLE,
-    POLICY_ELEMENT_TYPE_BODY,
-    POLICY_ELEMENT_TYPE_SUBTYPE,
-    POLICY_ELEMENT_TYPE_PROMISE,
-    POLICY_ELEMENT_TYPE_CONSTRAINT
-} PolicyElementType;
-
-typedef struct
-{
-    PolicyElementType type;
-    const void *subject;
-    char *message;
-} PolicyError;
 
 PolicyError *PolicyErrorNew(PolicyElementType type, const void *subject, const char *error_msg, ...);
 void PolicyErrorDestroy(PolicyError *error);
@@ -223,12 +241,137 @@ void PolicyToString(const Policy *policy, Writer *writer);
 SubType *BundleAppendSubType(Bundle *bundle, const char *name);
 SubType *BundleGetSubType(Bundle *bp, const char *name);
 
-const char *NamespaceFromConstraint(const Constraint *cp);
+Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
+
+/**
+ * @brief A sequence of constraints matching the l-value.
+ * @param body Body to query
+ * @param lval l-value to match
+ * @return Sequence of pointers to the constraints. Destroying it does not alter the DOM.
+ */
+Seq *BodyGetConstraint(Body *body, const char *lval);
+
+const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes);
+
+
 void PromiseDestroy(Promise *pp);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
-Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
+
+/**
+ * @brief Get the int value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Int value, or CF_NOINT
+ */
+int PromiseGetConstraintAsInt(const char *lval, const Promise *pp);
+
+/**
+ * @brief Get the real value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return Double value, or CF_NODOUBLE
+ */
+double PromiseGetConstraintAsReal(const char *lval, const Promise *list);
+
+/**
+ * @brief Get the octal value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return Double value, or 077 if not found
+ */
+mode_t PromiseGetConstraintAsOctal(const char *lval, const Promise *list);
+
+/**
+ * @brief Get the uid value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Uid value, or CF_SAME_OWNER if not found
+ */
+uid_t PromiseGetConstraintAsUid(const char *lval, const Promise *pp);
+
+/**
+ * @brief Get the uid value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param pp
+ * @return Gid value, or CF_SAME_GROUP if not found
+ */
+gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp);
+
+/**
+ * @brief Get the Rlist value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return Rlist or NULL if not found (note: same as empty list)
+ */
+Rlist *PromiseGetConstraintAsList(const char *lval, const Promise *pp);
+
+bool PromiseBundleConstraintExists(const char *lval, const Promise *pp);
+
+void PromiseRecheckAllConstraints(Promise *pp);
+
+/**
+ * @brief Get the trinary boolean value of the first effective constraint found matching, from a promise
+ * @param lval
+ * @param list
+ * @return True/false, or CF_UNDEFINED if not found
+ */
+int PromiseGetConstraintAsBoolean(const char *lval, const Promise *list);
+
+/**
+ * @brief Get the first effective constraint from the promise, also does some checking
+ * @param promise
+ * @param lval
+ * @return Effective constraint if found, otherwise NULL
+ */
+Constraint *PromiseGetConstraint(const Promise *promise, const char *lval);
+
+
+void ConstraintDestroy(Constraint *cp);
+
+
+
+/**
+ * @brief Get the context of the given constraint
+ * @param cp
+ * @return context. never returns NULL.
+ */
+const char *ConstraintContext(const Constraint *cp);
+
+/**
+ * @brief Returns the first effective constraint from a list of candidates, depending on evaluation state.
+ * @param constraints The list of potential candidates
+ * @return The effective constraint, or NULL if none are found.
+ */
+Constraint *EffectiveConstraint(Seq *constraints);
+
+/**
+ * @brief Replace the rval of a scalar constraint (copies rval)
+ * @param conlist
+ * @param lval
+ * @param rval
+ */
+void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
+
+/**
+ * @brief Get the Rval value of the first effective constraint that matches the given type
+ * @param lval
+ * @param promise
+ * @param type
+ * @return Rval value if found, NULL otherwise
+ */
+void *ConstraintGetRvalValue(const char *lval, const Promise *promise, RvalType type);
+
+/**
+ * @brief Get the trinary boolean value of the first effective constraint found matching
+ * @param lval
+ * @param constraints
+ * @return True/false, or CF_UNDEFINED if not found
+ */
+int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints);
+
+void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
 
 #endif

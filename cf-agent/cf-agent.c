@@ -26,7 +26,6 @@
 #include "generic_agent.h"
 
 #include "env_context.h"
-#include "constraints.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
 #include "verify_exec.h"
@@ -1228,7 +1227,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
 
     if (strcmp("files", pp->agentsubtype) == 0)
     {
-        if (GetBooleanConstraint("background", pp))
+        if (PromiseGetConstraintAsBoolean("background", pp))
         {
             ParallelFindAndVerifyFilesPromises(pp, report_context);
         }
@@ -1459,7 +1458,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
 
 static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
 {
-    int background = GetBooleanConstraint("background", pp);
+    int background = PromiseGetConstraintAsBoolean("background", pp);
     pid_t child = 1;
 
     if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))

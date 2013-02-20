@@ -25,7 +25,6 @@
 
 #include "syntax.h"
 
-#include "constraints.h"
 #include "json.h"
 #include "files_names.h"
 #include "mod_files.h"

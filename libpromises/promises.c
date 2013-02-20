@@ -25,7 +25,6 @@
 
 #include "promises.h"
 
-#include "constraints.h"
 #include "policy.h"
 #include "syntax.h"
 #include "expand.h"

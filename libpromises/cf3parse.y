@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
-#include "constraints.h"
 #include "env_context.h"
 #include "fncall.h"
 #include "logging.h"

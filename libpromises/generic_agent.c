@@ -28,7 +28,7 @@
 #include "bootstrap.h"
 #include "sysinfo.h"
 #include "env_context.h"
-#include "constraints.h"
+#include "policy.h"
 #include "promises.h"
 #include "files_lib.h"
 #include "files_names.h"
@@ -1018,7 +1018,7 @@ const Rlist *InputFiles(Policy *policy)
         return NULL;
     }
 
-    Seq *potential_inputs = ConstraintGetFromBody(body_common_control, "inputs");
+    Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
     Constraint *cp = EffectiveConstraint(potential_inputs);
     SeqDestroy(potential_inputs);
 

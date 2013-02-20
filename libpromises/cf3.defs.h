@@ -910,12 +910,12 @@ struct FnCallResult_
 /* Return value signalling                                         */
 /*******************************************************************/
 
-enum cfinterval
+typedef enum
 {
-    cfa_hourly,
-    cfa_daily,
-    cfa_nointerval
-};
+    INTERVAL_HOURLY,
+    INTERVAL_DAILY,
+    INTERVAL_NONE
+} Interval;
 
 enum cfdatetemplate
 {

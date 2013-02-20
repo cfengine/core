@@ -31,12 +31,14 @@
 MeasurePolicy MeasurePolicyFromString(char *s);
 EnvironmentState EnvironmentStateFromString(char *s);
 InsertMatchType InsertMatchTypeFromString(char *s);
+Interval IntervalFromString(char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
-
 long Months2Seconds(int m);
-enum cfinterval Str2Interval(char *s);
+
+
+
 int SyslogPriority2Int(char *s);
 enum cfdbtype Str2dbType(char *s);
 char *Rlist2String(Rlist *list, char *sep);

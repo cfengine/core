@@ -838,9 +838,9 @@ static FnCallResult FnCallSplayClass(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], class[CF_MAXVARSIZE];
 
-    enum cfinterval policy = Str2Interval(RlistScalarValue(finalargs->next));
+    Interval policy = IntervalFromString(RlistScalarValue(finalargs->next));
 
-    if (policy == cfa_hourly)
+    if (policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
         int slot = GetHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;

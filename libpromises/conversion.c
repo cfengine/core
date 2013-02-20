@@ -547,9 +547,9 @@ long Months2Seconds(int m)
 
 static const char *INTERVAL_TYPES[] = { "hourly", "daily", NULL };
 
-enum cfinterval Str2Interval(char *string)
+Interval IntervalFromString(char *string)
 {
-    return FindTypeInArray(INTERVAL_TYPES, string, cfa_nointerval, cfa_nointerval);
+    return FindTypeInArray(INTERVAL_TYPES, string, INTERVAL_NONE, INTERVAL_NONE);
 }
 
 /*********************************************************************/

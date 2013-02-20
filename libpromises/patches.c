@@ -108,6 +108,7 @@ char *MapName(char *s)
                    TOSTRING(MAX_FILENAME) ") characters",
                    ret);
     }
+    free(ret);
 
     return s;
 }

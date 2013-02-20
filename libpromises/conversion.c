@@ -264,11 +264,11 @@ FileComparator FileComparatorFromString(char *s)
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-static const char *REPRESENTATION_TYPES[] = 
-{ "url", "web", "file", "db", "literal", "image", "portal", NULL };
-
-enum representations String2Representation(char *s)
+KnowledgeRepresentation KnowledgeRepresentationFromString(char *s)
 {
+    static const char *REPRESENTATION_TYPES[] =
+    { "url", "web", "file", "db", "literal", "image", "portal", NULL };
+
     return FindTypeInArray(REPRESENTATION_TYPES, s, cfk_none, cfk_none);
 }
 
@@ -742,7 +742,7 @@ AclInheritance AclInheritanceFromString(char *string)
 
 static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
 
-enum cf_srv_policy Str2ServicePolicy(char *string)
+ServicePolicy ServicePolicyFromString(char *string)
 {
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, cfsrv_start, cfsrv_start);
 }

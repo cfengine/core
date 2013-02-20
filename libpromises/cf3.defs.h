@@ -1023,7 +1023,7 @@ enum signalnames
     cfa_segv
 };
 
-enum representations
+typedef enum
 {
     cfk_url,
     cfk_web,
@@ -1033,7 +1033,7 @@ enum representations
     cfk_image,
     cfk_portal,
     cfk_none
-};
+} KnowledgeRepresentation;
 
 typedef enum
 {
@@ -1302,7 +1302,7 @@ struct Occurrence_
     char *occurrence_context;
     char *locator;                 /* Promiser */
     char *bundle;
-    enum representations rep_type;
+    KnowledgeRepresentation rep_type;
     Rlist *represents;
     Rlist *about_topics;    
     Occurrence *next;
@@ -1759,7 +1759,7 @@ typedef struct
 
 /*************************************************************************/
 
-enum cf_srv_policy
+typedef enum
 {
     cfsrv_start,
     cfsrv_stop,
@@ -1767,14 +1767,14 @@ enum cf_srv_policy
     cfsrv_restart,
     cfsrv_reload,
     cfsrv_nostatus
-};
+} ServicePolicy;
 
 typedef struct
 {
     Rlist *service_depend;
     char *service_type;
     char *service_args;
-    enum cf_srv_policy service_policy;
+    ServicePolicy service_policy;
     char *service_autostart_policy;
     char *service_depend_chain;
     FnCall *service_method;

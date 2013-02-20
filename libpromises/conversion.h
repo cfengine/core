@@ -43,13 +43,8 @@ PackageAction PackageActionFromString(char *s);
 AclMethod AclMethodFromString(char *string);
 AclType AclTypeFromString(char *string);
 AclInheritance AclInheritanceFromString(char *string);
-
-
-
-enum cf_srv_policy Str2ServicePolicy(char *string);
-
-
-enum representations String2Representation(char *s);
+ServicePolicy ServicePolicyFromString(char *string);
+KnowledgeRepresentation KnowledgeRepresentationFromString(char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);

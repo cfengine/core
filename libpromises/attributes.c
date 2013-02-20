@@ -421,7 +421,7 @@ Services GetServicesConstraints(const Promise *pp)
     Services s;
 
     s.service_type = ConstraintGetRvalValue("service_type", pp, RVAL_TYPE_SCALAR);
-    s.service_policy = Str2ServicePolicy(ConstraintGetRvalValue("service_policy", pp, RVAL_TYPE_SCALAR));
+    s.service_policy = ServicePolicyFromString(ConstraintGetRvalValue("service_policy", pp, RVAL_TYPE_SCALAR));
     s.service_autostart_policy = ConstraintGetRvalValue("service_autostart_policy", pp, RVAL_TYPE_SCALAR);
     s.service_args = ConstraintGetRvalValue("service_args", pp, RVAL_TYPE_SCALAR);
     s.service_depend = PromiseGetConstraintAsList("service_dependencies", pp);

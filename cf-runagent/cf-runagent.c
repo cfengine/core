@@ -757,7 +757,6 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
 
         if ((sp = strstr(recvbuffer, CFD_TERMINATOR)) != NULL)
         {
-            fprintf(fp, "%s> !!\n\n", VPREFIX);
             break;
         }
 

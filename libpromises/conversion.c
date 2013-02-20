@@ -259,9 +259,9 @@ enum cflinktype String2LinkType(char *s)
 static const char *FILE_COMPARISON_TYPES[] =
 { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
 
-enum cfcomparison String2Comparison(char *s)
+FileComparator FileComparatorFromString(char *s)
 {
-    return FindTypeInArray(FILE_COMPARISON_TYPES, s, cfa_nocomparison, cfa_nocomparison);
+    return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
 static const char *REPRESENTATION_TYPES[] = 

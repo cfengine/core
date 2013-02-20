@@ -418,7 +418,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Destination file \"%s\" already exists\n", destfile);
 
-        if (attr.copy.compare == cfa_exists)
+        if (attr.copy.compare == FILE_COMPARATOR_EXISTS)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Existence only is promised, no copying required\n");
             return;
@@ -2647,8 +2647,8 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
     switch (attr.copy.compare)
     {
-    case cfa_checksum:
-    case cfa_hash:
+    case FILE_COMPARATOR_CHECKSUM:
+    case FILE_COMPARATOR_HASH:
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
@@ -2668,7 +2668,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
         }
         break;
 
-    case cfa_binary:
+    case FILE_COMPARATOR_BINARY:
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
@@ -2688,7 +2688,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
         }
         break;
 
-    case cfa_mtime:
+    case FILE_COMPARATOR_MTIME:
 
         ok_to_copy = (dsb->st_mtime < ssb->st_mtime);
 
@@ -2699,7 +2699,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
         }
         break;
 
-    case cfa_atime:
+    case FILE_COMPARATOR_ATIME:
 
         ok_to_copy = (dsb->st_ctime < ssb->st_ctime) ||
             (dsb->st_mtime < ssb->st_mtime) || (CompareBinaryFiles(sourcefile, destfile, ssb, dsb, attr, pp));

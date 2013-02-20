@@ -123,7 +123,7 @@ Attributes GetFilesAttributes(const Promise *pp)
 
     if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havecopy))
     {
-        if (((attr.copy.compare) != (cfa_checksum)) && ((attr.copy.compare) != cfa_hash))
+        if (((attr.copy.compare) != (FILE_COMPARATOR_CHECKSUM)) && ((attr.copy.compare) != FILE_COMPARATOR_HASH))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
@@ -906,7 +906,7 @@ FileCopy GetCopyConstraints(const Promise *pp)
         value = DEFAULT_COPYTYPE;
     }
 
-    f.compare = String2Comparison(value);
+    f.compare = FileComparatorFromString(value);
 
     value = (char *) ConstraintGetRvalValue("link_type", pp, RVAL_TYPE_SCALAR);
 

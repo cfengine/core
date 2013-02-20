@@ -34,6 +34,7 @@ InsertMatchType InsertMatchTypeFromString(char *s);
 Interval IntervalFromString(char *s);
 DatabaseType DatabaseTypeFromString(char *s);
 OutputLevel OutputLevelFromString(char *level);
+FileComparator FileComparatorFromString(char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -46,7 +47,7 @@ int SyslogPriority2Int(char *s);
 char *Rlist2String(Rlist *list, char *sep);
 int Signal2Int(char *s);
 
-enum cfcomparison String2Comparison(char *s);
+
 enum cflinktype String2LinkType(char *s);
 DataType Typename2Datatype(char *name);
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp);

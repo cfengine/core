@@ -927,17 +927,17 @@ enum cfdatetemplate
     cfa_sec
 };
 
-enum cfcomparison
+typedef enum
 {
-    cfa_atime,
-    cfa_mtime,
-    cfa_ctime,
-    cfa_checksum,
-    cfa_hash,
-    cfa_binary,
-    cfa_exists,
-    cfa_nocomparison
-};
+    FILE_COMPARATOR_ATIME,
+    FILE_COMPARATOR_MTIME,
+    FILE_COMPARATOR_CTIME,
+    FILE_COMPARATOR_CHECKSUM,
+    FILE_COMPARATOR_HASH,
+    FILE_COMPARATOR_BINARY,
+    FILE_COMPARATOR_EXISTS,
+    FILE_COMPARATOR_NONE
+} FileComparator;
 
 enum cflinktype
 {
@@ -1390,7 +1390,7 @@ typedef struct
 {
     char *source;
     char *destination;
-    enum cfcomparison compare;
+    FileComparator compare;
     enum cflinktype link_type;
     Rlist *servers;
     Rlist *link_instead;

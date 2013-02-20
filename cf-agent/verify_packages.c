@@ -69,7 +69,7 @@ static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chkli
 static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, Promise *pp);
 static int PrependListPackageItem(PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp);
 
-static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa, PackageActionPolicy x);
+static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, PackageAction pa, PackageActionPolicy x);
 static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
@@ -151,7 +151,7 @@ void VerifyPackagesPromise(Promise *pp)
 
     switch (a.packages.package_policy)
     {
-    case cfa_patch:
+    case PACKAGE_ACTION_PATCH:
         VerifyPromisedPatch(a, pp);
         break;
 
@@ -263,7 +263,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         return false;
     }
 
-    if (a.packages.package_policy == cfa_verifypack)
+    if (a.packages.package_policy == PACKAGE_ACTION_VERIFY)
     {
         if (!a.packages.package_verify_command)
         {
@@ -565,7 +565,7 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
 
 static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *default_arch, Attributes a, Promise *pp)
 {
-    PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, cfa_pa_none, PACKAGE_ACTION_POLICY_NONE);
+    PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, PACKAGE_ACTION_NONE, PACKAGE_ACTION_POLICY_NONE);
     char vbuff[CF_BUFSIZE];
 
     if (manager == NULL)
@@ -829,7 +829,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
     char id[CF_EXPANDSIZE];
     char *pathName = NULL;
     int package_select_in_range = false;
-    enum package_actions policy;
+    PackageAction policy;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking if package (%s,%s,%s) is at the desired state (installed=%d,matched=%d)",
           name, version, arch, installed, matched);
@@ -843,7 +843,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         NewScalar("cf_pack_context", "version", version, DATA_TYPE_STRING);
         NewScalar("cf_pack_context", "arch", arch, DATA_TYPE_STRING);
 
-        if ((a.packages.package_delete_convention) && (a.packages.package_policy == cfa_deletepack))
+        if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
             ExpandScalar(a.packages.package_delete_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
@@ -882,21 +882,21 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
 
     policy = a.packages.package_policy;
 
-    if (policy == cfa_addupdate)
+    if (policy == PACKAGE_ACTION_ADDUPDATE)
     {
         if (!installed)
         {
-            policy = cfa_addpack;
+            policy = PACKAGE_ACTION_ADD;
         }
         else
         {
-            policy = cfa_update;
+            policy = PACKAGE_ACTION_UPDATE;
         }
     }
 
     switch (policy)
     {
-    case cfa_addpack:
+    case PACKAGE_ACTION_ADD:
 
         if (installed == 0)
         {
@@ -934,7 +934,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
                 return;
             }
             manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, cfa_addpack,
+                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                   a.packages.package_changes);
             PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
         }
@@ -945,7 +945,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         }
         break;
 
-    case cfa_deletepack:
+    case PACKAGE_ACTION_DELETE:
 
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
@@ -982,7 +982,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             }
 
             manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, cfa_deletepack,
+                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                   a.packages.package_changes);
             PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
         }
@@ -992,7 +992,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         }
         break;
 
-    case cfa_reinstall:
+    case PACKAGE_ACTION_REINSTALL:
         if (a.packages.package_delete_command == NULL)
         {
             cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a, "Package delete command undefined");
@@ -1010,12 +1010,12 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             if ((matched && package_select_in_range) || (installed && no_version_specified))
             {
                 manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, cfa_deletepack,
+                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                       a.packages.package_changes);
                 PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
             }
             manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, cfa_addpack,
+                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                   a.packages.package_changes);
             PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
         }
@@ -1027,7 +1027,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
 
         break;
 
-    case cfa_update:
+    case PACKAGE_ACTION_UPDATE:
 
         *instVer = '\0';
         *instArch = '\0';
@@ -1125,12 +1125,12 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
                     return;
                 }
                 manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, cfa_deletepack,
+                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                       a.packages.package_changes);
                 PrependPackageItem(&(manager->pack_list), id_del, "any", "any", a, pp);
 
                 manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, cfa_addpack,
+                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                       a.packages.package_changes);
                 PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
             }
@@ -1138,7 +1138,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for update\n");
                 manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_update_command, cfa_update,
+                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_update_command, PACKAGE_ACTION_UPDATE,
                                       a.packages.package_changes);
                 PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
             }
@@ -1150,13 +1150,13 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         }
         break;
 
-    case cfa_patch:
+    case PACKAGE_ACTION_PATCH:
 
         if (matched && (!installed))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for patching\n");
             manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_patch_command, cfa_patch,
+                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_patch_command, PACKAGE_ACTION_PATCH,
                                   a.packages.package_changes);
             PrependPackageItem(&(manager->patch_list), id, "any", "any", a, pp);
         }
@@ -1167,13 +1167,13 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         }
         break;
 
-    case cfa_verifypack:
+    case PACKAGE_ACTION_VERIFY:
 
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for verification\n");
             manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_verify_command, cfa_verifypack,
+                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY,
                                   a.packages.package_changes);
             PrependPackageItem(&(manager->pack_list), id, "any", "any", a, pp);
         }
@@ -1290,18 +1290,18 @@ static VersionCmpResult PackageMatch(const char *n, const char *v, const char *a
 static int VersionCheckSchedulePackage(Attributes a, Promise *pp, int matches, int installed)
 {
 /* The meaning of matches and installed depends on the package policy */
-    enum package_actions policy = a.packages.package_policy;
+    PackageAction policy = a.packages.package_policy;
 
     switch (policy)
     {
-    case cfa_deletepack:
+    case PACKAGE_ACTION_DELETE:
         if (matches && installed)
         {
             return true;
         }
         break;
 
-    case cfa_reinstall:
+    case PACKAGE_ACTION_REINSTALL:
         if (matches && installed)
         {
             return true;
@@ -1534,7 +1534,7 @@ static void InvalidateSoftwareCache(void)
     }
 }
 
-static int ExecuteSchedule(PackageManager *schedule, enum package_actions action)
+static int ExecuteSchedule(PackageManager *schedule, PackageAction action)
 {
     PackageItem *pi;
     PackageManager *pm;
@@ -1587,7 +1587,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
         switch (action)
         {
-        case cfa_addpack:
+        case PACKAGE_ACTION_ADD:
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Execute scheduled package addition");
 
@@ -1603,7 +1603,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
             strcpy(command_string, a.packages.package_add_command);
             break;
 
-        case cfa_deletepack:
+        case PACKAGE_ACTION_DELETE:
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Execute scheduled package deletion");
 
@@ -1619,7 +1619,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
             strcpy(command_string, a.packages.package_delete_command);
             break;
 
-        case cfa_update:
+        case PACKAGE_ACTION_UPDATE:
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Execute scheduled package update");
 
@@ -1636,7 +1636,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
             break;
 
-        case cfa_verifypack:
+        case PACKAGE_ACTION_VERIFY:
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Execute scheduled package verification");
 
@@ -1689,7 +1689,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
                     char *sp, *offset = command_string + strlen(command_string);
 
-                    if ((a.packages.package_file_repositories) && ((action == cfa_addpack) || (action == cfa_update)))
+                    if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                     {
                         if ((sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name)) != NULL)
                         {
@@ -1729,7 +1729,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                     {
                         char *sp, *offset = command_string + strlen(command_string);
 
-                        if ((a.packages.package_file_repositories) && ((action == cfa_addpack) || (action == cfa_update)))
+                        if ((a.packages.package_file_repositories) && ((action == PACKAGE_ACTION_ADD) || (action == PACKAGE_ACTION_UPDATE)))
                         {
                             if ((sp = PrefixLocalRepository(a.packages.package_file_repositories, pi->name)) != NULL)
                             {
@@ -1785,7 +1785,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
     return retval;
 }
 
-static int ExecutePatch(PackageManager *schedule, enum package_actions action)
+static int ExecutePatch(PackageManager *schedule, PackageAction action)
 {
     PackageItem *pi;
     PackageManager *pm;
@@ -1837,7 +1837,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action)
 
         switch (action)
         {
-        case cfa_patch:
+        case PACKAGE_ACTION_PATCH:
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Execute scheduled package patch");
 
@@ -1963,7 +1963,7 @@ static void ExecutePackageSchedule(PackageManager *schedule)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Deletion schedule...\n");
 
-    if (!ExecuteSchedule(schedule, cfa_deletepack))
+    if (!ExecuteSchedule(schedule, PACKAGE_ACTION_DELETE))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Aborting package schedule");
         return;
@@ -1971,28 +1971,28 @@ static void ExecutePackageSchedule(PackageManager *schedule)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Addition schedule...\n");
 
-    if (!ExecuteSchedule(schedule, cfa_addpack))
+    if (!ExecuteSchedule(schedule, PACKAGE_ACTION_ADD))
     {
         return;
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Update schedule...\n");
 
-    if (!ExecuteSchedule(schedule, cfa_update))
+    if (!ExecuteSchedule(schedule, PACKAGE_ACTION_UPDATE))
     {
         return;
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Patch schedule...\n");
 
-    if (!ExecutePatch(schedule, cfa_patch))
+    if (!ExecutePatch(schedule, PACKAGE_ACTION_PATCH))
     {
         return;
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verify schedule...\n");
 
-    if (!ExecuteSchedule(schedule, cfa_verifypack))
+    if (!ExecuteSchedule(schedule, PACKAGE_ACTION_VERIFY))
     {
         return;
     }
@@ -2018,7 +2018,7 @@ void CleanScheduledPackages(void)
 
 /** Utils **/
 
-static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa,
+static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, PackageAction pa,
                                          PackageActionPolicy policy)
 {
     PackageManager *np;

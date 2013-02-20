@@ -1078,7 +1078,7 @@ ContextConstraint GetContextConstraints(const Promise *pp)
 Packages GetPackageConstraints(const Promise *pp)
 {
     Packages p;
-    enum package_actions action;
+    PackageAction action;
     PackageVersionComparator operator;
     PackageActionPolicy change_policy;
 
@@ -1086,12 +1086,12 @@ Packages GetPackageConstraints(const Promise *pp)
     p.package_version = (char *) ConstraintGetRvalValue("package_version", pp, RVAL_TYPE_SCALAR);
     p.package_architectures = PromiseGetConstraintAsList("package_architectures", pp);
 
-    action = Str2PackageAction((char *) ConstraintGetRvalValue("package_policy", pp, RVAL_TYPE_SCALAR));
+    action = PackageActionFromString((char *) ConstraintGetRvalValue("package_policy", pp, RVAL_TYPE_SCALAR));
     p.package_policy = action;
 
-    if (p.package_policy == cfa_pa_none)        // Default action => package add
+    if (p.package_policy == PACKAGE_ACTION_NONE)        // Default action => package add
     {
-        p.package_policy = cfa_addpack;
+        p.package_policy = PACKAGE_ACTION_ADD;
     }
 
     operator = PackageVersionComparatorFromString((char *) ConstraintGetRvalValue("package_select", pp, RVAL_TYPE_SCALAR));

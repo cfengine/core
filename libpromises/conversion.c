@@ -145,9 +145,9 @@ DatabaseType DatabaseTypeFromString(char *s)
 static const char *PACKAGE_ACTION_TYPES[] =
 { "add", "delete", "reinstall", "update", "addupdate", "patch", "verify", NULL };
 
-enum package_actions Str2PackageAction(char *s)
+PackageAction PackageActionFromString(char *s)
 {
-    return FindTypeInArray(PACKAGE_ACTION_TYPES, s, cfa_pa_none, cfa_pa_none);
+    return FindTypeInArray(PACKAGE_ACTION_TYPES, s, PACKAGE_ACTION_NONE, PACKAGE_ACTION_NONE);
 }
 
 static const char *PACKAGE_SELECT_TYPES[] = { "==", "!=", ">", "<", ">=", "<=", NULL };

@@ -1035,17 +1035,17 @@ enum representations
     cfk_none
 };
 
-enum package_actions
+typedef enum
 {
-    cfa_addpack,
-    cfa_deletepack,
-    cfa_reinstall,
-    cfa_update,
-    cfa_addupdate,
-    cfa_patch,
-    cfa_verifypack,
-    cfa_pa_none
-};
+    PACKAGE_ACTION_ADD,
+    PACKAGE_ACTION_DELETE,
+    PACKAGE_ACTION_REINSTALL,
+    PACKAGE_ACTION_UPDATE,
+    PACKAGE_ACTION_ADDUPDATE,
+    PACKAGE_ACTION_PATCH,
+    PACKAGE_ACTION_VERIFY,
+    PACKAGE_ACTION_NONE
+} PackageAction;
 
 typedef enum
 {
@@ -1363,7 +1363,7 @@ typedef struct PackageManager_ PackageManager;
 struct PackageManager_
 {
     char *manager;
-    enum package_actions action;
+    PackageAction action;
     PackageActionPolicy policy;
     PackageItem *pack_list;
     PackageItem *patch_list;
@@ -1672,7 +1672,7 @@ typedef struct
 
 typedef struct
 {
-    enum package_actions package_policy;
+    PackageAction package_policy;
     int have_package_methods;
     char *package_version;
     Rlist *package_architectures;

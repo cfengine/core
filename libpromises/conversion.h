@@ -28,23 +28,23 @@
 
 #include "cf3.defs.h"
 
-MeasurePolicy MeasurePolicyFromString(char *s);
-EnvironmentState EnvironmentStateFromString(char *s);
-InsertMatchType InsertMatchTypeFromString(char *s);
-Interval IntervalFromString(char *s);
-DatabaseType DatabaseTypeFromString(char *s);
-OutputLevel OutputLevelFromString(char *level);
-FileComparator FileComparatorFromString(char *s);
-FileLinkType FileLinkTypeFromString(char *s);
-DataType DataTypeFromString(char *name);
-PackageActionPolicy PackageActionPolicyFromString(char *s);
-PackageVersionComparator PackageVersionComparatorFromString(char *s);
-PackageAction PackageActionFromString(char *s);
-AclMethod AclMethodFromString(char *string);
-AclType AclTypeFromString(char *string);
-AclInheritance AclInheritanceFromString(char *string);
-ServicePolicy ServicePolicyFromString(char *string);
-KnowledgeRepresentation KnowledgeRepresentationFromString(char *s);
+MeasurePolicy MeasurePolicyFromString(const char *s);
+EnvironmentState EnvironmentStateFromString(const char *s);
+InsertMatchType InsertMatchTypeFromString(const char *s);
+Interval IntervalFromString(const char *s);
+DatabaseType DatabaseTypeFromString(const char *s);
+OutputLevel OutputLevelFromString(const char *level);
+FileComparator FileComparatorFromString(const char *s);
+FileLinkType FileLinkTypeFromString(const char *s);
+DataType DataTypeFromString(const char *name);
+PackageActionPolicy PackageActionPolicyFromString(const char *s);
+PackageVersionComparator PackageVersionComparatorFromString(const char *s);
+PackageAction PackageActionFromString(const char *s);
+AclMethod AclMethodFromString(const char *string);
+AclType AclTypeFromString(const char *string);
+AclInheritance AclInheritanceFromString(const char *string);
+ServicePolicy ServicePolicyFromString(const char *string);
+KnowledgeRepresentation KnowledgeRepresentationFromString(const char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -52,7 +52,7 @@ long Months2Seconds(int m);
 
 
 
-int SyslogPriority2Int(char *s);
+int SyslogPriority2Int(const char *s);
 
 char *Rlist2String(Rlist *list, char *sep);
 int Signal2Int(char *s);

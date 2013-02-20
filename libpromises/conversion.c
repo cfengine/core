@@ -104,22 +104,21 @@ int FindTypeInArray(const char **haystack, const char *needle, int default_value
     return default_value;
 }
 
-
-static const char *MEASURE_POLICY_TYPES[] = { "average", "sum", "first", "last",  NULL };
-
-MeasurePolicy MeasurePolicyFromString(char *s)
+MeasurePolicy MeasurePolicyFromString(const char *s)
 {
+    static const char *MEASURE_POLICY_TYPES[] = { "average", "sum", "first", "last",  NULL };
+
     return FindTypeInArray(MEASURE_POLICY_TYPES, s, MEASURE_POLICY_AVERAGE, MEASURE_POLICY_NONE);
 }
 
-static const char *ENV_STATE_TYPES[] = { "create", "delete", "running", "suspended", "down", NULL };
-
-EnvironmentState EnvironmentStateFromString(char *s)
+EnvironmentState EnvironmentStateFromString(const char *s)
 {
+    static const char *ENV_STATE_TYPES[] = { "create", "delete", "running", "suspended", "down", NULL };
+
     return FindTypeInArray(ENV_STATE_TYPES, s, ENVIRONMENT_STATE_NONE, ENVIRONMENT_STATE_CREATE);
 }
 
-InsertMatchType InsertMatchTypeFromString(char *s)
+InsertMatchType InsertMatchTypeFromString(const char *s)
 {
     static const char *INSERT_MATCH_TYPES[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
                                                 "exact_match", NULL };
@@ -127,40 +126,40 @@ InsertMatchType InsertMatchTypeFromString(char *s)
     return FindTypeInArray(INSERT_MATCH_TYPES, s, INSERT_MATCH_TYPE_EXACT, INSERT_MATCH_TYPE_EXACT);
 }
 
-static const char *SYSLOG_PRIORITY_TYPES[] =
-{ "emergency", "alert", "critical", "error", "warning", "notice", "info", "debug", NULL };
-
-int SyslogPriority2Int(char *s)
+int SyslogPriority2Int(const char *s)
 {
+    static const char *SYSLOG_PRIORITY_TYPES[] =
+    { "emergency", "alert", "critical", "error", "warning", "notice", "info", "debug", NULL };
+
     return FindTypeInArray(SYSLOG_PRIORITY_TYPES, s, 3, 3);
 }
 
-static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
-
-DatabaseType DatabaseTypeFromString(char *s)
+DatabaseType DatabaseTypeFromString(const char *s)
 {
+    static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
+
     return FindTypeInArray(DB_TYPES, s, cfd_notype, cfd_notype);
 }
 
-static const char *PACKAGE_ACTION_TYPES[] =
-{ "add", "delete", "reinstall", "update", "addupdate", "patch", "verify", NULL };
-
-PackageAction PackageActionFromString(char *s)
+PackageAction PackageActionFromString(const char *s)
 {
+    static const char *PACKAGE_ACTION_TYPES[] =
+    { "add", "delete", "reinstall", "update", "addupdate", "patch", "verify", NULL };
+
     return FindTypeInArray(PACKAGE_ACTION_TYPES, s, PACKAGE_ACTION_NONE, PACKAGE_ACTION_NONE);
 }
 
-static const char *PACKAGE_SELECT_TYPES[] = { "==", "!=", ">", "<", ">=", "<=", NULL };
-
-PackageVersionComparator PackageVersionComparatorFromString(char *s)
+PackageVersionComparator PackageVersionComparatorFromString(const char *s)
 {
+    static const char *PACKAGE_SELECT_TYPES[] = { "==", "!=", ">", "<", ">=", "<=", NULL };
+
     return FindTypeInArray(PACKAGE_SELECT_TYPES, s, PACKAGE_VERSION_COMPARATOR_NONE, PACKAGE_VERSION_COMPARATOR_NONE);
 }
 
-static const char *ACTION_POLICY_TYPES[] = { "individual", "bulk", NULL };
-
-PackageActionPolicy PackageActionPolicyFromString(char *s)
+PackageActionPolicy PackageActionPolicyFromString(const char *s)
 {
+    static const char *ACTION_POLICY_TYPES[] = { "individual", "bulk", NULL };
+
     return FindTypeInArray(ACTION_POLICY_TYPES, s, PACKAGE_ACTION_POLICY_NONE, PACKAGE_ACTION_POLICY_NONE);
 }
 
@@ -242,29 +241,29 @@ int Signal2Int(char *s)
 
 }
 
-static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
-
-OutputLevel OutputLevelFromString(char *level)
+OutputLevel OutputLevelFromString(const char *level)
 {
+    static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
+
     return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
 }
 
-static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
-
-FileLinkType FileLinkTypeFromString(char *s)
+FileLinkType FileLinkTypeFromString(const char *s)
 {
+    static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
+
     return FindTypeInArray(LINK_TYPES, s, FILE_LINK_TYPE_SYMLINK, FILE_LINK_TYPE_SYMLINK);
 }
 
-static const char *FILE_COMPARISON_TYPES[] =
-{ "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
-
-FileComparator FileComparatorFromString(char *s)
+FileComparator FileComparatorFromString(const char *s)
 {
+    static const char *FILE_COMPARISON_TYPES[] =
+    { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
+
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-KnowledgeRepresentation KnowledgeRepresentationFromString(char *s)
+KnowledgeRepresentation KnowledgeRepresentationFromString(const char *s)
 {
     static const char *REPRESENTATION_TYPES[] =
     { "url", "web", "file", "db", "literal", "image", "portal", NULL };
@@ -272,7 +271,7 @@ KnowledgeRepresentation KnowledgeRepresentationFromString(char *s)
     return FindTypeInArray(REPRESENTATION_TYPES, s, cfk_none, cfk_none);
 }
 
-DataType DataTypeFromString(char *name)
+DataType DataTypeFromString(const char *name)
 /* convert abstract data type names: int, ilist etc */
 {
     int i;
@@ -526,10 +525,10 @@ long Months2Seconds(int m)
 
 /*********************************************************************/
 
-static const char *INTERVAL_TYPES[] = { "hourly", "daily", NULL };
-
-Interval IntervalFromString(char *string)
+Interval IntervalFromString(const char *string)
 {
+    static const char *INTERVAL_TYPES[] = { "hourly", "daily", NULL };
+
     return FindTypeInArray(INTERVAL_TYPES, string, INTERVAL_NONE, INTERVAL_NONE);
 }
 
@@ -660,31 +659,31 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
     *max = lmax;
 }
 
-static const char *ACL_METHOD_TYPES[] = { "append", "overwrite", NULL };
-
-AclMethod AclMethodFromString(char *string)
+AclMethod AclMethodFromString(const char *string)
 {
+    static const char *ACL_METHOD_TYPES[] = { "append", "overwrite", NULL };
+
     return FindTypeInArray(ACL_METHOD_TYPES, string, ACL_METHOD_NONE, ACL_METHOD_NONE);
 }
 
-static const char *ACL_TYPES[]= { "generic", "posix", "ntfs", NULL };
-
-AclType AclTypeFromString(char *string)
+AclType AclTypeFromString(const char *string)
 {
+    static const char *ACL_TYPES[]= { "generic", "posix", "ntfs", NULL };
+
     return FindTypeInArray(ACL_TYPES, string, ACL_TYPE_NONE, ACL_TYPE_NONE);
 }
 
-static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
-
-AclInheritance AclInheritanceFromString(char *string)
+AclInheritance AclInheritanceFromString(const char *string)
 {
+    static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
+
     return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_INHERITANCE_NONE, ACL_INHERITANCE_NONE);
 }
 
-static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
-
-ServicePolicy ServicePolicyFromString(char *string)
+ServicePolicy ServicePolicyFromString(const char *string)
 {
+    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
+
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, cfsrv_start, cfsrv_start);
 }
 

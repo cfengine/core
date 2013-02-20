@@ -61,7 +61,6 @@ int Signal2Int(char *s);
 
 
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp);
-enum cfsbundle Type2Cfs(char *name);
 
 int GetBoolean(const char *val);
 long Str2Int(const char *s);

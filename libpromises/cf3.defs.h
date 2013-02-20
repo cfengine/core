@@ -679,14 +679,6 @@ enum cfexcontrol
     cfex_notype,
 };
 
-/*************************************************************************/
-
-enum cfsbundle
-{
-    cfs_access,
-    cfs_nobtype
-};
-
 typedef enum
 {
     OUTPUT_LEVEL_INFORM,

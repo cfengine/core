@@ -272,25 +272,6 @@ KnowledgeRepresentation KnowledgeRepresentationFromString(char *s)
     return FindTypeInArray(REPRESENTATION_TYPES, s, cfk_none, cfk_none);
 }
 
-/****************************************************************************/
-
-enum cfsbundle Type2Cfs(char *name)
-{
-    int i;
-
-    for (i = 0; i < (int) cfs_nobtype; i++)
-    {
-        if (name && (strcmp(CF_REMACCESS_SUBTYPES[i].subtype, name) == 0))
-        {
-            break;
-        }
-    }
-
-    return (enum cfsbundle) i;
-}
-
-/****************************************************************************/
-
 DataType DataTypeFromString(char *name)
 /* convert abstract data type names: int, ilist etc */
 {

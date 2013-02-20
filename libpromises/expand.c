@@ -284,10 +284,6 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
                     qualified = false;
                 }
 
-                // Interlude for knowledge map creation add dependency
-
-                RegisterBundleDependence(absscope, pp);
-
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 

@@ -60,7 +60,7 @@ void ForceScalar(char *lval, char *rval)
 {
     Rval retval;
 
-    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT && THIS_AGENT_TYPE != AGENT_TYPE_KNOW)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
     {
         return;
     }

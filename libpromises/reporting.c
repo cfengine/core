@@ -250,6 +250,10 @@ void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, c
 
 void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent)
 {
+#if defined(HAVE_NOVA)
+    Nova_ShowPromise(context, type, NULL, pp, indent);
+#endif
+
     switch (type)
     {
     default:

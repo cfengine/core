@@ -157,7 +157,6 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
-        ShowTopicRepresentation(report_context);
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }
 
@@ -1317,9 +1316,8 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
     // TODO: need to move this inside PolicyCheckRunnable eventually.
     if (!config->bundlesequence && config->check_runnable)
     {
-        // only verify policy-defined bundlesequence for cf-agent, cf-know, cf-promises, cf-gendoc
+        // only verify policy-defined bundlesequence for cf-agent, cf-promises, cf-gendoc
         if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
-            (THIS_AGENT_TYPE == AGENT_TYPE_KNOW) ||
             (THIS_AGENT_TYPE == AGENT_TYPE_COMMON) ||
             (THIS_AGENT_TYPE == AGENT_TYPE_GENDOC))
         {

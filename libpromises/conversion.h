@@ -35,6 +35,7 @@ Interval IntervalFromString(char *s);
 DatabaseType DatabaseTypeFromString(char *s);
 OutputLevel OutputLevelFromString(char *level);
 FileComparator FileComparatorFromString(char *s);
+FileLinkType FileLinkTypeFromString(char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -48,7 +49,7 @@ char *Rlist2String(Rlist *list, char *sep);
 int Signal2Int(char *s);
 
 
-enum cflinktype String2LinkType(char *s);
+
 DataType Typename2Datatype(char *name);
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp);
 enum cfsbundle Type2Cfs(char *name);

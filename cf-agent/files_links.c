@@ -132,7 +132,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
     {
         int ok = false;
 
-        if ((attr.link.link_type == cfa_symlink) && (strcmp(linkbuf, to) != 0) && (strcmp(linkbuf, source) != 0))
+        if ((attr.link.link_type == FILE_LINK_TYPE_SYMLINK) && (strcmp(linkbuf, to) != 0) && (strcmp(linkbuf, source) != 0))
         {
             ok = true;
         }

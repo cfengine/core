@@ -218,7 +218,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
         return;
     }
 
-    if (attr.copy.link_type != cfa_notlinked)
+    if (attr.copy.link_type != FILE_LINK_TYPE_NONE)
     {
         lastnode = ReadLastNode(sourcefile);
 
@@ -248,10 +248,10 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
     if (found != -1)
     {
-        if (((S_ISLNK(dsb.st_mode)) && (attr.copy.link_type == cfa_notlinked))
+        if (((S_ISLNK(dsb.st_mode)) && (attr.copy.link_type == FILE_LINK_TYPE_NONE))
             || ((S_ISLNK(dsb.st_mode)) && (!S_ISLNK(ssb.st_mode))))
         {
-            if ((!S_ISLNK(ssb.st_mode)) && ((attr.copy.type_check) && (attr.copy.link_type != cfa_notlinked)))
+            if ((!S_ISLNK(ssb.st_mode)) && ((attr.copy.type_check) && (attr.copy.link_type != FILE_LINK_TYPE_NONE)))
             {
                 cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr,
                      "file image exists but destination type is silly (file/dir/link doesn't match)\n");
@@ -300,7 +300,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             return;
         }
 
-        if ((S_ISREG(srcmode)) || ((S_ISLNK(srcmode)) && (attr.copy.link_type == cfa_notlinked)))
+        if ((S_ISREG(srcmode)) || ((S_ISLNK(srcmode)) && (attr.copy.link_type == FILE_LINK_TYPE_NONE)))
         {
             if (DONTDO)
             {
@@ -321,7 +321,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 }
             }
 
-            if ((S_ISLNK(srcmode)) && (attr.copy.link_type != cfa_notlinked))
+            if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> %s is a symbolic link\n", sourcefile);
                 LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
@@ -407,7 +407,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 #endif /* !__MINGW32__ */
         }
 
-        if ((S_ISLNK(srcmode)) && (attr.copy.link_type != cfa_notlinked))
+        if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
         {
             LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
         }
@@ -433,7 +433,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             ok_to_copy = true;
         }
 
-        if ((attr.copy.type_check) && (attr.copy.link_type != cfa_notlinked))
+        if ((attr.copy.type_check) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
         {
             if (((S_ISDIR(dsb.st_mode)) && (!S_ISDIR(ssb.st_mode))) ||
                 ((S_ISREG(dsb.st_mode)) && (!S_ISREG(ssb.st_mode))) ||
@@ -459,7 +459,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
         if ((attr.copy.force_update) || ok_to_copy || (S_ISLNK(ssb.st_mode)))       /* Always check links */
         {
-            if ((S_ISREG(srcmode)) || (attr.copy.link_type == cfa_notlinked))
+            if ((S_ISREG(srcmode)) || (attr.copy.link_type == FILE_LINK_TYPE_NONE))
             {
                 if (DONTDO)
                 {
@@ -750,7 +750,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
             return;
         }
 
-        if ((attr.recursion.travlinks) || (attr.copy.link_type == cfa_notlinked))
+        if ((attr.recursion.travlinks) || (attr.copy.link_type == FILE_LINK_TYPE_NONE))
         {
             /* No point in checking if there are untrusted symlinks here,
                since this is from a trusted source, by defintion */
@@ -868,7 +868,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
 
     CfDebug("VerifyCopy (source=%s destination=%s)\n", source, destination);
 
-    if (attr.copy.link_type == cfa_notlinked)
+    if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
     {
         CfDebug("Treating links as files for %s\n", source);
         found = cf_stat(source, &ssb, attr, pp);
@@ -936,7 +936,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
                 FatalError("VerifyCopy");
             }
 
-            if (attr.copy.link_type == cfa_notlinked)
+            if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
             {
                 if (cf_stat(sourcefile, &ssb, attr, pp) == -1)
                 {
@@ -996,7 +996,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking link from %s to %s\n", destfile, linkbuf);
 
-        if ((attr.copy.link_type == cfa_absolute) && (!IsAbsoluteFileName(linkbuf)))        /* Not absolute path - must fix */
+        if ((attr.copy.link_type == FILE_LINK_TYPE_ABSOLUTE) && (!IsAbsoluteFileName(linkbuf)))        /* Not absolute path - must fix */
         {
             char vbuff[CF_BUFSIZE];
 
@@ -1028,7 +1028,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 
     switch (attr.copy.link_type)
     {
-    case cfa_symlink:
+    case FILE_LINK_TYPE_SYMLINK:
 
         if (*linkbuf == '.')
         {
@@ -1040,15 +1040,15 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
         }
         break;
 
-    case cfa_relative:
+    case FILE_LINK_TYPE_RELATIVE:
         status = VerifyRelativeLink(destfile, linkbuf, attr, pp, report_context);
         break;
 
-    case cfa_absolute:
+    case FILE_LINK_TYPE_ABSOLUTE:
         status = VerifyAbsoluteLink(destfile, linkbuf, attr, pp, report_context);
         break;
 
-    case cfa_hardlink:
+    case FILE_LINK_TYPE_HARDLINK:
         status = VerifyHardLink(destfile, linkbuf, attr, pp, report_context);
         break;
 
@@ -2471,16 +2471,16 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
 
     switch (attr.link.link_type)
     {
-    case cfa_symlink:
+    case FILE_LINK_TYPE_SYMLINK:
         VerifyLink(destination, source, attr, pp, report_context);
         break;
-    case cfa_hardlink:
+    case FILE_LINK_TYPE_HARDLINK:
         VerifyHardLink(destination, source, attr, pp, report_context);
         break;
-    case cfa_relative:
+    case FILE_LINK_TYPE_RELATIVE:
         VerifyRelativeLink(destination, source, attr, pp, report_context);
         break;
-    case cfa_absolute:
+    case FILE_LINK_TYPE_ABSOLUTE:
         VerifyAbsoluteLink(destination, source, attr, pp, report_context);
         break;
     default:

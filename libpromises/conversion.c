@@ -251,9 +251,9 @@ OutputLevel OutputLevelFromString(char *level)
 
 static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
 
-enum cflinktype String2LinkType(char *s)
+FileLinkType FileLinkTypeFromString(char *s)
 {
-    return FindTypeInArray(LINK_TYPES, s, cfa_symlink, cfa_symlink);
+    return FindTypeInArray(LINK_TYPES, s, FILE_LINK_TYPE_SYMLINK, FILE_LINK_TYPE_SYMLINK);
 }
 
 static const char *FILE_COMPARISON_TYPES[] =

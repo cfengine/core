@@ -939,14 +939,14 @@ typedef enum
     FILE_COMPARATOR_NONE
 } FileComparator;
 
-enum cflinktype
+typedef enum
 {
-    cfa_symlink,
-    cfa_hardlink,
-    cfa_relative,
-    cfa_absolute,
-    cfa_notlinked
-};
+    FILE_LINK_TYPE_SYMLINK,
+    FILE_LINK_TYPE_HARDLINK,
+    FILE_LINK_TYPE_RELATIVE,
+    FILE_LINK_TYPE_ABSOLUTE,
+    FILE_LINK_TYPE_NONE
+} FileLinkType;
 
 enum cfopaction
 {
@@ -1391,7 +1391,7 @@ typedef struct
     char *source;
     char *destination;
     FileComparator compare;
-    enum cflinktype link_type;
+    FileLinkType link_type;
     Rlist *servers;
     Rlist *link_instead;
     Rlist *copy_links;
@@ -1495,7 +1495,7 @@ typedef struct
 typedef struct
 {
     char *source;
-    enum cflinktype link_type;
+    FileLinkType link_type;
     Rlist *copy_patterns;
     enum cfnofile when_no_file;
     enum cflinkchildren when_linking_children;

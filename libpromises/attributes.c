@@ -910,7 +910,7 @@ FileCopy GetCopyConstraints(const Promise *pp)
 
     value = (char *) ConstraintGetRvalValue("link_type", pp, RVAL_TYPE_SCALAR);
 
-    f.link_type = String2LinkType(value);
+    f.link_type = FileLinkTypeFromString(value);
     f.servers = PromiseGetConstraintAsList("servers", pp);
     f.portnumber = (short) PromiseGetConstraintAsInt("portnumber", pp);
     f.timeout = (short) PromiseGetConstraintAsInt("timeout", pp);
@@ -964,7 +964,7 @@ FileLink GetLinkConstraints(const Promise *pp)
 
     f.source = (char *) ConstraintGetRvalValue("source", pp, RVAL_TYPE_SCALAR);
     value = (char *) ConstraintGetRvalValue("link_type", pp, RVAL_TYPE_SCALAR);
-    f.link_type = String2LinkType(value);
+    f.link_type = FileLinkTypeFromString(value);
     f.copy_patterns = PromiseGetConstraintAsList("copy_patterns", pp);
 
     value = (char *) ConstraintGetRvalValue("when_no_source", pp, RVAL_TYPE_SCALAR);

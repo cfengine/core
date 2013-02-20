@@ -1679,7 +1679,7 @@ Measurement GetMeasurementConstraint(const Promise *pp)
     m.history_type = ConstraintGetRvalValue("history_type", pp, RVAL_TYPE_SCALAR);
     m.select_line_matching = ConstraintGetRvalValue("select_line_matching", pp, RVAL_TYPE_SCALAR);
     m.select_line_number = PromiseGetConstraintAsInt("select_line_number", pp);
-    m.policy = MeasurePolicy2Value(ConstraintGetRvalValue("select_multiline_policy", pp, RVAL_TYPE_SCALAR));
+    m.policy = MeasurePolicyFromString(ConstraintGetRvalValue("select_multiline_policy", pp, RVAL_TYPE_SCALAR));
     
     m.extraction_regex = ConstraintGetRvalValue("extraction_regex", pp, RVAL_TYPE_SCALAR);
     m.units = ConstraintGetRvalValue("units", pp, RVAL_TYPE_SCALAR);

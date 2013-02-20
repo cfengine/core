@@ -107,9 +107,9 @@ static int FindTypeInArray(const char **haystack, const char *needle, int defaul
 
 static const char *MEASURE_POLICY_TYPES[] = { "average", "sum", "first", "last",  NULL };
 
-enum cfmeasurepolicy MeasurePolicy2Value(char *s)
+MeasurePolicy MeasurePolicyFromString(char *s)
 {
-    return FindTypeInArray(MEASURE_POLICY_TYPES, s, cfm_average, cfm_nomeasure);
+    return FindTypeInArray(MEASURE_POLICY_TYPES, s, MEASURE_POLICY_AVERAGE, MEASURE_POLICY_NONE);
 }
 
 static const char *ENV_STATE_TYPES[] = { "create", "delete", "running", "suspended", "down", NULL };

@@ -30,7 +30,7 @@
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
-enum cfmeasurepolicy MeasurePolicy2Value(char *s);
+MeasurePolicy MeasurePolicyFromString(char *s);
 enum cfenvironment_state Str2EnvState(char *s);
 InsertMatchType String2InsertMatch(char *s);
 long Months2Seconds(int m);

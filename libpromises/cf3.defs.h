@@ -1722,20 +1722,20 @@ typedef struct
 
 /*************************************************************************/
 
-enum cfmeasurepolicy
+typedef enum
 {
-    cfm_average,
-    cfm_sum,
-    cfm_first,
-    cfm_last,
-    cfm_nomeasure
-};
+    MEASURE_POLICY_AVERAGE,
+    MEASURE_POLICY_SUM,
+    MEASURE_POLICY_FIRST,
+    MEASURE_POLICY_LAST,
+    MEASURE_POLICY_NONE
+} MeasurePolicy;
 
 typedef struct
 {
     char *stream_type;
     DataType data_type;
-    enum cfmeasurepolicy policy;
+    MeasurePolicy policy;
     char *history_type;
     char *select_line_matching;
     int select_line_number;

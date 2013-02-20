@@ -601,6 +601,7 @@ bool IsProcessNameRunning(char *procNameRegex)
     int start[CF_PROCCOLS] = { 0 };
     int end[CF_PROCCOLS] = { 0 };
     bool matched = false;
+    int i;
 
     if (PROCESSTABLE == NULL)
     {
@@ -630,6 +631,20 @@ bool IsProcessNameRunning(char *procNameRegex)
             matched = true;
             break;
         }
+
+        i = 0;
+        while (lineSplit[i] != NULL)
+        {
+            free(lineSplit[i]);
+            i++;
+        }
+    }
+
+    i = 0;
+    while (colHeaders[i] != NULL)
+    {
+        free(colHeaders[i]);
+        i++;
     }
 
     return matched;

@@ -721,23 +721,23 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
 static const char *ACL_METHOD_TYPES[] = { "append", "overwrite", NULL };
 
-enum cf_acl_method Str2AclMethod(char *string)
+AclMethod AclMethodFromString(char *string)
 {
-    return FindTypeInArray(ACL_METHOD_TYPES, string, cfacl_nomethod, cfacl_nomethod);
+    return FindTypeInArray(ACL_METHOD_TYPES, string, ACL_METHOD_NONE, ACL_METHOD_NONE);
 }
 
 static const char *ACL_TYPES[]= { "generic", "posix", "ntfs", NULL };
 
-enum cf_acl_type Str2AclType(char *string)
+AclType AclTypeFromString(char *string)
 {
-    return FindTypeInArray(ACL_TYPES, string, cfacl_notype, cfacl_notype);
+    return FindTypeInArray(ACL_TYPES, string, ACL_TYPE_NONE, ACL_TYPE_NONE);
 }
 
 static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
 
-enum cf_acl_inherit Str2AclInherit(char *string)
+AclInheritance AclInheritanceFromString(char *string)
 {
-    return FindTypeInArray(ACL_INHERIT_TYPES, string, cfacl_noinherit, cfacl_noinherit);
+    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_INHERITANCE_NONE, ACL_INHERITANCE_NONE);
 }
 
 static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };

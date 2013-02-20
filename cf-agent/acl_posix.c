@@ -47,10 +47,10 @@
 
 #ifdef HAVE_LIBACL
 
-static int CheckPosixLinuxAccessACEs(Rlist *aces, enum cf_acl_method method, char *file_path, Attributes a, Promise *pp);
-static int CheckPosixLinuxInheritACEs(Rlist *aces, enum cf_acl_method method, enum cf_acl_inherit directory_inherit,
+static int CheckPosixLinuxAccessACEs(Rlist *aces, AclMethod method, char *file_path, Attributes a, Promise *pp);
+static int CheckPosixLinuxInheritACEs(Rlist *aces, AclMethod method, AclInheritance directory_inherit,
                                     char *file_path, Attributes a, Promise *pp);
-static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *file_path, acl_type_t acl_type, Attributes a,
+static int CheckPosixLinuxACEs(Rlist *aces, AclMethod method, char *file_path, acl_type_t acl_type, Attributes a,
                              Promise *pp);
 static int CheckDefaultEqualsAccessACL(char *file_path, Attributes a, Promise *pp);
 static int CheckDefaultClearACL(char *file_path, Attributes a, Promise *pp);
@@ -84,34 +84,34 @@ int CheckPosixLinuxACL(char *file_path, Acl acl, Attributes a, Promise *pp)
     return true;
 }
 
-static int CheckPosixLinuxAccessACEs(Rlist *aces, enum cf_acl_method method, char *file_path, Attributes a, Promise *pp)
+static int CheckPosixLinuxAccessACEs(Rlist *aces, AclMethod method, char *file_path, Attributes a, Promise *pp)
 {
     return CheckPosixLinuxACEs(aces, method, file_path, ACL_TYPE_ACCESS, a, pp);
 }
 
-static int CheckPosixLinuxInheritACEs(Rlist *aces, enum cf_acl_method method, enum cf_acl_inherit directory_inherit,
+static int CheckPosixLinuxInheritACEs(Rlist *aces, AclMethod method, AclInheritance directory_inherit,
                                     char *file_path, Attributes a, Promise *pp)
 {
     int result;
 
     switch (directory_inherit)
     {
-    case cfacl_nochange:       // no change always succeeds
+    case ACL_INHERITANCE_NO_CHANGE:       // no change always succeeds
 
         result = true;
         break;
 
-    case cfacl_specify:        // default ALC is specified in promise
+    case ACL_INHERITANCE_SPECIFY:        // default ALC is specified in promise
 
         result = CheckPosixLinuxACEs(aces, method, file_path, ACL_TYPE_DEFAULT, a, pp);
         break;
 
-    case cfacl_parent:         // default ACL should be the same as access ACL
+    case ACL_INHERITANCE_PARENT:         // default ACL should be the same as access ACL
 
         result = CheckDefaultEqualsAccessACL(file_path, a, pp);
         break;
 
-    case cfacl_clear:          // default ALC should be empty
+    case ACL_INHERITANCE_CLEAR:          // default ALC should be empty
 
         result = CheckDefaultClearACL(file_path, a, pp);
         break;
@@ -131,7 +131,7 @@ static int CheckPosixLinuxInheritACEs(Rlist *aces, enum cf_acl_method method, en
    set on the given file. If it doesn't, the ACL on the file is updated.
 */
 
-static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *file_path, acl_type_t acl_type, Attributes a,
+static int CheckPosixLinuxACEs(Rlist *aces, AclMethod method, char *file_path, acl_type_t acl_type, Attributes a,
                              Promise *pp)
 {
     acl_t acl_existing;
@@ -180,7 +180,7 @@ static int CheckPosixLinuxACEs(Rlist *aces, enum cf_acl_method method, char *fil
 
 // copy existing aces if we are appending
 
-    if (method == cfacl_append)
+    if (method == ACL_METHOD_APPEND)
     {
         if ((acl_new = acl_dup(acl_existing)) == NULL)
         {

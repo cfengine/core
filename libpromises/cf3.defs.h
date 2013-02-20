@@ -1113,35 +1113,35 @@ typedef enum
 
 /************************************************************************************/
 
-enum cf_acl_method
+typedef enum
 {
-    cfacl_append,
-    cfacl_overwrite,
-    cfacl_nomethod
-};
+    ACL_METHOD_APPEND,
+    ACL_METHOD_OVERWRITE,
+    ACL_METHOD_NONE
+} AclMethod;
 
-enum cf_acl_type
+typedef enum
 {
-    cfacl_generic,
-    cfacl_posix,
-    cfacl_ntfs,
-    cfacl_notype
-};
+    ACL_TYPE_GENERIC,
+    ACL_TYPE_POSIX,
+    ACL_TYPE_NTFS,
+    ACL_TYPE_NONE
+} AclType;
 
-enum cf_acl_inherit
+typedef enum
 {
-    cfacl_nochange,
-    cfacl_specify,
-    cfacl_parent,
-    cfacl_clear,
-    cfacl_noinherit,
-};
+    ACL_INHERITANCE_NO_CHANGE,
+    ACL_INHERITANCE_SPECIFY,
+    ACL_INHERITANCE_PARENT,
+    ACL_INHERITANCE_CLEAR,
+    ACL_INHERITANCE_NONE
+} AclInheritance;
 
 typedef struct
 {
-    enum cf_acl_method acl_method;
-    enum cf_acl_type acl_type;
-    enum cf_acl_inherit acl_directory_inherit;
+    AclMethod acl_method;
+    AclType acl_type;
+    AclInheritance acl_directory_inherit;
     Rlist *acl_entries;
     Rlist *acl_inherit_entries;
 } Acl;

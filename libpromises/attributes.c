@@ -498,9 +498,9 @@ Acl GetAclConstraints(const Promise *pp)
 {
     Acl ac;
 
-    ac.acl_method = Str2AclMethod(ConstraintGetRvalValue("acl_method", pp, RVAL_TYPE_SCALAR));
-    ac.acl_type = Str2AclType(ConstraintGetRvalValue("acl_type", pp, RVAL_TYPE_SCALAR));
-    ac.acl_directory_inherit = Str2AclInherit(ConstraintGetRvalValue("acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
+    ac.acl_method = AclMethodFromString(ConstraintGetRvalValue("acl_method", pp, RVAL_TYPE_SCALAR));
+    ac.acl_type = AclTypeFromString(ConstraintGetRvalValue("acl_type", pp, RVAL_TYPE_SCALAR));
+    ac.acl_directory_inherit = AclInheritanceFromString(ConstraintGetRvalValue("acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
     ac.acl_entries = PromiseGetConstraintAsList("aces", pp);
     ac.acl_inherit_entries = PromiseGetConstraintAsList("specify_inherit_aces", pp);
     return ac;

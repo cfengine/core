@@ -62,8 +62,8 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 // decide which ACL API to use
     switch (a.acl.acl_type)
     {
-    case cfacl_notype: // fallthrough: acl_type defaults to generic
-    case cfacl_generic:
+    case ACL_TYPE_NONE: // fallthrough: acl_type defaults to generic
+    case ACL_TYPE_GENERIC:
 
 #if defined(__linux__)
         CheckPosixLinuxACL(file, a.acl, a, pp);
@@ -74,7 +74,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #endif
         break;
 
-    case cfacl_posix:
+    case ACL_TYPE_POSIX:
 
 #if defined(__linux__)
         CheckPosixLinuxACL(file, a.acl, a, pp);
@@ -83,7 +83,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #endif
         break;
 
-    case cfacl_ntfs:
+    case ACL_TYPE_NTFS:
 
 #if defined(__MINGW32__)
         Nova_CheckNtACL(file, a.acl, a, pp);
@@ -114,11 +114,11 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
     switch (acl.acl_method)
     {
-    case cfacl_overwrite:
+    case ACL_METHOD_OVERWRITE:
         valid_ops = CF_VALID_OPS_METHOD_OVERWRITE;
         break;
 
-    case cfacl_append:
+    case ACL_METHOD_APPEND:
         valid_ops = CF_VALID_OPS_METHOD_APPEND;
         break;
 
@@ -129,19 +129,19 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
 
     switch (acl.acl_type)
     {
-    case cfacl_generic:        // generic ACL type: cannot include native or deny-type permissions
+    case ACL_TYPE_GENERIC:        // generic ACL type: cannot include native or deny-type permissions
         valid_nperms = "";
         deny_support = false;
         mask_support = false;
         break;
 
-    case cfacl_posix:
+    case ACL_TYPE_POSIX:
         valid_nperms = CF_VALID_NPERMS_POSIX;
         deny_support = false;   // posix does not support deny-type permissions
         mask_support = true;    // mask-ACE is allowed in POSIX
         break;
 
-    case cfacl_ntfs:
+    case ACL_TYPE_NTFS:
         valid_nperms = CF_VALID_NPERMS_NTFS;
         deny_support = true;
         mask_support = false;
@@ -194,23 +194,23 @@ static void SetACLDefaults(char *path, Acl *acl)
 {
 // default: acl_method => append
 
-    if (acl->acl_method == cfacl_nomethod)
+    if (acl->acl_method == ACL_METHOD_NONE)
     {
-        acl->acl_method = cfacl_append;
+        acl->acl_method = ACL_METHOD_APPEND;
     }
 
 // default: acl_type => generic
 
-    if (acl->acl_type == cfacl_notype)
+    if (acl->acl_type == ACL_TYPE_NONE)
     {
-        acl->acl_type = cfacl_generic;
+        acl->acl_type = ACL_TYPE_GENERIC;
     }
 
 // default on directories: acl_directory_inherit => parent
 
-    if ((acl->acl_directory_inherit == cfacl_noinherit) && (IsDir(path)))
+    if ((acl->acl_directory_inherit == ACL_INHERITANCE_NONE) && (IsDir(path)))
     {
-        acl->acl_directory_inherit = cfacl_nochange;
+        acl->acl_directory_inherit = ACL_INHERITANCE_NO_CHANGE;
     }
 }
 
@@ -224,15 +224,15 @@ static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp)
 
     switch (acl->acl_directory_inherit)
     {
-    case cfacl_noinherit:      // unset is always valid
+    case ACL_INHERITANCE_NONE:      // unset is always valid
         valid = true;
 
         break;
 
-    case cfacl_specify:        // NOTE: we assume all acls support specify
+    case ACL_INHERITANCE_SPECIFY:        // NOTE: we assume all acls support specify
 
         // fallthrough
-    case cfacl_parent:
+    case ACL_INHERITANCE_PARENT:
 
         // fallthrough
     default:

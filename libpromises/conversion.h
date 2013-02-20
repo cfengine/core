@@ -40,6 +40,14 @@ DataType DataTypeFromString(char *name);
 PackageActionPolicy PackageActionPolicyFromString(char *s);
 PackageVersionComparator PackageVersionComparatorFromString(char *s);
 PackageAction PackageActionFromString(char *s);
+AclMethod AclMethodFromString(char *string);
+AclType AclTypeFromString(char *string);
+AclInheritance AclInheritanceFromString(char *string);
+
+
+
+enum cf_srv_policy Str2ServicePolicy(char *string);
+
 
 enum representations String2Representation(char *s);
 
@@ -75,10 +83,8 @@ int Day2Number(char *datestring);
 void UtcShiftInterval(time_t t, char *out, int outSz);
 
 
-enum cf_acl_method Str2AclMethod(char *string);
-enum cf_acl_type Str2AclType(char *string);
-enum cf_acl_inherit Str2AclInherit(char *string);
-enum cf_srv_policy Str2ServicePolicy(char *string);
+
+
 char *Dtype2Str(DataType dtype);
 const char *DataTypeShortToType(char *short_type);
 char *Item2String(Item *ip);

@@ -74,7 +74,6 @@ const char *GetArg0(const char *execstr);
 void CommPrefix(char *execstr, char *comm);
 int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
-void UtcShiftInterval(time_t t, char *out, int outSz);
 
 
 

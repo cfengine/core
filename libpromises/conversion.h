@@ -83,7 +83,6 @@ char *Dtype2Str(DataType dtype);
 const char *DataTypeShortToType(char *short_type);
 char *Item2String(Item *ip);
 int IsRealNumber(char *s);
-enum cfd_menu String2Menu(const char *s);
 
 #ifndef __MINGW32__
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
@@ -104,5 +103,7 @@ bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_
 /* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */
 char *SqlVariableExpand(const char *query);
 #endif
+
+int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
 #endif

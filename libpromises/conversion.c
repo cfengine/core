@@ -86,7 +86,7 @@ char *EscapeQuotes(const char *s, char *out, int outSz)
 
 /***************************************************************************/
 
-static int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value)
+int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value)
 {
     if (needle == NULL)
     {
@@ -1006,13 +1006,6 @@ int IsRealNumber(char *s)
     }
 
     return true;
-}
-
-static const char *MENU_TYPES[] = { "delta", "full", "relay", "collect_call", NULL };
-
-enum cfd_menu String2Menu(const char *s)
-{
-    return FindTypeInArray(MENU_TYPES, s, cfd_menu_error, cfd_menu_error);
 }
 
 /*******************************************************************/

@@ -37,6 +37,10 @@ OutputLevel OutputLevelFromString(char *level);
 FileComparator FileComparatorFromString(char *s);
 FileLinkType FileLinkTypeFromString(char *s);
 DataType DataTypeFromString(char *name);
+PackageActionPolicy PackageActionPolicyFromString(char *s);
+
+
+enum representations String2Representation(char *s);
 
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
@@ -54,7 +58,7 @@ int Signal2Int(char *s);
 
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp);
 enum cfsbundle Type2Cfs(char *name);
-enum representations String2Representation(char *s);
+
 int GetBoolean(const char *val);
 long Str2Int(const char *s);
 long TimeAbs2Int(char *s);
@@ -68,7 +72,7 @@ void CommPrefix(char *execstr, char *comm);
 int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
 void UtcShiftInterval(time_t t, char *out, int outSz);
-enum action_policy Str2ActionPolicy(char *s);
+
 enum version_cmp Str2PackageSelect(char *s);
 enum package_actions Str2PackageAction(char *s);
 enum cf_acl_method Str2AclMethod(char *string);

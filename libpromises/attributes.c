@@ -1080,7 +1080,7 @@ Packages GetPackageConstraints(const Promise *pp)
     Packages p;
     enum package_actions action;
     enum version_cmp operator;
-    enum action_policy change_policy;
+    PackageActionPolicy change_policy;
 
     p.have_package_methods = PromiseGetConstraintAsBoolean("havepackage_method", pp);
     p.package_version = (char *) ConstraintGetRvalValue("package_version", pp, RVAL_TYPE_SCALAR);
@@ -1097,7 +1097,7 @@ Packages GetPackageConstraints(const Promise *pp)
     operator = Str2PackageSelect((char *) ConstraintGetRvalValue("package_select", pp, RVAL_TYPE_SCALAR));
 
     p.package_select = operator;
-    change_policy = Str2ActionPolicy((char *) ConstraintGetRvalValue("package_changes", pp, RVAL_TYPE_SCALAR));
+    change_policy = PackageActionPolicyFromString((char *) ConstraintGetRvalValue("package_changes", pp, RVAL_TYPE_SCALAR));
     p.package_changes = change_policy;
 
     p.package_file_repositories = PromiseGetConstraintAsList("package_file_repositories", pp);

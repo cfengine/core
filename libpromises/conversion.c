@@ -159,9 +159,9 @@ enum version_cmp Str2PackageSelect(char *s)
 
 static const char *ACTION_POLICY_TYPES[] = { "individual", "bulk", NULL };
 
-enum action_policy Str2ActionPolicy(char *s)
+PackageActionPolicy PackageActionPolicyFromString(char *s)
 {
-    return FindTypeInArray(ACTION_POLICY_TYPES, s, cfa_no_ppolicy, cfa_no_ppolicy);
+    return FindTypeInArray(ACTION_POLICY_TYPES, s, PACKAGE_ACTION_POLICY_NONE, PACKAGE_ACTION_POLICY_NONE);
 }
 
 /***************************************************************************/

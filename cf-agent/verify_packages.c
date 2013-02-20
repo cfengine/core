@@ -69,7 +69,7 @@ static int PrependPatchItem(PackageItem ** list, char *item, PackageItem * chkli
 static int PrependMultiLinePackageItem(PackageItem ** list, char *item, int reset, const char *default_arch, Attributes a, Promise *pp);
 static int PrependListPackageItem(PackageItem ** list, char *item, const char *default_arch, Attributes a, Promise *pp);
 
-static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa, enum action_policy x);
+static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa, PackageActionPolicy x);
 static void DeletePackageManagers(PackageManager *newlist);
 
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
@@ -565,7 +565,7 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
 
 static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *default_arch, Attributes a, Promise *pp)
 {
-    PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, cfa_pa_none, cfa_no_ppolicy);
+    PackageManager *manager = NewPackageManager(all_mgrs, a.packages.package_list_command, cfa_pa_none, PACKAGE_ACTION_POLICY_NONE);
     char vbuff[CF_BUFSIZE];
 
     if (manager == NULL)
@@ -1564,7 +1564,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
             switch (pm->policy)
             {
-            case cfa_individual:
+            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
 
                 if (size > estimated_size)
                 {
@@ -1572,7 +1572,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
                 }
                 break;
 
-            case cfa_bulk:
+            case PACKAGE_ACTION_POLICY_BULK:
 
                 estimated_size += size + CF_MAXVARSIZE;
                 break;
@@ -1680,7 +1680,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
             switch (pm->policy)
             {
-            case cfa_individual:
+            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
 
                 for (pi = pm->pack_list; pi != NULL; pi = pi->next)
                 {
@@ -1721,7 +1721,7 @@ static int ExecuteSchedule(PackageManager *schedule, enum package_actions action
 
                 break;
 
-            case cfa_bulk:
+            case PACKAGE_ACTION_POLICY_BULK:
 
                 for (pi = pm->pack_list; pi != NULL; pi = pi->next)
                 {
@@ -1814,7 +1814,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action)
 
             switch (pm->policy)
             {
-            case cfa_individual:
+            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
 
                 if (size > estimated_size)
                 {
@@ -1822,7 +1822,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action)
                 }
                 break;
 
-            case cfa_bulk:
+            case PACKAGE_ACTION_POLICY_BULK:
 
                 estimated_size += size;
                 break;
@@ -1881,7 +1881,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action)
             {
                 int ok;
 
-            case cfa_individual:
+            case PACKAGE_ACTION_POLICY_INDIVIDUAL:
 
                 for (pi = pm->patch_list; pi != NULL; pi = pi->next)
                 {
@@ -1905,7 +1905,7 @@ static int ExecutePatch(PackageManager *schedule, enum package_actions action)
 
                 break;
 
-            case cfa_bulk:
+            case PACKAGE_ACTION_POLICY_BULK:
 
                 for (pi = pm->patch_list; pi != NULL; pi = pi->next)
                 {
@@ -2019,7 +2019,7 @@ void CleanScheduledPackages(void)
 /** Utils **/
 
 static PackageManager *NewPackageManager(PackageManager **lists, char *mgr, enum package_actions pa,
-                                         enum action_policy policy)
+                                         PackageActionPolicy policy)
 {
     PackageManager *np;
 

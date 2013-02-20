@@ -1058,12 +1058,12 @@ enum version_cmp
     cfa_cmp_none
 };
 
-enum action_policy
+typedef enum
 {
-    cfa_individual,
-    cfa_bulk,
-    cfa_no_ppolicy
-};
+    PACKAGE_ACTION_POLICY_INDIVIDUAL,
+    PACKAGE_ACTION_POLICY_BULK,
+    PACKAGE_ACTION_POLICY_NONE
+} PackageActionPolicy;
 
 /*
 Adding new mutex:
@@ -1364,7 +1364,7 @@ struct PackageManager_
 {
     char *manager;
     enum package_actions action;
-    enum action_policy policy;
+    PackageActionPolicy policy;
     PackageItem *pack_list;
     PackageItem *patch_list;
     PackageItem *patch_avail;
@@ -1677,7 +1677,7 @@ typedef struct
     char *package_version;
     Rlist *package_architectures;
     enum version_cmp package_select;
-    enum action_policy package_changes;
+    PackageActionPolicy package_changes;
     Rlist *package_file_repositories;
 
     char *package_default_arch_command;

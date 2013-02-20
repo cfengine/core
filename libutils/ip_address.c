@@ -351,8 +351,6 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
     int unsorted_pointer = 0;
     int bracket_expected = 0;
     int port = 0;
-    int colon_counter = 0;
-    int port_counter = 0;
     int char_counter = 0;
     bool is_start_bracket = 0;
     bool is_end_bracket = 0;
@@ -693,8 +691,6 @@ static int IPV6_parser(const char *source, struct IPV6Address *address)
         {
             sixteen = 0;
             port = 0;
-            colon_counter = 0;
-            port_counter = 0;
             char_counter = 0;
             is_start_bracket = false;
             is_end_bracket = false;

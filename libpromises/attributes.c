@@ -446,7 +446,7 @@ Environments GetEnvironmentsConstraints(const Promise *pp)
     e.addresses = PromiseGetConstraintAsList("env_addresses", pp);
     e.name = ConstraintGetRvalValue("env_name", pp, RVAL_TYPE_SCALAR);
     e.type = ConstraintGetRvalValue("environment_type", pp, RVAL_TYPE_SCALAR);
-    e.state = Str2EnvState(ConstraintGetRvalValue("environment_state", pp, RVAL_TYPE_SCALAR));
+    e.state = EnvironmentStateFromString(ConstraintGetRvalValue("environment_state", pp, RVAL_TYPE_SCALAR));
 
     return e;
 }

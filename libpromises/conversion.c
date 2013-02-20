@@ -114,9 +114,9 @@ MeasurePolicy MeasurePolicyFromString(char *s)
 
 static const char *ENV_STATE_TYPES[] = { "create", "delete", "running", "suspended", "down", NULL };
 
-enum cfenvironment_state Str2EnvState(char *s)
+EnvironmentState EnvironmentStateFromString(char *s)
 {
-    return FindTypeInArray(ENV_STATE_TYPES, s, cfvs_none, cfvs_create);
+    return FindTypeInArray(ENV_STATE_TYPES, s, ENVIRONMENT_STATE_NONE, ENVIRONMENT_STATE_CREATE);
 }
 
 InsertMatchType String2InsertMatch(char *s)

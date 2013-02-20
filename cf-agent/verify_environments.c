@@ -243,12 +243,12 @@ static void VerifyEnvironments(Attributes a, Promise *pp)
     {
         switch (a.env.state)
         {
-        case cfvs_create:
-        case cfvs_running:
+        case ENVIRONMENT_STATE_CREATE:
+        case ENVIRONMENT_STATE_RUNNING:
             CfOut(OUTPUT_LEVEL_VERBOSE, "",
                   " -> This host (\"%s\") is not the promised host for the environment (\"%s\"), so setting its intended state to \"down\"",
                   VFQNAME, a.env.host);
-            a.env.state = cfvs_down;
+            a.env.state = ENVIRONMENT_STATE_DOWN;
             break;
         default:
             CfOut(OUTPUT_LEVEL_VERBOSE, "",
@@ -346,19 +346,19 @@ static void VerifyVirtDomain(char *uri, enum cfhypervisors envtype, Attributes a
 
     switch (a.env.state)
     {
-    case cfvs_create:
+    case ENVIRONMENT_STATE_CREATE:
         CreateVirtDom(CFVC[envtype], uri, a, pp);
         break;
-    case cfvs_delete:
+    case ENVIRONMENT_STATE_DELETE:
         DeleteVirt(CFVC[envtype], uri, a, pp);
         break;
-    case cfvs_running:
+    case ENVIRONMENT_STATE_RUNNING:
         RunningVirt(CFVC[envtype], uri, a, pp);
         break;
-    case cfvs_suspended:
+    case ENVIRONMENT_STATE_SUSPENDED:
         SuspendedVirt(CFVC[envtype], uri, a, pp);
         break;
-    case cfvs_down:
+    case ENVIRONMENT_STATE_DOWN:
         DownVirt(CFVC[envtype], uri, a, pp);
         break;
     default:
@@ -394,11 +394,11 @@ static void VerifyVirtNetwork(char *uri, enum cfhypervisors envtype, Attributes 
 
     switch (a.env.state)
     {
-    case cfvs_create:
+    case ENVIRONMENT_STATE_CREATE:
         CreateVirtNetwork(CFVC[envtype], networks, a, pp);
         break;
 
-    case cfvs_delete:
+    case ENVIRONMENT_STATE_DELETE:
         DeleteVirtNetwork(CFVC[envtype], networks, a, pp);
         break;
 

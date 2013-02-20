@@ -1802,15 +1802,15 @@ typedef struct
 
 /*************************************************************************/
 
-enum cfenvironment_state
+typedef enum
 {
-    cfvs_create,
-    cfvs_delete,
-    cfvs_running,
-    cfvs_suspended,
-    cfvs_down,
-    cfvs_none
-};
+    ENVIRONMENT_STATE_CREATE,
+    ENVIRONMENT_STATE_DELETE,
+    ENVIRONMENT_STATE_RUNNING,
+    ENVIRONMENT_STATE_SUSPENDED,
+    ENVIRONMENT_STATE_DOWN,
+    ENVIRONMENT_STATE_NONE
+} EnvironmentState;
 
 /*************************************************************************/
 
@@ -1843,7 +1843,7 @@ typedef struct
     char *name;
     char *host;
     char *type;
-    enum cfenvironment_state state;
+    EnvironmentState state;
 } Environments;
 
 /* This is huge, but the simplification of logic is huge too

@@ -621,25 +621,6 @@ void *GetConstraintValue(const char *lval, const Promise *pp, RvalType rtype)
 void ReCheckAllConstraints(Promise *pp)
 {
     Item *ptr;
-    int in_class_any = false;
-
-    if (strcmp(pp->agentsubtype, "reports") == 0 && strcmp(pp->classes, "any") == 0)
-    {
-        char *cl = GetConstraintValue("ifvarclass", pp, RVAL_TYPE_SCALAR);
-
-        if (cl == NULL || strcmp(cl, "any") == 0)
-        {
-            in_class_any = true;
-        }
-
-        if (in_class_any)
-        {
-        Attributes a = GetReportsAttributes(pp);
-        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "reports promises may not be in class \'any\' - risk of a notification explosion");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        ERRORCOUNT++;
-        }
-    }
 
 /* Special promise type checks */
 

@@ -1334,12 +1334,12 @@ struct Inference_
 /* SQL Database connectors                                               */
 /*************************************************************************/
 
-enum cfdbtype
+typedef enum
 {
     cfd_mysql,
     cfd_postgres,
     cfd_notype
-};
+} DatabaseType;
 
 /*************************************************************************/
 /* Threading container                                                   */
@@ -1760,7 +1760,7 @@ typedef struct
     char *db_server_password;
     char *db_server_host;
     char *db_connect_db;
-    enum cfdbtype db_server_type;
+    DatabaseType db_server_type;
     char *server;
     char *type;
     char *operation;

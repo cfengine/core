@@ -321,7 +321,7 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 /*****************************************************************************/
 
-int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
+int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db)
 {
 
     cfdb->connected = false;

@@ -48,7 +48,7 @@ static void QueryTableColumns(char *s, char *db, char *table);
 static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char ***type_table, int **size_table,
                          int **done);
 static void DeleteSQLColumns(char **name_table, char **type_table, int *size_table, int *done, int len);
-static void CreateDBQuery(enum cfdbtype type, char *query);
+static void CreateDBQuery(DatabaseType type, char *query);
 static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns, Attributes a, Promise *pp);
 static int CheckSQLDataType(char *type, char *ref_type, Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
@@ -796,7 +796,7 @@ static Rlist *GetSQLTables(CfdbConn *cfdb)
 
 /*****************************************************************************/
 
-static void CreateDBQuery(enum cfdbtype type, char *query)
+static void CreateDBQuery(DatabaseType type, char *query)
 {
     switch (type)
     {

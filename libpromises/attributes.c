@@ -1706,7 +1706,7 @@ Database GetDatabaseConstraints(const Promise *pp)
     d.exclude = PromiseGetConstraintAsList("registry_exclude", pp);
 
     value = ConstraintGetRvalValue("db_server_type", pp, RVAL_TYPE_SCALAR);
-    d.db_server_type = Str2dbType(value);
+    d.db_server_type = DatabaseTypeFromString(value);
 
     if (value && ((d.db_server_type) == cfd_notype))
     {

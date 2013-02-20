@@ -137,7 +137,7 @@ int SyslogPriority2Int(char *s)
 
 static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
 
-enum cfdbtype Str2dbType(char *s)
+DatabaseType DatabaseTypeFromString(char *s)
 {
     return FindTypeInArray(DB_TYPES, s, cfd_notype, cfd_notype);
 }

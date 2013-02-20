@@ -60,7 +60,6 @@ static const struct option OPTIONS[] =
     {"negate", required_argument, 0, 'N'},
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
-    {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
     {"full-check", no_argument, 0, 'c'},
@@ -80,7 +79,6 @@ static const char *HINTS[] =
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
-    "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Ensure full policy integrity checks",
@@ -163,7 +161,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -264,11 +262,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
-
-        case 'a':
-            printf("Self-analysis is not yet implemented.\n");
-            exit(0);
-            break;
 
         default:
             Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);

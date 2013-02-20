@@ -48,7 +48,6 @@ bundle agent cfe_internal_update
                       "cf-agent",
                       "cf-execd",
                       "cf-key",
-                      "cf-know",
                       "cf-monitord",
                       "cf-promises",
                       "cf-report",

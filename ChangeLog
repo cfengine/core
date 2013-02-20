@@ -4,6 +4,8 @@
 
        - prevent possible crash when archiving files (GitHub #316)
 
+       - don't create symlinks to cf-know in update policy
+
 3.4.3   (Bugfix and Stability release)
 
        Bugfixes:

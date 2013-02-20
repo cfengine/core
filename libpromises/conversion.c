@@ -244,9 +244,9 @@ int Signal2Int(char *s)
 
 static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
 
-OutputLevel String2ReportLevel(char *s)
+OutputLevel OutputLevelFromString(char *level)
 {
-    return FindTypeInArray(REPORT_LEVEL_TYPES, s, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
+    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
 }
 
 static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };

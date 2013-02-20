@@ -98,7 +98,7 @@ void SetPromiseOutputs(Promise *pp)
 {
     char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
     char *setting = ConstraintGetRvalValue("report_level", pp, RVAL_TYPE_SCALAR);
-    OutputLevel report_level = String2ReportLevel(setting);
+    OutputLevel report_level = OutputLevelFromString(setting);
     int verbose = false, inform = false;
     Item *ip;
 

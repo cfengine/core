@@ -711,10 +711,10 @@ TransactionContext GetTransactionConstraints(const Promise *pp)
     }
 
     value = ConstraintGetRvalValue("log_level", pp, RVAL_TYPE_SCALAR);
-    t.log_level = String2ReportLevel(value);
+    t.log_level = OutputLevelFromString(value);
 
     value = ConstraintGetRvalValue("report_level", pp, RVAL_TYPE_SCALAR);
-    t.report_level = String2ReportLevel(value);
+    t.report_level = OutputLevelFromString(value);
 
     t.measure_id = ConstraintGetRvalValue("measurement_class", pp, RVAL_TYPE_SCALAR);
 

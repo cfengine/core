@@ -29,7 +29,7 @@
 #include "cf3.defs.h"
 
 const char *AgentTypeToString(AgentType agent_type);
-char *EscapeJson(char *s, char *out, int outSz);
+
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
 enum cfmeasurepolicy MeasurePolicy2Value(char *s);

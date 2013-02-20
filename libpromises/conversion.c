@@ -309,14 +309,6 @@ DataType Typename2Datatype(char *name)
     return (DataType) i;
 }
 
-/****************************************************************************/
-
-const char *AgentTypeToString(AgentType agent_type)
-{
-    return CF_AGENTTYPES[agent_type];
-}
-
-/****************************************************************************/
 
 DataType GetControlDatatype(const char *varname, const BodySyntax *bp)
 {

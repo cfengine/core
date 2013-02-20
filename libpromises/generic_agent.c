@@ -1848,3 +1848,8 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
     RlistDestroy(config->bundlesequence);
     config->bundlesequence = RlistCopy(bundlesequence);
 }
+
+const char *AgentTypeToString(AgentType agent_type)
+{
+    return CF_AGENTTYPES[agent_type];
+}

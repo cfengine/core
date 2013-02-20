@@ -100,6 +100,8 @@ void CloseReports(const char *agents, ReportContext *report_context);
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
 
+const char *AgentTypeToString(AgentType agent_type);
+
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
 

@@ -1047,16 +1047,16 @@ enum package_actions
     cfa_pa_none
 };
 
-enum version_cmp
+typedef enum
 {
-    cfa_eq,
-    cfa_neq,
-    cfa_gt,
-    cfa_lt,
-    cfa_ge,
-    cfa_le,
-    cfa_cmp_none
-};
+    PACKAGE_VERSION_COMPARATOR_EQ,
+    PACKAGE_VERSION_COMPARATOR_NEQ,
+    PACKAGE_VERSION_COMPARATOR_GT,
+    PACKAGE_VERSION_COMPARATOR_LT,
+    PACKAGE_VERSION_COMPARATOR_GE,
+    PACKAGE_VERSION_COMPARATOR_LE,
+    PACKAGE_VERSION_COMPARATOR_NONE
+} PackageVersionComparator;
 
 typedef enum
 {
@@ -1676,7 +1676,7 @@ typedef struct
     int have_package_methods;
     char *package_version;
     Rlist *package_architectures;
-    enum version_cmp package_select;
+    PackageVersionComparator package_select;
     PackageActionPolicy package_changes;
     Rlist *package_file_repositories;
 

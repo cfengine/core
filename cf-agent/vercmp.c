@@ -99,7 +99,7 @@ static VersionCmpResult CompareVersionsLess(const char *v1, const char *v2, Attr
     }
     else
     {
-        return ComparePackageVersionsInternal(v1, v2, cfa_gt) ? VERCMP_MATCH : VERCMP_NO_MATCH;
+        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_GT) ? VERCMP_MATCH : VERCMP_NO_MATCH;
     }
 }
 
@@ -118,7 +118,7 @@ static VersionCmpResult CompareVersionsEqual(const char *v1, const char *v2, Att
     else
     {
         /* Built-in fallback */
-        return ComparePackageVersionsInternal(v1, v2, cfa_eq);
+        return ComparePackageVersionsInternal(v1, v2, PACKAGE_VERSION_COMPARATOR_EQ);
     }
 }
 
@@ -126,13 +126,13 @@ VersionCmpResult CompareVersions(const char *v1, const char *v2, Attributes a, P
 {
     switch (a.packages.package_select)
     {
-    case cfa_eq:
-    case cfa_cmp_none: return CompareVersionsEqual(v1, v2, a, pp);
-    case cfa_neq: return InvertResult(CompareVersionsEqual(v1, v2, a, pp));
-    case cfa_lt: return CompareVersionsLess(v1, v2, a, pp);
-    case cfa_gt: return CompareVersionsLess(v2, v1, a, pp);
-    case cfa_ge: return InvertResult(CompareVersionsLess(v1, v2, a, pp));
-    case cfa_le: return InvertResult(CompareVersionsLess(v2, v1, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_EQ:
+    case PACKAGE_VERSION_COMPARATOR_NONE: return CompareVersionsEqual(v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_NEQ: return InvertResult(CompareVersionsEqual(v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LT: return CompareVersionsLess(v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GT: return CompareVersionsLess(v2, v1, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GE: return InvertResult(CompareVersionsLess(v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LE: return InvertResult(CompareVersionsLess(v2, v1, a, pp));
     default: FatalError("Unexpected comparison value: %d", a.packages.package_select);
     }
 }

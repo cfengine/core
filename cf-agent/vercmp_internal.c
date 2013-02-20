@@ -31,7 +31,7 @@
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
 
-bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version_cmp cmp)
+bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersionComparator cmp)
 {
     Rlist *rp_pr, *rp_in;
 
@@ -86,20 +86,20 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
             switch (cmp)
             {
-            case cfa_eq:
-            case cfa_cmp_none:
+            case PACKAGE_VERSION_COMPARATOR_EQ:
+            case PACKAGE_VERSION_COMPARATOR_NONE:
                 if (version_equal)
                 {
                     version_matched = true;
                 }
                 break;
-            case cfa_neq:
+            case PACKAGE_VERSION_COMPARATOR_NEQ:
                 if (!version_equal)
                 {
                     version_matched = true;
                 }
                 break;
-            case cfa_gt:
+            case PACKAGE_VERSION_COMPARATOR_GT:
                 if (cmp_result < 0)
                 {
                     version_matched = true;
@@ -109,7 +109,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
                     break_loop = true;
                 }
                 break;
-            case cfa_lt:
+            case PACKAGE_VERSION_COMPARATOR_LT:
                 if (cmp_result > 0)
                 {
                     version_matched = true;
@@ -119,7 +119,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
                     break_loop = true;
                 }
                 break;
-            case cfa_ge:
+            case PACKAGE_VERSION_COMPARATOR_GE:
                 if ((cmp_result < 0) || version_equal)
                 {
                     version_matched = true;
@@ -129,7 +129,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
                     break_loop = true;
                 }
                 break;
-            case cfa_le:
+            case PACKAGE_VERSION_COMPARATOR_LE:
                 if ((cmp_result > 0) || version_equal)
                 {
                     version_matched = true;
@@ -153,14 +153,14 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, enum version
 
         if (rp_pr != NULL)
         {
-            if ((cmp == cfa_lt) || (cmp == cfa_le))
+            if ((cmp == PACKAGE_VERSION_COMPARATOR_LT) || (cmp == PACKAGE_VERSION_COMPARATOR_LE))
             {
                 version_matched = true;
             }
         }
         if (rp_in != NULL)
         {
-            if ((cmp == cfa_gt) || (cmp == cfa_ge))
+            if ((cmp == PACKAGE_VERSION_COMPARATOR_GT) || (cmp == PACKAGE_VERSION_COMPARATOR_GE))
             {
                 version_matched = true;
             }

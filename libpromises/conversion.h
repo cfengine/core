@@ -38,7 +38,7 @@ FileComparator FileComparatorFromString(char *s);
 FileLinkType FileLinkTypeFromString(char *s);
 DataType DataTypeFromString(char *name);
 PackageActionPolicy PackageActionPolicyFromString(char *s);
-
+PackageVersionComparator PackageVersionComparatorFromString(char *s);
 
 enum representations String2Representation(char *s);
 
@@ -73,7 +73,7 @@ int NonEmptyLine(char *s);
 int Day2Number(char *datestring);
 void UtcShiftInterval(time_t t, char *out, int outSz);
 
-enum version_cmp Str2PackageSelect(char *s);
+
 enum package_actions Str2PackageAction(char *s);
 enum cf_acl_method Str2AclMethod(char *string);
 enum cf_acl_type Str2AclType(char *string);

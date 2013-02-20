@@ -693,7 +693,7 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *defaul
 /** Evaluate what needs to be done **/
 
 int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAnyVer, const char *ver,
-                            enum version_cmp package_select, Rlist *repositories, Attributes a, Promise *pp)
+                            PackageVersionComparator package_select, Rlist *repositories, Attributes a, Promise *pp)
 /* Returns true if a version gt/ge ver is found in local repos, false otherwise */
 {
     Rlist *rp;
@@ -717,7 +717,7 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
     {
         snprintf(largestVer, sizeof(largestVer), "%s", ver);
 
-        if (package_select == cfa_gt)   // either gt or ge
+        if (package_select == PACKAGE_VERSION_COMPARATOR_GT)   // either gt or ge
         {
             largestVer[strlen(largestVer) - 1]++;
         }
@@ -740,7 +740,7 @@ int FindLargestVersionAvail(char *matchName, char *matchVers, const char *refAny
 
                 /* Horrible */
                 Attributes a2 = a;
-                a2.packages.package_select = cfa_gt;
+                a2.packages.package_select = PACKAGE_VERSION_COMPARATOR_GT;
 
                 // check if match is largest so far
                 if (CompareVersions(matchVer, largestVer, a2, pp) == VERCMP_MATCH)
@@ -796,7 +796,7 @@ static int IsNewerThanInstalled(const char *n, const char *v, const char *a, cha
 
             /* Horrible */
             Attributes attr2 = attr;
-            attr2.packages.package_select = cfa_lt;
+            attr2.packages.package_select = PACKAGE_VERSION_COMPARATOR_LT;
 
             if (CompareVersions(pi->version, v, attr2, pp) == VERCMP_MATCH)
             {
@@ -873,8 +873,8 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
               "!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
     }
 
-    if ((a.packages.package_select == cfa_eq) || (a.packages.package_select == cfa_ge) ||
-        (a.packages.package_select == cfa_le) || (a.packages.package_select == cfa_cmp_none))
+    if ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_EQ) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE) ||
+        (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_LE) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_NONE))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Package version seems to match criteria");
         package_select_in_range = true;
@@ -901,7 +901,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         if (installed == 0)
         {
             if ((a.packages.package_file_repositories != NULL) &&
-                ((a.packages.package_select == cfa_gt) || (a.packages.package_select == cfa_ge)))
+                ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
             {
                 SetNewScope("cf_pack_context_anyver");
                 NewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
@@ -1033,7 +1033,7 @@ static void SchedulePackageOp(const char *name, const char *version, const char 
         *instArch = '\0';
 
         if ((a.packages.package_file_repositories != NULL) &&
-            ((a.packages.package_select == cfa_gt) || (a.packages.package_select == cfa_ge)))
+            ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
         {
             SetNewScope("cf_pack_context_anyver");
             NewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);

@@ -152,9 +152,9 @@ enum package_actions Str2PackageAction(char *s)
 
 static const char *PACKAGE_SELECT_TYPES[] = { "==", "!=", ">", "<", ">=", "<=", NULL };
 
-enum version_cmp Str2PackageSelect(char *s)
+PackageVersionComparator PackageVersionComparatorFromString(char *s)
 {
-    return FindTypeInArray(PACKAGE_SELECT_TYPES, s, cfa_cmp_none, cfa_cmp_none);
+    return FindTypeInArray(PACKAGE_SELECT_TYPES, s, PACKAGE_VERSION_COMPARATOR_NONE, PACKAGE_VERSION_COMPARATOR_NONE);
 }
 
 static const char *ACTION_POLICY_TYPES[] = { "individual", "bulk", NULL };

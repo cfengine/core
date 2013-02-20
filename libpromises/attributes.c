@@ -1079,7 +1079,7 @@ Packages GetPackageConstraints(const Promise *pp)
 {
     Packages p;
     enum package_actions action;
-    enum version_cmp operator;
+    PackageVersionComparator operator;
     PackageActionPolicy change_policy;
 
     p.have_package_methods = PromiseGetConstraintAsBoolean("havepackage_method", pp);
@@ -1094,7 +1094,7 @@ Packages GetPackageConstraints(const Promise *pp)
         p.package_policy = cfa_addpack;
     }
 
-    operator = Str2PackageSelect((char *) ConstraintGetRvalValue("package_select", pp, RVAL_TYPE_SCALAR));
+    operator = PackageVersionComparatorFromString((char *) ConstraintGetRvalValue("package_select", pp, RVAL_TYPE_SCALAR));
 
     p.package_select = operator;
     change_policy = PackageActionPolicyFromString((char *) ConstraintGetRvalValue("package_changes", pp, RVAL_TYPE_SCALAR));

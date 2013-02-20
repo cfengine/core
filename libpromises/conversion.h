@@ -28,11 +28,13 @@
 
 #include "cf3.defs.h"
 
-char *EscapeQuotes(const char *s, char *out, int outSz);
-char *MapAddress(char *addr);
 MeasurePolicy MeasurePolicyFromString(char *s);
 EnvironmentState EnvironmentStateFromString(char *s);
-InsertMatchType String2InsertMatch(char *s);
+InsertMatchType InsertMatchTypeFromString(char *s);
+
+char *EscapeQuotes(const char *s, char *out, int outSz);
+char *MapAddress(char *addr);
+
 long Months2Seconds(int m);
 enum cfinterval Str2Interval(char *s);
 int SyslogPriority2Int(char *s);

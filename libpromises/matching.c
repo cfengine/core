@@ -451,7 +451,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 
         for (rp = a.insert_match; rp != NULL; rp = rp->next)
         {
-            opt = String2InsertMatch(rp->item);
+            opt = InsertMatchTypeFromString(rp->item);
 
             /* Exact match can be done immediately */
 

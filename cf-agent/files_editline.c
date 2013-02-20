@@ -1204,7 +1204,7 @@ static int SanityCheckInsertions(Attributes a)
 
     for (rp = a.insert_match; rp != NULL; rp = rp->next)
     {
-        opt = String2InsertMatch(rp->item);
+        opt = InsertMatchTypeFromString(rp->item);
 
         switch (opt)
         {

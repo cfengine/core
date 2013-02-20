@@ -119,7 +119,7 @@ EnvironmentState EnvironmentStateFromString(char *s)
     return FindTypeInArray(ENV_STATE_TYPES, s, ENVIRONMENT_STATE_NONE, ENVIRONMENT_STATE_CREATE);
 }
 
-InsertMatchType String2InsertMatch(char *s)
+InsertMatchType InsertMatchTypeFromString(char *s)
 {
     static const char *INSERT_MATCH_TYPES[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
                                                 "exact_match", NULL };

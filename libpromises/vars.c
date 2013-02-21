@@ -265,68 +265,6 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap)
 
 /*******************************************************************/
 
-void DefaultVarPromise(Promise *pp)
-
-{
-    char *regex = ConstraintGetRvalValue("if_match_regex", pp, RVAL_TYPE_SCALAR);
-    Rval rval;
-    DataType dt;
-    Rlist *rp;
-    bool okay = true;
-
-    dt = GetVariable("this", pp->promiser, &rval);
-
-    switch (dt)
-       {
-       case DATA_TYPE_STRING:
-       case DATA_TYPE_INT:
-       case DATA_TYPE_REAL:
-
-           if (regex && !FullTextMatch(regex,rval.item))
-              {
-              return;
-              }
-
-           if (regex == NULL)
-              {
-              return;
-              }
-
-           break;
-           
-       case DATA_TYPE_STRING_LIST:
-       case DATA_TYPE_INT_LIST:
-       case DATA_TYPE_REAL_LIST:
-
-           if (regex)
-              {
-              for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
-                 {
-                 if (FullTextMatch(regex,rp->item))
-                    {
-                    okay = false;
-                    break;
-                    }
-                 }
-              
-              if (okay)
-                 {
-                 return;
-                 }
-              }
-           
-       break;
-       
-       default:
-           break;           
-       }
-
-    DeleteScalar(pp->bundle, pp->promiser);
-    ConvergeVarHashPromise(pp->bundle, pp, true);
-}
-
-/*******************************************************************/
-
 int UnresolvedVariables(CfAssoc *ap, char rtype)
 {
     Rlist *list, *rp;

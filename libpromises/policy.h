@@ -372,6 +372,4 @@ void *ConstraintGetRvalValue(const char *lval, const Promise *promise, RvalType 
  */
 int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints);
 
-void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
-
 #endif

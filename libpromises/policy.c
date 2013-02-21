@@ -66,6 +66,7 @@ static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise ha
 
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
+static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
 
 Policy *PolicyNew(void)
 {
@@ -2658,7 +2659,7 @@ void PromiseRecheckAllConstraints(Promise *pp)
 
 /*****************************************************************************/
 
-void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval)
+static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval)
 {
     SubTypeSyntax ss;
     int i, j, l, m;

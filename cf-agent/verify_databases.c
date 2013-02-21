@@ -800,11 +800,11 @@ static void CreateDBQuery(DatabaseType type, char *query)
 {
     switch (type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         snprintf(query, CF_MAXVARSIZE - 1, "show databases");
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         /* This gibberish is the simplest thing I can find in postgres */
 
         snprintf(query, CF_MAXVARSIZE - 1, "SELECT pg_database.datname FROM pg_database");
@@ -1010,11 +1010,11 @@ static void ListTables(int type, char *query)
 {
     switch (type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         snprintf(query, CF_MAXVARSIZE - 1, "show tables");
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         /* This gibberish is the simplest thing I can find in postgres */
 
         snprintf(query, CF_MAXVARSIZE - 1,

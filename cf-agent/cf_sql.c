@@ -340,11 +340,11 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
 
     switch (dbtype)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         cfdb->data = CfConnectMysqlDB(remotehost, dbuser, passwd, db);
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         cfdb->data = CfConnectPostgresqlDB(remotehost, dbuser, passwd, db);
         break;
 
@@ -371,11 +371,11 @@ void CfCloseDB(CfdbConn *cfdb)
 
     switch (cfdb->type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         CfCloseMysqlDB(cfdb->data);
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         CfClosePostgresqlDb(cfdb->data);
         break;
 
@@ -417,11 +417,11 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
 
     switch (cfdb->type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         CfNewQueryMysqlDb(cfdb, query);
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         CfNewQueryPostgresqlDb(cfdb, query);
         break;
 
@@ -439,11 +439,11 @@ char **CfFetchRow(CfdbConn *cfdb)
 {
     switch (cfdb->type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         CfFetchMysqlRow(cfdb);
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         CfFetchPostgresqlRow(cfdb);
         break;
 
@@ -476,11 +476,11 @@ void CfDeleteQuery(CfdbConn *cfdb)
 {
     switch (cfdb->type)
     {
-    case cfd_mysql:
+    case DATABASE_TYPE_MYSQL:
         CfDeleteMysqlQuery(cfdb);
         break;
 
-    case cfd_postgres:
+    case DATABASE_TYPE_POSTGRES:
         CfDeletePostgresqlQuery(cfdb);
         break;
 

@@ -1193,9 +1193,9 @@ typedef struct
 
 typedef enum
 {
-    cfd_mysql,
-    cfd_postgres,
-    cfd_notype
+    DATABASE_TYPE_MYSQL,
+    DATABASE_TYPE_POSTGRES,
+    DATABASE_TYPE_NONE
 } DatabaseType;
 
 /*************************************************************************/

@@ -834,17 +834,6 @@ typedef struct
 
 } EditContext;
 
-/*************************************************************************/
-
-typedef struct PromiseIdent_
-{
-    char *handle;
-    char *filename;
-    char *classes;
-    int line_number;
-    struct PromiseIdent_ *next;
-} PromiseIdent;
-
 /*******************************************************************/
 /* Variable processing                                             */
 /*******************************************************************/

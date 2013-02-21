@@ -218,6 +218,19 @@ field_edits:
 
 ##
 
+bundle edit_line regex_replace(find,replace)
+# You can think of this like a PCRE powered sed.
+# Find exactly a regular expression and replace exactly the match with a string.
+{
+replace_patterns:
+
+ "$(find)"
+     replace_with => value("$(replace)"),
+          comment => "Search and replace string";
+}
+
+##
+
 bundle edit_line resolvconf(search,list)
 
  # search is the search domains with space

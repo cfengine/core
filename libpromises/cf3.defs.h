@@ -1154,20 +1154,6 @@ typedef enum
     INSERT_MATCH_TYPE_EXACT
 } InsertMatchType;
 
-enum monitord_rep
-{
-    mon_rep_mag,
-    mon_rep_week,
-    mon_rep_yr
-};
-
-enum software_rep
-{
-    sw_rep_installed,
-    sw_rep_patch_avail,
-    sw_rep_patch_installed
-};
-
 /*************************************************************************/
 /* Runtime constraint structures                                         */
 /*************************************************************************/

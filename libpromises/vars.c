@@ -56,26 +56,6 @@ void LoadSystemConstants()
 /* Variables                                                       */
 /*******************************************************************/
 
-void ForceScalar(char *lval, char *rval)
-{
-    Rval retval;
-
-    if (THIS_AGENT_TYPE != AGENT_TYPE_AGENT)
-    {
-        return;
-    }
-
-    if (GetVariable("match", lval, &retval) != DATA_TYPE_NONE)
-    {
-        DeleteVariable("match", lval);
-    }
-
-    NewScalar("match", lval, rval, DATA_TYPE_STRING);
-    CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
-}
-
-/*******************************************************************/
-
 void NewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
 {
     Rval rvald;

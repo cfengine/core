@@ -29,7 +29,6 @@
 #include "assoc.h"
 
 void LoadSystemConstants(void);
-void ForceScalar(char *lval, char *rval);
 void NewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
 void DeleteScalar(const char *scope, const char *lval);
 void NewList(const char *scope, const char *lval, void *rval, DataType dt);

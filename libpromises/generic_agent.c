@@ -62,14 +62,16 @@
 #include "reporting.h"
 #endif
 
+#include <assert.h>
+
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void CheckWorkingDirectories(const ReportContext *report_context);
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
-static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context);
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
+static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
 static void CheckVariablePromises(char *scope, Seq *var_promises);
@@ -356,21 +358,46 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
 
 Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    Policy *policy = Cf3ParseFiles(config, report_context);
+    // TODO: remove PARSING
+    PARSING = true;
+
+    PROMISETIME = time(NULL);
+
+    Seq *errors = SeqNew(100, PolicyErrorDestroy);
+    Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
+
+    HashVariables(main_policy, NULL, report_context);
+    HashControls(main_policy, config);
+
+    if (PolicyIsRunnable(main_policy))
     {
-        Seq *errors = SeqNew(100, PolicyErrorDestroy);
-        if (!PolicyCheckPartial(policy, errors))
+        Policy *aux_policy = Cf3ParseFiles(config, InputFiles(main_policy), errors, report_context);
+        if (aux_policy)
         {
-            Writer *writer = FileWriter(stderr);
-            for (size_t i = 0; i < errors->length; i++)
-            {
-                PolicyErrorWrite(writer, errors->data[i]);
-            }
-            WriterClose(writer);
+            main_policy = PolicyMerge(main_policy, aux_policy);
         }
 
-        SeqDestroy(errors);
+        if (config->check_runnable)
+        {
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
+            PolicyCheckRunnable(main_policy, errors, config->ignore_missing_bundles);
+        }
     }
+
+    PARSING = false;
+
+    if (SeqLength(errors) > 0)
+    {
+        Writer *writer = FileWriter(stderr);
+        for (size_t i = 0; i < errors->length; i++)
+        {
+            PolicyErrorWrite(writer, errors->data[i]);
+        }
+        WriterClose(writer);
+        exit(EXIT_FAILURE); // TODO: do not exit
+    }
+
+    SeqDestroy(errors);
 
 /* Now import some web variables that are set in cf-know/control for the report options */
 
@@ -394,36 +421,14 @@ Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config,
 
     ShowContext(report_context);
 
-    if (config->check_runnable || PolicyIsRunnable(policy))
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-
-        Seq *errors = SeqNew(100, PolicyErrorDestroy);
-        if (!PolicyCheckRunnable(policy, errors, config->ignore_missing_bundles))
-        {
-            Writer *writer = FileWriter(stderr);
-            for (size_t i = 0; i < errors->length; i++)
-            {
-                PolicyErrorWrite(writer, errors->data[i]);
-            }
-            WriterClose(writer);
-
-            // TODO: exiting here because it does not make sense to continue.
-            // however, this condition should be bubbled up somehow, rather than exiting.
-            // need to restructure a bit first, separating reading from checking.
-            exit(EXIT_FAILURE);
-        }
-        SeqDestroy(errors);
-    }
-
-    VerifyPromises(policy, config, report_context);
+    VerifyPromises(main_policy, config, report_context);
 
     if (agent_type != AGENT_TYPE_COMMON)
     {
         ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
     }
 
-    return policy;
+    return main_policy;
 }
 
 /*****************************************************************************/
@@ -603,72 +608,60 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(GenericAgentConfig *config, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context)
 {
-    // TODO: remove PARSING
-    PARSING = true;
+    Policy *policy = PolicyNew();
 
-    PROMISETIME = time(NULL);
-
-    Policy *main_policy = Cf3ParseFile(config, config->input_file);
-
-    HashVariables(main_policy, NULL, report_context);
-    HashControls(main_policy, config);
-
-    if (PolicyIsRunnable(main_policy))
+    for (const Rlist *rp = inputs; rp; rp = rp->next)
     {
-        for (const Rlist *rp = InputFiles(main_policy); rp; rp = rp->next)
+        // TODO: ad-hoc validation, necessary?
+        if (rp->type != RVAL_TYPE_SCALAR)
         {
-            // TODO: ad-hoc validation, necessary?
-            if (rp->type != RVAL_TYPE_SCALAR)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Non-file object in inputs list\n");
-            }
-            else
-            {
-                Rval returnval;
-
-                if (strcmp(rp->item, CF_NULL_VALUE) == 0)
-                {
-                    continue;
-                }
-
-                returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
-
-                switch (returnval.type)
-                {
-                    case RVAL_TYPE_SCALAR:
-                    {
-                        Policy *policy = Cf3ParseFile(config, returnval.item);
-                        main_policy = PolicyMerge(main_policy, policy);
-                    }
-                    break;
-
-                    case RVAL_TYPE_LIST:
-                    for (const Rlist *sl = returnval.item; sl != NULL; sl = sl->next)
-                    {
-                        Policy *policy = Cf3ParseFile(config, sl->item);
-                        main_policy = PolicyMerge(main_policy, policy);
-                    }
-                    break;
-
-                    default:
-                    break;
-                }
-
-                RvalDestroy(returnval);
-            }
-
-            HashVariables(main_policy, NULL, report_context);
-            HashControls(main_policy, config);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Non-file object in inputs list\n");
+            continue;
         }
+        else
+        {
+            Rval returnval;
+
+            if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+            {
+                continue;
+            }
+
+            returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
+
+            Policy *aux_policy = NULL;
+            switch (returnval.type)
+            {
+            case RVAL_TYPE_SCALAR:
+                aux_policy = Cf3ParseFile(config, returnval.item, errors);
+                break;
+
+            case RVAL_TYPE_LIST:
+                aux_policy = Cf3ParseFiles(config, returnval.item, errors, report_context);
+                break;
+
+            default:
+                ProgrammingError("Unknown type in input list for parsing: %d", returnval.type);
+                break;
+            }
+
+            if (aux_policy)
+            {
+                policy = PolicyMerge(policy, aux_policy);
+            }
+
+            RvalDestroy(returnval);
+        }
+
+        HashVariables(policy, NULL, report_context);
+        HashControls(policy, config);
     }
 
-    HashVariables(main_policy, NULL, report_context);
+    HashVariables(policy, NULL, report_context);
 
-    PARSING = false;
-
-    return main_policy;
+    return policy;
 }
 
 /*******************************************************************/
@@ -924,7 +917,7 @@ void CloseReports(const char *agents, ReportContext *report_context)
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename)
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -962,6 +955,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         exit(1);
     }
 
+    Policy *policy = NULL;
     if (StringEndsWith(wfilename, ".json"))
     {
         char *contents = NULL;
@@ -975,17 +969,20 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         {
             FatalError("Error parsing JSON input file");
         }
-        Policy *policy = PolicyFromJson(json_policy);
+
+        policy = PolicyFromJson(json_policy);
 
         JsonElementDestroy(json_policy);
         free(contents);
-
-        return policy;
     }
     else
     {
-        return ParserParseFile(wfilename);
+        policy = ParserParseFile(wfilename);
     }
+
+    assert(policy);
+
+    return PolicyCheckPartial(policy, errors) ? policy : NULL;
 }
 
 /*******************************************************************/

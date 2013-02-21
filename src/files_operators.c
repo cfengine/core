@@ -2520,7 +2520,14 @@ bool SaveItemListCallback(const char *dest_filename, const char *orig_filename, 
 
     for (ip = liststart; ip != NULL; ip = ip->next)
     {
-        fprintf(fp, "%s\n", ip->name);
+        if (ip->next == NULL)
+        {
+            fprintf(fp, "%s", ip->name);
+        }
+        else
+        {
+            fprintf(fp, "%s\n", ip->name);
+        }
     }
 
     if (fclose(fp) == -1)

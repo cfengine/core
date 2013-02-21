@@ -1419,7 +1419,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             continue;
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_bundlesequence].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
             returnval = ExpandPrivateRval(CONTEXTID, cp->rval);
         }
@@ -1436,12 +1436,12 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_output_prefix].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
         {
             strncpy(VPREFIX, returnval.item, CF_MAXVARSIZE);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_domain].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
         {
             strcpy(VDOMAIN, cp->rval.item);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET domain = %s\n", VDOMAIN);
@@ -1454,19 +1454,19 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             HardClass(VDOMAIN);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
             config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
         }
 
-        if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
+        if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_GOALPATTERNS].lval) == 0)
         {
             /* Ignored */
             continue;

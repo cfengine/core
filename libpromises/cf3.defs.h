@@ -582,25 +582,25 @@ typedef enum
 
 /*************************************************************************/
 
-enum cfgcontrol
+typedef enum
 {
-    cfg_bundlesequence,
-    cfg_goalpatterns,
-    cfg_ignore_missing_bundles,
-    cfg_ignore_missing_inputs,
-    cfg_inputs,
-    cfg_version,
-    cfg_lastseenexpireafter,
-    cfg_output_prefix,
-    cfg_domain,
-    cfg_require_comments,
-    cfg_licenses,
-    cfg_site_classes,
-    cfg_syslog_host,
-    cfg_syslog_port,
-    cfg_fips_mode,
-    cfg_noagent
-};
+    COMMON_CONTROL_BUNDLESEQUENCE,
+    COMMON_CONTROL_GOALPATTERNS,
+    COMMON_CONTROL_IGNORE_MISSING_BUNDLES,
+    COMMON_CONTROL_IGNORE_MISSING_INPUTS,
+    COMMON_CONTROL_INPUTS,
+    COMMON_CONTROL_VERSION,
+    COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER,
+    COMMON_CONTROL_OUTPUT_PREFIX,
+    COMMON_CONTROL_DOMAIN,
+    COMMON_CONTROL_REQUIRE_COMMENTS,
+    COMMON_CONTROL_LICENSES,
+    COMMON_CONTROL_SITE_CLASSES,
+    COMMON_CONTROL_SYSLOG_HOST,
+    COMMON_CONTROL_SYSLOG_PORT,
+    COMMON_CONTROL_FIPS_MODE,
+    COMMON_CONTROL_NONE
+} CommonControl;
 
 /*************************************************************************/
 

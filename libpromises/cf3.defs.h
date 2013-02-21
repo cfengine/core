@@ -1105,7 +1105,7 @@ typedef enum
 {
     ACL_TYPE_GENERIC,
     ACL_TYPE_POSIX,
-    ACL_TYPE_NTFS,
+    ACL_TYPE_NTFS_,
     ACL_TYPE_NONE
 } AclType;
 

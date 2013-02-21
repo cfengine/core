@@ -33,7 +33,6 @@
 #include <stdio.h>
 
 int CheckParseVariableName(const char *name);
-void CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
 void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 int CheckParseClass(const char *lv, const char *s, const char *range);
 DataType StringDataType(const char *scopeid, const char *string);

@@ -86,7 +86,7 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 
 static void GetCPUInfo(void);
 
-static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
+static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
 {
     {"-", "-", "-"},            /* as appear here are matched. The fields are sysname and machine */
     {"hp-ux", ".*", ".*"},      /* hpux */
@@ -107,7 +107,7 @@ static const char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3] =
     {"vmkernel", ".*", ".*"},   /* VMWARE / ESX */
 };
 
-static const char *VRESOLVCONF[HARD_CLASSES_MAX] =
+static const char *VRESOLVCONF[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/etc/resolv.conf",         /* hpux */
@@ -128,7 +128,7 @@ static const char *VRESOLVCONF[HARD_CLASSES_MAX] =
     "/etc/resolv.conf",         /* vmware */
 };
 
-static const char *VMAILDIR[HARD_CLASSES_MAX] =
+static const char *VMAILDIR[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/var/mail",                /* hpux */
@@ -149,7 +149,7 @@ static const char *VMAILDIR[HARD_CLASSES_MAX] =
     "/var/spool/mail",          /* vmware */
 };
 
-static const char *VEXPORTS[HARD_CLASSES_MAX] =
+static const char *VEXPORTS[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/etc/exports",             /* hpux */
@@ -318,7 +318,7 @@ void GetNameInfo3()
     }
 #endif
 
-    for (i = 0; i < HARD_CLASSES_MAX; i++)
+    for (i = 0; i < PLATFORM_CONTEXT_MAX; i++)
     {
         char sysname[CF_BUFSIZE];
         strlcpy(sysname, VSYSNAME.sysname, CF_BUFSIZE);
@@ -334,7 +334,7 @@ void GetNameInfo3()
 
                     found = true;
 
-                    VSYSTEMHARDCLASS = (enum classes) i;
+                    VSYSTEMHARDCLASS = (PlatformContext) i;
                     NewScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
                     break;
                 }

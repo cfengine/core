@@ -68,7 +68,7 @@ extern char VIPADDRESS[];
 extern char VPREFIX[];
 
 extern char VDOMAIN[CF_MAXVARSIZE];
-extern enum classes VSYSTEMHARDCLASS;
+extern PlatformContext VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 

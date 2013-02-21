@@ -38,7 +38,7 @@
 Item *ALL_INCOMING;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
-static const char *VNETSTAT[HARD_CLASSES_MAX] =
+static const char *VNETSTAT[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/usr/bin/netstat -rn",     /* hpux */

@@ -193,4 +193,4 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
 bool MINUSF = false;
 
-enum classes VSYSTEMHARDCLASS;
+PlatformContext VSYSTEMHARDCLASS;

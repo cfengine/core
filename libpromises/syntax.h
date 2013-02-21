@@ -32,7 +32,6 @@
 
 #include <stdio.h>
 
-int LvalWantsBody(char *stype, char *lval);
 int CheckParseVariableName(const char *name);
 void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss);
 void CheckSelection(char *type, char *name, char *lval, Rval rval);

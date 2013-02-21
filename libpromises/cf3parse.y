@@ -44,6 +44,7 @@ extern char *yytext;
 
 static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
+static bool LvalWantsBody(char *stype, char *lval);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -736,5 +737,50 @@ static int RelevantBundle(const char *agent, const char *blocktype)
     }
 
     DeleteItemList(ip);
+    return false;
+}
+
+static bool LvalWantsBody(char *stype, char *lval)
+{
+    int i, j, l;
+    const SubTypeSyntax *ss;
+    const BodySyntax *bs;
+
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        {
+            continue;
+        }
+
+        for (j = 0; ss[j].subtype != NULL; j++)
+        {
+            if ((bs = ss[j].bs) == NULL)
+            {
+                continue;
+            }
+
+            if (strcmp(ss[j].subtype, stype) != 0)
+            {
+                continue;
+            }
+
+            for (l = 0; bs[l].range != NULL; l++)
+            {
+                if (strcmp(bs[l].lval, lval) == 0)
+                {
+                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
     return false;
 }

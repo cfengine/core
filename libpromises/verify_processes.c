@@ -196,7 +196,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
             }
             else
             {
-                if (IsExecutable(GetArg0(a.process_stop)))
+                if (IsExecutable(CommandArg0(a.process_stop)))
                 {
                     ShellCommandReturnsZero(a.process_stop, false);
                 }
@@ -267,7 +267,7 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
         for (rp = a.signals; rp != NULL; rp = rp->next)
         {
-            int signal = Signal2Int(rp->item);
+            int signal = SignalFromString(rp->item);
 
             if (!DONTDO)
             {

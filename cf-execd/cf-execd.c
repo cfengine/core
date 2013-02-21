@@ -389,7 +389,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_agent_expireafter].lval) == 0)
             {
-                config->agent_expireafter = Str2Int(retval.item);
+                config->agent_expireafter = IntFromString(retval.item);
                 CfDebug("agent_expireafter = %d\n", config->agent_expireafter);
             }
 
@@ -401,13 +401,13 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
             {
-                config->mail_max_lines = Str2Int(retval.item);
+                config->mail_max_lines = IntFromString(retval.item);
                 CfDebug("maxlines = %d\n", config->mail_max_lines);
             }
 
             if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
             {
-                int time = Str2Int(RvalScalarValue(retval));
+                int time = IntFromString(RvalScalarValue(retval));
 
                 SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
             }

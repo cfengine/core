@@ -554,28 +554,28 @@ static void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
-                RUNATTR.copy.force_ipv4 = GetBoolean(retval.item);
+                RUNATTR.copy.force_ipv4 = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TRUSTKEY].lval) == 0)
             {
-                RUNATTR.copy.trustkey = GetBoolean(retval.item);
+                RUNATTR.copy.trustkey = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET trustkey = %d\n", RUNATTR.copy.trustkey);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_ENCRYPT].lval) == 0)
             {
-                RUNATTR.copy.encrypt = GetBoolean(retval.item);
+                RUNATTR.copy.encrypt = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET encrypt = %d\n", RUNATTR.copy.encrypt);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                RUNATTR.copy.portnumber = (short) Str2Int(retval.item);
+                RUNATTR.copy.portnumber = (short) IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
                 continue;
             }
@@ -593,20 +593,20 @@ static void KeepControlPromises(Policy *policy)
                 }
                 else
                 {
-                    BACKGROUND = GetBoolean(retval.item);
+                    BACKGROUND = BooleanFromString(retval.item);
                 }
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_MAX_CHILD].lval) == 0)
             {
-                MAXCHILD = (short) Str2Int(retval.item);
+                MAXCHILD = (short) IntFromString(retval.item);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_OUTPUT_TO_FILE].lval) == 0)
             {
-                OUTPUT_TO_FILE = GetBoolean(retval.item);
+                OUTPUT_TO_FILE = BooleanFromString(retval.item);
                 continue;
             }
 
@@ -622,7 +622,7 @@ static void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TIMEOUT].lval) == 0)
             {
-                RUNATTR.copy.timeout = (short) Str2Int(retval.item);
+                RUNATTR.copy.timeout = (short) IntFromString(retval.item);
                 continue;
             }
 
@@ -640,7 +640,7 @@ static void KeepControlPromises(Policy *policy)
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != DATA_TYPE_NONE)
     {
-        LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
 }

@@ -648,7 +648,7 @@ int BooleanControl(const char *scope, const char *name)
 
     if (GetVariable(scope, name, &retval) != DATA_TYPE_NONE)
     {
-        return GetBoolean(retval.item);
+        return BooleanFromString(retval.item);
     }
 
     return false;

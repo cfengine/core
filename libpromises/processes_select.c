@@ -296,7 +296,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
     if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
     {
-        value = Str2Int(line[i]);
+        value = IntFromString(line[i]);
 
         if (value == CF_NOINT)
         {

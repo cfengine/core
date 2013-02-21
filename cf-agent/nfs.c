@@ -525,11 +525,11 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 
     if (!DONTDO)
     {
-        snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
+        snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
 
         if ((pfp = cf_popen(comm, "r")) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", GetArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
         }
 

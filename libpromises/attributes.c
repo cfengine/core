@@ -689,7 +689,7 @@ TransactionContext GetTransactionConstraints(const Promise *pp)
 
     t.audit = PromiseGetConstraintAsBoolean("audit", pp);
     t.log_string = ConstraintGetRvalValue("log_string", pp, RVAL_TYPE_SCALAR);
-    t.log_priority = SyslogPriority2Int(ConstraintGetRvalValue("log_priority", pp, RVAL_TYPE_SCALAR));
+    t.log_priority = SyslogPriorityFromString(ConstraintGetRvalValue("log_priority", pp, RVAL_TYPE_SCALAR));
 
     t.log_kept = ConstraintGetRvalValue("log_kept", pp, RVAL_TYPE_SCALAR);
     t.log_repaired = ConstraintGetRvalValue("log_repaired", pp, RVAL_TYPE_SCALAR);
@@ -1540,11 +1540,11 @@ StorageVolume GetVolumeConstraints(const Promise *pp)
     v.check_foreign = PromiseGetConstraintAsBoolean("check_foreign", pp);
     value = ConstraintGetRvalValue("freespace", pp, RVAL_TYPE_SCALAR);
 
-    v.freespace = (long) Str2Int(value);
+    v.freespace = (long) IntFromString(value);
     value = ConstraintGetRvalValue("sensible_size", pp, RVAL_TYPE_SCALAR);
-    v.sensible_size = (int) Str2Int(value);
+    v.sensible_size = (int) IntFromString(value);
     value = ConstraintGetRvalValue("sensible_count", pp, RVAL_TYPE_SCALAR);
-    v.sensible_count = (int) Str2Int(value);
+    v.sensible_count = (int) IntFromString(value);
     v.scan_arrivals = PromiseGetConstraintAsBoolean("scan_arrivals", pp);
 
 // defaults

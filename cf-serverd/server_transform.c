@@ -291,28 +291,28 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
-                DENYBADCLOCKS = GetBoolean(retval.item);
+                DENYBADCLOCKS = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
-                LOGENCRYPT = GetBoolean(retval.item);
+                LOGENCRYPT = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
-                SV.logconns = GetBoolean(retval.item);
+                SV.logconns = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGCONNS = %d\n", LOGCONNS);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_MAX_CONNECTIONS].lval) == 0)
             {
-                CFD_MAXPROCESSES = (int) Str2Int(retval.item);
+                CFD_MAXPROCESSES = (int) IntFromString(retval.item);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
                 continue;
@@ -320,14 +320,14 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
-                COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
+                COLLECT_INTERVAL = (int) 60 * IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
-                SERVER_LISTEN = GetBoolean(retval.item);
+                SERVER_LISTEN = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET server listen = %s \n",
                       (SERVER_LISTEN)? "true":"false");
                 continue;
@@ -335,7 +335,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
-                COLLECT_WINDOW = (int) Str2Int(retval.item);
+                COLLECT_WINDOW = (int) IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
@@ -452,11 +452,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                SHORT_CFENGINEPORT = (short) Str2Int(retval.item);
+                SHORT_CFENGINEPORT = (short) IntFromString(retval.item);
                 strncpy(STR_CFENGINEPORT, retval.item, 15);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
                       RvalScalarValue(retval));
-                SHORT_CFENGINEPORT = htons((short) Str2Int(retval.item));
+                SHORT_CFENGINEPORT = htons((short) IntFromString(retval.item));
                 continue;
             }
 
@@ -482,18 +482,18 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != DATA_TYPE_NONE)
     {
-        SetSyslogPort(Str2Int(retval.item));
+        SetSyslogPort(IntFromString(retval.item));
     }
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != DATA_TYPE_NONE)
     {
-        FIPS_MODE = GetBoolean(retval.item);
+        FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != DATA_TYPE_NONE)
     {
-        LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 }
 

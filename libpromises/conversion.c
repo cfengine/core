@@ -126,7 +126,7 @@ InsertMatchType InsertMatchTypeFromString(const char *s)
     return FindTypeInArray(INSERT_MATCH_TYPES, s, INSERT_MATCH_TYPE_EXACT, INSERT_MATCH_TYPE_EXACT);
 }
 
-int SyslogPriority2Int(const char *s)
+int SyslogPriorityFromString(const char *s)
 {
     static const char *SYSLOG_PRIORITY_TYPES[] =
     { "emergency", "alert", "critical", "error", "warning", "notice", "info", "debug", NULL };
@@ -187,7 +187,7 @@ char *Rlist2String(Rlist *list, char *sep)
 
 /***************************************************************************/
 
-int Signal2Int(char *s)
+int SignalFromString(const char *s)
 {
     int i = 0;
     Item *ip, *names = SplitString(CF_SIGNALRANGE, ',');
@@ -290,15 +290,15 @@ DataType DataTypeFromString(const char *name)
 }
 
 
-DataType GetControlDatatype(const char *varname, const BodySyntax *bp)
+DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
 {
     int i = 0;
 
-    for (i = 0; bp[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].range != NULL; i++)
     {
-        if (varname && (strcmp(bp[i].lval, varname) == 0))
+        if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {
-            return bp[i].dtype;
+            return body_syntax[i].dtype;
         }
     }
 
@@ -307,7 +307,7 @@ DataType GetControlDatatype(const char *varname, const BodySyntax *bp)
 
 /****************************************************************************/
 
-int GetBoolean(const char *s)
+bool BooleanFromString(const char *s)
 {
     Item *list = SplitString(CF_BOOL, ','), *ip;
     int count = 0;
@@ -336,7 +336,7 @@ int GetBoolean(const char *s)
 
 /****************************************************************************/
 
-long Str2Int(const char *s)
+long IntFromString(const char *s)
 {
     long a = CF_NOINT;
     char c = 'X';
@@ -438,7 +438,7 @@ static int GetMonthLength(int month, int year)
     }
 }
 
-long TimeAbs2Int(char *s)
+long TimeAbs2Int(const char *s)
 {
     time_t cftime;
     int i;
@@ -450,15 +450,15 @@ long TimeAbs2Int(char *s)
         return CF_NOINT;
     }
 
-    year = Str2Int(VYEAR);
+    year = IntFromString(VYEAR);
 
     if (strstr(s, ":"))         /* Hr:Min */
     {
         sscanf(s, "%2[^:]:%2[^:]:", h, m);
         month = Month2Int(VMONTH);
-        day = Str2Int(VDAY);
-        hour = Str2Int(h);
-        min = Str2Int(m);
+        day = IntFromString(VDAY);
+        hour = IntFromString(h);
+        min = IntFromString(m);
     }
     else                        /* date Month */
     {
@@ -505,7 +505,7 @@ long Months2Seconds(int m)
     }
 
     this_month = Month2Int(VMONTH);
-    year = Str2Int(VYEAR);
+    year = IntFromString(VYEAR);
 
     for (i = 0; i < m; i++)
     {
@@ -534,7 +534,7 @@ Interval IntervalFromString(const char *string)
 
 /*********************************************************************/
 
-int Day2Number(char *datestring)
+int Day2Number(const char *datestring)
 {
     int i = 0;
 
@@ -551,7 +551,7 @@ int Day2Number(char *datestring)
 
 /****************************************************************************/
 
-double Str2Double(const char *s)
+double DoubleFromString(const char *s)
 {
     double a = CF_NODOUBLE;
     char remainder[CF_BUFSIZE];
@@ -687,7 +687,7 @@ ServicePolicy ServicePolicyFromString(const char *string)
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, cfsrv_start, cfsrv_start);
 }
 
-char *Dtype2Str(DataType dtype)
+const char *DataTypeToString(DataType dtype)
 {
     switch (dtype)
     {
@@ -764,14 +764,14 @@ const char *DataTypeShortToType(char *short_type)
 /* Level                                                             */
 /*********************************************************************/
 
-int Month2Int(char *string)
+int Month2Int(const char *string)
 {
     return MonthLen2Int(string, MAX_MONTH_NAME);
 }
 
 /*************************************************************/
 
-int MonthLen2Int(char *string, int len)
+int MonthLen2Int(const char *string, int len)
 {
     int i;
 
@@ -809,7 +809,7 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 
 /*********************************************************************/
 
-const char *GetArg0(const char *execstr)
+const char *CommandArg0(const char *execstr)
 /** 
  * WARNING: Not thread-safe.
  **/
@@ -844,7 +844,7 @@ const char *GetArg0(const char *execstr)
 
 /*************************************************************/
 
-void CommPrefix(char *execstr, char *comm)
+void CommandPrefix(char *execstr, char *comm)
 {
     char *sp;
 
@@ -882,39 +882,6 @@ int NonEmptyLine(char *line)
     return false;
 }
 
-/*************************************************************/
-
-char *Item2String(Item *ip)
-{
-    Item *currItem;
-    int stringSz = 0;
-    char *buf;
-
-    // compute required buffer size
-    for (currItem = ip; currItem != NULL; currItem = currItem->next)
-    {
-        stringSz += strlen(currItem->name);
-        stringSz++;             // newline space
-    }
-
-    // we automatically get \0-termination because we are not appending a \n after the last item
-
-    buf = xcalloc(1, stringSz);
-
-    // do the copy
-    for (currItem = ip; currItem != NULL; currItem = currItem->next)
-    {
-        strcat(buf, currItem->name);
-
-        if (currItem->next != NULL)     // no newline after last item
-        {
-            strcat(buf, "\n");
-        }
-    }
-
-    return buf;
-}
-
 /*******************************************************************/
 
 static int IsSpace(char *remainder)
@@ -934,7 +901,7 @@ static int IsSpace(char *remainder)
 
 /*******************************************************************/
 
-int IsRealNumber(char *s)
+int IsRealNumber(const char *s)
 {
     double a = CF_NODOUBLE;
 

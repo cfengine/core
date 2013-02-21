@@ -1437,7 +1437,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         DeleteVariable(scope, cp->lval);
 
         if (!AddVariableHash(scope, cp->lval, returnval,
-                             GetControlDatatype(cp->lval, bp), cp->audit->filename, cp->offset.line))
+                             BodySyntaxGetDataType(bp, cp->lval), cp->audit->filename, cp->offset.line))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
         }
@@ -1463,13 +1463,13 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_inputs].lval) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
-            config->ignore_missing_inputs = GetBoolean(cp->rval.item);
+            config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_ignore_missing_bundles].lval) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
-            config->ignore_missing_bundles = GetBoolean(cp->rval.item);
+            config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
@@ -1523,10 +1523,10 @@ void ManPage(const char *component, const struct option options[], const char *h
 {
     int i;
 
-    printf(".TH %s 8 \"Maintenance Commands\"\n", GetArg0(component));
+    printf(".TH %s 8 \"Maintenance Commands\"\n", CommandArg0(component));
     printf(".SH NAME\n%s\n\n", component);
 
-    printf(".SH SYNOPSIS:\n\n %s [options]\n\n.SH DESCRIPTION:\n\n%s\n", GetArg0(component), id);
+    printf(".SH SYNOPSIS:\n\n %s [options]\n\n.SH DESCRIPTION:\n\n%s\n", CommandArg0(component), id);
 
     printf(".B cfengine\n"
            "is a self-healing configuration and change management based system. You can think of"

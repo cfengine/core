@@ -750,7 +750,7 @@ static void CheckParseInt(const char *lval, const char *s, const char *range)
         return;
     }
 
-    val = Str2Int(s);
+    val = IntFromString(s);
 
     if (val == CF_NOINT)
     {
@@ -839,7 +839,7 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 
     for (ip = rangep; ip != NULL; ip = ip->next)
     {
-        val = Str2Int(ip->name);
+        val = IntFromString(ip->name);
 
         if (val > max || val < min)
         {
@@ -903,7 +903,7 @@ static void CheckParseReal(const char *lval, const char *s, const char *range)
         FatalError("INTERN:could not parse format specifier for int rvalues for lval %s", lval);
     }
 
-    val = Str2Double(s);
+    val = DoubleFromString(s);
 
     if (val > max || val < min)
     {
@@ -981,7 +981,7 @@ static void CheckParseRealRange(const char *lval, const char *s, const char *ran
 
     for (ip = rangep; ip != NULL; ip = ip->next)
     {
-        val = Str2Double(ip->name);
+        val = DoubleFromString(ip->name);
 
         if (val > max || val < min)
         {

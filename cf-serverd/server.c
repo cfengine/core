@@ -481,7 +481,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(GetArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
+        if (!AccessControl(CommandArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to denied access to requested object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);

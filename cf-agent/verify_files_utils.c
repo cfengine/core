@@ -1494,7 +1494,7 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
     ExpandScalar(attr.transformer, comm);
     CfOut(OUTPUT_LEVEL_INFORM, "", "I: Transforming: %s ", comm);
 
-    if (!IsExecutable(GetArg0(comm)))
+    if (!IsExecutable(CommandArg0(comm)))
     {
         cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
         return false;

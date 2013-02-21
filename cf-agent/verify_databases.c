@@ -578,7 +578,7 @@ static int VerifyTablePromise(CfdbConn *cfdb, char *table_path, Rlist *columns, 
 
         if (sizestr)
         {
-            size = Str2Int(sizestr);
+            size = IntFromString(sizestr);
         }
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ... discovered column (%s,%s,%d)", name, type, size);
@@ -923,7 +923,7 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
         {
             if (cols->next->next->item)
             {
-                (*size_table)[i] = Str2Int(cols->next->next->item);
+                (*size_table)[i] = IntFromString(cols->next->next->item);
             }
             else
             {

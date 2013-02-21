@@ -213,7 +213,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     {
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            result = Str2Int(rp->item);
+            result = IntFromString(rp->item);
 
             if (result < 0)
             {
@@ -260,7 +260,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
         if (total > 0)          // dist class
         {
-            prob = ((double) Str2Int(rp->item)) / ((double) total);
+            prob = ((double) IntFromString(rp->item)) / ((double) total);
             cum += prob;
 
             if ((fluct < cum) || rp->next == NULL)

@@ -183,7 +183,7 @@ static int PackageSanityCheck(Attributes a, Promise *pp)
         return false;
     }
 
-    if ((!a.packages.package_commands_useshell) && (a.packages.package_list_command) && (!IsExecutable(GetArg0(a.packages.package_list_command))))
+    if ((!a.packages.package_commands_useshell) && (a.packages.package_list_command) && (!IsExecutable(CommandArg0(a.packages.package_list_command))))
     {
         cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
              "The proposed package list command \"%s\" was not executable",
@@ -381,7 +381,7 @@ static bool PackageListInstalledFromCommand(PackageItem **installed_list, const 
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ???????????????????????????????????????????????????????????????\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Reading package list from %s\n", GetArg0(a.packages.package_list_command));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Reading package list from %s\n", CommandArg0(a.packages.package_list_command));
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ???????????????????????????????????????????????????????????????\n");
 
     FILE *fin;
@@ -470,7 +470,7 @@ static void ReportSoftware(PackageManager *list)
         {
             fprintf(fout, "%s,", CanonifyChar(pi->name, ','));
             fprintf(fout, "%s,", CanonifyChar(pi->version, ','));
-            fprintf(fout, "%s,%s\n", pi->arch, ReadLastNode(GetArg0(mp->manager)));
+            fprintf(fout, "%s,%s\n", pi->arch, ReadLastNode(CommandArg0(mp->manager)));
         }
     }
 
@@ -519,7 +519,7 @@ static PackageItem *GetCachedPackageList(PackageManager *manager, const char *de
 
 /* Max 2016 entries - at least a week */
 
-    snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(GetArg0(manager->manager)));
+    snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(CommandArg0(manager->manager)));
 
     int linenumber = 0;
     while (!feof(fin))
@@ -627,10 +627,10 @@ static int VerifyInstalledPackages(PackageManager **all_mgrs, const char *defaul
     if (a.packages.package_patch_list_command != NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ???????????????????????????????????????????????????????????????\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Reading patches from %s\n", GetArg0(a.packages.package_patch_list_command));
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Reading patches from %s\n", CommandArg0(a.packages.package_patch_list_command));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ???????????????????????????????????????????????????????????????\n");
 
-        if ((!a.packages.package_commands_useshell) && (!IsExecutable(GetArg0(a.packages.package_patch_list_command))))
+        if ((!a.packages.package_commands_useshell) && (!IsExecutable(CommandArg0(a.packages.package_patch_list_command))))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "The proposed patch list command \"%s\" was not executable",
                   a.packages.package_patch_list_command);
@@ -2105,7 +2105,7 @@ int ExecPackageCommand(char *command, int verify, int setCmdClasses, Attributes 
     FILE *pfp;
     int packmanRetval = 0;
 
-    if ((!a.packages.package_commands_useshell) && (!IsExecutable(GetArg0(command))))
+    if ((!a.packages.package_commands_useshell) && (!IsExecutable(CommandArg0(command))))
     {
         cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "The proposed package schedule command \"%s\" was not executable", command);
         return false;

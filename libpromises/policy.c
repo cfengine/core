@@ -1097,7 +1097,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     if ((strcmp(type->name, "classes") == 0) || (strcmp(type->name, "vars") == 0))
     {
-        if ((isdigit((int)*promiser)) && (Str2Int(promiser) != CF_NOINT))
+        if ((isdigit((int)*promiser)) && (IntFromString(promiser) != CF_NOINT))
         {
             yyerror("Variable or class identifier is purely numerical, which is not allowed");
         }
@@ -2227,7 +2227,7 @@ int PromiseGetConstraintAsInt(const char *lval, const Promise *pp)
                 FatalError("Aborted");
             }
 
-            retval = (int) Str2Int((char *) cp->rval.item);
+            retval = (int) IntFromString((char *) cp->rval.item);
         }
     }
 
@@ -2265,7 +2265,7 @@ double PromiseGetConstraintAsReal(const char *lval, const Promise *pp)
                 FatalError("Aborted");
             }
 
-            retval = Str2Double((char *) cp->rval.item);
+            retval = DoubleFromString((char *) cp->rval.item);
         }
     }
 

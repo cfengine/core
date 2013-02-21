@@ -526,14 +526,14 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_maxconnections].lval) == 0)
             {
-                CFA_MAXTHREADS = (int) Str2Int(retval.item);
+                CFA_MAXTHREADS = (int) IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET maxconnections = %d\n", CFA_MAXTHREADS);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_checksum_alert_time].lval) == 0)
             {
-                CF_PERSISTENCE = (int) Str2Int(retval.item);
+                CF_PERSISTENCE = (int) IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET checksum_alert_time = %d\n", CF_PERSISTENCE);
                 continue;
             }
@@ -633,20 +633,20 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_alwaysvalidate].lval) == 0)
             {
-                ALWAYS_VALIDATE = GetBoolean(retval.item);
+                ALWAYS_VALIDATE = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET alwaysvalidate = %d\n", ALWAYS_VALIDATE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_allclassesreport].lval) == 0)
             {
-                ALLCLASSESREPORT = GetBoolean(retval.item);
+                ALLCLASSESREPORT = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET allclassesreport = %d\n", ALLCLASSESREPORT);
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_secureinput].lval) == 0)
             {
-                CFPARANOID = GetBoolean(retval.item);
+                CFPARANOID = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET secure input = %d\n", CFPARANOID);
                 continue;
             }
@@ -666,7 +666,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_hashupdates].lval) == 0)
             {
-                bool enabled = GetBoolean(retval.item);
+                bool enabled = BooleanFromString(retval.item);
 
                 SetChecksumUpdates(enabled);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ChecksumUpdates %d\n", enabled);
@@ -714,21 +714,21 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_dryrun].lval) == 0)
             {
-                DONTDO = GetBoolean(retval.item);
+                DONTDO = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET dryrun = %c\n", DONTDO);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_inform].lval) == 0)
             {
-                INFORM = GetBoolean(retval.item);
+                INFORM = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET inform = %c\n", INFORM);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_verbose].lval) == 0)
             {
-                VERBOSE = GetBoolean(retval.item);
+                VERBOSE = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET inform = %c\n", VERBOSE);
                 continue;
             }
@@ -742,7 +742,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_skipidentify].lval) == 0)
             {
-                bool enabled = GetBoolean(retval.item);
+                bool enabled = BooleanFromString(retval.item);
 
                 SetSkipIdentify(enabled);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET skipidentify = %d\n", (int) enabled);
@@ -772,42 +772,42 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_mountfilesystems].lval) == 0)
             {
-                CF_MOUNTALL = GetBoolean(retval.item);
+                CF_MOUNTALL = BooleanFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET mountfilesystems = %d\n", CF_MOUNTALL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_editfilesize].lval) == 0)
             {
-                EDITFILESIZE = Str2Int(retval.item);
+                EDITFILESIZE = IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET EDITFILESIZE = %d\n", EDITFILESIZE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_ifelapsed].lval) == 0)
             {
-                VIFELAPSED = Str2Int(retval.item);
+                VIFELAPSED = IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ifelapsed = %d\n", VIFELAPSED);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_expireafter].lval) == 0)
             {
-                VEXPIREAFTER = Str2Int(retval.item);
+                VEXPIREAFTER = IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ifelapsed = %d\n", VEXPIREAFTER);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_timeout].lval) == 0)
             {
-                CONNTIMEOUT = Str2Int(retval.item);
+                CONNTIMEOUT = IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET timeout = %jd\n", (intmax_t) CONNTIMEOUT);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_max_children].lval) == 0)
             {
-                CFA_BACKGROUND_LIMIT = Str2Int(retval.item);
+                CFA_BACKGROUND_LIMIT = IntFromString(retval.item);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET MAX_CHILDREN = %d\n", CFA_BACKGROUND_LIMIT);
                 if (CFA_BACKGROUND_LIMIT > 10)
                 {
@@ -820,7 +820,7 @@ void KeepControlPromises(Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[cfa_syslog].lval) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog = %d\n", GetBoolean(retval.item));
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog = %d\n", BooleanFromString(retval.item));
                 continue;
             }
 
@@ -845,18 +845,18 @@ void KeepControlPromises(Policy *policy)
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != DATA_TYPE_NONE)
     {
-        LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != DATA_TYPE_NONE)
     {
-        FIPS_MODE = GetBoolean(retval.item);
+        FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
     if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != DATA_TYPE_NONE)
     {
-        SetSyslogPort(Str2Int(retval.item));
+        SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 

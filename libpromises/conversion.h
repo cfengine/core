@@ -28,6 +28,7 @@
 
 #include "cf3.defs.h"
 
+// Type-String conversion
 MeasurePolicy MeasurePolicyFromString(const char *s);
 EnvironmentState EnvironmentStateFromString(const char *s);
 InsertMatchType InsertMatchTypeFromString(const char *s);
@@ -37,6 +38,7 @@ OutputLevel OutputLevelFromString(const char *level);
 FileComparator FileComparatorFromString(const char *s);
 FileLinkType FileLinkTypeFromString(const char *s);
 DataType DataTypeFromString(const char *name);
+const char *DataTypeToString(DataType dtype);
 PackageActionPolicy PackageActionPolicyFromString(const char *s);
 PackageVersionComparator PackageVersionComparatorFromString(const char *s);
 PackageAction PackageActionFromString(const char *s);
@@ -45,43 +47,37 @@ AclType AclTypeFromString(const char *string);
 AclInheritance AclInheritanceFromString(const char *string);
 ServicePolicy ServicePolicyFromString(const char *string);
 KnowledgeRepresentation KnowledgeRepresentationFromString(const char *s);
+int SignalFromString(const char *s);
+int SyslogPriorityFromString(const char *s);
 
+
+// Date/Time conversion
+long Months2Seconds(int m);
+int Day2Number(const char *datestring);
+void TimeToDateStr(time_t t, char *outStr, int outStrSz);
+int Month2Int(const char *string);
+int MonthLen2Int(const char *string, int len);
+long TimeAbs2Int(const char *s);
+
+
+// Evalaution conversion
+bool BooleanFromString(const char *val);
+long IntFromString(const char *s);
+double DoubleFromString(const char *s);
+void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
+int IsRealNumber(const char *s);
+
+
+// Misc.
+char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
+DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
-long Months2Seconds(int m);
-
-
-
-int SyslogPriority2Int(const char *s);
-
-char *Rlist2String(Rlist *list, char *sep);
-int Signal2Int(char *s);
-
-
-
-
-DataType GetControlDatatype(const char *varname, const BodySyntax *bp);
-
-int GetBoolean(const char *val);
-long Str2Int(const char *s);
-long TimeAbs2Int(char *s);
-double Str2Double(const char *s);
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
-int Month2Int(char *string);
-int MonthLen2Int(char *string, int len);
-void TimeToDateStr(time_t t, char *outStr, int outStrSz);
-const char *GetArg0(const char *execstr);
-void CommPrefix(char *execstr, char *comm);
+const char *CommandArg0(const char *execstr);
+void CommandPrefix(char *execstr, char *comm);
 int NonEmptyLine(char *s);
-int Day2Number(char *datestring);
-
-
-
-
-char *Dtype2Str(DataType dtype);
 const char *DataTypeShortToType(char *short_type);
-char *Item2String(Item *ip);
-int IsRealNumber(char *s);
+int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
 #ifndef __MINGW32__
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
@@ -103,6 +99,6 @@ bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_
 char *SqlVariableExpand(const char *query);
 #endif
 
-int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
+
 
 #endif

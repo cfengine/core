@@ -193,7 +193,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
     int cmdOutBufPos = 0;
     int lineOutLen;
 
-    if (!IsExecutable(GetArg0(pp->promiser)))
+    if (!IsExecutable(CommandArg0(pp->promiser)))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "%s promises to be executable but isn't\n", pp->promiser);
 
@@ -206,7 +206,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Promiser string contains a valid executable (%s) - ok\n", GetArg0(pp->promiser));
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Promiser string contains a valid executable (%s) - ok\n", CommandArg0(pp->promiser));
     }
 
     char timeout_str[CF_BUFSIZE];
@@ -249,7 +249,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
     }
     else
     {
-        CommPrefix(cmdline, comm);
+        CommandPrefix(cmdline, comm);
 
         if (a.transaction.background)
         {

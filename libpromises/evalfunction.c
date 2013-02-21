@@ -227,7 +227,7 @@ static FnCallResult FnCallHostsSeen(FnCall *fp, Rlist *finalargs)
 {
     Item *addresses = NULL;
 
-    int horizon = Str2Int(RlistScalarValue(finalargs)) * 3600;
+    int horizon = IntFromString(RlistScalarValue(finalargs)) * 3600;
     char *policy = RlistScalarValue(finalargs->next);
     char *format = RlistScalarValue(finalargs->next->next);
 
@@ -288,8 +288,8 @@ static FnCallResult FnCallRandomInt(FnCall *fp, Rlist *finalargs)
 
 /* begin fn specific content */
 
-    int from = Str2Int(RlistScalarValue(finalargs));
-    int to = Str2Int(RlistScalarValue(finalargs->next));
+    int from = IntFromString(RlistScalarValue(finalargs));
+    int to = IntFromString(RlistScalarValue(finalargs->next));
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
@@ -321,7 +321,7 @@ static FnCallResult FnCallGetEnv(FnCall *fp, Rlist *finalargs)
 /* begin fn specific content */
 
     char *name = RlistScalarValue(finalargs);
-    int limit = Str2Int(RlistScalarValue(finalargs->next));
+    int limit = IntFromString(RlistScalarValue(finalargs->next));
 
     snprintf(ctrlstr, CF_SMALLBUF, "%%.%ds", limit);    // -> %45s
 
@@ -729,7 +729,7 @@ static FnCallResult FnCallReturnsZero(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!IsExecutable(GetArg0(RlistScalarValue(finalargs))))
+    if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
@@ -741,7 +741,7 @@ static FnCallResult FnCallReturnsZero(FnCall *fp, Rlist *finalargs)
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
 
-    if (cfstat(GetArg0(RlistScalarValue(finalargs)), &statbuf) == -1)
+    if (cfstat(CommandArg0(RlistScalarValue(finalargs)), &statbuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -767,7 +767,7 @@ static FnCallResult FnCallExecResult(FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (!IsExecutable(GetArg0(RlistScalarValue(finalargs))))
+    if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
@@ -801,7 +801,7 @@ static FnCallResult FnCallUseModule(FnCall *fp, Rlist *finalargs)
 
     snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command);
 
-    if (cfstat(GetArg0(modulecmd), &statbuf) == -1)
+    if (cfstat(CommandArg0(modulecmd), &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "(Plug-in module %s not found)", modulecmd);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -888,8 +888,8 @@ static FnCallResult FnCallReadTcp(FnCall *fp, Rlist *finalargs)
     char *sendstring = RlistScalarValue(finalargs->next->next);
     char *maxbytes = RlistScalarValue(finalargs->next->next->next);
 
-    val = Str2Int(maxbytes);
-    portnum = (short) Str2Int(port);
+    val = IntFromString(maxbytes);
+    portnum = (short) IntFromString(port);
 
     if (val < 0 || portnum < 0 || THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
@@ -1312,7 +1312,7 @@ static FnCallResult FnCallSum(FnCall *fp, Rlist *finalargs)
     {
         double x;
 
-        if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
+        if ((x = DoubleFromString(rp->item)) == CF_NODOUBLE)
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -1377,7 +1377,7 @@ static FnCallResult FnCallProduct(FnCall *fp, Rlist *finalargs)
     {
         double x;
 
-        if ((x = Str2Double(rp->item)) == CF_NODOUBLE)
+        if ((x = DoubleFromString(rp->item)) == CF_NODOUBLE)
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -1614,7 +1614,7 @@ static FnCallResult FnCallLsDir(FnCall *fp, Rlist *finalargs)
 
     char *dirname = RlistScalarValue(finalargs);
     char *regex = RlistScalarValue(finalargs->next);
-    int includepath = GetBoolean(RlistScalarValue(finalargs->next->next));
+    int includepath = BooleanFromString(RlistScalarValue(finalargs->next->next));
 
     dirh = OpenDirLocal(dirname);
 
@@ -1775,8 +1775,8 @@ static FnCallResult FnCallSelectServers(FnCall *fp, Rlist *finalargs)
     }
 
     hostnameip = RvalRlistValue(retval);
-    val = Str2Int(maxbytes);
-    portnum = (short) Str2Int(port);
+    val = IntFromString(maxbytes);
+    portnum = (short) IntFromString(port);
 
     if (val < 0 || portnum < 0)
     {
@@ -2215,7 +2215,7 @@ static FnCallResult FnCallRemoteScalar(FnCall *fp, Rlist *finalargs)
 
     char *handle = RlistScalarValue(finalargs);
     char *server = RlistScalarValue(finalargs->next);
-    int encrypted = GetBoolean(RlistScalarValue(finalargs->next->next));
+    int encrypted = BooleanFromString(RlistScalarValue(finalargs->next->next));
 
     if (strcmp(server, "localhost") == 0)
     {
@@ -2293,7 +2293,7 @@ static FnCallResult FnCallRemoteClassesMatching(FnCall *fp, Rlist *finalargs)
 
     char *regex = RlistScalarValue(finalargs);
     char *server = RlistScalarValue(finalargs->next);
-    int encrypted = GetBoolean(RlistScalarValue(finalargs->next->next));
+    int encrypted = BooleanFromString(RlistScalarValue(finalargs->next->next));
     char *prefix = RlistScalarValue(finalargs->next->next->next);
 
     if (strcmp(server, "localhost") == 0)
@@ -2342,7 +2342,7 @@ static FnCallResult FnCallPeers(FnCall *fp, Rlist *finalargs)
 
     char *filename = RlistScalarValue(finalargs);
     char *comment = RlistScalarValue(finalargs->next);
-    int groupsize = Str2Int(RlistScalarValue(finalargs->next->next));
+    int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -2431,7 +2431,7 @@ static FnCallResult FnCallPeerLeader(FnCall *fp, Rlist *finalargs)
 
     char *filename = RlistScalarValue(finalargs);
     char *comment = RlistScalarValue(finalargs->next);
-    int groupsize = Str2Int(RlistScalarValue(finalargs->next->next));
+    int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -2522,7 +2522,7 @@ static FnCallResult FnCallPeerLeaders(FnCall *fp, Rlist *finalargs)
 
     char *filename = RlistScalarValue(finalargs);
     char *comment = RlistScalarValue(finalargs->next);
-    int groupsize = Str2Int(RlistScalarValue(finalargs->next->next));
+    int groupsize = IntFromString(RlistScalarValue(finalargs->next->next));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -2733,8 +2733,8 @@ static FnCallResult FnCallIsLessGreaterThan(FnCall *fp, Rlist *finalargs)
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
-        double a = Str2Double(argv0);
-        double b = Str2Double(argv1);
+        double a = DoubleFromString(argv0);
+        double b = DoubleFromString(argv1);
 
         if (a == CF_NODOUBLE || b == CF_NODOUBLE)
         {
@@ -2805,8 +2805,8 @@ static FnCallResult FnCallIRange(FnCall *fp, Rlist *finalargs)
 
 /* begin fn specific content */
 
-    long from = Str2Int(RlistScalarValue(finalargs));
-    long to = Str2Int(RlistScalarValue(finalargs->next));
+    long from = IntFromString(RlistScalarValue(finalargs));
+    long to = IntFromString(RlistScalarValue(finalargs->next));
 
     if (from == CF_NOINT || to == CF_NOINT)
     {
@@ -2843,8 +2843,8 @@ static FnCallResult FnCallRRange(FnCall *fp, Rlist *finalargs)
 
 /* begin fn specific content */
 
-    double from = Str2Double(RlistScalarValue(finalargs));
-    double to = Str2Double(RlistScalarValue(finalargs->next));
+    double from = DoubleFromString(RlistScalarValue(finalargs));
+    double to = DoubleFromString(RlistScalarValue(finalargs->next));
 
     if (from == CF_NODOUBLE || to == CF_NODOUBLE)
     {
@@ -2886,7 +2886,7 @@ static FnCallResult FnCallOn(FnCall *fp, Rlist *finalargs)
     {
         if (rp != NULL)
         {
-            d[i] = Str2Int(RlistScalarValue(rp));
+            d[i] = IntFromString(RlistScalarValue(rp));
             rp = rp->next;
         }
     }
@@ -2960,7 +2960,7 @@ static FnCallResult FnCallLaterThan(FnCall *fp, Rlist *finalargs)
     {
         if (rp != NULL)
         {
-            d[i] = Str2Int(RlistScalarValue(rp));
+            d[i] = IntFromString(RlistScalarValue(rp));
             rp = rp->next;
         }
     }
@@ -3014,7 +3014,7 @@ static FnCallResult FnCallAgoDate(FnCall *fp, Rlist *finalargs)
     {
         if (rp != NULL)
         {
-            d[i] = Str2Int(RlistScalarValue(rp));
+            d[i] = IntFromString(RlistScalarValue(rp));
             rp = rp->next;
         }
     }
@@ -3062,7 +3062,7 @@ static FnCallResult FnCallAccumulatedDate(FnCall *fp, Rlist *finalargs)
     {
         if (rp != NULL)
         {
-            d[i] = Str2Int(RlistScalarValue(rp));
+            d[i] = IntFromString(RlistScalarValue(rp));
             rp = rp->next;
         }
     }
@@ -3120,7 +3120,7 @@ static FnCallResult FnCallReadFile(FnCall *fp, Rlist *finalargs)
 /* begin fn specific content */
 
     char *filename = RlistScalarValue(finalargs);
-    int maxsize = Str2Int(RlistScalarValue(finalargs->next));
+    int maxsize = IntFromString(RlistScalarValue(finalargs->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3153,8 +3153,8 @@ static FnCallResult ReadList(FnCall *fp, Rlist *finalargs, DataType type)
     char *filename = RlistScalarValue(finalargs);
     char *comment = RlistScalarValue(finalargs->next);
     char *split = RlistScalarValue(finalargs->next->next);
-    int maxent = Str2Int(RlistScalarValue(finalargs->next->next->next));
-    int maxsize = Str2Int(RlistScalarValue(finalargs->next->next->next->next));
+    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
+    int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3189,7 +3189,7 @@ static FnCallResult ReadList(FnCall *fp, Rlist *finalargs, DataType type)
     case DATA_TYPE_INT:
         for (rp = newlist; rp != NULL; rp = rp->next)
         {
-            if (Str2Int(RlistScalarValue(rp)) == CF_NOINT)
+            if (IntFromString(RlistScalarValue(rp)) == CF_NOINT)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Presumed int value \"%s\" read from file %s has no recognizable value",
                       RlistScalarValue(rp), filename);
@@ -3201,7 +3201,7 @@ static FnCallResult ReadList(FnCall *fp, Rlist *finalargs, DataType type)
     case DATA_TYPE_REAL:
         for (rp = newlist; rp != NULL; rp = rp->next)
         {
-            if (Str2Double(RlistScalarValue(rp)) == CF_NODOUBLE)
+            if (DoubleFromString(RlistScalarValue(rp)) == CF_NODOUBLE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Presumed real value \"%s\" read from file %s has no recognizable value",
                       RlistScalarValue(rp), filename);
@@ -3269,8 +3269,8 @@ static FnCallResult ReadArray(FnCall *fp, Rlist *finalargs, DataType type, int i
     char *filename = RlistScalarValue(finalargs->next);
     char *comment = RlistScalarValue(finalargs->next->next);
     char *split = RlistScalarValue(finalargs->next->next->next);
-    int maxent = Str2Int(RlistScalarValue(finalargs->next->next->next->next));
-    int maxsize = Str2Int(RlistScalarValue(finalargs->next->next->next->next->next));
+    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
+    int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3372,8 +3372,8 @@ static FnCallResult ParseArray(FnCall *fp, Rlist *finalargs, DataType type, int 
     char *instring = xstrdup(RlistScalarValue(finalargs->next));
     char *comment = RlistScalarValue(finalargs->next->next);
     char *split = RlistScalarValue(finalargs->next->next->next);
-    int maxent = Str2Int(RlistScalarValue(finalargs->next->next->next->next));
-    int maxsize = Str2Int(RlistScalarValue(finalargs->next->next->next->next->next));
+    int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
+    int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3456,7 +3456,7 @@ static FnCallResult FnCallSplitString(FnCall *fp, Rlist *finalargs)
 
     char *string = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
-    int max = Str2Int(RlistScalarValue(finalargs->next->next));
+    int max = IntFromString(RlistScalarValue(finalargs->next->next));
 
 // Read once to validate structure of file in itemlist
 
@@ -3931,12 +3931,12 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
                 break;
 
             case DATA_TYPE_INT:
-                ival = Str2Int(rp->item);
+                ival = IntFromString(rp->item);
                 snprintf(this_rval, CF_MAXVARSIZE, "%d", (int) ival);
                 break;
 
             case DATA_TYPE_REAL:
-                Str2Double(rp->item);   /* Verify syntax */
+                DoubleFromString(rp->item);   /* Verify syntax */
                 sscanf(rp->item, "%255s", this_rval);
                 break;
 
@@ -4048,7 +4048,7 @@ void ModuleProtocol(char *command, char *line, int print, const char *ns)
 
 /* Infer namespace from script name */
 
-    snprintf(arg0, CF_BUFSIZE, "%s", GetArg0(command));
+    snprintf(arg0, CF_BUFSIZE, "%s", CommandArg0(command));
     filename = basename(arg0);
 
 /* Canonicalize filename into acceptable namespace name*/

@@ -57,6 +57,8 @@ typedef enum
     SYNTAX_TYPE_MATCH_ERROR_FNCALL_RETURN_TYPE,
     SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN,
 
+    SYNTAX_TYPE_MATCH_ERROR_CONTEXT_OUT_OF_RANGE,
+
     SYNTAX_TYPE_MATCH_MAX
 } SyntaxTypeMatch;
 
@@ -64,7 +66,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
 
 int CheckParseVariableName(const char *name);
 SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
-int CheckParseClass(const char *lv, const char *s, const char *range);
+SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);

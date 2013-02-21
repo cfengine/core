@@ -1642,9 +1642,9 @@ void DeleteAllClasses(const Rlist *list)
 
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
-        if (!CheckParseClass("class cancellation", (char *) rp->item, CF_IDRANGE))
+        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
         {
-            return;
+            return; // TODO: interesting course of action, but why is the check there in the first place?
         }
 
         if (IsHardClass((char *) rp->item))

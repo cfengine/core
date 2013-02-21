@@ -165,7 +165,9 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_OPTS_OUT_OF_RANGE] = "Selection is out of bounds",
 
         [SYNTAX_TYPE_MATCH_ERROR_FNCALL_RETURN_TYPE] = "Function does not return the required type",
-        [SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN] = "Unknown function"
+        [SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN] = "Unknown function",
+
+        [SYNTAX_TYPE_MATCH_ERROR_CONTEXT_OUT_OF_RANGE] = "Context string is invalid/out of range"
     };
 
     return msgs[result];
@@ -289,7 +291,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
-        return CheckParseClass(lval, (const char *) rval.item, range);
+        return CheckParseContext((const char *) rval.item, range);
 
     case DATA_TYPE_INT_RANGE:
         return CheckParseIntRange(lval, (const char *) rval.item, range);
@@ -420,31 +422,19 @@ static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const c
 
 /****************************************************************************/
 
-int CheckParseClass(const char *lval, const char *s, const char *range)
+SyntaxTypeMatch CheckParseContext(const char *context, const char *range)
 {
-    char output[CF_BUFSIZE];
-
-    if (s == NULL)
-    {
-        return false;
-    }
-
-    CfDebug("\nCheckParseClass(%s => %s/%s)\n", lval, s, range);
-
     if (strlen(range) == 0)
     {
-        return true;
+        return SYNTAX_TYPE_MATCH_OK;
     }
 
-    if (FullTextMatch(range, s))
+    if (FullTextMatch(range, context))
     {
-        return true;
+        return SYNTAX_TYPE_MATCH_OK;
     }
 
-    snprintf(output, CF_BUFSIZE, "Class item on rhs of lval \'%s\' given as { %s } is out of bounds (should match %s)",
-             lval, s, range);
-    ReportError(output);
-    return false;
+    return SYNTAX_TYPE_MATCH_ERROR_CONTEXT_OUT_OF_RANGE;
 }
 
 /****************************************************************************/

@@ -82,7 +82,7 @@ void EndAudit(int background_tasks)
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if (BooleanControl("control_agent", CFA_CONTROLBODY[cfa_track_value].lval))
+    if (BooleanControl("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
     {
         FILE *fout;
         char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];

@@ -104,7 +104,7 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
         return false;
     }
 
-    if (attr.copy.backup == cfa_nobackup)
+    if (attr.copy.backup == BACKUP_OPTION_NO_BACKUP)
     {
         return true;
     }

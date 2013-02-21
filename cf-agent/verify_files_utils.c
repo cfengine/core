@@ -1116,7 +1116,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
     CfDebug("CopyRegularFile(%s,%s)\n", source, dest);
 
-    discardbackup = ((attr.copy.backup == cfa_nobackup) || (attr.copy.backup == cfa_repos_store));
+    discardbackup = ((attr.copy.backup == BACKUP_OPTION_NO_BACKUP) || (attr.copy.backup == BACKUP_OPTION_REPOSITORY_STORE));
 
     if (DONTDO)
     {
@@ -1245,7 +1245,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
 
         strncpy(backup, dest, CF_BUFSIZE);
 
-        if (attr.copy.backup == cfa_timestamp)
+        if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
             stampnow = time((time_t *) NULL);
             snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));

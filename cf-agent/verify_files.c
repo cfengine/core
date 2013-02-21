@@ -671,7 +671,7 @@ static void LoadSetuid(Attributes a, Promise *pp)
     char filename[CF_BUFSIZE];
 
     b = a;
-    b.edits.backup = cfa_nobackup;
+    b.edits.backup = BACKUP_OPTION_NO_BACKUP;
     b.edits.maxfilesize = 1000000;
 
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
@@ -691,7 +691,7 @@ static void SaveSetuid(Attributes a, Promise *pp)
     char filename[CF_BUFSIZE];
 
     b = a;
-    b.edits.backup = cfa_nobackup;
+    b.edits.backup = BACKUP_OPTION_NO_BACKUP;
     b.edits.maxfilesize = 1000000;
 
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);

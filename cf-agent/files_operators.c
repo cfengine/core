@@ -81,7 +81,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp)
             saved[0] = '\0';
             strcpy(saved, from);
 
-            if (attr.copy.backup == cfa_timestamp || attr.edits.backup == cfa_timestamp)
+            if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP || attr.edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
                 snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
                 strcat(saved, stamp);
@@ -174,7 +174,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     strcpy(backup, file);
 
-    if (a.edits.backup == cfa_timestamp)
+    if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
         snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&stamp_now)));
         strcat(backup, stamp);
@@ -198,13 +198,13 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         return false;
     }
 
-    if (a.edits.backup == cfa_rotate)
+    if (a.edits.backup == BACKUP_OPTION_ROTATE)
     {
         RotateFiles(backup, a.edits.rotate);
         unlink(backup);
     }
 
-    if (a.edits.backup != cfa_nobackup)
+    if (a.edits.backup != BACKUP_OPTION_NO_BACKUP)
     {
         if (ArchiveToRepository(backup, a, pp))
         {

@@ -921,15 +921,15 @@ FileCopy GetCopyConstraints(const Promise *pp)
 
     if (value && (strcmp(value, "false") == 0))
     {
-        f.backup = cfa_nobackup;
+        f.backup = BACKUP_OPTION_NO_BACKUP;
     }
     else if (value && (strcmp(value, "timestamp") == 0))
     {
-        f.backup = cfa_timestamp;
+        f.backup = BACKUP_OPTION_TIMESTAMP;
     }
     else
     {
-        f.backup = cfa_backup;
+        f.backup = BACKUP_OPTION_BACKUP;
     }
 
     f.stealth = PromiseGetConstraintAsBoolean("stealth", pp);
@@ -1016,20 +1016,20 @@ EditDefaults GetEditDefaults(const Promise *pp)
 
     if (value && (strcmp(value, "false") == 0))
     {
-        e.backup = cfa_nobackup;
+        e.backup = BACKUP_OPTION_NO_BACKUP;
     }
     else if (value && (strcmp(value, "timestamp") == 0))
     {
-        e.backup = cfa_timestamp;
+        e.backup = BACKUP_OPTION_TIMESTAMP;
     }
     else if (value && (strcmp(value, "rotate") == 0))
     {
-        e.backup = cfa_rotate;
+        e.backup = BACKUP_OPTION_ROTATE;
         e.rotate = PromiseGetConstraintAsInt("rotate", pp);
     }
     else
     {
-        e.backup = cfa_backup;
+        e.backup = BACKUP_OPTION_BACKUP;
     }
 
     e.empty_before_use = PromiseGetConstraintAsBoolean("empty_file_before_editing", pp); 

@@ -903,14 +903,14 @@ enum cfopaction
     cfa_warn,
 };
 
-enum cfbackupoptions
+typedef enum
 {
-    cfa_backup,
-    cfa_nobackup,
-    cfa_timestamp,
-    cfa_rotate,
-    cfa_repos_store             /* for internal use only */
-};
+    BACKUP_OPTION_BACKUP,
+    BACKUP_OPTION_NO_BACKUP,
+    BACKUP_OPTION_TIMESTAMP,
+    BACKUP_OPTION_ROTATE,
+    BACKUP_OPTION_REPOSITORY_STORE             /* for internal use only */
+} BackupOption;
 
 enum cftidylinks
 {
@@ -1318,7 +1318,7 @@ typedef struct
     Rlist *servers;
     Rlist *link_instead;
     Rlist *copy_links;
-    enum cfbackupoptions backup;
+    BackupOption backup;
     int stealth;
     int preserve;
     int collapse;
@@ -1492,7 +1492,7 @@ typedef struct
 
 typedef struct
 {
-    enum cfbackupoptions backup;
+    BackupOption backup;
     int empty_before_use;
     int maxfilesize;
     int joinlines;

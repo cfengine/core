@@ -1391,7 +1391,6 @@ static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *r
 static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
 {
     const BodySyntax *bp = NULL;
-    Rlist *rp;
     Rval returnval;
 
     CfDebug("CheckControlPromises(%s)\n", agent);

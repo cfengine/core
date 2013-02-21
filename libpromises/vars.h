@@ -49,7 +49,7 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);
 int UnresolvedVariables(CfAssoc *ap, char rtype);
 int IsQualifiedVariable(char *var);
-int IsCfList(char *type);
+
 int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 

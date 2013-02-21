@@ -749,24 +749,6 @@ int IsQualifiedVariable(char *var)
     return false;
 }
 
-/*********************************************************************/
-
-int IsCfList(char *type)
-{
-    char *listTypes[] = { "sl", "il", "rl", "ml", NULL };
-    int i;
-
-    for (i = 0; listTypes[i] != NULL; i++)
-    {
-        if (strcmp(type, listTypes[i]) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 /*******************************************************************/
 
 int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname,

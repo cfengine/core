@@ -37,6 +37,9 @@
 static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);
 
+static char *CFPUBKEYFILE;
+static char *CFPRIVKEYFILE;
+
 /**********************************************************************/
 
 void CryptoInitialize()
@@ -96,9 +99,9 @@ void LoadSecretKeys()
     unsigned long err;
     struct stat sb;
 
-    if ((fp = fopen(CFPRIVKEYFILE, "r")) == NULL)
+    if ((fp = fopen(PrivateKeyFile(), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", CFPRIVKEYFILE);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile());
         return;
     }
 
@@ -113,11 +116,11 @@ void LoadSecretKeys()
 
     fclose(fp);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", CFPRIVKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile());
 
-    if ((fp = fopen(CFPUBKEYFILE, "r")) == NULL)
+    if ((fp = fopen(PublicKeyFile(), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile());
         return;
     }
 
@@ -130,7 +133,7 @@ void LoadSecretKeys()
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", CFPUBKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile());
     fclose(fp);
 
     if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
@@ -450,4 +453,24 @@ void DebugBinOut(char *buffer, int len, char *comment)
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
+}
+
+const char *PublicKeyFile(void)
+{
+    if (!CFPUBKEYFILE)
+    {
+        xasprintf(&CFPUBKEYFILE,
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", CFWORKDIR);
+    }
+    return CFPUBKEYFILE;
+}
+
+const char *PrivateKeyFile(void)
+{
+    if (!CFPRIVKEYFILE)
+    {
+        xasprintf(&CFPRIVKEYFILE,
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", CFWORKDIR);
+    }
+    return CFPRIVKEYFILE;
 }

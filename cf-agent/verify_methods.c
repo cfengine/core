@@ -194,7 +194,7 @@ static void GetReturnValue(char *scope, Promise *pp)
 
     if (result)
     {
-        HashIterator i;
+        AssocHashTableIterator i;
         CfAssoc *assoc;
         char newname[CF_BUFSIZE];                 
         Scope *ptr;

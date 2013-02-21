@@ -166,7 +166,7 @@ void ShowPromise(const ReportContext *context, const Promise *pp, int indent)
 
 static void PrintVariablesInScope(Writer *writer, const Scope *scope)
 {
-    HashIterator i = HashIteratorInit(scope->hashtable);
+    AssocHashTableIterator i = HashIteratorInit(scope->hashtable);
     CfAssoc *assoc;
 
     while ((assoc = HashIteratorNext(&i)))

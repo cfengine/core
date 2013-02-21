@@ -66,7 +66,15 @@ void HashFree(AssocHashTable *hashtable);
 /* HashToList */
 void HashToList(Scope *sp, Rlist **list);
 
-/* - hashtable iterator - */
+
+/*
+ * Disposable iterator over hash table. Does not require deinitialization.
+ */
+typedef struct
+{
+    AssocHashTable *hashtable;
+    int pos;
+} AssocHashTableIterator;
 
 /*
 HashIterator i = HashIteratorInit(hashtable);
@@ -77,7 +85,7 @@ while ((assoc = HashIteratorNext(&i)))
    }
 // No cleanup is required
 */
-HashIterator HashIteratorInit(AssocHashTable *hashtable);
-CfAssoc *HashIteratorNext(HashIterator *iterator);
+AssocHashTableIterator HashIteratorInit(AssocHashTable *hashtable);
+CfAssoc *HashIteratorNext(AssocHashTableIterator *iterator);
 
 #endif

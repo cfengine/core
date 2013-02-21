@@ -128,7 +128,7 @@ AssocHashTable *HashInit(void)
 
 void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash)
 {
-    HashIterator i = HashIteratorInit(oldhash);
+    AssocHashTableIterator i = HashIteratorInit(oldhash);
     CfAssoc *assoc;
 
     while ((assoc = HashIteratorNext(&i)))
@@ -435,14 +435,14 @@ void HashFree(AssocHashTable *hashtable)
 
 /*******************************************************************/
 
-HashIterator HashIteratorInit(AssocHashTable *hashtable)
+AssocHashTableIterator HashIteratorInit(AssocHashTable *hashtable)
 {
-    return (HashIterator) { hashtable, 0 };
+    return (AssocHashTableIterator) { hashtable, 0 };
 }
 
 /*******************************************************************/
 
-static CfAssoc *HugeHashIteratorNext(HashIterator *i)
+static CfAssoc *HugeHashIteratorNext(AssocHashTableIterator *i)
 {
     CfAssoc **buckets = i->hashtable->buckets;
 
@@ -466,7 +466,7 @@ static CfAssoc *HugeHashIteratorNext(HashIterator *i)
 
 /*******************************************************************/
 
-static CfAssoc *TinyHashIteratorNext(HashIterator *i)
+static CfAssoc *TinyHashIteratorNext(AssocHashTableIterator *i)
 {
     if (i->pos >= i->hashtable->array.size)
     {
@@ -480,7 +480,7 @@ static CfAssoc *TinyHashIteratorNext(HashIterator *i)
 
 /*******************************************************************/
 
-CfAssoc *HashIteratorNext(HashIterator *i)
+CfAssoc *HashIteratorNext(AssocHashTableIterator *i)
 {
     if (i->hashtable->huge)
     {
@@ -501,7 +501,7 @@ void HashToList(Scope *sp, Rlist **list)
         return;
     }
 
-    HashIterator i = HashIteratorInit(sp->hashtable);
+    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
     CfAssoc *assoc;
 
     while ((assoc = HashIteratorNext(&i)))

@@ -898,7 +898,7 @@ void DeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
     Scope *ptr;
     Rlist *rp;
     CfAssoc *cplist;
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
     if ((len = RlistLen(namelist)) != RlistLen(dereflist))

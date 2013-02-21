@@ -1017,7 +1017,7 @@ static FnCallResult FnCallRegArray(FnCall *fp, Rlist *finalargs)
     char lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
     char match[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
     Scope *ptr;
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
 /* begin fn specific content */
@@ -1073,7 +1073,7 @@ static FnCallResult FnCallGetIndices(FnCall *fp, Rlist *finalargs)
     char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
     Scope *ptr;
     Rlist *returnlist = NULL;
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
 /* begin fn specific content */
@@ -1146,7 +1146,7 @@ static FnCallResult FnCallGetValues(FnCall *fp, Rlist *finalargs)
     char match[CF_MAXVARSIZE];
     Scope *ptr;
     Rlist *rp, *returnlist = NULL;
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
 /* begin fn specific content */
@@ -2650,7 +2650,7 @@ static FnCallResult FnCallRegExtract(FnCall *fp, Rlist *finalargs)
 
     if (ptr && ptr->hashtable)
     {
-        HashIterator i = HashIteratorInit(ptr->hashtable);
+        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
         CfAssoc *assoc;
 
         while ((assoc = HashIteratorNext(&i)))

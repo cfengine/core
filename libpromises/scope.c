@@ -125,7 +125,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
     Rlist *rpl, *rpr;
     Rval retval;
     char *lval, naked[CF_BUFSIZE];
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
     if (RlistLen(lvals) != RlistLen(rvals))

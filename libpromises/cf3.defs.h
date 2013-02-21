@@ -849,17 +849,6 @@ typedef struct Scope_
 } Scope;
 
 /*******************************************************************/
-
-/*
- * Disposable iterator over hash table. Does not require deinitialization.
- */
-typedef struct HashIterator_
-{
-    AssocHashTable *hashtable;
-    int pos;
-} HashIterator;
-
-/*******************************************************************/
 /* Return value signalling                                         */
 /*******************************************************************/
 

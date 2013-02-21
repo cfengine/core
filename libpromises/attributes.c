@@ -1353,11 +1353,11 @@ EditLocation GetLocationAttributes(const Promise *pp)
 
     if (value && (strcmp(value, "before") == 0))
     {
-        e.before_after = cfe_before;
+        e.before_after = EDIT_ORDER_BEFORE;
     }
     else
     {
-        e.before_after = cfe_after;
+        e.before_after = EDIT_ORDER_AFTER;
     }
 
     e.first_last = ConstraintGetRvalValue("first_last", pp, RVAL_TYPE_SCALAR);

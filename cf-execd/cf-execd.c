@@ -360,60 +360,60 @@ void KeepPromises(Policy *policy, ExecConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailfrom].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFROM].lval) == 0)
             {
                 free(config->mail_from_address);
                 config->mail_from_address = SafeStringDuplicate(retval.item);
                 CfDebug("mailfrom = %s\n", config->mail_from_address);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailto].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILTO].lval) == 0)
             {
                 free(config->mail_to_address);
                 config->mail_to_address = SafeStringDuplicate(retval.item);
                 CfDebug("mailto = %s\n", config->mail_to_address);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_smtpserver].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SMTPSERVER].lval) == 0)
             {
                 free(config->mail_server);
                 config->mail_server = SafeStringDuplicate(retval.item);
                 CfDebug("smtpserver = %s\n", config->mail_server);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_execcommand].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECCOMMAND].lval) == 0)
             {
                 free(config->exec_command);
                 config->exec_command = SafeStringDuplicate(retval.item);
                 CfDebug("exec_command = %s\n", config->exec_command);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_agent_expireafter].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_AGENT_EXPIREAFTER].lval) == 0)
             {
                 config->agent_expireafter = IntFromString(retval.item);
                 CfDebug("agent_expireafter = %d\n", config->agent_expireafter);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_executorfacility].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
             {
                 SetFacility(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_mailmaxlines].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILMAXLINES].lval) == 0)
             {
                 config->mail_max_lines = IntFromString(retval.item);
                 CfDebug("maxlines = %d\n", config->mail_max_lines);
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_splaytime].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
             {
                 int time = IntFromString(RvalScalarValue(retval));
 
                 SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
             }
 
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[cfex_schedule].lval) == 0)
+            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
             {
                 CfDebug("Loading user-defined schedule...\n");
                 DeleteItemList(SCHEDULE);

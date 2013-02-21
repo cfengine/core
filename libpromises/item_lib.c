@@ -587,14 +587,14 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 
 /*********************************************************************/
 
-int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, enum cfeditorder pos, Attributes a,
+int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Attributes a,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
 
     for (const Item *ip = file_start; ip != NULL; ip = ip->next)
     {
-        if (pos == cfe_before)
+        if (pos == EDIT_ORDER_BEFORE)
         {
             if ((ip->next) && (ip->next == location))
             {
@@ -609,7 +609,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
             }
         }
 
-        if (pos == cfe_after)
+        if (pos == EDIT_ORDER_AFTER)
         {
             if (ip == location)
             {

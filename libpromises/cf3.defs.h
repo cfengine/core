@@ -654,19 +654,19 @@ typedef enum
 
 /*************************************************************************/
 
-enum cfexcontrol
+typedef enum
 {
-    cfex_splaytime,
-    cfex_mailfrom,
-    cfex_mailto,
-    cfex_smtpserver,
-    cfex_mailmaxlines,
-    cfex_schedule,
-    cfex_executorfacility,
-    cfex_execcommand,
-    cfex_agent_expireafter,
-    cfex_notype,
-};
+    EXEC_CONTROL_SPLAYTIME,
+    EXEC_CONTROL_MAILFROM,
+    EXEC_CONTROL_MAILTO,
+    EXEC_CONTROL_SMTPSERVER,
+    EXEC_CONTROL_MAILMAXLINES,
+    EXEC_CONTROL_SCHEDULE,
+    EXEC_CONTROL_EXECUTORFACILITY,
+    EXEC_CONTROL_EXECCOMMAND,
+    EXEC_CONTROL_AGENT_EXPIREAFTER,
+    EXEC_CONTROL_NONE
+} ExecControl;
 
 typedef enum
 {
@@ -679,11 +679,11 @@ typedef enum
     OUTPUT_LEVEL_NONE
 } OutputLevel;
 
-enum cfeditorder
+typedef enum
 {
-    cfe_before,
-    cfe_after
-};
+    EDIT_ORDER_BEFORE,
+    EDIT_ORDER_AFTER
+} EditOrder;
 
 /*************************************************************************/
 /* Syntax module range/pattern constants for type validation             */
@@ -1557,7 +1557,7 @@ typedef struct
 typedef struct
 {
     char *line_matching;
-    enum cfeditorder before_after;
+    EditOrder before_after;
     char *first_last;
 } EditLocation;
 

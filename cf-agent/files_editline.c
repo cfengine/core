@@ -757,7 +757,7 @@ static int InsertMultipleLinesToRegion(Item **start, Item *begin_ptr, Item *end_
 
     // Insert at the start of the region
     
-    if (a.location.before_after == cfe_before)
+    if (a.location.before_after == EDIT_ORDER_BEFORE)
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
@@ -772,7 +772,7 @@ static int InsertMultipleLinesToRegion(Item **start, Item *begin_ptr, Item *end_
 
     // Insert at the end of the region / else end of the file
 
-    if (a.location.before_after == cfe_after)
+    if (a.location.before_after == EDIT_ORDER_AFTER)
     {
         for (ip = *start; ip != NULL; ip = ip->next)
         {
@@ -1380,7 +1380,7 @@ static int InsertCompoundLineAtLocation(char *chunk, Item **start, Item *begin_p
 
         result |= InsertLineAtLocation(buf, start, location, prev, a, pp);
 
-        if (preserve_block && a.location.before_after == cfe_before && location == NULL && prev == CF_UNDEFINED_ITEM)
+        if (preserve_block && a.location.before_after == EDIT_ORDER_BEFORE && location == NULL && prev == CF_UNDEFINED_ITEM)
            {
            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
            // to get the order of the block right
@@ -1420,7 +1420,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
 
     if (prev == CF_UNDEFINED_ITEM)      /* Insert at first line */
     {
-        if (a.location.before_after == cfe_before)
+        if (a.location.before_after == EDIT_ORDER_BEFORE)
         {
             if (*start == NULL)
             {
@@ -1468,9 +1468,9 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
         }
     }
 
-    if (a.location.before_after == cfe_before)
+    if (a.location.before_after == EDIT_ORDER_BEFORE)
     {    
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_before, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a, pp))
         {
             cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
                  newline);
@@ -1497,7 +1497,7 @@ static int InsertLineAtLocation(char *newline, Item **start, Item *location, Ite
     }
     else
     {
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, cfe_after, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a, pp))
         {
             cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
                  newline);

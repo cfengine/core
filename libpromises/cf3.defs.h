@@ -1792,26 +1792,6 @@ typedef enum
     ENVIRONMENT_STATE_NONE
 } EnvironmentState;
 
-/*************************************************************************/
-
-enum cf_meter
-{
-    meter_compliance_week,
-    meter_compliance_day,
-    meter_compliance_hour,
-    meter_perf_day,
-    meter_other_day,
-    meter_comms_hour,
-    meter_anomalies_day,
-    meter_compliance_week_user,
-    meter_compliance_week_internal,
-    meter_compliance_day_user,
-    meter_compliance_day_internal,
-    meter_compliance_hour_user,
-    meter_compliance_hour_internal,
-    meter_endmark
-};
-
 typedef struct
 {
     int cpus;
@@ -1928,13 +1908,6 @@ typedef struct
     Rlist *general;
     char *rep_type;
 } Attributes;
-
-/*************************************************************************/
-/* definitions for reporting                                            */
-/*************************************************************************/
-
-extern double METER_KEPT[meter_endmark];
-extern double METER_REPAIRED[meter_endmark];
 
 /*************************************************************************/
 /* common macros                                                         */

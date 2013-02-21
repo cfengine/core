@@ -45,6 +45,7 @@ extern char *yytext;
 static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
 static bool LvalWantsBody(char *stype, char *lval);
+static void CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -426,7 +427,7 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
+                               CheckConstraint(P.currenttype, P.lval, P.rval, ss);
                                if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
@@ -783,4 +784,120 @@ static bool LvalWantsBody(char *stype, char *lval)
     }
 
     return false;
+}
+
+static void CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
+{
+    int lmatch = false;
+    int i, j, k, l;
+    const SubTypeSyntax *ss;
+    const BodySyntax *bs, *bs2;
+    char output[CF_BUFSIZE];
+
+    CfDebug("CheckSelection(%s,%s,", type, lval);
+
+    if (DEBUG)
+    {
+        RvalShow(stdout, rval);
+    }
+
+    CfDebug(")\n");
+
+/* Check internal control bodies etc */
+
+    for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+    {
+        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
+        {
+            CfDebug("Found matching a body matching (%s,%s)\n", type, name);
+
+            bs = CF_ALL_BODIES[i].bs;
+
+            for (l = 0; bs[l].lval != NULL; l++)
+            {
+                if (strcmp(lval, bs[l].lval) == 0)
+                {
+                    CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
+
+                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
+                        return;
+                    }
+                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
+                        return;
+                    }
+                    else
+                    {
+                        CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                        return;
+                    }
+                }
+            }
+
+        }
+    }
+
+/* Now check the functional modules - extra level of indirection */
+
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        CfDebug("Trying function module %d for matching lval %s\n", i, lval);
+
+        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        {
+            continue;
+        }
+
+        for (j = 0; ss[j].subtype != NULL; j++)
+        {
+            if ((bs = ss[j].bs) == NULL)
+            {
+                continue;
+            }
+
+            CfDebug("\nExamining subtype %s\n", ss[j].subtype);
+
+            for (l = 0; bs[l].range != NULL; l++)
+            {
+                if (bs[l].dtype == DATA_TYPE_BODY)
+                {
+                    bs2 = (const BodySyntax *) (bs[l].range);
+
+                    if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
+                    {
+                        continue;
+                    }
+
+                    for (k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
+                    {
+                        /* Either module defined or common */
+
+                        if (strcmp(ss[j].subtype, type) == 0 && strcmp(ss[j].subtype, "*") != 0)
+                        {
+                            snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
+                                     lval, ss[j].subtype, type);
+                            yyerror(output);
+                            return;
+                        }
+
+                        if (strcmp(lval, bs2[k].lval) == 0)
+                        {
+                            CfDebug("Matched\n");
+                            CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *) (bs2[k].range), 0);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (!lmatch)
+    {
+        snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
+        yyerror(output);
+    }
 }

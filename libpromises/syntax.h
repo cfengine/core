@@ -33,12 +33,11 @@
 #include <stdio.h>
 
 int CheckParseVariableName(const char *name);
-void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss);
-void CheckSelection(char *type, char *name, char *lval, Rval rval);
+void CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
 void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 int CheckParseClass(const char *lv, const char *s, const char *range);
 DataType StringDataType(const char *scopeid, const char *string);
-DataType ExpectedDataType(char *lvalname);
+DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
 

@@ -46,8 +46,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 #ifdef __MINGW32__
 
-char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
     return CF_FAIL;
@@ -55,8 +54,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
 
 #else
 
-char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp)
 {
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
@@ -111,7 +109,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
     if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
 
-        if (!MakeParentDirectory2(destination, attr.move_obstructions, report_context, EnforcePromise(attr.transaction.action)))
+        if (!MakeParentDirectory2(destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
         {
             cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
                  destination, to, EnforcePromise(attr.transaction.action));
@@ -119,7 +117,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
         }
         else
         {
-            if (!MoveObstruction(destination, attr, pp, report_context))
+            if (!MoveObstruction(destination, attr, pp))
             {
                 cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Unable to create link %s -> %s", destination, to);
                 return CF_FAIL;
@@ -182,8 +180,7 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
 
 /*****************************************************************************/
 
-char VerifyAbsoluteLink(char *destination, const char *source, Attributes attr, Promise *pp,
-                        const ReportContext *report_context)
+char VerifyAbsoluteLink(char *destination, const char *source, Attributes attr, Promise *pp)
 {
     char absto[CF_BUFSIZE];
     char expand[CF_BUFSIZE];
@@ -227,13 +224,12 @@ char VerifyAbsoluteLink(char *destination, const char *source, Attributes attr, 
 
     CompressPath(linkto, expand);
 
-    return VerifyLink(destination, linkto, attr, pp, report_context);
+    return VerifyLink(destination, linkto, attr, pp);
 }
 
 /*****************************************************************************/
 
-char VerifyRelativeLink(char *destination, const char *source, Attributes attr, Promise *pp,
-                        const ReportContext *report_context)
+char VerifyRelativeLink(char *destination, const char *source, Attributes attr, Promise *pp)
 {
     char *sp, *commonto, *commonfrom;
     char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
@@ -243,7 +239,7 @@ char VerifyRelativeLink(char *destination, const char *source, Attributes attr, 
 
     if (*source == '.')
     {
-        return VerifyLink(destination, source, attr, pp, report_context);
+        return VerifyLink(destination, source, attr, pp);
     }
 
     if (!CompressPath(linkto, source))
@@ -304,13 +300,12 @@ char VerifyRelativeLink(char *destination, const char *source, Attributes attr, 
         return CF_FAIL;
     }
 
-    return VerifyLink(destination, buff, attr, pp, report_context);
+    return VerifyLink(destination, buff, attr, pp);
 }
 
 /*****************************************************************************/
 
-char VerifyHardLink(char *destination, const char *source, Attributes attr, Promise *pp,
-                    const ReportContext *report_context)
+char VerifyHardLink(char *destination, const char *source, Attributes attr, Promise *pp)
 {
     char to[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat ssb, dsb;
@@ -382,7 +377,7 @@ char VerifyHardLink(char *destination, const char *source, Attributes attr, Prom
 
     CfOut(OUTPUT_LEVEL_INFORM, "", " !! %s does not appear to be a hard link to %s\n", destination, to);
 
-    if (!MoveObstruction(destination, attr, pp, report_context))
+    if (!MoveObstruction(destination, attr, pp))
     {
         return CF_FAIL;
     }

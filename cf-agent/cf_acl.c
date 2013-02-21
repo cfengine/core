@@ -83,7 +83,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
 #endif
         break;
 
-    case ACL_TYPE_NTFS:
+    case ACL_TYPE_NTFS_:
 
 #if defined(__MINGW32__)
         Nova_CheckNtACL(file, a.acl, a, pp);
@@ -141,7 +141,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
         mask_support = true;    // mask-ACE is allowed in POSIX
         break;
 
-    case ACL_TYPE_NTFS:
+    case ACL_TYPE_NTFS_:
         valid_nperms = CF_VALID_NPERMS_NTFS;
         deny_support = true;
         mask_support = false;

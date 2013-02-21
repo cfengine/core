@@ -13,7 +13,6 @@ man_MANS = \
 #if MONGO
 #  man_MANS += cf-hub.8
 #endif
-#  man_MANS += cf-know.8
 #endif
 
 endif

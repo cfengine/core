@@ -369,7 +369,7 @@ static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq 
 {
     char name[CF_MAXVARSIZE];
 
-    if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
+    if (ag != AGENT_TYPE_GENDOC)
     {
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[%s]", ifp->ifr_name);
     }
@@ -616,7 +616,7 @@ void GetInterfacesInfo(AgentType ag)
 
                 strcpy(ip, inet_ntoa(sin->sin_addr));
 
-                if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
+                if (ag != AGENT_TYPE_GENDOC)
                 {
                     snprintf(name, CF_MAXVARSIZE - 1, "ipv4[%s]", CanonifyName(ifp->ifr_name));
                 }
@@ -635,7 +635,7 @@ void GetInterfacesInfo(AgentType ag)
                     {
                         *sp = '\0';
 
-                        if ((ag != AGENT_TYPE_KNOW) && (ag != AGENT_TYPE_GENDOC))
+                        if (ag != AGENT_TYPE_GENDOC)
                         {
                             snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
                         }

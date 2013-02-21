@@ -35,8 +35,8 @@ bool FileWriteOver(char *filename, char *contents);
 
 int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp);
 
-int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
-int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
+int MakeParentDirectory(char *parentandchild, int force);
+int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
 

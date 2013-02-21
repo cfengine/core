@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, report_context, false))
+    if (GenericAgentCheckPolicy(config, false))
     {
         policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
     }

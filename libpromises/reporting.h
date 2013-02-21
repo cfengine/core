@@ -39,11 +39,11 @@ ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);
 
-void ShowPromises(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
-void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent);
+void ShowPromises(const ReportContext *context, const Seq *bundles, const Seq *bodies);
+void ShowPromise(const ReportContext *context, const Promise *pp, int indent);
 void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
 void ShowPromiseInReport(const ReportContext *context, ReportOutputType type, const char *version, const Promise *pp, int indent);
-void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
+void ShowPromisesInReportText(const ReportContext *context, const Seq *bundles, const Seq *bodies);
 void ShowContext(const ReportContext *report_context);
 
 // stdout only

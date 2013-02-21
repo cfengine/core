@@ -68,11 +68,11 @@ Rlist *SINGLE_COPY_LIST = NULL;
 static Rlist *SINGLE_COPY_CACHE = NULL;
 
 static int TransformFile(char *file, Attributes attr, Promise *pp);
-static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyDelete(char *path, struct stat *sb, Attributes attr, Promise *pp);
-static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp);
 static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp);
-static void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp);
 static int PushDirState(char *name, struct stat *sb);
 static void PopDirState(int goback, char *name, struct stat *sb, Recursion r);
 static void CheckLinkSecurity(struct stat *sb, char *name);
@@ -80,13 +80,13 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 static void FileAutoDefine(char *destfile, const char *namespace);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
-static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
 static int cf_stat(char *file, struct stat *buf, Attributes attr, Promise *pp);
 static int cf_readlink(char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 static bool CopyRegularFileDiskReport(char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, Promise *pp);
-static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp);
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
@@ -96,10 +96,10 @@ static int VerifyOwner(char *file, Promise *pp, Attributes attr, struct stat *sb
 static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
-static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context);
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp);
 
 #ifndef HAVE_NOVA
-static void LogFileChange(char *file, int change, Attributes a, Promise *pp, const ReportContext *report_context)
+static void LogFileChange(char *file, int change, Attributes a, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
 }
@@ -110,8 +110,7 @@ void SetFileAutoDefineList(Rlist *auto_define_list)
     AUTO_DEFINE_LIST = auto_define_list;
 }
 
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
-                   const ReportContext *report_context)
+int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
 /* Here we can assume that we are in the parent directory of the leaf */
 
@@ -139,7 +138,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
     {
         if (attr.haverename)
         {
-            VerifyName(path, sb, attr, pp, report_context);
+            VerifyName(path, sb, attr, pp);
         }
 
         if (attr.havedelete)
@@ -162,7 +161,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
         }
         else
         {
-            VerifyFileAttributes(path, sb, attr, pp, report_context);
+            VerifyFileAttributes(path, sb, attr, pp);
         }
     }
 
@@ -170,8 +169,7 @@ int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp,
     return true;
 }
 
-static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attributes attr, Promise *pp,
-                       const ReportContext *report_context)
+static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attributes attr, Promise *pp)
 {
     char *server;
     const char *lastnode;
@@ -237,7 +235,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 #ifdef __MINGW32__
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Links are not yet supported on Windows - copying %s instead\n", sourcefile);
 #else
-                LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
+                LinkCopy(sourcefile, destfile, &ssb, attr, pp);
                 return;
 #endif
             }
@@ -278,7 +276,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
     }
     else
     {
-        MakeParentDirectory(destfile, true, report_context);
+        MakeParentDirectory(destfile, true);
     }
 
     if (attr.copy.min_size != CF_NOINT)
@@ -324,9 +322,9 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
             if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> %s is a symbolic link\n", sourcefile);
-                LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
+                LinkCopy(sourcefile, destfile, &ssb, attr, pp);
             }
-            else if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
+            else if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp))
             {
                 if (cfstat(destfile, &dsb) == -1)
                 {
@@ -334,7 +332,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                 }
                 else
                 {
-                    VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
+                    VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp);
                 }
 
                 if (server)
@@ -409,7 +407,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
         if ((S_ISLNK(srcmode)) && (attr.copy.link_type != FILE_LINK_TYPE_NONE))
         {
-            LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
+            LinkCopy(sourcefile, destfile, &ssb, attr, pp);
         }
     }
     else
@@ -472,7 +470,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                     FileAutoDefine(destfile, pp->ns);
                 }
 
-                if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp, report_context))
+                if (CopyRegularFile(sourcefile, destfile, ssb, dsb, attr, pp))
                 {
                     if (cfstat(destfile, &dsb) == -1)
                     {
@@ -485,7 +483,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
                         cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, attr, " -> Updated %s from source %s on %s", destfile,
                              sourcefile, source_host);
 
-                        VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
+                        VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp);
                     }
 
                     if (RlistIsInListOfRegex(SINGLE_COPY_LIST, destfile))
@@ -503,12 +501,12 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
 
             if (S_ISLNK(ssb.st_mode))
             {
-                LinkCopy(sourcefile, destfile, &ssb, attr, pp, report_context);
+                LinkCopy(sourcefile, destfile, &ssb, attr, pp);
             }
         }
         else
         {
-            VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp, report_context);
+            VerifyCopiedFileAttributes(destfile, &dsb, &ssb, attr, pp);
 
             /* Now we have to check for single copy, even though nothing was copied
                otherwise we can get oscillations between multipe versions if type
@@ -524,8 +522,7 @@ static void CfCopyFile(char *sourcefile, char *destfile, struct stat ssb, Attrib
     }
 }
 
-static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Promise *pp,
-                            const ReportContext *report_context)
+static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Promise *pp)
 {
     Dir *dirh;
     struct stat sb;
@@ -612,7 +609,7 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
 
                     SetSearchDevice(&sb, pp);
 
-                    if (!DepthSearch(filename, &sb, 0, purgeattr, pp, report_context))
+                    if (!DepthSearch(filename, &sb, 0, purgeattr, pp))
                     {
                         cfPS(OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "rmdir", pp, attr,
                              " !! Couldn't empty directory %s while purging\n", filename);
@@ -640,8 +637,7 @@ static void PurgeLocalFiles(Item *filelist, char *localdir, Attributes attr, Pro
     CloseDir(dirh);
 }
 
-static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp,
-                                const ReportContext *report_context)
+static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes attr, Promise *pp)
 {
     struct stat sb, dsb;
     char newfrom[CF_BUFSIZE];
@@ -673,7 +669,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
     {
         struct stat tostat;
 
-        if (!MakeParentDirectory(newto, attr.move_obstructions, report_context))
+        if (!MakeParentDirectory(newto, attr.move_obstructions))
         {
             cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Unable to make directory for %s in file-copy %s to %s\n", newto,
                  attr.copy.source, attr.copy.destination);
@@ -832,20 +828,20 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
 
             if (!attr.copy.collapse)
             {
-                VerifyCopiedFileAttributes(newto, &dsb, &sb, attr, pp, report_context);
+                VerifyCopiedFileAttributes(newto, &dsb, &sb, attr, pp);
             }
 
-            SourceSearchAndCopy(newfrom, newto, maxrecurse - 1, attr, pp, report_context);
+            SourceSearchAndCopy(newfrom, newto, maxrecurse - 1, attr, pp);
         }
         else
         {
-            VerifyCopy(newfrom, newto, attr, pp, report_context);
+            VerifyCopy(newfrom, newto, attr, pp);
         }
     }
 
     if (attr.copy.purge)
     {
-        PurgeLocalFiles(namecache, to, attr, pp, report_context);
+        PurgeLocalFiles(namecache, to, attr, pp);
         DeleteItemList(namecache);
     }
 
@@ -854,8 +850,7 @@ static void SourceSearchAndCopy(char *from, char *to, int maxrecurse, Attributes
     CloseDir(dirh);
 }
 
-static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp,
-                       const ReportContext *report_context)
+static void VerifyCopy(char *source, char *destination, Attributes attr, Promise *pp)
 {
     Dir *dirh;
     char sourcefile[CF_BUFSIZE];
@@ -912,7 +907,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
         }
         else
         {
-            VerifyCopiedFileAttributes(destdir, &dsb, &ssb, attr, pp, report_context);
+            VerifyCopiedFileAttributes(destdir, &dsb, &ssb, attr, pp);
         }
 
         for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
@@ -955,7 +950,7 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
                 }
             }
 
-            CfCopyFile(sourcefile, destfile, ssb, attr, pp, report_context);
+            CfCopyFile(sourcefile, destfile, ssb, attr, pp);
         }
 
         CloseDir(dirh);
@@ -966,12 +961,11 @@ static void VerifyCopy(char *source, char *destination, Attributes attr, Promise
     strcpy(sourcefile, source);
     strcpy(destfile, destination);
 
-    CfCopyFile(sourcefile, destfile, ssb, attr, pp, report_context);
+    CfCopyFile(sourcefile, destfile, ssb, attr, pp);
     DeleteClientCache(attr, pp);
 }
 
-static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp,
-                     const ReportContext *report_context)
+static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp)
 /* Link the file to the source, instead of copying */
 #ifdef __MINGW32__
 {
@@ -1022,7 +1016,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine: link item in copy %s marked for copying from %s instead\n", sourcefile,
               linkbuf);
         cfstat(linkbuf, &ssb);
-        CfCopyFile(linkbuf, destfile, ssb, attr, pp, report_context);
+        CfCopyFile(linkbuf, destfile, ssb, attr, pp);
         return;
     }
 
@@ -1032,24 +1026,24 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 
         if (*linkbuf == '.')
         {
-            status = VerifyRelativeLink(destfile, linkbuf, attr, pp, report_context);
+            status = VerifyRelativeLink(destfile, linkbuf, attr, pp);
         }
         else
         {
-            status = VerifyLink(destfile, linkbuf, attr, pp, report_context);
+            status = VerifyLink(destfile, linkbuf, attr, pp);
         }
         break;
 
     case FILE_LINK_TYPE_RELATIVE:
-        status = VerifyRelativeLink(destfile, linkbuf, attr, pp, report_context);
+        status = VerifyRelativeLink(destfile, linkbuf, attr, pp);
         break;
 
     case FILE_LINK_TYPE_ABSOLUTE:
-        status = VerifyAbsoluteLink(destfile, linkbuf, attr, pp, report_context);
+        status = VerifyAbsoluteLink(destfile, linkbuf, attr, pp);
         break;
 
     case FILE_LINK_TYPE_HARDLINK:
-        status = VerifyHardLink(destfile, linkbuf, attr, pp, report_context);
+        status = VerifyHardLink(destfile, linkbuf, attr, pp);
         break;
 
     default:
@@ -1065,7 +1059,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
         }
         else
         {
-            VerifyCopiedFileAttributes(destfile, &dsb, sb, attr, pp, report_context);
+            VerifyCopiedFileAttributes(destfile, &dsb, sb, attr, pp);
         }
 
         if (status == CF_CHG)
@@ -1084,8 +1078,7 @@ static void LinkCopy(char *sourcefile, char *destfile, struct stat *sb, Attribut
 }
 #endif /* !__MINGW32__ */
 
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp,
-                    const ReportContext *report_context)
+int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp)
 {
     char backup[CF_BUFSIZE];
     char new[CF_BUFSIZE], *linkable;
@@ -1275,7 +1268,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
             if (S_ISDIR(s.st_mode))     /* if there is a dir in the way */
             {
                 backupisdir = true;
-                PurgeLocalFiles(NULL, backup, attr, pp, report_context);
+                PurgeLocalFiles(NULL, backup, attr, pp);
                 rmdir(backup);
             }
 
@@ -1297,7 +1290,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
         {
             if (S_ISDIR(s.st_mode))
             {
-                PurgeLocalFiles(NULL, dest, attr, pp, report_context);
+                PurgeLocalFiles(NULL, dest, attr, pp);
                 rmdir(dest);
             }
         }
@@ -1445,7 +1438,7 @@ int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dst
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot move a directory to repository, leaving at %s", backup);
     }
-    else if ((!discardbackup) && (ArchiveToRepository(backup, attr, pp, report_context)))
+    else if ((!discardbackup) && (ArchiveToRepository(backup, attr, pp)))
     {
         unlink(backup);
     }
@@ -1559,8 +1552,7 @@ static int TransformFile(char *file, Attributes attr, Promise *pp)
     return true;
 }
 
-static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp,
-                       const ReportContext *report_context)
+static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
     mode_t newperm;
     struct stat dsb;
@@ -1716,7 +1708,7 @@ static void VerifyName(char *path, struct stat *sb, Attributes attr, Promise *pp
                          newname, (uintmax_t)newperm);
                 }
 
-                if (ArchiveToRepository(newname, attr, pp, report_context))
+                if (ArchiveToRepository(newname, attr, pp))
                 {
                     unlink(newname);
                 }
@@ -1867,8 +1859,7 @@ static void TouchFile(char *path, struct stat *sb, Attributes attr, Promise *pp)
     }
 }
 
-void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
+void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promise *pp)
 {
 #ifndef __MINGW32__
     mode_t newperm = dstat->st_mode, maskvalue;
@@ -1939,7 +1930,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
     if (attr.havechange && S_ISREG(dstat->st_mode))
 #endif
     {
-        VerifyFileIntegrity(file, attr, pp, report_context);
+        VerifyFileIntegrity(file, attr, pp);
     }
 
     if (attr.havechange)
@@ -2074,8 +2065,7 @@ void VerifyFileAttributes(char *file, struct stat *dstat, Attributes attr, Promi
     CfDebug("VerifyFileAttributes(Done)\n");
 }
 
-int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp,
-                const ReportContext *report_context)
+int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp)
 {
     Dir *dirh;
     int goback;
@@ -2095,7 +2085,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
             CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to chdir into '%s'\n", basedir);
             return false;
         }
-        return VerifyFileLeaf(name, sb, attr, pp, report_context);
+        return VerifyFileLeaf(name, sb, attr, pp);
     }
 
     if (rlevel > CF_RECURSION_LIMIT)
@@ -2151,7 +2141,7 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
         {
             if (!KillGhostLink(path, attr, pp))
             {
-                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
+                VerifyFileLeaf(path, &lsb, attr, pp);
             }
             else
             {
@@ -2195,18 +2185,18 @@ int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promis
             if ((attr.recursion.depth > 1) && (rlevel <= attr.recursion.depth))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s (%d)\n", path, rlevel);
-                goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp, report_context);
+                goback = DepthSearch(path, &lsb, rlevel + 1, attr, pp);
                 PopDirState(goback, name, sb, attr.recursion);
-                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
+                VerifyFileLeaf(path, &lsb, attr, pp);
             }
             else
             {
-                VerifyFileLeaf(path, &lsb, attr, pp, report_context);
+                VerifyFileLeaf(path, &lsb, attr, pp);
             }
         }
         else
         {
-            VerifyFileLeaf(path, &lsb, attr, pp, report_context);
+            VerifyFileLeaf(path, &lsb, attr, pp);
         }
     }
 
@@ -2274,7 +2264,7 @@ static void CheckLinkSecurity(struct stat *sb, char *name)
 }
 
 static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct stat *sstat, Attributes attr,
-                                       Promise *pp, const ReportContext *report_context)
+                                       Promise *pp)
 {
 #ifndef __MINGW32__
     mode_t newplus, newminus;
@@ -2331,7 +2321,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
         }
     }
 #endif
-    VerifyFileAttributes(file, dstat, attr, pp, report_context);
+    VerifyFileAttributes(file, dstat, attr, pp);
 
 #ifndef __MINGW32__
     (attr.perms.owners)->uid = save_uid;
@@ -2339,7 +2329,7 @@ static void VerifyCopiedFileAttributes(char *file, struct stat *dstat, struct st
 #endif
 }
 
-static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void *CopyFileSources(char *destination, Attributes attr, Promise *pp)
 {
     char *source = attr.copy.source;
     char *server = pp->this_server;
@@ -2372,7 +2362,7 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
         strcat(vbuff, ".");
     }
 
-    if (!MakeParentDirectory(vbuff, attr.move_obstructions, report_context))
+    if (!MakeParentDirectory(vbuff, attr.move_obstructions))
     {
         cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Can't make directories for %s in files.copyfrom promise\n", vbuff);
         return NULL;
@@ -2387,19 +2377,19 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s\n", source);
         SetSearchDevice(&ssb, pp);
-        SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp, report_context);
+        SourceSearchAndCopy(source, destination, attr.recursion.depth, attr, pp);
 
         if (cfstat(destination, &dsb) != -1)
         {
             if (attr.copy.check_root)
             {
-                VerifyCopiedFileAttributes(destination, &dsb, &ssb, attr, pp, report_context);
+                VerifyCopiedFileAttributes(destination, &dsb, &ssb, attr, pp);
             }
         }
     }
     else
     {
-        VerifyCopy(source, destination, attr, pp, report_context);
+        VerifyCopy(source, destination, attr, pp);
     }
 
     snprintf(eventname, CF_BUFSIZE - 1, "Copy(%s:%s > %s)", server, source, destination);
@@ -2408,8 +2398,7 @@ static void *CopyFileSources(char *destination, Attributes attr, Promise *pp, co
     return NULL;
 }
 
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
+int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
 {
     AgentConnection *conn = NULL;
 
@@ -2441,7 +2430,7 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
     pp->conn = conn;            /* for ease of access */
     pp->cache = NULL;
 
-    CopyFileSources(destination, attr, pp, report_context);
+    CopyFileSources(destination, attr, pp);
 
     if (attr.transaction.background)
     {
@@ -2455,8 +2444,7 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp,
     return true;
 }
 
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp,
-                          const ReportContext *report_context)
+int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp)
 {
     const char *lastnode;
 
@@ -2465,23 +2453,23 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
     if (MatchRlistItem(attr.link.copy_patterns, lastnode))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Link %s matches copy_patterns\n", destination);
-        VerifyCopy(attr.link.source, destination, attr, pp, report_context);
+        VerifyCopy(attr.link.source, destination, attr, pp);
         return true;
     }
 
     switch (attr.link.link_type)
     {
     case FILE_LINK_TYPE_SYMLINK:
-        VerifyLink(destination, source, attr, pp, report_context);
+        VerifyLink(destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_HARDLINK:
-        VerifyHardLink(destination, source, attr, pp, report_context);
+        VerifyHardLink(destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_RELATIVE:
-        VerifyRelativeLink(destination, source, attr, pp, report_context);
+        VerifyRelativeLink(destination, source, attr, pp);
         break;
     case FILE_LINK_TYPE_ABSOLUTE:
-        VerifyAbsoluteLink(destination, source, attr, pp, report_context);
+        VerifyAbsoluteLink(destination, source, attr, pp);
         break;
     default:
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown link type - should not happen.\n");
@@ -2491,8 +2479,7 @@ int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Prom
     return true;
 }
 
-int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, Attributes attr, Promise *pp,
-                                  const ReportContext *report_context)
+int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, Attributes attr, Promise *pp)
 {
     Dir *dirh;
     const struct dirent *dirp;
@@ -2516,7 +2503,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
 
     snprintf(promiserpath, CF_BUFSIZE, "%s/.", destination);
 
-    if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath, pp, attr, report_context))
+    if ((ret == -1 || !S_ISDIR(lsb.st_mode)) && !CfCreateFile(promiserpath, pp, attr))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link multiple files to children of %s as it is not a directory!",
               destination);
@@ -2573,11 +2560,11 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
 
         if ((attr.recursion.depth > recurse) && (lstat(sourcepath, &lsb) != -1) && S_ISDIR(lsb.st_mode))
         {
-            ScheduleLinkChildrenOperation(promiserpath, sourcepath, recurse + 1, attr, pp, report_context);
+            ScheduleLinkChildrenOperation(promiserpath, sourcepath, recurse + 1, attr, pp);
         }
         else
         {
-            ScheduleLinkOperation(promiserpath, sourcepath, attr, pp, report_context);
+            ScheduleLinkOperation(promiserpath, sourcepath, attr, pp);
         }
     }
 
@@ -2585,7 +2572,7 @@ int ScheduleLinkChildrenOperation(char *destination, char *source, int recurse, 
     return true;
 }
 
-static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
@@ -2636,7 +2623,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp, const 
 
     if (attr.change.report_diffs)
     {
-        LogFileChange(file, changed, attr, pp, report_context);
+        LogFileChange(file, changed, attr, pp);
     }
 }
 
@@ -3379,8 +3366,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     CloseDB(dbp);
 }
 
-int CfCreateFile(char *file, Promise *pp, Attributes attr,
-                 const ReportContext *report_context)
+int CfCreateFile(char *file, Promise *pp, Attributes attr)
 {
     int fd;
 
@@ -3401,7 +3387,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
 
         if (!DONTDO && attr.transaction.action != cfa_warn)
         {
-            if (!MakeParentDirectory(file, attr.move_obstructions, report_context))
+            if (!MakeParentDirectory(file, attr.move_obstructions))
             {
                 cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "creat", pp, attr, " !! Error creating directories for %s\n", file);
                 return false;
@@ -3433,7 +3419,7 @@ int CfCreateFile(char *file, Promise *pp, Attributes attr,
                 filemode = attr.perms.plus & ~(attr.perms.minus);
             }
 
-            MakeParentDirectory(file, attr.move_obstructions, report_context);
+            MakeParentDirectory(file, attr.move_obstructions);
 
             if ((fd = creat(file, filemode)) == -1)
             {

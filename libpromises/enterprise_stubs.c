@@ -81,14 +81,6 @@ const char *PromiseID(const Promise *pp)
 }
 
 
-/* all agents: expand.c */
-
-
-void RegisterBundleDependence(char *name, const Promise *pp)
-{
-}
-
-
 /* all agents: logging.c */
 
 
@@ -130,14 +122,6 @@ void NewPromiser(Promise *pp)
 {
 }
 
-
-/* FIXME: all agents: generic_agent.c */
-
-
-void ShowTopicRepresentation(const ReportContext *report_context)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
-}
 
 /* cf-execd: cf-execd-runner.c */
 
@@ -268,20 +252,6 @@ void AnalyzePromiseConflicts(void)
 {
 }
 
-void AddGoalsToDB(char *goal_patterns)
-{
-}
-
-
-/* cf-report: cf-report.c */
-
-void SyntaxExport(void)
-{
-    Writer *writer = FileWriter(stdout);
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-}
-
 /* cf-serverd: server_transform.c, cf-serverd.c */
 
 void TranslatePath(char *new, const char *old)
@@ -311,12 +281,6 @@ int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call are only supported in the Enterprise ");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
     return false;
-}
-
-/* cf-know */
-
-void SyntaxCompletion(char *s)
-{
 }
 
 #endif

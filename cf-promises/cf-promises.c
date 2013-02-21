@@ -255,7 +255,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'r':
-            RlistPrependScalar(&GOALS, "goal.*");
             SHOWREPORTS = true;
             break;
 
@@ -284,7 +283,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 static void ThisAgentInit(void)
 {
-    AddGoalsToDB(Rlist2String(GOALS, ","));
     SHOWREPORTS = false;
 }
 

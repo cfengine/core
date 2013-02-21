@@ -294,8 +294,6 @@ typedef enum
     PLATFORM_CONTEXT_MAX
 } PlatformContext;
 
-/*******************************************************************/
-
 enum observables
 {
     ob_users,
@@ -372,14 +370,6 @@ enum observables
     ob_ipp_out,
     ob_spare
 };
-
-typedef struct
-{
-    char *portnr;
-    char *name;
-    enum observables in;
-    enum observables out;
-} Sock;
 
 /*******************************************************************/
 
@@ -583,7 +573,6 @@ typedef enum
     AGENT_TYPE_MONITOR,
     AGENT_TYPE_EXECUTOR,
     AGENT_TYPE_RUNAGENT,
-    AGENT_TYPE_KNOW,
     AGENT_TYPE_REPORT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
@@ -1116,7 +1105,7 @@ typedef enum
 {
     ACL_TYPE_GENERIC,
     ACL_TYPE_POSIX,
-    ACL_TYPE_NTFS,
+    ACL_TYPE_NTFS_,
     ACL_TYPE_NONE
 } AclType;
 

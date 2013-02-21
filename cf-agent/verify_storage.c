@@ -53,7 +53,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
 #ifndef __MINGW32__
-static int VerifyMountPromise(char *file, Attributes a, Promise *pp, const ReportContext *report_context);
+static int VerifyMountPromise(char *file, Attributes a, Promise *pp);
 #endif /* !__MINGW32__ */
 
 /*****************************************************************************/
@@ -77,7 +77,7 @@ static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context)
+void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context) /* FIXME: unused param */
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -134,7 +134,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.havemount)
     {
-        VerifyMountPromise(path, a, pp, report_context);
+        VerifyMountPromise(path, a, pp);
     }
 #endif /* !__MINGW32__ */
 
@@ -427,7 +427,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     return (false);
 }
 
-static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const ReportContext *report_context)
+static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
 {
     char *options;
     char dir[CF_BUFSIZE];
@@ -449,7 +449,7 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp, const Repor
     {
         if (!a.mount.unmount)
         {
-            if (!MakeParentDirectory(dir, a.move_obstructions, report_context))
+            if (!MakeParentDirectory(dir, a.move_obstructions))
             {
             }
 

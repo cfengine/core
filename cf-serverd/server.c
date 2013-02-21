@@ -2436,7 +2436,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
     if (S_ISLNK(statbuf.st_mode))
     {
         islink = true;
-        cfst.cf_type = cf_link; /* pointless - overwritten */
+        cfst.cf_type = FILE_TYPE_LINK; /* pointless - overwritten */
         cfst.cf_lmode = statbuf.st_mode & 07777;
         cfst.cf_nlink = statbuf.st_nlink;
 
@@ -2475,32 +2475,32 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     if (S_ISDIR(statbuf.st_mode))
     {
-        cfst.cf_type = cf_dir;
+        cfst.cf_type = FILE_TYPE_DIR;
     }
 
     if (S_ISREG(statbuf.st_mode))
     {
-        cfst.cf_type = cf_reg;
+        cfst.cf_type = FILE_TYPE_REGULAR;
     }
 
     if (S_ISSOCK(statbuf.st_mode))
     {
-        cfst.cf_type = cf_sock;
+        cfst.cf_type = FILE_TYPE_SOCK;
     }
 
     if (S_ISCHR(statbuf.st_mode))
     {
-        cfst.cf_type = cf_char;
+        cfst.cf_type = FILE_TYPE_CHAR;
     }
 
     if (S_ISBLK(statbuf.st_mode))
     {
-        cfst.cf_type = cf_block;
+        cfst.cf_type = FILE_TYPE_BLOCK;
     }
 
     if (S_ISFIFO(statbuf.st_mode))
     {
-        cfst.cf_type = cf_fifo;
+        cfst.cf_type = FILE_TYPE_FIFO;
     }
 
     cfst.cf_mode = statbuf.st_mode & 07777;

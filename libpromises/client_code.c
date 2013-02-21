@@ -431,7 +431,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
             return -1;
         }
 
-        cfst.cf_type = (enum cf_filetype) d1;
+        cfst.cf_type = (FileType) d1;
         cfst.cf_mode = (mode_t) d2;
         cfst.cf_lmode = (mode_t) d3;
         cfst.cf_uid = (uid_t) d4;
@@ -475,25 +475,25 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr
 
         switch (cfst.cf_type)
         {
-        case cf_reg:
+        case FILE_TYPE_REGULAR:
             cfst.cf_mode |= (mode_t) S_IFREG;
             break;
-        case cf_dir:
+        case FILE_TYPE_DIR:
             cfst.cf_mode |= (mode_t) S_IFDIR;
             break;
-        case cf_char:
+        case FILE_TYPE_CHAR:
             cfst.cf_mode |= (mode_t) S_IFCHR;
             break;
-        case cf_fifo:
+        case FILE_TYPE_FIFO:
             cfst.cf_mode |= (mode_t) S_IFIFO;
             break;
-        case cf_sock:
+        case FILE_TYPE_SOCK:
             cfst.cf_mode |= (mode_t) S_IFSOCK;
             break;
-        case cf_block:
+        case FILE_TYPE_BLOCK:
             cfst.cf_mode |= (mode_t) S_IFBLK;
             break;
-        case cf_link:
+        case FILE_TYPE_LINK:
             cfst.cf_mode |= (mode_t) S_IFLNK;
             break;
         }

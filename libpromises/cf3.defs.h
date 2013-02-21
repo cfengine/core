@@ -207,16 +207,16 @@ typedef struct
 
 /*******************************************************************/
 
-enum cf_filetype
+typedef enum
 {
-    cf_reg,
-    cf_link,
-    cf_dir,
-    cf_fifo,
-    cf_block,
-    cf_char,
-    cf_sock
-};
+    FILE_TYPE_REGULAR,
+    FILE_TYPE_LINK,
+    FILE_TYPE_DIR,
+    FILE_TYPE_FIFO,
+    FILE_TYPE_BLOCK,
+    FILE_TYPE_CHAR,
+    FILE_TYPE_SOCK
+} FileType;
 
 /*******************************************************************/
 
@@ -226,7 +226,7 @@ struct Stat_
 {
     char *cf_filename;          /* What file are we statting? */
     char *cf_server;            /* Which server did this come from? */
-    enum cf_filetype cf_type;   /* enum filetype */
+    FileType cf_type;           /* enum filetype */
     mode_t cf_lmode;            /* Mode of link, if link */
     mode_t cf_mode;             /* Mode of remote file, not link */
     uid_t cf_uid;               /* User ID of the file's owner */

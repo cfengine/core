@@ -2290,7 +2290,7 @@ static mode_t Str2Mode(const char *s)
     if (a == CF_UNDEFINED)
     {
         snprintf(output, CF_BUFSIZE, "Error reading assumed octal value %s\n", s);
-        FatalError(output);
+        FatalError("%s", output);
     }
 
     return (mode_t) a;

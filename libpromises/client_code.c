@@ -720,9 +720,10 @@ int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, 
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
     int i, tosend, cipherlen;
     AgentConnection *conn = pp->conn;
+    char buffer[EVP_MAX_MD_SIZE * 4];
 
     HashFile(file2, d, CF_DEFAULT_DIGEST);
-    CfDebug("Send digest of %s to server, %s\n", file2, HashPrint(CF_DEFAULT_DIGEST, d));
+    CfDebug("Send digest of %s to server, %s\n", file2, HashPrintSafe(CF_DEFAULT_DIGEST, d, buffer));
 
     memset(recvbuffer, 0, CF_BUFSIZE);
 

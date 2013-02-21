@@ -411,9 +411,12 @@ void GetNameInfo3(EvalContext *ctx)
     if (PUBKEY)
     {
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        snprintf(PUBKEY_DIGEST, sizeof(PUBKEY_DIGEST), "%s", HashPrint(CF_DEFAULT_DIGEST, digest));
+        HashPrintSafe(CF_DEFAULT_DIGEST, digest, PUBKEY_DIGEST);
+
         NewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
-        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", CanonifyName(HashPrint(CF_DEFAULT_DIGEST, digest)));
+
+        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", PUBKEY_DIGEST);
+        CanonifyNameInPlace(workbuf);
         HardClass(ctx, workbuf);
     }
 

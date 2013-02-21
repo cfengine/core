@@ -269,7 +269,7 @@ char *MapName(char *s)
     fail();
 }
 
-char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     fail();
 }

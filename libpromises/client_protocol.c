@@ -486,10 +486,11 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (server_pubkey != NULL)
     {
+        char buffer[EVP_MAX_MD_SIZE * 4];
         HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
-              HashPrint(CF_DEFAULT_DIGEST, conn->digest));
-        SavePublicKey(conn->username, conn->remoteip, HashPrint(CF_DEFAULT_DIGEST, conn->digest), server_pubkey);       // FIXME: username is local
+              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
+        SavePublicKey(conn->username, conn->remoteip, buffer, server_pubkey);       // FIXME: username is local
         LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
     }
 

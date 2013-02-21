@@ -103,7 +103,7 @@ double EndMeasureValue(struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(cf_verbose, "clock_gettime", "Clock gettime failure");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
         measured_ok = false;
     }
 

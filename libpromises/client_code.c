@@ -65,6 +65,10 @@ static AgentConnection *GetIdleConnectionToServer(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd, int toget);
 static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Attributes attr, Promise *pp);
+/**
+  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
+  */
+static AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp, int *err);
 
 #if !defined(__MINGW32__)
 static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
@@ -165,7 +169,7 @@ void DetermineCfenginePort()
 
 /*********************************************************************/
 
-AgentConnection *NewServerConnection(Attributes attr, Promise *pp)
+AgentConnection *NewServerConnection(Attributes attr, Promise *pp, int *err)
 {
     AgentConnection *conn;
     Rlist *rp;
@@ -188,7 +192,7 @@ AgentConnection *NewServerConnection(Attributes attr, Promise *pp)
         {
             if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
             {
-                conn = ServerConnection(rp->item, attr, pp);
+                conn = ServerConnection(rp->item, attr, pp, err);
                 return conn;
             }
         }
@@ -196,12 +200,13 @@ AgentConnection *NewServerConnection(Attributes attr, Promise *pp)
         {
             if ((conn = GetIdleConnectionToServer(rp->item)))
             {
+                *err = 0;
                 return conn;
             }
 
             /* This is first usage, need to open */
 
-            conn = ServerConnection(rp->item, attr, pp);
+            conn = ServerConnection(rp->item, attr, pp, err);
 
             if (conn == NULL)
             {
@@ -222,9 +227,10 @@ AgentConnection *NewServerConnection(Attributes attr, Promise *pp)
 
 /*****************************************************************************/
 
-AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
+static AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp, int *err)
 {
     AgentConnection *conn;
+    *err = 0;
 
 #if !defined(__MINGW32__)
     signal(SIGPIPE, SIG_IGN);
@@ -269,11 +275,13 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
                 DisconnectServer(conn);
             }
 
+            *err = -1; // unreachable err
             return NULL;
         }
 
         if (conn->sd == SOCKET_INVALID)
         {
+            *err = -1; // unreachable err
             return NULL;
         }
 
@@ -284,6 +292,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Id-authentication for %s failed\n", VFQNAME);
             errno = EPERM;
             DisconnectServer(conn);
+            *err = -2; // auth err
             return NULL;
         }
 
@@ -292,6 +301,7 @@ AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp)
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
             DisconnectServer(conn);
+            *err = -2; // auth err
             return NULL;
         }
 

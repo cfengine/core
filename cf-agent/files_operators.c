@@ -57,7 +57,7 @@ extern AgentConnection *COMS;
 
 /*****************************************************************************/
 
-int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContext *report_context)
+int MoveObstruction(char *from, Attributes attr, Promise *pp)
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
@@ -97,7 +97,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
                 return false;
             }
 
-            if (ArchiveToRepository(saved, attr, pp, report_context))
+            if (ArchiveToRepository(saved, attr, pp))
             {
                 unlink(saved);
             }
@@ -143,8 +143,7 @@ int MoveObstruction(char *from, Attributes attr, Promise *pp, const ReportContex
 
 /*********************************************************************/
 
-int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
@@ -207,7 +206,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     if (a.edits.backup != cfa_nobackup)
     {
-        if (ArchiveToRepository(backup, a, pp, report_context))
+        if (ArchiveToRepository(backup, a, pp))
         {
             unlink(backup);
         }
@@ -275,8 +274,7 @@ static bool SaveItemListCallback(const char *dest_filename, const char *orig_fil
 
 /*********************************************************************/
 
-int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a, Promise *pp)
 {
-    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp, report_context);
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a, pp);
 }

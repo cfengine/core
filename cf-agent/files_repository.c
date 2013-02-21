@@ -93,7 +93,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -125,7 +125,7 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
     
     JoinPath(destination, CanonifyName(file));
 
-    if (!MakeParentDirectory(destination, attr.move_obstructions, report_context))
+    if (!MakeParentDirectory(destination, attr.move_obstructions))
     {
     }
 

@@ -60,14 +60,14 @@ typedef struct
 
 const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
 void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation);
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
 Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 
-void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context);
+void InitializeGA(GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
-int CheckPromises(const char *input_file, const ReportContext *report_context);
+int CheckPromises(const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(const char *input_file, const Rlist *input_files);
 void CompilationReport(Policy *policy, char *fname);

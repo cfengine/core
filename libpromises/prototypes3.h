@@ -186,7 +186,7 @@ bool IsReadReady(int fd, int timeout_sec);
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
 
 void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context);
+                             const ReportContext *report_context); /* FIXME */
 void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 
 /* verify_interfaces.c */

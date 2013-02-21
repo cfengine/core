@@ -522,8 +522,6 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
 
     if (ONCE)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
-        sleep(SPLAYTIME);
         LocalExec(exec_config);
         CloseLog();
     }

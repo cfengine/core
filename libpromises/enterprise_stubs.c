@@ -252,11 +252,6 @@ void AnalyzePromiseConflicts(void)
 {
 }
 
-void AddGoalsToDB(char *goal_patterns)
-{
-}
-
-
 /* cf-report: cf-report.c */
 
 void SyntaxExport(void)

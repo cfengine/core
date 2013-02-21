@@ -109,7 +109,6 @@ extern Audit *VAUDIT;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
-extern Rlist *GOALS;
 
 extern Rlist *CF_STCK;
 extern int EDIT_MODEL;

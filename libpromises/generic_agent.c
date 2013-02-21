@@ -1469,12 +1469,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
         {
-            GOALS = NULL;
-            for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
-            {
-                RlistPrependScalar(&GOALS, rp->item);
-            }
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET goal_patterns list\n");
+            /* Ignored */
             continue;
         }
         

@@ -96,7 +96,6 @@ void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
-void AddGoalsToDB(char *goal_patterns);
 void VerifyWindowsService(Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
 

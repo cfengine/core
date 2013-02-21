@@ -25,6 +25,16 @@
 #ifndef CFENGINE_ITEM_LIB_H
 #define CFENGINE_ITEM_LIB_H
 
+struct Item_
+{
+    char done;
+    char *name;
+    char *classes;
+    int counter;
+    time_t time;
+    Item *next;
+};
+
 typedef enum
 {
     ITEM_MATCH_TYPE_LITERAL_START,

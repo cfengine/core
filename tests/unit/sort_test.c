@@ -2,6 +2,7 @@
 #include "sort.h"
 
 #include "rlist.h"
+#include "item_lib.h"
 
 #include <setjmp.h>
 #include <cmockery.h>

@@ -4,6 +4,7 @@
 #include <cmockery.h>
 
 #include "alphalist.h"
+#include "item_lib.h"
 
 static void test_create_destroy(void **state)
 {

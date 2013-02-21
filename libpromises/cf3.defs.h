@@ -407,20 +407,6 @@ struct Audit_
 };
 
 /*******************************************************************/
-/* Action /promise types                                           */
-/*******************************************************************/
-
-struct Item_
-{
-    char done;
-    char *name;
-    char *classes;
-    int counter;
-    time_t time;
-    Item *next;
-};
-
-/*******************************************************************/
 
 typedef struct UidList_ UidList;
 

@@ -728,7 +728,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
         switch (agent)
         {
         case AGENT_TYPE_COMMON:
-            ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
+            ShowPromise(report_context, pexp, 6);
             CheckRecursion(report_context, pexp);
             PromiseRecheckAllConstraints(pexp);
             break;

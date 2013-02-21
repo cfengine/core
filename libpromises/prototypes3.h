@@ -54,7 +54,6 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
-void SyntaxExport(void);
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 #endif
@@ -99,7 +98,6 @@ void AnalyzePromiseConflicts(void);
 void VerifyWindowsService(Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
 
-void SyntaxCompletion(char *s);
 void TryCollectCall(void);
 int SetServerListenState(size_t queue_size);
 

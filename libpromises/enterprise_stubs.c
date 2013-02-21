@@ -252,15 +252,6 @@ void AnalyzePromiseConflicts(void)
 {
 }
 
-/* cf-report: cf-report.c */
-
-void SyntaxExport(void)
-{
-    Writer *writer = FileWriter(stdout);
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-}
-
 /* cf-serverd: server_transform.c, cf-serverd.c */
 
 void TranslatePath(char *new, const char *old)
@@ -290,12 +281,6 @@ int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call are only supported in the Enterprise ");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
     return false;
-}
-
-/* cf-know */
-
-void SyntaxCompletion(char *s)
-{
 }
 
 #endif

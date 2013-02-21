@@ -116,7 +116,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
     "Run as a foreground processes (do not fork)",
-    "Run once and then exit",
+    "Run once and then exit (implies no-fork)",
     "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     NULL
@@ -259,6 +259,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
         case 'O':
             ONCE = true;
+            NO_FORK = true;
             break;
 
         case 'V':

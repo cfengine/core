@@ -294,8 +294,6 @@ typedef enum
     PLATFORM_CONTEXT_MAX
 } PlatformContext;
 
-/*******************************************************************/
-
 enum observables
 {
     ob_users,
@@ -372,14 +370,6 @@ enum observables
     ob_ipp_out,
     ob_spare
 };
-
-typedef struct
-{
-    char *portnr;
-    char *name;
-    enum observables in;
-    enum observables out;
-} Sock;
 
 /*******************************************************************/
 

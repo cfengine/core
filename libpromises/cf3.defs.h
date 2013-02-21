@@ -1054,11 +1054,11 @@ typedef enum
 
 typedef enum
 {
-    cf_file_new,
-    cf_file_removed,
-    cf_file_content_changed,
-    cf_file_stats_changed
-}FileState;
+    FILE_STATE_NEW,
+    FILE_STATE_REMOVED,
+    FILE_STATE_CONTENT_CHANGED,
+    FILE_STATE_STATS_CHANGED
+} FileState;
 
 /************************************************************************************/
 

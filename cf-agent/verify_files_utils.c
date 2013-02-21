@@ -2618,7 +2618,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp)
     if (changed)
     {
         NewPersistentContext(pp->ns, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
-        LogHashChange(file, cf_file_content_changed, "Content changed", pp);
+        LogHashChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -3299,7 +3299,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -3312,7 +3312,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
                  (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -3325,7 +3325,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        LogHashChange(file, cf_file_stats_changed, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)

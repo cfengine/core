@@ -949,16 +949,16 @@ static char FileStateToChar(FileState status)
 {
     switch(status)
     {
-    case cf_file_new:
+    case FILE_STATE_NEW:
         return 'N';
 
-    case cf_file_removed:
+    case FILE_STATE_REMOVED:
         return 'R';
 
-    case cf_file_content_changed:
+    case FILE_STATE_CONTENT_CHANGED:
         return 'C';
 
-    case cf_file_stats_changed:
+    case FILE_STATE_STATS_CHANGED:
         return 'S';
 
     default:

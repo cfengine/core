@@ -59,6 +59,16 @@
 
 #include <libgen.h>
 
+typedef enum
+{
+    DATE_TEMPLATE_YEAR,
+    DATE_TEMPLATE_MONTH,
+    DATE_TEMPLATE_DAY,
+    DATE_TEMPLATE_HOUR,
+    DATE_TEMPLATE_MIN,
+    DATE_TEMPLATE_SEC
+} DateTemplate;
+
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
@@ -2882,7 +2892,7 @@ static FnCallResult FnCallOn(FnCall *fp, Rlist *finalargs)
     long d[6];
     time_t cftime;
     struct tm tmv;
-    enum cfdatetemplate i;
+    DateTemplate i;
 
     buffer[0] = '\0';
 
@@ -2901,12 +2911,12 @@ static FnCallResult FnCallOn(FnCall *fp, Rlist *finalargs)
 
 /* (year,month,day,hour,minutes,seconds) */
 
-    tmv.tm_year = d[cfa_year] - 1900;
-    tmv.tm_mon = d[cfa_month] - 1;
-    tmv.tm_mday = d[cfa_day];
-    tmv.tm_hour = d[cfa_hour];
-    tmv.tm_min = d[cfa_min];
-    tmv.tm_sec = d[cfa_sec];
+    tmv.tm_year = d[DATE_TEMPLATE_YEAR] - 1900;
+    tmv.tm_mon = d[DATE_TEMPLATE_MONTH] - 1;
+    tmv.tm_mday = d[DATE_TEMPLATE_DAY];
+    tmv.tm_hour = d[DATE_TEMPLATE_HOUR];
+    tmv.tm_min = d[DATE_TEMPLATE_MIN];
+    tmv.tm_sec = d[DATE_TEMPLATE_SEC];
     tmv.tm_isdst = -1;
 
     if ((cftime = mktime(&tmv)) == -1)
@@ -2960,7 +2970,7 @@ static FnCallResult FnCallLaterThan(FnCall *fp, Rlist *finalargs)
     long d[6];
     time_t cftime, now = time(NULL);
     struct tm tmv;
-    enum cfdatetemplate i;
+    DateTemplate i;
 
     buffer[0] = '\0';
 
@@ -2979,12 +2989,12 @@ static FnCallResult FnCallLaterThan(FnCall *fp, Rlist *finalargs)
 
 /* (year,month,day,hour,minutes,seconds) */
 
-    tmv.tm_year = d[cfa_year] - 1900;
-    tmv.tm_mon = d[cfa_month] - 1;
-    tmv.tm_mday = d[cfa_day];
-    tmv.tm_hour = d[cfa_hour];
-    tmv.tm_min = d[cfa_min];
-    tmv.tm_sec = d[cfa_sec];
+    tmv.tm_year = d[DATE_TEMPLATE_YEAR] - 1900;
+    tmv.tm_mon = d[DATE_TEMPLATE_MONTH] - 1;
+    tmv.tm_mday = d[DATE_TEMPLATE_DAY];
+    tmv.tm_hour = d[DATE_TEMPLATE_HOUR];
+    tmv.tm_min = d[DATE_TEMPLATE_MIN];
+    tmv.tm_sec = d[DATE_TEMPLATE_SEC];
     tmv.tm_isdst = -1;
 
     if ((cftime = mktime(&tmv)) == -1)
@@ -3014,7 +3024,7 @@ static FnCallResult FnCallAgoDate(FnCall *fp, Rlist *finalargs)
     char buffer[CF_BUFSIZE];
     time_t cftime;
     long d[6];
-    enum cfdatetemplate i;
+    DateTemplate i;
 
     buffer[0] = '\0';
 
@@ -3034,12 +3044,12 @@ static FnCallResult FnCallAgoDate(FnCall *fp, Rlist *finalargs)
 /* (year,month,day,hour,minutes,seconds) */
 
     cftime = CFSTARTTIME;
-    cftime -= d[cfa_sec];
-    cftime -= d[cfa_min] * 60;
-    cftime -= d[cfa_hour] * 3600;
-    cftime -= d[cfa_day] * 24 * 3600;
-    cftime -= Months2Seconds(d[cfa_month]);
-    cftime -= d[cfa_year] * 365 * 24 * 3600;
+    cftime -= d[DATE_TEMPLATE_SEC];
+    cftime -= d[DATE_TEMPLATE_MIN] * 60;
+    cftime -= d[DATE_TEMPLATE_HOUR] * 3600;
+    cftime -= d[DATE_TEMPLATE_DAY] * 24 * 3600;
+    cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
+    cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
     CfDebug("Total negative offset = %.1f minutes\n", (double) (CFSTARTTIME - cftime) / 60.0);
     CfDebug("Time computed from input was: %s\n", cf_ctime(&cftime));
@@ -3062,7 +3072,7 @@ static FnCallResult FnCallAccumulatedDate(FnCall *fp, Rlist *finalargs)
     Rlist *rp;
     char buffer[CF_BUFSIZE];
     long d[6], cftime;
-    enum cfdatetemplate i;
+    DateTemplate i;
 
     buffer[0] = '\0';
 
@@ -3082,12 +3092,12 @@ static FnCallResult FnCallAccumulatedDate(FnCall *fp, Rlist *finalargs)
 /* (year,month,day,hour,minutes,seconds) */
 
     cftime = 0;
-    cftime += d[cfa_sec];
-    cftime += d[cfa_min] * 60;
-    cftime += d[cfa_hour] * 3600;
-    cftime += d[cfa_day] * 24 * 3600;
-    cftime += d[cfa_month] * 30 * 24 * 3600;
-    cftime += d[cfa_year] * 365 * 24 * 3600;
+    cftime += d[DATE_TEMPLATE_SEC];
+    cftime += d[DATE_TEMPLATE_MIN] * 60;
+    cftime += d[DATE_TEMPLATE_HOUR] * 3600;
+    cftime += d[DATE_TEMPLATE_DAY] * 24 * 3600;
+    cftime += d[DATE_TEMPLATE_MONTH] * 30 * 24 * 3600;
+    cftime += d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 

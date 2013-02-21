@@ -876,16 +876,6 @@ typedef enum
     INTERVAL_NONE
 } Interval;
 
-enum cfdatetemplate
-{
-    cfa_year,
-    cfa_month,
-    cfa_day,
-    cfa_hour,
-    cfa_min,
-    cfa_sec
-};
-
 typedef enum
 {
     FILE_COMPARATOR_ATIME,

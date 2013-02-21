@@ -918,19 +918,19 @@ enum cftidylinks
     cfa_linkkeep
 };
 
-enum cfhashes
+typedef enum
 {
-    cf_md5,
-    cf_sha224,
-    cf_sha256,
-    cf_sha384,
-    cf_sha512,
-    cf_sha1,
-    cf_sha,
-    cf_besthash,
-    cf_crypt,
-    cf_nohash
-};
+    HASH_METHOD_MD5,
+    HASH_METHOD_SHA224,
+    HASH_METHOD_SHA256,
+    HASH_METHOD_SHA384,
+    HASH_METHOD_SHA512,
+    HASH_METHOD_SHA1,
+    HASH_METHOD_SHA,
+    HASH_METHOD_BEST,
+    HASH_METHOD_CRYPT,
+    HASH_METHOD_NONE
+} HashMethod;
 
 enum cfnofile
 {
@@ -1407,7 +1407,7 @@ typedef struct
 
 typedef struct
 {
-    enum cfhashes hash;
+    HashMethod hash;
     enum cfchanges report_changes;
     int report_diffs;
     int update;

@@ -233,7 +233,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
     else
     {
-        HashString(in, nonce_len, digest, cf_md5);
+        HashString(in, nonce_len, digest, HASH_METHOD_MD5);
     }
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
@@ -330,7 +330,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         return false;
     }
 
-    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, cf_md5)))  // Legacy
+    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, HASH_METHOD_MD5)))  // Legacy
     {
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
@@ -395,7 +395,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
     else
     {
-        HashString(decrypted_cchall, nonce_len, digest, cf_md5);
+        HashString(decrypted_cchall, nonce_len, digest, HASH_METHOD_MD5);
     }
 
     CfDebug("Replying to counter challenge with hash\n");

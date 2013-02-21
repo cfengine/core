@@ -2586,15 +2586,15 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp)
     memset(digest1, 0, EVP_MAX_MD_SIZE + 1);
     memset(digest2, 0, EVP_MAX_MD_SIZE + 1);
 
-    if (attr.change.hash == cf_besthash)
+    if (attr.change.hash == HASH_METHOD_BEST)
     {
         if (!DONTDO)
         {
-            HashFile(file, digest1, cf_md5);
-            HashFile(file, digest2, cf_sha1);
+            HashFile(file, digest1, HASH_METHOD_MD5);
+            HashFile(file, digest2, HASH_METHOD_SHA1);
 
-            one = FileHashChanged(file, digest1, OUTPUT_LEVEL_ERROR, cf_md5, attr, pp);
-            two = FileHashChanged(file, digest2, OUTPUT_LEVEL_ERROR, cf_sha1, attr, pp);
+            one = FileHashChanged(file, digest1, OUTPUT_LEVEL_ERROR, HASH_METHOD_MD5, attr, pp);
+            two = FileHashChanged(file, digest2, OUTPUT_LEVEL_ERROR, HASH_METHOD_SHA1, attr, pp);
 
             if (one || two)
             {

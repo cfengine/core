@@ -219,7 +219,7 @@ void LoadSlowlyVaryingObservations(void)
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     fail();
 }
@@ -229,7 +229,7 @@ char *MapName(char *s)
     fail();
 }
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     fail();
 }
@@ -288,7 +288,7 @@ struct utsname VSYSNAME;
 PlatformContext VSYSTEMHARDCLASS;
 char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
-enum cfhashes CF_DEFAULT_DIGEST;
+HashMethod CF_DEFAULT_DIGEST;
 char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3];
 const char *VFSTAB[1];
 char *VRESOLVCONF[1];

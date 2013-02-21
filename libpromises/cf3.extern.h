@@ -100,7 +100,7 @@ extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
 extern int CF_TOPICS;
 extern int CF_OCCUR;
-extern enum cfhashes CF_DEFAULT_DIGEST;
+extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern Scope *VSCOPE;

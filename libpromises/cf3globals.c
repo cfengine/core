@@ -152,7 +152,7 @@ Item *IPADDRESSES = NULL;
 /*                                                                 */
 /*******************************************************************/
 
-enum cfhashes CF_DEFAULT_DIGEST;
+HashMethod CF_DEFAULT_DIGEST;
 int CF_DEFAULT_DIGEST_LEN;
 
 /***********************************************************/

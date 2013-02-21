@@ -263,7 +263,7 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
     fprintf(stderr, "\n");
 }
 
-enum cfhashes CF_DEFAULT_DIGEST;
+HashMethod CF_DEFAULT_DIGEST;
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 const char *SHIFT_TEXT[] = {};
@@ -278,7 +278,7 @@ char *MapAddress(char *addr)
     fail();
 }
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     fail();
 }
@@ -293,7 +293,7 @@ int ThreadUnlock(pthread_mutex_t *name)
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     fail();
 }

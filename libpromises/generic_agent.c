@@ -124,10 +124,10 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     char vbuff[CF_BUFSIZE];
 
 #ifdef HAVE_NOVA
-    CF_DEFAULT_DIGEST = cf_sha256;
+    CF_DEFAULT_DIGEST = HASH_METHOD_SHA256;
     CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
 #else
-    CF_DEFAULT_DIGEST = cf_md5;
+    CF_DEFAULT_DIGEST = HASH_METHOD_MD5;
     CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 

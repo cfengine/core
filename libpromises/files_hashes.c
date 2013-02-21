@@ -62,18 +62,18 @@ static const int CF_DIGEST_SIZES[10] =
     0
 };
 
-static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-static void DeleteHash(CF_DB *dbp, enum cfhashes type, char *name);
+static int ReadHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
+static int WriteHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
+static void DeleteHash(CF_DB *dbp, HashMethod type, char *name);
 static ChecksumValue *NewHashValue(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static char *NewIndexKey(char type, char *name, int *size);
 static void DeleteIndexKey(char *key);
 static void DeleteHashValue(ChecksumValue *value);
-static int FileHashSize(enum cfhashes id);
+static int FileHashSize(HashMethod id);
 
 /*****************************************************************************/
 
-int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, enum cfhashes type,
+int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, HashMethod type,
                     Attributes attr, Promise *pp)
 /* Returns false if filename never seen before, and adds a checksum
    to the database. Returns true if hashes do not match and also potentially
@@ -231,7 +231,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
 /*******************************************************************/
 
-void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     FILE *file;
     EVP_MD_CTX context;
@@ -265,7 +265,7 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cf
 
 /*******************************************************************/
 
-void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     EVP_MD_CTX context;
     const EVP_MD *md = NULL;
@@ -275,7 +275,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
     switch (type)
     {
-    case cf_crypt:
+    case HASH_METHOD_CRYPT:
         CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use another algorithm instead");
         memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
@@ -297,7 +297,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
 /*******************************************************************/
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     EVP_MD_CTX context;
     const EVP_MD *md = NULL;
@@ -327,7 +327,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
 
     switch (type)
     {
-    case cf_crypt:
+    case HASH_METHOD_CRYPT:
         CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use sha256 instead");
         break;
 
@@ -355,7 +355,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhash
 /*******************************************************************/
 
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
-                enum cfhashes type)
+                HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;
 
@@ -377,7 +377,7 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
 
 /*********************************************************************/
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 /** 
  * WARNING: Not thread-safe (returns pointer to global memory).
  * Use HashPrintSafe for a thread-safe equivalent
@@ -392,7 +392,7 @@ char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 
 /*********************************************************************/
 
-char *HashPrintSafe(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 /**
  * Thread safe. Note the buffer size.
  */
@@ -401,7 +401,7 @@ char *HashPrintSafe(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1
 
     switch (type)
     {
-    case cf_md5:
+    case HASH_METHOD_MD5:
         sprintf(buffer, "MD5=  ");
         break;
     default:
@@ -496,7 +496,7 @@ void PurgeHashes(char *path, Attributes attr, Promise *pp)
 
 /*****************************************************************************/
 
-static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int ReadHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     char *key;
     int size;
@@ -520,7 +520,7 @@ static int ReadHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char di
 
 /*****************************************************************************/
 
-static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int WriteHash(CF_DB *dbp, HashMethod type, char *name, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     char *key;
     ChecksumValue *value;
@@ -536,7 +536,7 @@ static int WriteHash(CF_DB *dbp, enum cfhashes type, char *name, unsigned char d
 
 /*****************************************************************************/
 
-static void DeleteHash(CF_DB *dbp, enum cfhashes type, char *name)
+static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
 {
     int size;
     char *key;
@@ -598,19 +598,19 @@ static void DeleteHashValue(ChecksumValue *chk_val)
 
 /*********************************************************************/
 
-const char *FileHashName(enum cfhashes id)
+const char *FileHashName(HashMethod id)
 {
     return CF_DIGEST_TYPES[id][0];
 }
 
 /***************************************************************************/
 
-static int FileHashSize(enum cfhashes id)
+static int FileHashSize(HashMethod id)
 {
     return CF_DIGEST_SIZES[id];
 }
 
-enum cfhashes String2HashType(char *typestr)
+HashMethod HashMethodFromString(char *typestr)
 {
     int i;
 
@@ -618,9 +618,9 @@ enum cfhashes String2HashType(char *typestr)
     {
         if (typestr && (strcmp(typestr, CF_DIGEST_TYPES[i][0]) == 0))
         {
-            return (enum cfhashes) i;
+            return (HashMethod) i;
         }
     }
 
-    return cf_nohash;
+    return HASH_METHOD_NONE;
 }

@@ -821,37 +821,37 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
     if (value && (strcmp(value, "best") == 0))
     {
 #ifdef HAVE_NOVA
-        c.hash = cf_sha512;
+        c.hash = HASH_METHOD_SHA512;
 #else
-        c.hash = cf_besthash;
+        c.hash = HASH_METHOD_BEST;
 #endif
     }
     else if (value && (strcmp(value, "md5") == 0))
     {
-        c.hash = cf_md5;
+        c.hash = HASH_METHOD_MD5;
     }
     else if (value && (strcmp(value, "sha1") == 0))
     {
-        c.hash = cf_sha1;
+        c.hash = HASH_METHOD_SHA1;
     }
     else if (value && (strcmp(value, "sha256") == 0))
     {
-        c.hash = cf_sha256;
+        c.hash = HASH_METHOD_SHA256;
     }
     else if (value && (strcmp(value, "sha384") == 0))
     {
-        c.hash = cf_sha384;
+        c.hash = HASH_METHOD_SHA384;
     }
     else if (value && (strcmp(value, "sha512") == 0))
     {
-        c.hash = cf_sha512;
+        c.hash = HASH_METHOD_SHA512;
     }
     else
     {
         c.hash = CF_DEFAULT_DIGEST;
     }
 
-    if (FIPS_MODE && (c.hash == cf_md5))
+    if (FIPS_MODE && (c.hash == HASH_METHOD_MD5))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm");
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);

@@ -2061,7 +2061,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     unsigned long err;
     RSA *newkey;
     int digestLen = 0;
-    enum cfhashes digestType;
+    HashMethod digestType;
 
     if ((PRIVKEY == NULL) || (PUBKEY == NULL))
     {
@@ -2076,7 +2076,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     }
     else
     {
-        digestType = cf_md5;
+        digestType = HASH_METHOD_MD5;
         digestLen = CF_MD5_LEN;
     }
 
@@ -2839,7 +2839,7 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
     HashFile(filename, digest2, CF_DEFAULT_DIGEST);
 
-    if ((HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST)) || (HashesMatch(digest1, digest2, cf_md5)))
+    if ((HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST)) || (HashesMatch(digest1, digest2, HASH_METHOD_MD5)))
     {
         sprintf(sendbuffer, "%s", CFD_FALSE);
         CfDebug("Hashes matched ok\n");

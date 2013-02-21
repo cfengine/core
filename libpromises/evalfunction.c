@@ -496,7 +496,7 @@ static FnCallResult FnCallHash(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    enum cfhashes type;
+    HashMethod type;
 
     buffer[0] = '\0';
 
@@ -505,9 +505,9 @@ static FnCallResult FnCallHash(FnCall *fp, Rlist *finalargs)
     char *string = RlistScalarValue(finalargs);
     char *typestring = RlistScalarValue(finalargs->next);
 
-    type = String2HashType(typestring);
+    type = HashMethodFromString(typestring);
 
-    if (FIPS_MODE && type == cf_md5)
+    if (FIPS_MODE && type == HASH_METHOD_MD5)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
     }
@@ -526,7 +526,7 @@ static FnCallResult FnCallHashMatch(FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], ret[CF_BUFSIZE];
     unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    enum cfhashes type;
+    HashMethod type;
 
     buffer[0] = '\0';
 
@@ -536,7 +536,7 @@ static FnCallResult FnCallHashMatch(FnCall *fp, Rlist *finalargs)
     char *typestring = RlistScalarValue(finalargs->next);
     char *compare = RlistScalarValue(finalargs->next->next);
 
-    type = String2HashType(typestring);
+    type = HashMethodFromString(typestring);
     HashFile(string, digest, type);
     snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrint(type, digest));
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> File \"%s\" hashes to \"%s\", compare to \"%s\"\n", string, buffer, compare);

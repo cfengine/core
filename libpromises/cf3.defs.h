@@ -1753,12 +1753,12 @@ typedef struct
 
 typedef enum
 {
-    cfsrv_start,
-    cfsrv_stop,
-    cfsrv_disable,
-    cfsrv_restart,
-    cfsrv_reload,
-    cfsrv_nostatus
+    SERVICE_POLICY_START,
+    SERVICE_POLICY_STOP,
+    SERVICE_POLICY_DISABLE,
+    SERVICE_POLICY_RESTART,
+    SERVICE_POLICY_RELOAD,
+    SERVICE_POLICY_NONE
 } ServicePolicy;
 
 typedef struct

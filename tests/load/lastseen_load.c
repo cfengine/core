@@ -107,7 +107,7 @@ char *MapAddress(char *addr)
     exit(42);
 }
 
-char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     exit(42);
 }

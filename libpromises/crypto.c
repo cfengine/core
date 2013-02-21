@@ -157,8 +157,10 @@ void LoadSecretKeys()
 
 /* Check that we have our own SHA key form of the key in the IP on the hub */
 
+    char buffer[EVP_MAX_MD_SIZE * 4];
+
     HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-    snprintf(name, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root", HashPrint(CF_DEFAULT_DIGEST, digest));
+    snprintf(name, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root", HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
     MapName(name);
 
     snprintf(source, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", CFWORKDIR);

@@ -72,7 +72,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role)
 {
-    char databuf[CF_BUFSIZE];
+    char databuf[EVP_MAX_MD_SIZE * 4];
     char *mapip;
 
     if (strlen(ipaddress) == 0)
@@ -81,11 +81,7 @@ void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSee
         return;
     }
 
-    ThreadLock(cft_output);
-
-    strlcpy(databuf, HashPrint(CF_DEFAULT_DIGEST, digest), CF_BUFSIZE);
-
-    ThreadUnlock(cft_output);
+    HashPrintSafe(CF_DEFAULT_DIGEST, digest, databuf);
 
     mapip = MapAddress(ipaddress);
 
@@ -235,7 +231,7 @@ bool Address2Hostkey(const char *address, char *result)
         {
             unsigned char digest[EVP_MAX_MD_SIZE + 1];
             HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-            snprintf(result, CF_MAXVARSIZE, "%s", HashPrint(CF_DEFAULT_DIGEST, digest));
+            HashPrintSafe(CF_DEFAULT_DIGEST, digest, result);
             return true;
         }
         else

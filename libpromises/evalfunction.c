@@ -514,7 +514,9 @@ static FnCallResult FnCallHash(FnCall *fp, Rlist *finalargs)
 
     HashString(string, strlen(string), digest, type);
 
-    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrint(type, digest));
+    char hashbuffer[EVP_MAX_MD_SIZE * 4];
+
+    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(SkipHashType(buffer)), RVAL_TYPE_SCALAR } };
 }
@@ -538,7 +540,9 @@ static FnCallResult FnCallHashMatch(FnCall *fp, Rlist *finalargs)
 
     type = HashMethodFromString(typestring);
     HashFile(string, digest, type);
-    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrint(type, digest));
+
+    char hashbuffer[EVP_MAX_MD_SIZE * 4];
+    snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> File \"%s\" hashes to \"%s\", compare to \"%s\"\n", string, buffer, compare);
 
     if (strcmp(buffer + 4, compare) == 0)

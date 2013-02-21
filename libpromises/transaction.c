@@ -207,7 +207,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
     }
 
     HashPromise(operand, pp, digest, CF_DEFAULT_DIGEST);
-    strcpy(str_digest, HashPrint(CF_DEFAULT_DIGEST, digest));
+    HashPrintSafe(CF_DEFAULT_DIGEST, digest, str_digest);
 
 /* As a backup to "done" we need something immune to re-use */
 

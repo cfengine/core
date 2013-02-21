@@ -89,7 +89,7 @@ EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
 
 /*****************************************************************************/
 
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context)
+void FinishEditContext(EditContext *ec, Attributes a, Promise *pp)
 {
     Item *ip;
 
@@ -116,7 +116,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
             }
             else
             {
-                SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
+                SaveItemListAsFile(ec->file_start, ec->filename, a, pp);
             }
         }
 
@@ -132,7 +132,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
             }
             else
             {
-                SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
+                SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp);
             }
             xmlFreeDoc(ec->xmldoc);
 #else
@@ -231,10 +231,9 @@ bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void 
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, a, pp, report_context);
+    return SaveAsFile(&SaveXmlCallback, doc, file, a, pp);
 }
 #endif
 

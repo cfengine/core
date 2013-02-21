@@ -54,7 +54,6 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
-void SyntaxExport(void);
 #if defined(__MINGW32__)
 void VerifyRegistryPromise(Attributes a, Promise *pp);
 #endif
@@ -67,10 +66,7 @@ void EnterpriseContext(void);
 int EnterpriseExpiry(void);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
-void RegisterBundleDependence(char *absscope, const Promise *pp);
-void ShowTopicRepresentation(const ReportContext *report_context);
 void PreSanitizePromise(Promise *pp);
-void Nova_ShowTopicRepresentation(FILE *fp);
 void GetObservable(int i, char *name, char *desc);
 void SetMeasurementPromises(Item **classlist);
 void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
@@ -99,11 +95,9 @@ void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void NewPromiser(Promise *pp);
 void AnalyzePromiseConflicts(void);
-void AddGoalsToDB(char *goal_patterns);
 void VerifyWindowsService(Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
 
-void SyntaxCompletion(char *s);
 void TryCollectCall(void);
 int SetServerListenState(size_t queue_size);
 
@@ -192,7 +186,7 @@ bool IsReadReady(int fd, int timeout_sec);
 void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
 
 void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context);
+                             const ReportContext *report_context); /* FIXME */
 void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
 
 /* verify_interfaces.c */

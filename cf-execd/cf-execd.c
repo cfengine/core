@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, report_context, false))
+    if (GenericAgentCheckPolicy(config, false))
     {
         policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
     }
@@ -664,7 +664,7 @@ static Reload CheckNewPromises(const char *input_file, const Rlist *input_files,
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(input_file, report_context))
+        if (CheckPromises(input_file))
         {
             return RELOAD_FULL;
         }

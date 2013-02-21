@@ -25,6 +25,7 @@
 #ifndef CFENGINE_MON_H
 #define CFENGINE_MON_H
 
+
 /* mon_entropy.c */
 
 void MonEntropyClassesInit(void);

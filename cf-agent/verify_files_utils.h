@@ -33,17 +33,16 @@ extern Rlist *SINGLE_COPY_LIST;
 
 void SetFileAutoDefineList(Rlist *auto_define_list);
 
-int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp, const ReportContext *report_context);
-int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp,
-                const ReportContext *report_context);
-int CfCreateFile(char *file, Promise *pp, Attributes attr, const ReportContext *report_context);
+int VerifyFileLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
+int DepthSearch(char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
+int CfCreateFile(char *file, Promise *pp, Attributes attr);
 void SetSearchDevice(struct stat *sb, Promise *pp);
 
-int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp, const ReportContext *report_context);
-int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp, const ReportContext *report_context);
+int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp);
+int ScheduleLinkChildrenOperation(char *destination, char *source, int rec, Attributes attr, Promise *pp);
+int ScheduleLinkOperation(char *destination, char *source, Attributes attr, Promise *pp);
 int ScheduleEditOperation(char *filename, Attributes attr, Promise *pp, const ReportContext *report_context);
 
-int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, const ReportContext *report_context);
+int CopyRegularFile(char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp);
 
 #endif

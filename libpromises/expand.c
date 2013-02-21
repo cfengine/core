@@ -284,10 +284,6 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
                     qualified = false;
                 }
 
-                // Interlude for knowledge map creation add dependency
-
-                RegisterBundleDependence(absscope, pp);
-
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
@@ -732,7 +728,7 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
         switch (agent)
         {
         case AGENT_TYPE_COMMON:
-            ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
+            ShowPromise(report_context, pexp, 6);
             CheckRecursion(report_context, pexp);
             PromiseRecheckAllConstraints(pexp);
             break;

@@ -69,7 +69,7 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void CheckWorkingDirectories(const ReportContext *report_context);
+static void CheckWorkingDirectories(void);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
 static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
@@ -131,7 +131,7 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 
-    InitializeGA(config, report_context);
+    InitializeGA(config);
 
     SetReferenceTime(true);
     SetStartTime();
@@ -157,7 +157,6 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
     {
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
-        ShowTopicRepresentation(report_context);
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }
 
@@ -226,13 +225,13 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *report_context, bool force_validation)
+bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
 {
     if (!MissingInputFile(config->input_file))
     {
         if (IsPolicyPrecheckNeeded(config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(config->input_file, report_context);
+            bool policy_check_ok = CheckPromises(config->input_file);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
@@ -255,7 +254,7 @@ bool GenericAgentCheckPolicy(GenericAgentConfig *config, const ReportContext *re
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(const char *input_file, const ReportContext *report_context)
+int CheckPromises(const char *input_file)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
@@ -327,7 +326,7 @@ int CheckPromises(const char *input_file, const ReportContext *report_context)
                 MapName(filename);
             }
 
-            MakeParentDirectory(filename, true, report_context);
+            MakeParentDirectory(filename, true);
 
             if ((fd = creat(filename, 0600)) != -1)
             {
@@ -453,7 +452,7 @@ void CloseLog(void)
 /* Level 1                                                         */
 /*******************************************************************/
 
-void InitializeGA(GenericAgentConfig *config, const ReportContext *report_context)
+void InitializeGA(GenericAgentConfig *config)
 {
     int force = false;
     struct stat statbuf, sb;
@@ -513,15 +512,15 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Work directory is %s\n", CFWORKDIR);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force, report_context);
+        MakeParentDirectory(vbuff, force);
         snprintf(vbuff, CF_BUFSIZE, "%s%cbin%ccf-agent -D from_cfexecd", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force, report_context);
+        MakeParentDirectory(vbuff, force);
         snprintf(vbuff, CF_BUFSIZE, "%s%coutputs%cspooled_reports", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force, report_context);
+        MakeParentDirectory(vbuff, force);
         snprintf(vbuff, CF_BUFSIZE, "%s%clastseen%cintermittencies", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force, report_context);
+        MakeParentDirectory(vbuff, force);
         snprintf(vbuff, CF_BUFSIZE, "%s%creports%cvarious", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, force, report_context);
+        MakeParentDirectory(vbuff, force);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
 
@@ -546,7 +545,7 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
         }
 
         sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(ebuff, force, report_context);
+        MakeParentDirectory(ebuff, force);
 
         if (cfstat(ebuff, &statbuf) == -1)
         {
@@ -574,7 +573,7 @@ void InitializeGA(GenericAgentConfig *config, const ReportContext *report_contex
 
     if (!LOOKUP)
     {
-        CheckWorkingDirectories(report_context);
+        CheckWorkingDirectories();
     }
 
     LoadSecretKeys();
@@ -1109,7 +1108,7 @@ void BannerBundle(Bundle *bp, Rlist *params)
 
 /*********************************************************************/
 
-static void CheckWorkingDirectories(const ReportContext *report_context)
+static void CheckWorkingDirectories(void)
 /* NOTE: We do not care about permissions (ACLs) in windows */
 {
     struct stat statbuf;
@@ -1124,7 +1123,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false, report_context);
+    MakeParentDirectory(vbuff, false);
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Making sure that locks are private...\n");
 
@@ -1140,7 +1139,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-    MakeParentDirectory(vbuff, false, report_context);
+    MakeParentDirectory(vbuff, false);
 
     if (strlen(CFPRIVKEYFILE) == 0)
     {
@@ -1154,7 +1153,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false, report_context);
+        MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1181,7 +1180,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false, report_context);
+        MakeParentDirectory(vbuff, false);
 
         if (chown(vbuff, getuid(), getgid()) == -1)
         {
@@ -1208,7 +1207,7 @@ static void CheckWorkingDirectories(const ReportContext *report_context)
     if (cfstat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        MakeParentDirectory(vbuff, false, report_context);
+        MakeParentDirectory(vbuff, false);
 
         cf_chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
     }
@@ -1259,7 +1258,7 @@ void CompilationReport(Policy *policy, char *fname)
     ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(compilation_report_context, REPORT_OUTPUT_TYPE_TEXT, policy->bundles, policy->bodies);
+    ShowPromises(compilation_report_context, policy->bundles, policy->bodies);
 
     ReportContextDestroy(compilation_report_context);
 }
@@ -1317,9 +1316,8 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
     // TODO: need to move this inside PolicyCheckRunnable eventually.
     if (!config->bundlesequence && config->check_runnable)
     {
-        // only verify policy-defined bundlesequence for cf-agent, cf-know, cf-promises, cf-gendoc
+        // only verify policy-defined bundlesequence for cf-agent, cf-promises, cf-gendoc
         if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
-            (THIS_AGENT_TYPE == AGENT_TYPE_KNOW) ||
             (THIS_AGENT_TYPE == AGENT_TYPE_COMMON) ||
             (THIS_AGENT_TYPE == AGENT_TYPE_GENDOC))
         {
@@ -1393,7 +1391,6 @@ static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *r
 static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
 {
     const BodySyntax *bp = NULL;
-    Rlist *rp;
     Rval returnval;
 
     CfDebug("CheckControlPromises(%s)\n", agent);
@@ -1471,12 +1468,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[cfg_goalpatterns].lval) == 0)
         {
-            GOALS = NULL;
-            for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
-            {
-                RlistPrependScalar(&GOALS, rp->item);
-            }
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET goal_patterns list\n");
+            /* Ignored */
             continue;
         }
         

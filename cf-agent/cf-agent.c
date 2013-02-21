@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, report_context, ALWAYS_VALIDATE))
+    if (GenericAgentCheckPolicy(config, ALWAYS_VALIDATE))
     {
         policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
     }
@@ -1362,7 +1362,7 @@ static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportCon
         {
             if (FSTABLIST)
             {
-                SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL, report_context);
+                SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
                 DeleteItemList(FSTABLIST);
                 FSTABLIST = NULL;
             }

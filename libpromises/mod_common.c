@@ -32,7 +32,6 @@
 #include "mod_interfaces.h"
 #include "mod_storage.h"
 #include "mod_databases.h"
-#include "mod_knowledge.h"
 #include "mod_packages.h"
 #include "mod_report.h"
 #include "mod_files.h"
@@ -298,57 +297,6 @@ const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFK_CONTROLBODY[] =
-{
-    {"build_directory", DATA_TYPE_STRING, ".*", "The directory in which to generate output files", "Current working directory"},
-    {"document_root", DATA_TYPE_STRING, ".*", "The directory in which the web root resides"},
-    {"generate_manual", DATA_TYPE_OPTION, CF_BOOL, "true/false generate texinfo manual page skeleton for this version", "false"},
-    {"graph_directory", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Path to directory where rendered .png files will be created"},
-    {"graph_output", DATA_TYPE_OPTION, CF_BOOL, "true/false generate png visualization of topic map if possible (requires lib)"},
-    {"html_banner", DATA_TYPE_STRING, "", "HTML code for a banner to be added to rendered in html after the header"},
-    {"html_footer", DATA_TYPE_STRING, "", "HTML code for a page footer to be added to rendered in html before the end body tag"},
-    {"id_prefix", DATA_TYPE_STRING, ".*",
-     "The LTM identifier prefix used to label topic maps (used for disambiguation in merging)"},
-    {"manual_source_directory", DATA_TYPE_STRING, CF_ABSPATHRANGE,
-     "Path to directory where raw text about manual topics is found (defaults to build_directory)"},
-    {"query_engine", DATA_TYPE_STRING, "", "Name of a dynamic web-page used to accept and drive queries in a browser"},
-    {"query_output", DATA_TYPE_OPTION, "html,text", "Menu option for generated output format"},
-    {"sql_type", DATA_TYPE_OPTION, "mysql,postgres", "Menu option for supported database type"},
-    {"sql_database", DATA_TYPE_STRING, "", "Name of database used for the topic map"},
-    {"sql_owner", DATA_TYPE_STRING, "", "User id of sql database user"},
-    {"sql_passwd", DATA_TYPE_STRING, "", "Embedded password for accessing sql database"},
-    {"sql_server", DATA_TYPE_STRING, "", "Name or IP of database server (or localhost)"},
-    {"sql_connection_db", DATA_TYPE_STRING, "",
-     "The name of an existing database to connect to in order to create/manage other databases"},
-    {"style_sheet", DATA_TYPE_STRING, "", "Name of a style-sheet to be used in rendering html output (added to headers)"},
-    {"view_projections", DATA_TYPE_OPTION, CF_BOOL, "Perform view-projection analytics in graph generation", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
-};
-
-const BodySyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
-{
-    {"aggregation_point", DATA_TYPE_STRING, CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation"},
-    {"auto_scaling", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to auto-scale graph output to optimize use of space",
-     "true"},
-    {"build_directory", DATA_TYPE_STRING, ".*", "The directory in which to generate output files", "Current working directory"},
-    {"csv2xml", DATA_TYPE_STRING_LIST, "", "A list of csv formatted files in the build directory to convert to simple xml"},
-    {"error_bars", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to generate error bars on graph output", "true"},
-    {"html_banner", DATA_TYPE_STRING, "", "HTML code for a banner to be added to rendered in html after the header"},
-    {"html_embed", DATA_TYPE_OPTION, CF_BOOL, "If true, no header and footer tags will be added to html output"},
-    {"html_footer", DATA_TYPE_STRING, "", "HTML code for a page footer to be added to rendered in html before the end body tag"},
-    {"query_engine", DATA_TYPE_STRING, "", "Name of a dynamic web-page used to accept and drive queries in a browser"},
-    {"reports", DATA_TYPE_OPTION_LIST,
-     "all,audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history,monitor_summary,compliance,setuid,file_changes,installed_software,software_patches,value,variables",
-     "A list of reports that may be generated", "none"},
-    {"report_output", DATA_TYPE_OPTION, "csv,html,text,xml",
-     "Menu option for generated output format. Applies only to text reports, graph data remain in xydy format.",
-     "none"},
-    {"style_sheet", DATA_TYPE_STRING, "", "Name of a style-sheet to be used in rendering html output (added to headers)"},
-    {"time_stamps", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to generate timestamps in the output directory name",
-     "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
-};
-
 const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
     {"export_zenoss", DATA_TYPE_STRING, CF_PATHRANGE, "Generate report for Zenoss integration"},
@@ -374,8 +322,6 @@ const SubTypeSyntax CF_ALL_BODIES[] =
     {CF_MONITORC, "control", CFM_CONTROLBODY},
     {CF_RUNC, "control", CFR_CONTROLBODY},
     {CF_EXECC, "control", CFEX_CONTROLBODY},
-    {CF_KNOWC, "control", CFK_CONTROLBODY},
-    {CF_REPORTC, "control", CFRE_CONTROLBODY},
     {CF_HUBC, "control", CFH_CONTROLBODY},
     {"file", "control", CFFILE_CONTROLBODY},
 
@@ -443,7 +389,6 @@ const SubTypeSyntax *CF_ALL_SUBTYPES[] =
     CF_SERVICES_SUBTYPES,       /* mod_services.c */
     CF_STORAGE_SUBTYPES,        /* mod_storage.c */
     CF_REMACCESS_SUBTYPES,      /* mod_access.c */
-    CF_KNOWLEDGE_SUBTYPES,      /* mod_knowledge.c */
     CF_MEASUREMENT_SUBTYPES,    /* mod_measurement.c */
 };
 

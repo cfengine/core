@@ -80,7 +80,6 @@ Services GetServicesConstraints(const Promise *pp);
 StorageMount GetMountConstraints(const Promise *pp);
 StorageVolume GetVolumeConstraints(const Promise *pp);
 TcpIp GetTCPIPAttributes(const Promise *pp);
-TopicAssociation GetAssociationConstraints(const Promise *pp);
 TransactionContext GetTransactionConstraints(const Promise *pp);
 
 /* Default values for attributes */

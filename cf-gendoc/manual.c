@@ -29,7 +29,6 @@
 
 #include "vars.h"
 #include "writer.h"
-#include "mod_knowledge.h"
 #include "mod_measurement.h"
 #include "mod_exec.h"
 #include "mod_access.h"
@@ -121,7 +120,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
         st = (CF_ALL_SUBTYPES[i]);
 
         if ((st == CF_COMMON_SUBTYPES) || (st == CF_EXEC_SUBTYPES) || (st == CF_REMACCESS_SUBTYPES)
-            || (st == CF_KNOWLEDGE_SUBTYPES) || (st == CF_MEASUREMENT_SUBTYPES))
+            || (st == CF_MEASUREMENT_SUBTYPES))
 
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);

@@ -558,9 +558,7 @@ typedef enum
 #define CF_SERVERC  "server"
 #define CF_MONITORC "monitor"
 #define CF_EXECC    "executor"
-#define CF_KNOWC    "knowledge"
 #define CF_RUNC     "runagent"
-#define CF_REPORTC  "reporter"
 #define CF_KEYGEN   "keygenerator"
 #define CF_HUBC     "hub"
 #define CF_GENDOC   "gendoc"
@@ -573,7 +571,6 @@ typedef enum
     AGENT_TYPE_MONITOR,
     AGENT_TYPE_EXECUTOR,
     AGENT_TYPE_RUNAGENT,
-    AGENT_TYPE_REPORT,
     AGENT_TYPE_KEYGEN,
     AGENT_TYPE_HUB,
     AGENT_TYPE_GENDOC,
@@ -974,18 +971,6 @@ enum signalnames
 
 typedef enum
 {
-    cfk_url,
-    cfk_web,
-    cfk_file,
-    cfk_db,
-    cfk_literal,
-    cfk_image,
-    cfk_portal,
-    cfk_none
-} KnowledgeRepresentation;
-
-typedef enum
-{
     PACKAGE_ACTION_ADD,
     PACKAGE_ACTION_DELETE,
     PACKAGE_ACTION_REINSTALL,
@@ -1201,57 +1186,6 @@ typedef struct
     Rlist *retcode_repaired;
     Rlist *retcode_failed;
 } DefineClasses;
-
-/*************************************************************************/
-/* Ontology                                                              */
-/*************************************************************************/
-
-typedef struct Topic_ Topic;
-typedef struct TopicAssociation_ TopicAssociation;
-
-struct Topic_
-{
-    int id;
-    char *topic_context;
-    char *topic_name;
-    char *bundle;
-    double evc;
-    TopicAssociation *associations;
-    Topic *next;
-};
-
-struct TopicAssociation_
-{
-    char *fwd_context;
-    char *fwd_name;
-    char *bwd_context;
-    char *bwd_name;
-    Item *associates;
-    TopicAssociation *next;
-};
-
-typedef struct Occurrence_ Occurrence;
-
-struct Occurrence_
-{
-    char *occurrence_context;
-    char *locator;                 /* Promiser */
-    char *bundle;
-    KnowledgeRepresentation rep_type;
-    Rlist *represents;
-    Rlist *about_topics;    
-    Occurrence *next;
-};
-
-typedef struct Inference_ Inference;
-
-struct Inference_
-{
-    char *inference;            // Promiser
-    char *precedent;
-    char *qualifier;
-    Inference *next;
-};
 
 /*************************************************************************/
 /* SQL Database connectors                                               */
@@ -1837,19 +1771,6 @@ typedef struct
     int expandvars;
     int not_matching;
     Rlist *insert_match;
-
-    /* knowledge */
-
-    char *fwd_name;
-    char *bwd_name;
-    Rlist *precedents;
-    Rlist *qualifiers;
-    Rlist *associates;
-    Rlist *represents;
-    Rlist *about_topics;
-    Rlist *synonyms;
-    Rlist *general;
-    char *rep_type;
 } Attributes;
 
 /*************************************************************************/

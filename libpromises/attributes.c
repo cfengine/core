@@ -358,43 +358,6 @@ Attributes GetInterfacesAttributes(const Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetTopicsAttributes(const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.fwd_name = ConstraintGetRvalValue("forward_relationship", pp, RVAL_TYPE_SCALAR);
-    attr.bwd_name = ConstraintGetRvalValue("backward_relationship", pp, RVAL_TYPE_SCALAR);
-    attr.associates = PromiseGetConstraintAsList("associates", pp);
-    attr.synonyms = PromiseGetConstraintAsList("synonyms", pp);
-    attr.general = PromiseGetConstraintAsList("generalizations", pp);
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetInferencesAttributes(const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.precedents = PromiseGetConstraintAsList("precedents", pp);
-    attr.qualifiers = PromiseGetConstraintAsList("qualifers", pp);
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetOccurrenceAttributes(const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.represents = PromiseGetConstraintAsList("represents", pp);
-    attr.rep_type = ConstraintGetRvalValue("representation", pp, RVAL_TYPE_SCALAR);
-    attr.about_topics = PromiseGetConstraintAsList("about_topics", pp);
-    return attr;
-}
-
-/*******************************************************************/
-
 Attributes GetMeasurementAttributes(const Promise *pp)
 {
     Attributes attr = { {0} };

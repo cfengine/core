@@ -263,14 +263,6 @@ FileComparator FileComparatorFromString(const char *s)
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-KnowledgeRepresentation KnowledgeRepresentationFromString(const char *s)
-{
-    static const char *REPRESENTATION_TYPES[] =
-    { "url", "web", "file", "db", "literal", "image", "portal", NULL };
-
-    return FindTypeInArray(REPRESENTATION_TYPES, s, cfk_none, cfk_none);
-}
-
 DataType DataTypeFromString(const char *name)
 /* convert abstract data type names: int, ilist etc */
 {

@@ -46,7 +46,6 @@ AclMethod AclMethodFromString(const char *string);
 AclType AclTypeFromString(const char *string);
 AclInheritance AclInheritanceFromString(const char *string);
 ServicePolicy ServicePolicyFromString(const char *string);
-KnowledgeRepresentation KnowledgeRepresentationFromString(const char *s);
 int SignalFromString(const char *s);
 int SyslogPriorityFromString(const char *s);
 

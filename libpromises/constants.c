@@ -90,8 +90,6 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
     CF_MONITORC,
     CF_EXECC,
     CF_RUNC,
-    CF_KNOWC,
-    CF_REPORTC,
     CF_KEYGEN,
     CF_HUBC,
     CF_GENDOC,

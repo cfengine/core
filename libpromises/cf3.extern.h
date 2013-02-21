@@ -46,8 +46,6 @@ extern char CFLOCK[CF_BUFSIZE];
 extern char CFLOG[CF_BUFSIZE];
 extern char CFLAST[CF_BUFSIZE];
 
-extern char CFPUBKEYFILE[CF_BUFSIZE];
-extern char CFPRIVKEYFILE[CF_BUFSIZE];
 extern char CFWORKDIR[CF_BUFSIZE];
 
 extern char VYEAR[];

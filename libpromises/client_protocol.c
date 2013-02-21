@@ -208,7 +208,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", PublicKeyFile());
         return false;
     }
 

@@ -186,7 +186,11 @@ static FnCallResult FnCallAnd(FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
     }
 
     for (arg = finalargs; arg; arg = arg->next)
@@ -552,7 +556,11 @@ static FnCallResult FnCallConcat(FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
     }
 
     for (arg = finalargs; arg; arg = arg->next)
@@ -2925,7 +2933,11 @@ static FnCallResult FnCallOr(FnCall *fp, Rlist *finalargs)
 /* We need to check all the arguments, ArgTemplate does not check varadic functions */
     for (arg = finalargs; arg; arg = arg->next)
     {
-        CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
     }
 
     for (arg = finalargs; arg; arg = arg->next)

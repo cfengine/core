@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -42,14 +42,13 @@
 
 #include <assert.h>
 
-static int CheckParseString(const char *lv, const char *s, const char *range);
-static void CheckParseInt(const char *lv, const char *s, const char *range);
-static void CheckParseReal(const char *lv, const char *s, const char *range);
-static void CheckParseRealRange(const char *lval, const char *s, const char *range);
-static void CheckParseIntRange(const char *lval, const char *s, const char *range);
-static void CheckParseOpts(const char *lv, const char *s, const char *range);
-static void CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range);
-
+static SyntaxTypeMatch CheckParseString(const char *lv, const char *s, const char *range);
+static SyntaxTypeMatch CheckParseInt(const char *lv, const char *s, const char *range);
+static SyntaxTypeMatch CheckParseReal(const char *lv, const char *s, const char *range);
+static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, const char *range);
+static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const char *range);
+static SyntaxTypeMatch CheckParseOpts(const char *lv, const char *s, const char *range);
+static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range);
 
 /*********************************************************/
 
@@ -139,16 +138,43 @@ DataType ExpectedDataType(const char *lvalname)
 /* Level 1                                                                  */
 /****************************************************************************/
 
-void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level)
+const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
+{
+    assert(result < SYNTAX_TYPE_MATCH_MAX);
+
+    static const char *msgs[SYNTAX_TYPE_MATCH_MAX] =
+    {
+        [SYNTAX_TYPE_MATCH_OK] = "OK",
+
+        [SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED] = "Cannot check unexpanded value",
+        [SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED] = "Real range specification should not be enclosed in brackets - just \"a,b\"",
+        [SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS] = "Range format specifier should be of form \"a,b\" but got multiple items",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attampted to give a scalar to a non-scalar type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attampted to give a list to a non-list type",
+
+        [SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION] = "Error parsing Unix permission string",
+
+        [SYNTAX_TYPE_MATCH_ERROR_SCALAR_OUT_OF_RANGE] = "Scalar value is out of range",
+
+        [SYNTAX_TYPE_MATCH_ERROR_INT_PARSE] = "Cannot parse value as integer",
+        [SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE] = "Integer is out of range",
+
+        [SYNTAX_TYPE_MATCH_ERROR_REAL_INF] = "Keyword \"inf\" has an integer value, cannot be used as real",
+        [SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE] = "Real value is out of range",
+
+        [SYNTAX_TYPE_MATCH_ERROR_OPTS_OUT_OF_RANGE] = "Selection is out of bounds",
+
+        [SYNTAX_TYPE_MATCH_ERROR_FNCALL_RETURN_TYPE] = "Function does not return the required type",
+        [SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN] = "Unknown function"
+    };
+
+    return msgs[result];
+}
+
+SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level)
 {
     Rlist *rp;
     Item *checklist;
-    char output[CF_BUFSIZE];
-
-    if (rval.item == NULL)
-    {
-        return;
-    }
 
     CfDebug(" ------------------------------------------------\n");
 
@@ -177,9 +203,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
         case DATA_TYPE_OPTION_LIST:
             if (level == 0)
             {
-                snprintf(output, CF_BUFSIZE, " !! Type mismatch -- rhs is a scalar, but lhs (%s) is not a scalar type",
-                         CF_DATATYPES[dt]);
-                ReportError(output);
+                return SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR;
             }
             break;
         default:
@@ -199,18 +223,24 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
         case DATA_TYPE_OPTION_LIST:
             break;
         default:
-            snprintf(output, CF_BUFSIZE, "!! Type mismatch -- rhs is a list, but lhs (%s) is not a list type",
-                     CF_DATATYPES[dt]);
-            ReportError(output);
-            break;
+            return SYNTAX_TYPE_MATCH_ERROR_GOT_LIST;
         }
 
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            CheckConstraintTypeMatch(lval, (Rval) {rp->item, rp->type}, dt, range, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, (Rval) {rp->item, rp->type}, dt, range, 1);
+            switch (err)
+            {
+            case SYNTAX_TYPE_MATCH_OK:
+            case SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED:
+                break;
+
+            default:
+                return err;
+            }
         }
 
-        return;
+        return SYNTAX_TYPE_MATCH_OK;
 
     case RVAL_TYPE_FNCALL:
 
@@ -220,11 +250,13 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
 
         if (!IsItemIn(checklist, lval))
         {
-            CheckFnCallType(lval, ((FnCall *) rval.item)->name, dt, range);
+            SyntaxTypeMatch err = CheckFnCallType(lval, ((FnCall *) rval.item)->name, dt, range);
+            DeleteItemList(checklist);
+            return err;
         }
 
         DeleteItemList(checklist);
-        return;
+        return SYNTAX_TYPE_MATCH_OK;
 
     default:
         break;
@@ -236,18 +268,15 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
     {
     case DATA_TYPE_STRING:
     case DATA_TYPE_STRING_LIST:
-        CheckParseString(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseString(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_INT:
     case DATA_TYPE_INT_LIST:
-        CheckParseInt(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseInt(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_REAL:
     case DATA_TYPE_REAL_LIST:
-        CheckParseReal(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseReal(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_BODY:
     case DATA_TYPE_BUNDLE:
@@ -256,21 +285,17 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
 
     case DATA_TYPE_OPTION:
     case DATA_TYPE_OPTION_LIST:
-        CheckParseOpts(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseOpts(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
-        CheckParseClass(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseClass(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_INT_RANGE:
-        CheckParseIntRange(lval, (const char *) rval.item, range);
-        break;
+        return CheckParseIntRange(lval, (const char *) rval.item, range);
 
     case DATA_TYPE_REAL_RANGE:
-        CheckParseRealRange(lval, (char *) rval.item, range);
-        break;
+        return CheckParseRealRange(lval, (char *) rval.item, range);
 
     default:
         ProgrammingError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n", lval);
@@ -278,6 +303,7 @@ void CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const ch
     }
 
     CfDebug("end CheckConstraintTypeMatch---------\n");
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
@@ -344,26 +370,23 @@ vars:
 /* Level 1                                                                  */
 /****************************************************************************/
 
-static int CheckParseString(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const char *range)
 {
-    char output[CF_BUFSIZE];
-
     CfDebug("\nCheckParseString(%s => %s/%s)\n", lval, s, range);
 
     if (s == NULL)
     {
-        return true;
+        return SYNTAX_TYPE_MATCH_OK;
     }
 
     if (strlen(range) == 0)
     {
-        return true;
+        return SYNTAX_TYPE_MATCH_OK;
     }
 
     if (IsNakedVar(s, '@') || IsNakedVar(s, '$'))
     {
-        CfDebug("Validation: Unable to verify variable expansion of %s at this stage\n", s);
-        return false;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
 /* Deal with complex strings as special cases */
@@ -374,31 +397,25 @@ static int CheckParseString(const char *lval, const char *s, const char *range)
 
         if (!ParseModeString(s, &plus, &minus))
         {
-            snprintf(output, CF_BUFSIZE, "Error parsing Unix permission string %s)", s);
-            ReportError(output);
-            return false;
+            return SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION;
         }
     }
 
     if (FullTextMatch(range, s))
     {
-        return true;
+        return SYNTAX_TYPE_MATCH_OK;
     }
 
     if (IsCf3VarString(s))
     {
-        CfDebug("Validation: Unable to verify syntax of %s due to variable expansion at this stage\n", s);
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
     else
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Scalar item in %s => { %s } in rvalue is out of bounds (value should match pattern %s)", lval, s,
-                 range);
-        ReportError(output);
-        return false;
+        return SYNTAX_TYPE_MATCH_ERROR_SCALAR_OUT_OF_RANGE;
     }
 
-    return true;
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
@@ -432,26 +449,20 @@ int CheckParseClass(const char *lval, const char *s, const char *range)
 
 /****************************************************************************/
 
-static void CheckParseInt(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char *range)
 {
     Item *split;
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
-    char output[CF_BUFSIZE];
 
 /* Numeric types are registered by range separated by comma str "min,max" */
     CfDebug("\nCheckParseInt(%s => %s/%s)\n", lval, s, range);
-
-    if (s == NULL)
-    {
-        return;
-    }
 
     split = SplitString(range, ',');
 
     if ((n = ListLen(split)) != 2)
     {
-        FatalError("INTERN: format specifier for int rvalues is not ok for lval %s - got %d items", lval, n);
+        ProgrammingError("INTERN: format specifier for int rvalues is not ok for lval %s - got %d items", lval, n);
     }
 
     sscanf(split->name, "%ld", &min);
@@ -469,65 +480,52 @@ static void CheckParseInt(const char *lval, const char *s, const char *range)
 
     if (min == CF_HIGHINIT || max == CF_LOWINIT)
     {
-        FatalError("INTERN: could not parse format specifier for int rvalues for lval %s", lval);
+        ProgrammingError("INTERN: could not parse format specifier for int rvalues for lval %s", lval);
     }
 
     if (IsCf3VarString(s))
     {
-        CfDebug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n", s);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
     val = IntFromString(s);
 
     if (val == CF_NOINT)
     {
-        snprintf(output, CF_BUFSIZE, "Int item on rhs of lval \'%s\' given as \'%s\' could not be parsed", lval, s);
-        ReportError(output);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_INT_PARSE;
     }
 
     if (val > max || val < min)
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Int item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])", lval, s,
-                 val, range);
-        ReportError(output);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE;
     }
 
     CfDebug("CheckParseInt - syntax verified\n\n");
+
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
 
-static void CheckParseIntRange(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *ip, *rangep;
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
-    char output[CF_BUFSIZE];
-
-    if (s == NULL)
-    {
-        return;
-    }
 
 /* Numeric types are registered by range separated by comma str "min,max" */
     CfDebug("\nCheckParseIntRange(%s => %s/%s)\n", lval, s, range);
 
     if (*s == '[' || *s == '(')
     {
-        ReportError("Range specification should not be enclosed in brackets - just \"a,b\"");
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED;
     }
 
     split = SplitString(range, ',');
 
     if ((n = ListLen(split)) != 2)
     {
-        FatalError("INTERN:format specifier %s for irange rvalues is not ok for lval %s - got %d items", range, lval,
-                   n);
+        ProgrammingError("Format specifier %s for irange rvalues is not ok for lval %s - got %d items", range, lval, n);
     }
 
     sscanf(split->name, "%ld", &min);
@@ -545,24 +543,19 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 
     if (min == CF_HIGHINIT || max == CF_LOWINIT)
     {
-        FatalError("INTERN: could not parse irange format specifier for int rvalues for lval %s", lval);
+        ProgrammingError("Could not parse irange format specifier for int rvalues for lval %s", lval);
     }
 
     if (IsCf3VarString(s))
     {
-        CfDebug("Validation: Unable to verify syntax of int \'%s\' due to variable expansion at this stage\n", s);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
     rangep = SplitString(s, ',');
 
     if ((n = ListLen(rangep)) != 2)
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Int range format specifier for lval %s should be of form \"a,b\" but got %d items", lval, n);
-        ReportError(output);
-        DeleteItemList(rangep);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS;
     }
 
     for (ip = rangep; ip != NULL; ip = ip->next)
@@ -571,46 +564,33 @@ static void CheckParseIntRange(const char *lval, const char *s, const char *rang
 
         if (val > max || val < min)
         {
-            snprintf(output, CF_BUFSIZE,
-                     "Int range item on rhs of lval \'%s\' given as {%s => %ld} is out of bounds (should be in [%s])",
-                     lval, s, val, range);
-            ReportError(output);
-            DeleteItemList(rangep);
-            return;
+            return SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE;
         }
     }
 
     DeleteItemList(rangep);
 
-    CfDebug("CheckParseIntRange - syntax verified\n\n");
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
 
-static void CheckParseReal(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseReal(const char *lval, const char *s, const char *range)
 {
     Item *split;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
-    char output[CF_BUFSIZE];
 
     CfDebug("\nCheckParseReal(%s => %s/%s)\n", lval, s, range);
 
-    if (s == NULL)
-    {
-        return;
-    }
-
     if (strcmp(s, "inf") == 0)
     {
-        ReportError("keyword \"inf\" has an integer value, cannot be used as real");
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_REAL_INF;
     }
 
     if (IsCf3VarString(s))
     {
-        CfDebug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n", s);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
 /* Numeric types are registered by range separated by comma str "min,max" */
@@ -619,7 +599,7 @@ static void CheckParseReal(const char *lval, const char *s, const char *range)
 
     if ((n = ListLen(split)) != 2)
     {
-        FatalError("INTERN:format specifier for real rvalues is not ok for lval %s - %d items", lval, n);
+        ProgrammingError("Format specifier for real rvalues is not ok for lval %s - %d items", lval, n);
     }
 
     sscanf(split->name, "%lf", &min);
@@ -628,54 +608,42 @@ static void CheckParseReal(const char *lval, const char *s, const char *range)
 
     if (min == CF_HIGHINIT || max == CF_LOWINIT)
     {
-        FatalError("INTERN:could not parse format specifier for int rvalues for lval %s", lval);
+        ProgrammingError("Could not parse format specifier for int rvalues for lval %s", lval);
     }
 
     val = DoubleFromString(s);
 
     if (val > max || val < min)
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Real item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])", lval, s,
-                 val, range);
-        ReportError(output);
+        return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
     }
 
-    CfDebug("CheckParseReal - syntax verified\n\n");
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
 
-static void CheckParseRealRange(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, const char *range)
 {
     Item *split, *rangep, *ip;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
-    char output[CF_BUFSIZE];
-
-    if (s == NULL)
-    {
-        return;
-    }
 
     CfDebug("\nCheckParseRealRange(%s => %s/%s)\n", lval, s, range);
 
     if (*s == '[' || *s == '(')
     {
-        ReportError("Range specification should not be enclosed in brackets - just \"a,b\"");
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED;
     }
 
     if (strcmp(s, "inf") == 0)
     {
-        ReportError("keyword \"inf\" has an integer value, cannot be used as real");
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_REAL_INF;
     }
 
     if (IsCf3VarString(s))
     {
-        CfDebug("Validation: Unable to verify syntax of real %s due to variable expansion at this stage\n", s);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
 /* Numeric types are registered by range separated by comma str "min,max" */
@@ -684,7 +652,7 @@ static void CheckParseRealRange(const char *lval, const char *s, const char *ran
 
     if ((n = ListLen(split)) != 2)
     {
-        FatalError("INTERN:format specifier for real rvalues is not ok for lval %s - %d items", lval, n);
+        ProgrammingError("Format specifier for real rvalues is not ok for lval %s - %d items", lval, n);
     }
 
     sscanf(split->name, "%lf", &min);
@@ -693,18 +661,14 @@ static void CheckParseRealRange(const char *lval, const char *s, const char *ran
 
     if (min == CF_HIGHINIT || max == CF_LOWINIT)
     {
-        FatalError("INTERN:could not parse format specifier for int rvalues for lval %s", lval);
+        ProgrammingError("Could not parse format specifier for int rvalues for lval %s", lval);
     }
 
     rangep = SplitString(s, ',');
 
     if ((n = ListLen(rangep)) != 2)
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Real range format specifier in lval %s should be of form \"a,b\" but got %d items", lval, n);
-        ReportError(output);
-        DeleteItemList(rangep);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS;
     }
 
     for (ip = rangep; ip != NULL; ip = ip->next)
@@ -713,57 +677,41 @@ static void CheckParseRealRange(const char *lval, const char *s, const char *ran
 
         if (val > max || val < min)
         {
-            snprintf(output, CF_BUFSIZE,
-                     "Real range item on rhs of lval \'%s\' give as {%s => %.3lf} is out of bounds (should be in [%s])",
-                     lval, s, val, range);
-            ReportError(output);
+            return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
         }
     }
 
     DeleteItemList(rangep);
 
-    CfDebug("CheckParseRealRange - syntax verified\n\n");
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
 
-static void CheckParseOpts(const char *lval, const char *s, const char *range)
+static SyntaxTypeMatch CheckParseOpts(const char *lval, const char *s, const char *range)
 {
     Item *split;
-    int err = false;
-    char output[CF_BUFSIZE];
 
 /* List/menu types are separated by comma str "a,b,c,..." */
 
     CfDebug("\nCheckParseOpts(%s => %s/%s)\n", lval, s, range);
 
-    if (s == NULL)
-    {
-        return;
-    }
-
     if (IsNakedVar(s, '@') || IsNakedVar(s, '$'))
     {
-        CfDebug("Validation: Unable to verify variable expansion of %s at this stage\n", s);
-        return;
+        return SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED;
     }
 
     split = SplitString(range, ',');
 
     if (!IsItemIn(split, s))
     {
-        snprintf(output, CF_BUFSIZE,
-                 "Selection on rhs of lval \'%s\' given as \'%s\' is out of bounds, should be in [%s]", lval, s, range);
-        ReportError(output);
-        err = true;
+        DeleteItemList(split);
+        return SYNTAX_TYPE_MATCH_ERROR_OPTS_OUT_OF_RANGE;
     }
 
     DeleteItemList(split);
 
-    if (!err)
-    {
-        CfDebug("CheckParseOpts - syntax verified\n\n");
-    }
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
 /****************************************************************************/
@@ -838,18 +786,12 @@ bool IsDataType(const char *s)
 
 /****************************************************************************/
 
-static void CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range)
+static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType dtype, const char *range)
 {
     DataType dt;
-    char output[CF_BUFSIZE];
     const FnCallType *fn;
 
     CfDebug("CheckFnCallType(%s => %s/%s)\n", lval, s, range);
-
-    if (s == NULL)
-    {
-        return;
-    }
 
     fn = FnCallTypeGet(s);
 
@@ -863,43 +805,39 @@ static void CheckFnCallType(const char *lval, const char *s, DataType dtype, con
 
             if (dt == DATA_TYPE_STRING && dtype == DATA_TYPE_STRING_LIST)
             {
-                return;
+                return SYNTAX_TYPE_MATCH_OK;
             }
 
             if (dt == DATA_TYPE_INT && dtype == DATA_TYPE_INT_LIST)
             {
-                return;
+                return SYNTAX_TYPE_MATCH_OK;
             }
 
             if (dt == DATA_TYPE_REAL && dtype == DATA_TYPE_REAL_LIST)
             {
-                return;
+                return SYNTAX_TYPE_MATCH_OK;
             }
 
             if (dt == DATA_TYPE_OPTION && dtype == DATA_TYPE_OPTION_LIST)
             {
-                return;
+                return SYNTAX_TYPE_MATCH_OK;
             }
 
             if (dt == DATA_TYPE_CONTEXT && dtype == DATA_TYPE_CONTEXT_LIST)
             {
-                return;
+                return SYNTAX_TYPE_MATCH_OK;
             }
 
-            snprintf(output, CF_BUFSIZE, "function %s() returns type %s but lhs requires %s", s, CF_DATATYPES[dt],
-                     CF_DATATYPES[dtype]);
-            ReportError(output);
-            return;
+            return SYNTAX_TYPE_MATCH_ERROR_FNCALL_RETURN_TYPE;
         }
         else
         {
-            return;
+            return SYNTAX_TYPE_MATCH_OK;
         }
     }
     else
     {
-        snprintf(output, CF_BUFSIZE, "Unknown built-in function %s()", s);
-        ReportError(output);
+        return SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN;
     }
 }
 

@@ -46,8 +46,8 @@ extern char *yytext;
 static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
 static bool LvalWantsBody(char *stype, char *lval);
-static void CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
-static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
+static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -249,7 +249,13 @@ selection:             id                         /* BODY ONLY */
                        ASSIGN
                        rval
                        {
-                           CheckSelection(P.blocktype,P.blockid,P.lval,P.rval);
+                           {
+                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                               {
+                                   yyerror(SyntaxTypeMatchToString(err));
+                               }
+                           }
 
                            if (!INSTALL_SKIP)
                            {
@@ -429,7 +435,13 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, P.lval, P.rval, ss);
+                               {
+                                   SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
+                                   if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                   {
+                                       yyerror(SyntaxTypeMatchToString(err));
+                                   }
+                               }
                                if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
@@ -788,7 +800,7 @@ static bool LvalWantsBody(char *stype, char *lval)
     return false;
 }
 
-static void CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
+static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
 {
     int lmatch = false;
     int i, j, k, l;
@@ -824,17 +836,16 @@ static void CheckSelection(const char *type, const char *name, const char *lval,
                     if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
-                        return;
+                        return SYNTAX_TYPE_MATCH_OK;
                     }
                     else if (bs[l].dtype == DATA_TYPE_BUNDLE)
                     {
                         CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
-                        return;
+                        return SYNTAX_TYPE_MATCH_OK;
                     }
                     else
                     {
-                        CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
-                        return;
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
                     }
                 }
             }
@@ -882,14 +893,13 @@ static void CheckSelection(const char *type, const char *name, const char *lval,
                             snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
                                      lval, ss[j].subtype, type);
                             yyerror(output);
-                            return;
+                            return SYNTAX_TYPE_MATCH_OK;
                         }
 
                         if (strcmp(lval, bs2[k].lval) == 0)
                         {
                             CfDebug("Matched\n");
-                            CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *) (bs2[k].range), 0);
-                            return;
+                            return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *) (bs2[k].range), 0);
                         }
                     }
                 }
@@ -902,9 +912,11 @@ static void CheckSelection(const char *type, const char *name, const char *lval,
         snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
         yyerror(output);
     }
+
+    return SYNTAX_TYPE_MATCH_OK;
 }
 
-static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss)
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss)
 {
     int lmatch = false;
     int i, l, allowed = false;
@@ -943,18 +955,17 @@ static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTy
                     if (bs[l].dtype == DATA_TYPE_BODY)
                     {
                         CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.type);
-                        return;
+                        return SYNTAX_TYPE_MATCH_OK;
                     }
                     else if (bs[l].dtype == DATA_TYPE_BUNDLE)
                     {
                         CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
                                 rval.type);
-                        return;
+                        return SYNTAX_TYPE_MATCH_OK;
                     }
                     else
                     {
-                        CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
-                        return;
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
                     }
                 }
             }
@@ -973,7 +984,7 @@ static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTy
         if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
         {
             CfDebug("Found a match for lval %s in the common constraint attributes\n", lval);
-            return;
+            return SYNTAX_TYPE_MATCH_OK;
         }
     }
 
@@ -984,7 +995,7 @@ static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTy
         if (strcmp(lval, CF_COMMON_EDITBODIES[i].lval) == 0)
         {
             CfDebug("Found a match for lval %s in the common edit_line constraint attributes\n", lval);
-            return;
+            return SYNTAX_TYPE_MATCH_OK;
         }
     }
 
@@ -995,7 +1006,7 @@ static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTy
         if (strcmp(lval, CF_COMMON_XMLBODIES[i].lval) == 0)
         {
             CfDebug("Found a match for lval %s in the common edit_xml constraint attributes\n", lval);
-            return;
+            return SYNTAX_TYPE_MATCH_OK;
         }
     }
 
@@ -1007,4 +1018,6 @@ static void CheckConstraint(const char *type, const char *lval, Rval rval, SubTy
         snprintf(output, CF_BUFSIZE, "Constraint lvalue \'%s\' is not allowed in bundle category \'%s\'", lval, type);
         yyerror(output);
     }
+
+    return SYNTAX_TYPE_MATCH_OK;
 }

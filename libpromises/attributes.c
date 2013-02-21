@@ -824,19 +824,19 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
 
     if (value && (strcmp(value, "content") == 0))
     {
-        c.report_changes = cfa_contentchange;
+        c.report_changes = FILE_CHANGE_REPORT_CONTENT_CHANGE;
     }
     else if (value && (strcmp(value, "stats") == 0))
     {
-        c.report_changes = cfa_statschange;
+        c.report_changes = FILE_CHANGE_REPORT_STATS_CHANGE;
     }
     else if (value && (strcmp(value, "all") == 0))
     {
-        c.report_changes = cfa_allchanges;
+        c.report_changes = FILE_CHANGE_REPORT_ALL;
     }
     else
     {
-        c.report_changes = cfa_noreport;
+        c.report_changes = FILE_CHANGE_REPORT_NONE;
     }
 
     if (ConstraintGetRvalValue("update_hashes", pp, RVAL_TYPE_SCALAR))
@@ -1671,7 +1671,7 @@ Database GetDatabaseConstraints(const Promise *pp)
     value = ConstraintGetRvalValue("db_server_type", pp, RVAL_TYPE_SCALAR);
     d.db_server_type = DatabaseTypeFromString(value);
 
-    if (value && ((d.db_server_type) == cfd_notype))
+    if (value && ((d.db_server_type) == DATABASE_TYPE_NONE))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unsupported database type \"%s\" in databases promise", value);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);

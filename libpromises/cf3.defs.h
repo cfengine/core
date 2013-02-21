@@ -942,13 +942,13 @@ enum cflinkchildren
     cfa_onlynonexisting
 };
 
-enum cfchanges
+typedef enum
 {
-    cfa_noreport,
-    cfa_contentchange,
-    cfa_statschange,
-    cfa_allchanges
-};
+    FILE_CHANGE_REPORT_NONE,
+    FILE_CHANGE_REPORT_CONTENT_CHANGE,
+    FILE_CHANGE_REPORT_STATS_CHANGE,
+    FILE_CHANGE_REPORT_ALL
+} FileChangeReport;
 
 enum signalnames
 {
@@ -1342,7 +1342,7 @@ typedef struct
 typedef struct
 {
     HashMethod hash;
-    enum cfchanges report_changes;
+    FileChangeReport report_changes;
     int report_diffs;
     int update;
 } FileChange;

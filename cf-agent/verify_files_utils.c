@@ -2578,7 +2578,7 @@ static void VerifyFileIntegrity(char *file, Attributes attr, Promise *pp)
     unsigned char digest2[EVP_MAX_MD_SIZE + 1];
     int changed = false, one, two;
 
-    if ((attr.change.report_changes != cfa_contentchange) && (attr.change.report_changes != cfa_allchanges))
+    if ((attr.change.report_changes != FILE_CHANGE_REPORT_CONTENT_CHANGE) && (attr.change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
         return;
     }
@@ -3233,7 +3233,7 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
     char message[CF_BUFSIZE];
     int ok = true;
 
-    if ((attr.change.report_changes != cfa_statschange) && (attr.change.report_changes != cfa_allchanges))
+    if ((attr.change.report_changes != FILE_CHANGE_REPORT_STATS_CHANGE) && (attr.change.report_changes != FILE_CHANGE_REPORT_ALL))
     {
         return;
     }

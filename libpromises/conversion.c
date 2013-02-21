@@ -138,7 +138,7 @@ DatabaseType DatabaseTypeFromString(const char *s)
 {
     static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
 
-    return FindTypeInArray(DB_TYPES, s, cfd_notype, cfd_notype);
+    return FindTypeInArray(DB_TYPES, s, DATABASE_TYPE_NONE, DATABASE_TYPE_NONE);
 }
 
 PackageAction PackageActionFromString(const char *s)

@@ -416,7 +416,7 @@ void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_cont
             }
         }
 
-        if (((a.change.report_changes) == cfa_contentchange) || ((a.change.report_changes) == cfa_allchanges))
+        if (((a.change.report_changes) == FILE_CHANGE_REPORT_CONTENT_CHANGE) || ((a.change.report_changes) == FILE_CHANGE_REPORT_ALL))
         {
             if (a.havedepthsearch)
             {

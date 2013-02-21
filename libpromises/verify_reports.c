@@ -51,7 +51,6 @@ void VerifyReportPromise(Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
-    Rlist *rp;
     char unique_name[CF_EXPANDSIZE];
 
     a = GetReportsAttributes(pp);

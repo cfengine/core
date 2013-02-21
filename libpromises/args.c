@@ -225,7 +225,11 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
         if (rp->type != RVAL_TYPE_FNCALL)
         {
             /* Nested functions will not match to lval so don't bother checking */
-            CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+            }
         }
 
         rp = rp->next;

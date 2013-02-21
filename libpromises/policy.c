@@ -2680,7 +2680,11 @@ static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rv
     {
         if (strcmp(lval, CF_CLASSBODY[i].lval) == 0)
         {
-            CheckConstraintTypeMatch(lval, rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+            }
         }
     }
 
@@ -2714,7 +2718,11 @@ static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rv
                             {
                                 if (strcmp(lval, bs2[m].lval) == 0)
                                 {
-                                    CheckConstraintTypeMatch(lval, rval, bs2[m].dtype, (char *) (bs2[m].range), 0);
+                                    SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, bs2[m].dtype, (char *) (bs2[m].range), 0);
+                                    if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                    {
+                                        FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+                                    }
                                     return;
                                 }
                             }
@@ -2722,7 +2730,11 @@ static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rv
 
                         if (strcmp(lval, bs[l].lval) == 0)
                         {
-                            CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                            {
+                                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+                            }
                             return;
                         }
                     }
@@ -2743,7 +2755,11 @@ static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rv
         if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
         {
             CfDebug("Found a match for lval %s in the common constraint attributes\n", lval);
-            CheckConstraintTypeMatch(lval, rval, CF_COMMON_BODIES[i].dtype, (char *) (CF_COMMON_BODIES[i].range), 0);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, CF_COMMON_BODIES[i].dtype, (char *) (CF_COMMON_BODIES[i].range), 0);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+            }
             return;
         }
     }

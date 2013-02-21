@@ -54,6 +54,14 @@ struct Policy_
     Seq *bodies;
 };
 
+typedef struct
+{
+    size_t start;
+    size_t end;
+    size_t line;
+    size_t context;
+} SourceOffset;
+
 struct Bundle_
 {
     Policy *parent_policy;

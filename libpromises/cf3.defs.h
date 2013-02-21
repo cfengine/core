@@ -804,18 +804,6 @@ typedef struct
 
 #define UNKNOWN_FUNCTION -1
 
-/*************************************************************************/
-
-typedef struct
-{
-    size_t start;
-    size_t end;
-    size_t line;
-    size_t context;
-} SourceOffset;
-
-/*************************************************************************/
-
 typedef struct Constraint_ Constraint;
 
 typedef struct

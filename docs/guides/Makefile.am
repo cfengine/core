@@ -72,7 +72,7 @@ cf3-solutions.texinfo: cf3-solutions.texinfo.in ../tools/build-solutions-guide
 	$(AM_V_GEN)../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || (rm -f $@; false)
 
 CfengineStdLibrary.texinfo: ../../masterfiles/libraries/cfengine_stdlib.cf ../tools/build-stdlib
-	$(AM_V_GEN)../tools/build-stdlib ../../masterfiles/libraries/cfengine_stdlib.cf || (rm -f $@; false)
+	$(AM_V_GEN)../tools/build-stdlib $(srcdir)/../../masterfiles/libraries/cfengine_stdlib.cf || (rm -f $@; false)
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \

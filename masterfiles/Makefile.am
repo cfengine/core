@@ -10,7 +10,7 @@ librariesdir = $(masterfilesdir)/libraries/
 dist_libraries_DATA = $(srcdir)/libraries/cfengine_stdlib.cf
 
 controlsdir = $(masterfilesdir)/controls
-dist_controls_DATA = $(srcdir)/controls/cf_execd.cf $(srcdir)/controls/cf_report.cf $(srcdir)/controls/cf_agent.cf $(srcdir)/controls/cf_runagent.cf $(srcdir)/controls/cf_monitord.cf $(srcdir)/controls/cf_serverd.cf
+dist_controls_DATA = $(srcdir)/controls/cf_execd.cf  $(srcdir)/controls/cf_agent.cf $(srcdir)/controls/cf_runagent.cf $(srcdir)/controls/cf_monitord.cf $(srcdir)/controls/cf_serverd.cf
 
 servicesdir = $(masterfilesdir)/services
 dist_services_DATA = $(srcdir)/services/init_msg.cf

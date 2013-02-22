@@ -30,7 +30,9 @@
 #include "dir.h"
 #include "reporting.h"
 #include "scope.h"
+#include "files_copy.h"
 #include "files_interfaces.h"
+#include "files_hashes.h"
 #include "keyring.h"
 #include "cfstream.h"
 #include "communication.h"
@@ -45,9 +47,13 @@ bool REMOVEKEYS = false;
 bool LICENSE_INSTALL = false;
 char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
+static char *print_digest_arg = NULL;
+static char *trust_key_arg = NULL;
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
+static int PrintDigest(const char* pubkey);
+static int TrustKey(const char* pubkey);
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
 static void KeepKeyPromises(void);
@@ -72,6 +78,8 @@ static const struct option OPTIONS[17] =
     {"show-hosts", no_argument, 0, 's'},
     {"remove-keys", required_argument, 0, 'r'},
     {"install-license", required_argument, 0, 'l'},
+    {"print-digest", required_argument, 0, 'p'},
+    {"trust-key", required_argument, 0, 't'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -85,6 +93,8 @@ static const char *HINTS[17] =
     "Show lastseen hostnames and IP addresses",
     "Remove keys for specified hostname/IP",
     "Install license without boostrapping (CFEngine Enterprise only)",
+    "Print digest of the specified public key",
+    "Make cf-serverd/cf-agent trust the specified public key",
     NULL
 };
 
@@ -105,6 +115,11 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    if (print_digest_arg)
+    {
+        return PrintDigest(print_digest_arg);
+    }
+
     if (REMOVEKEYS)
     {
         return RemoveKeys(remove_keys_host);
@@ -114,6 +129,11 @@ int main(int argc, char *argv[])
     {
         bool success = LicenseInstall(LICENSE_SOURCE);
         return success ? 0 : 1;
+    }
+
+    if (trust_key_arg)
+    {
+        return TrustKey(trust_key_arg);
     }
 
     KeepKeyPromises();
@@ -134,7 +154,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_KEYGEN);
 
-    while ((c = getopt_long(argc, argv, "dvf:VMsr:hl:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvf:VMp:sr:t:hl:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -155,6 +175,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'v':
             VERBOSE = true;
             break;
+
+        case 'p': /* print digest */
+            print_digest_arg = optarg;
+            break;
+
         case 's':
             SHOWHOSTS = true;
             break;
@@ -167,6 +192,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'l':
             LICENSE_INSTALL = true;
             strlcpy(LICENSE_SOURCE, optarg, sizeof(LICENSE_SOURCE));
+            break;
+
+        case 't':
+            trust_key_arg = optarg;
             break;
 
         case 'h':
@@ -187,7 +216,92 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     return config;
 }
 
+static RSA* LoadPublicKey(const char* filename)
+{
+    unsigned long err;
+    FILE* fp;
+    RSA* key;
+    static char *passphrase = "Cfengine passphrase";
+
+    fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        CfOut(cf_error, "fopen", "Cannot open file '%s'.\n", filename);
+        return NULL;
+    };
+
+    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+    {
+        err = ERR_get_error();
+        CfOut(cf_error, "PEM_read_RSAPublicKey", "Error reading public key = %s\n", ERR_reason_error_string(err));
+        fclose(fp);
+        return NULL;
+    };
+
+    fclose(fp);
+
+    if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
+    {
+        CfOut(cf_error, "BN_num_bits", "ERROR: RSA Exponent in key %s too small or not odd\n", filename);
+        return NULL;
+    };
+
+    return key;
+}
+
+/** Return a string with the printed digest of the given key file,
+    or NULL if an error occurred. */
+static char* GetPubkeyDigest(const char* pubkey)
+{
+    unsigned char digest[EVP_MAX_MD_SIZE + 1];
+    RSA* key = NULL;
+    char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
+
+    key = LoadPublicKey(pubkey);
+    if (NULL == key)
+    {
+        return NULL;
+    }
+
+    HashPubKey(key, digest, CF_DEFAULT_DIGEST);
+    HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer);
+    return buffer;
+}
+
 /*****************************************************************************/
+
+/** Print digest of the specified public key file.
+    Return 0 on success and 1 on error. */
+static int PrintDigest(const char* pubkey)
+{
+    char *digeststr = GetPubkeyDigest(pubkey);
+
+    if (NULL == digeststr)
+    {
+        return 1; /* ERROR exitcode */
+    }
+
+    fprintf(stdout, "%s\n", digeststr);
+    free(digeststr);
+    return 0; /* OK exitcode */
+}
+
+static int TrustKey(const char* pubkey)
+{
+    char *digeststr = GetPubkeyDigest(pubkey);
+    char outfilename[CF_BUFSIZE];
+    bool ok;
+
+    if (NULL == digeststr)
+        return 1; /* ERROR exitcode */
+
+    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
+    free(digeststr);
+
+    ok = CopyRegularFileDisk(pubkey, outfilename, false);
+
+    return (ok? 0 : 1);
+}
 
 static bool ShowHost(const char *hostkey, const char *address, bool incoming,
                      const KeyHostSeen *quality, void *ctx)

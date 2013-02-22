@@ -2887,6 +2887,8 @@ expireafter => "10";
 
 
 bundle common paths
+# When adding new paths, please remember to add them to the all_paths list
+# the all_paths list is used to define a context class for each path defined
 {
   vars:
 
@@ -3002,5 +3004,39 @@ bundle common paths
 
     all::
       "ping" string => "/usr/bin/ping";
+
+      "all_paths" slist => { 
+                                "awk",
+                                "bc",
+                                "cat",
+                                "cksum",
+                                "crontabs",
+                                "cut",
+                                "dc",
+                                "df",
+                                "diff",
+                                "dig",
+                                "echo",
+                                "egrep",
+                                "find",
+                                "grep",
+                                "groupadd",
+                                "ls",
+                                "netstat",
+                                "ping",
+                                "printf",
+                                "sed",
+                                "sort",
+                                "svc",
+                                "svcadm",
+                                "svcs",
+                                "tr",
+                                "useradd",
+                              };
+
+
+
+  classes:
+    "_stdlib_has_path_$(all_paths)" expression => isvariable("$(all_paths)");
 
 }

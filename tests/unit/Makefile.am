@@ -60,7 +60,8 @@ check_PROGRAMS = \
 	buffer_test \
 	ipaddress_test \
 	timeout_test \
-	connection_management_test
+	connection_management_test \
+	path_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

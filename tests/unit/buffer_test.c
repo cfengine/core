@@ -17,7 +17,8 @@ static void test_createBuffer(void **state)
     assert_int_equal(buffer->beginning, 0);
     assert_int_equal(buffer->end, 0);
     assert_true(buffer->ref_count != NULL);
-    assert_int_equal(buffer->ref_count->user_count, 1);    
+    assert_int_equal(buffer->ref_count->user_count, 1);
+    assert_int_equal(0, BufferDestroy(&buffer));
 }
 
 static void test_createBufferFrom(void **state)
@@ -35,6 +36,7 @@ static void test_createBufferFrom(void **state)
     assert_int_equal(buffer->end, 0);
     assert_true(buffer->ref_count != NULL);
     assert_int_equal(buffer->ref_count->user_count, 1);
+    assert_int_equal(0, BufferDestroy(&buffer));
 }
 
 static void test_destroyBuffer(void **state)

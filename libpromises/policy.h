@@ -262,7 +262,7 @@ Seq *BodyGetConstraint(Body *body, const char *lval);
 const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes);
-
+void SubTypeDestroy(SubType *subtype);
 
 void PromiseDestroy(Promise *pp);
 

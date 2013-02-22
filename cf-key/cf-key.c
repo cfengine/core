@@ -226,14 +226,14 @@ static RSA* LoadPublicKey(const char* filename)
     fp = fopen(filename, "r");
     if (fp == NULL)
     {
-        CfOut(cf_error, "fopen", "Cannot open file '%s'.\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open file '%s'.\n", filename);
         return NULL;
     };
 
     if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
     {
         err = ERR_get_error();
-        CfOut(cf_error, "PEM_read_RSAPublicKey", "Error reading public key = %s\n", ERR_reason_error_string(err));
+        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read_RSAPublicKey", "Error reading public key = %s\n", ERR_reason_error_string(err));
         fclose(fp);
         return NULL;
     };
@@ -242,7 +242,7 @@ static RSA* LoadPublicKey(const char* filename)
 
     if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
     {
-        CfOut(cf_error, "BN_num_bits", "ERROR: RSA Exponent in key %s too small or not odd\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "BN_num_bits", "ERROR: RSA Exponent in key %s too small or not odd\n", filename);
         return NULL;
     };
 

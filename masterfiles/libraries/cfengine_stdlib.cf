@@ -3027,9 +3027,17 @@ bundle common paths
       "dc"       string => "/usr/bin/dc";
 
       #
-      "svc"      string => "/sbin/service";
-      "useradd"  string => "/usr/sbin/useradd";
-      "groupadd" string => "/usr/sbin/groupadd";
+      "chkconfig" string => "/sbin/chkconfig";
+      "groupadd"  string => "/usr/sbin/groupadd";
+      "groupdel"  string => "/usr/sbin/groupdel";
+      "ifconfig"  string => "/sbin/ifconfig";
+      "ip"        string => "/sbin/ip";
+      "rpm"       string => "/bin/rpm";
+      "service"   string => "/sbin/service";
+      "svc"       string => "/sbin/service";
+      "useradd"   string => "/usr/sbin/useradd";
+      "userdel"   string => "/usr/sbin/userdel";
+      "yum"       string => "/usr/bin/yum";
 
     debian::
       "awk"      string => "/usr/bin/awk";

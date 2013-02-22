@@ -3077,6 +3077,7 @@ bundle common paths
                                 "awk",
                                 "bc",
                                 "cat",
+                                "chkconfig",
                                 "cksum",
                                 "crontabs",
                                 "cut",
@@ -3089,20 +3090,25 @@ bundle common paths
                                 "find",
                                 "grep",
                                 "groupadd",
+                                "groupdel",
+                                "ifconfig",
+                                "ip",
                                 "ls",
                                 "netstat",
                                 "ping",
                                 "printf",
+                                "rpm",
                                 "sed",
+                                "service",
                                 "sort",
                                 "svc",
                                 "svcadm",
                                 "svcs",
                                 "tr",
                                 "useradd",
+                                "userdel",
+                                "yum",
                               };
-
-
 
   classes:
     "_stdlib_has_path_$(all_paths)" expression => isvariable("$(all_paths)");

@@ -2930,7 +2930,7 @@ bundle common paths
       "bc"       string => "/usr/bin/bc";
       "dc"       string => "/usr/bin/dc";
 
-    freebsd::
+    freebsd|netbsd::
     
       "awk"      string => "/usr/bin/awk";
       "crontabs" string => "/var/cron/tabs";
@@ -2964,29 +2964,6 @@ bundle common paths
       "ls"       string => "/bin/ls";
       "netstat"  string => "/usr/bin/netstat";
       "cksum"    string => "/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/usr/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
-      "printf"   string => "/usr/bin/printf";
-      "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
-
-  netbsd::
-
-      "awk"      string => "/usr/bin/awk";
-      "crontabs" string => "/var/cron/tabs";
-      "df"       string => "/bin/df";
-      "dig"      string => "/usr/bin/dig";
-      "egrep"    string => "/usr/bin/egrep";
-      "grep"     string => "/usr/bin/grep";
-      "ls"       string => "/bin/ls";
-      "netstat"  string => "/usr/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
       "sort"     string => "/usr/bin/sort";
       "find"     string => "/usr/bin/find";
       "cat"      string => "/bin/cat";

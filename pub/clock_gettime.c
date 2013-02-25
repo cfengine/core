@@ -26,7 +26,7 @@
 #include <time.h>
 
 #ifdef HAVE_CONFIG_H
-# include "../libutils/conf.h"
+# include "config.h"
 #endif
 
 #ifndef HAVE_CLOCKID_T

@@ -40,7 +40,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # "aclocal; autoconf; autoheader; automake --add-missing"
 # "configure; make; make install"
 #
-MAINTAINERCLEANFILES = conf.h.in
+MAINTAINERCLEANFILES = config.h.in
 
 # libcfpub dependency
 

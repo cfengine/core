@@ -33,7 +33,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "conf.h"
+# include "config.h"
 #endif
 
 #define _GNU_SOURCE 1

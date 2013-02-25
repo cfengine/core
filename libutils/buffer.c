@@ -47,6 +47,7 @@ Buffer *BufferNew(void)
     Buffer *buffer = (Buffer *)xmalloc(sizeof(Buffer));
     buffer->capacity = DEFAULT_BUFFER_SIZE;
     buffer->buffer = (char *)xmalloc(buffer->capacity);
+    buffer->buffer[0] = '\0';
     buffer->mode = BUFFER_BEHAVIOR_CSTRING;
     buffer->used = 0;
     buffer->beginning = 0;
@@ -169,42 +170,155 @@ int BufferCopy(Buffer *source, Buffer **destination)
     return 0;
 }
 
-int BufferEqual(Buffer *buffer1, Buffer *buffer2)
+int BufferCompare(Buffer *buffer1, Buffer *buffer2)
 {
+    /*
+     * Quick safety check. If buffer1 is NULL, then it is immediately smaller than buffer2.
+     * Same if buffer2 is NULL. If both are NULL, then they are equal.
+     */
+    if (!buffer1 && !buffer2)
+    {
+        return 0;
+    }
+    else if (!buffer1 && buffer2)
+    {
+        return -1;
+    }
+    else if (buffer1 && !buffer2)
+    {
+        return 1;
+    }
     /*
      * Rules for comparison:
      * 1. First check the refcount elements, if they are the same
      * then the elements are the same.
-     * 2. Look at the mode, even if the content is the same the interpretation might be different.
-     * 3. Look at the content. For BUFFER_BEHAVIOR_CSTRING mode we stop at the first '\0'.
+     * 2. Check the content
+     * 2.1. If modes are different, check until the first '\0'
+     * 2.2. If sizes are different, check until the first buffer ends.
      */
     if (RefCountIsEqual(buffer1->ref_count, buffer2->ref_count))
     {
-        return 1;
-    }
-    if (buffer1->mode != buffer2->mode)
-    {
         return 0;
     }
-    int mode = buffer1->mode;
-    if (buffer1->used == buffer2->used)
+    if (buffer1->mode == buffer2->mode)
     {
-        int i = 0;
-        int equal = 1;
-        for (i = 0; (i < buffer1->used); i++)
+        if (buffer1->mode == BUFFER_BEHAVIOR_CSTRING)
         {
-            if (buffer1->buffer[i] != buffer2->buffer[i])
+            /*
+             * C String comparison
+             */
+            return strcmp(buffer1->buffer, buffer2->buffer);
+        }
+        else
+        {
+            /*
+             * BUFFER_BEHAVIOR_BYTEARRAY
+             * Byte by byte comparison
+             */
+            unsigned int i = 0;
+            if (buffer1->used < buffer2->used)
             {
-                equal = 0;
-                break;
+                for (i = 0; i < buffer1->used; ++i)
+                {
+                    if (buffer1->buffer[i] < buffer2->buffer[i])
+                    {
+                        return -1;
+                    }
+                    else if (buffer1->buffer[i] > buffer2->buffer[i])
+                    {
+                        return 1;
+                    }
+                }
+                return -1;
             }
-            if (('\0' == buffer1->buffer[i]) && (mode == BUFFER_BEHAVIOR_CSTRING))
+            else if (buffer1->used == buffer2->used)
             {
-                break;
+                for (i = 0; i < buffer1->used; ++i)
+                {
+                    if (buffer1->buffer[i] < buffer2->buffer[i])
+                    {
+                        return -1;
+                    }
+                    else if (buffer1->buffer[i] > buffer2->buffer[i])
+                    {
+                        return 1;
+                    }
+                }
+            }
+            else
+            {
+                for (i = 0; i < buffer2->used; ++i)
+                {
+                    if (buffer1->buffer[i] < buffer2->buffer[i])
+                    {
+                        return -1;
+                    }
+                    else if (buffer1->buffer[i] > buffer2->buffer[i])
+                    {
+                        return 1;
+                    }
+                }
+                return 1;
             }
         }
-        return equal;
     }
+    else
+    {
+        /*
+         * Mixed comparison
+         * Notice that every BYTEARRAY was born as a CSTRING.
+         * When we switch back to CSTRING we adjust the length to
+         * match the first '\0'.
+         */
+        unsigned int i = 0;
+        if (buffer1->used < buffer2->used)
+        {
+            for (i = 0; i < buffer1->used; ++i)
+            {
+                if (buffer1->buffer[i] < buffer2->buffer[i])
+                {
+                    return -1;
+                }
+                else if (buffer1->buffer[i] > buffer2->buffer[i])
+                {
+                    return 1;
+                }
+            }
+            return -1;
+        }
+        else if (buffer1->used == buffer2->used)
+        {
+            for (i = 0; i < buffer1->used; ++i)
+            {
+                if (buffer1->buffer[i] < buffer2->buffer[i])
+                {
+                    return -1;
+                }
+                else if (buffer1->buffer[i] > buffer2->buffer[i])
+                {
+                    return 1;
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < buffer2->used; ++i)
+            {
+                if (buffer1->buffer[i] < buffer2->buffer[i])
+                {
+                    return -1;
+                }
+                else if (buffer1->buffer[i] > buffer2->buffer[i])
+                {
+                    return 1;
+                }
+            }
+            return 1;
+        }
+    }
+    /*
+     * We did all we could and the buffers seems to be equal.
+     */
     return 0;
 }
 
@@ -690,6 +804,22 @@ void BufferSetMode(Buffer *buffer, BufferBehavior mode)
     if ((mode != BUFFER_BEHAVIOR_CSTRING) && (mode != BUFFER_BEHAVIOR_BYTEARRAY))
     {
         return;
+    }
+    /*
+     * If we switch from BYTEARRAY mode to CSTRING then we need to adjust the
+     * length to the first '\0'. This makes our life easier in the long run.
+     */
+    if (BUFFER_BEHAVIOR_CSTRING == mode)
+    {
+        unsigned int i = 0;
+        for (i = 0; i < buffer->used; ++i)
+        {
+            if (buffer->buffer[i] == '\0')
+            {
+                buffer->used = i;
+                break;
+            }
+        }
     }
     buffer->mode = mode;
 }

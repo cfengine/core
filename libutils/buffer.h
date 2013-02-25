@@ -113,7 +113,7 @@ int BufferCopy(Buffer *source, Buffer **destination);
   @param buffer2
   @return -1 if buffer1 < buffer2, 0 if buffer1 == buffer2, +1 if buffer1 > buffer2
   */
-int BufferEqual(Buffer *buffer1, Buffer *buffer2);
+int BufferCompare(Buffer *buffer1, Buffer *buffer2);
 /**
   @brief Replaces the current content of the buffer with the given string.
 

@@ -103,7 +103,8 @@ void PrintList(List *list)
 {
     ListIterator *i = NULL;
 
-    if (ListIteratorGet(list, &i) != 0)
+    i = ListIteratorGet(list);
+    if (!i)
     {
         ProgrammingError("Unable to get iterator for hub list");
         return;

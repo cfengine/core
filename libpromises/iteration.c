@@ -34,6 +34,56 @@ static void DeleteReferenceRlist(Rlist *list);
 
 /*****************************************************************************/
 
+static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
+   /* Allocates new memory for objects - careful, could leak!  */
+{
+    Rlist *rp, *lp;
+    CfAssoc *cp;
+
+    CfDebug("OrthogAppendRlist\n");
+
+    switch (type)
+    {
+    case RVAL_TYPE_LIST:
+        CfDebug("Expanding and appending list object, orthogonally\n");
+        break;
+    default:
+        CfDebug("Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        return NULL;
+    }
+
+    rp = xmalloc(sizeof(Rlist));
+
+    if (*start == NULL)
+    {
+        *start = rp;
+    }
+    else
+    {
+        for (lp = *start; lp->next != NULL; lp = lp->next)
+        {
+        }
+
+        lp->next = rp;
+    }
+
+// This is item is in fact a CfAssoc pointing to a list
+
+    cp = (CfAssoc *) item;
+
+// Note, we pad all iterators will a blank so the ptr arithmetic works
+// else EndOfIteration will not see lists with only one element
+
+    lp = RlistPrependScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
+    rp->state_ptr = lp->next;   // Always skip the null value
+    RlistAppendScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
+
+    rp->item = item;
+    rp->type = RVAL_TYPE_LIST;
+    rp->next = NULL;
+    return rp;
+}
+
 Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
 {
     Rlist *rps, *deref_listoflists = NULL;

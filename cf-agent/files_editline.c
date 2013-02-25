@@ -196,10 +196,12 @@ Bundle *MakeTemporaryBundleFromTemplate(Attributes a, Promise *pp)
  
     snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.template));
 
+    // TODO: this should be illegal
     bp = xcalloc(1, sizeof(Bundle));
     bp->name = xstrdup(bundlename);
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
+    bp->subtypes = SeqNew(10, SubTypeDestroy);
 
     tp = BundleAppendSubType(bp, "insert_lines");
 

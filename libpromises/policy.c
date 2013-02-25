@@ -932,7 +932,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 
 /*************************************************************************/
 
-static void SubTypeDestroy(SubType *subtype)
+void SubTypeDestroy(SubType *subtype)
 {
     if (subtype)
     {

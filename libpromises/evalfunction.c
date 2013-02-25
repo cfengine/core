@@ -1735,7 +1735,7 @@ static FnCallResult FnCallMapList(FnCall *fp, Rlist *finalargs)
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
-        RlistAppend(&newlist, expbuf, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(&newlist, expbuf);
         DeleteScalar("this", "this");
     }
 

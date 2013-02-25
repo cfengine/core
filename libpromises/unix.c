@@ -562,7 +562,7 @@ void GetInterfacesInfo(AgentType ag)
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
-                    RlistAppend(&ips, VIPADDRESS, RVAL_TYPE_SCALAR);
+                    RlistAppendScalar(&ips, VIPADDRESS);
 
                     for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                     {
@@ -601,7 +601,7 @@ void GetInterfacesInfo(AgentType ag)
                 }
 
                 AppendItem(&IPADDRESSES, inet_ntoa(sin->sin_addr), "");
-                RlistAppend(&ips, inet_ntoa(sin->sin_addr), RVAL_TYPE_SCALAR);
+                RlistAppendScalar(&ips, inet_ntoa(sin->sin_addr));
 
                 for (sp = ip + strlen(ip) - 1; (sp > ip); sp--)
                 {

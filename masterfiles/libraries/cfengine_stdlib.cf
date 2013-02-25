@@ -2901,6 +2901,8 @@ expireafter => "10";
 
 
 bundle common paths
+# When adding new paths, please remember to add them to the all_paths list
+# the all_paths list is used to define a context class for each path defined
 {
   vars:
 
@@ -2927,6 +2929,52 @@ bundle common paths
       "printf"   string => "/usr/bin/printf";
       "tr"       string => "/usr/bin/tr";
       "echo"     string => "/usr/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+    freebsd|netbsd::
+    
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/cron/tabs";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
+    openbsd::
+    
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/cron/tabs";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/sbin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
       "bc"       string => "/usr/bin/bc";
       "dc"       string => "/usr/bin/dc";
 
@@ -2981,9 +3029,17 @@ bundle common paths
       "dc"       string => "/usr/bin/dc";
 
       #
-      "svc"      string => "/sbin/service";
-      "useradd"  string => "/usr/sbin/useradd";
-      "groupadd" string => "/usr/sbin/groupadd";
+      "chkconfig" string => "/sbin/chkconfig";
+      "groupadd"  string => "/usr/sbin/groupadd";
+      "groupdel"  string => "/usr/sbin/groupdel";
+      "ifconfig"  string => "/sbin/ifconfig";
+      "ip"        string => "/sbin/ip";
+      "rpm"       string => "/bin/rpm";
+      "service"   string => "/sbin/service";
+      "svc"       string => "/sbin/service";
+      "useradd"   string => "/usr/sbin/useradd";
+      "userdel"   string => "/usr/sbin/userdel";
+      "yum"       string => "/usr/bin/yum";
 
     debian::
       "awk"      string => "/usr/bin/awk";
@@ -3008,13 +3064,72 @@ bundle common paths
       "dc"       string => "/usr/bin/dc";
 
       #
-      "svc"      string => "/usr/sbin/service";
-      "useradd"  string => "/usr/sbin/useradd";
-      "groupadd" string => "/usr/sbin/groupadd";
-      "ping" string => "/bin/ping";
+      "apt_cache"           string => "/usr/bin/apt-cache";
+      "apt_config"          string => "/usr/bin/apt-config";
+      "apt_get"             string => "/usr/bin/apt-get";
+      "apt_key"             string => "/usr/bin/apt-key";
+      "aptitude"            string => "/usr/bin/aptitude";
+      "dpkg"                string => "/usr/bin/dpkg";
+      "groupadd"            string => "/usr/sbin/groupadd";
+      "ifconfig"            string => "/sbin/ifconfig";
+      "ip"                  string => "/sbin/ip";
+      "ping"                string => "/bin/ping";
+      "service"             string => "/usr/sbin/service";
+      "svc"                 string => "/usr/sbin/service";
+      "update_alternatives" string => "/usr/bin/update-alternatives";
+      "update_rc_d"         string => "/usr/sbin/update-rc.d";
+      "useradd"             string => "/usr/sbin/useradd";
 
 
     all::
       "ping" string => "/usr/bin/ping";
+
+      "all_paths" slist => { 
+                                "apt_cache",
+                                "apt_config",
+                                "apt_get",
+                                "apt_key",
+                                "aptitude",
+                                "awk",
+                                "bc",
+                                "cat",
+                                "chkconfig",
+                                "cksum",
+                                "crontabs",
+                                "cut",
+                                "dc",
+                                "df",
+                                "diff",
+                                "dig",
+                                "dpkg",
+                                "echo",
+                                "egrep",
+                                "find",
+                                "grep",
+                                "groupadd",
+                                "groupdel",
+                                "ifconfig",
+                                "ip",
+                                "ls",
+                                "netstat",
+                                "ping",
+                                "printf",
+                                "rpm",
+                                "sed",
+                                "service",
+                                "sort",
+                                "svc",
+                                "svcadm",
+                                "svcs",
+                                "tr",
+                                "update_alternatives",
+                                "update_rc_d",
+                                "useradd",
+                                "userdel",
+                                "yum",
+                              };
+
+  classes:
+    "_stdlib_has_path_$(all_paths)" expression => isvariable("$(all_paths)");
 
 }

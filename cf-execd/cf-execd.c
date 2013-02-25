@@ -624,8 +624,8 @@ static void Apoptosis()
 
     GetCurrentUserName(mypid, 31);
 
-    RlistPrepend(&signals, "term", RVAL_TYPE_SCALAR);
-    RlistPrepend(&owners, mypid, RVAL_TYPE_SCALAR);
+    RlistPrependScalar(&signals, "term");
+    RlistPrependScalar(&owners, mypid);
 
     PromiseAppendConstraint(&pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
     PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);

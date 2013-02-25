@@ -29,8 +29,10 @@
 #include "cf3.defs.h"
 
 void DetermineCfenginePort(void);
-AgentConnection *NewServerConnection(Attributes attr, Promise *pp);
-AgentConnection *ServerConnection(char *server, Attributes attr, Promise *pp);
+/**
+  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
+  */
+AgentConnection *NewServerConnection(Attributes attr, Promise *pp, int *err);
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
 void DeleteClientCache(Attributes attr, Promise *pp);

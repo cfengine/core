@@ -89,7 +89,7 @@ bool IsHardClass(const char *sp);
 bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(void);
 void DeleteAllClasses(const Rlist *list);
-void AddAllClasses(const char *ns, const Rlist *list, int persist, ContextStatePolicy policy);
+void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
 void ListAlphaList(Writer *writer, AlphaList al, char sep);
 void MarkPromiseHandleDone(const Promise *pp);
 int MissingDependencies(const Promise *pp);

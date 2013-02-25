@@ -246,7 +246,6 @@ static void test_appendBuffer(void **state)
     element2[element2size] = '\0';
     assert_int_equal(element0size + element2size, BufferAppend(buffer, element2, element2size));
     element2pointer = buffer->buffer;
-    assert_true(element0pointer != element2pointer);
     assert_int_equal(buffer->used, element0size + element2size);
     assert_int_equal(BufferSize(buffer), element0size + element2size);
     char *longAppend = NULL;

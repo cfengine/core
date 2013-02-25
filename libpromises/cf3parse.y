@@ -138,7 +138,7 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
-                           RlistAppend(&(P.useargs),P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar(&(P.useargs),P.currentid);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -561,19 +561,19 @@ litems_int:            litem
 
 litem:                 IDSYNTAX
                        {
-                           RlistAppend((Rlist **)&P.currentRlist,P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
                        }
 
                      | QSTRING
                        {
-                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
 
                      | NAKEDVAR
                        {
-                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -581,7 +581,7 @@ litem:                 IDSYNTAX
                      | usefunction
                        {
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
-                           RlistAppend((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           RlistAppendFnCall((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1]);
                            FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
                        };
 
@@ -655,13 +655,13 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentid, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentid);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -669,7 +669,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           RlistAppend(&P.giveargs[P.arg_nesting],P.currentstring, RVAL_TYPE_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -677,7 +677,7 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           RlistAppend(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL);
+                           RlistAppendFnCall(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1]);
                            RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                        };
 

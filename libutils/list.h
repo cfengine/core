@@ -64,6 +64,18 @@
   iterator and a mutable iterator is the fact that with normal iterators only additions can be performed to the list
   without invalidating the iterator, while the mutable iterator allows any kind of change. Be aware that removing from
   the list, either by using remove or via the mutable iterator will invalidate all the normal iterators.
+
+  Simple way to iterate over the list:
+
+  ListIterator *i = ListIteratorGet(list);
+  int r = 0;
+  for (r = ListIteratorFirst(i); r == 0; r = ListIteratorNext(i))
+  {
+      MyData = ListIteratorData(i);
+      ...
+      Do something with the data.
+      ...
+  }
   */
 typedef struct List List;
 typedef struct ListMutableIterator ListMutableIterator;
@@ -145,9 +157,9 @@ int ListCount(List *list);
   @note After creation the iterator will be pointing to the first item of the list.
   @param list Linked list
   @param iterator Iterator.
-  @return 0 if initialized, -1 otherwise.
+  @return A fully initialized iterator or NULL in case of error.
   */
-int ListIteratorGet(List *list, ListIterator **iterator);
+ListIterator *ListIteratorGet(List *list);
 /**
   @brief Releases the memory associated with an iterator.
 
@@ -188,6 +200,16 @@ int ListIteratorPrevious(ListIterator *iterator);
   @return Pointer to the data or NULL if it was not possible.
   */
 void *ListIteratorData(const ListIterator *iterator);
+/**
+  @brief Checks if the iterator has a next element
+  @return True if it has a next element or False if not.
+  */
+bool ListIteratorHasNext(const ListIterator *iterator);
+/**
+  @brief Checks if the iterator has a previous element
+  @return True if it has a previous element or False if not.
+  */
+bool ListIteratorHasPrevious(const ListIterator *iterator);
 
 /**
   @brief Creates a new mutable iterator.
@@ -200,9 +222,9 @@ void *ListIteratorData(const ListIterator *iterator);
   will fail.
   @note After creation the iterator will be pointing to the first item of the list.
   @param iterator Iterator to be initialized.
-  @return 0 if the iterator was initialized, -1 if not.
+  @return A fully initialized iterator or NULL in case of error.
   */
-int ListMutableIteratorGet(List *list, ListMutableIterator **iterator);
+ListMutableIterator *ListMutableIteratorGet(List *list);
 /**
   @brief Releases the memory associated with an iterator.
 
@@ -280,4 +302,15 @@ int ListMutableIteratorPrepend(ListMutableIterator *iterator, void *payload);
   @return 0 if appended, -1 in case of error.
   */
 int ListMutableIteratorAppend(ListMutableIterator *iterator, void *payload);
+/**
+  @brief Checks if the iterator has a next element
+  @return True if it has a next element or False if not.
+  */
+bool ListMutableIteratorHasNext(const ListMutableIterator *iterator);
+/**
+  @brief Checks if the iterator has a previous element
+  @return True if it has a previous element or False if not.
+  */
+bool ListMutableIteratorHasPrevious(const ListMutableIterator *iterator);
+
 #endif // CFENGINE_LIST_H

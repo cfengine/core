@@ -2417,7 +2417,8 @@ int ScheduleCopyOperation(char *destination, Attributes attr, Promise *pp)
     }
     else
     {
-        conn = NewServerConnection(attr, pp);
+        int err = 0;
+        conn = NewServerConnection(attr, pp, &err);
 
         if (conn == NULL)
         {

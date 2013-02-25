@@ -113,9 +113,9 @@ static void test_last(void **state)
 {
     Rlist *l = NULL;
     assert_true(RlistLast(l) == NULL);
-    RlistAppend(&l, "a", RVAL_TYPE_SCALAR);
+    RlistAppendScalar(&l, "a");
     assert_string_equal("a", RlistScalarValue(RlistLast(l)));
-    RlistAppend(&l, "b", RVAL_TYPE_SCALAR);
+    RlistAppendScalar(&l, "b");
     assert_string_equal("b", RlistScalarValue(RlistLast(l)));
     RlistDestroy(l);
 }

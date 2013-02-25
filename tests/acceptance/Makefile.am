@@ -18,5 +18,6 @@ TESTS_ENVIRONMENT = env \
 
 dist-hook:
 	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -
+	chmod -R go-w $(distdir)
 
 CLEANFILES = *.gcno *.gcda

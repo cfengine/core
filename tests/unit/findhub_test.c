@@ -246,7 +246,8 @@ static void test_oneHubFound(void **state)
     assert_int_not_equal(list, NULL);
     
     ListIterator *i = NULL;
-    ListIteratorGet(list, &i);
+    i = ListIteratorGet(list);
+    assert_true(i != NULL);
     HostProperties *host = (HostProperties *)ListIteratorData(i);
     
     assert_int_equal(host->Port,5308);

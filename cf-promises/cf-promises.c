@@ -37,7 +37,7 @@
 /*******************************************************************/
 
 static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -91,18 +91,19 @@ static const char *HINTS[] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     ReportContext *report_context = OpenReports(config->agent_type);
     
-    GenericAgentDiscoverContext(config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
 
     if (SHOWREPORTS)
     {
-        CompilationReport(policy, config->input_file);
+        CompilationReport(ctx, policy, config->input_file);
     }
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
     switch (config->agent_specific.common.policy_output_format)
     {
@@ -137,6 +138,7 @@ int main(int argc, char *argv[])
 
     GenericAgentConfigDestroy(config);
     CloseReports("commmon", report_context);
+    EvalContextDestroy(ctx);
 
     if (ERRORCOUNT > 0)
     {
@@ -154,7 +156,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig *CheckOpts(int argc, char **argv)
+GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -181,7 +183,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -220,11 +222,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(optarg);
+            NewClassesFromString(ctx, optarg);
             break;
 
         case 'N':
-            NegateClassesFromString(optarg);
+            NegateClassesFromString(ctx, optarg);
             break;
 
         case 'I':
@@ -239,7 +241,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            HardClass("opt_dry_run");
+            HardClass(ctx, "opt_dry_run");
             break;
 
         case 'V':

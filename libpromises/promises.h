@@ -31,8 +31,8 @@
 
 Body *IsBody(Seq *bodies, const char *ns, const char *key);
 Bundle *IsBundle(Seq *bundles, const char *key);
-Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp);
-Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp);
+Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp);
+Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp);
 void PromiseRef(OutputLevel level, const Promise *pp);
 Promise *NewPromise(char *type, char *promiser);
 void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);

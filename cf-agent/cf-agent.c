@@ -137,17 +137,17 @@ static const char *AGENT_TYPESEQUENCE[] =
 /*******************************************************************/
 
 static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
-static void KeepControlPromises(Policy *policy);
-static void KeepAgentPromise(Promise *pp, const ReportContext *report_context);
+static void KeepControlPromises(EvalContext *ctx, Policy *policy);
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(TypeSequence type);
-static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportContext *report_context);
-static void ClassBanner(TypeSequence type);
-static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
+static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context);
+static void ClassBanner(EvalContext *ctx, TypeSequence type);
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
-static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -212,7 +212,8 @@ int main(int argc, char *argv[])
 {
     int ret = 0;
 
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
     if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
@@ -226,14 +227,15 @@ int main(int argc, char *argv[])
     }
 #endif
 #endif
+
     ReportContext *report_context = OpenReports(config->agent_type);
 
-    GenericAgentDiscoverContext(config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, ALWAYS_VALIDATE))
+    if (GenericAgentCheckPolicy(ctx, config, ALWAYS_VALIDATE))
     {
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
     else if (config->tty_interactive)
     {
@@ -242,23 +244,23 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass("failsafe_fallback");
+        HardClass(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
     ThisAgentInit();
     BeginAudit();
-    KeepPromises(policy, config, report_context);
+    KeepPromises(ctx, policy, config, report_context);
     CloseReports("agent", report_context);
 
     // only note class usage when default policy is run
     if (!config->input_file)
     {
-        NoteClassUsage(VHEAP, true);
-        NoteClassUsage(VHARDHEAP, true);
+        NoteClassUsage(ctx->heap_soft, true);
+        NoteClassUsage(ctx->heap_hard, true);
     }
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
@@ -272,6 +274,7 @@ int main(int argc, char *argv[])
     }
 
     EndAudit(CFA_BACKGROUND);
+    EvalContextDestroy(ctx);
     GenericAgentConfigDestroy(config);
 
     return ret;
@@ -281,7 +284,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     char *sp;
@@ -317,7 +320,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -326,7 +329,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
-            HardClass("bootstrap_mode");
+            HardClass(ctx, "bootstrap_mode");
             break;
 
         case 's':
@@ -374,11 +377,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(optarg);
+            NewClassesFromString(ctx, optarg);
             break;
 
         case 'N':
-            NegateClassesFromString(optarg);
+            NegateClassesFromString(ctx, optarg);
             break;
 
         case 'I':
@@ -392,7 +395,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass("opt_dry_run");
+            HardClass(ctx, "opt_dry_run");
             break;
 
         case 'V':
@@ -471,12 +474,12 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     double efficiency, model;
 
-    KeepControlPromises(policy);
-    KeepPromiseBundles(policy, config, report_context);
+    KeepControlPromises(ctx, policy);
+    KeepPromiseBundles(ctx, policy, config, report_context);
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
@@ -495,7 +498,7 @@ static void KeepPromises(Policy *policy, GenericAgentConfig *config, const Repor
 /* Level 2                                                         */
 /*******************************************************************/
 
-void KeepControlPromises(Policy *policy)
+void KeepControlPromises(EvalContext *ctx, Policy *policy)
 {
     Rval retval;
     Rlist *rp;
@@ -507,7 +510,7 @@ void KeepControlPromises(Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -547,7 +550,7 @@ void KeepControlPromises(Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_AGENTACCESS].lval) == 0)
             {
                 ACCESSLIST = (Rlist *) retval.item;
-                CheckAgentAccess(ACCESSLIST, InputFiles(policy));
+                CheckAgentAccess(ACCESSLIST, InputFiles(ctx, policy));
                 continue;
             }
 
@@ -619,7 +622,7 @@ void KeepControlPromises(Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> ... %s\n", RlistScalarValue(rp));
-                    NewClass(rp->item, NULL);
+                    NewClass(ctx, rp->item, NULL);
                 }
 
                 continue;
@@ -873,7 +876,7 @@ void KeepControlPromises(Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -978,11 +981,11 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
             NewScope(ns);
 
             SetBundleOutputs(bp->name);
-            AugmentScope(bp->name, bp->ns, bp->args, params);
+            AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
             DeletePrivateClassContext();        // Each time we change bundle
-            ScheduleAgentOperations(bp, report_context);
+            ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
         }
     }
@@ -992,7 +995,7 @@ static void KeepPromiseBundles(Policy *policy, GenericAgentConfig *config, const
 /* Level 3                                                           */
 /*********************************************************************/
 
-int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
     SubType *sp;
@@ -1002,7 +1005,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
 
-    if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(PROCESSREFRESH, bp->name)))
+    if (PROCESSREFRESH == NULL || (PROCESSREFRESH && IsRegexItemIn(ctx, PROCESSREFRESH, bp->name)))
     {
         DeleteItemList(PROCESSTABLE);
         PROCESSTABLE = NULL;
@@ -1012,7 +1015,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
     {
         for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
-            ClassBanner(type);
+            ClassBanner(ctx, type);
 
             if ((sp = BundleGetSubType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
             {
@@ -1033,7 +1036,7 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
 
                 if (ALLCLASSESREPORT)
                 {
-                    SaveClassEnvironment();
+                    SaveClassEnvironment(ctx);
                 }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency
@@ -1041,18 +1044,18 @@ int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context)
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(AGENT_TYPE_AGENT, bp->name, pp, KeepAgentPromise, report_context);
+                ExpandPromise(ctx, AGENT_TYPE_AGENT, bp->name, pp, KeepAgentPromise, report_context);
 
                 if (Abort())
                 {
                     NoteClassUsage(VADDCLASSES, false);
-                    DeleteTypeContext(bp->parent_policy, type, report_context);
+                    DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(bp->parent_policy, type, report_context);
+            DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
         }
     }
 
@@ -1127,9 +1130,9 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
 /**************************************************************/
 
-static void DefaultVarPromise(const Promise *pp)
+static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
 {
-    char *regex = ConstraintGetRvalValue("if_match_regex", pp, RVAL_TYPE_SCALAR);
+    char *regex = ConstraintGetRvalValue(ctx, "if_match_regex", pp, RVAL_TYPE_SCALAR);
     Rval rval;
     DataType dt;
     Rlist *rp;
@@ -1183,15 +1186,15 @@ static void DefaultVarPromise(const Promise *pp)
        }
 
     DeleteScalar(pp->bundle, pp->promiser);
-    ConvergeVarHashPromise(pp->bundle, pp, true);
+    ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
 }
 
-static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1206,7 +1209,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         return;
     }
 
-    if (VarClassExcluded(pp, &sp))
+    if (VarClassExcluded(ctx, pp, &sp))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1217,7 +1220,7 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
     }
 
 
-    if (MissingDependencies(pp))
+    if (MissingDependencies(ctx, pp))
     {
         return;
     }
@@ -1229,116 +1232,116 @@ static void KeepAgentPromise(Promise *pp, const ReportContext *report_context)
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
         NewScope(ns);
-        ConvergeVarHashPromise(ns, pp, true);
+        ConvergeVarHashPromise(ctx, ns, pp, true);
         return;
     }
 
     if (strcmp("vars", pp->agentsubtype) == 0)
     {
-        ConvergeVarHashPromise(pp->bundle, pp, true);
+        ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
         return;
     }
 
     if (strcmp("defaults", pp->agentsubtype) == 0)
     {
-        DefaultVarPromise(pp);
+        DefaultVarPromise(ctx, pp);
         return;
     }
 
     
     if (strcmp("classes", pp->agentsubtype) == 0)
     {
-        KeepClassContextPromise(pp);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
     if (strcmp("outputs", pp->agentsubtype) == 0)
     {
-        VerifyOutputsPromise(pp);
+        VerifyOutputsPromise(ctx, pp);
         return;
     }
 
-    SetPromiseOutputs(pp);
+    SetPromiseOutputs(ctx, pp);
 
     if (strcmp("interfaces", pp->agentsubtype) == 0)
     {
-        VerifyInterfacesPromise(pp);
+        VerifyInterfacesPromise(ctx, pp);
         return;
     }
 
     if (strcmp("processes", pp->agentsubtype) == 0)
     {
-        VerifyProcessesPromise(pp);
+        VerifyProcessesPromise(ctx, pp);
         return;
     }
 
     if (strcmp("storage", pp->agentsubtype) == 0)
     {
-        FindAndVerifyStoragePromises(pp, report_context);
-        EndMeasurePromise(start, pp);
+        FindAndVerifyStoragePromises(ctx, pp, report_context);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("packages", pp->agentsubtype) == 0)
     {
-        VerifyPackagesPromise(pp);
-        EndMeasurePromise(start, pp);
+        VerifyPackagesPromise(ctx, pp);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("files", pp->agentsubtype) == 0)
     {
-        if (PromiseGetConstraintAsBoolean("background", pp))
+        if (PromiseGetConstraintAsBoolean(ctx, "background", pp))
         {
-            ParallelFindAndVerifyFilesPromises(pp, report_context);
+            ParallelFindAndVerifyFilesPromises(ctx, pp, report_context);
         }
         else
         {
-            FindAndVerifyFilesPromises(pp, report_context);
+            FindAndVerifyFilesPromises(ctx, pp, report_context);
         }
 
-        EndMeasurePromise(start, pp);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("commands", pp->agentsubtype) == 0)
     {
-        VerifyExecPromise(pp);
-        EndMeasurePromise(start, pp);
+        VerifyExecPromise(ctx, pp);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("databases", pp->agentsubtype) == 0)
     {
-        VerifyDatabasePromises(pp);
-        EndMeasurePromise(start, pp);
+        VerifyDatabasePromises(ctx, pp);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("methods", pp->agentsubtype) == 0)
     {
-        VerifyMethodsPromise(pp, report_context);
-        EndMeasurePromise(start, pp);
+        VerifyMethodsPromise(ctx, pp, report_context);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("services", pp->agentsubtype) == 0)
     {
-        VerifyServicesPromise(pp, report_context);
-        EndMeasurePromise(start, pp);
+        VerifyServicesPromise(ctx, pp, report_context);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("guest_environments", pp->agentsubtype) == 0)
     {
         VerifyEnvironmentsPromise(pp);
-        EndMeasurePromise(start, pp);
+        EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("reports", pp->agentsubtype) == 0)
     {
-        VerifyReportPromise(pp);
+        VerifyReportPromise(ctx, pp);
         return;
     }
 }
@@ -1393,12 +1396,12 @@ static int NewTypeContext(TypeSequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportContext *report_context)
+static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context)
 {
     switch (type)
     {
     case TYPE_SEQUENCE_CONTEXTS:
-        HashVariables(policy, THIS_BUNDLE, report_context);
+        HashVariables(ctx, policy, THIS_BUNDLE, report_context);
         break;
 
     case TYPE_SEQUENCE_ENVIRONMENTS:
@@ -1423,7 +1426,7 @@ static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportCon
         {
             if (FSTABLIST)
             {
-                SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
+                SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
                 DeleteItemList(FSTABLIST);
                 FSTABLIST = NULL;
             }
@@ -1441,7 +1444,7 @@ static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportCon
 
     case TYPE_SEQUENCE_PACKAGES:
 
-        ExecuteScheduledPackages();
+        ExecuteScheduledPackages(ctx);
 
         CleanScheduledPackages();
         break;
@@ -1456,7 +1459,7 @@ static void DeleteTypeContext(Policy *policy, TypeSequence type, const ReportCon
 
 /**************************************************************/
 
-static void ClassBanner(TypeSequence type)
+static void ClassBanner(EvalContext *ctx, TypeSequence type)
 {
     const Item *ip;
 
@@ -1488,7 +1491,7 @@ static void ClassBanner(TypeSequence type)
 
     CfDebug("     ?  Public class context:\n");
 
-    it = AlphaListIteratorInit(&VHEAP);
+    it = AlphaListIteratorInit(&ctx->heap_soft);
     for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
     {
         CfDebug("     ?       %s\n", ip->name);
@@ -1517,9 +1520,9 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
 
 #else /* !__MINGW32__ */
 
-static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
-    int background = PromiseGetConstraintAsBoolean("background", pp);
+    int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
 
     if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
@@ -1547,7 +1550,7 @@ static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext 
 
     if (child == 0 || !background)
     {
-        FindAndVerifyFilesPromises(pp, report_context);
+        FindAndVerifyFilesPromises(ctx, pp, report_context);
     }
 }
 

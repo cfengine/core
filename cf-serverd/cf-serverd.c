@@ -30,15 +30,16 @@
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false))
+    if (GenericAgentCheckPolicy(ctx, config, false))
     {
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
     else if (config->tty_interactive)
     {
@@ -47,20 +48,22 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass("failsafe_fallback");
+        HardClass(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
     ThisAgentInit();
-    KeepPromises(policy, config, report_context);
+    KeepPromises(ctx, policy, config, report_context);
     Summarize();
 
-    StartServer(policy, config, report_context);
+    StartServer(ctx, policy, config, report_context);
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
+
     return 0;
 }

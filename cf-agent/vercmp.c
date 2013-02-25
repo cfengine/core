@@ -59,7 +59,7 @@ static VersionCmpResult AndResults(VersionCmpResult lhs, VersionCmpResult rhs)
     }
 }
 
-static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, const char *v1, const char *v2, Attributes a, Promise *pp)
 {
     char expanded_command[CF_EXPANDSIZE];
 
@@ -73,7 +73,7 @@ static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const
 
     if (pfp == NULL)
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_popen", pp, a, "Can not start package version comparison command: %s", expanded_command);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_popen", pp, a, "Can not start package version comparison command: %s", expanded_command);
         return VERCMP_ERROR;
     }
 
@@ -83,7 +83,7 @@ static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const
 
     if (retcode == -1)
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_pclose", pp, a, "Error during package version comparison command execution: %s",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_pclose", pp, a, "Error during package version comparison command execution: %s",
             expanded_command);
         return VERCMP_ERROR;
     }
@@ -91,11 +91,11 @@ static VersionCmpResult RunCmpCommand(const char *command, const char *v1, const
     return retcode == 0;
 }
 
-static VersionCmpResult CompareVersionsLess(const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult CompareVersionsLess(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
 {
     if (a.packages.package_version_less_command)
     {
-        return RunCmpCommand(a.packages.package_version_less_command, v1, v2, a, pp);
+        return RunCmpCommand(ctx, a.packages.package_version_less_command, v1, v2, a, pp);
     }
     else
     {
@@ -103,17 +103,17 @@ static VersionCmpResult CompareVersionsLess(const char *v1, const char *v2, Attr
     }
 }
 
-static VersionCmpResult CompareVersionsEqual(const char *v1, const char *v2, Attributes a, Promise *pp)
+static VersionCmpResult CompareVersionsEqual(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
 {
     if (a.packages.package_version_equal_command)
     {
-        return RunCmpCommand(a.packages.package_version_equal_command, v1, v2, a, pp);
+        return RunCmpCommand(ctx, a.packages.package_version_equal_command, v1, v2, a, pp);
     }
     else if (a.packages.package_version_less_command)
     {
         /* emulate v1 == v2 by !(v1 < v2) && !(v2 < v1)  */
-        return AndResults(InvertResult(CompareVersionsLess(v1, v2, a, pp)),
-                          InvertResult(CompareVersionsLess(v2, v1, a, pp)));
+        return AndResults(InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp)),
+                          InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp)));
     }
     else
     {
@@ -122,17 +122,17 @@ static VersionCmpResult CompareVersionsEqual(const char *v1, const char *v2, Att
     }
 }
 
-VersionCmpResult CompareVersions(const char *v1, const char *v2, Attributes a, Promise *pp)
+VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp)
 {
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
-    case PACKAGE_VERSION_COMPARATOR_NONE: return CompareVersionsEqual(v1, v2, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_NEQ: return InvertResult(CompareVersionsEqual(v1, v2, a, pp));
-    case PACKAGE_VERSION_COMPARATOR_LT: return CompareVersionsLess(v1, v2, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_GT: return CompareVersionsLess(v2, v1, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_GE: return InvertResult(CompareVersionsLess(v1, v2, a, pp));
-    case PACKAGE_VERSION_COMPARATOR_LE: return InvertResult(CompareVersionsLess(v2, v1, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_NONE: return CompareVersionsEqual(ctx, v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_NEQ: return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LT: return CompareVersionsLess(ctx, v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GT: return CompareVersionsLess(ctx, v2, v1, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GE: return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LE: return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp));
     default: FatalError("Unexpected comparison value: %d", a.packages.package_select);
     }
 }

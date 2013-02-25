@@ -767,6 +767,8 @@ typedef struct
 
 /*************************************************************************/
 
+typedef struct EvalContext_ EvalContext;
+
 typedef struct FnCallResult_ FnCallResult;
 
 typedef struct
@@ -781,7 +783,7 @@ typedef struct
     const char *name;
     DataType dtype;
     const FnCallArg *args;
-              FnCallResult(*impl) (FnCall *, Rlist *);
+    FnCallResult(*impl) (EvalContext *ctx, FnCall *, Rlist *);
     const char *description;
     bool varargs;
 } FnCallType;

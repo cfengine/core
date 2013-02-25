@@ -38,9 +38,9 @@ static int SAVE_VERBOSE = 0;
 
 /*****************************************************************************/
 
-void VerifyOutputsPromise(Promise *pp)
+void VerifyOutputsPromise(EvalContext *ctx, Promise *pp)
 {
-    Attributes a = GetOutputsAttributes(pp);
+    Attributes a = GetOutputsAttributes(ctx, pp);
     Item *ip;
     static char *defaultval = "verbose";
 
@@ -55,7 +55,7 @@ void VerifyOutputsPromise(Promise *pp)
         {
             if (strcmp(ip->classes, a.output.level) != 0)
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Promise for bundle \"%s\" conflicts with an existing outputs promise", pp->promiser);
             }
             else
@@ -65,7 +65,7 @@ void VerifyOutputsPromise(Promise *pp)
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for bundle \"%s\"", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for bundle \"%s\"", pp->promiser);
             PrependItem(&BUNDLE_OUTPUTS, pp->promiser, a.output.level);
         }
     }
@@ -75,7 +75,7 @@ void VerifyOutputsPromise(Promise *pp)
         {
             if (strcmp(ip->classes, a.output.level) != 0)
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Promise for handle \"%s\" conflicts with an existing outputs promise", pp->promiser);
             }
             else
@@ -86,7 +86,7 @@ void VerifyOutputsPromise(Promise *pp)
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for promise handle \"%s\"", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Setting output level for promise handle \"%s\"", pp->promiser);
             PrependItem(&HANDLE_OUTPUTS, pp->promiser, a.output.level);
         }
     }
@@ -94,10 +94,10 @@ void VerifyOutputsPromise(Promise *pp)
 
 /*****************************************************************************/
 
-void SetPromiseOutputs(Promise *pp)
+void SetPromiseOutputs(EvalContext *ctx, Promise *pp)
 {
-    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
-    char *setting = ConstraintGetRvalValue("report_level", pp, RVAL_TYPE_SCALAR);
+    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
+    char *setting = ConstraintGetRvalValue(ctx, "report_level", pp, RVAL_TYPE_SCALAR);
     OutputLevel report_level = OutputLevelFromString(setting);
     int verbose = false, inform = false;
     Item *ip;

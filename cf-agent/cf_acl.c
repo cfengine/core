@@ -48,11 +48,11 @@ static int CheckPermTypeSyntax(char *permt, int deny_support, Promise *pp);
 static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp);
 
 
-void VerifyACL(char *file, Attributes a, Promise *pp)
+void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
@@ -66,7 +66,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
     case ACL_TYPE_GENERIC:
 
 #if defined(__linux__)
-        CheckPosixLinuxACL(file, a.acl, a, pp);
+        CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
 #elif defined(__MINGW32__)
         Nova_CheckNtACL(file, a.acl, a, pp);
 #else
@@ -77,7 +77,7 @@ void VerifyACL(char *file, Attributes a, Promise *pp)
     case ACL_TYPE_POSIX:
 
 #if defined(__linux__)
-        CheckPosixLinuxACL(file, a.acl, a, pp);
+        CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
 #else
         CfOut(OUTPUT_LEVEL_INFORM, "", "!! Posix ACLs are not supported on this system");
 #endif

@@ -57,23 +57,27 @@
 #include <sys/sysctl.h>
 #endif
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
 #ifdef __linux__
-static int Linux_Fedora_Version(void);
-static int Linux_Redhat_Version(void);
-static void Linux_Oracle_VM_Server_Version(void);
-static void Linux_Oracle_Version(void);
-static int Linux_Suse_Version(void);
-static int Linux_Slackware_Version(char *filename);
-static int Linux_Debian_Version(void);
-static int Linux_Mandrake_Version(void);
-static int Linux_Mandriva_Version(void);
-static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor);
-static int VM_Version(void);
-static int Xen_Domain(void);
-static int EOS_Version(void);
-static int MiscOS(void);
+static int Linux_Fedora_Version(EvalContext *ctx);
+static int Linux_Redhat_Version(EvalContext *ctx);
+static void Linux_Oracle_VM_Server_Version(EvalContext *ctx);
+static void Linux_Oracle_Version(EvalContext *ctx);
+static int Linux_Suse_Version(EvalContext *ctx);
+static int Linux_Slackware_Version(EvalContext *ctx, char *filename);
+static int Linux_Debian_Version(EvalContext *ctx);
+static int Linux_Mandrake_Version(EvalContext *ctx);
+static int Linux_Mandriva_Version(EvalContext *ctx);
+static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor);
+static int VM_Version(EvalContext *ctx);
+static int Xen_Domain(EvalContext *ctx);
+static int EOS_Version(EvalContext *ctx);
+static int MiscOS(EvalContext *ctx);
 
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
@@ -84,7 +88,7 @@ static bool ReadLine(const char *filename, char *buf, int bufsize);
 static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize);
 #endif
 
-static void GetCPUInfo(void);
+static void GetCPUInfo(EvalContext *ctx);
 
 static const char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3] =
 {
@@ -211,7 +215,7 @@ void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname
 
 /*******************************************************************/
 
-void DetectDomainName(const char *orig_nodename)
+void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 {
     char nodename[CF_BUFSIZE];
 
@@ -245,7 +249,7 @@ void DetectDomainName(const char *orig_nodename)
 
     do
     {
-        HardClass(ptr);
+        HardClass(ctx, ptr);
 
         ptr = strchr(ptr, '.');
         if (ptr != NULL)
@@ -253,8 +257,8 @@ void DetectDomainName(const char *orig_nodename)
     }
     while (ptr != NULL);
 
-    HardClass(VUQNAME);
-    HardClass(VDOMAIN);
+    HardClass(ctx, VUQNAME);
+    HardClass(ctx, VDOMAIN);
 
     NewScalar("sys", "host", nodename, DATA_TYPE_STRING);
     NewScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
@@ -264,7 +268,7 @@ void DetectDomainName(const char *orig_nodename)
 
 /*******************************************************************/
 
-void GetNameInfo3()
+void GetNameInfo3(EvalContext *ctx)
 {
     int i, found = false;
     char *sp, workbuf[CF_BUFSIZE];
@@ -330,7 +334,7 @@ void GetNameInfo3()
             {
                 if (FullTextMatch(CLASSATTRIBUTES[i][2], VSYSNAME.release))
                 {
-                    HardClass(CLASSTEXT[i]);
+                    HardClass(ctx, CLASSTEXT[i]);
 
                     found = true;
 
@@ -359,11 +363,11 @@ void GetNameInfo3()
 #ifdef __sun
     if (strcmp(VSYSNAME.machine, "i86pc") == 0)
     {
-        HardClass("solarisx86");
+        HardClass(ctx, "solarisx86");
     }
 #endif
 
-    DetectDomainName(VSYSNAME.nodename);
+    DetectDomainName(ctx, VSYSNAME.nodename);
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
@@ -410,7 +414,7 @@ void GetNameInfo3()
         snprintf(PUBKEY_DIGEST, sizeof(PUBKEY_DIGEST), "%s", HashPrint(CF_DEFAULT_DIGEST, digest));
         NewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", CanonifyName(HashPrint(CF_DEFAULT_DIGEST, digest)));
-        HardClass(workbuf);
+        HardClass(ctx, workbuf);
     }
 
     for (i = 0; components[i] != NULL; i++)
@@ -510,24 +514,24 @@ void GetNameInfo3()
         LoadSlowlyVaryingObservations();
     }
 
-    EnterpriseContext();
+    EnterpriseContext(ctx);
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
-    HardClass(workbuf);
+    HardClass(ctx, workbuf);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
-    HardClass(workbuf);
+    HardClass(ctx, workbuf);
 
-    HardClass(VSYSNAME.machine);
+    HardClass(ctx, VSYSNAME.machine);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
-    HardClass(workbuf);
+    HardClass(ctx, workbuf);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s_%s", VSYSNAME.sysname, VSYSNAME.machine, VSYSNAME.release);
-    HardClass(workbuf);
+    HardClass(ctx, workbuf);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
@@ -539,7 +543,7 @@ void GetNameInfo3()
     }
     else
     {
-        HardClass(workbuf);
+        HardClass(ctx, workbuf);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
@@ -551,7 +555,7 @@ void GetNameInfo3()
     }
     else
     {
-        HardClass(workbuf);
+        HardClass(ctx, workbuf);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
@@ -567,13 +571,13 @@ void GetNameInfo3()
 
     sp = xstrdup(CanonifyName(workbuf));
     NewScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
-    HardClass(sp);
+    HardClass(ctx, sp);
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
     NewScalar("sys", "ostype", sp, DATA_TYPE_STRING);
-    HardClass(sp);
+    HardClass(ctx, sp);
     free(sp);
 
     if (!found)
@@ -583,7 +587,7 @@ void GetNameInfo3()
 
     strcpy(workbuf, "compiled_on_");
     strcat(workbuf, CanonifyName(AUTOCONF_SYSNAME));
-    HardClass(workbuf);
+    HardClass(ctx, workbuf);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "GNU autoconf class from compile time: %s", workbuf);
 
 /* Get IP address from nameserver */
@@ -603,7 +607,7 @@ void GetNameInfo3()
         for (i = 0; hp->h_aliases[i] != NULL; i++)
         {
             CfDebug("Adding alias %s..\n", hp->h_aliases[i]);
-            HardClass(hp->h_aliases[i]);
+            HardClass(ctx, hp->h_aliases[i]);
         }
     }
 
@@ -617,7 +621,7 @@ void GetNameInfo3()
 
     NewScalar("sys", "zone", zone, DATA_TYPE_STRING);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
-    HardClass(vbuff);
+    HardClass(ctx, vbuff);
 
     if (strcmp(zone, "global") == 0)
     {
@@ -632,7 +636,7 @@ void GetNameInfo3()
 
 /*******************************************************************/
 
-void Get3Environment()
+void Get3Environment(EvalContext *ctx)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
@@ -719,7 +723,7 @@ void Get3Environment()
         }
         else
         {
-            HardClass(context);
+            HardClass(ctx, context);
         }
     }
 
@@ -749,44 +753,44 @@ _Bool IsInterfaceAddress(const char *adr)
 
 /*******************************************************************/
 
-void BuiltinClasses(void)
+void BuiltinClasses(EvalContext *ctx)
 {
     char vbuff[CF_BUFSIZE];
 
-    HardClass("any");            /* This is a reserved word / wildcard */
+    HardClass(ctx, "any");            /* This is a reserved word / wildcard */
 
     snprintf(vbuff, CF_BUFSIZE, "cfengine_%s", CanonifyName(Version()));
-    CreateHardClassesFromCanonification(vbuff);
+    CreateHardClassesFromCanonification(ctx, vbuff);
 
 }
 
 /*******************************************************************/
 
-void CreateHardClassesFromCanonification(const char *canonified)
+void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified)
 {
     char buf[CF_MAXVARSIZE];
 
     strlcpy(buf, canonified, sizeof(buf));
 
-    HardClass(buf);
+    HardClass(ctx, buf);
 
     char *sp;
 
     while ((sp = strrchr(buf, '_')))
     {
         *sp = 0;
-        HardClass(buf);
+        HardClass(ctx, buf);
     }
 }
 
-static void SetFlavour(const char *flavour)
+static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
-    HardClass(flavour);
+    HardClass(ctx, flavour);
     NewScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
     NewScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
 }
 
-void OSClasses(void)
+void OSClasses(EvalContext *ctx)
 {
 #ifdef __linux__
     struct stat statbuf;
@@ -796,23 +800,23 @@ void OSClasses(void)
 
     if (cfstat("/etc/mandriva-release", &statbuf) != -1)
     {
-        Linux_Mandriva_Version();
+        Linux_Mandriva_Version(ctx);
     }
     else if (cfstat("/etc/mandrake-release", &statbuf) != -1)
     {
-        Linux_Mandrake_Version();
+        Linux_Mandrake_Version(ctx);
     }
     else if (cfstat("/etc/fedora-release", &statbuf) != -1)
     {
-        Linux_Fedora_Version();
+        Linux_Fedora_Version(ctx);
     }
     else if (cfstat("/etc/ovs-release", &statbuf) != -1)
     {
-        Linux_Oracle_VM_Server_Version();
+        Linux_Oracle_VM_Server_Version(ctx);
     }
     else if (cfstat("/etc/redhat-release", &statbuf) != -1)
     {
-        Linux_Redhat_Version();
+        Linux_Redhat_Version(ctx);
     }
 
 /* Oracle Linux >= 6 supplies separate /etc/oracle-release alongside
@@ -820,97 +824,97 @@ void OSClasses(void)
 
     if (cfstat("/etc/oracle-release", &statbuf) != -1)
     {
-        Linux_Oracle_Version();
+        Linux_Oracle_Version(ctx);
     }
 
     if (cfstat("/etc/generic-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a sun cobalt system.\n");
-        SetFlavour("SunCobalt");
+        SetFlavour(ctx, "SunCobalt");
     }
 
     if (cfstat("/etc/SuSE-release", &statbuf) != -1)
     {
-        Linux_Suse_Version();
+        Linux_Suse_Version(ctx);
     }
 
 # define SLACKWARE_ANCIENT_VERSION_FILENAME "/etc/slackware-release"
 # define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
     if (cfstat(SLACKWARE_VERSION_FILENAME, &statbuf) != -1)
     {
-        Linux_Slackware_Version(SLACKWARE_VERSION_FILENAME);
+        Linux_Slackware_Version(ctx, SLACKWARE_VERSION_FILENAME);
     }
     else if (cfstat(SLACKWARE_ANCIENT_VERSION_FILENAME, &statbuf) != -1)
     {
-        Linux_Slackware_Version(SLACKWARE_ANCIENT_VERSION_FILENAME);
+        Linux_Slackware_Version(ctx, SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
     if (cfstat("/etc/debian_version", &statbuf) != -1)
     {
-        Linux_Debian_Version();
+        Linux_Debian_Version(ctx);
     }
 
     if (cfstat("/usr/bin/aptitude", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This system seems to have the aptitude package system\n");
-        HardClass("have_aptitude");
+        HardClass(ctx, "have_aptitude");
     }
 
     if (cfstat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a UnitedLinux system.\n");
-        SetFlavour("UnitedLinux");
+        SetFlavour(ctx, "UnitedLinux");
     }
 
     if (cfstat("/etc/alpine-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an AlpineLinux system.\n");
-        SetFlavour("alpinelinux");
+        SetFlavour(ctx, "alpinelinux");
     }
 
     if (cfstat("/etc/gentoo-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a gentoo system.\n");
-        SetFlavour("gentoo");
+        SetFlavour(ctx, "gentoo");
     }
 
     if (cfstat("/etc/arch-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an Arch Linux system.\n");
-        SetFlavour("archlinux");
+        SetFlavour(ctx, "archlinux");
     }
 
     if (cfstat("/proc/vmware/version", &statbuf) != -1 || cfstat("/etc/vmware-release", &statbuf) != -1)
     {
-        VM_Version();
+        VM_Version(ctx);
     }
     else if (cfstat("/etc/vmware", &statbuf) != -1 && S_ISDIR(statbuf.st_mode))
     {
-        VM_Version();
+        VM_Version(ctx);
     }
 
     if (cfstat("/proc/xen/capabilities", &statbuf) != -1)
     {
-        Xen_Domain();
+        Xen_Domain(ctx);
     }
 
     if (cfstat("/etc/Eos-release", &statbuf) != -1)
     {
-        EOS_Version();
-        SetFlavour("Eos");
+        EOS_Version(ctx);
+        SetFlavour(ctx, "Eos");
     }
 
     if (cfstat("/etc/issue", &statbuf) != -1)
     {
-        MiscOS();
+        MiscOS(ctx);
     }
     
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen hv system.\n");
-        HardClass("xen");
-        HardClass("xen_domu_hv");
+        HardClass(ctx, "xen");
+        HardClass(ctx, "xen_domu_hv");
     }
 #endif
 
@@ -930,11 +934,11 @@ void OSClasses(void)
 
     char context[CF_BUFSIZE];
     snprintf(context, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, vbuff);
-    SetFlavour(context);
+    SetFlavour(ctx, context);
 
 #endif
 
-    GetCPUInfo();
+    GetCPUInfo(ctx);
 
 #ifdef __CYGWIN__
 
@@ -946,31 +950,31 @@ void OSClasses(void)
             if (strncmp(sp, "5.0", 3) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows 2000\n");
-                HardClass("Win2000");
+                HardClass(ctx, "Win2000");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows XP\n");
-                HardClass("WinXP");
+                HardClass(ctx, "WinXP");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2003\n");
-                HardClass("WinServer2003");
+                HardClass(ctx, "WinServer2003");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Vista\n");
-                HardClass("WinVista");
+                HardClass(ctx, "WinVista");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2008\n");
-                HardClass("WinServer2008");
+                HardClass(ctx, "WinServer2008");
             }
         }
     }
@@ -980,28 +984,28 @@ void OSClasses(void)
 #endif /* __CYGWIN__ */
 
 #ifdef __MINGW32__
-    HardClass(VSYSNAME.release); // code name - e.g. Windows Vista
-    HardClass(VSYSNAME.version); // service pack number - e.g. Service Pack 3
+    HardClass(ctx, VSYSNAME.release); // code name - e.g. Windows Vista
+    HardClass(ctx, VSYSNAME.version); // service pack number - e.g. Service Pack 3
 
     if (strstr(VSYSNAME.sysname, "workstation"))
     {
-        HardClass("WinWorkstation");
+        HardClass(ctx, "WinWorkstation");
     }
     else if (strstr(VSYSNAME.sysname, "server"))
     {
-        HardClass("WinServer");
+        HardClass(ctx, "WinServer");
     }
     else if (strstr(VSYSNAME.sysname, "domain controller"))
     {
-        HardClass("DomainController");
-        HardClass("WinServer");
+        HardClass(ctx, "DomainController");
+        HardClass(ctx, "WinServer");
     }
     else
     {
-        HardClass("unknown_ostype");
+        HardClass(ctx, "unknown_ostype");
     }
 
-    SetFlavour("windows");
+    SetFlavour(ctx, "windows");
 
 #endif /* __MINGW32__ */
 
@@ -1015,7 +1019,7 @@ void OSClasses(void)
     {
         char vbuff[CF_BUFSIZE];
 
-        if (IsDefinedClass("SuSE", NULL))
+        if (IsDefinedClass(ctx, "SuSE", NULL))
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
         }
@@ -1030,31 +1034,31 @@ void OSClasses(void)
 #endif
 
 #if defined(__ANDROID__)
-    SetFlavour("android");
+    SetFlavour(ctx, "android");
 #endif
 
 #ifdef __sun
     if (FullTextMatch("joyent.*", VSYSNAME.version))
     {
-        HardClass("smartos");
-        HardClass("smartmachine");
+        HardClass(ctx, "smartos");
+        HardClass(ctx, "smartmachine");
     }
 #endif
     
     /* FIXME: this variable needs redhat/SuSE/debian classes to be defined and
      * hence can't be initialized earlier */
 
-    if (IsDefinedClass("redhat", NULL))
+    if (IsDefinedClass(ctx, "redhat", NULL))
     {
         NewScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
     }
 
-    if (IsDefinedClass("SuSE", NULL))
+    if (IsDefinedClass(ctx, "SuSE", NULL))
     {
         NewScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
     }
 
-    if (IsDefinedClass("debian", NULL))
+    if (IsDefinedClass(ctx, "debian", NULL))
     {
         NewScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
     }
@@ -1063,7 +1067,7 @@ void OSClasses(void)
 /*********************************************************************************/
 
 #ifdef __linux__
-static void Linux_Oracle_VM_Server_Version(void)
+static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 {
     char relstring[CF_MAXVARSIZE];
     char *r;
@@ -1074,8 +1078,8 @@ static void Linux_Oracle_VM_Server_Version(void)
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle VM Server");
-    HardClass("redhat");
-    HardClass("oraclevmserver");
+    HardClass(ctx, "redhat");
+    HardClass(ctx, "oraclevmserver");
 
     if (!ReadLine(ORACLE_VM_SERVER_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1101,7 +1105,7 @@ static void Linux_Oracle_VM_Server_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d", major);
-        SetFlavour(buf);
+        SetFlavour(ctx, buf);
     }
 
     if (revcomps > 1)
@@ -1109,7 +1113,7 @@ static void Linux_Oracle_VM_Server_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d", major, minor);
-        HardClass(buf);
+        HardClass(ctx, buf);
     }
 
     if (revcomps > 2)
@@ -1117,13 +1121,13 @@ static void Linux_Oracle_VM_Server_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oraclevmserver_%d_%d_%d", major, minor, patch);
-        HardClass(buf);
+        HardClass(ctx, buf);
     }
 }
 
 /*********************************************************************************/
 
-static void Linux_Oracle_Version(void)
+static void Linux_Oracle_Version(EvalContext *ctx)
 {
     char relstring[CF_MAXVARSIZE];
     char *r;
@@ -1133,7 +1137,7 @@ static void Linux_Oracle_Version(void)
 #define ORACLE_ID "Oracle Linux Server"
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle Linux");
-    HardClass("oracle");
+    HardClass(ctx, "oracle");
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1157,16 +1161,16 @@ static void Linux_Oracle_Version(void)
         char buf[CF_BUFSIZE];
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d", major);
-        SetFlavour(buf);
+        SetFlavour(ctx, buf);
 
         snprintf(buf, CF_BUFSIZE, "oracle_%d_%d", major, minor);
-        HardClass(buf);
+        HardClass(ctx, buf);
     }
 }
 
 /*********************************************************************************/
 
-static int Linux_Fedora_Version(void)
+static int Linux_Fedora_Version(EvalContext *ctx)
 {
 #define FEDORA_ID "Fedora"
 #define RELEASE_FLAG "release "
@@ -1188,8 +1192,8 @@ static int Linux_Fedora_Version(void)
     char strmajor[CF_MAXVARSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a fedora system.\n");
-    HardClass("redhat");
-    HardClass("fedora");
+    HardClass(ctx, "redhat");
+    HardClass(ctx, "fedora");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1235,10 +1239,10 @@ static int Linux_Fedora_Version(void)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        HardClass(classbuf);
+        HardClass(ctx,classbuf);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        SetFlavour(classbuf);
+        SetFlavour(ctx, classbuf);
     }
 
     return 0;
@@ -1246,7 +1250,7 @@ static int Linux_Fedora_Version(void)
 
 /*********************************************************************************/
 
-static int Linux_Redhat_Version(void)
+static int Linux_Redhat_Version(EvalContext *ctx)
 {
 #define REDHAT_ID "Red Hat Linux"
 #define REDHAT_AS_ID "Red Hat Enterprise Linux AS"
@@ -1302,7 +1306,7 @@ static int Linux_Redhat_Version(void)
     char strminor[CF_MAXVARSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a redhat (or redhat-based) system.\n");
-    HardClass("redhat");
+    HardClass(ctx, "redhat");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1435,24 +1439,24 @@ static int Linux_Redhat_Version(void)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
         strcat(classbuf, "_");
 
         if (strcmp(edition, "") != 0)
         {
             strcat(classbuf, edition);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
             strcat(classbuf, "_");
         }
 
         strcat(classbuf, strmajor);
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
 
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
         }
     }
 
@@ -1462,18 +1466,18 @@ static int Linux_Redhat_Version(void)
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
         strcat(classbuf, "_");
 
         strcat(classbuf, strmajor);
 
-        SetFlavour(classbuf);
+        SetFlavour(ctx, classbuf);
 
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
         }
     }
 
@@ -1482,7 +1486,7 @@ static int Linux_Redhat_Version(void)
 
 /******************************************************************/
 
-static int Linux_Suse_Version(void)
+static int Linux_Suse_Version(EvalContext *ctx)
 {
 #define SUSE_REL_FILENAME "/etc/SuSE-release"
 /* Check if it's a SuSE Enterprise version (all in lowercase) */
@@ -1506,7 +1510,7 @@ static int Linux_Suse_Version(void)
     FILE *fp;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a SuSE system.\n");
-    HardClass("SuSE");
+    HardClass(ctx, "SuSE");
 
 /* Grab the first line from the file and then close it. */
 
@@ -1564,20 +1568,20 @@ static int Linux_Suse_Version(void)
     {
         classbuf[0] = '\0';
         strcat(classbuf, "SLES8");
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
     }
     else if (strncmp(relstring, "sles", 4) == 0)
     {
         Item *list, *ip;
 
         sscanf(relstring, "%[-_a-zA-Z0-9]", vbuf);
-        HardClass(vbuf);
+        HardClass(ctx, vbuf);
 
         list = SplitString(vbuf, '-');
 
         for (ip = list; ip != NULL; ip = ip->next)
         {
-            HardClass(ip->name);
+            HardClass(ctx, ip->name);
         }
 
         DeleteItemList(list);
@@ -1592,7 +1596,7 @@ static int Linux_Suse_Version(void)
             if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {
                 snprintf(classbuf, CF_MAXVARSIZE, "SLES%d", version);
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
             }
             else
             {
@@ -1602,7 +1606,7 @@ static int Linux_Suse_Version(void)
                 if (!strncmp(relstring, vbuf, strlen(vbuf)))
                 {
                     snprintf(classbuf, CF_MAXVARSIZE, "SLED%d", version);
-                    HardClass(classbuf);
+                    HardClass(ctx, classbuf);
                 }
             }
         }
@@ -1640,13 +1644,13 @@ static int Linux_Suse_Version(void)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SuSE");
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                SetFlavour(classbuf);
+                SetFlavour(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
 
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
                 return 0;
@@ -1660,15 +1664,15 @@ static int Linux_Suse_Version(void)
             if (major != -1 && minor != -1)
             {
                 strcpy(classbuf, "SLES");
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strmajor);
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
                 strcat(classbuf, "_");
                 strcat(classbuf, strminor);
-                HardClass(classbuf);
+                HardClass(ctx, classbuf);
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
-                SetFlavour(classbuf);
+                SetFlavour(ctx, classbuf);
 
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
                 return 0;
@@ -1683,7 +1687,7 @@ static int Linux_Suse_Version(void)
 
 /******************************************************************/
 
-static int Linux_Slackware_Version(char *filename)
+static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
 {
     int major = -1;
     int minor = -1;
@@ -1692,7 +1696,7 @@ static int Linux_Slackware_Version(char *filename)
     char buffer[CF_MAXVARSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a slackware system.\n");
-    HardClass("slackware");
+    HardClass(ctx, "slackware");
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
     {
@@ -1705,17 +1709,17 @@ static int Linux_Slackware_Version(char *filename)
     case 3:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
-        HardClass(classname);
+        HardClass(ctx, classname);
         /* Fall-through */
     case 2:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
-        HardClass(classname);
+        HardClass(ctx, classname);
         /* Fall-through */
     case 1:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
-        HardClass(classname);
+        HardClass(ctx, classname);
         break;
     case 0:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "No Slackware version number found.\n");
@@ -1726,7 +1730,7 @@ static int Linux_Slackware_Version(char *filename)
 
 /******************************************************************/
 
-static int Linux_Debian_Version(void)
+static int Linux_Debian_Version(EvalContext *ctx)
 {
 #define DEBIAN_VERSION_FILENAME "/etc/debian_version"
 #define DEBIAN_ISSUE_FILENAME "/etc/issue"
@@ -1736,7 +1740,7 @@ static int Linux_Debian_Version(void)
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a debian system.\n");
-    HardClass("debian");
+    HardClass(ctx, "debian");
 
     buffer[0] = classname[0] = '\0';
 
@@ -1754,15 +1758,15 @@ static int Linux_Debian_Version(void)
     case 2:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
-        HardClass(classname);
+        HardClass(ctx, classname);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(classname);
+        SetFlavour(ctx, classname);
         break;
         /* Fall-through */
     case 1:
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
-        SetFlavour(classname);
+        SetFlavour(ctx, classname);
         break;
 
     default:
@@ -1771,7 +1775,7 @@ static int Linux_Debian_Version(void)
         if (strlen(version) > 0)
         {
             snprintf(classname, CF_MAXVARSIZE, "debian_%s", version);
-            HardClass(classname);
+            HardClass(ctx, classname);
         }
         break;
     }
@@ -1788,19 +1792,19 @@ static int Linux_Debian_Version(void)
     {
         sscanf(buffer, "%*s %*s %[^./]", version);
         snprintf(buffer, CF_MAXVARSIZE, "debian_%s", version);
-        HardClass("debian");
-        SetFlavour(buffer);
+        HardClass(ctx, "debian");
+        SetFlavour(ctx, buffer);
     }
     else if (strcmp(os, "Ubuntu") == 0)
     {
         sscanf(buffer, "%*s %[^.].%d", version, &release);
         snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s", version);
-        SetFlavour(buffer);
-        HardClass("ubuntu");
+        SetFlavour(ctx, buffer);
+        HardClass(ctx, "ubuntu");
         if (release >= 0)
         {
             snprintf(buffer, CF_MAXVARSIZE, "ubuntu_%s_%d", version, release);
-            HardClass(buffer);
+            HardClass(ctx, buffer);
         }
     }
 
@@ -1809,7 +1813,7 @@ static int Linux_Debian_Version(void)
 
 /******************************************************************/
 
-static int Linux_Mandrake_Version(void)
+static int Linux_Mandrake_Version(EvalContext *ctx)
 {
 /* We are looking for one of the following strings... */
 #define MANDRAKE_ID "Linux Mandrake"
@@ -1822,7 +1826,7 @@ static int Linux_Mandrake_Version(void)
     char *vendor = NULL;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandrake system.\n");
-    HardClass("Mandrake");
+    HardClass(ctx, "Mandrake");
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1852,12 +1856,12 @@ static int Linux_Mandrake_Version(void)
         return 2;
     }
 
-    return Linux_Mandriva_Version_Real(MANDRAKE_REL_FILENAME, relstring, vendor);
+    return Linux_Mandriva_Version_Real(ctx, MANDRAKE_REL_FILENAME, relstring, vendor);
 }
 
 /******************************************************************/
 
-static int Linux_Mandriva_Version(void)
+static int Linux_Mandriva_Version(EvalContext *ctx)
 {
 /* We are looking for the following strings... */
 #define MANDRIVA_ID "Mandriva Linux"
@@ -1868,8 +1872,8 @@ static int Linux_Mandriva_Version(void)
     char *vendor = NULL;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandriva system.\n");
-    HardClass("Mandrake");
-    HardClass("Mandriva");
+    HardClass(ctx, "Mandrake");
+    HardClass(ctx, "Mandriva");
 
     if (!ReadLine(MANDRIVA_REL_FILENAME, relstring, sizeof(relstring)))
     {
@@ -1888,13 +1892,13 @@ static int Linux_Mandriva_Version(void)
         return 2;
     }
 
-    return Linux_Mandriva_Version_Real(MANDRIVA_REL_FILENAME, relstring, vendor);
+    return Linux_Mandriva_Version_Real(ctx, MANDRIVA_REL_FILENAME, relstring, vendor);
 
 }
 
 /******************************************************************/
 
-static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *vendor)
+static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *relstring, char *vendor)
 {
     char *release = NULL;
     char classbuf[CF_MAXVARSIZE];
@@ -1928,15 +1932,15 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
     {
         classbuf[0] = '\0';
         strcat(classbuf, vendor);
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
         strcat(classbuf, "_");
         strcat(classbuf, strmajor);
-        HardClass(classbuf);
+        HardClass(ctx, classbuf);
         if (minor != -2)
         {
             strcat(classbuf, "_");
             strcat(classbuf, strminor);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
         }
     }
 
@@ -1945,7 +1949,7 @@ static int Linux_Mandriva_Version_Real(char *filename, char *relstring, char *ve
 
 /******************************************************************/
 
-static int EOS_Version()
+static int EOS_Version(EvalContext *ctx)
 
 { char buffer[CF_BUFSIZE];
 
@@ -1956,13 +1960,13 @@ static int EOS_Version()
         if (strstr(buffer, "EOS"))
         {
             char version[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-            HardClass("eos");
-            HardClass("arista");
+            HardClass(ctx, "eos");
+            HardClass(ctx, "arista");
             version[0] = '\0';
             sscanf(buffer, "%*s %*s %*s %s", version);
             CanonifyNameInPlace(version);
             snprintf(class, CF_MAXVARSIZE, "eos_%s", version);
-            HardClass(class);
+            HardClass(ctx, class);
         }
     }
     
@@ -1971,7 +1975,7 @@ static int EOS_Version()
 
 /******************************************************************/
 
-static int MiscOS()
+static int MiscOS(EvalContext *ctx)
 
 { char buffer[CF_BUFSIZE];
 
@@ -1982,15 +1986,15 @@ static int MiscOS()
        if (strstr(buffer, "BIG-IP"))
        {
            char version[CF_MAXVARSIZE], build[CF_MAXVARSIZE], class[CF_MAXVARSIZE];
-           HardClass("big_ip");
+           HardClass(ctx, "big_ip");
            sscanf(buffer, "%*s %s %*s %s", version, build);
            CanonifyNameInPlace(version);
            CanonifyNameInPlace(build);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s", version);
-           HardClass(class);
+           HardClass(ctx, class);
            snprintf(class, CF_MAXVARSIZE, "big_ip_%s_%s", version, build);
-           HardClass(class);
-           SetFlavour("BIG-IP");
+           HardClass(ctx, class);
+           SetFlavour(ctx, "BIG-IP");
        }
     }
     
@@ -1999,14 +2003,14 @@ static int MiscOS()
 
 /******************************************************************/
 
-static int VM_Version(void)
+static int VM_Version(EvalContext *ctx)
 {
     char *sp, buffer[CF_BUFSIZE], classbuf[CF_BUFSIZE], version[CF_BUFSIZE];
     int major, minor, bug;
     int sufficient = 0;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a VMware Server ESX/xSX system.\n");
-    HardClass("VMware");
+    HardClass(ctx, "VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
     if (ReadLine("/proc/vmware/version", buffer, sizeof(buffer)))
@@ -2014,17 +2018,17 @@ static int VM_Version(void)
         if (sscanf(buffer, "VMware ESX Server %d.%d.%d", &major, &minor, &bug) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d", major);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d", major, minor);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %d.%d.%d", major, minor, bug);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
             sufficient = 1;
         }
         else if (sscanf(buffer, "VMware ESX Server %s", version) > 0)
         {
             snprintf(classbuf, CF_BUFSIZE, "VMware ESX Server %s", version);
-            HardClass(classbuf);
+            HardClass(ctx, classbuf);
             sufficient = 1;
         }
     }
@@ -2034,14 +2038,14 @@ static int VM_Version(void)
     if (sufficient < 1 && (ReadLine("/etc/vmware-release", buffer, sizeof(buffer))
                            || ReadLine("/etc/issue", buffer, sizeof(buffer))))
     {
-        HardClass(buffer);
+        HardClass(ctx, buffer);
 
         /* Strip off the release code name e.g. "(Dali)" */
         if ((sp = strchr(buffer, '(')) != NULL)
         {
             *sp = 0;
             Chop(buffer, CF_EXPANDSIZE);
-            HardClass(buffer);
+            HardClass(ctx, buffer);
         }
         sufficient = 1;
     }
@@ -2051,14 +2055,14 @@ static int VM_Version(void)
 
 /******************************************************************/
 
-static int Xen_Domain(void)
+static int Xen_Domain(EvalContext *ctx)
 {
     FILE *fp;
     char buffer[CF_BUFSIZE];
     int sufficient = 0;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen pv system.\n");
-    HardClass("xen");
+    HardClass(ctx, "xen");
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
 
@@ -2069,14 +2073,14 @@ static int Xen_Domain(void)
             CfReadLine(buffer, CF_BUFSIZE, fp);
             if (strstr(buffer, "control_d"))
             {
-                HardClass("xen_dom0");
+                HardClass(ctx, "xen_dom0");
                 sufficient = 1;
             }
         }
 
         if (!sufficient)
         {
-            HardClass("xen_domu_pv");
+            HardClass(ctx, "xen_domu_pv");
             sufficient = 1;
         }
 
@@ -2227,7 +2231,7 @@ const char *GetWorkDir(void)
 
 /******************************************************************/
 
-static void GetCPUInfo()
+static void GetCPUInfo(EvalContext *ctx)
 {
 #if defined(MINGW) || defined(NT)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "!! cpu count not implemented on Windows platform\n");
@@ -2285,11 +2289,11 @@ static void GetCPUInfo()
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
 
     if (count == 1) {
-        HardClass(buf);  // "1_cpu" from init - change if buf is ever used above
+        HardClass(ctx, buf);  // "1_cpu" from init - change if buf is ever used above
         NewScalar("sys", "cpus", "1", DATA_TYPE_STRING);
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
-        HardClass(buf);
+        HardClass(ctx, buf);
         snprintf(buf, CF_SMALLBUF, "%d", count);
         NewScalar("sys", "cpus", buf, DATA_TYPE_STRING);
     }

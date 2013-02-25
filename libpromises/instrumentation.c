@@ -54,11 +54,11 @@ struct timespec BeginMeasure()
 
 /***************************************************************/
 
-void EndMeasurePromise(struct timespec start, Promise *pp)
+void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp)
 {
     char id[CF_BUFSIZE], *mid = NULL;
 
-    mid = ConstraintGetRvalValue("measurement_class", pp, RVAL_TYPE_SCALAR);
+    mid = ConstraintGetRvalValue(ctx, "measurement_class", pp, RVAL_TYPE_SCALAR);
 
     if (mid)
     {

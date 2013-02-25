@@ -46,34 +46,34 @@ typedef enum
 {
     ACTION_RESULT_OK,
     ACTION_RESULT_TIMEOUT,
-    ACTION_RESULT_FAILED,
+    ACTION_RESULT_FAILED
 } ActionResult;
 
 static bool SyntaxCheckExec(Attributes a, Promise *pp);
 static bool PromiseKeptExec(Attributes a, Promise *pp);
 static char *GetLockNameExec(Attributes a, Promise *pp);
-static ActionResult RepairExec(Attributes a, Promise *pp);
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp);
 
 static void PreviewProtocolLine(char *line, char *comm);
 
-void VerifyExecPromise(Promise *pp)
+void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
-    a = GetExecAttributes(pp);
+    a = GetExecAttributes(ctx, pp);
 
     NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
     if (!SyntaxCheckExec(a, pp))
     {
-        // cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        // cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
@@ -84,25 +84,25 @@ void VerifyExecPromise(Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        // cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
         DeleteScalar("this", "promiser");
         return;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
-    switch (RepairExec(a, pp))
+    switch (RepairExec(ctx, a, pp))
     {
     case ACTION_RESULT_OK:
-        // cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "");
         break;
 
     case ACTION_RESULT_TIMEOUT:
-        // cfPS(OUTPUT_LEVEL_ERROR, CF_TIMEX, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_TIMEX, "", pp, a, "");
         break;
 
     case ACTION_RESULT_FAILED:
-        // cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
         break;
 
     default:
@@ -179,7 +179,7 @@ static char *GetLockNameExec(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static ActionResult RepairExec(Attributes a, Promise *pp)
+static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
 {
     char line[CF_BUFSIZE], eventname[CF_BUFSIZE];
     char cmdline[CF_BUFSIZE];
@@ -334,7 +334,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
 
                 if (a.module)
                 {
-                    ModuleProtocol(cmdline, line, !a.contain.nooutput, pp->ns);
+                    ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, pp->ns);
                 }
                 else if ((!a.contain.nooutput) && (NonEmptyLine(line)))
                 {
@@ -368,7 +368,7 @@ static ActionResult RepairExec(Attributes a, Promise *pp)
                 cf_pclose_def(pfp, a, pp);
             }
 #else /* !__MINGW32__ */
-            cf_pclose_def(pfp, a, pp);
+            cf_pclose_def(ctx, pfp, a, pp);
 #endif
         }
 

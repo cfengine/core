@@ -331,7 +331,7 @@ void DeleteMountInfo(Rlist *list)
 
 /*******************************************************************/
 
-int VerifyInFstab(char *name, Attributes a, Promise *pp)
+int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 /* Ensure filesystem IS in fstab, and return no of changes */
 {
     char fstab[CF_BUFSIZE];
@@ -339,7 +339,7 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -395,7 +395,7 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Adding file system %s:%s seems to %s.\n", host, rmountpt,
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Adding file system %s:%s seems to %s.\n", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
     }
 
@@ -405,7 +405,7 @@ int VerifyInFstab(char *name, Attributes a, Promise *pp)
 
 /*******************************************************************/
 
-int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
+int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 /* Ensure filesystem is NOT in fstab, and return no of changes */
 {
     char regex[CF_BUFSIZE];
@@ -414,7 +414,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -449,7 +449,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 
             if ((pfp = cf_popen(aixcomm, "r")) == NULL)
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
                 return 0;
             }
 
@@ -467,7 +467,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "The device under %s cannot be removed from %s\n",
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "The device under %s cannot be removed from %s\n",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     return 0;
                 }
@@ -483,7 +483,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
             {
                 if (FullTextMatch(regex, ip->name))
                 {
-                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Deleting file system mounted on %s.\n", host);
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Deleting file system mounted on %s.\n", host);
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
                     FSTAB_EDITS++;
@@ -503,7 +503,7 @@ int VerifyNotInFstab(char *name, Attributes a, Promise *pp)
 
 /*******************************************************************/
 
-int VerifyMount(char *name, Attributes a, Promise *pp)
+int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 {
     char comm[CF_BUFSIZE], line[CF_BUFSIZE];
     FILE *pfp;
@@ -540,7 +540,7 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
 
         if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -551,13 +551,13 @@ int VerifyMount(char *name, Attributes a, Promise *pp)
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Mounting %s to keep promise\n", mountpt);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Mounting %s to keep promise\n", mountpt);
     return 0;
 }
 
 /*******************************************************************/
 
-int VerifyUnmount(char *name, Attributes a, Promise *pp)
+int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 {
     char comm[CF_BUFSIZE], line[CF_BUFSIZE];
     FILE *pfp;
@@ -582,7 +582,7 @@ int VerifyUnmount(char *name, Attributes a, Promise *pp)
 
         if ((strstr(line, "busy")) || (strstr(line, "Busy")))
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -590,7 +590,7 @@ int VerifyUnmount(char *name, Attributes a, Promise *pp)
         cf_pclose(pfp);
     }
 
-    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Unmounting %s to keep promise\n", mountpt);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Unmounting %s to keep promise\n", mountpt);
     return 0;
 }
 

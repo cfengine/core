@@ -59,15 +59,15 @@ static pthread_attr_t threads_attrs;
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 static void ThisAgentInit(void);
-static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
-static void Apoptosis(void);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
+static void Apoptosis(EvalContext *ctx);
 
 static bool LocalExecInThread(const ExecConfig *config);
 
-void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
-void KeepPromises(Policy *policy, ExecConfig *config);
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
+void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
 static void DestroyExecConfig(ExecConfig *config);
@@ -125,15 +125,16 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     Policy *policy = NULL;
-    if (GenericAgentCheckPolicy(config, false))
+    if (GenericAgentCheckPolicy(ctx, config, false))
     {
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
     else if (config->tty_interactive)
     {
@@ -142,12 +143,12 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass("failsafe_fallback");
+        HardClass(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
     ThisAgentInit();
 
@@ -163,7 +164,7 @@ int main(int argc, char *argv[])
         .agent_expireafter = 10080,
     };
 
-    KeepPromises(policy, &exec_config);
+    KeepPromises(ctx, policy, &exec_config);
 
 #ifdef __MINGW32__
     if (WINSERVICE)
@@ -173,7 +174,7 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(policy, config, &exec_config, report_context);
+        StartServer(ctx, policy, config, &exec_config, report_context);
     }
 
     ReportContextDestroy(report_context);
@@ -186,7 +187,7 @@ int main(int argc, char *argv[])
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static GenericAgentConfig *CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -210,7 +211,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -219,11 +220,11 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(optarg);
+            NewClassesFromString(ctx, optarg);
             break;
 
         case 'N':
-            NegateClassesFromString(optarg);
+            NegateClassesFromString(ctx, optarg);
             break;
 
         case 'I':
@@ -238,7 +239,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass("opt_dry_run");
+            HardClass(ctx, "opt_dry_run");
             break;
 
         case 'L':
@@ -337,7 +338,7 @@ static double GetSplay(void)
 /*****************************************************************************/
 /* Might be called back from NovaWin_StartExecService */
 
-void KeepPromises(Policy *policy, ExecConfig *config)
+void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
 {
     bool schedule_is_specified = false;
 
@@ -348,7 +349,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -440,7 +441,7 @@ void KeepPromises(Policy *policy, ExecConfig *config)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -471,7 +472,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
         }
 
         /* Kill previous instances of cf-execd if those are still running */
-        Apoptosis();
+        Apoptosis(ctx);
 
         /* FIXME: kludge. This code re-sets "last" lock to the one we have
            acquired a few lines before. If the cf-execd is terminated, this lock
@@ -529,7 +530,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, ExecConfig *exec_co
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(&policy, config, exec_config, report_context))
+            if (ScheduleRun(ctx, &policy, config, exec_config, report_context))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -585,7 +586,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void Apoptosis()
+static void Apoptosis(EvalContext *ctx)
 {
     Promise pp = { 0 };
     Rlist *signals = NULL, *owners = NULL;
@@ -639,7 +640,7 @@ static void Apoptosis()
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
-        VerifyProcessesPromise(&pp);
+        VerifyProcessesPromise(ctx, &pp);
     }
 
     DeleteItemList(PROCESSTABLE);
@@ -657,9 +658,9 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(const char *input_file, const Rlist *input_files, const ReportContext *report_context)
+static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const Rlist *input_files, const ReportContext *report_context)
 {
-    if (NewPromiseProposals(input_file, input_files))
+    if (NewPromiseProposals(ctx, input_file, input_files))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
@@ -681,7 +682,7 @@ static Reload CheckNewPromises(const char *input_file, const Rlist *input_files,
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
 {
     Item *ip;
 
@@ -690,7 +691,7 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
 
 // recheck license (in case of license updates or expiry)
 
-    if (EnterpriseExpiry())
+    if (EnterpriseExpiry(ctx))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
@@ -700,16 +701,16 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(config->input_file, InputFiles(*policy), report_context) == RELOAD_FULL)
+    if (CheckNewPromises(ctx, config->input_file, InputFiles(ctx, *policy), report_context) == RELOAD_FULL)
     {
         /* Full reload */
 
         CfOut(OUTPUT_LEVEL_INFORM, "", "Re-reading promise file %s..\n", config->input_file);
 
-        DeleteAlphaList(&VHEAP);
-        InitAlphaList(&VHEAP);
-        DeleteAlphaList(&VHARDHEAP);
-        InitAlphaList(&VHARDHEAP);
+        DeleteAlphaList(&ctx->heap_soft);
+        InitAlphaList(&ctx->heap_soft);
+        DeleteAlphaList(&ctx->heap_hard);
+        InitAlphaList(&ctx->heap_hard);
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
 
@@ -742,31 +743,31 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
         NewScope("control_common");
         NewScope("remote_access");
 
-        GetNameInfo3();
-        GetInterfacesInfo(AGENT_TYPE_EXECUTOR);
-        Get3Environment();
-        BuiltinClasses();
-        OSClasses();
+        GetNameInfo3(ctx);
+        GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
+        Get3Environment(ctx);
+        BuiltinClasses(ctx);
+        OSClasses(ctx);
 
-        HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+        HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
-        SetReferenceTime(true);
+        SetReferenceTime(ctx, true);
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
-        *policy = GenericAgentLoadPolicy(AGENT_TYPE_EXECUTOR, config, report_context);
-        KeepPromises(*policy, exec_config);
+        *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_EXECUTOR, config, report_context);
+        KeepPromises(ctx, *policy, exec_config);
     }
     else
     {
         /* Environment reload */
 
-        DeleteAlphaList(&VHEAP);
-        InitAlphaList(&VHEAP);
+        DeleteAlphaList(&ctx->heap_soft);
+        InitAlphaList(&ctx->heap_soft);
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
-        DeleteAlphaList(&VHARDHEAP);
-        InitAlphaList(&VHARDHEAP);
+        DeleteAlphaList(&ctx->heap_hard);
+        InitAlphaList(&ctx->heap_hard);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
@@ -779,18 +780,18 @@ static bool ScheduleRun(Policy **policy, GenericAgentConfig *config, ExecConfig 
         NewScope("mon");
         NewScope("sys");
 
-        GetInterfacesInfo(AGENT_TYPE_EXECUTOR);
-        Get3Environment();
-        BuiltinClasses();
-        OSClasses();
-        SetReferenceTime(true);
+        GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
+        Get3Environment(ctx);
+        BuiltinClasses(ctx);
+        OSClasses(ctx);
+        SetReferenceTime(ctx, true);
     }
 
     for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking schedule %s...\n", ip->name);
 
-        if (IsDefinedClass(ip->name, NULL))
+        if (IsDefinedClass(ctx, ip->name, NULL))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), ip->name);
             return true;

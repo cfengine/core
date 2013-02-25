@@ -43,9 +43,9 @@ typedef enum
     MONITOR_CONTROL_NONE
 } MonitorControl;
 
-static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
-static void KeepPromises(Policy *policy, const ReportContext *report_context);
+static void ThisAgentInit(EvalContext *ctx);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -103,27 +103,29 @@ static const char *HINTS[14] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
-    ThisAgentInit();
-    KeepPromises(policy, report_context);
+    ThisAgentInit(ctx);
+    KeepPromises(ctx, policy, report_context);
 
     MonitorStartServer(policy, report_context);
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
     return 0;
 }
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -140,7 +142,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             NO_FORK = true;
             break;
@@ -198,7 +200,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(Policy *policy, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     Rval retval;
 
@@ -209,7 +211,7 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -243,12 +245,12 @@ static void KeepPromises(Policy *policy, const ReportContext *report_context)
 /* Level 1                                                                   */
 /*****************************************************************************/
 
-static void ThisAgentInit(void)
+static void ThisAgentInit(EvalContext *ctx)
 {
     umask(077);
     sprintf(VPREFIX, "cf-monitord");
 
-    SetReferenceTime(false);
+    SetReferenceTime(ctx, false);
     SetStartTime();
 
     signal(SIGINT, HandleSignalsForDaemon);

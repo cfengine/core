@@ -29,6 +29,6 @@
 #include "cf3.defs.h"
 
 void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp);
+int ConsiderFile(EvalContext *ctx, const char *nodename, char *path, Attributes attr, Promise *pp);
 
 #endif

@@ -84,7 +84,7 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     return rp;
 }
 
-Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
+Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelist)
 {
     Rlist *rps, *deref_listoflists = NULL;
     Rval retval;
@@ -126,7 +126,7 @@ Rlist *NewIterationContext(const char *scopeid, Rlist *namelist)
                 {
                     FnCall *fp = (FnCall *) rps->item;
 
-                    newret = FnCallEvaluate(fp, NULL).rval;
+                    newret = FnCallEvaluate(ctx, fp, NULL).rval;
                     FnCallDestroy(fp);
                     rps->item = newret.item;
                     rps->type = newret.type;

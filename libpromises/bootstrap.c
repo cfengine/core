@@ -35,6 +35,10 @@
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -74,7 +78,7 @@ static bool BootstrapAllowed(void)
 
 /*****************************************************************************/
 
-void CheckAutoBootstrap()
+void CheckAutoBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
@@ -138,9 +142,9 @@ void CheckAutoBootstrap()
 
     printf(" -> Attempting to initiate promised autonomous services...\n\n");
 
-    am_appliance = IsDefinedClass(CanonifyName(POLICY_SERVER), NULL);
+    am_appliance = IsDefinedClass(ctx, CanonifyName(POLICY_SERVER), NULL);
     snprintf(name, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(POLICY_SERVER));
-    am_appliance |= IsDefinedClass(name, NULL);
+    am_appliance |= IsDefinedClass(ctx, name, NULL);
 
     if (strlen(POLICY_SERVER) == 0)
     {
@@ -152,7 +156,7 @@ void CheckAutoBootstrap()
 
     if (am_appliance)
     {
-        HardClass("am_policy_hub");
+        HardClass(ctx, "am_policy_hub");
         printf
             (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
         printf

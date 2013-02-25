@@ -53,7 +53,7 @@ int IsEnterprise(void)
 
 /* all agents: sysinfo.c */
 
-void EnterpriseContext(void)
+void EnterpriseContext(EvalContext *ctx)
 {
 }
 
@@ -66,7 +66,7 @@ void LoadSlowlyVaryingObservations()
 /* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
 
 
-int EnterpriseExpiry(void)
+int EnterpriseExpiry(EvalContext *ctx)
 {
     return false;
 }
@@ -75,7 +75,7 @@ int EnterpriseExpiry(void)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(const Promise *pp)
+const char *PromiseID(EvalContext *ctx, const Promise *pp)
 {
     return "";
 }
@@ -84,7 +84,7 @@ const char *PromiseID(const Promise *pp)
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
+void NotePromiseCompliance(EvalContext *ctx, const Promise *pp, double val, PromiseState state, char *reason)
 {
 }
 
@@ -114,11 +114,11 @@ void LogTotalCompliance(const char *version, int background_tasks)
 /* all agents: constraints.c */
 
 
-void PreSanitizePromise(Promise *pp)
+void PreSanitizePromise(EvalContext *ctx, Promise *pp)
 {
 }
 
-void NewPromiser(Promise *pp)
+void NewPromiser(EvalContext *ctx, Promise *pp)
 {
 }
 
@@ -171,7 +171,7 @@ void LastSawBundle(const Bundle *bundle, double comp)
 /* cf-agent: evalfunction.c */
 
 
-char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv)
+char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
     return "";
@@ -219,27 +219,16 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
     return NULL;
 }
 
-bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
+bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Nova");
     return false;
 }
 
-
-/* cf-agent: verify_databases.c */
-
-
-#if defined(__MINGW32__)
-void VerifyRegistryPromise(Attributes a, Promise *pp)
-{
-}
-#endif
-
-
 /* cf-agent: verify_services.c */
 
 
-void VerifyWindowsService(Attributes a, Promise *pp)
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Nova");
 }
@@ -275,7 +264,7 @@ void TryCollectCall(void)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
-int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call are only supported in the Enterprise ");

@@ -27,8 +27,8 @@
 
 #include "cf3.defs.h"
 
-void VerifyOutputsPromise(Promise *pp);
-void SetPromiseOutputs(Promise *pp);
+void VerifyOutputsPromise(EvalContext *ctx, Promise *pp);
+void SetPromiseOutputs(EvalContext *ctx, Promise *pp);
 void SetBundleOutputs(char *name);
 void ResetBundleOutputs(char *name);
 

@@ -29,7 +29,7 @@
 
 typedef struct Dir_ Dir;
 
-Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp);
+Dir *OpenDirForPromise(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
 Dir *OpenDirLocal(const char *dirname);
 
 const struct dirent *ReadDir(Dir *dir);

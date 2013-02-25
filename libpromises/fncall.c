@@ -148,7 +148,7 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-FnCallResult FnCallEvaluate(FnCall *fp, const Promise *pp)
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 {
     Rlist *expargs;
     const FnCallType *this = FnCallTypeGet(fp->name);
@@ -179,12 +179,12 @@ FnCallResult FnCallEvaluate(FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(pp->classes, pp->ns))
+    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    expargs = NewExpArgs(fp, pp);
+    expargs = NewExpArgs(ctx, fp, pp);
 
     if (UnresolvedArgs(expargs))
     {
@@ -201,7 +201,7 @@ FnCallResult FnCallEvaluate(FnCall *fp, const Promise *pp)
         fp->ns = "default";
     }
     
-    FnCallResult result = CallFunction(this, fp, expargs);
+    FnCallResult result = CallFunction(ctx, this, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

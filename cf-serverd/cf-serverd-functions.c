@@ -84,7 +84,7 @@ static const char *HINTS[16] =
 
 /*******************************************************************/
 
-static void KeepHardClasses()
+static void KeepHardClasses(EvalContext *ctx)
 {
     char name[CF_BUFSIZE];
     if (name != NULL)
@@ -103,16 +103,16 @@ static void KeepHardClasses()
 
             if (stat(name, &sb) != -1)
             {
-                HardClass("am_policy_hub");
+                HardClass(ctx, "am_policy_hub");
             }
         }
     }
 
 #if defined HAVE_NOVA
-    HardClass("nova_edition");
-    HardClass("enterprise_edition");
+    HardClass(ctx, "nova_edition");
+    HardClass(ctx, "enterprise_edition");
 #else
-    HardClass("community_edition");
+    HardClass(ctx, "community_edition");
 #endif
 }
 
@@ -122,7 +122,7 @@ static int GenerateAvahiConfig(const char *path);
 #endif
 #endif
 
-GenericAgentConfig *CheckOpts(int argc, char **argv)
+GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     char ld_library_path[CF_BUFSIZE];
@@ -154,11 +154,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(optarg);
+            NewClassesFromString(ctx, optarg);
             break;
 
         case 'N':
-            NegateClassesFromString(optarg);
+            NegateClassesFromString(ctx, optarg);
             break;
 
         case 'I':
@@ -239,7 +239,7 @@ void ThisAgentInit(void)
 
 /*******************************************************************/
 
-void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     int sd = -1, sd_reply;
     fd_set rset;
@@ -267,7 +267,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
     signal(SIGUSR1, HandleSignalsForDaemon);
     signal(SIGUSR2, HandleSignalsForDaemon);
 
-    sd = SetServerListenState(QUEUESIZE);
+    sd = SetServerListenState(ctx, QUEUESIZE);
 
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 1;
@@ -325,7 +325,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(&policy, config, report_context);
+                CheckFileChanges(ctx, &policy, config, report_context);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -382,7 +382,7 @@ void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext
                 snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
                 ThreadUnlock(cft_getaddr);
 
-                ServerEntryPoint(sd_reply, ipaddr, SV);
+                ServerEntryPoint(ctx, sd_reply, ipaddr, SV);
             }
         }
     }
@@ -552,16 +552,16 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    if (EnterpriseExpiry())
+    if (EnterpriseExpiry(ctx))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
     }
 
     CfDebug("Checking file updates on %s\n", config->input_file);
 
-    if (NewPromiseProposals(config->input_file, InputFiles(*policy)))
+    if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
@@ -573,10 +573,10 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
 
             DeleteItemList(VNEGHEAP);
             
-            DeleteAlphaList(&VHEAP);
-            InitAlphaList(&VHEAP);
-            DeleteAlphaList(&VHARDHEAP);
-            InitAlphaList(&VHARDHEAP);
+            DeleteAlphaList(&ctx->heap_soft);
+            InitAlphaList(&ctx->heap_soft);
+            DeleteAlphaList(&ctx->heap_hard);
+            InitAlphaList(&ctx->heap_hard);
             
             DeleteAlphaList(&VADDCLASSES);
             InitAlphaList(&VADDCLASSES);
@@ -630,7 +630,7 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
             SetPolicyServer(POLICY_SERVER);
             NewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
-            if (EnterpriseExpiry())
+            if (EnterpriseExpiry(ctx))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
@@ -642,18 +642,18 @@ void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportC
             NewScope("control_common");
             NewScope("mon");
             NewScope("remote_access");
-            GetNameInfo3();
-            GetInterfacesInfo(AGENT_TYPE_SERVER);
-            Get3Environment();
-            BuiltinClasses();
-            OSClasses();
-            KeepHardClasses();
+            GetNameInfo3(ctx);
+            GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
+            Get3Environment(ctx);
+            BuiltinClasses(ctx);
+            OSClasses(ctx);
+            KeepHardClasses(ctx);
 
-            HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
-            SetReferenceTime(true);
-            *policy = GenericAgentLoadPolicy(AGENT_TYPE_SERVER, config, report_context);
-            KeepPromises(*policy, config, report_context);
+            SetReferenceTime(ctx, true);
+            *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);
+            KeepPromises(ctx, *policy, config, report_context);
             Summarize();
 
         }

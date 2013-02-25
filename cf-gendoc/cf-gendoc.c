@@ -71,10 +71,11 @@ static const char *HINTS[] =
 
 int main(int argc, char *argv[])
 {
+    EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     if (GENERATE_XML)
     {
@@ -87,6 +88,7 @@ int main(int argc, char *argv[])
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
     return 0;
 }
 

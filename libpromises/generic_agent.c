@@ -68,14 +68,14 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
-static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void CheckWorkingDirectories(void);
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
-static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
+static Policy *Cf3ParseFile(EvalContext *ctx, const GenericAgentConfig *config, const char *filename, Seq *errors);
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
-static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
-static void CheckVariablePromises(char *scope, Seq *var_promises);
-static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context);
+static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
+static void CheckVariablePromises(EvalContext *ctx, char *scope, Seq *var_promises);
+static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
 
 #if !defined(__MINGW32__)
@@ -100,7 +100,7 @@ static void SanitizeEnvironment()
 
 #if !defined(HAVE_NOVA)
 
-void CheckLicenses(void)
+void CheckLicenses(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
@@ -110,7 +110,7 @@ void CheckLicenses(void)
 
     if (stat(name, &sb) != -1)
     {
-        HardClass("am_policy_hub");
+        HardClass(ctx, "am_policy_hub");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Additional class defined: am_policy_hub");
     }
 }
@@ -119,7 +119,7 @@ void CheckLicenses(void)
 
 /*****************************************************************************/
 
-void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context)
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context)
 {
     char vbuff[CF_BUFSIZE];
 
@@ -131,19 +131,19 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     CF_DEFAULT_DIGEST_LEN = CF_MD5_LEN;
 #endif
 
-    InitializeGA(config);
+    InitializeGA(ctx, config);
 
-    SetReferenceTime(true);
+    SetReferenceTime(ctx, true);
     SetStartTime();
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    HardClass(CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
     SetNewScope("sys");
 
-    if (EnterpriseExpiry())
+    if (EnterpriseExpiry(ctx))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
@@ -163,14 +163,14 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     NewScope("const");
     NewScope("match");
     NewScope("mon");
-    GetNameInfo3();
-    GetInterfacesInfo(config->agent_type);
+    GetNameInfo3(ctx);
+    GetInterfacesInfo(ctx, config->agent_type);
 
-    Get3Environment();
-    BuiltinClasses();
-    OSClasses();
+    Get3Environment(ctx);
+    BuiltinClasses(ctx);
+    OSClasses(ctx);
 
-    LoadPersistentContext();
+    LoadPersistentContext(ctx);
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
@@ -180,7 +180,7 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
 
     if (BOOTSTRAP)
     {
-        CheckAutoBootstrap();
+        CheckAutoBootstrap(ctx);
     }
     else
     {
@@ -197,7 +197,7 @@ void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *repo
     SetPolicyServer(POLICY_SERVER);
 }
 
-static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_validation)
+static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
 {
     bool check_policy = false;
 
@@ -211,7 +211,7 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
         check_policy = true;
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Input file is outside default repository, validating it");
     }
-    if (NewPromiseProposals(config->input_file, NULL))
+    if (NewPromiseProposals(ctx, config->input_file, NULL))
     {
         check_policy = true;
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Input file is changed since last validation, validating it");
@@ -225,11 +225,11 @@ static bool IsPolicyPrecheckNeeded(GenericAgentConfig *config, bool force_valida
     return check_policy;
 }
 
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation)
+bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
 {
     if (!MissingInputFile(config->input_file))
     {
-        if (IsPolicyPrecheckNeeded(config, force_validation))
+        if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
             bool policy_check_ok = CheckPromises(config->input_file);
 
@@ -355,7 +355,7 @@ int CheckPromises(const char *input_file)
 
 /*****************************************************************************/
 
-Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
     // TODO: remove PARSING
     PARSING = true;
@@ -363,14 +363,14 @@ Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config,
     PROMISETIME = time(NULL);
 
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
-    Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
+    Policy *main_policy = Cf3ParseFile(ctx, config, config->input_file, errors);
 
-    HashVariables(main_policy, NULL, report_context);
-    HashControls(main_policy, config);
+    HashVariables(ctx, main_policy, NULL, report_context);
+    HashControls(ctx, main_policy, config);
 
     if (PolicyIsRunnable(main_policy))
     {
-        Policy *aux_policy = Cf3ParseFiles(config, InputFiles(main_policy), errors, report_context);
+        Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
         if (aux_policy)
         {
             main_policy = PolicyMerge(main_policy, aux_policy);
@@ -379,7 +379,7 @@ Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config,
         if (config->check_runnable)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-            PolicyCheckRunnable(main_policy, errors, config->ignore_missing_bundles);
+            PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
         }
     }
 
@@ -418,9 +418,9 @@ Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config,
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n",
                  AgentTypeToString(agent_type));
 
-    ShowContext(report_context);
+    ShowContext(ctx, report_context);
 
-    VerifyPromises(main_policy, config, report_context);
+    VerifyPromises(ctx, main_policy, config, report_context);
 
     if (agent_type != AGENT_TYPE_COMMON)
     {
@@ -452,7 +452,7 @@ void CloseLog(void)
 /* Level 1                                                         */
 /*******************************************************************/
 
-void InitializeGA(GenericAgentConfig *config)
+void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 {
     int force = false;
     struct stat statbuf, sb;
@@ -462,30 +462,30 @@ void InitializeGA(GenericAgentConfig *config)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    HardClass("any");
+    HardClass(ctx, "any");
 
 #if defined HAVE_NOVA
-    HardClass("nova_edition");
-    HardClass("enterprise_edition");
+    HardClass(ctx, "nova_edition");
+    HardClass(ctx, "enterprise_edition");
 #else
-    HardClass("community_edition");
+    HardClass(ctx, "community_edition");
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
     if (VERBOSE)
     {
-        HardClass("verbose_mode");
+        HardClass(ctx, "verbose_mode");
     }
 
     if (INFORM)
     {
-        HardClass("inform_mode");
+        HardClass(ctx, "inform_mode");
     }
 
     if (DEBUG)
     {
-        HardClass("debug_mode");
+        HardClass(ctx, "debug_mode");
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
@@ -607,7 +607,7 @@ void InitializeGA(GenericAgentConfig *config)
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context)
 {
     Policy *policy = PolicyNew();
 
@@ -628,17 +628,17 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Se
                 continue;
             }
 
-            returnval = EvaluateFinalRval("sys", (Rval) {rp->item, rp->type}, true, NULL);
+            returnval = EvaluateFinalRval(ctx, "sys", (Rval) {rp->item, rp->type}, true, NULL);
 
             Policy *aux_policy = NULL;
             switch (returnval.type)
             {
             case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(config, returnval.item, errors);
+                aux_policy = Cf3ParseFile(ctx, config, returnval.item, errors);
                 break;
 
             case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(config, returnval.item, errors, report_context);
+                aux_policy = Cf3ParseFiles(ctx, config, returnval.item, errors, report_context);
                 break;
 
             default:
@@ -654,11 +654,11 @@ static Policy *Cf3ParseFiles(GenericAgentConfig *config, const Rlist *inputs, Se
             RvalDestroy(returnval);
         }
 
-        HashVariables(policy, NULL, report_context);
-        HashControls(policy, config);
+        HashVariables(ctx, policy, NULL, report_context);
+        HashControls(ctx, policy, config);
     }
 
-    HashVariables(policy, NULL, report_context);
+    HashVariables(ctx, policy, NULL, report_context);
 
     return policy;
 }
@@ -683,7 +683,7 @@ static bool MissingInputFile(const char *input_file)
 
 /*******************************************************************/
 
-int NewPromiseProposals(const char *input_file, const Rlist *input_files)
+int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files)
 {
     Rlist *sl;
     struct stat sb;
@@ -748,7 +748,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
     snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
     MapName(filename);
 
-    if (IsNewerFileTree(filename, PROMISETIME))
+    if (IsNewerFileTree(ctx, filename, PROMISETIME))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Quick search detected file changes");
         return true;
@@ -764,7 +764,7 @@ int NewPromiseProposals(const char *input_file, const Rlist *input_files)
         }
         else
         {
-            Rval returnval = EvaluateFinalRval("sys", (Rval) { rp->item, rp->type }, true, NULL);
+            Rval returnval = EvaluateFinalRval(ctx, "sys", (Rval) { rp->item, rp->type }, true, NULL);
 
             switch (returnval.type)
             {
@@ -916,7 +916,7 @@ void CloseReports(const char *agents, ReportContext *report_context)
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors)
+static Policy *Cf3ParseFile(EvalContext *ctx, const GenericAgentConfig *config, const char *filename, Seq *errors)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -981,7 +981,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
 
     assert(policy);
 
-    return PolicyCheckPartial(policy, errors) ? policy : NULL;
+    return PolicyCheckPartial(ctx, policy, errors) ? policy : NULL;
 }
 
 /*******************************************************************/
@@ -1005,7 +1005,7 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
     return NULL;
 }
 
-const Rlist *InputFiles(Policy *policy)
+const Rlist *InputFiles(EvalContext *ctx, Policy *policy)
 {
     Body *body_common_control = PolicyGetBody(policy, NULL, "common", "control");
     if (!body_common_control)
@@ -1015,7 +1015,7 @@ const Rlist *InputFiles(Policy *policy)
     }
 
     Seq *potential_inputs = BodyGetConstraint(body_common_control, "inputs");
-    Constraint *cp = EffectiveConstraint(potential_inputs);
+    Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
     SeqDestroy(potential_inputs);
 
     return cp ? cp->rval.item : NULL;
@@ -1250,7 +1250,7 @@ const char *GenericAgentResolveInputPath(const char *filename, const char *base_
 
 /*******************************************************************/
 
-void CompilationReport(Policy *policy, char *fname)
+void CompilationReport(EvalContext *ctx, Policy *policy, char *fname)
 {
 #if defined(HAVE_NOVA)
     ReportContext *compilation_report_context = Nova_OpenCompilationReportFiles(fname);
@@ -1258,7 +1258,7 @@ void CompilationReport(Policy *policy, char *fname)
     ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(compilation_report_context, policy->bundles, policy->bodies);
+    ShowPromises(ctx, compilation_report_context, policy->bundles, policy->bodies);
 
     ReportContextDestroy(compilation_report_context);
 }
@@ -1286,7 +1286,7 @@ ReportContext *OpenCompilationReportFiles(const char *fname)
 
 /*******************************************************************/
 
-static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
 
 /* Now look once through ALL the bundles themselves */
@@ -1305,13 +1305,13 @@ static void VerifyPromises(Policy *policy, GenericAgentConfig *config, const Rep
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-                ExpandPromise(AGENT_TYPE_COMMON, scope, pp, NULL, report_context);
+                ExpandPromise(ctx, AGENT_TYPE_COMMON, scope, pp, NULL, report_context);
             }
         }
     }
 
-    HashVariables(policy, NULL, report_context);
-    HashControls(policy, config);
+    HashVariables(ctx, policy, NULL, report_context);
+    HashControls(ctx, policy, config);
 
     // TODO: need to move this inside PolicyCheckRunnable eventually.
     if (!config->bundlesequence && config->check_runnable)
@@ -1360,7 +1360,7 @@ static void PrependAuditFile(char *file)
 /* Level 3                                                         */
 /*******************************************************************/
 
-static void CheckVariablePromises(char *scope, Seq *var_promises)
+static void CheckVariablePromises(EvalContext *ctx, char *scope, Seq *var_promises)
 {
     int allow_redefine = false;
 
@@ -1369,26 +1369,26 @@ static void CheckVariablePromises(char *scope, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        ConvergeVarHashPromise(scope, pp, allow_redefine);
+        ConvergeVarHashPromise(ctx, scope, pp, allow_redefine);
     }
 }
 
 /*******************************************************************/
 
-static void CheckCommonClassPromises(Seq *class_promises, const ReportContext *report_context)
+static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking common class promises...\n");
 
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
         Promise *pp = SeqAt(class_promises, i);
-        ExpandPromise(AGENT_TYPE_AGENT, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
+        ExpandPromise(ctx, AGENT_TYPE_AGENT, THIS_BUNDLE, pp, KeepClassContextPromise, report_context);
     }
 }
 
 /*******************************************************************/
 
-static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
+static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
 {
     const BodySyntax *bp = NULL;
     Rval returnval;
@@ -1414,7 +1414,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
     {
         Constraint *cp = SeqAt(controllist, i);
 
-        if (IsExcluded(cp->classes, NULL))
+        if (IsExcluded(ctx, cp->classes, NULL))
         {
             continue;
         }
@@ -1425,7 +1425,7 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
         }
         else
         {
-            returnval = EvaluateFinalRval(CONTEXTID, cp->rval, true, NULL);
+            returnval = EvaluateFinalRval(ctx, CONTEXTID, cp->rval, true, NULL);
         }
 
         DeleteVariable(scope, cp->lval);
@@ -1450,8 +1450,8 @@ static void CheckControlPromises(GenericAgentConfig *config, char *scope, char *
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             NewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
             NewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
-            DeleteClass("undefined_domain", NULL);
-            HardClass(VDOMAIN);
+            DeleteClass(ctx, "undefined_domain", NULL);
+            HardClass(ctx, VDOMAIN);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
@@ -1664,7 +1664,7 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void HashVariables(Policy *policy, const char *name, const ReportContext *report_context)
+void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Initiate variable convergence...\n");
 
@@ -1691,14 +1691,14 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
             if (strcmp(sp->name, "vars") == 0)
             {
-                CheckVariablePromises(bp->name, sp->promises);
+                CheckVariablePromises(ctx, bp->name, sp->promises);
             }
 
             // We must also set global classes here?
 
             if (strcmp(bp->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
             {
-                CheckCommonClassPromises(sp->promises, report_context);
+                CheckCommonClassPromises(ctx, sp->promises, report_context);
             }
 
         }
@@ -1707,7 +1707,7 @@ void HashVariables(Policy *policy, const char *name, const ReportContext *report
 
 /*******************************************************************/
 
-void HashControls(const Policy *policy, GenericAgentConfig *config)
+void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
     char buf[CF_BUFSIZE];
 
@@ -1723,7 +1723,7 @@ void HashControls(const Policy *policy, GenericAgentConfig *config)
             CfDebug("Initiate control variable convergence...%s\n", buf);
             DeleteScope(buf);
             SetNewScope(buf);
-            CheckControlPromises(config, buf, bdp->type, bdp->conlist);
+            CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);
         }
     }
 }

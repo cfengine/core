@@ -33,7 +33,7 @@
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 int EndMeasureValueMs(struct timespec start);
-void EndMeasurePromise(struct timespec start, Promise *pp);
+void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp);
 void NoteClassUsage(AlphaList list, int purge);
 
 #endif

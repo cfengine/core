@@ -35,7 +35,7 @@
 static int CfSetuid(uid_t uid, gid_t gid);
 #endif
 
-int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
+int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
 {
     char retcodeStr[128] = { 0 };
     int result = true;
@@ -48,7 +48,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -57,7 +57,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -66,7 +66,7 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                  "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
                  retcode);
             result = false;
@@ -85,13 +85,13 @@ int VerifyCommandRetcode(int retcode, int fallback, Attributes a, Promise *pp)
     {
         if (retcode == 0)
         {
-            cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
                  pp->promiser);
             result = true;
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                  " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
                  retcode);
             result = false;
@@ -691,7 +691,7 @@ int cf_pclose(FILE *pp)
 
 /*******************************************************************/
 
-int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
+int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 /**
  * Defines command failure/success with cfPS based on exit code.
  */
@@ -753,11 +753,11 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
     if (!WIFEXITED(status))
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 
-    VerifyCommandRetcode(WEXITSTATUS(status), true, a, pp);
+    VerifyCommandRetcode(ctx, WEXITSTATUS(status), true, a, pp);
 
     return status;
 
@@ -774,13 +774,13 @@ int cf_pclose_def(FILE *pfp, Attributes a, Promise *pp)
 
     if (WIFSIGNALED(status))
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
         return -1;
     }
 
     if (!WIFEXITED(status))
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 

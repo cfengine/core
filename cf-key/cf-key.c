@@ -36,6 +36,7 @@
 #include "keyring.h"
 #include "cfstream.h"
 #include "communication.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
@@ -102,12 +103,13 @@ static const char *HINTS[17] =
 
 int main(int argc, char *argv[])
 {
+    EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
     THIS_AGENT_TYPE = config->agent_type;
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     if (SHOWHOSTS)
     {
@@ -140,6 +142,7 @@ int main(int argc, char *argv[])
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
     return 0;
 }
 

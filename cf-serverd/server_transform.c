@@ -86,12 +86,12 @@ typedef enum
     SERVER_CONTROL_NONE
 } ServerControl;
 
-static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
-static void KeepServerPromise(Promise *pp);
+static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
-static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
-static void KeepControlPromises(Policy *policy, GenericAgentConfig *config);
+static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
@@ -117,19 +117,19 @@ extern Auth *ROLESTOP;
 
 /*******************************************************************/
 
-void KeepFileAccessPromise(Promise *pp);
-void KeepLiteralAccessPromise(Promise *pp, char *type);
-void KeepQueryAccessPromise(Promise *pp, char *type);
+void KeepFileAccessPromise(EvalContext *ctx, Promise *pp);
+void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type);
+void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    KeepContextBundles(policy, report_context);
-    KeepControlPromises(policy, config);
-    KeepPromiseBundles(policy, report_context);
+    KeepContextBundles(ctx, policy, report_context);
+    KeepControlPromises(ctx, policy, config);
+    KeepPromiseBundles(ctx, policy, report_context);
 }
 
 /*******************************************************************/
@@ -246,7 +246,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
+static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Rval retval;
 
@@ -261,7 +261,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
     Banner("Server control promises..");
 
-    HashControls(policy, config);
+    HashControls(ctx, policy, config);
 
 /* Now expand */
 
@@ -272,7 +272,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -499,7 +499,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
 /*********************************************************************/
 
-static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
+static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     char *scope;
 
@@ -530,12 +530,12 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->ns, NULL, NULL);
+                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -544,7 +544,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     char *scope;
 
@@ -575,12 +575,12 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->ns, NULL, NULL);
+                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -591,17 +591,17 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
     }
 
-    if (VarClassExcluded(pp, &sp))
+    if (VarClassExcluded(ctx, pp, &sp))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -613,33 +613,33 @@ static void KeepServerPromise(Promise *pp)
 
     if (strcmp(pp->agentsubtype, "classes") == 0)
     {
-        KeepClassContextPromise(pp);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    sp = (char *) ConstraintGetRvalValue("resource_type", pp, RVAL_TYPE_SCALAR);
+    sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
-        KeepLiteralAccessPromise(pp, "literal");
+        KeepLiteralAccessPromise(ctx, pp, "literal");
         return;
     }
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
-        KeepLiteralAccessPromise(pp, "variable");
+        KeepLiteralAccessPromise(ctx, pp, "variable");
         return;
     }
     
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
-        KeepQueryAccessPromise(pp, "query");
+        KeepQueryAccessPromise(ctx, pp, "query");
         return;
     }
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
-        KeepLiteralAccessPromise(pp, "context");
+        KeepLiteralAccessPromise(ctx, pp, "context");
         return;
     }
 
@@ -647,20 +647,20 @@ static void KeepServerPromise(Promise *pp)
 
     if (strcmp(pp->agentsubtype, "access") == 0)
     {
-        KeepFileAccessPromise(pp);
+        KeepFileAccessPromise(ctx, pp);
         return;
     }
 
     if (strcmp(pp->agentsubtype, "roles") == 0)
     {
-        KeepServerRolePromise(pp);
+        KeepServerRolePromise(ctx, pp);
         return;
     }
 }
 
 /*********************************************************************/
 
-void KeepFileAccessPromise(Promise *pp)
+void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -687,7 +687,7 @@ void KeepFileAccessPromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
@@ -736,11 +736,11 @@ void KeepFileAccessPromise(Promise *pp)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(Promise *pp, char *type)
+void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
+    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {
@@ -801,7 +801,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
@@ -850,7 +850,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 
 /*********************************************************************/
 
-void KeepQueryAccessPromise(Promise *pp, char *type)
+void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -879,7 +879,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
@@ -928,7 +928,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
 /*********************************************************************/
 
-static void KeepServerRolePromise(Promise *pp)
+static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
 {
     Rlist *rp;
     Auth *ap;
@@ -944,7 +944,7 @@ static void KeepServerRolePromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }

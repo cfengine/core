@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -45,6 +45,10 @@
 #include "logging.h"
 #include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /*****************************************************************************/
 
 static bool ValidClassName(const char *str);
@@ -55,8 +59,7 @@ static int IsBracketed(const char *s);
 /*****************************************************************************/
 
 static AlphaList VHANDLES;
-AlphaList VHEAP;
-AlphaList VHARDHEAP;
+
 AlphaList VADDCLASSES;
 Item *VNEGHEAP = NULL;
 Item *ABORTBUNDLEHEAP = NULL;
@@ -71,7 +74,7 @@ static bool ABORTBUNDLE = false;
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int EvalClassExpression(Constraint *cp, Promise *pp)
+static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 {
     int result_and = true;
     int result_or = false;
@@ -88,7 +91,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return false;
     }
@@ -98,9 +101,9 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (IsDefinedClass(pp->promiser, pp->ns))
+    if (IsDefinedClass(ctx, pp->promiser, pp->ns))
     {
-        if (PromiseGetConstraintAsInt("persistence", pp) == 0)
+        if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
             DeletePersistentContext(pp->promiser);
@@ -113,7 +116,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     case RVAL_TYPE_FNCALL:
 
         fp = (FnCall *) cp->rval.item;  /* Special expansion of functions for control, best effort only */
-        FnCallResult res = FnCallEvaluate(fp, pp);
+        FnCallResult res = FnCallEvaluate(ctx, fp, pp);
 
         FnCallDestroy(fp);
         cp->rval = res.rval;
@@ -122,7 +125,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
         {
-            rval = EvaluateFinalRval("this", (Rval) {rp->item, rp->type}, true, pp);
+            rval = EvaluateFinalRval(ctx, "this", (Rval) {rp->item, rp->type}, true, pp);
             RvalDestroy((Rval) {rp->item, rp->type});
             rp->item = rval.item;
             rp->type = rval.type;
@@ -144,7 +147,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
         {
             return true;
         }
@@ -161,7 +164,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass((char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
         {
             return false;
         }
@@ -201,7 +204,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                NewClass(rp->item, pp->ns);
+                NewClass(ctx, rp->item, pp->ns);
                 return true;
             }
         }
@@ -252,7 +255,7 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             return false;
         }
 
-        result = IsDefinedClass((char *) (rp->item), pp->ns);
+        result = IsDefinedClass(ctx, (char *) (rp->item), pp->ns);
 
         result_and = result_and && result;
         result_or = result_or || result;
@@ -270,11 +273,11 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
                 if (strcmp(pp->bundletype, "common") == 0)
                 {
-                    NewClass(buffer, pp->ns);
+                    NewClass(ctx, buffer, pp->ns);
                 }
                 else
                 {
-                    NewBundleClass(buffer, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, buffer, pp->bundle, pp->ns);
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -305,11 +308,11 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
 
 /*******************************************************************/
 
-void KeepClassContextPromise(Promise *pp)
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a;
 
-    a = GetClassContextAttributes(pp);
+    a = GetClassContextAttributes(ctx, pp);
 
     if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
     {
@@ -319,13 +322,13 @@ void KeepClassContextPromise(Promise *pp)
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
         return;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
         return;
     }
 
@@ -333,13 +336,13 @@ void KeepClassContextPromise(Promise *pp)
 
     if (strcmp(pp->bundletype, "common") == 0)
     {
-        if (EvalClassExpression(a.context.expression, pp))
+        if (EvalClassExpression(ctx, a.context.expression, pp))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
 
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else
@@ -349,12 +352,12 @@ void KeepClassContextPromise(Promise *pp)
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(pp->promiser, pp->ns);
+                    NewClass(ctx, pp->promiser, pp->ns);
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    NewClass(pp->promiser, pp->ns);
+                    NewClass(ctx, pp->promiser, pp->ns);
                 }
             }
         }
@@ -369,11 +372,11 @@ void KeepClassContextPromise(Promise *pp)
 
     if (strcmp(pp->bundletype, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", pp->bundletype))
     {
-        if (EvalClassExpression(a.context.expression, pp))
+        if (EvalClassExpression(ctx, a.context.expression, pp))
         {
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else
@@ -385,12 +388,12 @@ void KeepClassContextPromise(Promise *pp)
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(pp->promiser, pp->ns);
+                    NewClass(ctx, pp->promiser, pp->ns);
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(pp->promiser, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, pp->promiser, pp->bundle, pp->ns);
                 }
             }
         }
@@ -404,7 +407,7 @@ void KeepClassContextPromise(Promise *pp)
 
 /*******************************************************************/
 
-void NewClass(const char *oclass, const char *ns)
+void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 {
     Item *ip;
     char context[CF_MAXVARSIZE];
@@ -433,28 +436,28 @@ void NewClass(const char *oclass, const char *ns)
         return;
     }
 
-    if (IsRegexItemIn(ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ABORTHEAP, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
     }
 
-    if (InAlphaList(&VHEAP, context))
+    if (InAlphaList(&ctx->heap_soft, context))
     {
         return;
     }
 
-    PrependAlphaList(&VHEAP, context);
+    PrependAlphaList(&ctx->heap_soft, context);
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name, ns))
+        if (IsDefinedClass(ctx, ip->name, ns))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
@@ -465,7 +468,7 @@ void NewClass(const char *oclass, const char *ns)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name, ns))
+            if (IsDefinedClass(ctx, ip->name, ns))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
@@ -477,7 +480,7 @@ void NewClass(const char *oclass, const char *ns)
 
 /*********************************************************************/
 
-void DeleteClass(const char *oclass, const char *ns)
+void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
 {
     char context[CF_MAXVARSIZE];
  
@@ -497,13 +500,13 @@ void DeleteClass(const char *oclass, const char *ns)
         }
     }
 
-    DeleteFromAlphaList(&VHEAP, context);
+    DeleteFromAlphaList(&ctx->heap_soft, context);
     DeleteFromAlphaList(&VADDCLASSES, context);
 }
 
 /*******************************************************************/
 
-void HardClass(const char *oclass)
+void HardClass(EvalContext *ctx, const char *oclass)
 {
     Item *ip;
     char context[CF_MAXVARSIZE];
@@ -522,28 +525,28 @@ void HardClass(const char *oclass)
         return;
     }
 
-    if (IsRegexItemIn(ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ABORTHEAP, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
     }
 
-    if (InAlphaList(&VHARDHEAP, context))
+    if (InAlphaList(&ctx->heap_hard, context))
     {
         return;
     }
 
-    PrependAlphaList(&VHARDHEAP, context);
+    PrependAlphaList(&ctx->heap_hard, context);
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name, NULL))
+        if (IsDefinedClass(ctx, ip->name, NULL))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
             exit(1);
@@ -554,7 +557,7 @@ void HardClass(const char *oclass)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name, NULL))
+            if (IsDefinedClass(ctx, ip->name, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
@@ -566,18 +569,18 @@ void HardClass(const char *oclass)
 
 /*******************************************************************/
 
-void DeleteHardClass(const char *oclass)
+void DeleteHardClass(EvalContext *ctx, const char *oclass)
 {
     char context[CF_MAXVARSIZE];
 
     strncpy(context, oclass, CF_MAXVARSIZE);
 
-    DeleteFromAlphaList(&VHARDHEAP, oclass);
+    DeleteFromAlphaList(&ctx->heap_hard, oclass);
 }
 
 /*******************************************************************/
 
-void NewBundleClass(const char *context, const char *bundle, const char *ns)
+void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
 {
     char copy[CF_BUFSIZE];
     Item *ip;
@@ -603,19 +606,19 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
 
     CfDebug("NewBundleClass(%s)\n", copy);
     
-    if (IsRegexItemIn(ABORTBUNDLEHEAP, copy))
+    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ABORTHEAP, copy))
+    if (IsRegexItemIn(ctx, ABORTHEAP, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
         exit(1);
     }
 
-    if (InAlphaList(&VHEAP, copy))
+    if (InAlphaList(&ctx->heap_soft, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
     }
@@ -629,7 +632,7 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ip->name, ns))
+        if (IsDefinedClass(ctx, ip->name, ns))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
             exit(1);
@@ -640,7 +643,7 @@ void NewBundleClass(const char *context, const char *bundle, const char *ns)
     {
         for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ip->name, ns))
+            if (IsDefinedClass(ctx, ip->name, ns))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
@@ -1075,7 +1078,7 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(const char *classname, void *ns)
+static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname, void *ns)
 {
     char qualified_class[CF_MAXVARSIZE];
 
@@ -1112,11 +1115,11 @@ static ExpressionValue EvalTokenAsClass(const char *classname, void *ns)
     {
         return false;
     }
-    if (InAlphaList(&VHARDHEAP, (char *)classname))  // Hard classes are always unqualified
+    if (InAlphaList(&ctx->heap_hard, (char *)classname))  // Hard classes are always unqualified
     {
         return true;
     }
-    if (InAlphaList(&VHEAP, qualified_class))
+    if (InAlphaList(&ctx->heap_soft, qualified_class))
     {
         return true;
     }
@@ -1141,7 +1144,7 @@ static char *EvalVarRef(const char *varname, void *param)
 
 /**********************************************************************/
 
-bool IsDefinedClass(const char *context, const char *ns)
+bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
 {
     ParseResult res;
 
@@ -1162,7 +1165,7 @@ bool IsDefinedClass(const char *context, const char *ns)
     }
     else
     {
-        ExpressionValue r = EvalExpression(res.result,
+        ExpressionValue r = EvalExpression(ctx, res.result,
                                            &EvalTokenAsClass, &EvalVarRef,
                                            (void *)ns);
 
@@ -1177,21 +1180,21 @@ bool IsDefinedClass(const char *context, const char *ns)
 
 /**********************************************************************/
 
-bool IsExcluded(const char *exception, const char *ns)
+bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
 {
-    return !IsDefinedClass(exception, ns);
+    return !IsDefinedClass(ctx, exception, ns);
 }
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenFromList(const char *token, void *param)
+static ExpressionValue EvalTokenFromList(EvalContext *ctx, const char *token, void *param)
 {
     return InAlphaList((AlphaList *) param, token);
 }
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(const char *expr, AlphaList *token_list)
+static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, AlphaList *token_list)
 {
     ParseResult res = ParseExpression(expr, 0, strlen(expr));
 
@@ -1205,7 +1208,8 @@ static bool EvalWithTokenFromList(const char *expr, AlphaList *token_list)
     }
     else
     {
-        ExpressionValue r = EvalExpression(res.result,
+        ExpressionValue r = EvalExpression(ctx,
+                                           res.result,
                                            &EvalTokenFromList,
                                            &EvalVarRef,
                                            token_list);
@@ -1221,26 +1225,26 @@ static bool EvalWithTokenFromList(const char *expr, AlphaList *token_list)
 
 /* Process result expression */
 
-bool EvalProcessResult(const char *process_result, AlphaList *proc_attr)
+bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *proc_attr)
 {
-    return EvalWithTokenFromList(process_result, proc_attr);
+    return EvalWithTokenFromList(ctx, process_result, proc_attr);
 }
 
 /**********************************************************************/
 
 /* File result expressions */
 
-bool EvalFileResult(const char *file_result, AlphaList *leaf_attr)
+bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr)
 {
-    return EvalWithTokenFromList(file_result, leaf_attr);
+    return EvalWithTokenFromList(ctx, file_result, leaf_attr);
 }
 
 /*****************************************************************************/
 
-void DeleteEntireHeap(void)
+void DeleteEntireHeap(EvalContext *ctx)
 {
-    DeleteAlphaList(&VHEAP);
-    InitAlphaList(&VHEAP);
+    DeleteAlphaList(&ctx->heap_soft);
+    InitAlphaList(&ctx->heap_hard);
 }
 
 /*****************************************************************************/
@@ -1343,7 +1347,7 @@ void DeletePersistentContext(const char *name)
 
 /*****************************************************************************/
 
-void LoadPersistentContext()
+void LoadPersistentContext(EvalContext *ctx)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;
@@ -1394,11 +1398,11 @@ void LoadPersistentContext()
                ns[0] = '\0';
                name[0] = '\0';
                sscanf(key, "%[^:]:%[^\n]", ns, name);
-               NewClass(name, ns);
+               NewClass(ctx, name, ns);
                }
             else
                {
-               NewClass(key, NULL);
+               NewClass(ctx, key, NULL);
                }
         }
     }
@@ -1411,20 +1415,20 @@ void LoadPersistentContext()
 
 /*****************************************************************************/
 
-void AddEphemeralClasses(const Rlist *classlist, const char *ns)
+void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns)
 {
     for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
     {
-        if (!InAlphaList(&VHEAP, rp->item))
+        if (!InAlphaList(&ctx->heap_soft, rp->item))
         {
-            NewClass(rp->item, ns);
+            NewClass(ctx, rp->item, ns);
         }
     }
 }
 
 /*********************************************************************/
 
-void NewClassesFromString(const char *classlist)
+void NewClassesFromString(EvalContext *ctx, const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1444,18 +1448,18 @@ void NewClassesFromString(const char *classlist)
 
         sp += strlen(currentitem);
 
-        if (IsHardClass(currentitem))
+        if (IsHardClass(ctx, currentitem))
         {
             FatalError("cfengine: You cannot use -D to define a reserved class!");
         }
 
-        NewClass(currentitem, NULL);
+        NewClass(ctx, currentitem, NULL);
     }
 }
 
 /*********************************************************************/
 
-void NegateClassesFromString(const char *classlist)
+void NegateClassesFromString(EvalContext *ctx, const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
 
@@ -1475,7 +1479,7 @@ void NegateClassesFromString(const char *classlist)
 
         sp += strlen(currentitem);
 
-        if (IsHardClass(currentitem))
+        if (IsHardClass(ctx, currentitem))
         {
             FatalError("Cannot negate the reserved class [%s]\n", currentitem);
         }
@@ -1486,17 +1490,17 @@ void NegateClassesFromString(const char *classlist)
 
 /*********************************************************************/
 
-bool IsSoftClass(const char *sp)
+bool IsSoftClass(EvalContext *ctx, const char *sp)
 {
-    return !IsHardClass(sp);
+    return !IsHardClass(ctx, sp);
 }
 
 /*********************************************************************/
 
-bool IsHardClass(const char *sp)
+bool IsHardClass(EvalContext *ctx, const char *sp)
 
 {
-    return InAlphaList(&VHARDHEAP, sp);
+    return InAlphaList(&ctx->heap_hard, sp);
 }
 
 /***************************************************************************/
@@ -1574,16 +1578,16 @@ int Abort()
 
 /*****************************************************************************/
 
-int VarClassExcluded(Promise *pp, char **classes)
+int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
 {
-    Constraint *cp = PromiseGetConstraint(pp, "ifvarclass");
+    Constraint *cp = PromiseGetConstraint(ctx, pp, "ifvarclass");
 
     if (cp == NULL)
     {
         return false;
     }
 
-    *classes = (char *) ConstraintGetRvalValue("ifvarclass", pp, RVAL_TYPE_SCALAR);
+    *classes = (char *) ConstraintGetRvalValue(ctx, "ifvarclass", pp, RVAL_TYPE_SCALAR);
 
     if (*classes == NULL)
     {
@@ -1596,7 +1600,7 @@ int VarClassExcluded(Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(*classes, pp->ns))
+    if (*classes && IsDefinedClass(ctx, *classes, pp->ns))
     {
         return false;
     }
@@ -1608,7 +1612,7 @@ int VarClassExcluded(Promise *pp, char **classes)
 
 /*******************************************************************/
 
-void SaveClassEnvironment(void)
+void SaveClassEnvironment(EvalContext *ctx)
 {
     char file[CF_BUFSIZE];
     FILE *fp;
@@ -1622,8 +1626,8 @@ void SaveClassEnvironment(void)
 
     Writer *writer = FileWriter(fp);
 
-    ListAlphaList(writer, VHARDHEAP, '\n');
-    ListAlphaList(writer, VHEAP, '\n');
+    ListAlphaList(writer, ctx->heap_hard, '\n');
+    ListAlphaList(writer, ctx->heap_soft, '\n');
     ListAlphaList(writer, VADDCLASSES, '\n');
 
     WriterClose(writer);
@@ -1631,7 +1635,7 @@ void SaveClassEnvironment(void)
 
 /**********************************************************************/
 
-void DeleteAllClasses(const Rlist *list)
+void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -1640,7 +1644,7 @@ void DeleteAllClasses(const Rlist *list)
             return; // TODO: interesting course of action, but why is the check there in the first place?
         }
 
-        if (IsHardClass((char *) rp->item))
+        if (IsHardClass(ctx, (char *) rp->item))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
                   RlistScalarValue(rp));
@@ -1650,7 +1654,7 @@ void DeleteAllClasses(const Rlist *list)
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
         DeletePersistentContext(string);
-        DeleteFromAlphaList(&VHEAP, CanonifyName(string));
+        DeleteFromAlphaList(&ctx->heap_soft, CanonifyName(string));
         DeleteFromAlphaList(&VADDCLASSES, CanonifyName(string));
         AppendItem(&VDELCLASSES, CanonifyName(string), NULL);
     }
@@ -1658,7 +1662,7 @@ void DeleteAllClasses(const Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
 {
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
@@ -1666,7 +1670,7 @@ void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextState
 
         CanonifyNameInPlace(classname);
 
-        if (IsHardClass(classname))
+        if (IsHardClass(ctx, classname))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
@@ -1681,7 +1685,7 @@ void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextState
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
             NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
-            NewClass(classname, ns);
+            NewClass(ctx, classname, ns);
         }
         else
         {
@@ -1690,12 +1694,12 @@ void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextState
             switch (context_scope)
             {
             case CONTEXT_SCOPE_BUNDLE:
-                NewBundleClass(classname, THIS_BUNDLE, ns);
+                NewBundleClass(ctx, classname, THIS_BUNDLE, ns);
                 break;
 
             default:
             case CONTEXT_SCOPE_NAMESPACE:
-                NewClass(classname, ns);
+                NewClass(ctx, classname, ns);
                 break;
             }
         }
@@ -1729,7 +1733,7 @@ void AddAbortClass(const char *name, const char *classes)
 
 /*****************************************************************************/
 
-void MarkPromiseHandleDone(const Promise *pp)
+void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
 {
     if (pp == NULL)
     {
@@ -1737,7 +1741,7 @@ void MarkPromiseHandleDone(const Promise *pp)
     }
 
     char name[CF_BUFSIZE];
-    char *handle = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR);
+    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
 
     if (handle == NULL)
     {
@@ -1751,7 +1755,7 @@ void MarkPromiseHandleDone(const Promise *pp)
 
 /*****************************************************************************/
 
-int MissingDependencies(const Promise *pp)
+int MissingDependencies(EvalContext *ctx, const Promise *pp)
 {
     if (pp == NULL)
     {
@@ -1759,7 +1763,7 @@ int MissingDependencies(const Promise *pp)
     }
 
     char name[CF_BUFSIZE], *d;
-    Rlist *rp, *deps = PromiseGetConstraintAsList("depends_on", pp);
+    Rlist *rp, *deps = PromiseGetConstraintAsList(ctx, "depends_on", pp);
     
     for (rp = deps; rp != NULL; rp = rp->next)
        {
@@ -1787,3 +1791,21 @@ int MissingDependencies(const Promise *pp)
     return false;
 }
 
+EvalContext *EvalContextNew(void)
+{
+    EvalContext *ctx = xmalloc(sizeof(EvalContext));
+
+    InitAlphaList(&ctx->heap_soft);
+    InitAlphaList(&ctx->heap_hard);
+
+    return ctx;
+}
+
+void EvalContextDestroy(EvalContext *ctx)
+{
+    if (ctx)
+    {
+        DeleteAlphaList(&ctx->heap_soft);
+        DeleteAlphaList(&ctx->heap_hard);
+    }
+}

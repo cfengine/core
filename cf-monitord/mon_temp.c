@@ -41,7 +41,7 @@ static bool LMSENSORS;
 /* Prototypes */
 
 #if defined(__linux__)
-static bool GetAcpi(double *cf_this);
+static bool GetAcpi(EvalContext *ctx, double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -53,12 +53,12 @@ static bool GetLMSensors(double *cf_this);
  * temperature is generally available. Several temperatures exist too ...
  ******************************************************************************/
 
-void MonTempGatherData(double *cf_this)
+void MonTempGatherData(EvalContext *ctx, double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
 #if defined(__linux__)
-    if (ACPI && GetAcpi(cf_this))
+    if (ACPI && GetAcpi(ctx, cf_this))
     {
         return;
     }
@@ -95,7 +95,7 @@ void MonTempInit(void)
 /******************************************************************************/
 
 #if defined(__linux__)
-static bool GetAcpi(double *cf_this)
+static bool GetAcpi(EvalContext *ctx, double *cf_this)
 {
     Dir *dirh;
     FILE *fp;
@@ -118,7 +118,7 @@ static bool GetAcpi(double *cf_this)
 
     for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
     {
-        if (!ConsiderFile(dirp->d_name, path, attr, NULL))
+        if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
         {
             continue;
         }

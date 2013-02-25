@@ -58,7 +58,7 @@ leads to Hash Association (lval,rval) => (user,"$(person)")
 
 /******************************************************************/
 
-int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
+int MapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take)
 {
     Rlist *rpg = NULL;
     const Rlist *rpt = NULL;
@@ -118,7 +118,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
                 }
             }
 
-            FnCallResult res = FnCallEvaluate(fp, NULL);
+            FnCallResult res = FnCallEvaluate(ctx, fp, NULL);
 
             if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
             {
@@ -158,7 +158,7 @@ int MapBodyArgs(const char *scopeid, Rlist *give, const Rlist *take)
 
 /******************************************************************/
 
-Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
+Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
 {
     int len;
     Rval rval;
@@ -185,7 +185,7 @@ Rlist *NewExpArgs(const FnCall *fp, const Promise *pp)
         {
         case RVAL_TYPE_FNCALL:
             subfp = (FnCall *) rp->item;
-            rval = FnCallEvaluate(subfp, pp).rval;
+            rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
             rval = ExpandPrivateRval(CONTEXTID, (Rval) {rp->item, rp->type});

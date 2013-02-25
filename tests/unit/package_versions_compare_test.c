@@ -1,5 +1,7 @@
 #include "cf3.defs.h"
 
+#include "env_context.h"
+
 #include <setjmp.h>
 #include <cmockery.h>
 #include <stdarg.h>
@@ -12,10 +14,12 @@ typedef enum
     VERCMP_MATCH = 1
 } VersionCmpResult;
 
-VersionCmpResult ComparePackages(const char *n, const char *v, const char *a, PackageItem * pi, Attributes attr, Promise *pp);
+VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *a, PackageItem * pi, Attributes attr, Promise *pp);
 
 void test_different_name(void **context)
 {
+    EvalContext *ctx = EvalContextNew();
+
     PackageItem pi = {
         .name = "pkgone",
         .version = "1",
@@ -27,11 +31,15 @@ void test_different_name(void **context)
         }
     };
 
-    assert_int_equal(ComparePackages("pkgtwo", "1", "arch", &pi, attr, NULL), false);
+    assert_int_equal(ComparePackages(ctx, "pkgtwo", "1", "arch", &pi, attr, NULL), false);
+
+    EvalContextDestroy(ctx);
 }
 
 void test_wildcard_arch(void **context)
 {
+    EvalContext *ctx = EvalContextNew();
+
     PackageItem pi = {
         .name = "foobar",
         .version = "1",
@@ -43,11 +51,15 @@ void test_wildcard_arch(void **context)
         }
     };
 
-    assert_int_equal(ComparePackages("foobar", "1", "*", &pi, attr, NULL), true);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "*", &pi, attr, NULL), true);
+
+    EvalContextDestroy(ctx);
 }
 
 void test_non_matching_arch(void **context)
 {
+    EvalContext *ctx = EvalContextNew();
+
     PackageItem pi = {
         .name = "foobar",
         .version = "1",
@@ -59,11 +71,15 @@ void test_non_matching_arch(void **context)
         }
     };
 
-    assert_int_equal(ComparePackages("foobar", "1", "s390", &pi, attr, NULL), false);
+    assert_int_equal(ComparePackages(ctx, "foobar", "1", "s390", &pi, attr, NULL), false);
+
+    EvalContextDestroy(ctx);
 }
 
 bool DoCompare(const char *lhs, const char *rhs, PackageVersionComparator cmp)
 {
+    EvalContext *ctx = EvalContextNew();
+
     PackageItem pi = {
         .name = "foobar",
         .version = (char*)lhs,
@@ -75,7 +91,9 @@ bool DoCompare(const char *lhs, const char *rhs, PackageVersionComparator cmp)
         }
     };
 
-    return ComparePackages("foobar", rhs, "somearch", &pi, a, NULL);
+    return ComparePackages(ctx, "foobar", rhs, "somearch", &pi, a, NULL);
+
+    EvalContextDestroy(ctx);
 }
 
 void test_wildcard_version(void **context)

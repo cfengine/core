@@ -35,6 +35,10 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #include <stdarg.h>
 
 /*****************************************************************************/
@@ -168,7 +172,7 @@ void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
 
 /*****************************************************************************/
 
-void cfPS(OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
+void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
 {
     va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];
@@ -210,7 +214,7 @@ void cfPS(OutputLevel level, char status, char *errstr, const Promise *pp, Attri
             v = "not specified";
         }
 
-        if ((sp = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
+        if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
         {
             strncpy(handle, sp, CF_MAXVARSIZE - 1);
         }
@@ -351,7 +355,7 @@ void cfPS(OutputLevel level, char status, char *errstr, const Promise *pp, Attri
 
     if (pp != NULL)
     {
-        ClassAuditLog(pp, attr, status, buffer);
+        ClassAuditLog(ctx, pp, attr, status, buffer);
     }
 
     DeleteItemList(mess);

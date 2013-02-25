@@ -48,6 +48,8 @@ typedef struct
 
 typedef struct ServerConnectionState
 {
+    EvalContext *ctx;
+
     int id_verified;
     int rsa_auth;
     int synchronized;
@@ -84,16 +86,16 @@ int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 
 #endif
 
-void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 
-void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv);
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv);
 void TryCollectCall(void);
-int SetServerListenState(size_t queue_size);
+int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void DeleteAuthList(Auth *ap);
 void PurgeOldConnections(Item **list, time_t now);
 
 
-AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
+AgentConnection *ExtractCallBackChannel(EvalContext *ctx, ServerConnectionState *conn);
 
 
 //*******************************************************************

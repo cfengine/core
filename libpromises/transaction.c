@@ -42,6 +42,10 @@
 #include "rlist.h"
 #include "policy.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
@@ -59,7 +63,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 /*****************************************************************************/
 
-void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
+void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promise *pp, const char *logname)
 {
     if (logname && (attr.transaction.log_string))
     {
@@ -97,7 +101,7 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
     {
         if (logname && (strcmp(logname, attr.transaction.log_failed) == 0))
         {
-            cfPS(OUTPUT_LEVEL_LOG, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
+            cfPS(ctx, OUTPUT_LEVEL_LOG, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
         }
     }
 }
@@ -934,9 +938,9 @@ static void ReleaseCriticalSection()
 
 /************************************************************************/
 
-int ShiftChange(void)
+int ShiftChange(EvalContext *ctx)
 {
-    if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
+    if (IsDefinedClass(ctx, "(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
     {
         return true;
     }

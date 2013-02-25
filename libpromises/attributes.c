@@ -30,6 +30,10 @@
 #include "cfstream.h"
 #include "chflags.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 static void ShowAttributes(Attributes a);
 
 /*******************************************************************/
@@ -45,7 +49,7 @@ void SetChecksumUpdates(bool enabled)
 
 /*******************************************************************/
 
-Attributes GetFilesAttributes(const Promise *pp)
+Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -53,38 +57,38 @@ Attributes GetFilesAttributes(const Promise *pp)
 
 // default for file copy
 
-    attr.havedepthsearch = PromiseGetConstraintAsBoolean("depth_search", pp);
-    attr.haveselect = PromiseGetConstraintAsBoolean("file_select", pp);
-    attr.haverename = PromiseGetConstraintAsBoolean("rename", pp);
-    attr.havedelete = PromiseGetConstraintAsBoolean("delete", pp);
-    attr.haveperms = PromiseGetConstraintAsBoolean("perms", pp);
-    attr.havechange = PromiseGetConstraintAsBoolean("changes", pp);
-    attr.havecopy = PromiseGetConstraintAsBoolean("copy_from", pp);
-    attr.havelink = PromiseGetConstraintAsBoolean("link_from", pp);
+    attr.havedepthsearch = PromiseGetConstraintAsBoolean(ctx, "depth_search", pp);
+    attr.haveselect = PromiseGetConstraintAsBoolean(ctx, "file_select", pp);
+    attr.haverename = PromiseGetConstraintAsBoolean(ctx, "rename", pp);
+    attr.havedelete = PromiseGetConstraintAsBoolean(ctx, "delete", pp);
+    attr.haveperms = PromiseGetConstraintAsBoolean(ctx, "perms", pp);
+    attr.havechange = PromiseGetConstraintAsBoolean(ctx, "changes", pp);
+    attr.havecopy = PromiseGetConstraintAsBoolean(ctx, "copy_from", pp);
+    attr.havelink = PromiseGetConstraintAsBoolean(ctx, "link_from", pp);
 
-    attr.template = (char *)ConstraintGetRvalValue("edit_template", pp, RVAL_TYPE_SCALAR);
-    attr.haveeditline = PromiseBundleConstraintExists("edit_line", pp);
-    attr.haveeditxml = PromiseBundleConstraintExists("edit_xml", pp);
+    attr.template = (char *)ConstraintGetRvalValue(ctx, "edit_template", pp, RVAL_TYPE_SCALAR);
+    attr.haveeditline = PromiseBundleConstraintExists(ctx, "edit_line", pp);
+    attr.haveeditxml = PromiseBundleConstraintExists(ctx, "edit_xml", pp);
     attr.haveedit = (attr.haveeditline) || (attr.haveeditxml) || (attr.template);
 
 /* Files, specialist */
 
-    attr.repository = (char *) ConstraintGetRvalValue("repository", pp, RVAL_TYPE_SCALAR);
-    attr.create = PromiseGetConstraintAsBoolean("create", pp);
-    attr.touch = PromiseGetConstraintAsBoolean("touch", pp);
-    attr.transformer = (char *) ConstraintGetRvalValue("transformer", pp, RVAL_TYPE_SCALAR);
-    attr.move_obstructions = PromiseGetConstraintAsBoolean("move_obstructions", pp);
-    attr.pathtype = (char *) ConstraintGetRvalValue("pathtype", pp, RVAL_TYPE_SCALAR);
+    attr.repository = (char *) ConstraintGetRvalValue(ctx, "repository", pp, RVAL_TYPE_SCALAR);
+    attr.create = PromiseGetConstraintAsBoolean(ctx, "create", pp);
+    attr.touch = PromiseGetConstraintAsBoolean(ctx, "touch", pp);
+    attr.transformer = (char *) ConstraintGetRvalValue(ctx, "transformer", pp, RVAL_TYPE_SCALAR);
+    attr.move_obstructions = PromiseGetConstraintAsBoolean(ctx, "move_obstructions", pp);
+    attr.pathtype = (char *) ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
 
-    attr.acl = GetAclConstraints(pp);
-    attr.perms = GetPermissionConstraints(pp);
-    attr.select = GetSelectConstraints(pp);
-    attr.delete = GetDeleteConstraints(pp);
-    attr.rename = GetRenameConstraints(pp);
-    attr.change = GetChangeMgtConstraints(pp);
-    attr.copy = GetCopyConstraints(pp);
-    attr.link = GetLinkConstraints(pp);
-    attr.edits = GetEditDefaults(pp);
+    attr.acl = GetAclConstraints(ctx, pp);
+    attr.perms = GetPermissionConstraints(ctx, pp);
+    attr.select = GetSelectConstraints(ctx, pp);
+    attr.delete = GetDeleteConstraints(ctx, pp);
+    attr.rename = GetRenameConstraints(ctx, pp);
+    attr.change = GetChangeMgtConstraints(ctx, pp);
+    attr.copy = GetCopyConstraints(ctx, pp);
+    attr.link = GetLinkConstraints(ctx, pp);
+    attr.edits = GetEditDefaults(ctx, pp);
 
     if (attr.template)
        {
@@ -94,14 +98,14 @@ Attributes GetFilesAttributes(const Promise *pp)
 
 /* Files, multiple use */
 
-    attr.recursion = GetRecursionConstraints(pp);
+    attr.recursion = GetRecursionConstraints(ctx, pp);
 
 /* Common ("included") */
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     if (DEBUG)
     {
@@ -117,7 +121,7 @@ Attributes GetFilesAttributes(const Promise *pp)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
         }
     }
 
@@ -150,154 +154,154 @@ Attributes GetFilesAttributes(const Promise *pp)
 
 /*******************************************************************/
 
-Attributes GetOutputsAttributes(const Promise *pp)
+Attributes GetOutputsAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    attr.output.promiser_type = ConstraintGetRvalValue("promiser_type", pp, RVAL_TYPE_SCALAR);
-    attr.output.level = ConstraintGetRvalValue("output_level", pp, RVAL_TYPE_SCALAR);
+    attr.output.promiser_type = ConstraintGetRvalValue(ctx, "promiser_type", pp, RVAL_TYPE_SCALAR);
+    attr.output.level = ConstraintGetRvalValue(ctx, "output_level", pp, RVAL_TYPE_SCALAR);
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetReportsAttributes(const Promise *pp)
+Attributes GetReportsAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    attr.report = GetReportConstraints(pp);
+    attr.report = GetReportConstraints(ctx, pp);
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetEnvironmentsAttributes(const Promise *pp)
+Attributes GetEnvironmentsAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
-    attr.env = GetEnvironmentsConstraints(pp);
-
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetServicesAttributes(const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
-    attr.service = GetServicesConstraints(pp);
-    attr.havebundle = PromiseBundleConstraintExists("service_bundle", pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.env = GetEnvironmentsConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetPackageAttributes(const Promise *pp)
+Attributes GetServicesAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
-    attr.packages = GetPackageConstraints(pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.service = GetServicesConstraints(ctx, pp);
+    attr.havebundle = PromiseBundleConstraintExists(ctx, "service_bundle", pp);
+
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetDatabaseAttributes(const Promise *pp)
+Attributes GetPackageAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.transaction = GetTransactionConstraints(pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
-    attr.database = GetDatabaseConstraints(pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.packages = GetPackageConstraints(ctx, pp);
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetClassContextAttributes(const Promise *pp)
+Attributes GetDatabaseAttributes(EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+    attr.database = GetDatabaseConstraints(ctx, pp);
+    return attr;
+}
+
+/*******************************************************************/
+
+Attributes GetClassContextAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes a = { {0} };;
 
-    a.transaction = GetTransactionConstraints(pp);
-    a.classes = GetClassDefinitionConstraints(pp);
-    a.context = GetContextConstraints(pp);
+    a.transaction = GetTransactionConstraints(ctx, pp);
+    a.classes = GetClassDefinitionConstraints(ctx, pp);
+    a.context = GetContextConstraints(ctx, pp);
 
     return a;
 }
 
 /*******************************************************************/
 
-Attributes GetExecAttributes(const Promise *pp)
+Attributes GetExecAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.contain = GetExecContainConstraints(pp);
-    attr.havecontain = PromiseGetConstraintAsBoolean("contain", pp);
+    attr.contain = GetExecContainConstraints(ctx, pp);
+    attr.havecontain = PromiseGetConstraintAsBoolean(ctx, "contain", pp);
 
-    attr.args = ConstraintGetRvalValue("args", pp, RVAL_TYPE_SCALAR);
-    attr.module = PromiseGetConstraintAsBoolean("module", pp);
+    attr.args = ConstraintGetRvalValue(ctx, "args", pp, RVAL_TYPE_SCALAR);
+    attr.module = PromiseGetConstraintAsBoolean(ctx, "module", pp);
 
 /* Common ("included") */
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetProcessAttributes(const Promise *pp)
+Attributes GetProcessAttributes(EvalContext *ctx, const Promise *pp)
 {
     static Attributes attr = { {0} };
 
-    attr.signals = PromiseGetConstraintAsList("signals", pp);
-    attr.process_stop = (char *) ConstraintGetRvalValue("process_stop", pp, RVAL_TYPE_SCALAR);
-    attr.haveprocess_count = PromiseGetConstraintAsBoolean("process_count", pp);
-    attr.haveselect = PromiseGetConstraintAsBoolean("process_select", pp);
-    attr.restart_class = (char *) ConstraintGetRvalValue("restart_class", pp, RVAL_TYPE_SCALAR);
+    attr.signals = PromiseGetConstraintAsList(ctx, "signals", pp);
+    attr.process_stop = (char *) ConstraintGetRvalValue(ctx, "process_stop", pp, RVAL_TYPE_SCALAR);
+    attr.haveprocess_count = PromiseGetConstraintAsBoolean(ctx, "process_count", pp);
+    attr.haveselect = PromiseGetConstraintAsBoolean(ctx, "process_select", pp);
+    attr.restart_class = (char *) ConstraintGetRvalValue(ctx, "restart_class", pp, RVAL_TYPE_SCALAR);
 
-    attr.process_count = GetMatchesConstraints(pp);
-    attr.process_select = GetProcessFilterConstraints(pp);
+    attr.process_count = GetMatchesConstraints(ctx, pp);
+    attr.process_select = GetProcessFilterConstraints(ctx, pp);
 
 /* Common ("included") */
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetStorageAttributes(const Promise *pp)
+Attributes GetStorageAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.mount = GetMountConstraints(pp);
-    attr.volume = GetVolumeConstraints(pp);
-    attr.havevolume = PromiseGetConstraintAsBoolean("volume", pp);
-    attr.havemount = PromiseGetConstraintAsBoolean("mount", pp);
+    attr.mount = GetMountConstraints(ctx, pp);
+    attr.volume = GetVolumeConstraints(ctx, pp);
+    attr.havevolume = PromiseGetConstraintAsBoolean(ctx, "volume", pp);
+    attr.havemount = PromiseGetConstraintAsBoolean(ctx, "mount", pp);
 
 /* Common ("included") */
 
@@ -306,71 +310,71 @@ Attributes GetStorageAttributes(const Promise *pp)
         attr.edits.maxfilesize = EDITFILESIZE;
     }
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
-
-    return attr;
-}
-
-/*******************************************************************/
-
-Attributes GetMethodAttributes(const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.havebundle = PromiseBundleConstraintExists("usebundle", pp);
-
-    attr.inherit = PromiseGetConstraintAsBoolean("inherit", pp);
-
-/* Common ("included") */
-
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
-
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetInterfacesAttributes(const Promise *pp)
+Attributes GetMethodAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havetcpip = PromiseBundleConstraintExists("usebundle", pp);
-    attr.tcpip = GetTCPIPAttributes(pp);
+    attr.havebundle = PromiseBundleConstraintExists(ctx, "usebundle", pp);
+
+    attr.inherit = PromiseGetConstraintAsBoolean(ctx, "inherit", pp);
 
 /* Common ("included") */
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetMeasurementAttributes(const Promise *pp)
+Attributes GetInterfacesAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.measure = GetMeasurementConstraint(pp);
+    attr.havetcpip = PromiseBundleConstraintExists(ctx, "usebundle", pp);
+    attr.tcpip = GetTCPIPAttributes(ctx, pp);
 
 /* Common ("included") */
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
+
+    return attr;
+}
+
+/*******************************************************************/
+
+Attributes GetMeasurementAttributes(EvalContext *ctx, const Promise *pp)
+{
+    Attributes attr = { {0} };
+
+    attr.measure = GetMeasurementConstraint(ctx, pp);
+
+/* Common ("included") */
+
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
+
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
@@ -379,105 +383,105 @@ Attributes GetMeasurementAttributes(const Promise *pp)
 /* Level                                                           */
 /*******************************************************************/
 
-Services GetServicesConstraints(const Promise *pp)
+Services GetServicesConstraints(EvalContext *ctx, const Promise *pp)
 {
     Services s;
 
-    s.service_type = ConstraintGetRvalValue("service_type", pp, RVAL_TYPE_SCALAR);
-    s.service_policy = ServicePolicyFromString(ConstraintGetRvalValue("service_policy", pp, RVAL_TYPE_SCALAR));
-    s.service_autostart_policy = ConstraintGetRvalValue("service_autostart_policy", pp, RVAL_TYPE_SCALAR);
-    s.service_args = ConstraintGetRvalValue("service_args", pp, RVAL_TYPE_SCALAR);
-    s.service_depend = PromiseGetConstraintAsList("service_dependencies", pp);
-    s.service_depend_chain = ConstraintGetRvalValue("service_dependence_chain", pp, RVAL_TYPE_SCALAR);
+    s.service_type = ConstraintGetRvalValue(ctx, "service_type", pp, RVAL_TYPE_SCALAR);
+    s.service_policy = ServicePolicyFromString(ConstraintGetRvalValue(ctx, "service_policy", pp, RVAL_TYPE_SCALAR));
+    s.service_autostart_policy = ConstraintGetRvalValue(ctx, "service_autostart_policy", pp, RVAL_TYPE_SCALAR);
+    s.service_args = ConstraintGetRvalValue(ctx, "service_args", pp, RVAL_TYPE_SCALAR);
+    s.service_depend = PromiseGetConstraintAsList(ctx, "service_dependencies", pp);
+    s.service_depend_chain = ConstraintGetRvalValue(ctx, "service_dependence_chain", pp, RVAL_TYPE_SCALAR);
 
     return s;
 }
 
 /*******************************************************************/
 
-Environments GetEnvironmentsConstraints(const Promise *pp)
+Environments GetEnvironmentsConstraints(EvalContext *ctx, const Promise *pp)
 {
     Environments e;
 
-    e.cpus = PromiseGetConstraintAsInt("env_cpus", pp);
-    e.memory = PromiseGetConstraintAsInt("env_memory", pp);
-    e.disk = PromiseGetConstraintAsInt("env_disk", pp);
-    e.baseline = ConstraintGetRvalValue("env_baseline", pp, RVAL_TYPE_SCALAR);
-    e.spec = ConstraintGetRvalValue("env_spec", pp, RVAL_TYPE_SCALAR);
-    e.host = ConstraintGetRvalValue("environment_host", pp, RVAL_TYPE_SCALAR);
+    e.cpus = PromiseGetConstraintAsInt(ctx, "env_cpus", pp);
+    e.memory = PromiseGetConstraintAsInt(ctx, "env_memory", pp);
+    e.disk = PromiseGetConstraintAsInt(ctx, "env_disk", pp);
+    e.baseline = ConstraintGetRvalValue(ctx, "env_baseline", pp, RVAL_TYPE_SCALAR);
+    e.spec = ConstraintGetRvalValue(ctx, "env_spec", pp, RVAL_TYPE_SCALAR);
+    e.host = ConstraintGetRvalValue(ctx, "environment_host", pp, RVAL_TYPE_SCALAR);
 
-    e.addresses = PromiseGetConstraintAsList("env_addresses", pp);
-    e.name = ConstraintGetRvalValue("env_name", pp, RVAL_TYPE_SCALAR);
-    e.type = ConstraintGetRvalValue("environment_type", pp, RVAL_TYPE_SCALAR);
-    e.state = EnvironmentStateFromString(ConstraintGetRvalValue("environment_state", pp, RVAL_TYPE_SCALAR));
+    e.addresses = PromiseGetConstraintAsList(ctx, "env_addresses", pp);
+    e.name = ConstraintGetRvalValue(ctx, "env_name", pp, RVAL_TYPE_SCALAR);
+    e.type = ConstraintGetRvalValue(ctx, "environment_type", pp, RVAL_TYPE_SCALAR);
+    e.state = EnvironmentStateFromString(ConstraintGetRvalValue(ctx, "environment_state", pp, RVAL_TYPE_SCALAR));
 
     return e;
 }
 
 /*******************************************************************/
 
-ExecContain GetExecContainConstraints(const Promise *pp)
+ExecContain GetExecContainConstraints(EvalContext *ctx, const Promise *pp)
 {
     ExecContain e;
 
-    e.useshell = PromiseGetConstraintAsBoolean("useshell", pp);
-    e.umask = PromiseGetConstraintAsOctal("umask", pp);
-    e.owner = PromiseGetConstraintAsUid("exec_owner", pp);
-    e.group = PromiseGetConstraintAsGid("exec_group", pp);
-    e.preview = PromiseGetConstraintAsBoolean("preview", pp);
-    e.nooutput = PromiseGetConstraintAsBoolean("no_output", pp);
-    e.timeout = PromiseGetConstraintAsInt("exec_timeout", pp);
-    e.chroot = ConstraintGetRvalValue("chroot", pp, RVAL_TYPE_SCALAR);
-    e.chdir = ConstraintGetRvalValue("chdir", pp, RVAL_TYPE_SCALAR);
+    e.useshell = PromiseGetConstraintAsBoolean(ctx, "useshell", pp);
+    e.umask = PromiseGetConstraintAsOctal(ctx, "umask", pp);
+    e.owner = PromiseGetConstraintAsUid(ctx, "exec_owner", pp);
+    e.group = PromiseGetConstraintAsGid(ctx, "exec_group", pp);
+    e.preview = PromiseGetConstraintAsBoolean(ctx, "preview", pp);
+    e.nooutput = PromiseGetConstraintAsBoolean(ctx, "no_output", pp);
+    e.timeout = PromiseGetConstraintAsInt(ctx, "exec_timeout", pp);
+    e.chroot = ConstraintGetRvalValue(ctx, "chroot", pp, RVAL_TYPE_SCALAR);
+    e.chdir = ConstraintGetRvalValue(ctx, "chdir", pp, RVAL_TYPE_SCALAR);
 
     return e;
 }
 
 /*******************************************************************/
 
-Recursion GetRecursionConstraints(const Promise *pp)
+Recursion GetRecursionConstraints(EvalContext *ctx, const Promise *pp)
 {
     Recursion r;
 
-    r.travlinks = PromiseGetConstraintAsBoolean("traverse_links", pp);
-    r.rmdeadlinks = PromiseGetConstraintAsBoolean("rmdeadlinks", pp);
-    r.depth = PromiseGetConstraintAsInt("depth", pp);
+    r.travlinks = PromiseGetConstraintAsBoolean(ctx, "traverse_links", pp);
+    r.rmdeadlinks = PromiseGetConstraintAsBoolean(ctx, "rmdeadlinks", pp);
+    r.depth = PromiseGetConstraintAsInt(ctx, "depth", pp);
 
     if (r.depth == CF_NOINT)
     {
         r.depth = 0;
     }
 
-    r.xdev = PromiseGetConstraintAsBoolean("xdev", pp);
-    r.include_dirs = PromiseGetConstraintAsList("include_dirs", pp);
-    r.exclude_dirs = PromiseGetConstraintAsList("exclude_dirs", pp);
-    r.include_basedir = PromiseGetConstraintAsBoolean("include_basedir", pp);
+    r.xdev = PromiseGetConstraintAsBoolean(ctx, "xdev", pp);
+    r.include_dirs = PromiseGetConstraintAsList(ctx, "include_dirs", pp);
+    r.exclude_dirs = PromiseGetConstraintAsList(ctx, "exclude_dirs", pp);
+    r.include_basedir = PromiseGetConstraintAsBoolean(ctx, "include_basedir", pp);
     return r;
 }
 
 /*******************************************************************/
 
-Acl GetAclConstraints(const Promise *pp)
+Acl GetAclConstraints(EvalContext *ctx, const Promise *pp)
 {
     Acl ac;
 
-    ac.acl_method = AclMethodFromString(ConstraintGetRvalValue("acl_method", pp, RVAL_TYPE_SCALAR));
-    ac.acl_type = AclTypeFromString(ConstraintGetRvalValue("acl_type", pp, RVAL_TYPE_SCALAR));
-    ac.acl_directory_inherit = AclInheritanceFromString(ConstraintGetRvalValue("acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
-    ac.acl_entries = PromiseGetConstraintAsList("aces", pp);
-    ac.acl_inherit_entries = PromiseGetConstraintAsList("specify_inherit_aces", pp);
+    ac.acl_method = AclMethodFromString(ConstraintGetRvalValue(ctx, "acl_method", pp, RVAL_TYPE_SCALAR));
+    ac.acl_type = AclTypeFromString(ConstraintGetRvalValue(ctx, "acl_type", pp, RVAL_TYPE_SCALAR));
+    ac.acl_directory_inherit = AclInheritanceFromString(ConstraintGetRvalValue(ctx, "acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
+    ac.acl_entries = PromiseGetConstraintAsList(ctx, "aces", pp);
+    ac.acl_inherit_entries = PromiseGetConstraintAsList(ctx, "specify_inherit_aces", pp);
     return ac;
 }
 
 /*******************************************************************/
 
-FilePerms GetPermissionConstraints(const Promise *pp)
+FilePerms GetPermissionConstraints(EvalContext *ctx, const Promise *pp)
 {
     FilePerms p;
     char *value;
     Rlist *list;
 
-    value = (char *) ConstraintGetRvalValue("mode", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "mode", pp, RVAL_TYPE_SCALAR);
 
     p.plus = CF_SAMEMODE;
     p.minus = CF_SAMEMODE;
@@ -488,7 +492,7 @@ FilePerms GetPermissionConstraints(const Promise *pp)
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
-    list = PromiseGetConstraintAsList("bsdflags", pp);
+    list = PromiseGetConstraintAsList(ctx, "bsdflags", pp);
 
     p.plus_flags = 0;
     p.minus_flags = 0;
@@ -500,18 +504,18 @@ FilePerms GetPermissionConstraints(const Promise *pp)
     }
 
 #ifdef __MINGW32__
-    p.owners = NovaWin_Rlist2SidList((Rlist *) GetConstraintValue("owners", pp, RVAL_TYPE_LIST));
+    p.owners = NovaWin_Rlist2SidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST));
 #else /* !__MINGW32__ */
-    p.owners = Rlist2UidList((Rlist *) ConstraintGetRvalValue("owners", pp, RVAL_TYPE_LIST), pp);
-    p.groups = Rlist2GidList((Rlist *) ConstraintGetRvalValue("groups", pp, RVAL_TYPE_LIST), pp);
+    p.owners = Rlist2UidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST), pp);
+    p.groups = Rlist2GidList((Rlist *) ConstraintGetRvalValue(ctx, "groups", pp, RVAL_TYPE_LIST), pp);
 #endif /* !__MINGW32__ */
 
-    p.findertype = (char *) ConstraintGetRvalValue("findertype", pp, RVAL_TYPE_SCALAR);
-    p.rxdirs = PromiseGetConstraintAsBoolean("rxdirs", pp);
+    p.findertype = (char *) ConstraintGetRvalValue(ctx, "findertype", pp, RVAL_TYPE_SCALAR);
+    p.rxdirs = PromiseGetConstraintAsBoolean(ctx, "rxdirs", pp);
 
 // The default should be true
 
-    if (!ConstraintGetRvalValue("rxdirs", pp, RVAL_TYPE_SCALAR))
+    if (!ConstraintGetRvalValue(ctx, "rxdirs", pp, RVAL_TYPE_SCALAR))
     {
         p.rxdirs = true;
     }
@@ -521,7 +525,7 @@ FilePerms GetPermissionConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-FileSelect GetSelectConstraints(const Promise *pp)
+FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileSelect s;
     char *value;
@@ -530,12 +534,12 @@ FileSelect GetSelectConstraints(const Promise *pp)
     u_long fplus, fminus;
     int entries = false;
 
-    s.name = (Rlist *) ConstraintGetRvalValue("leaf_name", pp, RVAL_TYPE_LIST);
-    s.path = (Rlist *) ConstraintGetRvalValue("path_name", pp, RVAL_TYPE_LIST);
-    s.filetypes = (Rlist *) ConstraintGetRvalValue("file_types", pp, RVAL_TYPE_LIST);
-    s.issymlinkto = (Rlist *) ConstraintGetRvalValue("issymlinkto", pp, RVAL_TYPE_LIST);
+    s.name = (Rlist *) ConstraintGetRvalValue(ctx, "leaf_name", pp, RVAL_TYPE_LIST);
+    s.path = (Rlist *) ConstraintGetRvalValue(ctx, "path_name", pp, RVAL_TYPE_LIST);
+    s.filetypes = (Rlist *) ConstraintGetRvalValue(ctx, "file_types", pp, RVAL_TYPE_LIST);
+    s.issymlinkto = (Rlist *) ConstraintGetRvalValue(ctx, "issymlinkto", pp, RVAL_TYPE_LIST);
 
-    s.perms = PromiseGetConstraintAsList("search_mode", pp);
+    s.perms = PromiseGetConstraintAsList(ctx, "search_mode", pp);
 
     for (rp = s.perms; rp != NULL; rp = rp->next)
     {
@@ -550,7 +554,7 @@ FileSelect GetSelectConstraints(const Promise *pp)
         }
     }
 
-    s.bsdflags = PromiseGetConstraintAsList("search_bsdflags", pp);
+    s.bsdflags = PromiseGetConstraintAsList(ctx, "search_bsdflags", pp);
 
     fplus = 0;
     fminus = 0;
@@ -566,10 +570,10 @@ FileSelect GetSelectConstraints(const Promise *pp)
         entries = true;
     }
 
-    s.owners = (Rlist *) ConstraintGetRvalValue("search_owners", pp, RVAL_TYPE_LIST);
-    s.groups = (Rlist *) ConstraintGetRvalValue("search_groups", pp, RVAL_TYPE_LIST);
+    s.owners = (Rlist *) ConstraintGetRvalValue(ctx, "search_owners", pp, RVAL_TYPE_LIST);
+    s.groups = (Rlist *) ConstraintGetRvalValue(ctx, "search_groups", pp, RVAL_TYPE_LIST);
 
-    value = (char *) ConstraintGetRvalValue("search_size", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "search_size", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
@@ -577,20 +581,20 @@ FileSelect GetSelectConstraints(const Promise *pp)
 
     IntRange2Int(value, (long *) &s.min_size, (long *) &s.max_size, pp);
 
-    value = (char *) ConstraintGetRvalValue("ctime", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "ctime", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
 
     IntRange2Int(value, (long *) &s.min_ctime, (long *) &s.max_ctime, pp);
-    value = (char *) ConstraintGetRvalValue("atime", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "atime", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
     IntRange2Int(value, (long *) &s.min_atime, (long *) &s.max_atime, pp);
-    value = (char *) ConstraintGetRvalValue("mtime", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "mtime", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
@@ -598,15 +602,15 @@ FileSelect GetSelectConstraints(const Promise *pp)
 
     IntRange2Int(value, (long *) &s.min_mtime, (long *) &s.max_mtime, pp);
 
-    s.exec_regex = (char *) ConstraintGetRvalValue("exec_regex", pp, RVAL_TYPE_SCALAR);
-    s.exec_program = (char *) ConstraintGetRvalValue("exec_program", pp, RVAL_TYPE_SCALAR);
+    s.exec_regex = (char *) ConstraintGetRvalValue(ctx, "exec_regex", pp, RVAL_TYPE_SCALAR);
+    s.exec_program = (char *) ConstraintGetRvalValue(ctx, "exec_program", pp, RVAL_TYPE_SCALAR);
 
     if ((s.owners) || (s.min_size) || (s.exec_regex) || (s.exec_program))
     {
         entries = true;
     }
 
-    if ((s.result = (char *) ConstraintGetRvalValue("file_result", pp, RVAL_TYPE_SCALAR)) == NULL)
+    if ((s.result = (char *) ConstraintGetRvalValue(ctx, "file_result", pp, RVAL_TYPE_SCALAR)) == NULL)
     {
         if (!entries)
         {
@@ -619,12 +623,12 @@ FileSelect GetSelectConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-TransactionContext GetTransactionConstraints(const Promise *pp)
+TransactionContext GetTransactionConstraints(EvalContext *ctx, const Promise *pp)
 {
     TransactionContext t;
     char *value;
 
-    value = ConstraintGetRvalValue("action_policy", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "action_policy", pp, RVAL_TYPE_SCALAR);
 
     if (value && ((strcmp(value, "warn") == 0) || (strcmp(value, "nop") == 0)))
     {
@@ -635,89 +639,89 @@ TransactionContext GetTransactionConstraints(const Promise *pp)
         t.action = cfa_fix;     // default
     }
 
-    t.background = PromiseGetConstraintAsBoolean("background", pp);
-    t.ifelapsed = PromiseGetConstraintAsInt("ifelapsed", pp);
+    t.background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
+    t.ifelapsed = PromiseGetConstraintAsInt(ctx, "ifelapsed", pp);
 
     if (t.ifelapsed == CF_NOINT)
     {
         t.ifelapsed = VIFELAPSED;
     }
 
-    t.expireafter = PromiseGetConstraintAsInt("expireafter", pp);
+    t.expireafter = PromiseGetConstraintAsInt(ctx, "expireafter", pp);
 
     if (t.expireafter == CF_NOINT)
     {
         t.expireafter = VEXPIREAFTER;
     }
 
-    t.audit = PromiseGetConstraintAsBoolean("audit", pp);
-    t.log_string = ConstraintGetRvalValue("log_string", pp, RVAL_TYPE_SCALAR);
-    t.log_priority = SyslogPriorityFromString(ConstraintGetRvalValue("log_priority", pp, RVAL_TYPE_SCALAR));
+    t.audit = PromiseGetConstraintAsBoolean(ctx, "audit", pp);
+    t.log_string = ConstraintGetRvalValue(ctx, "log_string", pp, RVAL_TYPE_SCALAR);
+    t.log_priority = SyslogPriorityFromString(ConstraintGetRvalValue(ctx, "log_priority", pp, RVAL_TYPE_SCALAR));
 
-    t.log_kept = ConstraintGetRvalValue("log_kept", pp, RVAL_TYPE_SCALAR);
-    t.log_repaired = ConstraintGetRvalValue("log_repaired", pp, RVAL_TYPE_SCALAR);
-    t.log_failed = ConstraintGetRvalValue("log_failed", pp, RVAL_TYPE_SCALAR);
+    t.log_kept = ConstraintGetRvalValue(ctx, "log_kept", pp, RVAL_TYPE_SCALAR);
+    t.log_repaired = ConstraintGetRvalValue(ctx, "log_repaired", pp, RVAL_TYPE_SCALAR);
+    t.log_failed = ConstraintGetRvalValue(ctx, "log_failed", pp, RVAL_TYPE_SCALAR);
 
-    if ((t.value_kept = PromiseGetConstraintAsReal("value_kept", pp)) == CF_NODOUBLE)
+    if ((t.value_kept = PromiseGetConstraintAsReal(ctx, "value_kept", pp)) == CF_NODOUBLE)
     {
         t.value_kept = 1.0;
     }
 
-    if ((t.value_repaired = PromiseGetConstraintAsReal("value_repaired", pp)) == CF_NODOUBLE)
+    if ((t.value_repaired = PromiseGetConstraintAsReal(ctx, "value_repaired", pp)) == CF_NODOUBLE)
     {
         t.value_repaired = 0.5;
     }
 
-    if ((t.value_notkept = PromiseGetConstraintAsReal("value_notkept", pp)) == CF_NODOUBLE)
+    if ((t.value_notkept = PromiseGetConstraintAsReal(ctx, "value_notkept", pp)) == CF_NODOUBLE)
     {
         t.value_notkept = -1.0;
     }
 
-    value = ConstraintGetRvalValue("log_level", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "log_level", pp, RVAL_TYPE_SCALAR);
     t.log_level = OutputLevelFromString(value);
 
-    value = ConstraintGetRvalValue("report_level", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "report_level", pp, RVAL_TYPE_SCALAR);
     t.report_level = OutputLevelFromString(value);
 
-    t.measure_id = ConstraintGetRvalValue("measurement_class", pp, RVAL_TYPE_SCALAR);
+    t.measure_id = ConstraintGetRvalValue(ctx, "measurement_class", pp, RVAL_TYPE_SCALAR);
 
     return t;
 }
 
 /*******************************************************************/
 
-DefineClasses GetClassDefinitionConstraints(const Promise *pp)
+DefineClasses GetClassDefinitionConstraints(EvalContext *ctx, const Promise *pp)
 {
     DefineClasses c;
     char *pt = NULL;
 
     {
-        const char *context_scope = ConstraintGetRvalValue("scope", pp, RVAL_TYPE_SCALAR);
+        const char *context_scope = ConstraintGetRvalValue(ctx, "scope", pp, RVAL_TYPE_SCALAR);
         c.scope = ContextScopeFromString(context_scope);
     }
-    c.change = (Rlist *) PromiseGetConstraintAsList("promise_repaired", pp);
-    c.failure = (Rlist *) PromiseGetConstraintAsList("repair_failed", pp);
-    c.denied = (Rlist *) PromiseGetConstraintAsList("repair_denied", pp);
-    c.timeout = (Rlist *) PromiseGetConstraintAsList("repair_timeout", pp);
-    c.kept = (Rlist *) PromiseGetConstraintAsList("promise_kept", pp);
-    c.interrupt = (Rlist *) PromiseGetConstraintAsList("on_interrupt", pp);
+    c.change = (Rlist *) PromiseGetConstraintAsList(ctx, "promise_repaired", pp);
+    c.failure = (Rlist *) PromiseGetConstraintAsList(ctx, "repair_failed", pp);
+    c.denied = (Rlist *) PromiseGetConstraintAsList(ctx, "repair_denied", pp);
+    c.timeout = (Rlist *) PromiseGetConstraintAsList(ctx, "repair_timeout", pp);
+    c.kept = (Rlist *) PromiseGetConstraintAsList(ctx, "promise_kept", pp);
+    c.interrupt = (Rlist *) PromiseGetConstraintAsList(ctx, "on_interrupt", pp);
 
-    c.del_change = (Rlist *) PromiseGetConstraintAsList("cancel_repaired", pp);
-    c.del_kept = (Rlist *) PromiseGetConstraintAsList("cancel_kept", pp);
-    c.del_notkept = (Rlist *) PromiseGetConstraintAsList("cancel_notkept", pp);
+    c.del_change = (Rlist *) PromiseGetConstraintAsList(ctx, "cancel_repaired", pp);
+    c.del_kept = (Rlist *) PromiseGetConstraintAsList(ctx, "cancel_kept", pp);
+    c.del_notkept = (Rlist *) PromiseGetConstraintAsList(ctx, "cancel_notkept", pp);
 
-    c.retcode_kept = (Rlist *) PromiseGetConstraintAsList("kept_returncodes", pp);
-    c.retcode_repaired = (Rlist *) PromiseGetConstraintAsList("repaired_returncodes", pp);
-    c.retcode_failed = (Rlist *) PromiseGetConstraintAsList("failed_returncodes", pp);
+    c.retcode_kept = (Rlist *) PromiseGetConstraintAsList(ctx, "kept_returncodes", pp);
+    c.retcode_repaired = (Rlist *) PromiseGetConstraintAsList(ctx, "repaired_returncodes", pp);
+    c.retcode_failed = (Rlist *) PromiseGetConstraintAsList(ctx, "failed_returncodes", pp);
 
-    c.persist = PromiseGetConstraintAsInt("persist_time", pp);
+    c.persist = PromiseGetConstraintAsInt(ctx, "persist_time", pp);
 
     if (c.persist == CF_NOINT)
     {
         c.persist = 0;
     }
 
-    pt = ConstraintGetRvalValue("timer_policy", pp, RVAL_TYPE_SCALAR);
+    pt = ConstraintGetRvalValue(ctx, "timer_policy", pp, RVAL_TYPE_SCALAR);
 
     if (pt && (strncmp(pt, "abs", 3) == 0))
     {
@@ -733,12 +737,12 @@ DefineClasses GetClassDefinitionConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-FileDelete GetDeleteConstraints(const Promise *pp)
+FileDelete GetDeleteConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileDelete f;
     char *value;
 
-    value = (char *) ConstraintGetRvalValue("dirlinks", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "dirlinks", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "keep") == 0))
     {
@@ -749,18 +753,18 @@ FileDelete GetDeleteConstraints(const Promise *pp)
         f.dirlinks = cfa_linkdelete;
     }
 
-    f.rmdirs = PromiseGetConstraintAsBoolean("rmdirs", pp);
+    f.rmdirs = PromiseGetConstraintAsBoolean(ctx, "rmdirs", pp);
     return f;
 }
 
 /*******************************************************************/
 
-FileRename GetRenameConstraints(const Promise *pp)
+FileRename GetRenameConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileRename r;
     char *value;
 
-    value = (char *) ConstraintGetRvalValue("disable_mode", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "disable_mode", pp, RVAL_TYPE_SCALAR);
 
     if (!ParseModeString(value, &r.plus, &r.minus))
     {
@@ -768,22 +772,22 @@ FileRename GetRenameConstraints(const Promise *pp)
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
-    r.disable = PromiseGetConstraintAsBoolean("disable", pp);
-    r.disable_suffix = (char *) ConstraintGetRvalValue("disable_suffix", pp, RVAL_TYPE_SCALAR);
-    r.newname = (char *) ConstraintGetRvalValue("newname", pp, RVAL_TYPE_SCALAR);
-    r.rotate = PromiseGetConstraintAsInt("rotate", pp);
+    r.disable = PromiseGetConstraintAsBoolean(ctx, "disable", pp);
+    r.disable_suffix = (char *) ConstraintGetRvalValue(ctx, "disable_suffix", pp, RVAL_TYPE_SCALAR);
+    r.newname = (char *) ConstraintGetRvalValue(ctx, "newname", pp, RVAL_TYPE_SCALAR);
+    r.rotate = PromiseGetConstraintAsInt(ctx, "rotate", pp);
 
     return r;
 }
 
 /*******************************************************************/
 
-FileChange GetChangeMgtConstraints(const Promise *pp)
+FileChange GetChangeMgtConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileChange c;
     char *value;
 
-    value = (char *) ConstraintGetRvalValue("hash", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "hash", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "best") == 0))
     {
@@ -824,7 +828,7 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
-    value = (char *) ConstraintGetRvalValue("report_changes", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "report_changes", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "content") == 0))
     {
@@ -843,30 +847,30 @@ FileChange GetChangeMgtConstraints(const Promise *pp)
         c.report_changes = FILE_CHANGE_REPORT_NONE;
     }
 
-    if (ConstraintGetRvalValue("update_hashes", pp, RVAL_TYPE_SCALAR))
+    if (ConstraintGetRvalValue(ctx, "update_hashes", pp, RVAL_TYPE_SCALAR))
     {
-        c.update = PromiseGetConstraintAsBoolean("update_hashes", pp);
+        c.update = PromiseGetConstraintAsBoolean(ctx, "update_hashes", pp);
     }
     else
     {
         c.update = CHECKSUMUPDATES;
     }
 
-    c.report_diffs = PromiseGetConstraintAsBoolean("report_diffs", pp);
+    c.report_diffs = PromiseGetConstraintAsBoolean(ctx, "report_diffs", pp);
     return c;
 }
 
 /*******************************************************************/
 
-FileCopy GetCopyConstraints(const Promise *pp)
+FileCopy GetCopyConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileCopy f;
     char *value;
     long min, max;
 
-    f.source = (char *) ConstraintGetRvalValue("source", pp, RVAL_TYPE_SCALAR);
+    f.source = (char *) ConstraintGetRvalValue(ctx, "source", pp, RVAL_TYPE_SCALAR);
 
-    value = (char *) ConstraintGetRvalValue("compare", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "compare", pp, RVAL_TYPE_SCALAR);
 
     if (value == NULL)
     {
@@ -875,16 +879,16 @@ FileCopy GetCopyConstraints(const Promise *pp)
 
     f.compare = FileComparatorFromString(value);
 
-    value = (char *) ConstraintGetRvalValue("link_type", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "link_type", pp, RVAL_TYPE_SCALAR);
 
     f.link_type = FileLinkTypeFromString(value);
-    f.servers = PromiseGetConstraintAsList("servers", pp);
-    f.portnumber = (short) PromiseGetConstraintAsInt("portnumber", pp);
-    f.timeout = (short) PromiseGetConstraintAsInt("timeout", pp);
-    f.link_instead = PromiseGetConstraintAsList("linkcopy_patterns", pp);
-    f.copy_links = PromiseGetConstraintAsList("copylink_patterns", pp);
+    f.servers = PromiseGetConstraintAsList(ctx, "servers", pp);
+    f.portnumber = (short) PromiseGetConstraintAsInt(ctx, "portnumber", pp);
+    f.timeout = (short) PromiseGetConstraintAsInt(ctx, "timeout", pp);
+    f.link_instead = PromiseGetConstraintAsList(ctx, "linkcopy_patterns", pp);
+    f.copy_links = PromiseGetConstraintAsList(ctx, "copylink_patterns", pp);
 
-    value = (char *) ConstraintGetRvalValue("copy_backup", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "copy_backup", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "false") == 0))
     {
@@ -899,24 +903,24 @@ FileCopy GetCopyConstraints(const Promise *pp)
         f.backup = BACKUP_OPTION_BACKUP;
     }
 
-    f.stealth = PromiseGetConstraintAsBoolean("stealth", pp);
-    f.collapse = PromiseGetConstraintAsBoolean("collapse_destination_dir", pp);
-    f.preserve = PromiseGetConstraintAsBoolean("preserve", pp);
-    f.type_check = PromiseGetConstraintAsBoolean("type_check", pp);
-    f.force_update = PromiseGetConstraintAsBoolean("force_update", pp);
-    f.force_ipv4 = PromiseGetConstraintAsBoolean("force_ipv4", pp);
-    f.check_root = PromiseGetConstraintAsBoolean("check_root", pp);
+    f.stealth = PromiseGetConstraintAsBoolean(ctx, "stealth", pp);
+    f.collapse = PromiseGetConstraintAsBoolean(ctx, "collapse_destination_dir", pp);
+    f.preserve = PromiseGetConstraintAsBoolean(ctx, "preserve", pp);
+    f.type_check = PromiseGetConstraintAsBoolean(ctx, "type_check", pp);
+    f.force_update = PromiseGetConstraintAsBoolean(ctx, "force_update", pp);
+    f.force_ipv4 = PromiseGetConstraintAsBoolean(ctx, "force_ipv4", pp);
+    f.check_root = PromiseGetConstraintAsBoolean(ctx, "check_root", pp);
 
-    value = (char *) ConstraintGetRvalValue("copy_size", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "copy_size", pp, RVAL_TYPE_SCALAR);
     IntRange2Int(value, &min, &max, pp);
 
     f.min_size = (size_t) min;
     f.max_size = (size_t) max;
 
-    f.trustkey = PromiseGetConstraintAsBoolean("trustkey", pp);
-    f.encrypt = PromiseGetConstraintAsBoolean("encrypt", pp);
-    f.verify = PromiseGetConstraintAsBoolean("verify", pp);
-    f.purge = PromiseGetConstraintAsBoolean("purge", pp);
+    f.trustkey = PromiseGetConstraintAsBoolean(ctx, "trustkey", pp);
+    f.encrypt = PromiseGetConstraintAsBoolean(ctx, "encrypt", pp);
+    f.verify = PromiseGetConstraintAsBoolean(ctx, "verify", pp);
+    f.purge = PromiseGetConstraintAsBoolean(ctx, "purge", pp);
     f.destination = NULL;
 
     return f;
@@ -924,17 +928,17 @@ FileCopy GetCopyConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-FileLink GetLinkConstraints(const Promise *pp)
+FileLink GetLinkConstraints(EvalContext *ctx, const Promise *pp)
 {
     FileLink f;
     char *value;
 
-    f.source = (char *) ConstraintGetRvalValue("source", pp, RVAL_TYPE_SCALAR);
-    value = (char *) ConstraintGetRvalValue("link_type", pp, RVAL_TYPE_SCALAR);
+    f.source = (char *) ConstraintGetRvalValue(ctx, "source", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "link_type", pp, RVAL_TYPE_SCALAR);
     f.link_type = FileLinkTypeFromString(value);
-    f.copy_patterns = PromiseGetConstraintAsList("copy_patterns", pp);
+    f.copy_patterns = PromiseGetConstraintAsList(ctx, "copy_patterns", pp);
 
-    value = (char *) ConstraintGetRvalValue("when_no_source", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "when_no_source", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "force") == 0))
     {
@@ -949,7 +953,7 @@ FileLink GetLinkConstraints(const Promise *pp)
         f.when_no_file = cfa_skip;
     }
 
-    value = (char *) ConstraintGetRvalValue("when_linking_children", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "when_linking_children", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "override_file") == 0))
     {
@@ -960,26 +964,26 @@ FileLink GetLinkConstraints(const Promise *pp)
         f.when_linking_children = cfa_onlynonexisting;
     }
 
-    f.link_children = PromiseGetConstraintAsBoolean("link_children", pp);
+    f.link_children = PromiseGetConstraintAsBoolean(ctx, "link_children", pp);
 
     return f;
 }
 
 /*******************************************************************/
 
-EditDefaults GetEditDefaults(const Promise *pp)
+EditDefaults GetEditDefaults(EvalContext *ctx, const Promise *pp)
 {
     EditDefaults e = { 0 };
     char *value;
 
-    e.maxfilesize = PromiseGetConstraintAsInt("max_file_size", pp);
+    e.maxfilesize = PromiseGetConstraintAsInt(ctx, "max_file_size", pp);
 
     if ((e.maxfilesize == CF_NOINT) || (e.maxfilesize == 0))
     {
         e.maxfilesize = EDITFILESIZE;
     }
 
-    value = (char *) ConstraintGetRvalValue("edit_backup", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "edit_backup", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "false") == 0))
     {
@@ -992,31 +996,31 @@ EditDefaults GetEditDefaults(const Promise *pp)
     else if (value && (strcmp(value, "rotate") == 0))
     {
         e.backup = BACKUP_OPTION_ROTATE;
-        e.rotate = PromiseGetConstraintAsInt("rotate", pp);
+        e.rotate = PromiseGetConstraintAsInt(ctx, "rotate", pp);
     }
     else
     {
         e.backup = BACKUP_OPTION_BACKUP;
     }
 
-    e.empty_before_use = PromiseGetConstraintAsBoolean("empty_file_before_editing", pp); 
+    e.empty_before_use = PromiseGetConstraintAsBoolean(ctx, "empty_file_before_editing", pp);
 
-    e.joinlines = PromiseGetConstraintAsBoolean("recognize_join", pp);
+    e.joinlines = PromiseGetConstraintAsBoolean(ctx, "recognize_join", pp);
 
-    e.inherit = PromiseGetConstraintAsBoolean("inherit", pp);
+    e.inherit = PromiseGetConstraintAsBoolean(ctx, "inherit", pp);
 
     return e;
 }
 
 /*******************************************************************/
 
-ContextConstraint GetContextConstraints(const Promise *pp)
+ContextConstraint GetContextConstraints(EvalContext *ctx, const Promise *pp)
 {
     ContextConstraint a;
 
     a.nconstraints = 0;
     a.expression = NULL;
-    a.persistent = PromiseGetConstraintAsInt("persistence", pp);
+    a.persistent = PromiseGetConstraintAsInt(ctx, "persistence", pp);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -1042,18 +1046,18 @@ ContextConstraint GetContextConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-Packages GetPackageConstraints(const Promise *pp)
+Packages GetPackageConstraints(EvalContext *ctx, const Promise *pp)
 {
     Packages p;
     PackageAction action;
     PackageVersionComparator operator;
     PackageActionPolicy change_policy;
 
-    p.have_package_methods = PromiseGetConstraintAsBoolean("havepackage_method", pp);
-    p.package_version = (char *) ConstraintGetRvalValue("package_version", pp, RVAL_TYPE_SCALAR);
-    p.package_architectures = PromiseGetConstraintAsList("package_architectures", pp);
+    p.have_package_methods = PromiseGetConstraintAsBoolean(ctx, "havepackage_method", pp);
+    p.package_version = (char *) ConstraintGetRvalValue(ctx, "package_version", pp, RVAL_TYPE_SCALAR);
+    p.package_architectures = PromiseGetConstraintAsList(ctx, "package_architectures", pp);
 
-    action = PackageActionFromString((char *) ConstraintGetRvalValue("package_policy", pp, RVAL_TYPE_SCALAR));
+    action = PackageActionFromString((char *) ConstraintGetRvalValue(ctx, "package_policy", pp, RVAL_TYPE_SCALAR));
     p.package_policy = action;
 
     if (p.package_policy == PACKAGE_ACTION_NONE)        // Default action => package add
@@ -1061,74 +1065,74 @@ Packages GetPackageConstraints(const Promise *pp)
         p.package_policy = PACKAGE_ACTION_ADD;
     }
 
-    operator = PackageVersionComparatorFromString((char *) ConstraintGetRvalValue("package_select", pp, RVAL_TYPE_SCALAR));
+    operator = PackageVersionComparatorFromString((char *) ConstraintGetRvalValue(ctx, "package_select", pp, RVAL_TYPE_SCALAR));
 
     p.package_select = operator;
-    change_policy = PackageActionPolicyFromString((char *) ConstraintGetRvalValue("package_changes", pp, RVAL_TYPE_SCALAR));
+    change_policy = PackageActionPolicyFromString((char *) ConstraintGetRvalValue(ctx, "package_changes", pp, RVAL_TYPE_SCALAR));
     p.package_changes = change_policy;
 
-    p.package_file_repositories = PromiseGetConstraintAsList("package_file_repositories", pp);
+    p.package_file_repositories = PromiseGetConstraintAsList(ctx, "package_file_repositories", pp);
 
-    p.package_default_arch_command = (char *) ConstraintGetRvalValue("package_default_arch_command", pp, RVAL_TYPE_SCALAR);
+    p.package_default_arch_command = (char *) ConstraintGetRvalValue(ctx, "package_default_arch_command", pp, RVAL_TYPE_SCALAR);
 
-    p.package_patch_list_command = (char *) ConstraintGetRvalValue("package_patch_list_command", pp, RVAL_TYPE_SCALAR);
-    p.package_patch_name_regex = (char *) ConstraintGetRvalValue("package_patch_name_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_patch_arch_regex = (char *) ConstraintGetRvalValue("package_patch_arch_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_patch_version_regex = (char *) ConstraintGetRvalValue("package_patch_version_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_patch_installed_regex = (char *) ConstraintGetRvalValue("package_patch_installed_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_list_command = (char *) ConstraintGetRvalValue(ctx, "package_patch_list_command", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_name_regex = (char *) ConstraintGetRvalValue(ctx, "package_patch_name_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_arch_regex = (char *) ConstraintGetRvalValue(ctx, "package_patch_arch_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_version_regex = (char *) ConstraintGetRvalValue(ctx, "package_patch_version_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_installed_regex = (char *) ConstraintGetRvalValue(ctx, "package_patch_installed_regex", pp, RVAL_TYPE_SCALAR);
 
-    p.package_list_update_command = (char *) ConstraintGetRvalValue("package_list_update_command", pp, RVAL_TYPE_SCALAR);
-    p.package_list_update_ifelapsed = PromiseGetConstraintAsInt("package_list_update_ifelapsed", pp);
-    p.package_list_command = (char *) ConstraintGetRvalValue("package_list_command", pp, RVAL_TYPE_SCALAR);
-    p.package_list_version_regex = (char *) ConstraintGetRvalValue("package_list_version_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_list_name_regex = (char *) ConstraintGetRvalValue("package_list_name_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_list_arch_regex = (char *) ConstraintGetRvalValue("package_list_arch_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_list_update_command = (char *) ConstraintGetRvalValue(ctx, "package_list_update_command", pp, RVAL_TYPE_SCALAR);
+    p.package_list_update_ifelapsed = PromiseGetConstraintAsInt(ctx, "package_list_update_ifelapsed", pp);
+    p.package_list_command = (char *) ConstraintGetRvalValue(ctx, "package_list_command", pp, RVAL_TYPE_SCALAR);
+    p.package_list_version_regex = (char *) ConstraintGetRvalValue(ctx, "package_list_version_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_list_name_regex = (char *) ConstraintGetRvalValue(ctx, "package_list_name_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_list_arch_regex = (char *) ConstraintGetRvalValue(ctx, "package_list_arch_regex", pp, RVAL_TYPE_SCALAR);
 
-    p.package_installed_regex = (char *) ConstraintGetRvalValue("package_installed_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_installed_regex = (char *) ConstraintGetRvalValue(ctx, "package_installed_regex", pp, RVAL_TYPE_SCALAR);
 
-    p.package_version_regex = (char *) ConstraintGetRvalValue("package_version_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_name_regex = (char *) ConstraintGetRvalValue("package_name_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_arch_regex = (char *) ConstraintGetRvalValue("package_arch_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_version_regex = (char *) ConstraintGetRvalValue(ctx, "package_version_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_name_regex = (char *) ConstraintGetRvalValue(ctx, "package_name_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_arch_regex = (char *) ConstraintGetRvalValue(ctx, "package_arch_regex", pp, RVAL_TYPE_SCALAR);
 
-    p.package_add_command = (char *) ConstraintGetRvalValue("package_add_command", pp, RVAL_TYPE_SCALAR);
-    p.package_delete_command = (char *) ConstraintGetRvalValue("package_delete_command", pp, RVAL_TYPE_SCALAR);
-    p.package_update_command = (char *) ConstraintGetRvalValue("package_update_command", pp, RVAL_TYPE_SCALAR);
-    p.package_patch_command = (char *) ConstraintGetRvalValue("package_patch_command", pp, RVAL_TYPE_SCALAR);
-    p.package_verify_command = (char *) ConstraintGetRvalValue("package_verify_command", pp, RVAL_TYPE_SCALAR);
-    p.package_noverify_regex = (char *) ConstraintGetRvalValue("package_noverify_regex", pp, RVAL_TYPE_SCALAR);
-    p.package_noverify_returncode = PromiseGetConstraintAsInt("package_noverify_returncode", pp);
+    p.package_add_command = (char *) ConstraintGetRvalValue(ctx, "package_add_command", pp, RVAL_TYPE_SCALAR);
+    p.package_delete_command = (char *) ConstraintGetRvalValue(ctx, "package_delete_command", pp, RVAL_TYPE_SCALAR);
+    p.package_update_command = (char *) ConstraintGetRvalValue(ctx, "package_update_command", pp, RVAL_TYPE_SCALAR);
+    p.package_patch_command = (char *) ConstraintGetRvalValue(ctx, "package_patch_command", pp, RVAL_TYPE_SCALAR);
+    p.package_verify_command = (char *) ConstraintGetRvalValue(ctx, "package_verify_command", pp, RVAL_TYPE_SCALAR);
+    p.package_noverify_regex = (char *) ConstraintGetRvalValue(ctx, "package_noverify_regex", pp, RVAL_TYPE_SCALAR);
+    p.package_noverify_returncode = PromiseGetConstraintAsInt(ctx, "package_noverify_returncode", pp);
 
-    if (PromiseGetConstraint(pp, "package_commands_useshell") == NULL)
+    if (PromiseGetConstraint(ctx, pp, "package_commands_useshell") == NULL)
     {
         p.package_commands_useshell = true;
     }
     else
     {
-        p.package_commands_useshell = PromiseGetConstraintAsBoolean("package_commands_useshell", pp);
+        p.package_commands_useshell = PromiseGetConstraintAsBoolean(ctx, "package_commands_useshell", pp);
     }
 
-    p.package_name_convention = (char *) ConstraintGetRvalValue("package_name_convention", pp, RVAL_TYPE_SCALAR);
-    p.package_delete_convention = (char *) ConstraintGetRvalValue("package_delete_convention", pp, RVAL_TYPE_SCALAR);
+    p.package_name_convention = (char *) ConstraintGetRvalValue(ctx, "package_name_convention", pp, RVAL_TYPE_SCALAR);
+    p.package_delete_convention = (char *) ConstraintGetRvalValue(ctx, "package_delete_convention", pp, RVAL_TYPE_SCALAR);
 
-    p.package_multiline_start = (char *) ConstraintGetRvalValue("package_multiline_start", pp, RVAL_TYPE_SCALAR);
+    p.package_multiline_start = (char *) ConstraintGetRvalValue(ctx, "package_multiline_start", pp, RVAL_TYPE_SCALAR);
 
-    p.package_version_equal_command = ConstraintGetRvalValue("package_version_equal_command", pp, RVAL_TYPE_SCALAR);
-    p.package_version_less_command = ConstraintGetRvalValue("package_version_less_command", pp, RVAL_TYPE_SCALAR);
+    p.package_version_equal_command = ConstraintGetRvalValue(ctx, "package_version_equal_command", pp, RVAL_TYPE_SCALAR);
+    p.package_version_less_command = ConstraintGetRvalValue(ctx, "package_version_less_command", pp, RVAL_TYPE_SCALAR);
 
     return p;
 }
 
 /*******************************************************************/
 
-ProcessSelect GetProcessFilterConstraints(const Promise *pp)
+ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
 {
     ProcessSelect p;
     char *value;
     int entries = 0;
 
-    p.owner = PromiseGetConstraintAsList("process_owner", pp);
+    p.owner = PromiseGetConstraintAsList(ctx, "process_owner", pp);
 
-    value = (char *) ConstraintGetRvalValue("pid", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "pid", pp, RVAL_TYPE_SCALAR);
 
     if (value)
     {
@@ -1136,7 +1140,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
     }
 
     IntRange2Int(value, &p.min_pid, &p.max_pid, pp);
-    value = (char *) ConstraintGetRvalValue("ppid", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "ppid", pp, RVAL_TYPE_SCALAR);
 
     if (value)
     {
@@ -1144,7 +1148,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
     }
 
     IntRange2Int(value, &p.min_ppid, &p.max_ppid, pp);
-    value = (char *) ConstraintGetRvalValue("pgid", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "pgid", pp, RVAL_TYPE_SCALAR);
 
     if (value)
     {
@@ -1152,7 +1156,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
     }
 
     IntRange2Int(value, &p.min_pgid, &p.max_pgid, pp);
-    value = (char *) ConstraintGetRvalValue("rsize", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "rsize", pp, RVAL_TYPE_SCALAR);
 
     if (value)
     {
@@ -1160,21 +1164,21 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
     }
 
     IntRange2Int(value, &p.min_rsize, &p.max_rsize, pp);
-    value = (char *) ConstraintGetRvalValue("vsize", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "vsize", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
 
     IntRange2Int(value, &p.min_vsize, &p.max_vsize, pp);
-    value = (char *) ConstraintGetRvalValue("ttime_range", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "ttime_range", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
 
     IntRange2Int(value, (long *) &p.min_ttime, (long *) &p.max_ttime, pp);
-    value = (char *) ConstraintGetRvalValue("stime_range", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "stime_range", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
@@ -1182,18 +1186,18 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
 
     IntRange2Int(value, (long *) &p.min_stime, (long *) &p.max_stime, pp);
 
-    p.status = (char *) ConstraintGetRvalValue("status", pp, RVAL_TYPE_SCALAR);
-    p.command = (char *) ConstraintGetRvalValue("command", pp, RVAL_TYPE_SCALAR);
-    p.tty = (char *) ConstraintGetRvalValue("tty", pp, RVAL_TYPE_SCALAR);
+    p.status = (char *) ConstraintGetRvalValue(ctx, "status", pp, RVAL_TYPE_SCALAR);
+    p.command = (char *) ConstraintGetRvalValue(ctx, "command", pp, RVAL_TYPE_SCALAR);
+    p.tty = (char *) ConstraintGetRvalValue(ctx, "tty", pp, RVAL_TYPE_SCALAR);
 
-    value = (char *) ConstraintGetRvalValue("priority", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "priority", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
     }
 
     IntRange2Int(value, &p.min_pri, &p.max_pri, pp);
-    value = (char *) ConstraintGetRvalValue("threads", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "threads", pp, RVAL_TYPE_SCALAR);
     if (value)
     {
         entries++;
@@ -1206,7 +1210,7 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
         entries = true;
     }
 
-    if ((p.process_result = (char *) ConstraintGetRvalValue("process_result", pp, RVAL_TYPE_SCALAR)) == NULL)
+    if ((p.process_result = (char *) ConstraintGetRvalValue(ctx, "process_result", pp, RVAL_TYPE_SCALAR)) == NULL)
     {
         if (entries)
         {
@@ -1219,15 +1223,15 @@ ProcessSelect GetProcessFilterConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-ProcessCount GetMatchesConstraints(const Promise *pp)
+ProcessCount GetMatchesConstraints(EvalContext *ctx, const Promise *pp)
 {
     ProcessCount p;
     char *value;
 
-    value = (char *) ConstraintGetRvalValue("match_range", pp, RVAL_TYPE_SCALAR);
+    value = (char *) ConstraintGetRvalValue(ctx, "match_range", pp, RVAL_TYPE_SCALAR);
     IntRange2Int(value, &p.min_range, &p.max_range, pp);
-    p.in_range_define = PromiseGetConstraintAsList("in_range_define", pp);
-    p.out_of_range_define = PromiseGetConstraintAsList("out_of_range_define", pp);
+    p.in_range_define = PromiseGetConstraintAsList(ctx, "in_range_define", pp);
+    p.out_of_range_define = PromiseGetConstraintAsList(ctx, "out_of_range_define", pp);
 
     return p;
 }
@@ -1276,47 +1280,47 @@ static void ShowAttributes(Attributes a)
 /* Edit sub-bundles have their own attributes                      */
 /*******************************************************************/
 
-Attributes GetInsertionAttributes(const Promise *pp)
+Attributes GetInsertionAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havelocation = PromiseGetConstraintAsBoolean("location", pp);
-    attr.location = GetLocationAttributes(pp);
+    attr.havelocation = PromiseGetConstraintAsBoolean(ctx, "location", pp);
+    attr.location = GetLocationAttributes(ctx, pp);
 
-    attr.sourcetype = ConstraintGetRvalValue("insert_type", pp, RVAL_TYPE_SCALAR);
-    attr.expandvars = PromiseGetConstraintAsBoolean("expand_scalars", pp);
+    attr.sourcetype = ConstraintGetRvalValue(ctx, "insert_type", pp, RVAL_TYPE_SCALAR);
+    attr.expandvars = PromiseGetConstraintAsBoolean(ctx, "expand_scalars", pp);
 
-    attr.haveinsertselect = PromiseGetConstraintAsBoolean("insert_select", pp);
-    attr.line_select = GetInsertSelectConstraints(pp);
+    attr.haveinsertselect = PromiseGetConstraintAsBoolean(ctx, "insert_select", pp);
+    attr.line_select = GetInsertSelectConstraints(ctx, pp);
 
-    attr.insert_match = PromiseGetConstraintAsList("whitespace_policy", pp);
+    attr.insert_match = PromiseGetConstraintAsList(ctx, "whitespace_policy", pp);
 
 /* Common ("included") */
 
-    attr.haveregion = PromiseGetConstraintAsBoolean("select_region", pp);
-    attr.region = GetRegionConstraints(pp);
+    attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
+    attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(pp);
+    attr.xml = GetXmlConstraints(ctx, pp);
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-EditLocation GetLocationAttributes(const Promise *pp)
+EditLocation GetLocationAttributes(EvalContext *ctx, const Promise *pp)
 {
     EditLocation e;
     char *value;
 
-    e.line_matching = ConstraintGetRvalValue("select_line_matching", pp, RVAL_TYPE_SCALAR);
+    e.line_matching = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR);
 
-    value = ConstraintGetRvalValue("before_after", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "before_after", pp, RVAL_TYPE_SCALAR);
 
     if (value && (strcmp(value, "before") == 0))
     {
@@ -1327,141 +1331,141 @@ EditLocation GetLocationAttributes(const Promise *pp)
         e.before_after = EDIT_ORDER_AFTER;
     }
 
-    e.first_last = ConstraintGetRvalValue("first_last", pp, RVAL_TYPE_SCALAR);
+    e.first_last = ConstraintGetRvalValue(ctx, "first_last", pp, RVAL_TYPE_SCALAR);
     return e;
 }
 
 /*******************************************************************/
 
-Attributes GetDeletionAttributes(const Promise *pp)
+Attributes GetDeletionAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.not_matching = PromiseGetConstraintAsBoolean("not_matching", pp);
+    attr.not_matching = PromiseGetConstraintAsBoolean(ctx, "not_matching", pp);
 
-    attr.havedeleteselect = PromiseGetConstraintAsBoolean("delete_select", pp);
-    attr.line_select = GetDeleteSelectConstraints(pp);
+    attr.havedeleteselect = PromiseGetConstraintAsBoolean(ctx, "delete_select", pp);
+    attr.line_select = GetDeleteSelectConstraints(ctx, pp);
 
     /* common */
 
-    attr.haveregion = PromiseGetConstraintAsBoolean("select_region", pp);
-    attr.region = GetRegionConstraints(pp);
+    attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
+    attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(pp);
+    attr.xml = GetXmlConstraints(ctx, pp);
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetColumnAttributes(const Promise *pp)
+Attributes GetColumnAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havecolumn = PromiseGetConstraintAsBoolean("edit_field", pp);
-    attr.column = GetColumnConstraints(pp);
+    attr.havecolumn = PromiseGetConstraintAsBoolean(ctx, "edit_field", pp);
+    attr.column = GetColumnConstraints(ctx, pp);
 
     /* common */
 
-    attr.haveregion = PromiseGetConstraintAsBoolean("select_region", pp);
-    attr.region = GetRegionConstraints(pp);
+    attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
+    attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-Attributes GetReplaceAttributes(const Promise *pp)
+Attributes GetReplaceAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
-    attr.havereplace = PromiseGetConstraintAsBoolean("replace_patterns", pp);
-    attr.replace = GetReplaceConstraints(pp);
+    attr.havereplace = PromiseGetConstraintAsBoolean(ctx, "replace_patterns", pp);
+    attr.replace = GetReplaceConstraints(ctx, pp);
 
-    attr.havecolumn = PromiseGetConstraintAsBoolean("replace_with", pp);
+    attr.havecolumn = PromiseGetConstraintAsBoolean(ctx, "replace_with", pp);
 
     /* common */
 
-    attr.haveregion = PromiseGetConstraintAsBoolean("select_region", pp);
-    attr.region = GetRegionConstraints(pp);
+    attr.haveregion = PromiseGetConstraintAsBoolean(ctx, "select_region", pp);
+    attr.region = GetRegionConstraints(ctx, pp);
 
-    attr.xml = GetXmlConstraints(pp);
+    attr.xml = GetXmlConstraints(ctx, pp);
 
-    attr.havetrans = PromiseGetConstraintAsBoolean(CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(pp);
+    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
+    attr.transaction = GetTransactionConstraints(ctx, pp);
 
-    attr.haveclasses = PromiseGetConstraintAsBoolean(CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(pp);
+    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
+    attr.classes = GetClassDefinitionConstraints(ctx, pp);
 
     return attr;
 }
 
 /*******************************************************************/
 
-EditXml GetXmlConstraints(const Promise *pp)
+EditXml GetXmlConstraints(EvalContext *ctx, const Promise *pp)
 {
     EditXml x;
 
-    x.havebuildxpath = ((x.build_xpath = ConstraintGetRvalValue("build_xpath", pp, RVAL_TYPE_SCALAR)) != NULL);
-    x.haveselectxpath = ((x.select_xpath = ConstraintGetRvalValue("select_xpath", pp, RVAL_TYPE_SCALAR)) != NULL);
-    x.haveattributevalue = ((x.attribute_value = ConstraintGetRvalValue("attribute_value", pp, RVAL_TYPE_SCALAR)) != NULL);
+    x.havebuildxpath = ((x.build_xpath = ConstraintGetRvalValue(ctx, "build_xpath", pp, RVAL_TYPE_SCALAR)) != NULL);
+    x.haveselectxpath = ((x.select_xpath = ConstraintGetRvalValue(ctx, "select_xpath", pp, RVAL_TYPE_SCALAR)) != NULL);
+    x.haveattributevalue = ((x.attribute_value = ConstraintGetRvalValue(ctx, "attribute_value", pp, RVAL_TYPE_SCALAR)) != NULL);
 
     return x;
 }
 
 /*******************************************************************/
 
-EditRegion GetRegionConstraints(const Promise *pp)
+EditRegion GetRegionConstraints(EvalContext *ctx, const Promise *pp)
 {
     EditRegion e;
 
-    e.select_start = ConstraintGetRvalValue("select_start", pp, RVAL_TYPE_SCALAR);
-    e.select_end = ConstraintGetRvalValue("select_end", pp, RVAL_TYPE_SCALAR);
-    e.include_start = PromiseGetConstraintAsBoolean("include_start_delimiter", pp);
-    e.include_end = PromiseGetConstraintAsBoolean("include_end_delimiter", pp);
+    e.select_start = ConstraintGetRvalValue(ctx, "select_start", pp, RVAL_TYPE_SCALAR);
+    e.select_end = ConstraintGetRvalValue(ctx, "select_end", pp, RVAL_TYPE_SCALAR);
+    e.include_start = PromiseGetConstraintAsBoolean(ctx, "include_start_delimiter", pp);
+    e.include_end = PromiseGetConstraintAsBoolean(ctx, "include_end_delimiter", pp);
     return e;
 }
 
 /*******************************************************************/
 
-EditReplace GetReplaceConstraints(const Promise *pp)
+EditReplace GetReplaceConstraints(EvalContext *ctx, const Promise *pp)
 {
     EditReplace r;
 
-    r.replace_value = ConstraintGetRvalValue("replace_value", pp, RVAL_TYPE_SCALAR);
-    r.occurrences = ConstraintGetRvalValue("occurrences", pp, RVAL_TYPE_SCALAR);
+    r.replace_value = ConstraintGetRvalValue(ctx, "replace_value", pp, RVAL_TYPE_SCALAR);
+    r.occurrences = ConstraintGetRvalValue(ctx, "occurrences", pp, RVAL_TYPE_SCALAR);
 
     return r;
 }
 
 /*******************************************************************/
 
-EditColumn GetColumnConstraints(const Promise *pp)
+EditColumn GetColumnConstraints(EvalContext *ctx, const Promise *pp)
 {
     EditColumn c;
     char *value;
 
-    c.column_separator = ConstraintGetRvalValue("field_separator", pp, RVAL_TYPE_SCALAR);
-    c.select_column = PromiseGetConstraintAsInt("select_field", pp);
+    c.column_separator = ConstraintGetRvalValue(ctx, "field_separator", pp, RVAL_TYPE_SCALAR);
+    c.select_column = PromiseGetConstraintAsInt(ctx, "select_field", pp);
 
-    if (((c.select_column) != CF_NOINT) && (PromiseGetConstraintAsBoolean("start_fields_from_zero", pp)))
+    if (((c.select_column) != CF_NOINT) && (PromiseGetConstraintAsBoolean(ctx, "start_fields_from_zero", pp)))
     {
         c.select_column++;
     }
 
-    value = ConstraintGetRvalValue("value_separator", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "value_separator", pp, RVAL_TYPE_SCALAR);
 
     if (value)
     {
@@ -1472,10 +1476,10 @@ EditColumn GetColumnConstraints(const Promise *pp)
         c.value_separator = '\0';
     }
 
-    c.column_value = ConstraintGetRvalValue("field_value", pp, RVAL_TYPE_SCALAR);
-    c.column_operation = ConstraintGetRvalValue("field_operation", pp, RVAL_TYPE_SCALAR);
-    c.extend_columns = PromiseGetConstraintAsBoolean("extend_fields", pp);
-    c.blanks_ok = PromiseGetConstraintAsBoolean("allow_blank_fields", pp);
+    c.column_value = ConstraintGetRvalValue(ctx, "field_value", pp, RVAL_TYPE_SCALAR);
+    c.column_operation = ConstraintGetRvalValue(ctx, "field_operation", pp, RVAL_TYPE_SCALAR);
+    c.extend_columns = PromiseGetConstraintAsBoolean(ctx, "extend_fields", pp);
+    c.blanks_ok = PromiseGetConstraintAsBoolean(ctx, "allow_blank_fields", pp);
     return c;
 }
 
@@ -1483,36 +1487,36 @@ EditColumn GetColumnConstraints(const Promise *pp)
 /* Storage                                                         */
 /*******************************************************************/
 
-StorageMount GetMountConstraints(const Promise *pp)
+StorageMount GetMountConstraints(EvalContext *ctx, const Promise *pp)
 {
     StorageMount m;
 
-    m.mount_type = ConstraintGetRvalValue("mount_type", pp, RVAL_TYPE_SCALAR);
-    m.mount_source = ConstraintGetRvalValue("mount_source", pp, RVAL_TYPE_SCALAR);
-    m.mount_server = ConstraintGetRvalValue("mount_server", pp, RVAL_TYPE_SCALAR);
-    m.mount_options = PromiseGetConstraintAsList("mount_options", pp);
-    m.editfstab = PromiseGetConstraintAsBoolean("edit_fstab", pp);
-    m.unmount = PromiseGetConstraintAsBoolean("unmount", pp);
+    m.mount_type = ConstraintGetRvalValue(ctx, "mount_type", pp, RVAL_TYPE_SCALAR);
+    m.mount_source = ConstraintGetRvalValue(ctx, "mount_source", pp, RVAL_TYPE_SCALAR);
+    m.mount_server = ConstraintGetRvalValue(ctx, "mount_server", pp, RVAL_TYPE_SCALAR);
+    m.mount_options = PromiseGetConstraintAsList(ctx, "mount_options", pp);
+    m.editfstab = PromiseGetConstraintAsBoolean(ctx, "edit_fstab", pp);
+    m.unmount = PromiseGetConstraintAsBoolean(ctx, "unmount", pp);
 
     return m;
 }
 
 /*******************************************************************/
 
-StorageVolume GetVolumeConstraints(const Promise *pp)
+StorageVolume GetVolumeConstraints(EvalContext *ctx, const Promise *pp)
 {
     StorageVolume v;
     char *value;
 
-    v.check_foreign = PromiseGetConstraintAsBoolean("check_foreign", pp);
-    value = ConstraintGetRvalValue("freespace", pp, RVAL_TYPE_SCALAR);
+    v.check_foreign = PromiseGetConstraintAsBoolean(ctx, "check_foreign", pp);
+    value = ConstraintGetRvalValue(ctx, "freespace", pp, RVAL_TYPE_SCALAR);
 
     v.freespace = (long) IntFromString(value);
-    value = ConstraintGetRvalValue("sensible_size", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "sensible_size", pp, RVAL_TYPE_SCALAR);
     v.sensible_size = (int) IntFromString(value);
-    value = ConstraintGetRvalValue("sensible_count", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "sensible_count", pp, RVAL_TYPE_SCALAR);
     v.sensible_count = (int) IntFromString(value);
-    v.scan_arrivals = PromiseGetConstraintAsBoolean("scan_arrivals", pp);
+    v.scan_arrivals = PromiseGetConstraintAsBoolean(ctx, "scan_arrivals", pp);
 
 // defaults
     if (v.sensible_size == CF_NOINT)
@@ -1530,28 +1534,28 @@ StorageVolume GetVolumeConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-TcpIp GetTCPIPAttributes(const Promise *pp)
+TcpIp GetTCPIPAttributes(EvalContext *ctx, const Promise *pp)
 {
     TcpIp t;
 
-    t.ipv4_address = ConstraintGetRvalValue("ipv4_address", pp, RVAL_TYPE_SCALAR);
-    t.ipv4_netmask = ConstraintGetRvalValue("ipv4_netmask", pp, RVAL_TYPE_SCALAR);
+    t.ipv4_address = ConstraintGetRvalValue(ctx, "ipv4_address", pp, RVAL_TYPE_SCALAR);
+    t.ipv4_netmask = ConstraintGetRvalValue(ctx, "ipv4_netmask", pp, RVAL_TYPE_SCALAR);
 
     return t;
 }
 
 /*******************************************************************/
 
-Report GetReportConstraints(const Promise *pp)
+Report GetReportConstraints(EvalContext *ctx, const Promise *pp)
 {
  Report r = {0};
  
- r.result = ConstraintGetRvalValue("bundle_return_value_index", pp, RVAL_TYPE_SCALAR);
+ r.result = ConstraintGetRvalValue(ctx, "bundle_return_value_index", pp, RVAL_TYPE_SCALAR);
     
-    if (ConstraintGetRvalValue("lastseen", pp, RVAL_TYPE_SCALAR))
+    if (ConstraintGetRvalValue(ctx, "lastseen", pp, RVAL_TYPE_SCALAR))
     {
         r.havelastseen = true;
-        r.lastseen = PromiseGetConstraintAsInt("lastseen", pp);
+        r.lastseen = PromiseGetConstraintAsInt(ctx, "lastseen", pp);
 
         if (r.lastseen == CF_NOINT)
         {
@@ -1564,27 +1568,27 @@ Report GetReportConstraints(const Promise *pp)
         r.lastseen = 0;
     }
 
-    r.intermittency = PromiseGetConstraintAsReal("intermittency", pp);
+    r.intermittency = PromiseGetConstraintAsReal(ctx, "intermittency", pp);
 
     if (r.intermittency == CF_NODOUBLE)
     {
         r.intermittency = 0;
     }
 
-    r.haveprintfile = PromiseGetConstraintAsBoolean("printfile", pp);
-    r.filename = (char *) ConstraintGetRvalValue("file_to_print", pp, RVAL_TYPE_SCALAR);
-    r.numlines = PromiseGetConstraintAsInt("number_of_lines", pp);
+    r.haveprintfile = PromiseGetConstraintAsBoolean(ctx, "printfile", pp);
+    r.filename = (char *) ConstraintGetRvalValue(ctx, "file_to_print", pp, RVAL_TYPE_SCALAR);
+    r.numlines = PromiseGetConstraintAsInt(ctx, "number_of_lines", pp);
 
     if (r.numlines == CF_NOINT)
     {
         r.numlines = 5;
     }
 
-    r.showstate = PromiseGetConstraintAsList("showstate", pp);
+    r.showstate = PromiseGetConstraintAsList(ctx, "showstate", pp);
 
-    r.friend_pattern = ConstraintGetRvalValue("friend_pattern", pp, RVAL_TYPE_SCALAR);
+    r.friend_pattern = ConstraintGetRvalValue(ctx, "friend_pattern", pp, RVAL_TYPE_SCALAR);
 
-    r.to_file = ConstraintGetRvalValue("report_to_file", pp, RVAL_TYPE_SCALAR);
+    r.to_file = ConstraintGetRvalValue(ctx, "report_to_file", pp, RVAL_TYPE_SCALAR);
 
     if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
@@ -1596,46 +1600,46 @@ Report GetReportConstraints(const Promise *pp)
 
 /*******************************************************************/
 
-LineSelect GetInsertSelectConstraints(const Promise *pp)
+LineSelect GetInsertSelectConstraints(EvalContext *ctx, const Promise *pp)
 {
     LineSelect s;
 
-    s.startwith_from_list = PromiseGetConstraintAsList("insert_if_startwith_from_list", pp);
-    s.not_startwith_from_list = PromiseGetConstraintAsList("insert_if_not_startwith_from_list", pp);
-    s.match_from_list = PromiseGetConstraintAsList("insert_if_match_from_list", pp);
-    s.not_match_from_list = PromiseGetConstraintAsList("insert_if_not_match_from_list", pp);
-    s.contains_from_list = PromiseGetConstraintAsList("insert_if_contains_from_list", pp);
-    s.not_contains_from_list = PromiseGetConstraintAsList("insert_if_not_contains_from_list", pp);
+    s.startwith_from_list = PromiseGetConstraintAsList(ctx, "insert_if_startwith_from_list", pp);
+    s.not_startwith_from_list = PromiseGetConstraintAsList(ctx, "insert_if_not_startwith_from_list", pp);
+    s.match_from_list = PromiseGetConstraintAsList(ctx, "insert_if_match_from_list", pp);
+    s.not_match_from_list = PromiseGetConstraintAsList(ctx, "insert_if_not_match_from_list", pp);
+    s.contains_from_list = PromiseGetConstraintAsList(ctx, "insert_if_contains_from_list", pp);
+    s.not_contains_from_list = PromiseGetConstraintAsList(ctx, "insert_if_not_contains_from_list", pp);
 
     return s;
 }
 
 /*******************************************************************/
 
-LineSelect GetDeleteSelectConstraints(const Promise *pp)
+LineSelect GetDeleteSelectConstraints(EvalContext *ctx, const Promise *pp)
 {
     LineSelect s;
 
-    s.startwith_from_list = PromiseGetConstraintAsList("delete_if_startwith_from_list", pp);
-    s.not_startwith_from_list = PromiseGetConstraintAsList("delete_if_not_startwith_from_list", pp);
-    s.match_from_list = PromiseGetConstraintAsList("delete_if_match_from_list", pp);
-    s.not_match_from_list = PromiseGetConstraintAsList("delete_if_not_match_from_list", pp);
-    s.contains_from_list = PromiseGetConstraintAsList("delete_if_contains_from_list", pp);
-    s.not_contains_from_list = PromiseGetConstraintAsList("delete_if_not_contains_from_list", pp);
+    s.startwith_from_list = PromiseGetConstraintAsList(ctx, "delete_if_startwith_from_list", pp);
+    s.not_startwith_from_list = PromiseGetConstraintAsList(ctx, "delete_if_not_startwith_from_list", pp);
+    s.match_from_list = PromiseGetConstraintAsList(ctx, "delete_if_match_from_list", pp);
+    s.not_match_from_list = PromiseGetConstraintAsList(ctx, "delete_if_not_match_from_list", pp);
+    s.contains_from_list = PromiseGetConstraintAsList(ctx, "delete_if_contains_from_list", pp);
+    s.not_contains_from_list = PromiseGetConstraintAsList(ctx, "delete_if_not_contains_from_list", pp);
 
     return s;
 }
 
 /*******************************************************************/
 
-Measurement GetMeasurementConstraint(const Promise *pp)
+Measurement GetMeasurementConstraint(EvalContext *ctx, const Promise *pp)
 {
     Measurement m;
     char *value;
 
-    m.stream_type = ConstraintGetRvalValue("stream_type", pp, RVAL_TYPE_SCALAR);
+    m.stream_type = ConstraintGetRvalValue(ctx, "stream_type", pp, RVAL_TYPE_SCALAR);
 
-    value = ConstraintGetRvalValue("data_type", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "data_type", pp, RVAL_TYPE_SCALAR);
     m.data_type = DataTypeFromString(value);
 
     if (m.data_type == DATA_TYPE_NONE)
@@ -1643,36 +1647,36 @@ Measurement GetMeasurementConstraint(const Promise *pp)
         m.data_type = DATA_TYPE_STRING;
     }
 
-    m.history_type = ConstraintGetRvalValue("history_type", pp, RVAL_TYPE_SCALAR);
-    m.select_line_matching = ConstraintGetRvalValue("select_line_matching", pp, RVAL_TYPE_SCALAR);
-    m.select_line_number = PromiseGetConstraintAsInt("select_line_number", pp);
-    m.policy = MeasurePolicyFromString(ConstraintGetRvalValue("select_multiline_policy", pp, RVAL_TYPE_SCALAR));
+    m.history_type = ConstraintGetRvalValue(ctx, "history_type", pp, RVAL_TYPE_SCALAR);
+    m.select_line_matching = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR);
+    m.select_line_number = PromiseGetConstraintAsInt(ctx, "select_line_number", pp);
+    m.policy = MeasurePolicyFromString(ConstraintGetRvalValue(ctx, "select_multiline_policy", pp, RVAL_TYPE_SCALAR));
     
-    m.extraction_regex = ConstraintGetRvalValue("extraction_regex", pp, RVAL_TYPE_SCALAR);
-    m.units = ConstraintGetRvalValue("units", pp, RVAL_TYPE_SCALAR);
-    m.growing = PromiseGetConstraintAsBoolean("track_growing_file", pp);
+    m.extraction_regex = ConstraintGetRvalValue(ctx, "extraction_regex", pp, RVAL_TYPE_SCALAR);
+    m.units = ConstraintGetRvalValue(ctx, "units", pp, RVAL_TYPE_SCALAR);
+    m.growing = PromiseGetConstraintAsBoolean(ctx, "track_growing_file", pp);
     return m;
 }
 
 /*******************************************************************/
 
-Database GetDatabaseConstraints(const Promise *pp)
+Database GetDatabaseConstraints(EvalContext *ctx, const Promise *pp)
 {
     Database d;
     char *value;
 
-    d.db_server_owner = ConstraintGetRvalValue("db_server_owner", pp, RVAL_TYPE_SCALAR);
-    d.db_server_password = ConstraintGetRvalValue("db_server_password", pp, RVAL_TYPE_SCALAR);
-    d.db_server_host = ConstraintGetRvalValue("db_server_host", pp, RVAL_TYPE_SCALAR);
-    d.db_connect_db = ConstraintGetRvalValue("db_server_connection_db", pp, RVAL_TYPE_SCALAR);
-    d.type = ConstraintGetRvalValue("database_type", pp, RVAL_TYPE_SCALAR);
-    d.server = ConstraintGetRvalValue("database_server", pp, RVAL_TYPE_SCALAR);
-    d.columns = PromiseGetConstraintAsList("database_columns", pp);
-    d.rows = PromiseGetConstraintAsList("database_rows", pp);
-    d.operation = ConstraintGetRvalValue("database_operation", pp, RVAL_TYPE_SCALAR);
-    d.exclude = PromiseGetConstraintAsList("registry_exclude", pp);
+    d.db_server_owner = ConstraintGetRvalValue(ctx, "db_server_owner", pp, RVAL_TYPE_SCALAR);
+    d.db_server_password = ConstraintGetRvalValue(ctx, "db_server_password", pp, RVAL_TYPE_SCALAR);
+    d.db_server_host = ConstraintGetRvalValue(ctx, "db_server_host", pp, RVAL_TYPE_SCALAR);
+    d.db_connect_db = ConstraintGetRvalValue(ctx, "db_server_connection_db", pp, RVAL_TYPE_SCALAR);
+    d.type = ConstraintGetRvalValue(ctx, "database_type", pp, RVAL_TYPE_SCALAR);
+    d.server = ConstraintGetRvalValue(ctx, "database_server", pp, RVAL_TYPE_SCALAR);
+    d.columns = PromiseGetConstraintAsList(ctx, "database_columns", pp);
+    d.rows = PromiseGetConstraintAsList(ctx, "database_rows", pp);
+    d.operation = ConstraintGetRvalValue(ctx, "database_operation", pp, RVAL_TYPE_SCALAR);
+    d.exclude = PromiseGetConstraintAsList(ctx, "registry_exclude", pp);
 
-    value = ConstraintGetRvalValue("db_server_type", pp, RVAL_TYPE_SCALAR);
+    value = ConstraintGetRvalValue(ctx, "db_server_type", pp, RVAL_TYPE_SCALAR);
     d.db_server_type = DatabaseTypeFromString(value);
 
     if (value && ((d.db_server_type) == DATABASE_TYPE_NONE))

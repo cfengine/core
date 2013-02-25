@@ -38,9 +38,12 @@
 
 #include <assert.h>
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 static Item *NextItem(const Item *ip);
-static int ItemListsEqual(const Item *list1, const Item *list2, int report, Attributes a, const Promise *pp);
+static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int report, Attributes a, const Promise *pp);
 static bool DeleteDirectoryTree(const char *path);
 
 /*********************************************************************/
@@ -124,7 +127,7 @@ int RawSaveItemList(const Item *liststart, const char *file)
 
 /*********************************************************************/
 
-int CompareToFile(const Item *liststart, const char *file, Attributes a, const Promise *pp)
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp)
 /* returns true if file on disk is identical to file in memory */
 {
     struct stat statbuf;
@@ -147,12 +150,12 @@ int CompareToFile(const Item *liststart, const char *file, Attributes a, const P
         return false;
     }
 
-    if (!LoadFileAsItemList(&cmplist, file, a, pp))
+    if (!LoadFileAsItemList(ctx, &cmplist, file, a, pp))
     {
         return false;
     }
 
-    if (!ItemListsEqual(cmplist, liststart, (a.transaction.action == cfa_warn), a, pp))
+    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp))
     {
         DeleteItemList(cmplist);
         return false;
@@ -164,7 +167,7 @@ int CompareToFile(const Item *liststart, const char *file, Attributes a, const P
 
 /*********************************************************************/
 
-static int ItemListsEqual(const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
+static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
 // Some complex logic here to enable warnings of diffs to be given
 {
     int retval = true;
@@ -185,20 +188,20 @@ static int ItemListsEqual(const Item *list1, const Item *list2, int warnings, At
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                          " ! File content wants to change from from/to full/empty but only a warning promised");
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
                     }
                 }
             }
@@ -228,8 +231,8 @@ static int ItemListsEqual(const Item *list1, const Item *list2, int warnings, At
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
-                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
                 retval = false;
             }
         }
@@ -571,7 +574,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     return (true);
 }
 
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp)
+int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp)
 {
     FILE *fp;
     struct stat statbuf;
@@ -593,13 +596,13 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const P
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
         return false;
     }
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
         return false;
     }
 
@@ -945,7 +948,7 @@ void CreateEmptyFile(char *name)
 
 #endif
 
-static char FileStateToChar(FileState status)
+static char FileStateToChar(EvalContext *ctx, FileState status)
 {
     switch(status)
     {
@@ -966,7 +969,7 @@ static char FileStateToChar(FileState status)
     }
 }
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
+void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1004,9 +1007,9 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
         return;
     }
 
-    const char *handle = PromiseID(pp);
+    const char *handle = PromiseID(ctx, pp);
 
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(ctx, status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);

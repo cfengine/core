@@ -3,6 +3,6 @@
 
 #include "cf3.defs.h"
 
-void VerifyMeasurementPromise(double *this, Promise *pp);
+void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp);
 
 #endif

@@ -59,20 +59,20 @@ typedef struct
 } GenericAgentConfig;
 
 const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
-void GenericAgentDiscoverContext(GenericAgentConfig *config, ReportContext *report_context);
-bool GenericAgentCheckPolicy(GenericAgentConfig *config, bool force_validation);
-Policy *GenericAgentLoadPolicy(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context);
+bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 
-void InitializeGA(GenericAgentConfig *config);
+void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
-int NewPromiseProposals(const char *input_file, const Rlist *input_files);
-void CompilationReport(Policy *policy, char *fname);
-void HashVariables(Policy *policy, const char *name, const ReportContext *report_context);
-void HashControls(const Policy *policy, GenericAgentConfig *config);
+int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
+void CompilationReport(EvalContext *ctx, Policy *policy, char *fname);
+void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context);
+void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
 
@@ -81,17 +81,17 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
  * @param policy Policy where inputs are specified
  * @return Pointer to the Rlist in the DOM
  */
-const Rlist *InputFiles(Policy *policy);
+const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
 
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
-void PromiseBanner(Promise *pp);
+void PromiseBanner(EvalContext *ctx, Promise *pp);
 void BannerBundle(Bundle *bp, Rlist *args);
 void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
 ReportContext *OpenCompilationReportFiles(const char *fname);
-void CheckLicenses(void);
+void CheckLicenses(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
 ReportContext *OpenReports(AgentType agent_type);

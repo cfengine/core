@@ -40,6 +40,9 @@
 #include "string_lib.h"
 #include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 int cfstat(const char *path, struct stat *buf)
 {
@@ -52,7 +55,7 @@ int cfstat(const char *path, struct stat *buf)
 
 /*********************************************************************/
 
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp)
+int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp)
 {
     int res;
 
@@ -64,7 +67,7 @@ int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp)
     }
     else
     {
-        return cf_remote_stat(file, buf, "link", attr, pp);
+        return cf_remote_stat(ctx, file, buf, "link", attr, pp);
     }
 }
 

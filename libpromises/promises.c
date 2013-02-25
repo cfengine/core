@@ -45,7 +45,7 @@ static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
-Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
+Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
     Rval returnval;
@@ -174,7 +174,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
                 NewScope("body");
 
-                if (fp && bp && fp->args && bp->args && !MapBodyArgs("body", fp->args, bp->args))
+                if (fp && bp && fp->args && bp->args && !MapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
                     ERRORCOUNT++;
                     CfOut(OUTPUT_LEVEL_ERROR, "",
@@ -239,7 +239,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
+Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp)
 {
     Promise *pcopy;
     Rval returnval, final;
@@ -253,7 +253,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = EvaluateFinalRval(scopeid, pp->promisee, true, pp);
+        pcopy->promisee = EvaluateFinalRval(ctx, scopeid, pp->promisee, true, pp);
     }
     else
     {
@@ -307,8 +307,8 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
         }
         else
         {
-            returnval = EvaluateFinalRval(scopeid, cp->rval, false, pp);
-            final = ExpandDanglers(scopeid, returnval, pp);
+            returnval = EvaluateFinalRval(ctx, scopeid, cp->rval, false, pp);
+            final = ExpandDanglers(ctx, scopeid, returnval, pp);
             RvalDestroy(returnval);
         }
 

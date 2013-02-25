@@ -54,7 +54,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     AlphaList proc_attr;
     int result = true, i;
@@ -149,7 +149,7 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
         PrependAlphaList(&proc_attr, "tty");
     }
 
-    result = EvalProcessResult(a.process_result, &proc_attr);
+    result = EvalProcessResult(ctx, a.process_result, &proc_attr);
 
     DeleteAlphaList(&proc_attr);
 
@@ -161,7 +161,7 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
     return result;
 }
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
     Item *result = NULL;
 
@@ -187,7 +187,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                 continue;
             }
 
-            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
+            if (attrselect && !SelectProcess(ctx, ip->name, names, start, end, a))
             {
                 continue;
             }
@@ -213,12 +213,12 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
     return result;
 }
 
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp)
+int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, Promise *pp)
 {
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(procdata, pp->promiser, a.process_select, a.haveselect);
+    Item *matched = SelectProcesses(ctx, procdata, pp->promiser, a.process_select, a.haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {

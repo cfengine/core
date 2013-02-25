@@ -30,7 +30,7 @@
 
 #include "assoc.h"
 
-void GetInterfacesInfo(AgentType ag);
+void GetInterfacesInfo(EvalContext *ctx, AgentType ag);
 void ProcessSignalTerminate(pid_t pid);
 
 #endif

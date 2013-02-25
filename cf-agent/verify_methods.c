@@ -40,23 +40,23 @@
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 
-static void GetReturnValue(char *scope, Promise *pp);
+static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     
 /*****************************************************************************/
 
-void VerifyMethodsPromise(Promise *pp, const ReportContext *report_context)
+void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
-    a = GetMethodAttributes(pp);
+    a = GetMethodAttributes(ctx, pp);
 
-    VerifyMethod("usebundle", a, pp, report_context);
+    VerifyMethod(ctx, "usebundle", a, pp, report_context);
     DeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
+int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     Bundle *bp;
     void *vp;
@@ -69,13 +69,13 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
     if (a.havebundle)
     {
-        if ((vp = ConstraintGetRvalValue(attrname, pp, RVAL_TYPE_FNCALL)))
+        if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
             ExpandScalar(fp->name, method_name);
             params = fp->args;
         }
-        else if ((vp = ConstraintGetRvalValue(attrname, pp, RVAL_TYPE_SCALAR)))
+        else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
             ExpandScalar((char *) vp, method_name);
             params = NULL;
@@ -95,7 +95,7 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         return false;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (strncmp(method_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
     {
@@ -125,21 +125,21 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
         DeleteScope(bp->name);
         NewScope(bp->name);
-        HashVariables(PolicyFromPromise(pp), bp->name, report_context);
+        HashVariables(ctx, PolicyFromPromise(pp), bp->name, report_context);
 
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
         NewScope(ns);
         SetBundleOutputs(bp->name);
 
-        AugmentScope(method_deref, pp->ns, bp->args, params);
+        AugmentScope(ctx, method_deref, pp->ns, bp->args, params);
 
         THIS_BUNDLE = bp->name;
         PushPrivateClassContext(a.inherit);
 
-        retval = ScheduleAgentOperations(bp, report_context);
+        retval = ScheduleAgentOperations(ctx, bp, report_context);
 
-        GetReturnValue(bp->name, pp);
+        GetReturnValue(ctx, bp->name, pp);
         ResetBundleOutputs(bp->name);
 
         PopPrivateClassContext();
@@ -148,15 +148,15 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         switch (retval)
         {
         case CF_FAIL:
-            cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
             break;
 
         case CF_CHG:
-            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
             break;
 
         default:
-            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Method verified\n");
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Method verified\n");
             break;
 
         }
@@ -172,11 +172,11 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
         }
         if (bp && (bp->name))
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                  " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }
@@ -188,9 +188,9 @@ int VerifyMethod(char *attrname, Attributes a, Promise *pp, const ReportContext 
 
 /***********************************************************************/
 
-static void GetReturnValue(char *scope, Promise *pp)
+static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
 {
-    char *result = ConstraintGetRvalValue("useresult", pp, RVAL_TYPE_SCALAR);
+    char *result = ConstraintGetRvalValue(ctx, "useresult", pp, RVAL_TYPE_SCALAR);
 
     if (result)
     {

@@ -30,7 +30,7 @@
 
 #if !defined(HAVE_NOVA)
 
-int SetServerListenState(size_t queue_size)
+int SetServerListenState(EvalContext *ctx, size_t queue_size)
 {
     if (!SERVER_LISTEN)
     {

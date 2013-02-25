@@ -1,6 +1,8 @@
 #include "cf3.defs.h"
 
 #include "sysinfo.h"
+#include "env_context.h"
+#include "item_lib.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -44,7 +46,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void HardClass(const char *classname)
+void HardClass(EvalContext *ctx, const char *classname)
 {
     int i;
 
@@ -98,7 +100,8 @@ static void test_set_names(void **state)
 {
     int i = 0;
 
-    DetectDomainName("laptop.intra");
+    EvalContext *ctx = EvalContextNew();
+    DetectDomainName(ctx, "laptop.intra");
 
     for (i = 0; i < sizeof(expected_classes) / sizeof(expected_classes[0]); ++i)
     {
@@ -109,6 +112,7 @@ static void test_set_names(void **state)
     {
         assert_int_equal(expected_vars[i].found, true);
     }
+    EvalContextDestroy(ctx);
 }
 
 int main()
@@ -126,6 +130,40 @@ int main()
 /* Stub out functions we do not use in test */
 
 int LOOKUP = false;
+
+EvalContext *EvalContextNew(void)
+{
+    EvalContext *ctx = xmalloc(sizeof(EvalContext));
+
+    InitAlphaList(&ctx->heap_soft);
+    InitAlphaList(&ctx->heap_hard);
+
+    return ctx;
+}
+
+void EvalContextDestroy(EvalContext *ctx)
+{
+    if (ctx)
+    {
+        DeleteAlphaList(&ctx->heap_soft);
+        DeleteAlphaList(&ctx->heap_hard);
+    }
+}
+
+void InitAlphaList(AlphaList *al)
+{
+    memset(al, 0, sizeof(AlphaList));
+}
+
+void DeleteAlphaList(AlphaList *al)
+{
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        DeleteItemList(al->list[i]);
+    }
+
+    InitAlphaList(al);
+}
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
@@ -169,9 +207,26 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void DeleteItemList(Item *item)
+void DeleteItemList(Item *item) /* delete starting from item */
 {
-    fail();
+    Item *ip, *next;
+
+    for (ip = item; ip != NULL; ip = next)
+    {
+        next = ip->next;        // save before free
+
+        if (ip->name != NULL)
+        {
+            free(ip->name);
+        }
+
+        if (ip->classes != NULL)
+        {
+            free(ip->classes);
+        }
+
+        free((char *) ip);
+    }
 }
 
 Item *SplitString(const char *string, char sep)
@@ -239,7 +294,7 @@ void Unix_GetInterfaceInfo(AgentType ag)
     fail();
 }
 
-void EnterpriseContext(void)
+void EnterpriseContext(EvalContext *ctx)
 {
     fail();
 }
@@ -254,7 +309,7 @@ ssize_t CfReadLine(char *buff, int size, FILE *fp)
     fail();
 }
 
-bool IsDefinedClass(const char *class)
+bool IsDefinedClass(EvalContext *ctx, const char *class, const char *ns)
 {
     fail();
 }

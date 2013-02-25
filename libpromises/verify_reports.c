@@ -41,19 +41,19 @@
 #include "misc_lib.h"
 #include "policy.h"
 
-static void PrintFile(Attributes a, Promise *pp);
+static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 
 /*******************************************************************/
 /* Agent reporting                                                 */
 /*******************************************************************/
 
-void VerifyReportPromise(Promise *pp)
+void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
     char unique_name[CF_EXPANDSIZE];
 
-    a = GetReportsAttributes(pp);
+    a = GetReportsAttributes(ctx, pp);
 
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
     thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
@@ -83,9 +83,9 @@ void VerifyReportPromise(Promise *pp)
         return;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
-    cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
@@ -98,7 +98,7 @@ void VerifyReportPromise(Promise *pp)
 
     if (a.report.haveprintfile)
     {
-        PrintFile(a, pp);
+        PrintFile(ctx, a, pp);
     }
 
     if (a.report.showstate)
@@ -118,7 +118,7 @@ void VerifyReportPromise(Promise *pp)
 /* Level                                                           */
 /*******************************************************************/
 
-static void PrintFile(Attributes a, Promise *pp)
+static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 {
     FILE *fp;
     char buffer[CF_BUFSIZE];
@@ -132,7 +132,7 @@ static void PrintFile(Attributes a, Promise *pp)
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
         return;
     }
 

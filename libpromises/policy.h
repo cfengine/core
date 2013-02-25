@@ -211,7 +211,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error);
  * @param errors Sequence of PolicyError to append errors to
  * @return True if no new errors are found
  */
-bool PolicyCheckPartial(const Policy *policy, Seq *errors);
+bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors);
 
 /**
  * @brief Check a runnable policy DOM for errors
@@ -220,7 +220,7 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors);
  * @param ignore_missing_bundles Whether to ignore missing bundle references
  * @return True if no new errors are found
  */
-bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles);
+bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
@@ -274,7 +274,7 @@ Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rva
  * @param pp
  * @return Int value, or CF_NOINT
  */
-int PromiseGetConstraintAsInt(const char *lval, const Promise *pp);
+int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp);
 
 /**
  * @brief Get the real value of the first effective constraint found matching, from a promise
@@ -282,7 +282,7 @@ int PromiseGetConstraintAsInt(const char *lval, const Promise *pp);
  * @param list
  * @return Double value, or CF_NODOUBLE
  */
-double PromiseGetConstraintAsReal(const char *lval, const Promise *list);
+double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *list);
 
 /**
  * @brief Get the octal value of the first effective constraint found matching, from a promise
@@ -290,7 +290,7 @@ double PromiseGetConstraintAsReal(const char *lval, const Promise *list);
  * @param list
  * @return Double value, or 077 if not found
  */
-mode_t PromiseGetConstraintAsOctal(const char *lval, const Promise *list);
+mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Promise *list);
 
 /**
  * @brief Get the uid value of the first effective constraint found matching, from a promise
@@ -298,7 +298,7 @@ mode_t PromiseGetConstraintAsOctal(const char *lval, const Promise *list);
  * @param pp
  * @return Uid value, or CF_SAME_OWNER if not found
  */
-uid_t PromiseGetConstraintAsUid(const char *lval, const Promise *pp);
+uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp);
 
 /**
  * @brief Get the uid value of the first effective constraint found matching, from a promise
@@ -306,7 +306,7 @@ uid_t PromiseGetConstraintAsUid(const char *lval, const Promise *pp);
  * @param pp
  * @return Gid value, or CF_SAME_GROUP if not found
  */
-gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp);
+gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp);
 
 /**
  * @brief Get the Rlist value of the first effective constraint found matching, from a promise
@@ -314,11 +314,11 @@ gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp);
  * @param list
  * @return Rlist or NULL if not found (note: same as empty list)
  */
-Rlist *PromiseGetConstraintAsList(const char *lval, const Promise *pp);
+Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Promise *pp);
 
-bool PromiseBundleConstraintExists(const char *lval, const Promise *pp);
+bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Promise *pp);
 
-void PromiseRecheckAllConstraints(Promise *pp);
+void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp);
 
 /**
  * @brief Get the trinary boolean value of the first effective constraint found matching, from a promise
@@ -326,7 +326,7 @@ void PromiseRecheckAllConstraints(Promise *pp);
  * @param list
  * @return True/false, or CF_UNDEFINED if not found
  */
-int PromiseGetConstraintAsBoolean(const char *lval, const Promise *list);
+int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Promise *list);
 
 /**
  * @brief Get the first effective constraint from the promise, also does some checking
@@ -334,7 +334,7 @@ int PromiseGetConstraintAsBoolean(const char *lval, const Promise *list);
  * @param lval
  * @return Effective constraint if found, otherwise NULL
  */
-Constraint *PromiseGetConstraint(const Promise *promise, const char *lval);
+Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *promise, const char *lval);
 
 
 void ConstraintDestroy(Constraint *cp);
@@ -353,7 +353,7 @@ const char *ConstraintContext(const Constraint *cp);
  * @param constraints The list of potential candidates
  * @return The effective constraint, or NULL if none are found.
  */
-Constraint *EffectiveConstraint(Seq *constraints);
+Constraint *EffectiveConstraint(EvalContext *ctx, Seq *constraints);
 
 /**
  * @brief Replace the rval of a scalar constraint (copies rval)
@@ -370,7 +370,7 @@ void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
  * @param type
  * @return Rval value if found, NULL otherwise
  */
-void *ConstraintGetRvalValue(const char *lval, const Promise *promise, RvalType type);
+void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *promise, RvalType type);
 
 /**
  * @brief Get the trinary boolean value of the first effective constraint found matching
@@ -378,6 +378,6 @@ void *ConstraintGetRvalValue(const char *lval, const Promise *promise, RvalType 
  * @param constraints
  * @return True/false, or CF_UNDEFINED if not found
  */
-int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints);
+int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints);
 
 #endif

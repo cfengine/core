@@ -158,7 +158,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 
 /*****************************************************************************/
 
-void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
 {
     switch (status)
     {
@@ -172,19 +172,19 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
                 VAL_REPAIRED += attr.transaction.value_repaired;
 
 #ifdef HAVE_NOVA
-                EnterpriseTrackTotalCompliance(pp, 'r');
+                EnterpriseTrackTotalCompliance(ctx, pp, 'r');
 #endif
             }
         }
 
-        AddAllClasses(pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        MarkPromiseHandleDone(pp);
-        DeleteAllClasses(attr.classes.del_change);
+        AddAllClasses(ctx, pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        MarkPromiseHandleDone(ctx, pp);
+        DeleteAllClasses(ctx, attr.classes.del_change);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_repaired);
+            NotePromiseCompliance(ctx, pp, 0.5, PROMISE_STATE_REPAIRED, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_repaired);
         }
         break;
 
@@ -196,13 +196,13 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
         }
         break;
 
@@ -214,17 +214,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -236,17 +236,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -258,17 +258,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -280,30 +280,30 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(attr.classes.del_kept);
+        AddAllClasses(ctx, pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_kept);
+            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_ANY, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_kept);
         }
 
         if (IsPromiseValuableForStatus(pp))
@@ -312,11 +312,11 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_KEPT += attr.transaction.value_kept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'c');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'c');
 #endif
         }
 
-        MarkPromiseHandleDone(pp);
+        MarkPromiseHandleDone(ctx, pp);
         break;
     }
 }
@@ -349,12 +349,12 @@ void PromiseLog(char *s)
 
 /************************************************************************/
 
-void PromiseBanner(Promise *pp)
+void PromiseBanner(EvalContext *ctx, Promise *pp)
 {
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = ConstraintGetRvalValue("handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(pp)))
+    if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }

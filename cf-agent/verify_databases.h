@@ -28,6 +28,6 @@
 
 #include "cf3.defs.h"
 
-void VerifyDatabasePromises(Promise *pp);
+void VerifyDatabasePromises(EvalContext *ctx, Promise *pp);
 
 #endif

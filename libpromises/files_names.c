@@ -37,9 +37,13 @@
 #include "logging.h"
 #include "string_lib.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /*********************************************************************/
 
-int IsNewerFileTree(char *dir, time_t reftime)
+int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     char path[CF_BUFSIZE] = { 0 };
@@ -74,7 +78,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
     {
         for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
         {
-            if (!ConsiderFile(dirp->d_name, dir, dummyattr, NULL))
+            if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
             {
                 continue;
             }
@@ -107,7 +111,7 @@ int IsNewerFileTree(char *dir, time_t reftime)
                 }
                 else
                 {
-                    if (IsNewerFileTree(path, reftime))
+                    if (IsNewerFileTree(ctx, path, reftime))
                     {
                         CloseDir(dirh);
                         return true;

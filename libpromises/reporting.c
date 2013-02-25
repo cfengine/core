@@ -100,16 +100,16 @@ void ReportContextDestroy(ReportContext *context)
 /* Generic                                                         */
 /*******************************************************************/
 
-void ShowContext(const ReportContext *report_context)
+void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 {
     for (int i = 0; i < CF_ALPHABETSIZE; i++)
     {
-        VHEAP.list[i] = SortItemListNames(VHEAP.list[i]);
+        ctx->heap_soft.list[i] = SortItemListNames(ctx->heap_soft.list[i]);
     }
 
     for (int i = 0; i < CF_ALPHABETSIZE; i++)
     {
-        VHARDHEAP.list[i] = SortItemListNames(VHARDHEAP.list[i]);
+        ctx->heap_hard.list[i] = SortItemListNames(ctx->heap_hard.list[i]);
     }
     
     if (VERBOSE || DEBUG)
@@ -125,13 +125,13 @@ void ShowContext(const ReportContext *report_context)
 
         WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
 
-        ListAlphaList(writer, VHARDHEAP, ' ');
+        ListAlphaList(writer, ctx->heap_hard, ' ');
 
         WriterWriteF(writer, "}\n");
 
         WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
 
-        ListAlphaList(writer, VHEAP, ' ');
+        ListAlphaList(writer, ctx->heap_soft, ' ');
 
         WriterWriteF(writer, "}\n");
 
@@ -150,17 +150,17 @@ void ShowContext(const ReportContext *report_context)
 
 /*******************************************************************/
 
-void ShowPromises(const ReportContext *context, const Seq *bundles, const Seq *bodies)
+void ShowPromises(EvalContext *ctx, const ReportContext *context, const Seq *bundles, const Seq *bodies)
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromises(context, bundles, bodies);
+    Nova_ShowPromises(ctx, context, bundles, bodies);
 #endif
 }
 
-void ShowPromise(const ReportContext *context, const Promise *pp, int indent)
+void ShowPromise(EvalContext *ctx, const ReportContext *context, const Promise *pp, int indent)
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromise(context, NULL, pp, indent);
+    Nova_ShowPromise(ctx, context, NULL, pp, indent);
 #endif
 }
 

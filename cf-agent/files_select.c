@@ -38,8 +38,8 @@
 #include "exec_tools.h"
 #include "chflags.h"
 
-static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
-static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
+static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit);
+static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit);
 static int SelectModeMatch(struct stat *lstatptr, Rlist *ls);
 static int SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime);
 static int SelectNameRegexMatch(const char *filename, char *crit);
@@ -56,10 +56,10 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
 #endif
 #ifndef __MINGW32__
-static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
+static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit);
 #endif
 
-int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
+int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
     AlphaList leaf_attr;
     int result = true;
@@ -119,12 +119,12 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         }
     }
 
-    if (SelectTypeMatch(sb, attr.select.filetypes))
+    if (SelectTypeMatch(ctx, sb, attr.select.filetypes))
     {
         PrependAlphaList(&leaf_attr, "file_types");
     }
 
-    if ((attr.select.owners) && (SelectOwnerMatch(path, sb, attr.select.owners)))
+    if ((attr.select.owners) && (SelectOwnerMatch(ctx, path, sb, attr.select.owners)))
     {
         PrependAlphaList(&leaf_attr, "owner");
     }
@@ -138,7 +138,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
     PrependAlphaList(&leaf_attr, "group");
 
 #else /* !__MINGW32__ */
-    if ((attr.select.groups) && (SelectGroupMatch(sb, attr.select.groups)))
+    if ((attr.select.groups) && (SelectGroupMatch(ctx, sb, attr.select.groups)))
     {
         PrependAlphaList(&leaf_attr, "group");
     }
@@ -196,7 +196,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
         PrependAlphaList(&leaf_attr, "exec_program");
     }
 
-    result = EvalFileResult(attr.select.result, &leaf_attr);
+    result = EvalFileResult(ctx, attr.select.result, &leaf_attr);
 
     CfDebug("Select result \"%s\"on %s was %d\n", attr.select.result, path, result);
 
@@ -221,7 +221,7 @@ static int SelectSizeMatch(size_t size, size_t min, size_t max)
 
 /*******************************************************************/
 
-static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
+static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
 {
     AlphaList leafattrib;
     Rlist *rp;
@@ -275,7 +275,7 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, &leafattrib))
+        if (EvalFileResult(ctx, (char *) rp->item, &leafattrib))
         {
             DeleteAlphaList(&leafattrib);
             return true;
@@ -286,7 +286,7 @@ static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
     return false;
 }
 
-static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
+static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit)
 {
     AlphaList leafattrib;
     Rlist *rp;
@@ -314,7 +314,7 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, &leafattrib))
+        if (EvalFileResult(ctx, (char *) rp->item, &leafattrib))
         {
             CfDebug(" - ? Select owner match\n");
             DeleteAlphaList(&leafattrib);
@@ -544,7 +544,7 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 
 /*******************************************************************/
 
-static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
+static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
 {
     AlphaList leafattrib;
     char buffer[CF_SMALLBUF];
@@ -567,7 +567,7 @@ static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult((char *) rp->item, &leafattrib))
+        if (EvalFileResult(ctx, (char *) rp->item, &leafattrib))
         {
             CfDebug(" - ? Select group match\n");
             DeleteAlphaList(&leafattrib);

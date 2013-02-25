@@ -43,9 +43,9 @@
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
 
-static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context);
-static int VerifyFileSystem(char *name, Attributes a, Promise *pp);
-static int VerifyFreeSpace(char *file, Attributes a, Promise *pp);
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise *pp);
+static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
 #if !defined(__MINGW32__)
 static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp);
@@ -53,36 +53,36 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
 #ifndef __MINGW32__
-static int VerifyMountPromise(char *file, Attributes a, Promise *pp);
+static int VerifyMountPromise(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif /* !__MINGW32__ */
 
 /*****************************************************************************/
 
-void *FindAndVerifyStoragePromises(Promise *pp, const ReportContext *report_context)
+void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
-    PromiseBanner(pp);
-    FindStoragePromiserObjects(pp, report_context);
+    PromiseBanner(ctx, pp);
+    FindStoragePromiserObjects(ctx, pp, report_context);
 
     return (void *) NULL;
 }
 
 /*****************************************************************************/
 
-static void FindStoragePromiserObjects(Promise *pp, const ReportContext *report_context)
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
 /* Check if we are searching over a regular expression */
 
-    LocateFilePromiserGroup(pp->promiser, pp, VerifyStoragePromise, report_context);
+    LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyStoragePromise, report_context);
 }
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_context) /* FIXME: unused param */
+void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context) /* FIXME: unused param */
 {
     Attributes a = { {0} };
     CfLock thislock;
 
-    a = GetStorageAttributes(pp);
+    a = GetStorageAttributes(ctx, pp);
 
     CF_OCCUR++;
 
@@ -134,7 +134,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.havemount)
     {
-        VerifyMountPromise(path, a, pp);
+        VerifyMountPromise(ctx, path, a, pp);
     }
 #endif /* !__MINGW32__ */
 
@@ -142,11 +142,11 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 
     if (a.havevolume)
     {
-        VerifyFileSystem(path, a, pp);
+        VerifyFileSystem(ctx, path, a, pp);
 
         if (a.volume.freespace != CF_NOINT)
         {
-            VerifyFreeSpace(path, a, pp);
+            VerifyFreeSpace(ctx, path, a, pp);
         }
 
         if (a.volume.scan_arrivals)
@@ -162,7 +162,7 @@ void VerifyStoragePromise(char *path, Promise *pp, const ReportContext *report_c
 /** Level                                                          */
 /*******************************************************************/
 
-static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
+static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 {
     struct stat statbuf, localstat;
     Dir *dirh;
@@ -180,7 +180,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 
     if (S_ISLNK(statbuf.st_mode))
     {
-        KillGhostLink(name, a, pp);
+        KillGhostLink(ctx, name, a, pp);
         return (true);
     }
 
@@ -194,7 +194,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 
         for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
         {
-            if (!ConsiderFile(dirp->d_name, name, a, pp))
+            if (!ConsiderFile(ctx, dirp->d_name, name, a, pp))
             {
                 continue;
             }
@@ -214,7 +214,7 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
             {
                 if (S_ISLNK(localstat.st_mode))
                 {
-                    KillGhostLink(buff, a, pp);
+                    KillGhostLink(ctx, buff, a, pp);
                     continue;
                 }
 
@@ -235,26 +235,26 @@ static int VerifyFileSystem(char *name, Attributes a, Promise *pp)
 
         if (sizeinbytes < a.volume.sensible_size)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
                  (intmax_t) sizeinbytes);
             return (false);
         }
 
         if (filecount < a.volume.sensible_count)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
                  filecount);
             return (false);
         }
     }
 
-    cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
     return (true);
 }
 
 /*******************************************************************/
 
-static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
+static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {
     struct stat statbuf;
 
@@ -289,7 +289,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 
         if (free_percentage < threshold_percentage)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
                  " !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",
                  threshold_percentage, file, free_percentage);
             return false;
@@ -302,7 +302,7 @@ static int VerifyFreeSpace(char *file, Attributes a, Promise *pp)
 
         if (free_bytes < threshold)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
                  (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
@@ -427,7 +427,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     return (false);
 }
 
-static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
+static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 {
     char *options;
     char dir[CF_BUFSIZE];
@@ -439,7 +439,7 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
 
     if (!IsPrivileged())
     {
-        cfPS(OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "Only root can mount filesystems.\n");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "Only root can mount filesystems.\n");
         return false;
     }
 
@@ -455,22 +455,22 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
 
             if (a.mount.editfstab)
             {
-                changes += VerifyInFstab(name, a, pp);
+                changes += VerifyInFstab(ctx, name, a, pp);
             }
             else
             {
-                cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
                      " -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 // Mount explicitly
-                VerifyMount(name, a, pp);
+                VerifyMount(ctx, name, a, pp);
             }
         }
         else
         {
             if (a.mount.editfstab)
             {
-                changes += VerifyNotInFstab(name, a, pp);
+                changes += VerifyNotInFstab(ctx, name, a, pp);
             }
         }
 
@@ -483,15 +483,15 @@ static int VerifyMountPromise(char *name, Attributes a, Promise *pp)
     {
         if (a.mount.unmount)
         {
-            VerifyUnmount(name, a, pp);
+            VerifyUnmount(ctx, name, a, pp);
             if (a.mount.editfstab)
             {
-                VerifyNotInFstab(name, a, pp);
+                VerifyNotInFstab(ctx, name, a, pp);
             }
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
         }
     }
 

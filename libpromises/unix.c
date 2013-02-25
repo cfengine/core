@@ -68,7 +68,7 @@
 
 static bool IsProcessRunning(pid_t pid);
 
-static void FindV6InterfacesInfo(void);
+static void FindV6InterfacesInfo(EvalContext *ctx);
 
 static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr);
 static bool IgnoreInterface(char *name);
@@ -364,7 +364,7 @@ static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
 
 /******************************************************************/
 
-static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
+static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *ifr, struct ifreq *ifp, Rlist **interfaces,
                           Rlist **hardware)
 {
     char name[CF_MAXVARSIZE];
@@ -395,16 +395,16 @@ static void GetMacAddress(AgentType ag, int fd, struct ifreq *ifr, struct ifreq 
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
-    HardClass(name);
+    HardClass(ctx, name);
 # else
     NewScalar("sys", name, "mac_unknown", DATA_TYPE_STRING);
-    HardClass("mac_unknown");
+    HardClass(ctx, "mac_unknown");
 # endif
 }
 
 /******************************************************************/
 
-void GetInterfacesInfo(AgentType ag)
+void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 {
     int fd, len, i, j, first_address = false, ipdefault = false;
     struct ifreq ifbuf[CF_IFREQ], ifr, *ifp;
@@ -507,7 +507,7 @@ void GetInterfacesInfo(AgentType ag)
 
         snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
 
-        HardClass(workbuf);
+        HardClass(ctx, workbuf);
 
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
@@ -530,7 +530,7 @@ void GetInterfacesInfo(AgentType ag)
                 }
 
                 CfDebug("Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
-                HardClass(inet_ntoa(sin->sin_addr));
+                HardClass(ctx, inet_ntoa(sin->sin_addr));
 
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
@@ -542,14 +542,14 @@ void GetInterfacesInfo(AgentType ag)
                     if (hp->h_name != NULL)
                     {
                         CfDebug("Adding hostname %s..\n", hp->h_name);
-                        HardClass(hp->h_name);
+                        HardClass(ctx, hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
                                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Adding alias %s..\n", hp->h_aliases[i]);
-                                HardClass(hp->h_aliases[i]);
+                                HardClass(ctx, hp->h_aliases[i]);
                             }
                         }
                     }
@@ -569,7 +569,7 @@ void GetInterfacesInfo(AgentType ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            HardClass(ip);
+                            HardClass(ctx, ip);
                         }
                     }
 
@@ -590,7 +590,7 @@ void GetInterfacesInfo(AgentType ag)
 
                 strncpy(ip, "ipv4_", CF_MAXVARSIZE);
                 strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
-                HardClass(ip);
+                HardClass(ctx, ip);
 
                 if (!ipdefault)
                 {
@@ -608,7 +608,7 @@ void GetInterfacesInfo(AgentType ag)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        HardClass(ip);
+                        HardClass(ctx, ip);
                     }
                 }
 
@@ -650,7 +650,7 @@ void GetInterfacesInfo(AgentType ag)
             }
 
             // Set the hardware/mac address array
-            GetMacAddress(ag, fd, &ifr, ifp, &interfaces, &hardware);
+            GetMacAddress(ctx, ag, fd, &ifr, ifp, &interfaces, &hardware);
         }
     }
 
@@ -664,12 +664,12 @@ void GetInterfacesInfo(AgentType ag)
     RlistDestroy(hardware);
     RlistDestroy(ips);
 
-    FindV6InterfacesInfo();
+    FindV6InterfacesInfo(ctx);
 }
 
 /*******************************************************************/
 
-static void FindV6InterfacesInfo(void)
+static void FindV6InterfacesInfo(EvalContext *ctx)
 {
     FILE *pp = NULL;
     char buffer[CF_BUFSIZE];
@@ -745,7 +745,7 @@ static void FindV6InterfacesInfo(void)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    HardClass(ip->name);
+                    HardClass(ctx, ip->name);
                 }
             }
 

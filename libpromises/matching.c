@@ -406,14 +406,14 @@ int IsPathRegex(char *str)
 
 /*********************************************************************/
 
-int IsRegexItemIn(Item *list, char *regex)
+int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
    /* Checks whether item matches a list of wildcards */
 {
     Item *ptr;
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if ((ptr->classes) && (IsExcluded(ptr->classes, NULL))) // This NULL might be wrong
+        if ((ptr->classes) && (IsExcluded(ctx, ptr->classes, NULL))) // This NULL might be wrong
         {
             continue;
         }

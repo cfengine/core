@@ -602,12 +602,12 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
     return success;
 }
 
-static bool PolicyCheckRequiredComments(const Policy *policy, Seq *errors)
+static bool PolicyCheckRequiredComments(EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
     if (common_control)
     {
-        bool require_comments = ConstraintsGetAsBoolean("require_comments", common_control->conlist);
+        bool require_comments = ConstraintsGetAsBoolean(ctx, "require_comments", common_control->conlist);
         if (!require_comments)
         {
             return true;
@@ -657,7 +657,7 @@ static bool PolicyCheckRequiredComments(const Policy *policy, Seq *errors)
     }
 }
 
-bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
+bool PolicyCheckDuplicateHandles(EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     bool success = true;
 
@@ -674,7 +674,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
             for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
             {
                 Promise *promise = SeqAt(subtype->promises, ppi);
-                char *handle = ConstraintGetRvalValue("handle", promise, RVAL_TYPE_SCALAR);
+                char *handle = ConstraintGetRvalValue(ctx, "handle", promise, RVAL_TYPE_SCALAR);
 
                 if (handle)
                 {
@@ -698,7 +698,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
     return success;
 }
 
-bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_bundles)
+bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
     // check has body common control
     {
@@ -713,7 +713,7 @@ bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_
 
     bool success = true;
 
-    success &= PolicyCheckRequiredComments(policy, errors);
+    success &= PolicyCheckRequiredComments(ctx, policy, errors);
     success &= PolicyCheckUndefinedBodies(policy, errors);
 
     if (!ignore_missing_bundles)
@@ -721,12 +721,12 @@ bool PolicyCheckRunnable(const Policy *policy, Seq *errors, bool ignore_missing_
         success &= PolicyCheckUndefinedBundles(policy, errors);
     }
 
-    success &= PolicyCheckDuplicateHandles(policy, errors);
+    success &= PolicyCheckDuplicateHandles(ctx, policy, errors);
 
     return success;
 }
 
-bool PolicyCheckPartial(const Policy *policy, Seq *errors)
+bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     bool success = true;
 
@@ -782,7 +782,7 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
         }
     }
 
-    success &= PolicyCheckDuplicateHandles(policy, errors);
+    success &= PolicyCheckDuplicateHandles(ctx, policy, errors);
 
     return success;
 }
@@ -2001,7 +2001,7 @@ const char *ConstraintContext(const Constraint *cp)
     }
 }
 
-Constraint *EffectiveConstraint(Seq *constraints)
+Constraint *EffectiveConstraint(EvalContext *ctx, Seq *constraints)
 {
     for (size_t i = 0; i < SeqLength(constraints); i++)
     {
@@ -2010,7 +2010,7 @@ Constraint *EffectiveConstraint(Seq *constraints)
         const char *context = ConstraintContext(cp);
         const char *ns = ConstraintGetNamespace(cp);
 
-        if (IsDefinedClass(context, ns))
+        if (IsDefinedClass(ctx, context, ns))
         {
             return cp;
         }
@@ -2050,7 +2050,7 @@ void ConstraintDestroy(Constraint *cp)
 
 /*****************************************************************************/
 
-int PromiseGetConstraintAsBoolean(const char *lval, const Promise *pp)
+int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 
@@ -2060,7 +2060,7 @@ int PromiseGetConstraintAsBoolean(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2104,7 +2104,7 @@ int PromiseGetConstraintAsBoolean(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints)
+int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints)
 {
     int retval = CF_UNDEFINED;
 
@@ -2114,7 +2114,7 @@ int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, NULL))
+            if (IsDefinedClass(ctx, cp->classes, NULL))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2156,7 +2156,7 @@ int ConstraintsGetAsBoolean(const char *lval, const Seq *constraints)
 
 /*****************************************************************************/
 
-bool PromiseBundleConstraintExists(const char *lval, const Promise *pp)
+bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 
@@ -2166,7 +2166,7 @@ bool PromiseBundleConstraintExists(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2197,7 +2197,7 @@ bool PromiseBundleConstraintExists(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-int PromiseGetConstraintAsInt(const char *lval, const Promise *pp)
+int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_NOINT;
 
@@ -2207,7 +2207,7 @@ int PromiseGetConstraintAsInt(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_NOINT)
                 {
@@ -2237,7 +2237,7 @@ int PromiseGetConstraintAsInt(const char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-double PromiseGetConstraintAsReal(const char *lval, const Promise *pp)
+double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     double retval = CF_NODOUBLE;
 
@@ -2247,7 +2247,7 @@ double PromiseGetConstraintAsReal(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_NODOUBLE)
                 {
@@ -2296,7 +2296,7 @@ static mode_t Str2Mode(const char *s)
     return (mode_t) a;
 }
 
-mode_t PromiseGetConstraintAsOctal(const char *lval, const Promise *pp)
+mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     mode_t retval = 077;
 
@@ -2308,7 +2308,7 @@ mode_t PromiseGetConstraintAsOctal(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != 077)
                 {
@@ -2347,7 +2347,7 @@ uid_t GetUidConstraint(const char *lval, const Promise *pp)
 
 #else /* !__MINGW32__ */
 
-uid_t PromiseGetConstraintAsUid(const char *lval, const Promise *pp)
+uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_SAME_OWNER;
     char buffer[CF_MAXVARSIZE];
@@ -2358,7 +2358,7 @@ uid_t PromiseGetConstraintAsUid(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2400,7 +2400,7 @@ gid_t GetGidConstraint(char *lval, const Promise *pp)
 
 #else /* !__MINGW32__ */
 
-gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp)
+gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
 {
     int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
@@ -2411,7 +2411,7 @@ gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2443,7 +2443,7 @@ gid_t PromiseGetConstraintAsGid(char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-Rlist *PromiseGetConstraintAsList(const char *lval, const Promise *pp)
+Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Promise *pp)
 {
     Rlist *retval = NULL;
 
@@ -2453,7 +2453,7 @@ Rlist *PromiseGetConstraintAsList(const char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != NULL)
                 {
@@ -2547,7 +2547,7 @@ static int VerifyConstraintName(const char *lval)
     return false;
 }
 
-Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
+Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
 
@@ -2567,7 +2567,7 @@ Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, pp->ns))
             {
                 if (retval != NULL)
                 {
@@ -2586,9 +2586,9 @@ Constraint *PromiseGetConstraint(const Promise *pp, const char *lval)
 
 /*****************************************************************************/
 
-void *ConstraintGetRvalValue(const char *lval, const Promise *pp, RvalType rtype)
+void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)
 {
-    const Constraint *constraint = PromiseGetConstraint(pp, lval);
+    const Constraint *constraint = PromiseGetConstraint(ctx, pp, lval);
 
     if (constraint && constraint->rval.type == rtype)
     {
@@ -2602,7 +2602,7 @@ void *ConstraintGetRvalValue(const char *lval, const Promise *pp, RvalType rtype
 
 /*****************************************************************************/
 
-void PromiseRecheckAllConstraints(Promise *pp)
+void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 {
     static Item *EDIT_ANCHORS = NULL;
     Item *ptr;
@@ -2611,16 +2611,16 @@ void PromiseRecheckAllConstraints(Promise *pp)
 
     if (SHOWREPORTS)
     {
-        NewPromiser(pp);
+        NewPromiser(ctx, pp);
     }
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return;
     }
 
     char *sp = NULL;
-    if (VarClassExcluded(pp, &sp))
+    if (VarClassExcluded(ctx, pp, &sp))
     {
         return;
     }
@@ -2635,7 +2635,7 @@ void PromiseRecheckAllConstraints(Promise *pp)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
-        if ((sp = ConstraintGetRvalValue("select_line_matching", pp, RVAL_TYPE_SCALAR)))
+        if ((sp = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR)))
         {
             if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
             {
@@ -2654,7 +2654,7 @@ void PromiseRecheckAllConstraints(Promise *pp)
         }
     }
 
-    PreSanitizePromise(pp);
+    PreSanitizePromise(ctx, pp);
 }
 
 /*****************************************************************************/

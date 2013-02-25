@@ -111,17 +111,17 @@ char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
 static const size_t CF_BUFEXT = 128;
 static const int CF_NOSIZE = -1;
 
-static void SpawnConnection(int sd_reply, char *ipaddr);
+static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr);
 static void *HandleConnection(ServerConnectionState *conn);
-static int BusyWithConnection(ServerConnectionState *conn);
-static int MatchClasses(ServerConnectionState *conn);
-static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args);
+static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn);
+static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args);
 static ProtocolCommand GetCommand(char *str);
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
 static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg);
-static int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
 static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted, Item *classes);
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key);
 static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
@@ -134,12 +134,12 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 static void Terminate(int sd);
 static int AllowedUser(char *user);
-static int AuthorizeRoles(ServerConnectionState *conn, char *args);
+static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args);
 static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
 static void AbortTransfer(int sd, char *sendbuffer, char *filename);
 static void FailedTransfer(int sd, char *sendbuffer, char *filename);
 static void ReplyNothing(ServerConnectionState *conn);
-static ServerConnectionState *NewConn(int sd);
+static ServerConnectionState *NewConn(EvalContext *ctx, int sd);
 static void DeleteConn(ServerConnectionState *conn);
 static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
 static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen);
@@ -179,7 +179,7 @@ static int TRIES = 0;
 
 /*******************************************************************/
 
-void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv)
 
 {
     char intime[64];
@@ -249,7 +249,7 @@ void ServerEntryPoint(int sd_reply, char *ipaddr, ServerAccess sv)
        return;
     }
     
-    SpawnConnection(sd_reply, ipaddr);
+    SpawnConnection(ctx, sd_reply, ipaddr);
     
 }
 
@@ -299,14 +299,14 @@ void PurgeOldConnections(Item **list, time_t now)
 
 /*********************************************************************/
 
-static void SpawnConnection(int sd_reply, char *ipaddr)
+static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
 {
     ServerConnectionState *conn;
 
     pthread_t tid;
     pthread_attr_t threadattrs;
 
-    if ((conn = NewConn(sd_reply)) == NULL)
+    if ((conn = NewConn(ctx, sd_reply)) == NULL)
     {
         return;
     }
@@ -400,7 +400,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
     SetReceiveTimeout(conn->sd_reply, &tv);
 
-    while (BusyWithConnection(conn))
+    while (BusyWithConnection(conn->ctx, conn))
     {
     }
 
@@ -424,7 +424,7 @@ static void *HandleConnection(ServerConnectionState *conn)
 
 /*********************************************************************/
 
-static int BusyWithConnection(ServerConnectionState *conn)
+static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
   /* This is the protocol section. Here we must   */
   /* check that the incoming data are sensible    */
   /* and extract the information from the message */
@@ -481,21 +481,21 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(CommandArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to denied access to requested object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
             return false;
         }
 
-        if (!MatchClasses(conn))
+        if (!MatchClasses(ctx, conn))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to failed class/context match\n");
             Terminate(conn->sd_reply);
             return false;
         }
 
-        DoExec(conn, sendbuffer, args);
+        DoExec(ctx, conn, sendbuffer, args);
         Terminate(conn->sd_reply);
         return false;
 
@@ -560,7 +560,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(filename, conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, false, VADMIT, VDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access denied to get object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -628,7 +628,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -685,7 +685,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -707,7 +707,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "DIR access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -784,7 +784,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
-        if (!AccessControl(filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control in sync\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -874,7 +874,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(recvbuffer, conn, encrypted, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Literal access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -917,7 +917,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
-        if ((classes = ContextAccessControl(recvbuffer, conn, encrypted, VARADMIT, VARDENY)) == NULL)
+        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Context access failure on %s\n", recvbuffer);
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -955,7 +955,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -997,14 +997,14 @@ static int BusyWithConnection(ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
             return false;
         }
         
-        if (ReceiveCollectCall(conn, sendbuffer))
+        if (ReceiveCollectCall(ctx, conn, sendbuffer))
         {
             return true;
         }
@@ -1025,7 +1025,7 @@ static int BusyWithConnection(ServerConnectionState *conn)
 /* Level 4                                                    */
 /**************************************************************/
 
-static int MatchClasses(ServerConnectionState *conn)
+static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 {
     char recvbuffer[CF_BUFSIZE];
     Item *classlist = NULL, *ip;
@@ -1062,21 +1062,21 @@ static int MatchClasses(ServerConnectionState *conn)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking whether class %s can be identified as me...\n", ip->name);
 
-            if (IsDefinedClass(ip->name, NULL))
+            if (IsDefinedClass(ctx, ip->name, NULL))
             {
                 CfDebug("Class %s matched, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
 
-            if (MatchInAlphaList(&VHEAP, ip->name))
+            if (MatchInAlphaList(&ctx->heap_soft, ip->name))
             {
                 CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
 
-            if (MatchInAlphaList(&VHARDHEAP, ip->name))
+            if (MatchInAlphaList(&ctx->heap_hard, ip->name))
             {
                 CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);
@@ -1101,7 +1101,7 @@ static int MatchClasses(ServerConnectionState *conn)
 
 /******************************************************************/
 
-static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args)
 {
     char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
     int print = false, i;
@@ -1154,7 +1154,7 @@ static void DoExec(ServerConnectionState *conn, char *sendbuffer, char *args)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Attempt to activate a predefined role..\n");
 
-            if (!AuthorizeRoles(conn, sp))
+            if (!AuthorizeRoles(ctx, conn, sp))
             {
                 sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
                 SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
@@ -1566,7 +1566,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
 /**************************************************************/
 
-static int AccessControl(const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1655,14 +1655,14 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
             {
                 CfDebug("Checking whether to map root privileges..\n");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ap->maproot, conn->hostname)))
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Mapping root privileges to access non-root files\n");
                 }
 
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
+                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     CfDebug("Access privileges - match found\n");
@@ -1676,7 +1676,7 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
     {
         for (ap = vdeny; ap != NULL; ap = ap->next)
         {
-            if (IsRegexItemIn(ap->accesslist, conn->hostname))
+            if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
             {
                 access = false;
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s explicitly denied access to %s\n", conn->hostname, transrequest);
@@ -1711,7 +1711,7 @@ static int AccessControl(const char *req_path, ServerConnectionState *conn, int 
 
 /**************************************************************/
 
-static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1770,7 +1770,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
             {
                 CfDebug("Checking whether to map root privileges..\n");
 
-                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ap->maproot, conn->hostname)))
+                if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Mapping root privileges\n");
@@ -1781,7 +1781,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
                 }
 
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
+                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
                     CfDebug("Access privileges - match found\n");
@@ -1795,7 +1795,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
         if (strcmp(ap->path, name) == 0)
         {
             if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                || (IsRegexItemIn(ap->accesslist, conn->hostname)))
+                || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s explicitly denied access to %s\n", conn->hostname, name);
@@ -1830,7 +1830,7 @@ static int LiteralAccessControl(char *in, ServerConnectionState *conn, int encry
 
 /**************************************************************/
 
-static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
 {
     Auth *ap;
     int access = false;
@@ -1918,7 +1918,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
                     CfDebug("Checking whether to map root privileges..\n");
 
                     if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
-                        || (IsRegexItemIn(ap->maproot, conn->hostname)))
+                        || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                     {
                         conn->maproot = true;
                         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Mapping root privileges\n");
@@ -1929,7 +1929,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
                     }
 
                     if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                        || (IsRegexItemIn(ap->accesslist, conn->hostname)))
+                        || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = true;
                         CfDebug("Access privileges - match found\n");
@@ -1943,7 +1943,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
             if (strcmp(ap->path, ip->name) == 0)
             {
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
-                    || (IsRegexItemIn(ap->accesslist, conn->hostname)))
+                    || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = false;
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s explicitly denied access to context %s\n", conn->hostname, ip->name);
@@ -1975,7 +1975,7 @@ static Item *ContextAccessControl(char *in, ServerConnectionState *conn, int enc
 
 /**************************************************************/
 
-static int AuthorizeRoles(ServerConnectionState *conn, char *args)
+static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args)
 {
     char *sp;
     Auth *ap;
@@ -2016,10 +2016,10 @@ static int AuthorizeRoles(ServerConnectionState *conn, char *args)
             {
                 /* We have a pattern covering this class - so are we allowed to activate it? */
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr))) ||
-                    (IsRegexItemIn(ap->accesslist, conn->hostname)) ||
-                    (IsRegexItemIn(ap->accesslist, userid1)) ||
-                    (IsRegexItemIn(ap->accesslist, userid2)) ||
-                    (IsRegexItemIn(ap->accesslist, conn->username)))
+                    (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, userid1)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, userid2)) ||
+                    (IsRegexItemIn(ctx, ap->accesslist, conn->username)))
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Attempt to define role/class %s is permitted", RlistScalarValue(rp));
                     permitted = true;
@@ -3354,7 +3354,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 /* Toolkit/Class: conn                                         */
 /***************************************************************/
 
-static ServerConnectionState *NewConn(int sd)
+static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
 {
     ServerConnectionState *conn;
     struct sockaddr addr;
@@ -3371,6 +3371,7 @@ static ServerConnectionState *NewConn(int sd)
 
     ThreadUnlock(cft_system);
 
+    conn->ctx = ctx;
     conn->sd_reply = sd;
     conn->id_verified = false;
     conn->rsa_auth = false;

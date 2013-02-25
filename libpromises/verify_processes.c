@@ -39,25 +39,29 @@
 #include "rlist.h"
 #include "policy.h"
 
-static void VerifyProcesses(Attributes a, Promise *pp);
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
+static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
-static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
+static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 
 #ifndef __MINGW32__
-static int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
+static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
 #endif
 
 
 /*****************************************************************************/
 
-void VerifyProcessesPromise(Promise *pp)
+void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
-    a = GetProcessAttributes(pp);
+    a = GetProcessAttributes(ctx, pp);
     ProcessSanityChecks(a, pp);
 
-    VerifyProcesses(a, pp);
+    VerifyProcesses(ctx, a, pp);
 }
 
 /*****************************************************************************/
@@ -108,7 +112,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static void VerifyProcesses(Attributes a, Promise *pp)
+static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -131,21 +135,21 @@ static void VerifyProcesses(Attributes a, Promise *pp)
 
     DeleteScalar("this", "promiser");
     NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
-    PromiseBanner(pp);
-    VerifyProcessOp(PROCESSTABLE, a, pp);
+    PromiseBanner(ctx, pp);
+    VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     DeleteScalar("this", "promiser");
 
     YieldCurrentLock(thislock);
 }
 
-static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
+static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp)
 {
     int matches = 0, do_signals = true, out_of_range, killed = 0, need_to_restart = true;
     Item *killlist = NULL;
 
     CfDebug("VerifyProcessOp\n");
 
-    matches = FindPidMatches(procdata, &killlist, a, pp);
+    matches = FindPidMatches(ctx, procdata, &killlist, a, pp);
 
 /* promise based on number of matches */
 
@@ -153,14 +157,14 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
-            AddEphemeralClasses(a.process_count.out_of_range_define, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            AddEphemeralClasses(ctx, a.process_count.out_of_range_define, pp->ns);
             out_of_range = true;
         }
         else
         {
-            AddEphemeralClasses(a.process_count.in_range_define, pp->ns);
-            cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
+            AddEphemeralClasses(ctx, a.process_count.in_range_define, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -191,7 +195,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         {
             if (DONTDO)
             {
-                cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -- Need to keep process-stop promise for %s, but only a warning is promised", pp->promiser);
             }
             else
@@ -202,7 +206,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
                 }
                 else
                 {
-                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
                          "Process promise to stop %s could not be kept because %s the stop operator failed",
                          pp->promiser, a.process_stop);
                     DeleteItemList(killlist);
@@ -211,7 +215,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
             }
         }
 
-        killed = DoAllSignals(killlist, a, pp);
+        killed = DoAllSignals(ctx, killlist, a, pp);
     }
 
 /* delegated promise to restart killed or non-existent entries */
@@ -222,26 +226,26 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
     if (!need_to_restart)
     {
-        cfPS(OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
         return;
     }
     else
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                  " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
         }
         else
         {
-            cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
-            NewClass(a.restart_class, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
+            NewClass(ctx, a.restart_class, pp->ns);
         }
     }
 }
 
 #ifndef __MINGW32__
-static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
+static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
     Rlist *rp;
@@ -278,13 +282,13 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(OUTPUT_LEVEL_VERBOSE, CF_FAIL, "kill", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "kill", pp, a,
                          " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", RlistScalarValue(rp),
                          signal, (intmax_t)pid);
                 }
                 else
                 {
-                    cfPS(OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }

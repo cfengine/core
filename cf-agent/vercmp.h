@@ -40,6 +40,6 @@ typedef enum
  *  a.packages.package_commands_useshell
  *  cfPS
  */
-VersionCmpResult CompareVersions(const char *v1, const char *v2, Attributes a, Promise *pp);
+VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v2, Attributes a, Promise *pp);
 
 #endif

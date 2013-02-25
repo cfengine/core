@@ -63,10 +63,10 @@ typedef enum
 } RunagentControl;
 
 static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
-static void KeepControlPromises(Policy *policy);
-static int HailServer(char *host, Attributes a, Promise *pp);
+static void KeepControlPromises(EvalContext *ctx, Policy *policy);
+static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
 static Promise *MakeDefaultRunAgentPromise(void);
@@ -157,16 +157,17 @@ int main(int argc, char *argv[])
     int pid;
 #endif
 
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     ReportContext *report_context = OpenReports(config->agent_type);
 
-    GenericAgentDiscoverContext(config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
 
-    CheckLicenses();
+    CheckLicenses(ctx);
 
     ThisAgentInit();
-    KeepControlPromises(policy);      // Set RUNATTR using copy
+    KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
 
     if (BACKGROUND && INTERACTIVE)
     {
@@ -198,7 +199,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(rp->item, RUNATTR, pp);
+                        HailServer(ctx, rp->item, RUNATTR, pp);
                         exit(0);
                     }
                     else        /* parent process */
@@ -217,7 +218,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(rp->item, RUNATTR, pp);
+                HailServer(ctx, rp->item, RUNATTR, pp);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -246,7 +247,7 @@ int main(int argc, char *argv[])
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(int argc, char **argv)
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -274,7 +275,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -336,7 +337,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass("opt_dry_run");
+            HardClass(ctx, "opt_dry_run");
             break;
 
         case 't':
@@ -387,7 +388,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(char *host, Attributes a, Promise *pp)
+static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 {
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
@@ -479,13 +480,13 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 
     if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "No hosts are registered to connect to");
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "No hosts are registered to connect to");
         return false;
     }
     else
     {
         int err = 0;
-        conn = NewServerConnection(a, pp, &err);
+        conn = NewServerConnection(ctx, a, pp, &err);
 
         if (conn == NULL)
         {
@@ -524,7 +525,7 @@ static int HailServer(char *host, Attributes a, Promise *pp)
 /* Level 2                                                          */
 /********************************************************************/
 
-static void KeepControlPromises(Policy *policy)
+static void KeepControlPromises(EvalContext *ctx, Policy *policy)
 {
     Rval retval;
 
@@ -542,7 +543,7 @@ static void KeepControlPromises(Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }

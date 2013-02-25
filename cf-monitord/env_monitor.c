@@ -53,7 +53,7 @@
 #include <math.h>
 
 #ifndef HAVE_NOVA
-static void HistoryUpdate(Averages newvals);
+static void HistoryUpdate(EvalContext *ctx, Averages newvals);
 #endif
 
 /*****************************************************************************/
@@ -102,22 +102,22 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(const Policy *policy, const ReportContext *report_context);
-static Averages EvalAvQ(char *timekey);
+static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+static Averages EvalAvQ(EvalContext *ctx, char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context);
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
-static void UpdateAverages(char *timekey, Averages newvals);
-static void UpdateDistributions(char *timekey, Averages *av);
+static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals);
+static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av);
 static double WAverage(double newvals, double oldvals, double age);
 static double SetClasses(char *name, double variable, double av_expect, double av_var, double localav_expect,
                          double localav_var, Item **classlist, char *timekey);
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(Promise *pp);
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp);
 
 /****************************************************************/
 
@@ -264,7 +264,7 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(const Policy *policy, const ReportContext *report_context)
+void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
@@ -311,9 +311,9 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
 
     while (!IsPendingTermination())
     {
-        GetQ(policy, report_context);
+        GetQ(ctx, policy, report_context);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
-        averages = EvalAvQ(timekey);
+        averages = EvalAvQ(ctx, timekey);
         LeapDetection();
         ArmClasses(averages, timekey);
 
@@ -327,7 +327,7 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
 
 /*********************************************************************/
 
-static void GetQ(const Policy *policy, const ReportContext *report_context)
+static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -342,15 +342,15 @@ static void GetQ(const Policy *policy, const ReportContext *report_context)
     MonDiskGatherData(CF_THIS);
     MonNetworkGatherData(CF_THIS);
     MonNetworkSnifferGatherData(CF_THIS);
-    MonTempGatherData(CF_THIS);
+    MonTempGatherData(ctx, CF_THIS);
 #endif /* !__MINGW32__ */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures(policy, report_context);
+    GatherPromisedMeasures(ctx, policy, report_context);
 }
 
 /*********************************************************************/
 
-static Averages EvalAvQ(char *t)
+static Averages EvalAvQ(EvalContext *ctx, char *t)
 {
     Averages *lastweek_vals, newvals;
     double last5_vals[CF_OBSERVABLES];
@@ -455,8 +455,8 @@ static Averages EvalAvQ(char *t)
         }
     }
 
-    UpdateAverages(t, newvals);
-    UpdateDistributions(t, lastweek_vals);        /* Distribution about mean */
+    UpdateAverages(ctx, t, newvals);
+    UpdateDistributions(ctx, t, lastweek_vals);        /* Distribution about mean */
 
     return newvals;
 }
@@ -777,7 +777,7 @@ static Averages *GetCurrentAverages(char *timekey)
 
 /*****************************************************************************/
 
-static void UpdateAverages(char *timekey, Averages newvals)
+static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
 {
     CF_DB *dbp;
 
@@ -792,12 +792,12 @@ static void UpdateAverages(char *timekey, Averages newvals)
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
 
     CloseDB(dbp);
-    HistoryUpdate(newvals);
+    HistoryUpdate(ctx, newvals);
 }
 
 /*****************************************************************************/
 
-static void UpdateDistributions(char *timekey, Averages *av)
+static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 {
     int position, day, i;
     char filename[CF_BUFSIZE];
@@ -808,7 +808,7 @@ static void UpdateDistributions(char *timekey, Averages *av)
    std-deviation for the current time.
 */
 
-    if (IsDefinedClass("Min40_45", NULL))
+    if (IsDefinedClass(ctx, "Min40_45", NULL))
     {
         day = Day2Number(timekey);
 
@@ -1136,7 +1136,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(const Policy *policy, const ReportContext *report_context)
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
 {
     char *scope;
 
@@ -1156,7 +1156,7 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
                 }
             }
         }
@@ -1168,22 +1168,22 @@ static void GatherPromisedMeasures(const Policy *policy, const ReportContext *re
     NewScope("control_common");
     NewScope("mon");
     NewScope("sys");
-    GetNameInfo3();
-    GetInterfacesInfo(AGENT_TYPE_MONITOR);
-    Get3Environment();
-    OSClasses();
-    BuiltinClasses();
+    GetNameInfo3(ctx);
+    GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
+    Get3Environment(ctx);
+    OSClasses(ctx);
+    BuiltinClasses(ctx);
 }
 
 /*********************************************************************/
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(Promise *pp)
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1193,7 +1193,7 @@ static void KeepMonitorPromise(Promise *pp)
         return;
     }
 
-    if (VarClassExcluded(pp, &sp))
+    if (VarClassExcluded(ctx, pp, &sp))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1205,13 +1205,13 @@ static void KeepMonitorPromise(Promise *pp)
 
     if (strcmp("classes", pp->agentsubtype) == 0)
     {
-        KeepClassContextPromise(pp);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
     if (strcmp("measurements", pp->agentsubtype) == 0)
     {
-        VerifyMeasurementPromise(CF_THIS, pp);
+        VerifyMeasurementPromise(ctx, CF_THIS, pp);
         *pp->donep = false;
         return;
     }
@@ -1236,7 +1236,7 @@ void MonOtherGatherData(double *cf_this)
 }
 
 #ifndef HAVE_NOVA
-static void HistoryUpdate(Averages newvals)
+static void HistoryUpdate(EvalContext *ctx, Averages newvals)
 {
 }
 #endif

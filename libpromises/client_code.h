@@ -32,14 +32,14 @@ void DetermineCfenginePort(void);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-AgentConnection *NewServerConnection(Attributes attr, Promise *pp, int *err);
+AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise *pp, int *err);
 void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
+int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
 void DeleteClientCache(Attributes attr, Promise *pp);
-int CompareHashNet(char *file1, char *file2, Attributes attr, Promise *pp);
-int CopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int ServerConnect(AgentConnection *conn, char *host, Attributes attr, Promise *pp);
+int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, Promise *pp);
+int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
+int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
+int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp);
 void DestroyServerConnection(AgentConnection *conn);
 
 #endif

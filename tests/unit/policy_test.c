@@ -4,6 +4,8 @@
 #include "parser.h"
 #include "rlist.h"
 #include "fncall.h"
+#include "env_context.h"
+#include "item_lib.h"
 
 static Policy *LoadPolicy(const char *filename)
 {
@@ -16,9 +18,12 @@ static Policy *LoadPolicy(const char *filename)
 static Seq *LoadAndCheck(const char *filename)
 {
     Policy *p = LoadPolicy(filename);
+    EvalContext *ctx = EvalContextNew();
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
-    PolicyCheckPartial(p, errs);
+    PolicyCheckPartial(ctx, p, errs);
+
+    EvalContextDestroy(ctx);
 
     return errs;
 }
@@ -81,6 +86,7 @@ static void test_promise_duplicate_handle(void **state)
 
 static void test_policy_json_to_from(void **state)
 {
+    EvalContext *ctx = EvalContextNew();
     Policy *policy = NULL;
     {
         Policy *original = LoadPolicy("benchmark.cf");
@@ -114,14 +120,14 @@ static void test_policy_json_to_from(void **state)
                         assert_int_equal(2, SeqLength(promise->conlist));
 
                         {
-                            Constraint *create = PromiseGetConstraint(promise, "create");
+                            Constraint *create = PromiseGetConstraint(ctx, promise, "create");
                             assert_true(create);
                             assert_string_equal("create", create->lval);
                             assert_string_equal("true", RvalScalarValue(create->rval));
                         }
 
                         {
-                            Constraint *create = PromiseGetConstraint(promise, "perms");
+                            Constraint *create = PromiseGetConstraint(ctx, promise, "perms");
                             assert_true(create);
                             assert_string_equal("perms", create->lval);
                             assert_string_equal("myperms", RvalScalarValue(create->rval));
@@ -185,6 +191,7 @@ static void test_policy_json_to_from(void **state)
     }
 
     PolicyDestroy(policy);
+    EvalContextDestroy(ctx);
 }
 
 static void test_util_bundle_qualified_name(void **state)
@@ -224,4 +231,40 @@ int main()
     };
 
     return run_tests(tests);
+}
+
+// STUBS
+
+EvalContext *EvalContextNew(void)
+{
+    EvalContext *ctx = xmalloc(sizeof(EvalContext));
+
+    InitAlphaList(&ctx->heap_soft);
+    InitAlphaList(&ctx->heap_hard);
+
+    return ctx;
+}
+
+void EvalContextDestroy(EvalContext *ctx)
+{
+    if (ctx)
+    {
+        DeleteAlphaList(&ctx->heap_soft);
+        DeleteAlphaList(&ctx->heap_hard);
+    }
+}
+
+void InitAlphaList(AlphaList *al)
+{
+    memset(al, 0, sizeof(AlphaList));
+}
+
+void DeleteAlphaList(AlphaList *al)
+{
+    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    {
+        DeleteItemList(al->list[i]);
+    }
+
+    InitAlphaList(al);
 }

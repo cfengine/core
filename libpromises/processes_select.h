@@ -27,8 +27,8 @@
 
 #include "cf3.defs.h"
 
-Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
+Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
 bool IsProcessNameRunning(char *procNameRegex);
-int FindPidMatches(Item *procdata, Item **killlist, Attributes a, Promise *pp);
+int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, Promise *pp);
 
 #endif

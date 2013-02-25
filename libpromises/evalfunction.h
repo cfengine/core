@@ -28,11 +28,11 @@
 #include "cf3.defs.h"
 #include "rlist.h"
 
-FnCallResult FnCallHostInNetgroup(FnCall *fp, Rlist *finalargs);
+FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
 
-FnCallResult CallFunction(const FnCallType *function, FnCall *fp, Rlist *finalargs);
+FnCallResult CallFunction(EvalContext *ctx, const FnCallType *function, FnCall *fp, Rlist *finalargs);
 int FnNumArgs(const FnCallType *call_type);
 
-void ModuleProtocol(char *command, char *line, int print, const char *namespace);
+void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns);
 
 #endif

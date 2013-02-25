@@ -119,7 +119,7 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
+void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -188,7 +188,7 @@ void AugmentScope(char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 
         case RVAL_TYPE_FNCALL:
             subfp = (FnCall *) rpr->item;
-            Rval rval = FnCallEvaluate(subfp, pp).rval;
+            Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
             if (rval.type == RVAL_TYPE_SCALAR)
             {
                 NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);

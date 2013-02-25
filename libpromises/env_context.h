@@ -30,12 +30,11 @@
 #include "alphalist.h"
 #include "writer.h"
 
-/**
-  The global heap
-  Classes are added to the global heap using NewClass().
-  */
-extern AlphaList VHEAP;
-extern AlphaList VHARDHEAP;
+struct EvalContext_
+{
+    AlphaList heap_soft;
+    AlphaList heap_hard;
+};
 
 /**
   Negated classes
@@ -55,43 +54,54 @@ extern AlphaList VADDCLASSES;
   */
 extern Item *ABORTBUNDLEHEAP;
 
+
+EvalContext *EvalContextNew(void);
+void EvalContextDestroy(EvalContext *ctx);
+
+
+
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(const char *context, const char *ns);
-bool IsExcluded(const char *exception, const char *ns);
+bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);
+bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
 
-bool EvalProcessResult(const char *process_result, AlphaList *proc_attr);
-bool EvalFileResult(const char *file_result, AlphaList *leaf_attr);
+bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *proc_attr);
+bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr);
+
+
+// Add new contexts
+void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
+void AddAbortClass(const char *name, const char *classes);
+void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
+void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
+void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
+void HardClass(EvalContext *ctx, const char *oclass);
+void NewClassesFromString(EvalContext *ctx, const char *classlist);
+void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns);
+void NegateClassesFromString(EvalContext *ctx, const char *classlist);
+void LoadPersistentContext(EvalContext *ctx);
+
+// Remove contexts
+void DeleteHardClass(EvalContext *ctx, const char *oclass);
+void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
+void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
+void DeleteEntireHeap(EvalContext *ctx);
+void DeletePrivateClassContext(void);
+void DeletePersistentContext(const char *name);
 
 /* - Rest - */
 int Abort(void);
-void AddAbortClass(const char *name, const char *classes);
-void KeepClassContextPromise(Promise *pp);
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
 void PushPrivateClassContext(int inherit);
 void PopPrivateClassContext(void);
-void DeletePrivateClassContext(void);
-void DeleteEntireHeap(void);
-void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
-void DeletePersistentContext(const char *name);
-void LoadPersistentContext(void);
-void AddEphemeralClasses(const Rlist *classlist, const char *ns);
-void HardClass(const char *oclass);
-void DeleteHardClass(const char *oclass);
-void NewClass(const char *oclass, const char *ns);      /* Copies oclass */
-void NewBundleClass(const char *oclass, const char *bundle, const char *ns);
 Rlist *SplitContextExpression(const char *context, Promise *pp);
-void DeleteClass(const char *oclass, const char *ns);
-int VarClassExcluded(Promise *pp, char **classes);
-void NewClassesFromString(const char *classlist);
-void NegateClassesFromString(const char *classlist);
-bool IsSoftClass(const char *sp);
-bool IsHardClass(const char *sp);
+int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
+bool IsSoftClass(EvalContext *ctx, const char *sp);
+bool IsHardClass(EvalContext *ctx, const char *sp);
 bool IsTimeClass(const char *sp);
-void SaveClassEnvironment(void);
-void DeleteAllClasses(const Rlist *list);
-void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
+void SaveClassEnvironment(EvalContext *ctx);
 void ListAlphaList(Writer *writer, AlphaList al, char sep);
-void MarkPromiseHandleDone(const Promise *pp);
-int MissingDependencies(const Promise *pp);
+void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
+int MissingDependencies(EvalContext *ctx, const Promise *pp);
 
 #endif

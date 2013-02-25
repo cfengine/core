@@ -37,21 +37,21 @@
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(Promise *pp, const ReportContext *report_context)
+void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
-    a = GetServicesAttributes(pp);
+    a = GetServicesAttributes(ctx, pp);
 
     SetServiceDefaults(&a);
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(a, pp, report_context);
+        VerifyServices(ctx, a, pp, report_context);
     }
 }
 
@@ -148,7 +148,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     CfLock thislock;
 
@@ -170,15 +170,15 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
     }
 
     NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
     {
-        VerifyWindowsService(a, pp);
+        VerifyWindowsService(ctx, a, pp);
     }
     else
     {
-        DoVerifyServices(a, pp, report_context);
+        DoVerifyServices(ctx, a, pp, report_context);
     }
 
     DeleteScalar("this", "promiser");
@@ -189,14 +189,14 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
 
 // Need to set up the default service pack to eliminate syntax
 
-    if (ConstraintGetRvalValue("service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
+    if (ConstraintGetRvalValue(ctx, "service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {
@@ -261,12 +261,12 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)
     {
-        VerifyMethod("service_bundle", a, pp, report_context);  // Send list of classes to set privately?
+        VerifyMethod(ctx, "service_bundle", a, pp, report_context);  // Send list of classes to set privately?
     }
 }
 

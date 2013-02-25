@@ -17,7 +17,8 @@ static void test_createBuffer(void **state)
     assert_int_equal(buffer->beginning, 0);
     assert_int_equal(buffer->end, 0);
     assert_true(buffer->ref_count != NULL);
-    assert_int_equal(buffer->ref_count->user_count, 1);    
+    assert_int_equal(buffer->ref_count->user_count, 1);
+    assert_int_equal(0, BufferDestroy(&buffer));
 }
 
 static void test_createBufferFrom(void **state)
@@ -35,6 +36,7 @@ static void test_createBufferFrom(void **state)
     assert_int_equal(buffer->end, 0);
     assert_true(buffer->ref_count != NULL);
     assert_int_equal(buffer->ref_count->user_count, 1);
+    assert_int_equal(0, BufferDestroy(&buffer));
 }
 
 static void test_destroyBuffer(void **state)
@@ -156,31 +158,41 @@ static void test_zeroBuffer(void **state)
     assert_int_equal(0, BufferDestroy(&buffer));
 }
 
-static void test_copyEqualBuffer(void **state)
+static void test_copyCompareBuffer(void **state)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
     char element1[] = "element1";
     unsigned int element1size = strlen(element1);
 
-    Buffer *buffer0 = BufferNew();
-    Buffer *buffer1 = BufferNew();
-    Buffer *buffer2 = BufferNew();
+    Buffer *buffer0 = NULL;
+    Buffer *buffer1 = NULL;
+    Buffer *buffer2 = NULL;
 
-    // Empty buffers, all empty buffers are the same
-    assert_true(BufferEqual(buffer0, buffer0));
-    assert_true(BufferEqual(buffer0, buffer1));
+    assert_int_equal(0, BufferCompare(buffer0, buffer1));
+    buffer0 = BufferNew();
+    assert_int_equal(-1, BufferCompare(NULL, buffer0));
+    assert_int_equal(1, BufferCompare(buffer0, NULL));
+    buffer1 = BufferNew();
+    /*
+     * Empty buffers, they are not the same because their
+     * ref_counts are different.
+     * buffer2 is equal to buffer0 because it is a copy of it.
+     */
+    assert_int_equal(0, BufferCompare(buffer0, buffer0));
+    assert_int_equal(0, BufferCompare(buffer0, buffer1));
     assert_int_equal(0, BufferCopy(buffer0, &buffer2));
-    assert_true(BufferEqual(buffer0, buffer2));
+    assert_int_equal(0, BufferCompare(buffer0, buffer2));
 
     // Add some flavour
     assert_int_equal(0, BufferDestroy(&buffer2));
     assert_int_equal(element0size, BufferSet(buffer0, element0, element0size));
     assert_int_equal(element1size, BufferSet(buffer1, element1, element1size));
-    assert_true(BufferEqual(buffer0, buffer0));
-    assert_false(BufferEqual(buffer0, buffer1));
+    assert_int_equal(0, BufferCompare(buffer0, buffer0));
+    assert_int_equal(-1, BufferCompare(buffer0, buffer1));
+    assert_int_equal(1, BufferCompare(buffer1, buffer0));
     assert_int_equal(0, BufferCopy(buffer0, &buffer2));
-    assert_true(BufferEqual(buffer0, buffer2));
+    assert_int_equal(0, BufferCompare(buffer0, buffer2));
 
     // Destroy the buffers
     assert_int_equal(0, BufferDestroy(&buffer0));
@@ -610,7 +622,7 @@ int main()
         , unit_test(test_createBufferFrom)
         , unit_test(test_destroyBuffer)
         , unit_test(test_zeroBuffer)
-        , unit_test(test_copyEqualBuffer)
+        , unit_test(test_copyCompareBuffer)
         , unit_test(test_setBuffer)
         , unit_test(test_appendBuffer)
         , unit_test(test_printf)

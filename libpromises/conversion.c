@@ -241,6 +241,12 @@ int SignalFromString(const char *s)
 
 }
 
+ContextScope ContextScopeFromString(const char *scope_str)
+{
+    static const char *CONTEXT_SCOPES[] = { "namespace", "bundle" };
+    return FindTypeInArray(CONTEXT_SCOPES, scope_str, CONTEXT_SCOPE_NAMESPACE, CONTEXT_SCOPE_NONE);
+}
+
 OutputLevel OutputLevelFromString(const char *level)
 {
     static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };

@@ -691,6 +691,10 @@ DefineClasses GetClassDefinitionConstraints(const Promise *pp)
     DefineClasses c;
     char *pt = NULL;
 
+    {
+        const char *context_scope = ConstraintGetRvalValue("scope", pp, RVAL_TYPE_SCALAR);
+        c.scope = ContextScopeFromString(context_scope);
+    }
     c.change = (Rlist *) PromiseGetConstraintAsList("promise_repaired", pp);
     c.failure = (Rlist *) PromiseGetConstraintAsList("repair_failed", pp);
     c.denied = (Rlist *) PromiseGetConstraintAsList("repair_denied", pp);

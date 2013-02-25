@@ -177,7 +177,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             }
         }
 
-        AddAllClasses(pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         MarkPromiseHandleDone(pp);
         DeleteAllClasses(attr.classes.del_change);
 
@@ -218,7 +218,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -240,7 +240,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -262,7 +262,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -284,7 +284,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -297,7 +297,7 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer);
+        AddAllClasses(pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))

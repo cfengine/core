@@ -72,6 +72,7 @@ static const BodySyntax CF_TRANSACTION_BODY[] =
 
 static const BodySyntax CF_DEFINECLASS_BODY[] =
 {
+    {"scope", DATA_TYPE_OPTION, "namespace,bundle", "Scope of the contexts set by this body" },
     {"promise_repaired", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
     {"repair_failed", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
     {"repair_denied", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},

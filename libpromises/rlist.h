@@ -64,7 +64,7 @@ void RlistPushStack(Rlist **liststart, void *item);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 Rlist *RlistAppendAlien(Rlist **start, void *item);
 Rlist *RlistPrependAlien(Rlist **start, void *item);
-Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type);
+
 Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar);
 Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
 Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type);

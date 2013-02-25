@@ -268,7 +268,7 @@ static void test_multipleHubsFound(void **state)
     assert_int_not_equal(list, NULL);
     
     ListIterator *i = NULL;
-    ListIteratorGet(list, &i);
+    i = ListIteratorGet(list);
     
     HostProperties *host1 = (HostProperties *)ListIteratorData(i); 
     assert_int_not_equal(ListIteratorNext(i), -1);

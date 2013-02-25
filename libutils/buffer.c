@@ -164,6 +164,7 @@ int BufferCopy(Buffer *source, Buffer **destination)
     {
         return -1;
     }
+    (*destination)->buffer = source->buffer;
     (*destination)->ref_count = source->ref_count;
     return 0;
 }

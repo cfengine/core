@@ -26,7 +26,7 @@ libutils_la_SOURCES = \
 	writer.c writer.h \
 	csv_writer.c csv_writer.h \
 	ip_address.c ip_address.h \
-	xml_writer.c writer.h
+	xml_writer.c xml_writer.h
 
 CLEANFILES = *.gcno *.gcda
 

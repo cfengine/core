@@ -74,7 +74,7 @@
 
 /* This should always be first.  */
 
-#include "config.h"
+# include <config.h>
 
 #ifdef HAVE_NLIST_H		/* What autoconf defines.  */
 # undef NLIST_STRUCT

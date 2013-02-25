@@ -201,25 +201,25 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
         switch (a.service.service_policy)
         {
         case SERVICE_POLICY_START:
-            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            RlistAppend(&args, "start", RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "start");
             break;
 
         case SERVICE_POLICY_RESTART:
-            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
 
         case SERVICE_POLICY_RELOAD:
-            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            RlistAppend(&args, "restart", RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
             
         case SERVICE_POLICY_STOP:
         case SERVICE_POLICY_DISABLE:
         default:
-            RlistAppend(&args, pp->promiser, RVAL_TYPE_SCALAR);
-            RlistAppend(&args, "stop", RVAL_TYPE_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "stop");
             break;
 
         }

@@ -39,6 +39,8 @@
 
 #include <assert.h>
 
+static Rlist *RlistPrependRval(Rlist **start, Rval rval);
+
 /*******************************************************************/
 
 char *RlistScalarValue(const Rlist *rlist)
@@ -212,72 +214,53 @@ bool RlistIsInListOfRegex(const Rlist *list, const char *str)
 
 /*******************************************************************/
 
-Rval RvalCopy(Rval rval)
+static Rval RvalCopyScalar(Rval rval)
 {
-    Rlist *rp, *srp, *start = NULL;
-    FnCall *fp;
+    assert(rval.type == RVAL_TYPE_SCALAR);
 
-    CfDebug("RvalCopy(%c)\n", rval.type);
-
-    if (rval.item == NULL)
+    if (rval.item)
     {
-        switch (rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            return (Rval) {xstrdup(""), RVAL_TYPE_SCALAR};
+        return ((Rval) {xstrdup((const char *) rval.item), RVAL_TYPE_SCALAR});
+    }
+    else
+    {
+        return ((Rval) {xstrdup(""), RVAL_TYPE_SCALAR});
+    }
+}
 
-        case RVAL_TYPE_LIST:
-            return (Rval) {NULL, RVAL_TYPE_LIST};
+static Rval RvalCopyList(Rval rval)
+{
+    assert(rval.type == RVAL_TYPE_LIST);
 
-        default:
-            break;
-        }
+    if (!rval.item)
+    {
+        return ((Rval) {NULL, RVAL_TYPE_LIST});
     }
 
-    switch (rval.type)
+    Rlist *start = NULL;
+    for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
     {
-    case RVAL_TYPE_SCALAR:
-        /* the rval is just a string */
-        return (Rval) {xstrdup((const char *) rval.item), RVAL_TYPE_SCALAR};
+        char naked[CF_BUFSIZE] = "";
 
-    case RVAL_TYPE_ASSOC:
-        return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
-
-    case RVAL_TYPE_FNCALL:
-        /* the rval is a fncall */
-        fp = (FnCall *) rval.item;
-        return (Rval) {FnCallCopy(fp), RVAL_TYPE_FNCALL};
-
-    case RVAL_TYPE_LIST:
-        /* The rval is an embedded rlist (2d) */
-        for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+        if (IsNakedVar(rp->item, '@'))
         {
-            char naked[CF_BUFSIZE] = "";
+            GetNaked(naked, rp->item);
 
-            if (IsNakedVar(rp->item, '@'))
+            Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
+            if (GetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
             {
-                GetNaked(naked, rp->item);
-
-                Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
-                if (GetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
+                switch (rv.type)
                 {
-                    switch (rv.type)
+                case RVAL_TYPE_LIST:
+                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
                     {
-                    case RVAL_TYPE_LIST:
-                        for (srp = (Rlist *) rv.item; srp != NULL; srp = srp->next)
-                        {
-                            RlistAppend(&start, srp->item, srp->type);
-                        }
-                        break;
-
-                    default:
-                        RlistAppend(&start, rp->item, rp->type);
-                        break;
+                        RlistAppend(&start, srp->item, srp->type);
                     }
-                }
-                else
-                {
+                    break;
+
+                default:
                     RlistAppend(&start, rp->item, rp->type);
+                    break;
                 }
             }
             else
@@ -285,15 +268,47 @@ Rval RvalCopy(Rval rval)
                 RlistAppend(&start, rp->item, rp->type);
             }
         }
-
-        return (Rval) {start, RVAL_TYPE_LIST};
-
-    default:
-        break;
+        else
+        {
+            RlistAppend(&start, rp->item, rp->type);
+        }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
-    return (Rval) {NULL, rval.type};
+    return (Rval) {start, RVAL_TYPE_LIST};
+}
+
+static Rval RvalCopyAssoc(Rval rval)
+{
+    assert(rval.type == RVAL_TYPE_ASSOC);
+    return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
+}
+
+static Rval RvalCopyFnCall(Rval rval)
+{
+    assert(rval.type == RVAL_TYPE_FNCALL);
+    return (Rval) {FnCallCopy(rval.item), RVAL_TYPE_FNCALL};
+}
+
+Rval RvalCopy(Rval rval)
+{
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return RvalCopyScalar(rval);
+
+    case RVAL_TYPE_ASSOC:
+        return RvalCopyAssoc(rval);
+
+    case RVAL_TYPE_FNCALL:
+        return RvalCopyFnCall(rval);
+
+    case RVAL_TYPE_LIST:
+        return RvalCopyList(rval);
+
+    default:
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
+        return ((Rval) {NULL, rval.type});
+    }
 }
 
 /*******************************************************************/
@@ -346,7 +361,7 @@ Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
 {
     if (!RlistKeyIn(*start, scalar))
     {
-        return RlistAppend(start, scalar, RVAL_TYPE_SCALAR);
+        return RlistAppendScalar(start, scalar);
     }
     else
     {
@@ -355,12 +370,17 @@ Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar)
 }
 
 /*******************************************************************/
+
+Rlist *RlistPrependScalar(Rlist **start, const char *scalar)
+{
+    return RlistPrependRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
+}
 
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar)
 {
     if (!RlistKeyIn(*start, scalar))
     {
-        return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
+        return RlistPrependScalar(start, scalar);
     }
     else
     {
@@ -368,7 +388,51 @@ Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar)
     }
 }
 
+static Rlist *RlistPrependFnCall(Rlist **start, const FnCall *fn)
+{
+    return RlistPrependRval(start, RvalCopyFnCall((Rval) { (FnCall *)fn, RVAL_TYPE_FNCALL }));
+}
+
 /*******************************************************************/
+
+static Rlist *RlistAppendRval(Rlist **start, Rval rval)
+{
+    Rlist *rp = xmalloc(sizeof(Rlist));
+
+    if (*start == NULL)
+    {
+        *start = rp;
+    }
+    else
+    {
+        Rlist *lp = NULL;
+        for (lp = *start; lp->next != NULL; lp = lp->next)
+        {
+        }
+
+        lp->next = rp;
+    }
+
+    rp->item = rval.item;
+    rp->type = rval.type;
+
+    ThreadLock(cft_lock);
+
+    if (rval.type == RVAL_TYPE_LIST)
+    {
+        rp->state_ptr = rp->item;
+    }
+    else
+    {
+        rp->state_ptr = NULL;
+    }
+
+    rp->next = NULL;
+
+    ThreadUnlock(cft_lock);
+
+    return rp;
+}
 
 Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
 {
@@ -393,21 +457,16 @@ Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type)
     }
 }
 
-/*******************************************************************/
 
 Rlist *RlistAppendScalar(Rlist **start, const char *scalar)
 {
-    return RlistAppend(start, scalar, RVAL_TYPE_SCALAR);
+    return RlistAppendRval(start, RvalCopyScalar((Rval) { (char *)scalar, RVAL_TYPE_SCALAR }));
 }
 
-/*******************************************************************/
-
-Rlist *RlistPrependScalar(Rlist **start, const char *scalar)
+Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn)
 {
-    return RlistPrepend(start, scalar, RVAL_TYPE_SCALAR);
+    return RlistAppendRval(start, RvalCopyFnCall((Rval) { (FnCall *)fn, RVAL_TYPE_FNCALL }));
 }
-
-/*******************************************************************/
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
    /* Allocates new memory for objects - careful, could leak!  */
@@ -418,8 +477,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        CfDebug("Appending scalar to rval-list [%s]\n", (char *) item);
-        break;
+        return RlistAppendScalar(start, item);
 
     case RVAL_TYPE_ASSOC:
         CfDebug("Appending assoc to rval-list [%s]\n", (char *) item);
@@ -488,17 +546,42 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 
 /*******************************************************************/
 
+static Rlist *RlistPrependRval(Rlist **start, Rval rval)
+{
+    ThreadLock(cft_system);
+
+    Rlist *rp = xmalloc(sizeof(Rlist));
+
+    ThreadUnlock(cft_system);
+
+    rp->next = *start;
+    rp->item = rval.item;
+    rp->type = rval.type;
+
+    if (rval.type == RVAL_TYPE_LIST)
+    {
+        rp->state_ptr = rp->item;
+    }
+    else
+    {
+        rp->state_ptr = NULL;
+    }
+
+    ThreadLock(cft_lock);
+    *start = rp;
+    ThreadUnlock(cft_lock);
+    return rp;
+}
+
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
    /* heap memory for item must have already been allocated */
 {
     Rlist *rp, *lp = *start;
-    FnCall *fp;
 
     switch (type)
     {
     case RVAL_TYPE_SCALAR:
-        CfDebug("Prepending scalar to rval-list [%s]\n", (char *) item);
-        break;
+        return RlistPrependScalar(start, item);
 
     case RVAL_TYPE_LIST:
 
@@ -511,14 +594,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
         return lp;
 
     case RVAL_TYPE_FNCALL:
-        CfDebug("Prepending function to rval-list function call: ");
-        fp = (FnCall *) item;
-        if (DEBUG)
-        {
-            FnCallShow(stdout, fp);
-        }
-        CfDebug("\n");
-        break;
+        return RlistPrependFnCall(start, item);
     default:
         CfDebug("Cannot prepend %c to rval-list [%s]\n", type, (char *) item);
         return NULL;
@@ -577,7 +653,7 @@ Rlist *RlistParseShown(char *string)
     for (rp = splitlist; rp != NULL; rp = rp->next)
     {
         sscanf(rp->item, "%*[{ '\"]%255[^'\"]", value);
-        RlistAppend(&newlist, value, RVAL_TYPE_SCALAR);
+        RlistAppendScalar(&newlist, value);
     }
 
     RlistDestroy(splitlist);

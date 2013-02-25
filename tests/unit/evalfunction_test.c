@@ -48,7 +48,7 @@ static void test_hostinnetgroup_found(void **state)
     FnCallResult res;
     Rlist *args = NULL;
 
-    RlistAppend(&args, "valid_netgroup", 's');
+    RlistAppendScalar(&args, "valid_netgroup");
 
     res = FnCallHostInNetgroup(NULL, args);
     assert_string_equal("any", (char *) res.rval.item);
@@ -59,7 +59,7 @@ static void test_hostinnetgroup_not_found(void **state)
     FnCallResult res;
     Rlist *args = NULL;
 
-    RlistAppend(&args, "invalid_netgroup", 's');
+    RlistAppendScalar(&args, "invalid_netgroup");
 
     res = FnCallHostInNetgroup(NULL, args);
     assert_string_equal("!any", (char *) res.rval.item);

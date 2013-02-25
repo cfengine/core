@@ -74,9 +74,9 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
 // Note, we pad all iterators will a blank so the ptr arithmetic works
 // else EndOfIteration will not see lists with only one element
 
-    lp = RlistPrepend((Rlist **) &(cp->rval), CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    lp = RlistPrependScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
     rp->state_ptr = lp->next;   // Always skip the null value
-    RlistAppend((Rlist **) &(cp->rval), CF_NULL_VALUE, RVAL_TYPE_SCALAR);
+    RlistAppendScalar((Rlist **) &(cp->rval), CF_NULL_VALUE);
 
     rp->item = item;
     rp->type = RVAL_TYPE_LIST;

@@ -62,16 +62,21 @@ int RlistLen(const Rlist *start);
 void RlistPopStack(Rlist **liststart, void **item, size_t size);
 void RlistPushStack(Rlist **liststart, void *item);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
+
 Rlist *RlistAppendAlien(Rlist **start, void *item);
 Rlist *RlistPrependAlien(Rlist **start, void *item);
 
-Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar);
-Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
-Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type);
 Rlist *RlistPrependScalarIdemp(Rlist **start, const char *scalar);
 Rlist *RlistPrependScalar(Rlist **start, const char *scalar);
+Rlist *RlistAppendScalarIdemp(Rlist **start, const char *scalar);
+Rlist *RlistAppendScalar(Rlist **start, const char *scalar);
+
+Rlist *RlistAppendIdemp(Rlist **start, void *item, RvalType type);
 Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
+
+Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn);
+
 Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
 void RlistShow(FILE *fp, const Rlist *list);

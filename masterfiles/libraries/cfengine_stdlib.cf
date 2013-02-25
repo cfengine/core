@@ -3077,7 +3077,7 @@ bundle common paths
       "service"             string => "/usr/sbin/service";
       "svc"                 string => "/usr/sbin/service";
       "update_alternatives" string => "/usr/bin/update-alternatives";
-      "update_rc_d"         string => "/usr/sbin/update-rc.d"
+      "update_rc_d"         string => "/usr/sbin/update-rc.d";
       "useradd"             string => "/usr/sbin/useradd";
 
 

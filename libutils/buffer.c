@@ -310,7 +310,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     return buffer->used;
 }
 
-int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
+int BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
     {

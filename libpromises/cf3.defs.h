@@ -1143,8 +1143,16 @@ typedef struct
 
 /*************************************************************************/
 
+typedef enum
+{
+    CONTEXT_SCOPE_NAMESPACE,
+    CONTEXT_SCOPE_BUNDLE,
+    CONTEXT_SCOPE_NONE
+} ContextScope;
+
 typedef struct
 {
+    ContextScope scope;
     Rlist *change;
     Rlist *failure;
     Rlist *denied;

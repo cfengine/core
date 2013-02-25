@@ -1633,13 +1633,6 @@ void SaveClassEnvironment(void)
 
 void DeleteAllClasses(const Rlist *list)
 {
-    char *string;
-
-    if (list == NULL)
-    {
-        return;
-    }
-
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
@@ -1653,7 +1646,7 @@ void DeleteAllClasses(const Rlist *list)
                   RlistScalarValue(rp));
         }
 
-        string = (char *) (rp->item);
+        const char *string = (char *) (rp->item);
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
         DeletePersistentContext(string);
@@ -1665,13 +1658,8 @@ void DeleteAllClasses(const Rlist *list)
 
 /*****************************************************************************/
 
-void AddAllClasses(const char *ns, const Rlist *list, int persist, ContextStatePolicy policy)
+void AddAllClasses(const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
 {
-    if (list == NULL)
-    {
-        return;
-    }
-
     for (const Rlist *rp = list; rp != NULL; rp = rp->next)
     {
         char *classname = xstrdup(rp->item);
@@ -1681,19 +1669,36 @@ void AddAllClasses(const char *ns, const Rlist *list, int persist, ContextStateP
         if (IsHardClass(classname))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            // TODO: ok.. but should we take any action? continue; maybe?
         }
 
         if (persist > 0)
         {
+            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
+            }
+
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
             NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
+            NewClass(classname, ns);
         }
         else
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
-        }
 
-        NewClass(classname, ns);
+            switch (context_scope)
+            {
+            case CONTEXT_SCOPE_BUNDLE:
+                NewBundleClass(classname, THIS_BUNDLE, ns);
+                break;
+
+            default:
+            case CONTEXT_SCOPE_NAMESPACE:
+                NewClass(classname, ns);
+                break;
+            }
+        }
     }
 }
 

@@ -82,7 +82,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
-    int repaired = false, have_policy = false, am_appliance = false;
+    int have_policy = false, am_appliance = false;
 
     CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
@@ -103,11 +103,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
-    {
-        CreateFailSafe(name);
-        repaired = true;
-    }
+    CreateFailSafe(name);
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
@@ -134,7 +130,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
-        else if (repaired)
+        else
         {
             CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }

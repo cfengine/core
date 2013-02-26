@@ -1012,7 +1012,6 @@ AC_CONFIG_FILES([Makefile
 	tests/Makefile
 	tests/acceptance/Makefile
 	tests/unit/Makefile
-	tests/unit/data/Makefile
 	tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])

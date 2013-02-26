@@ -158,9 +158,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     {
         EvalContextHeapAddHard(ctx, "am_policy_hub");
         printf
-            (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
-        printf
-            (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
+            (" ** This host recognizes itself as a CFEngine policy server, with policy distribution from %s/masterfiles.\n", WORKDIR);
         creat(name, 0600);
     }
     else

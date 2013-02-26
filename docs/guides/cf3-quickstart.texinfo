@@ -490,7 +490,7 @@ ownership is the @samp{sys} group.
 @item Designate cfhub as the policy server by bootstrapping it using its own IP address:
 
 @smallexample
-root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.134
+root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap 172.16.100.134
 @end smallexample
 
 @item CFEngine will output diagnostic information upon bootstrap. If all is well you should see the following in the output: 
@@ -502,7 +502,7 @@ root@@cfhub# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.1
 @item Return to cfhost and bootstrap it to the IP address of the policy server cfhub:  172.16.100.134
 
 @smallexample
-root@@cfhost# /var/cfengine/bin/cf-agent --bootstrap --policy-server 172.16.100.134
+root@@cfhost# /var/cfengine/bin/cf-agent --bootstrap 172.16.100.134
 @end smallexample
 
 Ensure that the bootstrap was successful. If you have problems with this step, the most common issues are related to:

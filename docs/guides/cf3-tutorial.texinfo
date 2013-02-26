@@ -697,7 +697,7 @@ This will be corrected in a bugfix release coming soon.
 This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 @verbatim
 
-   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+   host# /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 
 @end verbatim
 
@@ -722,7 +722,7 @@ this:
 @smallexample
    host# /var/cfengine/bin/cf-key
    host# cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
-   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+   host# /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end smallexample
 @end enumerate
 

@@ -616,7 +616,7 @@ file to @file{/var/cfengine/masterfiles/license.dat} on the hub before continuin
 @item The remaining steps apply to all hosts, but you should install the hub or policy server first.
 Find the name or IP address of the hub (policy server), here we assume @samp{123.456.789.123} is the address.
 @verbatim
-/var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+/var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 Use the same command on all hosts, i.e. do not bootstrap the policy
 server with a localhost address.

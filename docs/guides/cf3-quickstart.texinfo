@@ -25,7 +25,7 @@
 @titlepage
 @title CFEngine Quick Start Guide
 @subtitle A CFEngine Handbook
-@subtitle Updated 15. February 2013 @c also update in ifnottex section below
+@subtitle Updated 26. February 2013 @c also update in ifnottex section below
 @author CFEngine AS
 
 
@@ -58,7 +58,7 @@ Copyright @copyright{} 2011- CFEngine AS
 @end ifinfo
 
 @ifnottex
-Updated 15. February 2012
+Updated 26. February 2012
 @node Top, Welcome to CFEngine!, (dir), (dir)
 @top CFEngine Quick Start Guide
 
@@ -256,11 +256,18 @@ For more details on software licensing see:
 
 Prior to installing CFEngine, you should first ensure that the following packages are installed:
 
-@itemize
-@item OpenSSL - Open source Secure Sockets Layer for encryption.
-@item BerkeleyDB (version 3.2 or later) - Lightweight flat-file database system.
-@item PCRE - Perl Compatible Regular Expression library.
-@end itemize
+@table @r
+@item @b{OpenSSL}
+Open source Secure Sockets Layer for encryption.@*URL: @url{http://www.openssl.org}
+@item @b{Tokyo Cabinet} (version 1.4.42 or later)
+Lightweight flat-file database system.@*URL: @url{http://fallabs.com/tokyocabinet/}
+@item @b{PCRE}
+Perl Compatible Regular Expression library.@*URL: @url{http://www.pcre.org/}
+
+@item
+On Windows machines, you need to install the basic Cygwin DLL from @url{http://www.cygwin.com}
+in order to run CFEngine.
+@end table
 
 If they are not installed, then you can easily install them using the appropriate package manager:
 

@@ -46,7 +46,7 @@ libpromises_la_SOURCES = \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
         expand.c expand.h \
-        files_copy.c \
+        files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \

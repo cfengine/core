@@ -17,6 +17,7 @@ TESTS_ENVIRONMENT = env \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
 
 dist-hook:
-	tar -c -f - [0-9]* | tar -x -C $(distdir) -f -
+	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -
+	chmod -R go-w $(distdir)
 
 CLEANFILES = *.gcno *.gcda

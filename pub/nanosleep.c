@@ -30,7 +30,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "../libutils/conf.h"
+# include <config.h>
 #endif
 
 #ifdef __MINGW32__

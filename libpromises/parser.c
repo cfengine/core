@@ -25,6 +25,8 @@
 #include "parser.h"
 #include "parser_state.h"
 
+#include <errno.h>
+
 int yyparse(void);
 
 struct ParserState P = { 0 };
@@ -62,6 +64,12 @@ Policy *ParserParseFile(const char *path)
     strncpy(P.filename, path, CF_MAXVARSIZE);
 
     yyin = fopen(path, "r");
+    if (yyin == NULL)
+    {
+        fprintf(stderr, "Error opening file %s: %s\n",
+                path, strerror(errno));
+        exit(1);
+    }
 
     while (!feof(yyin))
     {

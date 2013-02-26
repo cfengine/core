@@ -16,7 +16,7 @@ cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
 endif
 
 cf_monitord_SOURCES = \
-        verify_measurements.c \
+        verify_measurements.c verify_measurements.h \
         env_monitor.c env_monitor.h \
         mon.h \
         mon_cpu.c \

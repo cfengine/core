@@ -650,16 +650,16 @@ static void KeepControlPromises(Policy *policy)
 
 static Promise *MakeDefaultRunAgentPromise()
 {
-    Promise *pp;
-
+    // TODO: ad-hoc promise
 /* The default promise here is to hail associates */
 
-    pp = xcalloc(1, sizeof(Promise));
+    Promise *pp = xcalloc(1, sizeof(Promise));
 
     pp->bundle = xstrdup("implicit internal bundle for runagent");
     pp->promiser = xstrdup("runagent");
     pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
+    pp->conlist = SeqNew(10, ConstraintDestroy);
 
     return pp;
 }

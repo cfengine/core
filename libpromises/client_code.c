@@ -496,7 +496,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
         case FILE_TYPE_DIR:
             cfst.cf_mode |= (mode_t) S_IFDIR;
             break;
-        case FILE_TYPE_CHAR:
+        case FILE_TYPE_CHAR_:
             cfst.cf_mode |= (mode_t) S_IFCHR;
             break;
         case FILE_TYPE_FIFO:

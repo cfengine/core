@@ -2490,7 +2490,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     if (S_ISCHR(statbuf.st_mode))
     {
-        cfst.cf_type = FILE_TYPE_CHAR;
+        cfst.cf_type = FILE_TYPE_CHAR_;
     }
 
     if (S_ISBLK(statbuf.st_mode))

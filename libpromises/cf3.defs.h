@@ -214,7 +214,7 @@ typedef enum
     FILE_TYPE_DIR,
     FILE_TYPE_FIFO,
     FILE_TYPE_BLOCK,
-    FILE_TYPE_CHAR,
+    FILE_TYPE_CHAR_, /* Conflict with winbase.h */
     FILE_TYPE_SOCK
 } FileType;
 

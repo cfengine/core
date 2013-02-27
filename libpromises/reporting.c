@@ -121,7 +121,7 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
             char *context = NULL;
             while ((context = SetIteratorNext(&it)))
             {
-                if (!IsItemIn(VNEGHEAP, context))
+                if (!EvalContextHeapContainsNegated(ctx, context))
                 {
                     SeqAppend(hard_contexts, context);
                 }
@@ -131,10 +131,12 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 
             for (size_t i = 0; i < SeqLength(hard_contexts); i++)
             {
+                const char *context = SeqAt(hard_contexts, i);
                 WriterWriteF(writer, "%s ", context);
             }
 
             WriterWriteF(writer, "}\n");
+            SeqDestroy(hard_contexts);
         }
 
         {
@@ -145,7 +147,7 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
             char *context = NULL;
             while ((context = SetIteratorNext(&it)))
             {
-                if (!IsItemIn(VNEGHEAP, context))
+                if (!EvalContextHeapContainsNegated(ctx, context))
                 {
                     SeqAppend(soft_contexts, context);
                 }
@@ -155,20 +157,26 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 
             for (size_t i = 0; i < SeqLength(soft_contexts); i++)
             {
+                const char *context = SeqAt(soft_contexts, i);
+                WriterWriteF(writer, "%s ", context);
+            }
+
+            WriterWriteF(writer, "}\n");
+            SeqDestroy(soft_contexts);
+        }
+
+        {
+            WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
+
+            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+            const char *context = NULL;
+            while ((context = StringSetIteratorNext(&it)))
+            {
                 WriterWriteF(writer, "%s ", context);
             }
 
             WriterWriteF(writer, "}\n");
         }
-
-        WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
-
-        for (const Item *ptr = VNEGHEAP; ptr != NULL; ptr = ptr->next)
-        {
-            WriterWriteF(writer, "%s ", ptr->name);
-        }
-
-        WriterWriteF(writer, "}\n");
 
         FileWriterDetach(writer);
     }

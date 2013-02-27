@@ -1485,9 +1485,13 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -  Private classes diminished:\n");
 
-    for (ip = VNEGHEAP; ip != NULL; ip = ip->next)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -       %s\n", ip->name);
+        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -       %s\n", context);
+        }
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");

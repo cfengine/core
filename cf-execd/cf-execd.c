@@ -715,14 +715,10 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        DeleteItemList(VNEGHEAP);
-
         DeleteAllScope();
 
         strcpy(VDOMAIN, "undefinded.domain");
         POLICY_SERVER[0] = '\0';
-
-        VNEGHEAP = NULL;
 
         PolicyDestroy(*policy);
         *policy = NULL;

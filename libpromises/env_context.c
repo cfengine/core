@@ -61,7 +61,6 @@ static int IsBracketed(const char *s);
 static AlphaList VHANDLES;
 
 AlphaList VADDCLASSES;
-Item *VNEGHEAP = NULL;
 Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
@@ -1095,7 +1094,7 @@ static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname,
         snprintf(qualified_class, CF_MAXVARSIZE, "%s", classname);
     }
 
-    if (IsItemIn(VNEGHEAP, qualified_class))
+    if (EvalContextHeapContainsNegated(ctx, qualified_class))
     {
         return false;
     }
@@ -1464,7 +1463,7 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
             FatalError("Cannot negate the reserved class [%s]\n", currentitem);
         }
 
-        AppendItem(&VNEGHEAP, currentitem, NULL);
+        EvalContextHeapAddNegated(ctx, currentitem);
     }
 }
 
@@ -1603,7 +1602,7 @@ void SaveClassEnvironment(EvalContext *ctx)
         const char *context = NULL;
         while ((context = SetIteratorNext(&it)))
         {
-            if (!IsItemIn(VNEGHEAP, context))
+            if (!EvalContextHeapContainsNegated(ctx, context))
             {
                 WriterWriteF(writer, "%s\n", context);
             }
@@ -1615,14 +1614,14 @@ void SaveClassEnvironment(EvalContext *ctx)
         const char *context = NULL;
         while ((context = SetIteratorNext(&it)))
         {
-            if (!IsItemIn(VNEGHEAP, context))
+            if (!EvalContextHeapContainsNegated(ctx, context))
             {
                 WriterWriteF(writer, "%s\n", context);
             }
         }
     }
 
-    ListAlphaList(writer, VADDCLASSES, '\n');
+    ListAlphaList(ctx, writer, VADDCLASSES, '\n');
 
     WriterClose(writer);
 }
@@ -1702,13 +1701,13 @@ void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool per
 
 /*****************************************************************************/
 
-void ListAlphaList(Writer *writer, AlphaList al, char sep)
+void ListAlphaList(EvalContext *ctx, Writer *writer, AlphaList al, char sep)
 {
     AlphaListIterator i = AlphaListIteratorInit(&al);
 
     for (const Item *ip = AlphaListIteratorNext(&i); ip != NULL; ip = AlphaListIteratorNext(&i))
     {
-        if (!IsItemIn(VNEGHEAP, ip->name))
+        if (!EvalContextHeapContainsNegated(ctx, ip->name))
         {
             WriterWriteF(writer, "%s%c", ip->name, sep);
         }
@@ -1791,6 +1790,7 @@ EvalContext *EvalContextNew(void)
 
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
+    ctx->heap_negated = StringSetNew();
 
     return ctx;
 }
@@ -1801,17 +1801,23 @@ void EvalContextDestroy(EvalContext *ctx)
     {
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
+        StringSetDestroy(ctx->heap_negated);
     }
 }
 
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
 {
-    return StringSetAdd(ctx->heap_soft, xstrdup(context));
+    StringSetAdd(ctx->heap_soft, xstrdup(context));
 }
 
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 {
-    return StringSetAdd(ctx->heap_hard, xstrdup(context));
+    StringSetAdd(ctx->heap_hard, xstrdup(context));
+}
+
+void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
+{
+    StringSetAdd(ctx->heap_negated, xstrdup(context));
 }
 
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
@@ -1822,6 +1828,11 @@ bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
 bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_hard, context);
+}
+
+bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context)
+{
+    return StringSetContains(ctx->heap_negated, context);
 }
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
@@ -1838,6 +1849,7 @@ void EvalContextHeapClear(EvalContext *ctx)
 {
     StringSetClear(ctx->heap_soft);
     StringSetClear(ctx->heap_hard);
+    StringSetClear(ctx->heap_negated);
 }
 
 static size_t StringSetMatchCount(StringSet *set, const char *regex)
@@ -1871,7 +1883,12 @@ StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
     return StringSetIteratorInit(ctx->heap_soft);
 }
 
-SetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
+StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
 {
     return StringSetIteratorInit(ctx->heap_hard);
+}
+
+StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
+{
+    return StringSetIteratorInit(ctx->heap_negated);
 }

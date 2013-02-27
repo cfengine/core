@@ -35,14 +35,8 @@ struct EvalContext_
 {
     StringSet *heap_soft;
     StringSet *heap_hard;
+    StringSet *heap_negated;
 };
-
-/**
-  Negated classes
-  Classes may be negated by using the command line option ‘-N’ or by being cancelled during
-  exit status of a classes body: cancel ̇kept etc.
-  */
-extern Item *VNEGHEAP;
 
 /**
   The bundle heap
@@ -61,9 +55,11 @@ void EvalContextDestroy(EvalContext *ctx);
 
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
+void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
@@ -75,6 +71,7 @@ size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context
 
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
+StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 
 
 /* - Parsing/evaluating expressions - */
@@ -114,7 +111,7 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 bool IsSoftClass(EvalContext *ctx, const char *sp);
 bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(EvalContext *ctx);
-void ListAlphaList(Writer *writer, AlphaList al, char sep);
+void ListAlphaList(EvalContext *ctx, Writer *writer, AlphaList al, char sep);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
 

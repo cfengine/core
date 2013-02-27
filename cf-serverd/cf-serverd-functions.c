@@ -570,8 +570,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             CfOut(OUTPUT_LEVEL_INFORM, "", "Rereading config files %s..\n", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
-
-            DeleteItemList(VNEGHEAP);
             
             EvalContextHeapClear(ctx);
             
@@ -610,7 +608,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             ROLES = ROLESTOP = NULL;
 
-            VNEGHEAP = NULL;
             SV.trustkeylist = NULL;
             SV.skipverify = NULL;
             SV.attackerlist = NULL;

@@ -82,8 +82,9 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
     int i, size = 21;
     unsigned char dbdigest[EVP_MAX_MD_SIZE + 1];
     CF_DB *dbp;
+    char buffer[EVP_MAX_MD_SIZE * 4];
 
-    CfDebug("HashChanged: key %s (type=%d) with data %s\n", filename, type, HashPrint(type, digest));
+    CfDebug("HashChanged: key %s (type=%d) with data %s\n", filename, type, HashPrintSafe(type, digest, buffer));
 
     size = FileHashSize(type);
 
@@ -111,7 +112,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
                 if (attr.change.update)
                 {
                     cfPS(warnlevel, CF_CHG, "", pp, attr, " -> Updating hash for %s to %s", filename,
-                         HashPrint(type, digest));
+                         HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
                     WriteHash(dbp, type, filename, digest);
@@ -135,7 +136,7 @@ int FileHashChanged(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], i
         /* Key was not found, so install it */
         cfPS(warnlevel, CF_CHG, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
              FileHashName(type));
-        CfDebug("Storing checksum for %s in database %s\n", filename, HashPrint(type, digest));
+        CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
 
         LogHashChange(filename, FILE_STATE_NEW, "New file found", pp);
@@ -358,11 +359,12 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
                 HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;
+    char buffer[EVP_MAX_MD_SIZE * 4];
 
     size = FileHashSize(type);
 
-    CfDebug("1. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrint(type, digest1));
-    CfDebug("2. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrint(type, digest2));
+    CfDebug("1. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest1, buffer));
+    CfDebug("2. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest2, buffer));
 
     for (i = 0; i < size; i++)
     {
@@ -374,23 +376,6 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
 
     return true;
 }
-
-/*********************************************************************/
-
-char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
-/** 
- * WARNING: Not thread-safe (returns pointer to global memory).
- * Use HashPrintSafe for a thread-safe equivalent
- */
-{
-    static char buffer[EVP_MAX_MD_SIZE * 4];
-
-    HashPrintSafe(type, digest, buffer);
-
-    return buffer;
-}
-
-/*********************************************************************/
 
 char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 /**
@@ -413,6 +398,8 @@ char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], 
     {
         sprintf((char *) (buffer + 4 + 2 * i), "%02x", digest[i]);
     }
+
+    buffer[4 + 2*CF_DIGEST_SIZES[type]] = '\0';
 
     return buffer;
 }

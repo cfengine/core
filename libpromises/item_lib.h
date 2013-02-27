@@ -27,7 +27,6 @@
 
 struct Item_
 {
-    char done;
     char *name;
     char *classes;
     int counter;

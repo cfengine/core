@@ -259,8 +259,11 @@ int main(int argc, char *argv[])
     // only note class usage when default policy is run
     if (!config->input_file)
     {
-        NoteClassUsage(ctx->heap_soft, true);
-        NoteClassUsage(ctx->heap_hard, true);
+        StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
+        NoteClassUsageFromStringSetIterator(soft_iter, true);
+
+        StringSetIterator hard_iter = EvalContextHeapIteratorHard(ctx);
+        NoteClassUsageFromStringSetIterator(hard_iter, true);
     }
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
@@ -1048,7 +1051,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (Abort())
                 {
-                    NoteClassUsage(VADDCLASSES, false);
+                    NoteClassUsageFromAlphalist(VADDCLASSES, false);
                     DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
@@ -1059,7 +1062,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
         }
     }
 
-    NoteClassUsage(VADDCLASSES, false);
+    NoteClassUsageFromAlphalist(VADDCLASSES, false);
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
@@ -1488,15 +1491,6 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-
-    CfDebug("     ?  Public class context:\n");
-
-    it = AlphaListIteratorInit(&ctx->heap_soft);
-    for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
-    {
-        CfDebug("     ?       %s\n", ip->name);
-    }
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 

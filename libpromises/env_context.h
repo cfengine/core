@@ -29,11 +29,12 @@
 
 #include "alphalist.h"
 #include "writer.h"
+#include "set.h"
 
 struct EvalContext_
 {
-    AlphaList heap_soft;
-    AlphaList heap_hard;
+    StringSet *heap_soft;
+    StringSet *heap_hard;
 };
 
 /**
@@ -58,6 +59,22 @@ extern Item *ABORTBUNDLEHEAP;
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
+
+bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
+
+bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
+bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
+
+void EvalContextHeapClear(EvalContext *ctx);
+
+size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
+size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
+
+StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
+StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 
 
 /* - Parsing/evaluating expressions - */
@@ -82,10 +99,8 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist);
 void LoadPersistentContext(EvalContext *ctx);
 
 // Remove contexts
-void DeleteHardClass(EvalContext *ctx, const char *oclass);
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
 void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
-void DeleteEntireHeap(EvalContext *ctx);
 void DeletePrivateClassContext(void);
 void DeletePersistentContext(const char *name);
 
@@ -97,7 +112,6 @@ void PopPrivateClassContext(void);
 Rlist *SplitContextExpression(const char *context, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 bool IsSoftClass(EvalContext *ctx, const char *sp);
-bool IsHardClass(EvalContext *ctx, const char *sp);
 bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(EvalContext *ctx);
 void ListAlphaList(Writer *writer, AlphaList al, char sep);

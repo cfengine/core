@@ -94,7 +94,7 @@ rlist_test_LDADD = libtest.la libstr.la
 
 set_domainname_test_SOURCES = set_domainname_test.c \
 	../../libpromises/sysinfo.c
-set_domainname_test_LDADD = libstr.la
+set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la
 
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la

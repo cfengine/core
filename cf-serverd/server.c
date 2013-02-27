@@ -1069,14 +1069,14 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
                 return true;
             }
 
-            if (MatchInAlphaList(&ctx->heap_soft, ip->name))
+            if (EvalContextHeapMatchCountSoft(ctx, ip->name) > 0)
             {
                 CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
 
-            if (MatchInAlphaList(&ctx->heap_hard, ip->name))
+            if (EvalContextHeapMatchCountHard(ctx, ip->name))
             {
                 CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);

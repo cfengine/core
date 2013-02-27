@@ -448,12 +448,12 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
         exit(1);
     }
 
-    if (InAlphaList(&ctx->heap_soft, context))
+    if (EvalContextHeapContainsSoft(ctx, context))
     {
         return;
     }
 
-    PrependAlphaList(&ctx->heap_soft, context);
+    EvalContextHeapAddSoft(ctx, context);
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
@@ -500,7 +500,8 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
         }
     }
 
-    DeleteFromAlphaList(&ctx->heap_soft, context);
+    EvalContextHeapRemoveSoft(ctx, context);
+
     DeleteFromAlphaList(&VADDCLASSES, context);
 }
 
@@ -537,12 +538,12 @@ void HardClass(EvalContext *ctx, const char *oclass)
         exit(1);
     }
 
-    if (InAlphaList(&ctx->heap_hard, context))
+    if (EvalContextHeapContainsHard(ctx, context))
     {
         return;
     }
 
-    PrependAlphaList(&ctx->heap_hard, context);
+    EvalContextHeapAddHard(ctx, context);
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
@@ -566,19 +567,6 @@ void HardClass(EvalContext *ctx, const char *oclass)
         }
     }
 }
-
-/*******************************************************************/
-
-void DeleteHardClass(EvalContext *ctx, const char *oclass)
-{
-    char context[CF_MAXVARSIZE];
-
-    strncpy(context, oclass, CF_MAXVARSIZE);
-
-    DeleteFromAlphaList(&ctx->heap_hard, oclass);
-}
-
-/*******************************************************************/
 
 void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
 {
@@ -618,7 +606,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
         exit(1);
     }
 
-    if (InAlphaList(&ctx->heap_soft, copy))
+    if (EvalContextHeapContainsSoft(ctx, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
     }
@@ -1115,11 +1103,11 @@ static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname,
     {
         return false;
     }
-    if (InAlphaList(&ctx->heap_hard, (char *)classname))  // Hard classes are always unqualified
+    if (EvalContextHeapContainsHard(ctx, classname))  // Hard classes are always unqualified
     {
         return true;
     }
-    if (InAlphaList(&ctx->heap_soft, qualified_class))
+    if (EvalContextHeapContainsSoft(ctx, qualified_class))
     {
         return true;
     }
@@ -1237,14 +1225,6 @@ bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *
 bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr)
 {
     return EvalWithTokenFromList(ctx, file_result, leaf_attr);
-}
-
-/*****************************************************************************/
-
-void DeleteEntireHeap(EvalContext *ctx)
-{
-    DeleteAlphaList(&ctx->heap_soft);
-    InitAlphaList(&ctx->heap_hard);
 }
 
 /*****************************************************************************/
@@ -1419,7 +1399,7 @@ void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *n
 {
     for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
     {
-        if (!InAlphaList(&ctx->heap_soft, rp->item))
+        if (!EvalContextHeapContainsSoft(ctx, rp->item))
         {
             NewClass(ctx, rp->item, ns);
         }
@@ -1448,7 +1428,7 @@ void NewClassesFromString(EvalContext *ctx, const char *classlist)
 
         sp += strlen(currentitem);
 
-        if (IsHardClass(ctx, currentitem))
+        if (EvalContextHeapContainsHard(ctx, currentitem))
         {
             FatalError("cfengine: You cannot use -D to define a reserved class!");
         }
@@ -1479,7 +1459,7 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
 
         sp += strlen(currentitem);
 
-        if (IsHardClass(ctx, currentitem))
+        if (EvalContextHeapContainsHard(ctx, currentitem))
         {
             FatalError("Cannot negate the reserved class [%s]\n", currentitem);
         }
@@ -1492,15 +1472,7 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
 
 bool IsSoftClass(EvalContext *ctx, const char *sp)
 {
-    return !IsHardClass(ctx, sp);
-}
-
-/*********************************************************************/
-
-bool IsHardClass(EvalContext *ctx, const char *sp)
-
-{
-    return InAlphaList(&ctx->heap_hard, sp);
+    return !EvalContextHeapContainsHard(ctx, sp);
 }
 
 /***************************************************************************/
@@ -1626,8 +1598,30 @@ void SaveClassEnvironment(EvalContext *ctx)
 
     Writer *writer = FileWriter(fp);
 
-    ListAlphaList(writer, ctx->heap_hard, '\n');
-    ListAlphaList(writer, ctx->heap_soft, '\n');
+    {
+        SetIterator it = EvalContextHeapIteratorHard(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!IsItemIn(VNEGHEAP, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
+
+    {
+        SetIterator it = EvalContextHeapIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!IsItemIn(VNEGHEAP, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
+
     ListAlphaList(writer, VADDCLASSES, '\n');
 
     WriterClose(writer);
@@ -1644,7 +1638,7 @@ void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
             return; // TODO: interesting course of action, but why is the check there in the first place?
         }
 
-        if (IsHardClass(ctx, (char *) rp->item))
+        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
                   RlistScalarValue(rp));
@@ -1654,7 +1648,7 @@ void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
         DeletePersistentContext(string);
-        DeleteFromAlphaList(&ctx->heap_soft, CanonifyName(string));
+        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
         DeleteFromAlphaList(&VADDCLASSES, CanonifyName(string));
         AppendItem(&VDELCLASSES, CanonifyName(string), NULL);
     }
@@ -1670,7 +1664,7 @@ void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool per
 
         CanonifyNameInPlace(classname);
 
-        if (IsHardClass(ctx, classname))
+        if (EvalContextHeapContainsHard(ctx, classname))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
@@ -1795,8 +1789,8 @@ EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
-    InitAlphaList(&ctx->heap_soft);
-    InitAlphaList(&ctx->heap_hard);
+    ctx->heap_soft = StringSetNew();
+    ctx->heap_hard = StringSetNew();
 
     return ctx;
 }
@@ -1805,7 +1799,79 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
-        DeleteAlphaList(&ctx->heap_soft);
-        DeleteAlphaList(&ctx->heap_hard);
+        StringSetDestroy(ctx->heap_soft);
+        StringSetDestroy(ctx->heap_hard);
     }
+}
+
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
+{
+    return StringSetAdd(ctx->heap_soft, xstrdup(context));
+}
+
+void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
+{
+    return StringSetAdd(ctx->heap_hard, xstrdup(context));
+}
+
+bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
+{
+    return StringSetContains(ctx->heap_soft, context);
+}
+
+bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
+{
+    return StringSetContains(ctx->heap_hard, context);
+}
+
+bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
+{
+    return StringSetRemove(ctx->heap_soft, context);
+}
+
+bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context)
+{
+    return StringSetRemove(ctx->heap_hard, context);
+}
+
+void EvalContextHeapClear(EvalContext *ctx)
+{
+    StringSetClear(ctx->heap_soft);
+    StringSetClear(ctx->heap_hard);
+}
+
+static size_t StringSetMatchCount(StringSet *set, const char *regex)
+{
+    size_t count = 0;
+    StringSetIterator it = StringSetIteratorInit(set);
+    const char *context = NULL;
+    while ((context = SetIteratorNext(&it)))
+    {
+        // TODO: used FullTextMatch to avoid regressions, investigate whether StringMatch can be used
+        if (FullTextMatch(regex, context))
+        {
+            count++;
+        }
+    }
+    return count;
+}
+
+size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex)
+{
+    return StringSetMatchCount(ctx->heap_soft, context_regex);
+}
+
+size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex)
+{
+    return StringSetMatchCount(ctx->heap_hard, context_regex);
+}
+
+StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
+{
+    return StringSetIteratorInit(ctx->heap_soft);
+}
+
+SetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
+{
+    return StringSetIteratorInit(ctx->heap_hard);
 }

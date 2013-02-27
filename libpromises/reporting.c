@@ -102,16 +102,6 @@ void ReportContextDestroy(ReportContext *context)
 
 void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 {
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
-    {
-        ctx->heap_soft.list[i] = SortItemListNames(ctx->heap_soft.list[i]);
-    }
-
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
-    {
-        ctx->heap_hard.list[i] = SortItemListNames(ctx->heap_hard.list[i]);
-    }
-    
     if (VERBOSE || DEBUG)
     {
         if (report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT])
@@ -123,17 +113,53 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 
         Writer *writer = FileWriter(stdout);
 
-        WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
+        {
+            WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
 
-        ListAlphaList(writer, ctx->heap_hard, ' ');
+            Seq *hard_contexts = SeqNew(1000, NULL);
+            SetIterator it = EvalContextHeapIteratorHard(ctx);
+            char *context = NULL;
+            while ((context = SetIteratorNext(&it)))
+            {
+                if (!IsItemIn(VNEGHEAP, context))
+                {
+                    SeqAppend(hard_contexts, context);
+                }
+            }
 
-        WriterWriteF(writer, "}\n");
+            SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
 
-        WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
+            for (size_t i = 0; i < SeqLength(hard_contexts); i++)
+            {
+                WriterWriteF(writer, "%s ", context);
+            }
 
-        ListAlphaList(writer, ctx->heap_soft, ' ');
+            WriterWriteF(writer, "}\n");
+        }
 
-        WriterWriteF(writer, "}\n");
+        {
+            WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
+
+            Seq *soft_contexts = SeqNew(1000, NULL);
+            SetIterator it = EvalContextHeapIteratorSoft(ctx);
+            char *context = NULL;
+            while ((context = SetIteratorNext(&it)))
+            {
+                if (!IsItemIn(VNEGHEAP, context))
+                {
+                    SeqAppend(soft_contexts, context);
+                }
+            }
+
+            SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
+
+            for (size_t i = 0; i < SeqLength(soft_contexts); i++)
+            {
+                WriterWriteF(writer, "%s ", context);
+            }
+
+            WriterWriteF(writer, "}\n");
+        }
 
         WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
 

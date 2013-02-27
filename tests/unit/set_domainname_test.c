@@ -135,8 +135,8 @@ EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
 
-    InitAlphaList(&ctx->heap_soft);
-    InitAlphaList(&ctx->heap_hard);
+    ctx->heap_soft = StringSetNew();
+    ctx->heap_hard = StringSetNew();
 
     return ctx;
 }
@@ -145,24 +145,31 @@ void EvalContextDestroy(EvalContext *ctx)
 {
     if (ctx)
     {
-        DeleteAlphaList(&ctx->heap_soft);
-        DeleteAlphaList(&ctx->heap_hard);
+        StringSetDestroy(ctx->heap_soft);
+        StringSetDestroy(ctx->heap_hard);
     }
 }
 
-void InitAlphaList(AlphaList *al)
+void DeleteItemList(Item *item) /* delete starting from item */
 {
-    memset(al, 0, sizeof(AlphaList));
-}
+    Item *ip, *next;
 
-void DeleteAlphaList(AlphaList *al)
-{
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
+    for (ip = item; ip != NULL; ip = next)
     {
-        DeleteItemList(al->list[i]);
-    }
+        next = ip->next;        // save before free
 
-    InitAlphaList(al);
+        if (ip->name != NULL)
+        {
+            free(ip->name);
+        }
+
+        if (ip->classes != NULL)
+        {
+            free(ip->classes);
+        }
+
+        free((char *) ip);
+    }
 }
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
@@ -205,28 +212,6 @@ void FatalError(char *s, ...)
 {
     fail();
     exit(42);
-}
-
-void DeleteItemList(Item *item) /* delete starting from item */
-{
-    Item *ip, *next;
-
-    for (ip = item; ip != NULL; ip = next)
-    {
-        next = ip->next;        // save before free
-
-        if (ip->name != NULL)
-        {
-            free(ip->name);
-        }
-
-        if (ip->classes != NULL)
-        {
-            free(ip->classes);
-        }
-
-        free((char *) ip);
-    }
 }
 
 Item *SplitString(const char *string, char sep)

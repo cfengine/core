@@ -234,37 +234,3 @@ int main()
 }
 
 // STUBS
-
-EvalContext *EvalContextNew(void)
-{
-    EvalContext *ctx = xmalloc(sizeof(EvalContext));
-
-    InitAlphaList(&ctx->heap_soft);
-    InitAlphaList(&ctx->heap_hard);
-
-    return ctx;
-}
-
-void EvalContextDestroy(EvalContext *ctx)
-{
-    if (ctx)
-    {
-        DeleteAlphaList(&ctx->heap_soft);
-        DeleteAlphaList(&ctx->heap_hard);
-    }
-}
-
-void InitAlphaList(AlphaList *al)
-{
-    memset(al, 0, sizeof(AlphaList));
-}
-
-void DeleteAlphaList(AlphaList *al)
-{
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
-    {
-        DeleteItemList(al->list[i]);
-    }
-
-    InitAlphaList(al);
-}

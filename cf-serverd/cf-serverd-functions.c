@@ -573,10 +573,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             DeleteItemList(VNEGHEAP);
             
-            DeleteAlphaList(&ctx->heap_soft);
-            InitAlphaList(&ctx->heap_soft);
-            DeleteAlphaList(&ctx->heap_hard);
-            InitAlphaList(&ctx->heap_hard);
+            EvalContextHeapClear(ctx);
             
             DeleteAlphaList(&VADDCLASSES);
             InitAlphaList(&VADDCLASSES);

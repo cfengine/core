@@ -707,10 +707,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         CfOut(OUTPUT_LEVEL_INFORM, "", "Re-reading promise file %s..\n", config->input_file);
 
-        DeleteAlphaList(&ctx->heap_soft);
-        InitAlphaList(&ctx->heap_soft);
-        DeleteAlphaList(&ctx->heap_hard);
-        InitAlphaList(&ctx->heap_hard);
+        EvalContextHeapClear(ctx);
+
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
 
@@ -762,12 +760,11 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     {
         /* Environment reload */
 
-        DeleteAlphaList(&ctx->heap_soft);
-        InitAlphaList(&ctx->heap_soft);
+        EvalContextHeapClear(ctx);
+
         DeleteAlphaList(&VADDCLASSES);
         InitAlphaList(&VADDCLASSES);
-        DeleteAlphaList(&ctx->heap_hard);
-        InitAlphaList(&ctx->heap_hard);
+
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;

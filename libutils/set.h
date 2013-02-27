@@ -51,12 +51,16 @@ void *SetIteratorNext(SetIterator *i);
         Set *impl;                                                      \
     } Prefix##Set;                                                      \
                                                                         \
+    typedef SetIterator Prefix##SetIterator;                            \
+                                                                        \
     Prefix##Set *Prefix##SetNew(void);                                  \
     void Prefix##SetAdd(const Prefix##Set *set, ElementType element);   \
     bool Prefix##SetContains(const Prefix##Set *Set, const ElementType element);  \
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
     void Prefix##SetDestroy(Prefix##Set *set);                          \
+    Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set);      \
+    ElementType Prefix##SetIteratorNext(Prefix##SetIterator *iter);     \
 
 #define TYPED_SET_DEFINE(Prefix, ElementType, hash_fn, equal_fn, destroy_fn) \
                                                                         \
@@ -67,7 +71,7 @@ void *SetIteratorNext(SetIterator *i);
         return set;                                                     \
     }                                                                   \
                                                                         \
-    void Prefix##SetInsert(const Prefix##Set *set, ElementType element) \
+    void Prefix##SetAdd(const Prefix##Set *set, ElementType element)    \
     {                                                                   \
         SetAdd(set->impl, element);                                     \
     }                                                                   \
@@ -91,6 +95,19 @@ void *SetIteratorNext(SetIterator *i);
     {                                                                   \
         SetDestroy(set->impl);                                          \
         free(set);                                                      \
-    }
+    }                                                                   \
+                                                                        \
+    Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set)       \
+    {                                                                   \
+        return SetIteratorInit(set->impl);                              \
+    }                                                                   \
+                                                                        \
+    ElementType Prefix##SetIteratorNext(Prefix##SetIterator *iter)      \
+    {                                                                   \
+        return SetIteratorNext(iter);                                   \
+    }                                                                   \
+
+
+TYPED_SET_DECLARE(String, char *)
 
 #endif

@@ -594,7 +594,9 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (MatchInAlphaList(&ctx->heap_hard, RlistScalarValue(finalargs)) || MatchInAlphaList(&ctx->heap_soft, RlistScalarValue(finalargs)) || MatchInAlphaList(&VADDCLASSES, RlistScalarValue(finalargs)))
+    if (EvalContextHeapMatchCountHard(ctx, RlistScalarValue(finalargs))
+        || EvalContextHeapMatchCountSoft(ctx, RlistScalarValue(finalargs))
+        || MatchInAlphaList(&VADDCLASSES, RlistScalarValue(finalargs)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }
@@ -615,24 +617,11 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
 
 /* begin fn specific content */
 
+    count += EvalContextHeapMatchCountSoft(ctx, string);
+    count += EvalContextHeapMatchCountHard(ctx, string);
+
     if (isalnum(i) || *string == '_')
     {
-        for (ip = ctx->heap_soft.list[i]; ip != NULL; ip = ip->next)
-        {
-            if (FullTextMatch(string, ip->name))
-            {
-                count++;
-            }
-        }
-
-        for (ip = ctx->heap_hard.list[i]; ip != NULL; ip = ip->next)
-        {
-            if (FullTextMatch(string, ip->name))
-            {
-                count++;
-            }
-        }
-
         for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
         {
             if (FullTextMatch(string, ip->name))
@@ -645,22 +634,6 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
     {
         for (i = 0; i < CF_ALPHABETSIZE; i++)
         {
-            for (ip = ctx->heap_soft.list[i]; ip != NULL; ip = ip->next)
-            {
-                if (FullTextMatch(string, ip->name))
-                {
-                    count++;
-                }
-            }
-
-            for (ip = ctx->heap_hard.list[i]; ip != NULL; ip = ip->next)
-            {
-                if (FullTextMatch(string, ip->name))
-                {
-                    count++;
-                }
-            }
-
             for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
             {
                 if (FullTextMatch(string, ip->name))

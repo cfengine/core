@@ -29,11 +29,15 @@
 #include "cf3.defs.h"
 
 #include "alphalist.h"
+#include "set.h"
 
 struct timespec BeginMeasure(void);
 void EndMeasure(char *eventname, struct timespec start);
 int EndMeasureValueMs(struct timespec start);
 void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp);
-void NoteClassUsage(AlphaList list, int purge);
+
+// TODO: temporary measure until all heaps are under EvalContext
+void NoteClassUsageFromAlphalist(AlphaList list, int purge);
+void NoteClassUsageFromStringSetIterator(StringSetIterator context_iterator, int purge);
 
 #endif

@@ -13,6 +13,7 @@
 
        Changes:
 
+       - option --policy-server removed, require option to --bootstrap instead
        - process promises don't log if processes are out of range unless you 
          run in verbose mode
        - reports promises are now allowed in any context (Redmine #2005)

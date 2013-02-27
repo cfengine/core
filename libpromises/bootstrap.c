@@ -78,7 +78,7 @@ void CheckAutoBootstrap()
 {
     struct stat sb;
     char name[CF_BUFSIZE];
-    int repaired = false, have_policy = false, am_appliance = false;
+    int have_policy = false, am_appliance = false;
 
     CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
@@ -99,11 +99,7 @@ void CheckAutoBootstrap()
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
-    {
-        CreateFailSafe(name);
-        repaired = true;
-    }
+    CreateFailSafe(name);
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
@@ -130,7 +126,7 @@ void CheckAutoBootstrap()
             CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
-        else if (repaired)
+        else
         {
             CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }
@@ -154,9 +150,7 @@ void CheckAutoBootstrap()
     {
         HardClass("am_policy_hub");
         printf
-            (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
-        printf
-            (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
+            (" ** This host recognizes itself as a CFEngine policy server, with policy distribution from %s/masterfiles.\n", WORKDIR);
         creat(name, 0600);
     }
     else

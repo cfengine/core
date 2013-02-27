@@ -164,7 +164,7 @@ static const char *ID = "The main Cfengine agent is the instigator of change\n"
 
 static const struct option OPTIONS[15] =
 {
-    {"bootstrap", no_argument, 0, 'B'},
+    {"bootstrap", required_argument, 0, 'B'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"define", required_argument, 0, 'D'},
@@ -175,7 +175,6 @@ static const struct option OPTIONS[15] =
     {"inform", no_argument, 0, 'I'},
     {"negate", required_argument, 0, 'N'},
     {"no-lock", no_argument, 0, 'K'},
-    {"policy-server", required_argument, 0, 's'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
     {NULL, 0, 0, '\0'}
@@ -183,7 +182,7 @@ static const struct option OPTIONS[15] =
 
 static const char *HINTS[15] =
 {
-    "Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory",
+    "Bootstrap CFEngine to the given policy server IP or hostname",
     "Set or override bundlesequence from command line",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
@@ -194,7 +193,6 @@ static const char *HINTS[15] =
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
-    "Define the server name or IP address of the a policy server (for use with bootstrap)",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
     NULL
@@ -294,7 +292,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     POLICY_SERVER[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "rdvnKIf:D:N:Vs:x:MBb:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "rdvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -322,19 +320,17 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'B':
+
+            if(IsLoopbackAddress(optarg))
+            {
+                FatalError("Use a non-loopback address when bootstrapping");
+            }
+
             BOOTSTRAP = true;
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
             HardClass("bootstrap_mode");
-            break;
-
-        case 's':
-            
-            if(IsLoopbackAddress(optarg))
-            {
-                FatalError("Use a non-loopback address when bootstrapping");
-            }
 
             // temporary assure that network functions are working
             OpenNetwork();

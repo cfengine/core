@@ -60,9 +60,10 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
-	ipaddress_test \
 	timeout_test \
 	connection_management_test
+
+#	ipaddress_test
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
@@ -107,7 +108,8 @@ refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
 
-ipaddress_test_SOURCES = ipaddress_test.c 
+#ipaddress_test_SOURCES = ipaddress_test.c 
+
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 

@@ -135,14 +135,16 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         AugmentScope(ctx, method_deref, pp->ns, bp->args, params);
 
         THIS_BUNDLE = bp->name;
-        PushPrivateClassContext(a.inherit);
+
+        EvalContextStackPushFrame(ctx, a.inherit);
 
         retval = ScheduleAgentOperations(ctx, bp, report_context);
 
         GetReturnValue(ctx, bp->name, pp);
         ResetBundleOutputs(bp->name);
 
-        PopPrivateClassContext();
+        EvalContextStackPopFrame(ctx);
+
         THIS_BUNDLE = bp_stack;
 
         switch (retval)

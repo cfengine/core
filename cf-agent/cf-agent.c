@@ -987,7 +987,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
-            DeletePrivateClassContext();        // Each time we change bundle
+            DeletePrivateClassContext(ctx);        // Each time we change bundle
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
         }
@@ -1051,7 +1051,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (Abort())
                 {
-                    NoteClassUsageFromAlphalist(VADDCLASSES, false);
+                    NoteClassUsageFromStringSetIterator(EvalContextStackFrameIteratorSoft(ctx) , false);
                     DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
@@ -1062,7 +1062,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
         }
     }
 
-    NoteClassUsageFromAlphalist(VADDCLASSES, false);
+    NoteClassUsageFromStringSetIterator(EvalContextStackFrameIteratorSoft(ctx) , false);
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
@@ -1464,24 +1464,24 @@ static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence typ
 
 static void ClassBanner(EvalContext *ctx, TypeSequence type)
 {
-    const Item *ip;
-
     if (type != TYPE_SEQUENCE_INTERFACES)  /* Just parsed all local classes */
     {
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +  Private classes augmented:\n");
-
-    AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
-
-    for (ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +       %s\n", ip->name);
-    }
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +  Private classes augmented:\n");
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +       %s\n", context);
+        }
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -  Private classes diminished:\n");
 

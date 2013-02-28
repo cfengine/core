@@ -600,7 +600,7 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
 {
     if (EvalContextHeapMatchCountHard(ctx, RlistScalarValue(finalargs))
         || EvalContextHeapMatchCountSoft(ctx, RlistScalarValue(finalargs))
-        || MatchInAlphaList(&VADDCLASSES, RlistScalarValue(finalargs)))
+        || EvalContextStackFrameMatchCountSoft(ctx, RlistScalarValue(finalargs)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }
@@ -615,38 +615,11 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
 static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *string = RlistScalarValue(finalargs);
-    Item *ip;
     int count = 0;
-    int i = (int) *string;
-
-/* begin fn specific content */
 
     count += EvalContextHeapMatchCountSoft(ctx, string);
     count += EvalContextHeapMatchCountHard(ctx, string);
-
-    if (isalnum(i) || *string == '_')
-    {
-        for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
-        {
-            if (FullTextMatch(string, ip->name))
-            {
-                count++;
-            }
-        }
-    }
-    else
-    {
-        for (i = 0; i < CF_ALPHABETSIZE; i++)
-        {
-            for (ip = VADDCLASSES.list[i]; ip != NULL; ip = ip->next)
-            {
-                if (FullTextMatch(string, ip->name))
-                {
-                    count++;
-                }
-            }
-        }
-    }
+    count += EvalContextStackFrameMatchCountSoft(ctx, string);
 
     snprintf(buffer, CF_MAXVARSIZE, "%d", count);
 

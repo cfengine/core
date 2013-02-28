@@ -572,9 +572,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             /* Free & reload -- lock this to avoid access errors during reload */
             
             EvalContextHeapClear(ctx);
-            
-            DeleteAlphaList(&VADDCLASSES);
-            InitAlphaList(&VADDCLASSES);
+            EvalContextStackFrameClear(ctx);
 
             DeleteItemList(IPADDRESSES);
             IPADDRESSES = NULL;

@@ -40,7 +40,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
-    char line[CF_EXPANDSIZE], *sp;
+    char line[CF_EXPANDSIZE];
     FILE *pp;
 
     CfDebug("GetExecOutput(%s,%s) - use shell = %d\n", command, buffer, useshell);

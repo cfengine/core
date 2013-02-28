@@ -23,11 +23,10 @@
 
 */
 
-#include "cf3.defs.h"
+#include "item_lib.h"
 
 #include "files_names.h"
 #include "addr_lib.h"
-#include "item_lib.h"
 #include "matching.h"
 #include "logging.h"
 #include "misc_lib.h"

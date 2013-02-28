@@ -65,81 +65,11 @@ void DeleteAlphaList(AlphaList *al)
 
 /*****************************************************************************/
 
-AlphaList *CopyAlphaListPointers(AlphaList *ap, const AlphaList *al)
-{
-    if (ap != NULL)
-    {
-        memcpy(ap, al, sizeof(AlphaList));
-    }
-
-    return ap;
-}
-
-/*****************************************************************************/
-
-AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al)
-{
-    if (ap != NULL)
-    {
-        memcpy(ap, al, sizeof(AlphaList));
-    }
-
-    for (int i = 0; i < CF_ALPHABETSIZE; i++)
-    {
-        Item *tmp = NULL;
-        if (al->list[i])
-        {
-            CopyList(&tmp, al->list[i]);
-            al->list[i] = tmp;
-        }
-    }
-
-    return ap;
-}
-
-/*****************************************************************************/
-
 int InAlphaList(const AlphaList *al, const char *string)
 {
     int i = (int) *string;
 
     return IsItemIn(al->list[i], string);
-}
-
-/*****************************************************************************/
-
-int MatchInAlphaList(const AlphaList *al, const char *string)
-{
-    Item *ip;
-    int i = (int) *string;
-
-    if (isalnum(i) || *string == '_')
-    {
-        for (ip = al->list[i]; ip != NULL; ip = ip->next)
-        {
-            if (FullTextMatch(string, ip->name))
-            {
-                return true;
-            }
-        }
-    }
-    else
-    {
-        // We don't know what the correct hash is because the pattern in vague
-
-        for (i = 0; i < CF_ALPHABETSIZE; i++)
-        {
-            for (ip = al->list[i]; ip != NULL; ip = ip->next)
-            {
-                if (FullTextMatch(string, ip->name))
-                {
-                    return true;
-                }
-            }
-        }
-    }
-
-    return false;
 }
 
 /*****************************************************************************/
@@ -159,13 +89,6 @@ void IdempPrependAlphaList(AlphaList *al, const char *string)
     {
         PrependAlphaList(al, string);
     }
-}
-
-/*****************************************************************************/
-
-void DeleteFromAlphaList(AlphaList *al, const char *string)
-{
-    DeleteItemLiteral(&al->list[(int) *string], string);
 }
 
 /*****************************************************************************/

@@ -86,12 +86,6 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
-//void PushPrivateClassContext(int inherit);
-//void PopPrivateClassContext(void);
-
-
-
-
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);

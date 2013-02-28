@@ -25,6 +25,8 @@
 #ifndef CFENGINE_ITEM_LIB_H
 #define CFENGINE_ITEM_LIB_H
 
+#include "cf3.defs.h"
+
 struct Item_
 {
     char *name;

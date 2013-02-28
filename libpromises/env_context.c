@@ -66,7 +66,6 @@ Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
 static Item *VDELCLASSES = NULL;
-static Rlist *PRIVCLASSHEAP = NULL;
 
 static bool ABORTBUNDLE = false;
 
@@ -1234,38 +1233,6 @@ void DeletePrivateClassContext(EvalContext *ctx)
     DeleteItemList(VDELCLASSES);
     VDELCLASSES = NULL;
 }
-
-/*
-
-void PushPrivateClassContext(int inherit)
-{
-    AlphaList *ap = xmalloc(sizeof(AlphaList));
-
-// copy to heap
-    RlistPushStack(&PRIVCLASSHEAP, CopyAlphaListPointers(ap, &VADDCLASSES));
-
-    InitAlphaList(&VADDCLASSES);
-
-    if (inherit)
-    {
-        InitAlphaList(&VADDCLASSES);
-        DupAlphaListPointers(&VADDCLASSES, ap);
-    }
-    
-}
-
-
-void PopPrivateClassContext()
-{
-    AlphaList *ap;
-
-    DeleteAlphaList(&VADDCLASSES);
-    RlistPopStack(&PRIVCLASSHEAP, (void *) &ap, sizeof(VADDCLASSES));
-    CopyAlphaListPointers(&VADDCLASSES, ap);
-    free(ap);
-}
-
-*/
 
 /*****************************************************************************/
 

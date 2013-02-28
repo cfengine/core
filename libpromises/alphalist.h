@@ -29,13 +29,9 @@
 
 void InitAlphaList(AlphaList *al);
 int InAlphaList(const AlphaList *al, const char *string);
-int MatchInAlphaList(const AlphaList *al, const char *string);
 void PrependAlphaList(AlphaList *al, const char *string);
 void IdempPrependAlphaList(AlphaList *al, const char *string);
 void DeleteAlphaList(AlphaList *al);
-AlphaList *CopyAlphaListPointers(AlphaList *al, const AlphaList *ap);
-AlphaList *DupAlphaListPointers(AlphaList *ap, AlphaList *al);
-void DeleteFromAlphaList(AlphaList *al, const char *string);
 
 /*
 AlphaListIterator i = AlphaListIteratorInit(&al);

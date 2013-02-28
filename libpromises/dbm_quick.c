@@ -70,7 +70,7 @@ static bool Lock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_lock", "Unable to lock QDBM database");
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock", "Unable to lock QDBM database");
         return false;
     }
     return true;
@@ -82,7 +82,7 @@ static void Unlock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_unlock", "Unable to unlock QDBM database");
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock", "Unable to unlock QDBM database");
     }
 }
 
@@ -92,7 +92,7 @@ static bool LockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_lock", "Unable to obtain cursor lock for QDBM database");
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock", "Unable to obtain cursor lock for QDBM database");
         return false;
     }
     return true;
@@ -104,7 +104,7 @@ static void UnlockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_unlock", "Unable to release cursor lock for QDBM database");
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock", "Unable to release cursor lock for QDBM database");
     }
 }
 
@@ -124,15 +124,15 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if ((db->depot == NULL) && (dpecode == DP_EBROKEN))
     {
-        CfOut(cf_error, "", "!! Database \"%s\" is broken, trying to repair...", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Database \"%s\" is broken, trying to repair...", filename);
 
         if (dprepair(filename))
         {
-            CfOut(cf_log, "", "Successfully repaired database \"%s\"", filename);
+            CfOut(OUTPUT_LEVEL_LOG, "", "Successfully repaired database \"%s\"", filename);
         }
         else
         {
-            CfOut(cf_error, "", "!! Failed to repair database %s, recreating...", filename);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed to repair database %s, recreating...", filename);
             DBPathMoveBroken(filename);
         }
 
@@ -141,7 +141,7 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if (db->depot == NULL)
     {
-        CfOut(cf_error, "", "!! dpopen: Opening database \"%s\" failed: %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpopen: Opening database \"%s\" failed: %s",
               filename, dperrmsg(dpecode));
         pthread_mutex_destroy(&db->cursor_lock);
         pthread_mutex_destroy(&db->lock);
@@ -159,20 +159,20 @@ void DBPrivCloseDB(DBPriv *db)
     if ((ret = pthread_mutex_destroy(&db->lock)) != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_destroy",
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
               "Lock is still active during QDBM database handle close");
     }
 
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_destroy",
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
               "Cursor lock is still active during QDBM database handle close");
     }
 
     if (!dpclose(db->depot))
     {
-        CfOut(cf_error, "", "Unable to close QDBM database: %s", dperrmsg(dpecode));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to close QDBM database: %s", dperrmsg(dpecode));
     }
 
     free(db);
@@ -210,7 +210,7 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     if (!dpput(db->depot, key, key_size, value, value_size, DP_DOVER))
     {
         char *db_name = dpname(db->depot);
-        CfOut(cf_error, "", "!! dpput: Could not write key to DB \"%s\": %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpput: Could not write key to DB \"%s\": %s",
               db_name, dperrmsg(dpecode));
         free(db_name);
         Unlock(db);
@@ -280,7 +280,7 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 
     if (!dpiterinit(db->depot))
     {
-        CfOut(cf_error, "", "!! dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
         Unlock(db);
         UnlockCursor(db);
         return NULL;

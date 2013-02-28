@@ -34,6 +34,7 @@
 #include "cfstream.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "rlist.h"
 
 static pcre *CompileRegExp(const char *regexp)
 {
@@ -45,7 +46,7 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        CfOut(cf_error, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
               erroffset);
     }
 
@@ -53,6 +54,19 @@ static pcre *CompileRegExp(const char *regexp)
 }
 
 /*********************************************************************/
+
+void ForceScalar(char *lval, char *rval)
+{
+    Rval retval;
+
+    if (GetVariable("match", lval, &retval) != DATA_TYPE_NONE)
+    {
+        DeleteVariable("match", lval);
+    }
+
+    NewScalar("match", lval, rval, DATA_TYPE_STRING);
+    CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
+}
 
 static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int *end)
 {
@@ -78,7 +92,10 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
 
                 strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
                 snprintf(lval, 3, "%d", i);
-                ForceScalar(lval, substring);
+                if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
+                {
+                    ForceScalar(lval, substring);
+                }
             }
         }
     }
@@ -373,10 +390,10 @@ int IsPathRegex(char *str)
 
                 if ((*sp == FILE_SEPARATOR) && (r || s))
                 {
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
                           FILE_SEPARATOR);
-                    CfOut(cf_error, "", "Use a work-around to avoid pathological behaviour\n");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Use a work-around to avoid pathological behaviour\n");
                     return false;
                 }
                 break;
@@ -389,14 +406,14 @@ int IsPathRegex(char *str)
 
 /*********************************************************************/
 
-int IsRegexItemIn(Item *list, char *regex)
+int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
    /* Checks whether item matches a list of wildcards */
 {
     Item *ptr;
 
     for (ptr = list; ptr != NULL; ptr = ptr->next)
     {
-        if ((ptr->classes) && (IsExcluded(ptr->classes, NULL))) // This NULL might be wrong
+        if ((ptr->classes) && (IsExcluded(ctx, ptr->classes, NULL))) // This NULL might be wrong
         {
             continue;
         }
@@ -426,7 +443,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 {
     Rlist *rp;
     char *sp, *spto, *firstchar, *lastchar;
-    enum insert_match opt;
+    InsertMatchType opt;
     char work[CF_BUFSIZE], final[CF_BUFSIZE];
     Item *list = SplitString(camel, '\n'), *ip;
     int direct_cmp = false, ok = false, escaped = false;
@@ -450,16 +467,16 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 
         for (rp = a.insert_match; rp != NULL; rp = rp->next)
         {
-            opt = String2InsertMatch(rp->item);
+            opt = InsertMatchTypeFromString(rp->item);
 
             /* Exact match can be done immediately */
 
-            if (opt == cf_exact_match)
+            if (opt == INSERT_MATCH_TYPE_EXACT)
             {
                 if ((rp->next != NULL) || (rp != a.insert_match))
                 {
-                    CfOut(cf_error, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
-                    PromiseRef(cf_error, pp);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
+                    PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 }
 
                 ok = ok || direct_cmp;
@@ -473,7 +490,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
             escaped = true;
             }
             
-            if (opt == cf_ignore_embedded)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_EMBEDDED)
             {
                 memset(work, 0, CF_BUFSIZE);
 
@@ -515,7 +532,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
                 strcpy(final, work);
             }
 
-            if (opt == cf_ignore_leading)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_LEADING)
             {
                 if (strncmp(final, "\\s*", 3) != 0)
                 {
@@ -527,7 +544,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
                 }
             }
 
-            if (opt == cf_ignore_trailing)
+            if (opt == INSERT_MATCH_TYPE_IGNORE_TRAILING)
             {
                 if (strncmp(final + strlen(final) - 4, "\\s*", 3) != 0)
                 {

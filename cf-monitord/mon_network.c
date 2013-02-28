@@ -38,7 +38,43 @@
 Item *ALL_INCOMING;
 Item *MON_UDP4 = NULL, *MON_UDP6 = NULL, *MON_TCP4 = NULL, *MON_TCP6 = NULL;
 
-static const char *VNETSTAT[HARD_CLASSES_MAX] =
+/*******************************************************************/
+/* Anomaly                                                         */
+/*******************************************************************/
+
+typedef struct
+{
+    char *portnr;
+    char *name;
+    enum observables in;
+    enum observables out;
+} Sock;
+
+static const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
+{
+    {"137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
+    {"138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
+    {"139", "netbiosssn", ob_netbiosssn_in, ob_netbiosssn_out},
+    {"445", "microsoft_ds", ob_microsoft_ds_in, ob_microsoft_ds_out},
+    {"5308", "cfengine", ob_cfengine_in, ob_cfengine_out},
+    {"2049", "nfsd", ob_nfsd_in, ob_nfsd_out},
+    {"25", "smtp", ob_smtp_in, ob_smtp_out},
+    {"80", "www", ob_www_in, ob_www_out},
+    {"8080", "www-alt", ob_www_alt_in, ob_www_alt_out},
+    {"21", "ftp", ob_ftp_in, ob_ftp_out},
+    {"22", "ssh", ob_ssh_in, ob_ssh_out},
+    {"443", "wwws", ob_wwws_in, ob_wwws_out},
+    {"143", "imap", ob_imap_in, ob_imap_out},
+    {"993", "imaps", ob_imaps_in, ob_imaps_out},
+    {"389", "ldap", ob_ldap_in, ob_ldap_out},
+    {"636", "ldaps", ob_ldaps_in, ob_ldaps_out},
+    {"27017", "mongo", ob_mongo_in, ob_mongo_out},
+    {"3306", "mysql", ob_mysql_in, ob_mysql_out},
+    {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
+    {"631", "ipp", ob_ipp_in, ob_ipp_out},
+};
+
+static const char *VNETSTAT[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/usr/bin/netstat -rn",     /* hpux */
@@ -340,7 +376,7 @@ void MonNetworkGatherData(double *cf_this)
         {
             if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(in[i]);
                 continue;
             }
@@ -364,7 +400,7 @@ void MonNetworkGatherData(double *cf_this)
         {
             if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(out[i]);
                 continue;
             }

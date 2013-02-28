@@ -25,6 +25,27 @@
 #ifndef CFENGINE_ITEM_LIB_H
 #define CFENGINE_ITEM_LIB_H
 
+struct Item_
+{
+    char *name;
+    char *classes;
+    int counter;
+    time_t time;
+    Item *next;
+};
+
+typedef enum
+{
+    ITEM_MATCH_TYPE_LITERAL_START,
+    ITEM_MATCH_TYPE_LITERAL_COMPLETE,
+    ITEM_MATCH_TYPE_LITERAL_SOMEWHERE,
+    ITEM_MATCH_TYPE_REGEX_COMPLETE,
+    ITEM_MATCH_TYPE_LITERAL_START_NOT,
+    ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT,
+    ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT,
+    ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT
+} ItemMatchType;
+
 int PrintItemList(char *buffer, int bufsize, const Item *list);
 void PrependFullItem(Item **liststart, const char *itemstring, const char *classes, int counter, time_t t);
 Item *ReturnItemIn(Item *list, const char *item);
@@ -37,11 +58,11 @@ int SelectItemMatching(Item *s, char *regex, Item *begin, Item *end, Item **matc
 int SelectNextItemMatching(const char *regexp, Item *begin, Item *end, Item **match, Item **prev);
 int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **match, Item **prev);
 void InsertAfter(Item **filestart, Item *ptr, const char *string);
-int NeighbourItemMatches(const Item *start, const Item *location, const char *string, enum cfeditorder pos, Attributes a, const Promise *pp);
+int NeighbourItemMatches(const Item *start, const Item *location, const char *string, EditOrder pos, Attributes a, const Promise *pp);
 int RawSaveItemList(const Item *liststart, const char *file);
 Item *SplitStringAsItemList(const char *string, char sep);
 Item *SplitString(const char *string, char sep);
-int DeleteItemGeneral(Item **filestart, const char *string, enum matchtypes type);
+int DeleteItemGeneral(Item **filestart, const char *string, ItemMatchType type);
 int DeleteItemLiteral(Item **filestart, const char *string);
 int DeleteItemStarting(Item **list, const char *string);
 int DeleteItemNotStarting(Item **list, const char *string);
@@ -49,7 +70,7 @@ int DeleteItemMatching(Item **list, const char *string);
 int DeleteItemNotMatching(Item **list, const char *string);
 int DeleteItemContaining(Item **list, const char *string);
 int DeleteItemNotContaining(Item **list, const char *string);
-int CompareToFile(const Item *liststart, const char *file, Attributes a, const Promise *pp);
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
 int ListLen(const Item *list);
 int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);

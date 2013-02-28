@@ -28,13 +28,13 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
-#include "constraints.h"
 #include "env_context.h"
 #include "fncall.h"
 #include "logging.h"
 #include "rlist.h"
 #include "item_lib.h"
 #include "policy.h"
+#include "mod_files.h"
 
 int yylex(void);
 
@@ -45,6 +45,9 @@ extern char *yytext;
 
 static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
+static bool LvalWantsBody(char *stype, char *lval);
+static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -79,7 +82,7 @@ bundle:                BUNDLE
                            DebugBanner("Bundle");
                            P.block = "bundle";
                            P.rval = (Rval) { NULL, '\0' };
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blockid,"");
@@ -93,7 +96,7 @@ body:                  BODY
                            DebugBanner("Body");
                            P.block = "body";
                            strcpy(P.blockid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blocktype,"");
@@ -106,7 +109,7 @@ typeid:                IDSYNTAX
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
                            CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
                        };
 
@@ -135,7 +138,7 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
-                           AppendRlist(&(P.useargs),P.currentid,CF_SCALAR);
+                           RlistAppendScalar(&(P.useargs),P.currentid);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -164,7 +167,7 @@ bundlebody:            '{'
                                P.currentbundle = NULL;
                            }
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
                        }
 
@@ -204,7 +207,7 @@ bodybody:              '{'
                                P.currentbody->offset.start = P.offsets.last_block_id;
                            }
 
-                           DeleteRlist(P.useargs);
+                           RlistDestroy(P.useargs);
                            P.useargs = NULL;
 
                            strcpy(P.currentid,"");
@@ -246,13 +249,19 @@ selection:             id                         /* BODY ONLY */
                        ASSIGN
                        rval
                        {
-                           CheckSelection(P.blocktype,P.blockid,P.lval,P.rval);
+                           {
+                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                               {
+                                   yyerror(SyntaxTypeMatchToString(err));
+                               }
+                           }
 
                            if (!INSTALL_SKIP)
                            {
                                Constraint *cp = NULL;
 
-                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
@@ -272,14 +281,14 @@ selection:             id                         /* BODY ONLY */
                            }
                            else
                            {
-                               DeleteRvalItem(P.rval);
+                               RvalDestroy(P.rval);
                            }
 
                            if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
                            {
                                if (strcmp(P.lval,"namespace") == 0)
                                {
-                                   if (P.rval.rtype != CF_SCALAR)
+                                   if (P.rval.type != RVAL_TYPE_SCALAR)
                                    {
                                        yyerror("namespace must be a constant scalar string");
                                    }
@@ -343,8 +352,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
                                                                        P.rval,
-                                                                       P.currentclasses ? P.currentclasses : "any",
-                                                                       P.blockid, P.blocktype, P.current_namespace);
+                                                                       P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -359,7 +367,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            CfDebug("End implicit promise %s\n\n",P.promiser);
                            strcpy(P.currentid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -379,9 +387,8 @@ promise:               promiser                    /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
-                                                                (Rval) { NULL, CF_NOPROMISEE },
-                                                                P.currentclasses ? P.currentclasses : "any",
-                                                                P.blockid, P.blocktype, P.current_namespace);
+                                                                (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
+                                                                P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -398,7 +405,7 @@ promise:               promiser                    /* BUNDLE ONLY */
 
                            /* Don't free these */
                            strcpy(P.currentid,"");
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            free(P.promiser);
                            if (P.currentstring)
@@ -428,8 +435,14 @@ constraint:            id                        /* BUNDLE ONLY */
                            {
                                Constraint *cp = NULL;
                                SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
-                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
+                                   if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                   {
+                                       yyerror(SyntaxTypeMatchToString(err));
+                                   }
+                               }
+                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
                                    ValidateClassSyntax(P.rval.item);
                                }
@@ -451,12 +464,12 @@ constraint:            id                        /* BUNDLE ONLY */
 
                                P.rval = (Rval) { NULL, '\0' };
                                strcpy(P.lval,"no lval");
-                               DeleteRlist(P.currentRlist);
+                               RlistDestroy(P.currentRlist);
                                P.currentRlist = NULL;
                            }
                            else
                            {
-                               DeleteRvalItem(P.rval);
+                               RvalDestroy(P.rval);
                            }
                        };
 
@@ -473,7 +486,7 @@ class:                 CLASS
 id:                    IDSYNTAX
                        {
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
-                           DeleteRlist(P.currentRlist);
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
                        };
@@ -483,19 +496,19 @@ id:                    IDSYNTAX
 
 rval:                  IDSYNTAX
                        {
-                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | BLOCKID
                        {
-                           P.rval = (Rval) { xstrdup(P.currentid), CF_SCALAR };
+                           P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
                        {
-                           P.rval = (Rval) { P.currentstring, CF_SCALAR };
+                           P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
@@ -511,7 +524,7 @@ rval:                  IDSYNTAX
                        }
                      | NAKEDVAR
                        {
-                           P.rval = (Rval) { P.currentstring, CF_SCALAR };
+                           P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
@@ -519,14 +532,14 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
-                           P.rval = (Rval) { CopyRlist(P.currentRlist), CF_LIST };
-                           DeleteRlist(P.currentRlist);
+                           P.rval = (Rval) { RlistCopy(P.currentRlist), RVAL_TYPE_LIST };
+                           RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.references_body = false;
                        }
                      | usefunction
                        {
-                           P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL };
+                           P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL };
                            P.references_body = false;
                        };
 
@@ -548,19 +561,19 @@ litems_int:            litem
 
 litem:                 IDSYNTAX
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,P.currentid,CF_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
                        }
 
                      | QSTRING
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
 
                      | NAKEDVAR
                        {
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentstring,CF_SCALAR);
+                           RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -568,8 +581,8 @@ litem:                 IDSYNTAX
                      | usefunction
                        {
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
-                           AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                           DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
+                           RlistAppendFnCall((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1]);
+                           FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -622,7 +635,7 @@ givearglist:           '('
                        ')'
                        {
                            CfDebug("End args level %d\n",P.arg_nesting);
-                           P.currentfncall[P.arg_nesting] = NewFnCall(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
+                           P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
                            free(P.currentfnid[P.arg_nesting]);
@@ -642,13 +655,13 @@ gaitems:               gaitem
 gaitem:                IDSYNTAX
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentid,CF_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentid);
                        }
 
                      | QSTRING
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -656,7 +669,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
-                           AppendRlist(&P.giveargs[P.arg_nesting],P.currentstring,CF_SCALAR);
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
                        }
@@ -664,8 +677,8 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
-                           AppendRlist(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
-                           DeleteRvalItem((Rval) { P.currentfncall[P.arg_nesting+1], CF_FNCALL });
+                           RlistAppendFnCall(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1]);
+                           RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                        };
 
 %%
@@ -740,4 +753,271 @@ static int RelevantBundle(const char *agent, const char *blocktype)
 
     DeleteItemList(ip);
     return false;
+}
+
+static bool LvalWantsBody(char *stype, char *lval)
+{
+    int i, j, l;
+    const SubTypeSyntax *ss;
+    const BodySyntax *bs;
+
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        {
+            continue;
+        }
+
+        for (j = 0; ss[j].subtype != NULL; j++)
+        {
+            if ((bs = ss[j].bs) == NULL)
+            {
+                continue;
+            }
+
+            if (strcmp(ss[j].subtype, stype) != 0)
+            {
+                continue;
+            }
+
+            for (l = 0; bs[l].range != NULL; l++)
+            {
+                if (strcmp(bs[l].lval, lval) == 0)
+                {
+                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
+{
+    int lmatch = false;
+    int i, j, k, l;
+    const SubTypeSyntax *ss;
+    const BodySyntax *bs, *bs2;
+    char output[CF_BUFSIZE];
+
+    CfDebug("CheckSelection(%s,%s,", type, lval);
+
+    if (DEBUG)
+    {
+        RvalShow(stdout, rval);
+    }
+
+    CfDebug(")\n");
+
+/* Check internal control bodies etc */
+
+    for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+    {
+        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
+        {
+            CfDebug("Found matching a body matching (%s,%s)\n", type, name);
+
+            bs = CF_ALL_BODIES[i].bs;
+
+            for (l = 0; bs[l].lval != NULL; l++)
+            {
+                if (strcmp(lval, bs[l].lval) == 0)
+                {
+                    CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
+
+                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
+                        return SYNTAX_TYPE_MATCH_OK;
+                    }
+                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
+                        return SYNTAX_TYPE_MATCH_OK;
+                    }
+                    else
+                    {
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                    }
+                }
+            }
+
+        }
+    }
+
+/* Now check the functional modules - extra level of indirection */
+
+    for (i = 0; i < CF3_MODULES; i++)
+    {
+        CfDebug("Trying function module %d for matching lval %s\n", i, lval);
+
+        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        {
+            continue;
+        }
+
+        for (j = 0; ss[j].subtype != NULL; j++)
+        {
+            if ((bs = ss[j].bs) == NULL)
+            {
+                continue;
+            }
+
+            CfDebug("\nExamining subtype %s\n", ss[j].subtype);
+
+            for (l = 0; bs[l].range != NULL; l++)
+            {
+                if (bs[l].dtype == DATA_TYPE_BODY)
+                {
+                    bs2 = (const BodySyntax *) (bs[l].range);
+
+                    if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
+                    {
+                        continue;
+                    }
+
+                    for (k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
+                    {
+                        /* Either module defined or common */
+
+                        if (strcmp(ss[j].subtype, type) == 0 && strcmp(ss[j].subtype, "*") != 0)
+                        {
+                            snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
+                                     lval, ss[j].subtype, type);
+                            yyerror(output);
+                            return SYNTAX_TYPE_MATCH_OK;
+                        }
+
+                        if (strcmp(lval, bs2[k].lval) == 0)
+                        {
+                            CfDebug("Matched\n");
+                            return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *) (bs2[k].range), 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (!lmatch)
+    {
+        snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
+        yyerror(output);
+    }
+
+    return SYNTAX_TYPE_MATCH_OK;
+}
+
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss)
+{
+    int lmatch = false;
+    int i, l, allowed = false;
+    const BodySyntax *bs;
+    char output[CF_BUFSIZE];
+
+    CfDebug("CheckConstraint(%s,%s,", type, lval);
+
+    if (DEBUG)
+    {
+        RvalShow(stdout, rval);
+    }
+
+    CfDebug(")\n");
+
+    if (ss.subtype != NULL)     /* In a bundle */
+    {
+        if (strcmp(ss.subtype, type) == 0)
+        {
+            CfDebug("Found type %s's body syntax\n", type);
+
+            bs = ss.bs;
+
+            for (l = 0; bs[l].lval != NULL; l++)
+            {
+                CfDebug("CMP-bundle # (%s,%s)\n", lval, bs[l].lval);
+
+                if (strcmp(lval, bs[l].lval) == 0)
+                {
+                    /* If we get here we have found the lval and it is valid
+                       for this subtype */
+
+                    lmatch = true;
+                    CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n", lval);
+
+                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.type);
+                        return SYNTAX_TYPE_MATCH_OK;
+                    }
+                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                    {
+                        CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
+                                rval.type);
+                        return SYNTAX_TYPE_MATCH_OK;
+                    }
+                    else
+                    {
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                    }
+                }
+            }
+        }
+    }
+
+/* Now check the functional modules - extra level of indirection
+   Note that we only check body attributes relative to promise type.
+   We can enter any promise types in any bundle, but only recognized
+   types will be dealt with. */
+
+    for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+    {
+        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_BODIES[i].lval);
+
+        if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
+        {
+            CfDebug("Found a match for lval %s in the common constraint attributes\n", lval);
+            return SYNTAX_TYPE_MATCH_OK;
+        }
+    }
+
+    for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
+    {
+        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_EDITBODIES[i].lval);
+
+        if (strcmp(lval, CF_COMMON_EDITBODIES[i].lval) == 0)
+        {
+            CfDebug("Found a match for lval %s in the common edit_line constraint attributes\n", lval);
+            return SYNTAX_TYPE_MATCH_OK;
+        }
+    }
+
+    for (i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
+    {
+        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_XMLBODIES[i].lval);
+
+        if (strcmp(lval, CF_COMMON_XMLBODIES[i].lval) == 0)
+        {
+            CfDebug("Found a match for lval %s in the common edit_xml constraint attributes\n", lval);
+            return SYNTAX_TYPE_MATCH_OK;
+        }
+    }
+
+
+// Now check if it is in the common list...
+
+    if (!lmatch || !allowed)
+    {
+        snprintf(output, CF_BUFSIZE, "Constraint lvalue \'%s\' is not allowed in bundle category \'%s\'", lval, type);
+        yyerror(output);
+    }
+
+    return SYNTAX_TYPE_MATCH_OK;
 }

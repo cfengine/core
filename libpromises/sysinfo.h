@@ -27,15 +27,15 @@
 
 #include "cf3.defs.h"
 
-void GetNameInfo3(void);
-void Get3Environment(void);
-void BuiltinClasses(void);
-void OSClasses(void);
+void GetNameInfo3(EvalContext *ctx);
+void Get3Environment(EvalContext *ctx);
+void BuiltinClasses(EvalContext *ctx);
+void OSClasses(EvalContext *ctx);
 bool IsInterfaceAddress(const char *adr);
-void DetectDomainName(const char *orig_nodename);
+void DetectDomainName(EvalContext *ctx, const char *orig_nodename);
 const char *GetWorkDir(void);
 
-void CreateHardClassesFromCanonification(const char *canonified);
+void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonified);
 
 // FIX: win_proc.c?
 int GetCurrentUserName(char *userName, int userNameLen);

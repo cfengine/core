@@ -77,7 +77,7 @@ static bool LockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_lock",
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock",
               "Unable to obtain cursor lock for Tokyo Cabinet database");
         return false;
     }
@@ -90,7 +90,7 @@ static void UnlockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_unlock",
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock",
               "Unable to release cursor lock for Tokyo Cabinet database");
     }
 }
@@ -130,7 +130,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
     if (!OpenTokyoDatabase(dbpath, &db->hdb))
     {
-        CfOut(cf_error, "", "!! Could not open database %s: %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
 
         int errcode = tchdbecode(db->hdb);
@@ -142,13 +142,13 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
         tchdbdel(db->hdb);
 
-        CfOut(cf_error, "", "!! Database \"%s\" is broken, recreating...", dbpath);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Database \"%s\" is broken, recreating...", dbpath);
 
         DBPathMoveBroken(dbpath);
 
         if (!OpenTokyoDatabase(dbpath, &db->hdb))
         {
-            CfOut(cf_error, "", "!! Could not open database %s after recreate: %s",
+            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not open database %s after recreate: %s",
                   dbpath, ErrorMessage(db->hdb));
             goto err;
         }
@@ -170,13 +170,13 @@ void DBPrivCloseDB(DBPriv *db)
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
         errno = ret;
-        CfOut(cf_error, "pthread_mutex_destroy",
+        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
               "Unable to destroy mutex during Tokyo Cabinet database handle close");
     }
 
     if (!tchdbclose(db->hdb))
     {
-	CfOut(cf_error, "", "!! tchdbclose: Closing database failed: %s",
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbclose: Closing database failed: %s",
               ErrorMessage(db->hdb));
     }
 
@@ -202,7 +202,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         if (tchdbecode(db->hdb) != TCENOREC)
         {
-            CfOut(cf_error, "", "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
         }
         return false;
     }
@@ -214,7 +214,7 @@ static bool Write(TCHDB *hdb, const void *key, int key_size, const void *value, 
 {
     if (!tchdbput(hdb, key, key_size, value, value_size))
     {
-        CfOut(cf_error, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
               tchdbpath(hdb), ErrorMessage(hdb));
         return false;
     }
@@ -225,7 +225,7 @@ static bool Delete(TCHDB *hdb, const void *key, int key_size)
 {
     if (!tchdbout(hdb, key, key_size) && tchdbecode(hdb) != TCENOREC)
     {
-        CfOut(cf_error, "", "!! tchdbout: Could not delete key: %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbout: Could not delete key: %s",
               ErrorMessage(hdb));
         return false;
     }

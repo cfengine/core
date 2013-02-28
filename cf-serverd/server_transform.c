@@ -30,7 +30,6 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "mod_access.h"
-#include "constraints.h"
 #include "item_lib.h"
 #include "conversion.h"
 #include "reporting.h"
@@ -42,14 +41,57 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "string_lib.h"
+#include "rlist.h"
+
 #include "generic_agent.h" // HashControls
 
-static void KeepContextBundles(Policy *policy, const ReportContext *report_context);
-static void KeepServerPromise(Promise *pp);
+typedef enum
+{
+    REMOTE_ACCESS_ADMIT,
+    REMOTE_ACCESS_DENY,
+    REMOTE_ACCESS_MAPROOT,
+    REMOTE_ACCESS_ENCRYPTED,
+    REMOTE_ACCESS_NONE
+} RemoteAccess;
+
+typedef enum
+{
+    REMOTE_ROLE_AUTHORIZE,
+    REMOTE_ROLE_NONE
+} RemoteRole;
+
+typedef enum
+{
+    SERVER_CONTROL_ALLOW_ALL_CONNECTS,
+    SERVER_CONTROL_ALLOW_CONNECTS,
+    SERVER_CONTROL_ALLOW_USERS,
+    SERVER_CONTROL_AUDITING,
+    SERVER_CONTROL_BIND_TO_INTERFACE,
+    SERVER_CONTROL_CF_RUN_COMMAND,
+    SERVER_CONTROL_CALL_COLLECT_INTERVAL,
+    SERVER_CONTROL_CALL_COLLECT_WINDOW,
+    SERVER_CONTROL_DENY_BAD_CLOCKS,
+    SERVER_CONTROL_DENY_CONNECTS,
+    SERVER_CONTROL_DYNAMIC_ADDRESSES,
+    SERVER_CONTROL_HOSTNAME_KEYS,
+    SERVER_CONTROL_KEY_TTL,
+    SERVER_CONTROL_LOG_ALL_CONNECTIONS,
+    SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS,
+    SERVER_CONTROL_MAX_CONNECTIONS,
+    SERVER_CONTROL_PORT_NUMBER,
+    SERVER_CONTROL_SERVER_FACILITY,
+    SERVER_CONTROL_SKIP_VERIFY,
+    SERVER_CONTROL_TRUST_KEYS_FROM,
+    SERVER_CONTROL_LISTEN,
+    SERVER_CONTROL_NONE
+} ServerControl;
+
+static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp);
 static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
-static void KeepServerRolePromise(Promise *pp);
-static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context);
-static void KeepControlPromises(Policy *policy, GenericAgentConfig *config);
+static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
@@ -75,19 +117,19 @@ extern Auth *ROLESTOP;
 
 /*******************************************************************/
 
-void KeepFileAccessPromise(Promise *pp);
-void KeepLiteralAccessPromise(Promise *pp, char *type);
-void KeepQueryAccessPromise(Promise *pp, char *type);
+void KeepFileAccessPromise(EvalContext *ctx, Promise *pp);
+void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type);
+void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 
 /*******************************************************************/
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    KeepContextBundles(policy, report_context);
-    KeepControlPromises(policy, config);
-    KeepPromiseBundles(policy, report_context);
+    KeepContextBundles(ctx, policy, report_context);
+    KeepControlPromises(ctx, policy, config);
+    KeepPromiseBundles(ctx, policy, report_context);
 }
 
 /*******************************************************************/
@@ -97,105 +139,105 @@ void Summarize()
     Auth *ptr;
     Item *ip, *ipr;
 
-    CfOut(cf_verbose, "", "Summarize control promises\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Summarize control promises\n");
 
-    CfOut(cf_verbose, "", "Granted access to paths :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to paths :\n");
 
     for (ptr = VADMIT; ptr != NULL; ptr = ptr->next)
     {
-        CfOut(cf_verbose, "", "Path: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            CfOut(cf_verbose, "", "   Admit: %s root=", ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Admit: %s root=", ip->name);
             for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
             {
-                CfOut(cf_verbose, "", "%s,", ipr->name);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s,", ipr->name);
             }
         }
     }
 
-    CfOut(cf_verbose, "", "Denied access to paths :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to paths :\n");
 
     for (ptr = VDENY; ptr != NULL; ptr = ptr->next)
     {
-        CfOut(cf_verbose, "", "Path: %s\n", ptr->path);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s\n", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            CfOut(cf_verbose, "", "   Deny: %s\n", ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Deny: %s\n", ip->name);
         }
     }
 
-    CfOut(cf_verbose, "", "Granted access to literal/variable/query data :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to literal/variable/query data :\n");
 
     for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
     {
-        CfOut(cf_verbose, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            CfOut(cf_verbose, "", "   Admit: %s root=", ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Admit: %s root=", ip->name);
             for (ipr = ptr->maproot; ipr != NULL; ipr = ipr->next)
             {
-                CfOut(cf_verbose, "", "%s,", ipr->name);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s,", ipr->name);
             }
         }
     }
 
-    CfOut(cf_verbose, "", "Denied access to literal/variable/query data :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to literal/variable/query data :\n");
 
     for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
     {
-        CfOut(cf_verbose, "", "  Object: %s\n", ptr->path);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s\n", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            CfOut(cf_verbose, "", "   Deny: %s\n", ip->name);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Deny: %s\n", ip->name);
         }
     }
 
     
-    CfOut(cf_verbose, "", " -> Host IPs allowed connection access :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Host IPs allowed connection access :\n");
 
     for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... IP: %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "Host IPs denied connection access :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host IPs denied connection access :\n");
 
     for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... IP: %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "Host IPs allowed multiple connection access :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host IPs allowed multiple connection access :\n");
 
     for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... IP: %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "Host IPs from whom we shall accept public keys on trust :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host IPs from whom we shall accept public keys on trust :\n");
 
     for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... IP: %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "Users from whom we accept connections :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Users from whom we accept connections :\n");
 
     for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... USERS: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... USERS: %s\n", ip->name);
     }
 
-    CfOut(cf_verbose, "", "Host IPs from NAT which we don't verify :\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host IPs from NAT which we don't verify :\n");
 
     for (ip = SV.skipverify; ip != NULL; ip = ip->next)
     {
-        CfOut(cf_verbose, "", " .... IP: %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " .... IP: %s\n", ip->name);
     }
 
 }
@@ -204,7 +246,7 @@ void Summarize()
 /* Level                                                           */
 /*******************************************************************/
 
-static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
+static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Rval retval;
 
@@ -219,7 +261,7 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
 
     Banner("Server control promises..");
 
-    HashControls(policy, config);
+    HashControls(ctx, policy, config);
 
 /* Now expand */
 
@@ -230,86 +272,86 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(cp->classes, NULL))
+            if (IsExcluded(ctx, cp->classes, NULL))
             {
                 continue;
             }
 
-            if (GetVariable("control_server", cp->lval, &retval) == cf_notype)
+            if (GetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
             {
-                CfOut(cf_error, "", "Unknown lval %s in server control body", cp->lval);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_serverfacility].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SERVER_FACILITY].lval) == 0)
             {
                 SetFacility(retval.item);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denybadclocks].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
-                DENYBADCLOCKS = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
+                DENYBADCLOCKS = BooleanFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET denybadclocks = %d\n", DENYBADCLOCKS);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logencryptedtransfers].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
-                LOGENCRYPT = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
+                LOGENCRYPT = BooleanFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGENCRYPT = %d\n", LOGENCRYPT);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_logallconnections].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
-                SV.logconns = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET LOGCONNS = %d\n", LOGCONNS);
+                SV.logconns = BooleanFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGCONNS = %d\n", LOGCONNS);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_maxconnections].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_MAX_CONNECTIONS].lval) == 0)
             {
-                CFD_MAXPROCESSES = (int) Str2Int(retval.item);
+                CFD_MAXPROCESSES = (int) IntFromString(retval.item);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
-                CfOut(cf_verbose, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET maxconnections = %d\n", CFD_MAXPROCESSES);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_call_collect_interval].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
-                COLLECT_INTERVAL = (int) 60 * Str2Int(retval.item);
-                CfOut(cf_verbose, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+                COLLECT_INTERVAL = (int) 60 * IntFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_listen].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
-                SERVER_LISTEN = GetBoolean(retval.item);
-                CfOut(cf_verbose, "", "SET server listen = %s \n",
+                SERVER_LISTEN = BooleanFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET server listen = %s \n",
                       (SERVER_LISTEN)? "true":"false");
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_collect_window].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
-                COLLECT_WINDOW = (int) Str2Int(retval.item);
-                CfOut(cf_verbose, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
+                COLLECT_WINDOW = (int) IntFromString(retval.item);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_cfruncommand].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
                 strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
-                CfOut(cf_verbose, "", "SET cfruncommand = %s\n", CFRUNCOMMAND);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET cfruncommand = %s\n", CFRUNCOMMAND);
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Allowing connections from ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Allowing connections from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -322,11 +364,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_denyconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Denying connections from ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Denying connections from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -339,11 +381,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_skipverify].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_SKIP_VERIFY].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Skip verify connections from ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Skip verify connections from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -357,11 +399,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
             }
 
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowallconnects].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_ALL_CONNECTS].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Allowing multiple connections from ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Allowing multiple connections from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -374,11 +416,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_allowusers].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_ALLOW_USERS].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Allowing users ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Allowing users ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -391,11 +433,11 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_trustkeysfrom].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_TRUST_KEYS_FROM].lval) == 0)
             {
                 Rlist *rp;
 
-                CfOut(cf_verbose, "", "SET Trust keys from ...\n");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Trust keys from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -408,56 +450,56 @@ static void KeepControlPromises(Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_portnumber].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_PORT_NUMBER].lval) == 0)
             {
-                SHORT_CFENGINEPORT = (short) Str2Int(retval.item);
+                SHORT_CFENGINEPORT = (short) IntFromString(retval.item);
                 strncpy(STR_CFENGINEPORT, retval.item, 15);
-                CfOut(cf_verbose, "", "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
-                      ScalarRvalValue(retval));
-                SHORT_CFENGINEPORT = htons((short) Str2Int(retval.item));
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
+                      RvalScalarValue(retval));
+                SHORT_CFENGINEPORT = htons((short) IntFromString(retval.item));
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_keyttl].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_KEY_TTL].lval) == 0)
             {
-                CfOut(cf_verbose, "", "Ignoring deprecated option keycacheTTL");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Ignoring deprecated option keycacheTTL");
                 continue;
             }
 
-            if (strcmp(cp->lval, CFS_CONTROLBODY[cfs_bindtointerface].lval) == 0)
+            if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-                CfOut(cf_verbose, "", "SET bindtointerface = %s\n", BINDINTERFACE);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET bindtointerface = %s\n", BINDINTERFACE);
                 continue;
             }
         }
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_host].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_syslog_port].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
     {
-        SetSyslogPort(Str2Int(retval.item));
+        SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_fips_mode].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
     {
-        FIPS_MODE = GetBoolean(retval.item);
-        CfOut(cf_verbose, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
+        FIPS_MODE = BooleanFromString(retval.item);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[cfg_lastseenexpireafter].lval, &retval) != cf_notype)
+    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
     {
-        LASTSEENEXPIREAFTER = Str2Int(retval.item) * 60;
+        LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 }
 
 /*********************************************************************/
 
-static void KeepContextBundles(Policy *policy, const ReportContext *report_context)
+static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     char *scope;
 
@@ -488,12 +530,12 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->ns, NULL, NULL);
+                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -502,7 +544,7 @@ static void KeepContextBundles(Policy *policy, const ReportContext *report_conte
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(Policy *policy, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     char *scope;
 
@@ -533,12 +575,12 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 
                 BannerSubType(scope, sp->name, 0);
                 SetScope(scope);
-                AugmentScope(scope, bp->ns, NULL, NULL);
+                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -549,55 +591,55 @@ static void KeepPromiseBundles(Policy *policy, const ReportContext *report_conte
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
-        CfOut(cf_verbose, "", "Skipping whole promise, as context is %s\n", pp->classes);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
     }
 
-    if (VarClassExcluded(pp, &sp))
+    if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(cf_verbose, "", "\n");
-        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(cf_verbose, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
               sp);
-        CfOut(cf_verbose, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
     if (strcmp(pp->agentsubtype, "classes") == 0)
     {
-        KeepClassContextPromise(pp);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    sp = (char *) GetConstraintValue("resource_type", pp, CF_SCALAR);
+    sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
-        KeepLiteralAccessPromise(pp, "literal");
+        KeepLiteralAccessPromise(ctx, pp, "literal");
         return;
     }
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
-        KeepLiteralAccessPromise(pp, "variable");
+        KeepLiteralAccessPromise(ctx, pp, "variable");
         return;
     }
     
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
-        KeepQueryAccessPromise(pp, "query");
+        KeepQueryAccessPromise(ctx, pp, "query");
         return;
     }
 
     if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
-        KeepLiteralAccessPromise(pp, "context");
+        KeepLiteralAccessPromise(ctx, pp, "context");
         return;
     }
 
@@ -605,20 +647,20 @@ static void KeepServerPromise(Promise *pp)
 
     if (strcmp(pp->agentsubtype, "access") == 0)
     {
-        KeepFileAccessPromise(pp);
+        KeepFileAccessPromise(ctx, pp);
         return;
     }
 
     if (strcmp(pp->agentsubtype, "roles") == 0)
     {
-        KeepServerRolePromise(pp);
+        KeepServerRolePromise(ctx, pp);
         return;
     }
 }
 
 /*********************************************************************/
 
-void KeepFileAccessPromise(Promise *pp)
+void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -645,39 +687,39 @@ void KeepFileAccessPromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;
@@ -685,7 +727,7 @@ void KeepFileAccessPromise(Promise *pp)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -694,21 +736,21 @@ void KeepFileAccessPromise(Promise *pp)
 
 /*********************************************************************/
 
-void KeepLiteralAccessPromise(Promise *pp, char *type)
+void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = GetConstraintValue("handle", pp, CF_SCALAR);
+    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {
-        CfOut(cf_error, "", "Access to literal server data requires you to define a promise handle for reference");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Access to literal server data requires you to define a promise handle for reference");
         return;
     }
     
     if (strcmp(type, "literal") == 0)
     {
-        CfOut(cf_verbose,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+        CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
 
         if (!GetAuthPath(handle, VARADMIT))
         {
@@ -727,7 +769,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     }
     else
     {
-        CfOut(cf_verbose,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
+        CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
         if (!GetAuthPath(pp->promiser, VARADMIT))
         {
@@ -759,39 +801,39 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;
@@ -799,7 +841,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -808,7 +850,7 @@ void KeepLiteralAccessPromise(Promise *pp, char *type)
 
 /*********************************************************************/
 
-void KeepQueryAccessPromise(Promise *pp, char *type)
+void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap, *dp;
@@ -837,39 +879,39 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
 
-            if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_encrypted].lval) == 0)
+            if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ENCRYPTED].lval) == 0)
             {
                 ap->encrypt = true;
             }
 
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_admit].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_ADMIT].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_deny].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_DENY].lval) == 0)
                 {
                     PrependItem(&(dp->accesslist), rp->item, NULL);
                     continue;
                 }
 
-                if (strcmp(cp->lval, CF_REMACCESS_BODIES[cfs_maproot].lval) == 0)
+                if (strcmp(cp->lval, CF_REMACCESS_BODIES[REMOTE_ACCESS_MAPROOT].lval) == 0)
                 {
                     PrependItem(&(ap->maproot), rp->item, NULL);
                     continue;
@@ -877,7 +919,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
             }
             break;
 
-        case CF_FNCALL:
+        default:
             /* Shouldn't happen */
             break;
         }
@@ -886,7 +928,7 @@ void KeepQueryAccessPromise(Promise *pp, char *type)
 
 /*********************************************************************/
 
-static void KeepServerRolePromise(Promise *pp)
+static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
 {
     Rlist *rp;
     Auth *ap;
@@ -902,18 +944,18 @@ static void KeepServerRolePromise(Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
         {
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
 
             for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
             {
-                if (strcmp(cp->lval, CF_REMROLE_BODIES[cfs_authorize].lval) == 0)
+                if (strcmp(cp->lval, CF_REMROLE_BODIES[REMOTE_ROLE_AUTHORIZE].lval) == 0)
                 {
                     PrependItem(&(ap->accesslist), rp->item, NULL);
                     continue;
@@ -921,7 +963,7 @@ static void KeepServerRolePromise(Promise *pp)
             }
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             /* Shouldn't happen */
             break;
 
@@ -932,7 +974,7 @@ static void KeepServerRolePromise(Promise *pp)
             }
             else
             {
-                CfOut(cf_error, "", "RHS of authorize promise for %s should be a list\n", pp->promiser);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "RHS of authorize promise for %s should be a list\n", pp->promiser);
             }
             break;
         }

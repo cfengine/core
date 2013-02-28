@@ -57,7 +57,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
 
     if (pp == NULL)
     {
-        CfOut(cf_error, "cf_popen", "Couldn't open pipe to command %s\n", command);
+        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe to command %s\n", command);
         return false;
     }
 
@@ -95,7 +95,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
 
         if (strlen(line) + offset > CF_EXPANDSIZE - 10)
         {
-            CfOut(cf_error, "", "Buffer exceeded %d bytes in exec %s\n", CF_EXPANDSIZE, command);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Buffer exceeded %d bytes in exec %s\n", CF_EXPANDSIZE, command);
             break;
         }
 
@@ -115,7 +115,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
     {
         if (Chop(buffer, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
         }
     }
 
@@ -145,12 +145,12 @@ void ActAsDaemon(int preserve)
     {
         if (dup2(fd, STDIN_FILENO) == -1)
         {
-            CfOut(cf_error, "dup2", "Could not dup");
+            CfOut(OUTPUT_LEVEL_ERROR, "dup2", "Could not dup");
         }
 
         if (dup2(fd, STDOUT_FILENO) == -1)
         {
-            CfOut(cf_error, "dup2", "Could not dup");
+            CfOut(OUTPUT_LEVEL_ERROR, "dup2", "Could not dup");
         }
 
         dup2(fd, STDERR_FILENO);

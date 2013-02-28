@@ -70,14 +70,14 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 /*****************************************************************************/
 
-void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum roles role)
+void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role)
 {
     char databuf[CF_BUFSIZE];
     char *mapip;
 
     if (strlen(ipaddress) == 0)
     {
-        CfOut(cf_inform, "", "LastSeen registry for empty IP with role %d", role);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "LastSeen registry for empty IP with role %d", role);
         return;
     }
 
@@ -89,7 +89,7 @@ void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum ro
 
     mapip = MapAddress(ipaddress);
 
-    UpdateLastSawHost(databuf, mapip, role == cf_accept, time(NULL));
+    UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }
 
 /*****************************************************************************/
@@ -100,7 +100,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
     DBHandle *db = NULL;
     if (!OpenDB(&db, dbid_lastseen))
     {
-        CfOut(cf_error, "", " !! Unable to open last seen db");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Unable to open last seen db");
         return;
     }
 
@@ -147,7 +147,7 @@ bool RemoveHostFromLastSeen(const char *hostkey)
     DBHandle *db;
     if (!OpenDB(&db, dbid_lastseen))
     {
-        CfOut(cf_error, "", "Unable to open lastseen database");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open lastseen database");
         return false;
     }
 
@@ -264,13 +264,13 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
     if (!OpenDB(&db, dbid_lastseen))
     {
-        CfOut(cf_error, "", "!! Unable to open lastseen database");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Unable to open lastseen database");
         return false;
     }
 
     if (!NewDBCursor(db, &cursor))
     {
-        CfOut(cf_error, "", " !! Unable to create lastseen database cursor");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Unable to create lastseen database cursor");
         CloseDB(db);
         return false;
     }

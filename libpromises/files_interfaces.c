@@ -38,7 +38,11 @@
 #include "client_code.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 int cfstat(const char *path, struct stat *buf)
 {
@@ -51,7 +55,7 @@ int cfstat(const char *path, struct stat *buf)
 
 /*********************************************************************/
 
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp)
+int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp)
 {
     int res;
 
@@ -63,7 +67,7 @@ int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp)
     }
     else
     {
-        return cf_remote_stat(file, buf, "link", attr, pp);
+        return cf_remote_stat(ctx, file, buf, "link", attr, pp);
     }
 }
 
@@ -80,7 +84,7 @@ ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
     //error checking
     if (!fp || ferror(fp))
     {
-        CfOut(cf_error, "", " !! NULL or corrupt inputs to CfReadLine");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! NULL or corrupt inputs to CfReadLine");
         return -1;
     }
 

@@ -36,26 +36,32 @@
 #include "transaction.h"
 #include "exec_tools.h"
 #include "logging.h"
+#include "rlist.h"
+#include "policy.h"
 
-static void VerifyProcesses(Attributes a, Promise *pp);
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
+static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
-static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp);
+static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 
 #ifndef __MINGW32__
-static int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
+static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
 #endif
 
 
 /*****************************************************************************/
 
-void VerifyProcessesPromise(Promise *pp)
+void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
-    a = GetProcessAttributes(pp);
+    a = GetProcessAttributes(ctx, pp);
     ProcessSanityChecks(a, pp);
 
-    VerifyProcesses(a, pp);
+    VerifyProcesses(ctx, a, pp);
 }
 
 /*****************************************************************************/
@@ -70,34 +76,34 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
     if (a.restart_class)
     {
-        if ((IsStringIn(a.signals, "term")) || (IsStringIn(a.signals, "kill")))
+        if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
         {
-            CfOut(cf_inform, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> (warning) Promise %s kills then restarts - never strictly converges",
                   pp->promiser);
-            PromiseRef(cf_inform, pp);
+            PromiseRef(OUTPUT_LEVEL_INFORM, pp);
         }
 
         if (a.haveprocess_count)
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   " !! process_count and restart_class should not be used in the same promise as this makes no sense");
-            PromiseRef(cf_inform, pp);
+            PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             ret = false;
         }
     }
 
     if (promised_zero && (a.restart_class))
     {
-        CfOut(cf_error, "", "Promise constraint conflicts - %s processes cannot have zero count if restarted",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Promise constraint conflicts - %s processes cannot have zero count if restarted",
               pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         ret = false;
     }
 
     if ((a.haveselect) && (!a.process_select.process_result))
     {
-        CfOut(cf_error, "", " !! Process select constraint body promised no result (check body definition)");
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Process select constraint body promised no result (check body definition)");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -106,7 +112,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
 /*****************************************************************************/
 
-static void VerifyProcesses(Attributes a, Promise *pp)
+static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
     char lockname[CF_BUFSIZE];
@@ -128,22 +134,22 @@ static void VerifyProcesses(Attributes a, Promise *pp)
     }
 
     DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", pp->promiser, cf_str);
-    PromiseBanner(pp);
-    VerifyProcessOp(PROCESSTABLE, a, pp);
+    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    PromiseBanner(ctx, pp);
+    VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     DeleteScalar("this", "promiser");
 
     YieldCurrentLock(thislock);
 }
 
-static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
+static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp)
 {
     int matches = 0, do_signals = true, out_of_range, killed = 0, need_to_restart = true;
     Item *killlist = NULL;
 
     CfDebug("VerifyProcessOp\n");
 
-    matches = FindPidMatches(procdata, &killlist, a, pp);
+    matches = FindPidMatches(ctx, procdata, &killlist, a, pp);
 
 /* promise based on number of matches */
 
@@ -151,14 +157,14 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(cf_verbose, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
-            AddEphemeralClasses(a.process_count.out_of_range_define, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            AddEphemeralClasses(ctx, a.process_count.out_of_range_define, pp->ns);
             out_of_range = true;
         }
         else
         {
-            AddEphemeralClasses(a.process_count.in_range_define, pp->ns);
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
+            AddEphemeralClasses(ctx, a.process_count.in_range_define, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -189,18 +195,18 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
         {
             if (DONTDO)
             {
-                cfPS(cf_error, CF_WARN, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                      " -- Need to keep process-stop promise for %s, but only a warning is promised", pp->promiser);
             }
             else
             {
-                if (IsExecutable(GetArg0(a.process_stop)))
+                if (IsExecutable(CommandArg0(a.process_stop)))
                 {
                     ShellCommandReturnsZero(a.process_stop, false);
                 }
                 else
                 {
-                    cfPS(cf_verbose, CF_FAIL, "", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
                          "Process promise to stop %s could not be kept because %s the stop operator failed",
                          pp->promiser, a.process_stop);
                     DeleteItemList(killlist);
@@ -209,7 +215,7 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
             }
         }
 
-        killed = DoAllSignals(killlist, a, pp);
+        killed = DoAllSignals(ctx, killlist, a, pp);
     }
 
 /* delegated promise to restart killed or non-existent entries */
@@ -220,26 +226,26 @@ static void VerifyProcessOp(Item *procdata, Attributes a, Promise *pp)
 
     if (!need_to_restart)
     {
-        cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
         return;
     }
     else
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(cf_error, CF_WARN, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
                  " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
         }
         else
         {
-            cfPS(cf_inform, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
-            NewClass(a.restart_class, pp->ns);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
+            NewClass(ctx, a.restart_class, pp->ns);
         }
     }
 }
 
 #ifndef __MINGW32__
-static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
+static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
     Rlist *rp;
@@ -255,7 +261,7 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
     if (a.signals == NULL)
     {
-        CfOut(cf_verbose, "", " -> No signals to send for %s\n", pp->promiser);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No signals to send for %s\n", pp->promiser);
         return 0;
     }
 
@@ -265,7 +271,7 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
         for (rp = a.signals; rp != NULL; rp = rp->next)
         {
-            int signal = Signal2Int(rp->item);
+            int signal = SignalFromString(rp->item);
 
             if (!DONTDO)
             {
@@ -276,20 +282,20 @@ static int DoAllSignals(Item *siglist, Attributes a, Promise *pp)
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(cf_verbose, CF_FAIL, "kill", pp, a,
-                         " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", ScalarValue(rp),
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "kill", pp, a,
+                         " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", RlistScalarValue(rp),
                          signal, (intmax_t)pid);
                 }
                 else
                 {
-                    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
-                         ScalarValue(rp), signal, (intmax_t)pid, ip->name);
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                         RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else
             {
-                CfOut(cf_error, "", " -> Need to keep signal promise \'%s\' in process entry %s",
-                      ScalarValue(rp), ip->name);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Need to keep signal promise \'%s\' in process entry %s",
+                      RlistScalarValue(rp), ip->name);
             }
         }
     }

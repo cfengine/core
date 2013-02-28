@@ -25,7 +25,7 @@ libutils_la_SOURCES = \
 	misc_lib.c misc_lib.h \
 	writer.c writer.h \
 	csv_writer.c csv_writer.h \
-	xml_writer.c writer.h
+	xml_writer.c xml_writer.h
 
 CLEANFILES = *.gcno *.gcda
 
@@ -39,7 +39,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # "aclocal; autoconf; autoheader; automake --add-missing"
 # "configure; make; make install"
 #
-MAINTAINERCLEANFILES = conf.h.in
+MAINTAINERCLEANFILES = config.h.in
 
 # libcfpub dependency
 

@@ -33,16 +33,17 @@
 #include "item_lib.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "policy.h"
 
 /*****************************************************************************/
 
-EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
+EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
 {
     EditContext *ec;
 
     if (!IsAbsoluteFileName(filename))
     {
-        CfOut(cf_error, "", "Relative file name %s was marked for editing but has no invariant meaning\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Relative file name %s was marked for editing but has no invariant meaning\n", filename);
         return NULL;
     }
 
@@ -53,7 +54,7 @@ EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
 
     if (a.haveeditline)
     {
-        if (!LoadFileAsItemList(&(ec->file_start), filename, a, pp))
+        if (!LoadFileAsItemList(ctx, &(ec->file_start), filename, a, pp))
         {
         free(ec);
         return NULL;
@@ -63,13 +64,13 @@ EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
     if (a.haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a, pp))
+        if (!LoadFileAsXmlDoc(ctx, &(ec->xmldoc), filename, a, pp))
         {
             free(ec);
             return NULL;
         }
 #else
-        cfPS(cf_error, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -77,7 +78,7 @@ EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
 
     if (a.edits.empty_before_use)
     {
-        CfOut(cf_verbose, "", " -> Build file model from a blank slate (emptying)\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Build file model from a blank slate (emptying)\n");
         DeleteItemList(ec->file_start);
         ec->file_start = NULL;
     }
@@ -88,7 +89,7 @@ EditContext *NewEditContext(char *filename, Attributes a, const Promise *pp)
 
 /*****************************************************************************/
 
-void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportContext *report_context)
+void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise *pp)
 {
     Item *ip;
 
@@ -96,9 +97,9 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
-        if (ec && (!CompareToFile(ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
+        if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
-            cfPS(cf_error, CF_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
@@ -106,36 +107,36 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
     {
         if (a.haveeditline)
         {
-            if (CompareToFile(ec->file_start, ec->filename, a, pp))
+            if (CompareToFile(ctx, ec->file_start, ec->filename, a, pp))
             {
                 if (ec)
                 {
-                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
                 }
             }
             else
             {
-                SaveItemListAsFile(ec->file_start, ec->filename, a, pp, report_context);
+                SaveItemListAsFile(ctx, ec->file_start, ec->filename, a, pp);
             }
         }
 
         if (a.haveeditxml)
         {
 #ifdef HAVE_LIBXML2
-            if (XmlCompareToFile(ec->xmldoc, ec->filename, a, pp))
+            if (XmlCompareToFile(ctx, ec->xmldoc, ec->filename, a, pp))
             {
                 if (ec)
                 {
-                    cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
                 }
             }
             else
             {
-                SaveXmlDocAsFile(ec->xmldoc, ec->filename, a, pp, report_context);
+                SaveXmlDocAsFile(ctx, ec->xmldoc, ec->filename, a, pp);
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(cf_error, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
 #endif
         }
     }
@@ -143,7 +144,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
     {
         if (ec)
         {
-            cfPS(cf_verbose, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
         }
     }
 
@@ -151,7 +152,7 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
     {
         for (ip = ec->file_classes; ip != NULL; ip = ip->next)
         {
-            NewClass(ip->name, pp->ns);
+            NewClass(ctx, ip->name, pp->ns);
         }
 
         DeleteItemList(ec->file_classes);
@@ -166,26 +167,26 @@ void FinishEditContext(EditContext *ec, Attributes a, Promise *pp, const ReportC
 /***************************************************************************/
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp)
+int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp)
 {
     struct stat statbuf;
 
     if (cfstat(file, &statbuf) == -1)
     {
-        cfPS(cf_error, CF_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
     }
 
     if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
     {
-        CfOut(cf_inform, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+        CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
               (intmax_t) statbuf.st_size, a.edits.maxfilesize);
         return false;
     }
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(cf_inform, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
         return false;
     }
 
@@ -193,13 +194,13 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, const Promi
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        cfPS(cf_inform, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
         return false;
     }
 
@@ -211,18 +212,18 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a, const Promi
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
 {
     xmlDocPtr doc = param;
 
     //saving xml to file
     if (xmlSaveFile(dest_filename, doc) == -1)
     {
-        cfPS(cf_error, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
         return false;
     }
 
-    cfPS(cf_inform, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
     return true;
 }
 #endif
@@ -230,10 +231,9 @@ bool SaveXmlCallback(const char *dest_filename, const char *orig_filename, void 
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a, Promise *pp,
-                       const ReportContext *report_context)
+int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp)
 {
-    return SaveAsFile(&SaveXmlCallback, doc, file, a, pp, report_context);
+    return SaveAsFile(ctx, &SaveXmlCallback, doc, file, a, pp);
 }
 #endif
 
@@ -252,7 +252,7 @@ int AppendIfNoSuchLine(const char *filename, const char *line)
 
     if ((fread = fopen(filename, "rw")) == NULL)
     {
-        CfOut(cf_error, "fopen", "!! Cannot open the file \"%s\" for read", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "!! Cannot open the file \"%s\" for read", filename);
         return false;
     }
 
@@ -281,7 +281,7 @@ int AppendIfNoSuchLine(const char *filename, const char *line)
     {
         if ((fappend = fopen(filename, "a")) == NULL)
         {
-            CfOut(cf_error, "fopen", "!! Cannot open the file \"%s\" for append", filename);
+            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "!! Cannot open the file \"%s\" for append", filename);
             return false;
         }
 
@@ -302,7 +302,7 @@ int AppendIfNoSuchLine(const char *filename, const char *line)
         }
         else
         {
-            CfOut(cf_error, "fwrite", "!! Could not write %zd characters to \"%s\" (wrote %zd)", strlen(lineCp),
+            CfOut(OUTPUT_LEVEL_ERROR, "fwrite", "!! Could not write %zd characters to \"%s\" (wrote %zd)", strlen(lineCp),
                   filename, written);
             result = false;
         }

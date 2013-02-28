@@ -25,6 +25,7 @@
 #ifndef CFENGINE_MON_H
 #define CFENGINE_MON_H
 
+
 /* mon_entropy.c */
 
 void MonEntropyClassesInit(void);
@@ -66,6 +67,6 @@ void MonProcessesGatherData(double *cf_this);
 /* mon_temp.c */
 
 void MonTempInit(void);
-void MonTempGatherData(double *cf_this);
+void MonTempGatherData(EvalContext *ctx, double *cf_this);
 
 #endif

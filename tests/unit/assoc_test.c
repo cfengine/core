@@ -4,18 +4,18 @@
 
 static void test_create_destroy(void **state)
 {
-    CfAssoc *ap = NewAssoc("hello", (Rval) { "world", CF_SCALAR }, cf_str);
+    CfAssoc *ap = NewAssoc("hello", (Rval) { "world", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
     DeleteAssoc(ap);
 }
 
 static void test_copy(void **state)
 {
-    CfAssoc *ap = NewAssoc("hello", (Rval) { "world", CF_SCALAR }, cf_str);
+    CfAssoc *ap = NewAssoc("hello", (Rval) { "world", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
     CfAssoc *ap2 = CopyAssoc(ap);
 
     assert_string_equal(ap->lval, ap2->lval);
     assert_string_equal(ap->rval.item, ap2->rval.item);
-    assert_int_equal(ap->rval.rtype, ap2->rval.rtype);
+    assert_int_equal(ap->rval.type, ap2->rval.type);
     assert_int_equal(ap->dtype, ap2->dtype);
 
     DeleteAssoc(ap);

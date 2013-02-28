@@ -35,6 +35,10 @@
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -74,13 +78,13 @@ static bool BootstrapAllowed(void)
 
 /*****************************************************************************/
 
-void CheckAutoBootstrap()
+void CheckAutoBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
     int repaired = false, have_policy = false, am_appliance = false;
 
-    CfOut(cf_cmdout, "", "** CFEngine BOOTSTRAP probe initiated");
+    CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
     PrintVersionBanner("CFEngine");
     printf("\n");
@@ -110,37 +114,37 @@ void CheckAutoBootstrap()
 
     if (cfstat(name, &sb) == -1)
     {
-        CfOut(cf_cmdout, "", " -> No previous policy has been cached on this host");
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No previous policy has been cached on this host");
     }
     else
     {
-        CfOut(cf_cmdout, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
         have_policy = true;
     }
 
     if (strlen(POLICY_SERVER) > 0)
     {
-        CfOut(cf_cmdout, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
               POLICY_SERVER);
     }
     else
     {
         if (have_policy)
         {
-            CfOut(cf_cmdout, "",
+            CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
         else if (repaired)
         {
-            CfOut(cf_cmdout, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
+            CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }
     }
 
     printf(" -> Attempting to initiate promised autonomous services...\n\n");
 
-    am_appliance = IsDefinedClass(CanonifyName(POLICY_SERVER), NULL);
+    am_appliance = IsDefinedClass(ctx, CanonifyName(POLICY_SERVER), NULL);
     snprintf(name, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(POLICY_SERVER));
-    am_appliance |= IsDefinedClass(name, NULL);
+    am_appliance |= IsDefinedClass(ctx, name, NULL);
 
     if (strlen(POLICY_SERVER) == 0)
     {
@@ -152,26 +156,12 @@ void CheckAutoBootstrap()
 
     if (am_appliance)
     {
-        HardClass("am_policy_hub");
+        HardClass(ctx, "am_policy_hub");
         printf
             (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
         printf
             (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
         creat(name, 0600);
-
-        char execstring[CF_BUFSIZE], buffer[CF_EXPANDSIZE];
-        
-        snprintf(execstring, CF_BUFSIZE, "%s/cf-execd --once", CFWORKDIR);
-        
-        if (GetExecOutput(execstring, buffer, false))
-        {
-            printf(" -> The agent might leave errors/messages for you as email to root@localhost.\n");
-        }
-        else
-        {
-            printf(" !! I was not able to execute %s -- this is not necessarily fatal, but it is unexpected\n", execstring);
-        }
-        
     }
     else
     {
@@ -214,7 +204,7 @@ void SetPolicyServer(char *name)
     {
         if ((fout = fopen(file, "w")) == NULL)
         {
-            CfOut(cf_error, "fopen", "Unable to write policy server file! (%s)", file);
+            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write policy server file! (%s)", file);
             return;
         }
 
@@ -226,11 +216,11 @@ void SetPolicyServer(char *name)
     {
         // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
         // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
-        NewScalar("sys", "policy_hub", "undefined", cf_str);
+        NewScalar("sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
     else
     {
-        NewScalar("sys", "policy_hub", name, cf_str);
+        NewScalar("sys", "policy_hub", name, DATA_TYPE_STRING);
     }
 
 // Get the timestamp on policy update
@@ -248,7 +238,7 @@ void SetPolicyServer(char *name)
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
     
-    NewScalar("sys", "last_policy_update", timebuf, cf_str);
+    NewScalar("sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
 /********************************************************************/
@@ -259,11 +249,11 @@ static void CreateFailSafe(char *name)
 
     if ((fout = fopen(name, "w")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Unable to write failsafe file! (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write failsafe file! (%s)", name);
         return;
     }
 
-    CfOut(cf_cmdout, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
+    CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
             "################################################################################\n"
@@ -445,6 +435,6 @@ static void CreateFailSafe(char *name)
 
     if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(cf_error, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
     }
 }

@@ -28,52 +28,56 @@
 
 #include "cf3.defs.h"
 
-const char *AgentTypeToString(AgentType agent_type);
-char *EscapeJson(char *s, char *out, int outSz);
+// Type-String conversion
+MeasurePolicy MeasurePolicyFromString(const char *s);
+EnvironmentState EnvironmentStateFromString(const char *s);
+InsertMatchType InsertMatchTypeFromString(const char *s);
+Interval IntervalFromString(const char *s);
+DatabaseType DatabaseTypeFromString(const char *s);
+ContextScope ContextScopeFromString(const char *scope_str);
+OutputLevel OutputLevelFromString(const char *level);
+FileComparator FileComparatorFromString(const char *s);
+FileLinkType FileLinkTypeFromString(const char *s);
+DataType DataTypeFromString(const char *name);
+const char *DataTypeToString(DataType dtype);
+PackageActionPolicy PackageActionPolicyFromString(const char *s);
+PackageVersionComparator PackageVersionComparatorFromString(const char *s);
+PackageAction PackageActionFromString(const char *s);
+AclMethod AclMethodFromString(const char *string);
+AclType AclTypeFromString(const char *string);
+AclInheritance AclInheritanceFromString(const char *string);
+ServicePolicy ServicePolicyFromString(const char *string);
+int SignalFromString(const char *s);
+int SyslogPriorityFromString(const char *s);
+
+
+// Date/Time conversion
+long Months2Seconds(int m);
+int Day2Number(const char *datestring);
+void TimeToDateStr(time_t t, char *outStr, int outStrSz);
+int Month2Int(const char *string);
+int MonthLen2Int(const char *string, int len);
+long TimeAbs2Int(const char *s);
+
+
+// Evalaution conversion
+bool BooleanFromString(const char *val);
+long IntFromString(const char *s);
+double DoubleFromString(const char *s);
+void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
+int IsRealNumber(const char *s);
+
+
+// Misc.
+char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
+DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
 char *EscapeQuotes(const char *s, char *out, int outSz);
 char *MapAddress(char *addr);
-enum cfmeasurepolicy MeasurePolicy2Value(char *s);
-enum cfenvironment_state Str2EnvState(char *s);
-enum insert_match String2InsertMatch(char *s);
-long Months2Seconds(int m);
-enum cfinterval Str2Interval(char *s);
-int SyslogPriority2Int(char *s);
-enum cfdbtype Str2dbType(char *s);
-char *Rlist2String(Rlist *list, char *sep);
-int Signal2Int(char *s);
-enum cfreport String2ReportLevel(char *typestr);
-enum cfhashes String2HashType(char *typestr);
-enum cfcomparison String2Comparison(char *s);
-enum cflinktype String2LinkType(char *s);
-enum cfdatatype Typename2Datatype(char *name);
-enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp);
-enum cfsbundle Type2Cfs(char *name);
-enum representations String2Representation(char *s);
-int GetBoolean(const char *val);
-long Str2Int(const char *s);
-long TimeAbs2Int(char *s);
-double Str2Double(const char *s);
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
-int Month2Int(char *string);
-int MonthLen2Int(char *string, int len);
-void TimeToDateStr(time_t t, char *outStr, int outStrSz);
-const char *GetArg0(const char *execstr);
-void CommPrefix(char *execstr, char *comm);
+const char *CommandArg0(const char *execstr);
+void CommandPrefix(char *execstr, char *comm);
 int NonEmptyLine(char *s);
-int Day2Number(char *datestring);
-void UtcShiftInterval(time_t t, char *out, int outSz);
-enum action_policy Str2ActionPolicy(char *s);
-enum version_cmp Str2PackageSelect(char *s);
-enum package_actions Str2PackageAction(char *s);
-enum cf_acl_method Str2AclMethod(char *string);
-enum cf_acl_type Str2AclType(char *string);
-enum cf_acl_inherit Str2AclInherit(char *string);
-enum cf_srv_policy Str2ServicePolicy(char *string);
-char *Dtype2Str(enum cfdatatype dtype);
 const char *DataTypeShortToType(char *short_type);
-char *Item2String(Item *ip);
-int IsRealNumber(char *s);
-enum cfd_menu String2Menu(const char *s);
+int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
 #ifndef __MINGW32__
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
@@ -94,5 +98,7 @@ bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_
 /* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */
 char *SqlVariableExpand(const char *query);
 #endif
+
+
 
 #endif

@@ -26,13 +26,18 @@
 #include "cfstream.h"
 
 #include "files_names.h"
-#include "constraints.h"
+#include "policy.h"
 #include "item_lib.h"
 #include "vars.h"
 #include "transaction.h"
 #include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+#include "rlist.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 #include <stdarg.h>
 
@@ -46,8 +51,8 @@ static void LogList(FILE *fh, const Item *messages, bool has_prefix);
 static void FileReport(const Item *mess, bool has_prefix, const char *filename);
 
 #if !defined(__MINGW32__)
-static void MakeLog(Item *mess, enum cfreport level);
-static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level,
+static void MakeLog(Item *mess, OutputLevel level);
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
                              Item *mess);
 #endif
 
@@ -60,7 +65,7 @@ static const char *GetErrorStr(void);
 /*
  * Common functionality of CfFOut and CfOut.
  */
-static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *fmt, va_list args)
+static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fmt, va_list args)
 {
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE];
     Item *mess = NULL;
@@ -75,7 +80,7 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     AppendItem(&mess, buffer, NULL);
@@ -88,7 +93,7 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
 
     switch (level)
     {
-    case cf_inform:
+    case OUTPUT_LEVEL_INFORM:
 
         if (INFORM || VERBOSE || DEBUG)
         {
@@ -96,7 +101,7 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
         }
         break;
 
-    case cf_verbose:
+    case OUTPUT_LEVEL_VERBOSE:
 
         if (VERBOSE || DEBUG)
         {
@@ -104,21 +109,21 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
         }
         break;
 
-    case cf_error:
-    case cf_reporting:
-    case cf_cmdout:
+    case OUTPUT_LEVEL_ERROR:
+    case OUTPUT_LEVEL_REPORTING:
+    case OUTPUT_LEVEL_CMDOUT:
 
         LogList(fh, mess, VERBOSE);
         MakeLog(mess, level);
         break;
 
-    case cf_log:
+    case OUTPUT_LEVEL_LOG:
 
         if (VERBOSE || DEBUG)
         {
             LogList(fh, mess, VERBOSE);
         }
-        MakeLog(mess, cf_verbose);
+        MakeLog(mess, OUTPUT_LEVEL_VERBOSE);
         break;
 
     default:
@@ -130,12 +135,12 @@ static void VLog(FILE *fh, enum cfreport level, const char *errstr, const char *
     DeleteItemList(mess);
 }
 
-void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
+void CfFOut(char *filename, OutputLevel level, char *errstr, char *fmt, ...)
 {
     FILE *fp = fopen(filename, "a");
     if (fp == NULL)
     {
-        CfOut(cf_error, "fopen", "Could not open log file %s\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", filename);
         fp = stdout;
     }
 
@@ -152,7 +157,7 @@ void CfFOut(char *filename, enum cfreport level, char *errstr, char *fmt, ...)
     }
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -160,14 +165,14 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
     va_end(ap);
 }
 
-void CfVOut(enum cfreport level, const char *errstr, const char *fmt, va_list ap)
+void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
 {
     VLog(stdout, level, errstr, fmt, ap);
 }
 
 /*****************************************************************************/
 
-void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
+void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
 {
     va_list ap;
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];
@@ -187,7 +192,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     AppendItem(&mess, buffer, NULL);
@@ -198,9 +203,9 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
         AppendItem(&mess, output, NULL);
     }
 
-    if (level == cf_error)
+    if (level == OUTPUT_LEVEL_ERROR)
     {
-        if (GetVariable("control_common", "version", &retval) != cf_notype)
+        if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
         {
             v = (char *) retval.item;
         }
@@ -209,7 +214,7 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             v = "not specified";
         }
 
-        if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+        if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
         {
             strncpy(handle, sp, CF_MAXVARSIZE - 1);
         }
@@ -238,18 +243,21 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
         if (pp != NULL)
         {
-            switch (pp->promisee.rtype)
+            switch (pp->promisee.type)
             {
-            case CF_SCALAR:
+            case RVAL_TYPE_SCALAR:
                 snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
                 AppendItem(&mess, output, NULL);
                 break;
 
-            case CF_LIST:
+            case RVAL_TYPE_LIST:
                 
                 snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to (stakeholders): ");
-                PrintRlist(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
+                RlistPrint(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
                 AppendItem(&mess, output, NULL);
+                break;
+
+            default:
                 break;
             }
             
@@ -263,25 +271,25 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
         }
     }
 
-    verbose = (attr.transaction.report_level == cf_verbose) || VERBOSE;
+    verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;
 
     switch (level)
     {
-    case cf_inform:
+    case OUTPUT_LEVEL_INFORM:
 
-        if (INFORM || verbose || DEBUG || (attr.transaction.report_level == cf_inform))
+        if (INFORM || verbose || DEBUG || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM))
         {
             LogList(stdout, mess, verbose);
         }
 
-        if (attr.transaction.log_level == cf_inform)
+        if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
         {
             MakeLog(mess, level);
         }
         break;
 
-    case cf_reporting:
-    case cf_cmdout:
+    case OUTPUT_LEVEL_REPORTING:
+    case OUTPUT_LEVEL_CMDOUT:
 
         if (attr.report.to_file)
         {
@@ -292,27 +300,27 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             LogList(stdout, mess, verbose);
         }
 
-        if (attr.transaction.log_level == cf_inform)
+        if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
         {
             MakeLog(mess, level);
         }
         break;
 
-    case cf_verbose:
+    case OUTPUT_LEVEL_VERBOSE:
 
         if (verbose || DEBUG)
         {
             LogList(stdout, mess, verbose);
         }
 
-        if (attr.transaction.log_level == cf_verbose)
+        if (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
         {
             MakeLog(mess, level);
         }
 
         break;
 
-    case cf_error:
+    case OUTPUT_LEVEL_ERROR:
 
         if (attr.report.to_file)
         {
@@ -323,13 +331,13 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
             LogList(stdout, mess, verbose);
         }
 
-        if (attr.transaction.log_level == cf_error)
+        if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
         {
             MakeLog(mess, level);
         }
         break;
 
-    case cf_log:
+    case OUTPUT_LEVEL_LOG:
 
         MakeLog(mess, level);
         break;
@@ -340,14 +348,14 @@ void cfPS(enum cfreport level, char status, char *errstr, const Promise *pp, Att
 
     if (pp != NULL)
     {
-        LogPromiseResult(pp->promiser, pp->promisee.rtype, pp->promisee.item, status, attr.transaction.log_level, mess);
+        LogPromiseResult(pp->promiser, pp->promisee.type, pp->promisee.item, status, attr.transaction.log_level, mess);
     }
 
 /* Now complete the exits status classes and auditing */
 
     if (pp != NULL)
     {
-        ClassAuditLog(pp, attr, status, buffer);
+        ClassAuditLog(ctx, pp, attr, status, buffer);
     }
 
     DeleteItemList(mess);
@@ -380,7 +388,7 @@ static void FileReport(const Item *mess, bool has_prefix, const char *filename)
 
     if ((fp = fopen(filename, "a")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Could not open log file %s\n", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", filename);
         fp = stdout;
     }
 
@@ -396,7 +404,7 @@ static void FileReport(const Item *mess, bool has_prefix, const char *filename)
 
 #if !defined(__MINGW32__)
 
-static void MakeLog(Item *mess, enum cfreport level)
+static void MakeLog(Item *mess, OutputLevel level)
 {
     Item *ip;
 
@@ -416,17 +424,17 @@ static void MakeLog(Item *mess, enum cfreport level)
     {
         switch (level)
         {
-        case cf_inform:
-        case cf_reporting:
-        case cf_cmdout:
+        case OUTPUT_LEVEL_INFORM:
+        case OUTPUT_LEVEL_REPORTING:
+        case OUTPUT_LEVEL_CMDOUT:
             syslog(LOG_NOTICE, " %s", ip->name);
             break;
 
-        case cf_verbose:
+        case OUTPUT_LEVEL_VERBOSE:
             syslog(LOG_INFO, " %s", ip->name);
             break;
 
-        case cf_error:
+        case OUTPUT_LEVEL_ERROR:
             syslog(LOG_ERR, " %s", ip->name);
             break;
 
@@ -438,7 +446,7 @@ static void MakeLog(Item *mess, enum cfreport level)
     ThreadUnlock(cft_output);
 }
 
-static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, enum cfreport log_level,
+static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
                              Item *mess)
 {
 }

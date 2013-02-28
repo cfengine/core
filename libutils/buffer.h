@@ -76,12 +76,23 @@ void BufferSetGeneralMemoryCap(unsigned int cap);
 
 /**
   @brief Buffer initialization routine.
+
   Initializes the internals of a buffer. By default it is initialized to emulate a C string, but that can be
   changed at run time if needed. The default size of the buffer is set to DEFAULT_BUFFER_SIZE (4096).
   @return Pointer to initialized Buffer if the initialization was successful,
           otherwise terminate with message to stderr.
   */
 Buffer* BufferNew(void);
+/**
+  @brief Initializes a buffer based on a const char pointer.
+  @param data Data
+  @param length Length of the data.
+  @return Pointer to initialized Buffer if the initialization was successful,
+          otherwise terminate with message to stderr.
+  @remarks Length is used as a reference only. If a '\0' is found, only so many bytes will be copied.
+  @remarks Only C_STRING behavior is accepted if this constructor is used.
+  */
+Buffer* BufferNewFrom(const char *data, unsigned int length);
 /**
   @brief Destroys a buffer and frees the memory associated with it.
   @param buffer Buffer to be destroyed.
@@ -102,7 +113,7 @@ int BufferCopy(Buffer *source, Buffer **destination);
   @param buffer2
   @return -1 if buffer1 < buffer2, 0 if buffer1 == buffer2, +1 if buffer1 > buffer2
   */
-int BufferEqual(Buffer *buffer1, Buffer *buffer2);
+int BufferCompare(Buffer *buffer1, Buffer *buffer2);
 /**
   @brief Replaces the current content of the buffer with the given string.
 

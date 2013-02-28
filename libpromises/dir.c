@@ -28,10 +28,11 @@
 #include "dir_priv.h"
 #include "item_lib.h"
 #include "logging.h"
+#include "rlist.h"
 
 /*********************************************************************/
 
-Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp)
+Dir *OpenDirForPromise(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp)
 {
     if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
@@ -40,7 +41,7 @@ Dir *OpenDirForPromise(const char *dirname, Attributes attr, Promise *pp)
     else
     {
         /* -> client_code.c to talk to server */
-        return OpenDirRemote(dirname, attr, pp);
+        return OpenDirRemote(ctx, dirname, attr, pp);
     }
 }
 

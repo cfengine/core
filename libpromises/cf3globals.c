@@ -43,8 +43,6 @@ int FIPS_MODE = false;
 
 struct utsname VSYSNAME;
 
-int XML = false;
-
 int CFA_MAXTHREADS = 10;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
@@ -62,11 +60,9 @@ char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 
 // These are used to measure graph complexity in know/agent
 
-int CSV = false;
 int CF_TOPICS = 0;              // objects
 int CF_OCCUR = 0;               // objects
 
-PromiseIdent *PROMISE_ID_LIST = NULL;
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
 Item *DONELIST = NULL;
@@ -77,13 +73,6 @@ int EDIT_MODEL = false;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/
-/* Measurements                                                              */
-/*****************************************************************************/
-
-double METER_KEPT[meter_endmark];
-double METER_REPAIRED[meter_endmark];
-
-/*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/
 
@@ -91,17 +80,10 @@ Scope *VSCOPE = NULL;
 
 Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
-Item *EDIT_ANCHORS = NULL;
-
 int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
 char POLICY_SERVER[CF_BUFSIZE] = { 0 };
-
-char WEBDRIVER[CF_MAXVARSIZE] = { 0 };
-char BANNER[2 * CF_BUFSIZE] = { 0 };
-char FOOTER[CF_BUFSIZE] = { 0 };
-char STYLESHEET[CF_BUFSIZE] = { 0 };
 
 /*****************************************************************************/
 /* Compatability infrastructure                                              */
@@ -165,20 +147,12 @@ char VIPADDRESS[18] = { 0 };
 Item *IPADDRESSES = NULL;
 
 /*******************************************************************/
-/* Context Management                                              */
-/*******************************************************************/
-
-// see env_context.c
-
-Rlist *GOALS = NULL;
-
-/*******************************************************************/
 /*                                                                 */
 /* Checksums                                                       */
 /*                                                                 */
 /*******************************************************************/
 
-enum cfhashes CF_DEFAULT_DIGEST;
+HashMethod CF_DEFAULT_DIGEST;
 int CF_DEFAULT_DIGEST_LEN;
 
 /***********************************************************/
@@ -204,4 +178,4 @@ char BINDINTERFACE[CF_BUFSIZE] = { 0 };
 
 bool MINUSF = false;
 
-enum classes VSYSTEMHARDCLASS;
+PlatformContext VSYSTEMHARDCLASS;

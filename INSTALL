@@ -27,9 +27,9 @@ In order to build CFEngine you need the following tools and libraries installed:
 In order to build CFEngine cloned from git, you will need the
 following additional tools:
 
-* GNU Automake >= 1.9.5
-* GNU Autoconf >= 2.59
-* GNU Libtool >= 1.5.4
+* GNU Automake >= 1.10.1
+* GNU Autoconf >= 2.60
+* GNU Libtool >= 1.5.24
 * Yacc (note: GNU Bison 2.4.2 has troubles invoking m4)
 * Lex
 

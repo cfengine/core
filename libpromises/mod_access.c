@@ -48,22 +48,22 @@
 
 const BodySyntax CF_REMACCESS_BODIES[] =
 {
-    {"admit", cf_slist, "", "List of host names or IP addresses to grant access to file objects"},
-    {"deny", cf_slist, "", "List of host names or IP addresses to deny access to file objects"},
-    {"maproot", cf_slist, "", "List of host names or IP addresses to grant full read-privilege on the server"},
-    {"ifencrypted", cf_opts, CF_BOOL,
+    {"admit", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to grant access to file objects"},
+    {"deny", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to deny access to file objects"},
+    {"maproot", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to grant full read-privilege on the server"},
+    {"ifencrypted", DATA_TYPE_OPTION, CF_BOOL,
      "true/false whether the current file access promise is conditional on the connection from the client being encrypted",
      "false"},
-    {"resource_type", cf_opts, "path,literal,context,query,variable",
+    {"resource_type", DATA_TYPE_OPTION, "path,literal,context,query,variable",
      "The type of object being granted access (the default grants access to files)"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const BodySyntax CF_REMROLE_BODIES[] =
 {
-    {"authorize", cf_slist, "",
+    {"authorize", DATA_TYPE_STRING_LIST, "",
      "List of public-key user names that are allowed to activate the promised class during remote agent activation"},
-    {NULL, cf_notype, NULL, NULL}
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_REMACCESS_SUBTYPES[] =

@@ -25,7 +25,6 @@
 
 #include "promises.h"
 
-#include "constraints.h"
 #include "policy.h"
 #include "syntax.h"
 #include "expand.h"
@@ -38,6 +37,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "fncall.h"
 
 #define PACK_UPIFELAPSED_SALT "packageuplist"
 
@@ -45,47 +45,7 @@ static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
-char *BodyName(const Promise *pp)
-{
-    char *name, *sp;
-    int size = 0;
-
-/* Return a type template for the promise body for lock-type identification */
-
-    name = xmalloc(CF_MAXVARSIZE);
-
-    sp = pp->agentsubtype;
-
-    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
-    {
-        strcpy(name, sp);
-        strcat(name, ".");
-        size += strlen(sp);
-    }
-
-    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
-        {
-            continue;
-        }
-
-        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
-        {
-            strcat(name, cp->lval);
-            strcat(name, ".");
-            size += strlen(cp->lval);
-        }
-    }
-
-    return name;
-}
-
-/*****************************************************************************/
-
-Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
+Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
     Rval returnval;
@@ -95,7 +55,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         CfDebug("CopyPromise(%s->", pp->promiser);
         if (DEBUG)
         {
-            ShowRval(stdout, pp->promisee);
+            RvalShow(stdout, pp->promisee);
         }
         CfDebug("\n");
     }
@@ -113,7 +73,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = CopyRvalItem(pp->promisee);
+        pcopy->promisee = RvalCopy(pp->promisee);
     }
 
     if (pp->classes)
@@ -162,9 +122,9 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         Policy *policy = PolicyFromPromise(pp);
         Seq *bodies = policy ? policy->bodies : NULL;
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             bodyname = (char *) cp->rval.item;
             if (cp->references_body)
             {
@@ -172,7 +132,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
             }
             fp = NULL;
             break;
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
             bp = IsBody(bodies, pp->ns, bodyname);
@@ -190,7 +150,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
         {
             if (strcmp(bp->type, cp->lval) != 0)
             {
-                CfOut(cf_error, "",
+                CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
                       bodyname, pp->offset.line, (pp->audit)->filename, bp->type, cp->lval);
                 ERRORCOUNT++;
@@ -198,7 +158,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
             /* Keep the referent body type as a boolean for convenience when checking later */
 
-            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), CF_SCALAR}, cp->classes, false);
+            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
 
             CfDebug("Handling body-lval \"%s\"\n", cp->lval);
 
@@ -208,16 +168,16 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
                 if (fp == NULL || fp->args == NULL)
                 {
-                    CfOut(cf_error, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
                 NewScope("body");
 
-                if (fp && bp && fp->args && bp->args && !MapBodyArgs("body", fp->args, bp->args))
+                if (fp && bp && fp->args && bp->args && !MapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
                     ERRORCOUNT++;
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
@@ -239,7 +199,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
                 if (fp != NULL)
                 {
-                    CfOut(cf_error, "",
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
                           "An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %zu of %s (possible unquoted literal value)",
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
@@ -250,7 +210,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
                         Constraint *scp = SeqAt(bp->conlist, k);
 
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
-                        Rval newrv = CopyRvalItem(scp->rval);
+                        Rval newrv = RvalCopy(scp->rval);
 
                         PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
                     }
@@ -263,12 +223,12 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
             if (cp->references_body && !IsBundle(policy->bundles, bodyname))
             {
-                CfOut(cf_error, "",
+                CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",
                       bodyname, pp->offset.line, (pp->audit)->filename);
             }
 
-            Rval newrv = CopyRvalItem(cp->rval);
+            Rval newrv = RvalCopy(cp->rval);
 
             PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
         }
@@ -279,7 +239,7 @@ Promise *DeRefCopyPromise(const char *scopeid, const Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
+Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp)
 {
     Promise *pcopy;
     Rval returnval, final;
@@ -288,16 +248,16 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
     pcopy = xcalloc(1, sizeof(Promise));
 
-    returnval = ExpandPrivateRval("this", (Rval) {pp->promiser, CF_SCALAR});
+    returnval = ExpandPrivateRval("this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
     pcopy->promiser = (char *) returnval.item;
 
     if (pp->promisee.item)
     {
-        pcopy->promisee = EvaluateFinalRval(scopeid, pp->promisee, true, pp);
+        pcopy->promisee = EvaluateFinalRval(ctx, scopeid, pp->promisee, true, pp);
     }
     else
     {
-        pcopy->promisee = (Rval) {NULL, CF_NOPROMISEE};
+        pcopy->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     }
 
     if (pp->classes)
@@ -341,26 +301,26 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
         Rval returnval;
 
-        if (ExpectedDataType(cp->lval) == cf_bundle)
+        if (ExpectedDataType(cp->lval) == DATA_TYPE_BUNDLE)
         {
             final = ExpandBundleReference(scopeid, cp->rval);
         }
         else
         {
-            returnval = EvaluateFinalRval(scopeid, cp->rval, false, pp);
-            final = ExpandDanglers(scopeid, returnval, pp);
-            DeleteRvalItem(returnval);
+            returnval = EvaluateFinalRval(ctx, scopeid, cp->rval, false, pp);
+            final = ExpandDanglers(ctx, scopeid, returnval, pp);
+            RvalDestroy(returnval);
         }
 
         PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
 
         if (strcmp(cp->lval, "comment") == 0)
         {
-            if (final.rtype != CF_SCALAR)
+            if (final.type != RVAL_TYPE_SCALAR)
             {
                 char err[CF_BUFSIZE];
 
-                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects (not %c in \"%s\")", final.rtype,
+                snprintf(err, CF_BUFSIZE, "Comments can only be scalar objects (not %c in \"%s\")", final.type,
                          pp->promiser);
                 yyerror(err);
             }
@@ -381,7 +341,7 @@ Promise *ExpandDeRefPromise(const char *scopeid, Promise *pp)
 
 /*******************************************************************/
 
-Body *IsBody(Seq *bodies, const char *namespace, const char *key)
+Body *IsBody(Seq *bodies, const char *ns, const char *key)
 {
     char fqname[CF_BUFSIZE];
 
@@ -390,7 +350,7 @@ Body *IsBody(Seq *bodies, const char *namespace, const char *key)
         Body *bp = SeqAt(bodies, i);
 
         // bp->namespace is where the body belongs, namespace is where we are now
-        if (strchr(key, CF_NS) || strcmp(namespace,"default") == 0)
+        if (strchr(key, CF_NS) || strcmp(ns,"default") == 0)
         {
             if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
             {
@@ -403,7 +363,7 @@ Body *IsBody(Seq *bodies, const char *namespace, const char *key)
         }
         else
         {
-            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", namespace, CF_NS, key);
+            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", ns, CF_NS, key);
         }
 
         if (strcmp(bp->name, fqname) == 0)
@@ -456,7 +416,7 @@ Bundle *IsBundle(Seq *bundles, const char *key)
 
 /*****************************************************************************/
 
-Promise *NewPromise(char *typename, char *promiser)
+Promise *NewPromise(char *type, char *promiser)
 {
     Promise *pp;
 
@@ -472,23 +432,23 @@ Promise *NewPromise(char *typename, char *promiser)
 
     ThreadUnlock(cft_policy);
 
-    pp->promisee = (Rval) {NULL, CF_NOPROMISEE};
+    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     pp->donep = &(pp->done);
 
-    pp->agentsubtype = typename;        /* cache this, do not copy string */
+    pp->agentsubtype = type;        /* cache this, do not copy string */
     pp->ref_alloc = 'n';
     pp->has_subbundles = false;
 
     PromiseAppendConstraint(pp, "handle",
                             (Rval) {xstrdup("cfe_internal_promise_hardcoded"),
-                            CF_SCALAR}, NULL, false);
+                            RVAL_TYPE_SCALAR }, NULL, false);
 
     return pp;
 }
 
 /*****************************************************************************/
 
-void PromiseRef(enum cfreport level, const Promise *pp)
+void PromiseRef(OutputLevel level, const Promise *pp)
 {
     char *v;
     Rval retval;
@@ -499,7 +459,7 @@ void PromiseRef(enum cfreport level, const Promise *pp)
         return;
     }
 
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }
@@ -524,13 +484,13 @@ void PromiseRef(enum cfreport level, const Promise *pp)
         CfOut(level, "", "Comment: %s\n", pp->ref);
     }
 
-    switch (pp->promisee.rtype)
+    switch (pp->promisee.type)
     {
-       case CF_SCALAR:
+       case RVAL_TYPE_SCALAR:
            CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
            break;
-       case CF_LIST:
-           PrintRlist(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
+       case RVAL_TYPE_LIST:
+           RlistPrint(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
            CfOut(level, "", "This was a promise to: %s",buffer);
            break;
        default:
@@ -540,7 +500,7 @@ void PromiseRef(enum cfreport level, const Promise *pp)
 
 /*******************************************************************/
 
-void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     EVP_MD_CTX context;
     int md_len;
@@ -599,20 +559,20 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-        case CF_SCALAR:
+        case RVAL_TYPE_SCALAR:
             EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
             break;
 
-        case CF_LIST:
+        case RVAL_TYPE_LIST:
             for (rp = cp->rval.item; rp != NULL; rp = rp->next)
             {
                 EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
             }
             break;
 
-        case CF_FNCALL:
+        case RVAL_TYPE_FNCALL:
 
             /* Body or bundle */
 
@@ -624,6 +584,9 @@ void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE +
             {
                 EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
             }
+            break;
+
+        default:
             break;
         }
     }

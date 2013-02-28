@@ -24,7 +24,7 @@
 
 #include "cf3.defs.h"
 
-const char *CLASSTEXT[HARD_CLASSES_MAX] =
+const char *CLASSTEXT[PLATFORM_CONTEXT_MAX] =
 {
     "<unknown>",
     "hpux",
@@ -45,7 +45,7 @@ const char *CLASSTEXT[HARD_CLASSES_MAX] =
     "vmware",
 };
 
-const char *VPSCOMM[HARD_CLASSES_MAX] =
+const char *VPSCOMM[PLATFORM_CONTEXT_MAX] =
 {
     "",
     "/bin/ps",                  /* hpux */
@@ -69,7 +69,7 @@ const char *VPSCOMM[HARD_CLASSES_MAX] =
 // linux after rhel 3: ps -eo user,pid,ppid,pgid,%cpu,%mem,vsize,ni,rss,stat,nlwp,stime,time,args
 // solaris: ps -eo user,pid,ppid,pgid,pcpu,pmem,vsz,pri,rss,nlwp,stime,time,args
 
-const char *VPSOPTS[HARD_CLASSES_MAX] =
+const char *VPSOPTS[PLATFORM_CONTEXT_MAX] =
 {
     "",
     "-ef",                      /* hpux */
@@ -90,7 +90,7 @@ const char *VPSOPTS[HARD_CLASSES_MAX] =
     "?",                        /* vmware */
 };
 
-const char *VFSTAB[HARD_CLASSES_MAX] =
+const char *VFSTAB[PLATFORM_CONTEXT_MAX] =
 {
     "-",
     "/etc/fstab",               /* hpux */

@@ -533,6 +533,10 @@ Debug levels: 1=parsing, 2=running, 3=summary, 4
 (-s)       - Show lastseen hostnames and IP addresses
 @item --remove-keys
 (-r @var{value}) - Remove keys for specified hostname/IP from lastseen database 
+@item --print-digest
+(-p @var{pubkeyfile}) - Print digest of the specified public key file
+@item --trust-key
+(-t @var{pubkeyfile}) - Make cf-serverd/cf-agent trust the specified public key
 @end table
 
 

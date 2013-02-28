@@ -29,7 +29,7 @@
 #include "cf3.defs.h"
 
 int cfstat(const char *path, struct stat *buf);
-int cf_lstat(char *file, struct stat *buf, Attributes attr, Promise *pp);
+int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp);
 
 /**
  * @return Number of characters read, or -1 on error.

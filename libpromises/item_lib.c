@@ -587,14 +587,14 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 
 /*********************************************************************/
 
-int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, enum cfeditorder pos, Attributes a,
+int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Attributes a,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
 
     for (const Item *ip = file_start; ip != NULL; ip = ip->next)
     {
-        if (pos == cfe_before)
+        if (pos == EDIT_ORDER_BEFORE)
         {
             if ((ip->next) && (ip->next == location))
             {
@@ -609,7 +609,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
             }
         }
 
-        if (pos == cfe_after)
+        if (pos == EDIT_ORDER_AFTER)
         {
             if (ip == location)
             {
@@ -897,7 +897,7 @@ void DeleteItem(Item **liststart, Item *item)
 
 /*********************************************************************/
 
-int DeleteItemGeneral(Item **list, const char *string, enum matchtypes type)
+int DeleteItemGeneral(Item **list, const char *string, ItemMatchType type)
 {
     Item *ip, *last = NULL;
     int match = 0;
@@ -916,30 +916,30 @@ int DeleteItemGeneral(Item **list, const char *string, enum matchtypes type)
 
         switch (type)
         {
-        case NOTliteralStart:
+        case ITEM_MATCH_TYPE_LITERAL_START_NOT:
             match = (strncmp(ip->name, string, strlen(string)) != 0);
             break;
-        case literalStart:
+        case ITEM_MATCH_TYPE_LITERAL_START:
             match = (strncmp(ip->name, string, strlen(string)) == 0);
             break;
-        case NOTliteralComplete:
+        case ITEM_MATCH_TYPE_LITERAL_COMPLETE_NOT:
             match = (strcmp(ip->name, string) != 0);
             break;
-        case literalComplete:
+        case ITEM_MATCH_TYPE_LITERAL_COMPLETE:
             match = (strcmp(ip->name, string) == 0);
             break;
-        case NOTliteralSomewhere:
+        case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT:
             match = (strstr(ip->name, string) == NULL);
             break;
-        case literalSomewhere:
+        case ITEM_MATCH_TYPE_LITERAL_SOMEWHERE:
             match = (strstr(ip->name, string) != NULL);
             break;
-        case NOTregexComplete:
-        case regexComplete:
+        case ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT:
+        case ITEM_MATCH_TYPE_REGEX_COMPLETE:
             /* To fix a bug on some implementations where rx gets emptied */
             match = FullTextMatch(string, ip->name);
 
-            if (type == NOTregexComplete)
+            if (type == ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT)
             {
                 match = !match;
             }
@@ -990,49 +990,49 @@ int DeleteItemGeneral(Item **list, const char *string, enum matchtypes type)
 
 int DeleteItemStarting(Item **list, const char *string)       /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(list, string, literalStart);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START);
 }
 
 /*********************************************************************/
 
 int DeleteItemNotStarting(Item **list, const char *string)    /* delete 1st item starting with string */
 {
-    return DeleteItemGeneral(list, string, NOTliteralStart);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_START_NOT);
 }
 
 /*********************************************************************/
 
 int DeleteItemLiteral(Item **list, const char *string)  /* delete 1st item which is string */
 {
-    return DeleteItemGeneral(list, string, literalComplete);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_COMPLETE);
 }
 
 /*********************************************************************/
 
 int DeleteItemMatching(Item **list, const char *string)       /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(list, string, regexComplete);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE);
 }
 
 /*********************************************************************/
 
 int DeleteItemNotMatching(Item **list, const char *string)    /* delete 1st item fully matching regex */
 {
-    return DeleteItemGeneral(list, string, NOTregexComplete);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT);
 }
 
 /*********************************************************************/
 
 int DeleteItemContaining(Item **list, const char *string)     /* delete first item containing string */
 {
-    return DeleteItemGeneral(list, string, literalSomewhere);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE);
 }
 
 /*********************************************************************/
 
 int DeleteItemNotContaining(Item **list, const char *string)  /* delete first item containing string */
 {
-    return DeleteItemGeneral(list, string, NOTliteralSomewhere);
+    return DeleteItemGeneral(list, string, ITEM_MATCH_TYPE_LITERAL_SOMEWHERE_NOT);
 }
 
 /*********************************************************************/

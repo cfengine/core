@@ -23,11 +23,10 @@
 
 */
 
-#include "cf3.defs.h"
+#include "transaction.h"
 
 #include "env_context.h"
 #include "promises.h"
-#include "transaction.h"
 #include "dbm_api.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -40,6 +39,12 @@
 #include "verify_processes.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "rlist.h"
+#include "policy.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
@@ -58,7 +63,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data);
 
 /*****************************************************************************/
 
-void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
+void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promise *pp, const char *logname)
 {
     if (logname && (attr.transaction.log_string))
     {
@@ -72,7 +77,7 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            CfOut(cf_reporting, "", "L: %s\n", buffer);
+            CfOut(OUTPUT_LEVEL_REPORTING, "", "L: %s\n", buffer);
         }
         else
         {
@@ -80,11 +85,11 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
 
             if (fout == NULL)
             {
-                CfOut(cf_error, "", "Unable to open private log %s", logname);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open private log %s", logname);
                 return;
             }
 
-            CfOut(cf_verbose, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);
@@ -96,7 +101,7 @@ void SummarizeTransaction(Attributes attr, const Promise *pp, const char *lognam
     {
         if (logname && (strcmp(logname, attr.transaction.log_failed) == 0))
         {
-            cfPS(cf_log, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
+            cfPS(ctx, OUTPUT_LEVEL_LOG, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
         }
     }
 }
@@ -123,6 +128,44 @@ static void RegisterLockCleanup(void)
 }
 
 /*****************************************************************************/
+
+static char *BodyName(const Promise *pp)
+{
+    char *name, *sp;
+    int size = 0;
+
+/* Return a type template for the promise body for lock-type identification */
+
+    name = xmalloc(CF_MAXVARSIZE);
+
+    sp = pp->agentsubtype;
+
+    if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+    {
+        strcpy(name, sp);
+        strcat(name, ".");
+        size += strlen(sp);
+    }
+
+    for (size_t i = 0; (i < 5) && i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        if (strcmp(cp->lval, "args") == 0)      /* Exception for args, by symmetry, for locking */
+        {
+            continue;
+        }
+
+        if (size + strlen(cp->lval) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
+        {
+            strcat(name, cp->lval);
+            strcat(name, ".");
+            size += strlen(cp->lval);
+        }
+    }
+
+    return name;
+}
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {
@@ -176,7 +219,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
     {
         if (IsItemIn(DONELIST, str_digest))
         {
-            CfOut(cf_verbose, "", " -> This promise has already been verified");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This promise has already been verified");
             return this;
         }
 
@@ -231,7 +274,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
     if (elapsedtime < 0)
     {
-        CfOut(cf_verbose, "", " XX Another cf-agent seems to have done this since I started (elapsed=%jd)\n",
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " XX Another cf-agent seems to have done this since I started (elapsed=%jd)\n",
               (intmax_t) elapsedtime);
         ReleaseCriticalSection();
         return this;
@@ -239,7 +282,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 
     if (elapsedtime < attr.transaction.ifelapsed)
     {
-        CfOut(cf_verbose, "", " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n", cflast,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n", cflast,
               (intmax_t) elapsedtime, attr.transaction.ifelapsed);
         ReleaseCriticalSection();
         return this;
@@ -256,19 +299,19 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
         {
             if (elapsedtime >= attr.transaction.expireafter)
             {
-                CfOut(cf_inform, "", "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
                       attr.transaction.expireafter);
 
                 pid = FindLockPid(cflock);
 
                 if (pid == -1)
                 {
-                    CfOut(cf_error, "", "Illegal pid in corrupt lock %s - ignoring lock\n", cflock);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal pid in corrupt lock %s - ignoring lock\n", cflock);
                 }
 #ifdef __MINGW32__                    // killing processes with e.g. task manager does not allow for termination handling
                 else if (!NovaWin_IsProcessRunning(pid))
                 {
-                    CfOut(cf_verbose, "",
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           "Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",
                           pid);
                     LogLockCompletion(cflog, pid, "Lock expired, process not running", cc_operator, cc_operand);
@@ -277,7 +320,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
 #endif /* __MINGW32__ */
                 else
                 {
-                    CfOut(cf_verbose, "", "Trying to kill expired process, pid %d\n", pid);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Trying to kill expired process, pid %d\n", pid);
 
                     err = GracefulTerminate(pid);
 
@@ -297,7 +340,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
             else
             {
                 ReleaseCriticalSection();
-                CfOut(cf_verbose, "", "Couldn't obtain lock for %s (already running!)\n", cflock);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Couldn't obtain lock for %s (already running!)\n", cflock);
                 return this;
             }
         }
@@ -338,7 +381,7 @@ void YieldCurrentLock(CfLock this)
 
     if (RemoveLock(this.lock) == -1)
     {
-        CfOut(cf_verbose, "", "Unable to remove lock %s\n", this.lock);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to remove lock %s\n", this.lock);
         free(this.last);
         free(this.lock);
         free(this.log);
@@ -347,7 +390,7 @@ void YieldCurrentLock(CfLock this)
 
     if (WriteLock(this.last) == -1)
     {
-        CfOut(cf_error, "creat", "Unable to create %s\n", this.last);
+        CfOut(OUTPUT_LEVEL_ERROR, "creat", "Unable to create %s\n", this.last);
         free(this.last);
         free(this.lock);
         free(this.log);
@@ -509,7 +552,7 @@ static time_t FindLock(char *last)
 
         if (WriteLock(last) == -1)
         {
-            CfOut(cf_error, "", "Unable to lock %s\n", last);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to lock %s\n", last);
             return 0;
         }
 
@@ -618,7 +661,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     if ((fp = fopen(cflog, "a")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Can't open lock-log file %s\n", cflog);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Can't open lock-log file %s\n", cflog);
         exit(1);
     }
 
@@ -631,7 +674,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
     fprintf(fp, "%s:%s:pid=%d:%s:%s\n", buffer, str, pid, operator, operand);
@@ -642,7 +685,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     {
         if (statbuf.st_size > CFLOGSIZE)
         {
-            CfOut(cf_verbose, "", "Rotating lock-runlog file\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Rotating lock-runlog file\n");
             RotateFiles(cflog, 2);
         }
     }
@@ -828,13 +871,13 @@ void PurgeLocks()
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {
-            CfOut(cf_verbose, "", " -> No lock purging scheduled");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No lock purging scheduled");
             CloseLock(dbp);
             return;
         }
     }
 
-    CfOut(cf_verbose, "", " -> Looking for stale locks to purge");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for stale locks to purge");
 
     if (!NewDBCursor(dbp, &dbcp))
     {
@@ -852,7 +895,7 @@ void PurgeLocks()
 
         if (now - entry.time > (time_t) CF_LOCKHORIZON)
         {
-            CfOut(cf_verbose, "", " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " --> Purging lock (%jd) %s", (intmax_t)(now - entry.time), key);
             DBCursorDeleteEntry(dbcp);
         }
     }
@@ -895,9 +938,9 @@ static void ReleaseCriticalSection()
 
 /************************************************************************/
 
-int ShiftChange(void)
+int ShiftChange(EvalContext *ctx)
 {
-    if (IsDefinedClass("(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
+    if (IsDefinedClass(ctx, "(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
     {
         return true;
     }
@@ -955,19 +998,19 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
     {
-        CfOut(cf_inform, "", "Unable to find syslog_host or service: (%s/%s) %s", SYSLOG_HOST, strport,
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to find syslog_host or service: (%s/%s) %s", SYSLOG_HOST, strport,
               gai_strerror(err));
         return;
     }
 
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        CfOut(cf_verbose, "", " -> Connect to syslog %s = %s on port %s\n", SYSLOG_HOST, sockaddr_ntop(ap->ai_addr),
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to syslog %s = %s on port %s\n", SYSLOG_HOST, sockaddr_ntop(ap->ai_addr),
               strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {
-            CfOut(cf_inform, "socket", "Couldn't open a socket");
+            CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a socket");
             continue;
         }
         else
@@ -978,11 +1021,11 @@ void RemoteSysLog(int log_priority, const char *log_string)
                      log_string);
             if (sendto(sd, message, strlen(message), 0, ap->ai_addr, ap->ai_addrlen) == -1)
             {
-                CfOut(cf_verbose, "sendto", " -> Couldn't send \"%s\" to syslog server \"%s\"\n", message, SYSLOG_HOST);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "sendto", " -> Couldn't send \"%s\" to syslog server \"%s\"\n", message, SYSLOG_HOST);
             }
             else
             {
-                CfOut(cf_verbose, "", " -> Syslog message: \"%s\" to server \"%s\"\n", message, SYSLOG_HOST);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Syslog message: \"%s\" to server \"%s\"\n", message, SYSLOG_HOST);
             }
             close(sd);
             return;
@@ -998,7 +1041,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
     {
-        CfOut(cf_error, "sendto", " !! Unable to send syslog datagram");
+        CfOut(OUTPUT_LEVEL_ERROR, "sendto", " !! Unable to send syslog datagram");
         return;
     }
 
@@ -1007,11 +1050,11 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     if (sendto(sd, message, strlen(message), 0, (struct sockaddr *) &addr, sizeof(addr)) == -1)
     {
-        CfOut(cf_error, "sendto", " !! Unable to send syslog datagram");
+        CfOut(OUTPUT_LEVEL_ERROR, "sendto", " !! Unable to send syslog datagram");
         return;
     }
 
-    CfOut(cf_verbose, "", " -> Syslog message: \"%s\" to server %s\n", message, SYSLOG_HOST);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Syslog message: \"%s\" to server %s\n", message, SYSLOG_HOST);
     close(sd);
 #endif
 }

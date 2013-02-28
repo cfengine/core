@@ -26,7 +26,6 @@
 #include "generic_agent.h"
 
 #include "env_context.h"
-#include "constraints.h"
 #include "files_names.h"
 #include "export_xml.h"
 #include "item_lib.h"
@@ -72,10 +71,11 @@ static const char *HINTS[] =
 
 int main(int argc, char *argv[])
 {
+    EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(argc, argv);
 
     ReportContext *report_context = OpenReports(config->agent_type);
-    GenericInitialize(config, report_context, false);
+    GenericAgentDiscoverContext(ctx, config, report_context);
 
     if (GENERATE_XML)
     {
@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
+    EvalContextDestroy(ctx);
     return 0;
 }
 
@@ -131,7 +132,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
     }
 
     return config;

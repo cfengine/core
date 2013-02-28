@@ -32,6 +32,7 @@
 #include "reporting.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "rlist.h"
 
 #include <assert.h>
 
@@ -85,217 +86,81 @@ char *EscapeQuotes(const char *s, char *out, int outSz)
 
 /***************************************************************************/
 
-char *EscapeJson(char *s, char *out, int outSz)
+int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value)
 {
-    char *spt, *spf;
-    int i = 0;
-
-    memset(out, 0, outSz);
-
-    for (spf = s, spt = out; (i < outSz - 2) && (*spf != '\0'); spf++, spt++, i++)
+    if (needle == NULL)
     {
-        switch (*spf)
-        {
-        case '\"':
-        case '\\':
-        case '/':
-            *spt++ = '\\';
-            *spt = *spf;
-            i += 2;
-            break;
-        case '\n':
-            *spt++ = '\\';
-            *spt = 'n';
-            i += 2;
-            break;
-        case '\t':
-            *spt++ = '\\';
-            *spt = 't';
-            i += 2;
-            break;
-        case '\r':
-            *spt++ = '\\';
-            *spt = 'r';
-            i += 2;
-            break;
-        case '\b':
-            *spt++ = '\\';
-            *spt = 'b';
-            i += 2;
-            break;
-        case '\f':
-            *spt++ = '\\';
-            *spt = 'f';
-            i += 2;
-            break;
-        default:
-            *spt = *spf;
-            i++;
-            break;
-        }
+        return null_value;
     }
 
-    return out;
-}
-
-/***************************************************************************/
-
-enum cfmeasurepolicy MeasurePolicy2Value(char *s)
-{
-    static char *names[] = { "average", "sum", "first", "last",  NULL };
-    int i;
-
-    if (s == NULL)
+    for (int i = 0; haystack[i] != NULL; ++i)
     {
-        return cfm_nomeasure;
-    }
-
-    for (i = 0; names[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, names[i]) == 0))
-        {
-            return (enum cfmeasurepolicy) i;
-        }
-    }
-
-    return cfm_average;
-
-}
-    
-/***************************************************************************/
-    
-enum cfenvironment_state Str2EnvState(char *s)
-{
-    static char *names[] = { "create", "delete", "running", "suspended", "down", NULL };
-    int i;
-
-    if (s == NULL)
-    {
-        return cfvs_create;
-    }
-
-    for (i = 0; names[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, names[i]) == 0))
-        {
-            return (enum cfenvironment_state) i;
-        }
-    }
-
-    return (enum cfenvironment_state) i;
-}
-
-/***************************************************************************/
-
-enum insert_match String2InsertMatch(char *s)
-{
-    static char *names[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
-        "exact_match", NULL
-    };
-    int i;
-
-    for (i = 0; names[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, names[i]) == 0))
+        if (strcmp(needle, haystack[i]) == 0)
         {
             return i;
         }
     }
 
-    return cf_exact_match;
+    return default_value;
 }
 
-/***************************************************************************/
-
-int SyslogPriority2Int(char *s)
+MeasurePolicy MeasurePolicyFromString(const char *s)
 {
-    int i;
+    static const char *MEASURE_POLICY_TYPES[] = { "average", "sum", "first", "last",  NULL };
 
-    static char *types[] = { "emergency", "alert", "critical", "error",
-        "warning", "notice", "info", "debug", NULL
-    };
-
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return i;
-        }
-    }
-
-    return 3;
+    return FindTypeInArray(MEASURE_POLICY_TYPES, s, MEASURE_POLICY_AVERAGE, MEASURE_POLICY_NONE);
 }
 
-/***************************************************************************/
-
-enum cfdbtype Str2dbType(char *s)
+EnvironmentState EnvironmentStateFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "mysql", "postgres", NULL };
+    static const char *ENV_STATE_TYPES[] = { "create", "delete", "running", "suspended", "down", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum cfdbtype) i;
-        }
-    }
-
-    return cfd_notype;
+    return FindTypeInArray(ENV_STATE_TYPES, s, ENVIRONMENT_STATE_NONE, ENVIRONMENT_STATE_CREATE);
 }
 
-/***************************************************************************/
-
-enum package_actions Str2PackageAction(char *s)
+InsertMatchType InsertMatchTypeFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "add", "delete", "reinstall", "update", "addupdate", "patch", "verify", NULL };
+    static const char *INSERT_MATCH_TYPES[] = { "ignore_leading", "ignore_trailing", "ignore_embedded",
+                                                "exact_match", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum package_actions) i;
-        }
-    }
-
-    return cfa_pa_none;
+    return FindTypeInArray(INSERT_MATCH_TYPES, s, INSERT_MATCH_TYPE_EXACT, INSERT_MATCH_TYPE_EXACT);
 }
 
-/***************************************************************************/
-
-enum version_cmp Str2PackageSelect(char *s)
+int SyslogPriorityFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "==", "!=", ">", "<", ">=", "<=", NULL };
+    static const char *SYSLOG_PRIORITY_TYPES[] =
+    { "emergency", "alert", "critical", "error", "warning", "notice", "info", "debug", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum version_cmp) i;
-        }
-    }
-
-    return cfa_cmp_none;
+    return FindTypeInArray(SYSLOG_PRIORITY_TYPES, s, 3, 3);
 }
 
-/***************************************************************************/
-
-enum action_policy Str2ActionPolicy(char *s)
+DatabaseType DatabaseTypeFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "individual", "bulk", NULL };
+    static const char *DB_TYPES[] = { "mysql", "postgres", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum action_policy) i;
-        }
-    }
+    return FindTypeInArray(DB_TYPES, s, DATABASE_TYPE_NONE, DATABASE_TYPE_NONE);
+}
 
-    return cfa_no_ppolicy;
+PackageAction PackageActionFromString(const char *s)
+{
+    static const char *PACKAGE_ACTION_TYPES[] =
+    { "add", "delete", "reinstall", "update", "addupdate", "patch", "verify", NULL };
+
+    return FindTypeInArray(PACKAGE_ACTION_TYPES, s, PACKAGE_ACTION_NONE, PACKAGE_ACTION_NONE);
+}
+
+PackageVersionComparator PackageVersionComparatorFromString(const char *s)
+{
+    static const char *PACKAGE_SELECT_TYPES[] = { "==", "!=", ">", "<", ">=", "<=", NULL };
+
+    return FindTypeInArray(PACKAGE_SELECT_TYPES, s, PACKAGE_VERSION_COMPARATOR_NONE, PACKAGE_VERSION_COMPARATOR_NONE);
+}
+
+PackageActionPolicy PackageActionPolicyFromString(const char *s)
+{
+    static const char *ACTION_POLICY_TYPES[] = { "individual", "bulk", NULL };
+
+    return FindTypeInArray(ACTION_POLICY_TYPES, s, PACKAGE_ACTION_POLICY_NONE, PACKAGE_ACTION_POLICY_NONE);
 }
 
 /***************************************************************************/
@@ -322,7 +187,7 @@ char *Rlist2String(Rlist *list, char *sep)
 
 /***************************************************************************/
 
-int Signal2Int(char *s)
+int SignalFromString(const char *s)
 {
     int i = 0;
     Item *ip, *names = SplitString(CF_SIGNALRANGE, ',');
@@ -376,122 +241,42 @@ int Signal2Int(char *s)
 
 }
 
-/***************************************************************************/
-
-enum cfreport String2ReportLevel(char *s)
+ContextScope ContextScopeFromString(const char *scope_str)
 {
-    int i;
-    static char *types[] = { "inform", "verbose", "error", "log", NULL };
-
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum cfreport) i;
-        }
-    }
-
-    return cf_noreport;
+    static const char *CONTEXT_SCOPES[] = { "namespace", "bundle" };
+    return FindTypeInArray(CONTEXT_SCOPES, scope_str, CONTEXT_SCOPE_NAMESPACE, CONTEXT_SCOPE_NONE);
 }
 
-/***************************************************************************/
-
-enum cfhashes String2HashType(char *typestr)
+OutputLevel OutputLevelFromString(const char *level)
 {
-    int i;
+    static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
 
-    for (i = 0; CF_DIGEST_TYPES[i][0] != NULL; i++)
-    {
-        if (typestr && (strcmp(typestr, CF_DIGEST_TYPES[i][0]) == 0))
-        {
-            return (enum cfhashes) i;
-        }
-    }
-
-    return cf_nohash;
+    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
 }
 
-/****************************************************************************/
-
-enum cflinktype String2LinkType(char *s)
+FileLinkType FileLinkTypeFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "symlink", "hardlink", "relative", "absolute", NULL };
+    static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum cflinktype) i;
-        }
-    }
-
-    return cfa_symlink;
+    return FindTypeInArray(LINK_TYPES, s, FILE_LINK_TYPE_SYMLINK, FILE_LINK_TYPE_SYMLINK);
 }
 
-/****************************************************************************/
-
-enum cfcomparison String2Comparison(char *s)
+FileComparator FileComparatorFromString(const char *s)
 {
-    int i;
-    static char *types[] = { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
+    static const char *FILE_COMPARISON_TYPES[] =
+    { "atime", "mtime", "ctime", "digest", "hash", "binary", "exists", NULL };
 
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum cfcomparison) i;
-        }
-    }
-
-    return cfa_nocomparison;
+    return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-/****************************************************************************/
-
-enum representations String2Representation(char *s)
-{
-    int i;
-    static char *types[] = { "url", "web", "file", "db", "literal", "image", "portal", NULL };
-
-    for (i = 0; types[i] != NULL; i++)
-    {
-        if (s && (strcmp(s, types[i]) == 0))
-        {
-            return (enum representations) i;
-        }
-    }
-
-    return cfk_none;
-}
-
-/****************************************************************************/
-
-enum cfsbundle Type2Cfs(char *name)
-{
-    int i;
-
-    for (i = 0; i < (int) cfs_nobtype; i++)
-    {
-        if (name && (strcmp(CF_REMACCESS_SUBTYPES[i].subtype, name) == 0))
-        {
-            break;
-        }
-    }
-
-    return (enum cfsbundle) i;
-}
-
-/****************************************************************************/
-
-enum cfdatatype Typename2Datatype(char *name)
+DataType DataTypeFromString(const char *name)
 /* convert abstract data type names: int, ilist etc */
 {
     int i;
 
     CfDebug("typename2type(%s)\n", name);
 
-    for (i = 0; i < (int) cf_notype; i++)
+    for (i = 0; i < (int) DATA_TYPE_NONE; i++)
     {
         if (name && (strcmp(CF_DATATYPES[i], name) == 0))
         {
@@ -499,36 +284,28 @@ enum cfdatatype Typename2Datatype(char *name)
         }
     }
 
-    return (enum cfdatatype) i;
+    return (DataType) i;
 }
 
-/****************************************************************************/
 
-const char *AgentTypeToString(AgentType agent_type)
-{
-    return CF_AGENTTYPES[agent_type];
-}
-
-/****************************************************************************/
-
-enum cfdatatype GetControlDatatype(const char *varname, const BodySyntax *bp)
+DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
 {
     int i = 0;
 
-    for (i = 0; bp[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].range != NULL; i++)
     {
-        if (varname && (strcmp(bp[i].lval, varname) == 0))
+        if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {
-            return bp[i].dtype;
+            return body_syntax[i].dtype;
         }
     }
 
-    return cf_notype;
+    return DATA_TYPE_NONE;
 }
 
 /****************************************************************************/
 
-int GetBoolean(const char *s)
+bool BooleanFromString(const char *s)
 {
     Item *list = SplitString(CF_BOOL, ','), *ip;
     int count = 0;
@@ -557,7 +334,7 @@ int GetBoolean(const char *s)
 
 /****************************************************************************/
 
-long Str2Int(const char *s)
+long IntFromString(const char *s)
 {
     long a = CF_NOINT;
     char c = 'X';
@@ -588,11 +365,11 @@ long Str2Int(const char *s)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            CfOut(cf_inform, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
                   s, "non-value", remainder);
             if (strchr(s, '$'))
             {
-                CfOut(cf_inform, "", " !! The variable might not yet be expandable - not necessarily an error");
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! The variable might not yet be expandable - not necessarily an error");
             }
         }
     }
@@ -621,7 +398,7 @@ long Str2Int(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(cf_error, "", "Percentage out of range (%ld)", a);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%ld)", a);
                 return CF_NOINT;
             }
             else
@@ -659,7 +436,7 @@ static int GetMonthLength(int month, int year)
     }
 }
 
-long TimeAbs2Int(char *s)
+long TimeAbs2Int(const char *s)
 {
     time_t cftime;
     int i;
@@ -671,15 +448,15 @@ long TimeAbs2Int(char *s)
         return CF_NOINT;
     }
 
-    year = Str2Int(VYEAR);
+    year = IntFromString(VYEAR);
 
     if (strstr(s, ":"))         /* Hr:Min */
     {
         sscanf(s, "%2[^:]:%2[^:]:", h, m);
         month = Month2Int(VMONTH);
-        day = Str2Int(VDAY);
-        hour = Str2Int(h);
-        min = Str2Int(m);
+        day = IntFromString(VDAY);
+        hour = IntFromString(h);
+        min = IntFromString(m);
     }
     else                        /* date Month */
     {
@@ -726,7 +503,7 @@ long Months2Seconds(int m)
     }
 
     this_month = Month2Int(VMONTH);
-    year = Str2Int(VYEAR);
+    year = IntFromString(VYEAR);
 
     for (i = 0; i < m; i++)
     {
@@ -746,25 +523,16 @@ long Months2Seconds(int m)
 
 /*********************************************************************/
 
-enum cfinterval Str2Interval(char *string)
+Interval IntervalFromString(const char *string)
 {
-    static char *text[3] = { "hourly", "daily", NULL };
-    int i;
+    static const char *INTERVAL_TYPES[] = { "hourly", "daily", NULL };
 
-    for (i = 0; text[i] != NULL; i++)
-    {
-        if (string && (strcmp(text[i], string) == 0))
-        {
-            return i;
-        }
-    }
-
-    return cfa_nointerval;
+    return FindTypeInArray(INTERVAL_TYPES, string, INTERVAL_NONE, INTERVAL_NONE);
 }
 
 /*********************************************************************/
 
-int Day2Number(char *datestring)
+int Day2Number(const char *datestring)
 {
     int i = 0;
 
@@ -781,47 +549,7 @@ int Day2Number(char *datestring)
 
 /****************************************************************************/
 
-void UtcShiftInterval(time_t t, char *out, int outSz)
-/* 00 - 06, 
-   06 - 12, 
-   12 - 18, 
-   18 - 24*/
-{
-    char buf[CF_MAXVARSIZE];
-    int hr = 0, fromHr = 0, toHr = 0;
-
-    cf_strtimestamp_utc(t, buf);
-
-    sscanf(buf + 11, "%d", &hr);
-    buf[11] = '\0';
-
-    if (hr < 6)
-    {
-        fromHr = 0;
-        toHr = 6;
-    }
-    else if (hr < 12)
-    {
-        fromHr = 6;
-        toHr = 12;
-    }
-    else if (hr < 18)
-    {
-        fromHr = 12;
-        toHr = 18;
-    }
-    else
-    {
-        fromHr = 18;
-        toHr = 24;
-    }
-
-    snprintf(out, outSz, "%s %02d-%02d", buf, fromHr, toHr);
-}
-
-/****************************************************************************/
-
-double Str2Double(const char *s)
+double DoubleFromString(const char *s)
 {
     double a = CF_NODOUBLE;
     char remainder[CF_BUFSIZE];
@@ -867,7 +595,7 @@ double Str2Double(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(cf_error, "", "Percentage out of range (%.2lf)", a);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
                 return CF_NOINT;
             }
             else
@@ -921,7 +649,7 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         FatalError("Could not make sense of integer range [%s]", intrange);
     }
 
@@ -929,99 +657,53 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
     *max = lmax;
 }
 
-/*********************************************************************/
-
-enum cf_acl_method Str2AclMethod(char *string)
+AclMethod AclMethodFromString(const char *string)
 {
-    static char *text[3] = { "append", "overwrite", NULL };
-    int i;
+    static const char *ACL_METHOD_TYPES[] = { "append", "overwrite", NULL };
 
-    for (i = 0; i < 2; i++)
-    {
-        if (string && (strcmp(text[i], string) == 0))
-        {
-            return i;
-        }
-    }
-
-    return cfacl_nomethod;
+    return FindTypeInArray(ACL_METHOD_TYPES, string, ACL_METHOD_NONE, ACL_METHOD_NONE);
 }
 
-/*********************************************************************/
-
-enum cf_acl_type Str2AclType(char *string)
+AclType AclTypeFromString(const char *string)
 {
-    static char *text[4] = { "generic", "posix", "ntfs", NULL };
-    int i;
+    static const char *ACL_TYPES[]= { "generic", "posix", "ntfs", NULL };
 
-    for (i = 0; i < 3; i++)
-    {
-        if (string && (strcmp(text[i], string) == 0))
-        {
-            return i;
-        }
-    }
-
-    return cfacl_notype;
+    return FindTypeInArray(ACL_TYPES, string, ACL_TYPE_NONE, ACL_TYPE_NONE);
 }
 
-/*********************************************************************/
-
-enum cf_acl_inherit Str2AclInherit(char *string)
+AclInheritance AclInheritanceFromString(const char *string)
 {
-    static char *text[5] = { "nochange", "specify", "parent", "clear", NULL };
-    int i;
+    static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
 
-    for (i = 0; i < 4; i++)
-    {
-        if (string && (strcmp(text[i], string) == 0))
-        {
-            return i;
-        }
-    }
-
-    return cfacl_noinherit;
+    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_INHERITANCE_NONE, ACL_INHERITANCE_NONE);
 }
 
-/*********************************************************************/
-
-enum cf_srv_policy Str2ServicePolicy(char *string)
+ServicePolicy ServicePolicyFromString(const char *string)
 {
-    static char *text[5] = { "start", "stop", "disable", "restart", NULL };
-    int i;
+    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
 
-    for (i = 0; i < 4; i++)
-    {
-        if (string && (strcmp(text[i], string) == 0))
-        {
-            return i;
-        }
-    }
-
-    return cfsrv_start;
+    return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }
 
-/*********************************************************************/
-
-char *Dtype2Str(enum cfdatatype dtype)
+const char *DataTypeToString(DataType dtype)
 {
     switch (dtype)
     {
-    case cf_str:
+    case DATA_TYPE_STRING:
         return "s";
-    case cf_slist:
+    case DATA_TYPE_STRING_LIST:
         return "sl";
-    case cf_int:
+    case DATA_TYPE_INT:
         return "i";
-    case cf_ilist:
+    case DATA_TYPE_INT_LIST:
         return "il";
-    case cf_real:
+    case DATA_TYPE_REAL:
         return "r";
-    case cf_rlist:
+    case DATA_TYPE_REAL_LIST:
         return "rl";
-    case cf_opts:
+    case DATA_TYPE_OPTION:
         return "m";
-    case cf_olist:
+    case DATA_TYPE_OPTION_LIST:
         return "ml";
     default:
         return "D?";
@@ -1080,14 +762,14 @@ const char *DataTypeShortToType(char *short_type)
 /* Level                                                             */
 /*********************************************************************/
 
-int Month2Int(char *string)
+int Month2Int(const char *string)
 {
     return MonthLen2Int(string, MAX_MONTH_NAME);
 }
 
 /*************************************************************/
 
-int MonthLen2Int(char *string, int len)
+int MonthLen2Int(const char *string, int len)
 {
     int i;
 
@@ -1125,7 +807,7 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
 
 /*********************************************************************/
 
-const char *GetArg0(const char *execstr)
+const char *CommandArg0(const char *execstr)
 /** 
  * WARNING: Not thread-safe.
  **/
@@ -1160,7 +842,7 @@ const char *GetArg0(const char *execstr)
 
 /*************************************************************/
 
-void CommPrefix(char *execstr, char *comm)
+void CommandPrefix(char *execstr, char *comm)
 {
     char *sp;
 
@@ -1198,39 +880,6 @@ int NonEmptyLine(char *line)
     return false;
 }
 
-/*************************************************************/
-
-char *Item2String(Item *ip)
-{
-    Item *currItem;
-    int stringSz = 0;
-    char *buf;
-
-    // compute required buffer size
-    for (currItem = ip; currItem != NULL; currItem = currItem->next)
-    {
-        stringSz += strlen(currItem->name);
-        stringSz++;             // newline space
-    }
-
-    // we automatically get \0-termination because we are not appending a \n after the last item
-
-    buf = xcalloc(1, stringSz);
-
-    // do the copy
-    for (currItem = ip; currItem != NULL; currItem = currItem->next)
-    {
-        strcat(buf, currItem->name);
-
-        if (currItem->next != NULL)     // no newline after last item
-        {
-            strcat(buf, "\n");
-        }
-    }
-
-    return buf;
-}
-
 /*******************************************************************/
 
 static int IsSpace(char *remainder)
@@ -1250,7 +899,7 @@ static int IsSpace(char *remainder)
 
 /*******************************************************************/
 
-int IsRealNumber(char *s)
+int IsRealNumber(const char *s)
 {
     double a = CF_NODOUBLE;
 
@@ -1262,24 +911,6 @@ int IsRealNumber(char *s)
     }
 
     return true;
-}
-
-/********************************************************************/
-
-enum cfd_menu String2Menu(const char *s)
-{
-    static const char *menus[] = { "delta", "full", "relay", "collect_call", NULL };
-    int i;
-
-    for (i = 0; menus[i] != NULL; i++)
-    {
-        if (strcmp(s, menus[i]) == 0)
-        {
-            return i;
-        }
-    }
-
-    return cfd_menu_error;
 }
 
 /*******************************************************************/
@@ -1424,11 +1055,11 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                CfOut(cf_inform, "", " !! Unknown user in promise \'%s\'\n", ip->name);
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user in promise \'%s\'\n", ip->name);
 
                 if (pp != NULL)
                 {
-                    PromiseRef(cf_inform, pp);
+                    PromiseRef(OUTPUT_LEVEL_INFORM, pp);
                 }
 
                 uid = CF_UNKNOWN_OWNER; /* signal user not found */
@@ -1461,7 +1092,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unknown user %s in promise\n", uidbuff);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user %s in promise\n", uidbuff);
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1498,11 +1129,11 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
 
             if (pp)
             {
-                PromiseRef(cf_inform, pp);
+                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
             }
 
             gid = CF_UNKNOWN_GROUP;

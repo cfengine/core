@@ -32,21 +32,47 @@
 
 #include <stdio.h>
 
-int LvalWantsBody(char *stype, char *lval);
-int CheckParseVariableName(char *name);
-void CheckConstraint(char *type, char *ns, char *name, char *lval, Rval rval, SubTypeSyntax ss);
-void CheckSelection(char *type, char *name, char *lval, Rval rval);
-void CheckConstraintTypeMatch(const char *lval, Rval rval, enum cfdatatype dt, const char *range, int level);
-int CheckParseClass(const char *lv, const char *s, const char *range);
-enum cfdatatype StringDataType(const char *scopeid, const char *string);
-enum cfdatatype ExpectedDataType(char *lvalname);
+typedef enum
+{
+    SYNTAX_TYPE_MATCH_OK,
+
+    SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED,
+    SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED,
+    SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS,
+    SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR,
+    SYNTAX_TYPE_MATCH_ERROR_GOT_LIST,
+
+    SYNTAX_TYPE_MATCH_ERROR_SCALAR_OUT_OF_RANGE,
+
+    SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION,
+
+    SYNTAX_TYPE_MATCH_ERROR_INT_PARSE,
+    SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE,
+
+    SYNTAX_TYPE_MATCH_ERROR_REAL_INF,
+    SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE,
+
+    SYNTAX_TYPE_MATCH_ERROR_OPTS_OUT_OF_RANGE,
+
+    SYNTAX_TYPE_MATCH_ERROR_FNCALL_RETURN_TYPE,
+    SYNTAX_TYPE_MATCH_ERROR_FNCALL_UNKNOWN,
+
+    SYNTAX_TYPE_MATCH_ERROR_CONTEXT_OUT_OF_RANGE,
+
+    SYNTAX_TYPE_MATCH_MAX
+} SyntaxTypeMatch;
+
+const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
+
+int CheckParseVariableName(const char *name);
+SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
+SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
+DataType StringDataType(const char *scopeid, const char *string);
+DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
 
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);
-
-/* print a parse tree of the given policy (bundles, bodies) */
-void PolicyPrintAsJson(Writer *writer, const char *filename, Seq *bundles, Seq *bodies);
 
 #endif

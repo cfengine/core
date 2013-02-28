@@ -25,7 +25,6 @@
 #include "verify_services.h"
 
 #include "verify_methods.h"
-#include "constraints.h"
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
@@ -33,24 +32,26 @@
 #include "fncall.h"
 #include "transaction.h"
 #include "logging.h"
+#include "rlist.h"
+#include "policy.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(Promise *pp, const ReportContext *report_context)
+void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     Attributes a = { {0} };
 
-    a = GetServicesAttributes(pp);
+    a = GetServicesAttributes(ctx, pp);
 
     SetServiceDefaults(&a);
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(a, pp, report_context);
+        VerifyServices(ctx, a, pp, report_context);
     }
 }
 
@@ -62,24 +63,24 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     switch (a.service.service_policy)
     {
-    case cfsrv_start:
+    case SERVICE_POLICY_START:
         break;
 
-    case cfsrv_stop:
-    case cfsrv_disable:
+    case SERVICE_POLICY_STOP:
+    case SERVICE_POLICY_DISABLE:
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
-            CfOut(cf_error, "",
+            CfOut(OUTPUT_LEVEL_ERROR, "",
                   "!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
                   pp->promiser, a.service.service_autostart_policy);
-            PromiseRef(cf_error, pp);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
         break;
 
     default:
-        CfOut(cf_error, "", "!! Invalid service policy for service \"%s\"", pp->promiser);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Invalid service policy for service \"%s\"", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -87,16 +88,16 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
     {
         if (strcmp(pp->promiser, dep->item) == 0)
         {
-            CfOut(cf_error, "", "!! Service promiser \"%s\" has itself as dependency", pp->promiser);
-            PromiseRef(cf_error, pp);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service promiser \"%s\" has itself as dependency", pp->promiser);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
     }
 
     if (a.service.service_type == NULL)
     {
-        CfOut(cf_error, "", "!! Service type for service \"%s\" is not known", pp->promiser);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service type for service \"%s\" is not known", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -104,9 +105,9 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (strcmp(a.service.service_type, "windows") != 0)
     {
-        CfOut(cf_error, "", "!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
               pp->promiser, a.service.service_type);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
 
@@ -147,7 +148,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     CfLock thislock;
 
@@ -168,16 +169,16 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
         return;
     }
 
-    NewScalar("this", "promiser", pp->promiser, cf_str);
-    PromiseBanner(pp);
+    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    PromiseBanner(ctx, pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
     {
-        VerifyWindowsService(a, pp);
+        VerifyWindowsService(ctx, a, pp);
     }
     else
     {
-        DoVerifyServices(a, pp, report_context);
+        DoVerifyServices(ctx, a, pp, report_context);
     }
 
     DeleteScalar("this", "promiser");
@@ -188,44 +189,44 @@ void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_conte
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *report_context)
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
 
 // Need to set up the default service pack to eliminate syntax
 
-    if (GetConstraintValue("service_bundle", pp, CF_SCALAR) == NULL)
+    if (ConstraintGetRvalValue(ctx, "service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {
-        case cfsrv_start:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "start", CF_SCALAR);
+        case SERVICE_POLICY_START:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "start");
             break;
 
-        case cfsrv_restart:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+        case SERVICE_POLICY_RESTART:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
 
-        case cfsrv_reload:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+        case SERVICE_POLICY_RELOAD:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
             
-        case cfsrv_stop:
-        case cfsrv_disable:
+        case SERVICE_POLICY_STOP:
+        case SERVICE_POLICY_DISABLE:
         default:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "stop", CF_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "stop");
             break;
 
         }
 
-        default_bundle = NewFnCall("default:standard_services", args);
+        default_bundle = FnCallNew("default:standard_services", args);
 
-        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL }, "any", false);
         a.havebundle = true;
     }
 
@@ -233,33 +234,39 @@ static void DoVerifyServices(Attributes a, Promise *pp, const ReportContext *rep
 
     switch (a.service.service_policy)
     {
-    case cfsrv_start:
-        NewScalar("this", "service_policy", "start", cf_str);
+    case SERVICE_POLICY_START:
+        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
-    case cfsrv_restart:
-        NewScalar("this", "service_policy", "restart", cf_str);
+    case SERVICE_POLICY_RESTART:
+        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
-    case cfsrv_reload:
-        NewScalar("this", "service_policy", "reload", cf_str);
+    case SERVICE_POLICY_RELOAD:
+        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
-    case cfsrv_stop:
-    case cfsrv_disable:
+    case SERVICE_POLICY_STOP:
+    case SERVICE_POLICY_DISABLE:
     default:
-        NewScalar("this", "service_policy", "stop", cf_str);
+        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 
-    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
+    const Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", default_bundle->name);
+    if (!bp)
     {
-        cfPS(cf_inform, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
+    }
+
+    if (default_bundle && bp == NULL)
+    {
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)
     {
-        VerifyMethod("service_bundle", a, pp, report_context);  // Send list of classes to set privately?
+        VerifyMethod(ctx, "service_bundle", a, pp, report_context);  // Send list of classes to set privately?
     }
 }
 

@@ -1,4 +1,4 @@
-/* 
+/*
 
    Copyright (C) Cfengine AS
 
@@ -31,13 +31,13 @@
 #include "cfstream.h"
 #include "logging.h"
 #include "syntax.h"
+#include "rlist.h"
+#include "parser.h"
 
 /*******************************************************************/
 
-static bool SHOW_PARSE_TREE;
-
 static void ThisAgentInit(void);
-static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -60,9 +60,8 @@ static const struct option OPTIONS[] =
     {"negate", required_argument, 0, 'N'},
     {"inform", no_argument, 0, 'I'},
     {"diagnostic", no_argument, 0, 'x'},
-    {"analysis", no_argument, 0, 'a'},
     {"reports", no_argument, 0, 'r'},
-    {"parse-tree", no_argument, 0, 'p'},
+    {"policy-output-format", required_argument, 0, 'p'},
     {"full-check", no_argument, 0, 'c'},
     {NULL, 0, 0, '\0'}
 };
@@ -80,9 +79,8 @@ static const char *HINTS[] =
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Activate internal diagnostics (developers only)",
-    "Perform additional analysis of configuration",
     "Generate reports about configuration and insert into CFDB",
-    "Print a parse tree for the policy file in JSON format",
+    "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Ensure full policy integrity checks",
     NULL
 };
@@ -93,16 +91,46 @@ static const char *HINTS[] =
 
 int main(int argc, char *argv[])
 {
-    GenericAgentConfig *config = CheckOpts(argc, argv);
+    EvalContext *ctx = EvalContextNew();
+    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     ReportContext *report_context = OpenReports(config->agent_type);
     
-    Policy *policy = GenericInitialize(config, report_context, false);
+    GenericAgentDiscoverContext(ctx, config, report_context);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
 
-    if (SHOW_PARSE_TREE)
+    if (SHOWREPORTS)
     {
-        Writer *writer = FileWriter(stdout);
-        PolicyPrintAsJson(writer, config->input_file, policy->bundles, policy->bodies);
-        WriterClose(writer);
+        CompilationReport(ctx, policy, config->input_file);
+    }
+
+    CheckLicenses(ctx);
+
+    switch (config->agent_specific.common.policy_output_format)
+    {
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
+        {
+            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Writer *writer = FileWriter(stdout);
+            PolicyToString(policy, writer);
+            WriterClose(writer);
+            PolicyDestroy(output_policy);
+        }
+        break;
+
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
+        {
+            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            JsonElement *json_policy = PolicyToJson(output_policy);
+            Writer *writer = FileWriter(stdout);
+            JsonElementPrint(writer, json_policy, 2);
+            WriterClose(writer);
+            JsonElementDestroy(json_policy);
+            PolicyDestroy(output_policy);
+        }
+        break;
+
+    case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
+        break;
     }
 
     ThisAgentInit();
@@ -110,15 +138,16 @@ int main(int argc, char *argv[])
 
     GenericAgentConfigDestroy(config);
     CloseReports("commmon", report_context);
+    EvalContextDestroy(ctx);
 
     if (ERRORCOUNT > 0)
     {
-        CfOut(cf_verbose, "", " !! Inputs are invalid\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
         exit(1);
     }
     else
     {
-        CfOut(cf_verbose, "", " -> Inputs are valid\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
         exit(0);
     }
 }
@@ -127,14 +156,14 @@ int main(int argc, char *argv[])
 /* Level 1                                                         */
 /*******************************************************************/
 
-GenericAgentConfig *CheckOpts(int argc, char **argv)
+GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "advnIf:D:N:VSrxMb:pcg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -154,17 +183,37 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'd':
-            HardClass("opt_debug");
+            HardClass(ctx, "opt_debug");
             DEBUG = true;
             break;
 
         case 'b':
             if (optarg)
             {
-                Rlist *bundlesequence = SplitStringAsRList(optarg, ',');
+                Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
                 GenericAgentConfigSetBundleSequence(config, bundlesequence);
-                DeleteRlist(bundlesequence);
+                RlistDestroy(bundlesequence);
                 CBUNDLESEQUENCE_STR = optarg; // TODO: wtf is this
+            }
+            break;
+
+        case 'p':
+            if (strcmp("none", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE;
+            }
+            else if (strcmp("cf", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF;
+            }
+            else if (strcmp("json", optarg) == 0)
+            {
+                config->agent_specific.common.policy_output_format = GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON;
+            }
+            else
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -173,11 +222,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(optarg);
+            NewClassesFromString(ctx, optarg);
             break;
 
         case 'N':
-            NegateClassesFromString(optarg);
+            NegateClassesFromString(ctx, optarg);
             break;
 
         case 'I':
@@ -192,7 +241,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            HardClass("opt_dry_run");
+            HardClass(ctx, "opt_dry_run");
             break;
 
         case 'V':
@@ -208,22 +257,12 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'r':
-            PrependRScalar(&GOALS, "goal.*", CF_SCALAR);
             SHOWREPORTS = true;
             break;
 
         case 'x':
-            CfOut(cf_error, "", "Self-diagnostic functionality is retired.");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
-
-        case 'a':
-            printf("Self-analysis is not yet implemented.\n");
-            exit(0);
-            break;
-
-        case 'p':
-            SHOW_PARSE_TREE = true;
-            break;
 
         default:
             Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
@@ -234,7 +273,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(cf_error, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
     }
 
     CfDebug("Set debugging\n");
@@ -246,7 +285,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
 static void ThisAgentInit(void)
 {
-    AddGoalsToDB(Rlist2String(GOALS, ","));
     SHOWREPORTS = false;
 }
 

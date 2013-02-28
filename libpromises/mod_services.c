@@ -27,23 +27,23 @@
 
 static const BodySyntax CF_SERVMETHOD_BODY[] =
 {
-    {"service_args", cf_str, "", "Parameters for starting the service as command"},
-    {"service_autostart_policy", cf_opts, "none,boot_time,on_demand",
+    {"service_args", DATA_TYPE_STRING, "", "Parameters for starting the service as command"},
+    {"service_autostart_policy", DATA_TYPE_OPTION, "none,boot_time,on_demand",
      "Should the service be started automatically by the OS"},
-    {"service_bundle", cf_bundle, CF_BUNDLE,
+    {"service_bundle", DATA_TYPE_BUNDLE, CF_BUNDLE,
      "A bundle reference with two arguments (service_name,args) used if the service type is generic"},
-    {"service_dependence_chain", cf_opts, "ignore,start_parent_services,stop_child_services,all_related",
+    {"service_dependence_chain", DATA_TYPE_OPTION, "ignore,start_parent_services,stop_child_services,all_related",
      "How to handle dependencies and dependent services"},
-    {"service_type", cf_opts, "windows,generic", "Service abstraction type"},
-    {NULL, cf_notype, NULL, NULL}
+    {"service_type", DATA_TYPE_OPTION, "windows,generic", "Service abstraction type"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 static const BodySyntax CF_SERVICES_BODIES[] =
 {
-    {"service_policy", cf_opts, "start,stop,disable,restart,reload", "Policy for cfengine service status"},
-    {"service_dependencies", cf_slist, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
-    {"service_method", cf_body, CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"},
-    {NULL, cf_notype, NULL, NULL}
+    {"service_policy", DATA_TYPE_OPTION, "start,stop,disable,restart,reload", "Policy for cfengine service status"},
+    {"service_dependencies", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
+    {"service_method", DATA_TYPE_BODY, CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"},
+    {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
 const SubTypeSyntax CF_SERVICES_SUBTYPES[] =

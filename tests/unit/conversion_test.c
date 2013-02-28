@@ -7,8 +7,8 @@
 
 static void str_to_service_policy(void **state)
 {
-    assert_int_equal(Str2ServicePolicy("start"), cfsrv_start);
-    assert_int_equal(Str2ServicePolicy("restart"), cfsrv_restart);
+    assert_int_equal(ServicePolicyFromString("start"), SERVICE_POLICY_START);
+    assert_int_equal(ServicePolicyFromString("restart"), SERVICE_POLICY_RESTART);
 }
 
 int main()

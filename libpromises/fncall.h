@@ -27,19 +27,23 @@
 
 #include "cf3.defs.h"
 
-#include "json.h"
+struct FnCall_
+{
+    char *name;
+    Rlist *args;
+    char *ns;
+};
 
-int IsBuiltinFnCall(Rval rval);
-FnCall *NewFnCall(const char *name, Rlist *args);
-FnCall *CopyFnCall(const FnCall *f);
-int PrintFnCall(char *buffer, int bufsize, const FnCall *fp);
-void DeleteFnCall(FnCall *fp);
-void ShowFnCall(FILE *fout, const FnCall *fp);
-FnCallResult EvaluateFunctionCall(FnCall *fp, const Promise *pp);
-enum cfdatatype FunctionReturnType(const char *name);
-const FnCallType *FindFunction(const char *name);
-void SetFnCallReturnStatus(char *fname, int status, char *message);
-void FnCallPrint(Writer *writer, const FnCall *fp);
-JsonElement *FnCallToJson(const FnCall *fp);
+bool FnCallIsBuiltIn(Rval rval);
+
+FnCall *FnCallNew(const char *name, Rlist *args);
+FnCall *FnCallCopy(const FnCall *f);
+void FnCallDestroy(FnCall *fp);
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp);
+
+const FnCallType *FnCallTypeGet(const char *name);
+
+// TODO: should probably demolish this eventually
+void FnCallShow(FILE *fout, const FnCall *fp);
 
 #endif

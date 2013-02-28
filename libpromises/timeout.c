@@ -30,8 +30,8 @@
 
 /* Prototypes */
 
-static void AddTimeClass(time_t time);
-static void RemoveTimeClass(time_t time);
+static void AddTimeClass(EvalContext *ctx, time_t time);
+static void RemoveTimeClass(EvalContext *ctx, time_t time);
 
 /*************************************************************************/
 
@@ -50,37 +50,37 @@ void TimeOut()
 
     if (ALARM_PID != -1)
     {
-        CfOut(cf_verbose, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
         GracefulTerminate(ALARM_PID);
     }
     else
     {
-        CfOut(cf_verbose, "", "%s> Time out\n", VPREFIX);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s> Time out\n", VPREFIX);
     }
 }
 
 /*************************************************************************/
 
-void SetReferenceTime(int setclasses)
+void SetReferenceTime(EvalContext *ctx, int setclasses)
 {
     time_t tloc;
     char vbuff[CF_BUFSIZE];
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        CfOut(cf_error, "time", "Couldn't read system clock\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "time", "Couldn't read system clock\n");
     }
 
     CFSTARTTIME = tloc;
 
     snprintf(vbuff, CF_BUFSIZE, "%s", cf_ctime(&tloc));
 
-    CfOut(cf_verbose, "", "Reference time set to %s\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reference time set to %s\n", cf_ctime(&tloc));
 
     if (setclasses)
     {
-        RemoveTimeClass(tloc);
-        AddTimeClass(tloc);
+        RemoveTimeClass(ctx, tloc);
+        AddTimeClass(ctx, tloc);
     }
 }
 
@@ -92,7 +92,7 @@ void SetStartTime(void)
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        CfOut(cf_error, "time", "Couldn't read system clock\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "time", "Couldn't read system clock\n");
     }
 
     CFINITSTARTTIME = tloc;
@@ -102,7 +102,7 @@ void SetStartTime(void)
 
 /*********************************************************************/
 
-static void RemoveTimeClass(time_t time)
+static void RemoveTimeClass(EvalContext *ctx, time_t time)
 {
     int i, j;
     struct tm parsed_time;
@@ -110,7 +110,7 @@ static void RemoveTimeClass(time_t time)
 
     if (localtime_r(&time, &parsed_time) == NULL)
     {
-        CfOut(cf_error, "localtime_r", "Unable to parse passed time");
+        CfOut(OUTPUT_LEVEL_ERROR, "localtime_r", "Unable to parse passed time");
         return;
     }
 
@@ -119,28 +119,28 @@ static void RemoveTimeClass(time_t time)
     for( i = 0; i < 3; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Lcycle_%d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 
 /* Year */
 
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year - 1 + 1900);
-    DeleteHardClass(buf);
+    EvalContextHeapRemoveHard(ctx, buf);
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    DeleteHardClass(buf);
+    EvalContextHeapRemoveHard(ctx, buf);
 
 /* Month */
 
     for( i = 0; i < 12; i++ )
     {
-        DeleteHardClass(MONTH_TEXT[i]);
+        EvalContextHeapRemoveHard(ctx, MONTH_TEXT[i]);
     }
 
 /* Day of week */
 
     for( i = 0; i < 7; i++ )
     {
-        DeleteHardClass(DAY_TEXT[i]);
+        EvalContextHeapRemoveHard(ctx, DAY_TEXT[i]);
     }
 
 /* Day */
@@ -148,14 +148,14 @@ static void RemoveTimeClass(time_t time)
     for( i = 1; i < 32; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Day%d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 
 /* Shift */
 
     for( i = 0; i < 4; i++ )
     {
-        DeleteHardClass(SHIFT_TEXT[i]);
+        EvalContextHeapRemoveHard(ctx, SHIFT_TEXT[i]);
     }
 
 /* Hour */
@@ -163,7 +163,7 @@ static void RemoveTimeClass(time_t time)
     for( i = 0; i < 24; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Hr%02d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 
 /* GMT hour */
@@ -171,7 +171,7 @@ static void RemoveTimeClass(time_t time)
     for( i = 0; i < 24; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "GMT_Hr%02d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 
 /* Quarter */
@@ -179,11 +179,11 @@ static void RemoveTimeClass(time_t time)
     for( i = 1; i <= 4; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Q%d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
         for( j = 0; j < 24; j++ )
         {
             snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", j, i);
-            DeleteHardClass(buf);
+            EvalContextHeapRemoveHard(ctx, buf);
         }
     }
 
@@ -192,19 +192,19 @@ static void RemoveTimeClass(time_t time)
     for( i = 0; i < 60; i++ )
     {
         snprintf(buf, CF_BUFSIZE, "Min%02d", i);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 
     for( i = 0; i < 60; i += 5 )
     {
         snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", i, (i + 5) % 60);
-        DeleteHardClass(buf);
+        EvalContextHeapRemoveHard(ctx, buf);
     }
 }
 
 /*********************************************************************/
 
-static void AddTimeClass(time_t time)
+static void AddTimeClass(EvalContext *ctx, time_t time)
 {
     struct tm parsed_time;
     struct tm gmt_parsed_time;
@@ -213,31 +213,31 @@ static void AddTimeClass(time_t time)
 
     if (localtime_r(&time, &parsed_time) == NULL)
     {
-        CfOut(cf_error, "localtime_r", "Unable to parse passed time");
+        CfOut(OUTPUT_LEVEL_ERROR, "localtime_r", "Unable to parse passed time");
         return;
     }
 
     if (gmtime_r(&time, &gmt_parsed_time) == NULL)
     {
-        CfOut(cf_error, "gmtime_r", "Unable to parse passed date");
+        CfOut(OUTPUT_LEVEL_ERROR, "gmtime_r", "Unable to parse passed date");
         return;
     }
 
 /* Lifecycle */
 
     snprintf(buf, CF_BUFSIZE, "Lcycle_%d", ((parsed_time.tm_year + 1900) % 3));
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* Year */
 
     snprintf(VYEAR, CF_BUFSIZE, "%04d", parsed_time.tm_year + 1900);
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* Month */
 
     strlcpy(VMONTH, MONTH_TEXT[parsed_time.tm_mon], 4);
-    HardClass(MONTH_TEXT[parsed_time.tm_mon]);
+    HardClass(ctx, MONTH_TEXT[parsed_time.tm_mon]);
 
 /* Day of week */
 
@@ -246,48 +246,48 @@ static void AddTimeClass(time_t time)
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
     day_text_index = (parsed_time.tm_wday + 6) % 7;
-    HardClass(DAY_TEXT[day_text_index]);
+    HardClass(ctx, DAY_TEXT[day_text_index]);
 
 /* Day */
 
     snprintf(VDAY, CF_BUFSIZE, "%d", parsed_time.tm_mday);
     snprintf(buf, CF_BUFSIZE, "Day%d", parsed_time.tm_mday);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* Shift */
 
     strcpy(VSHIFT, SHIFT_TEXT[parsed_time.tm_hour / 6]);
-    HardClass(VSHIFT);
+    HardClass(ctx, VSHIFT);
 
 /* Hour */
 
     snprintf(buf, CF_BUFSIZE, "Hr%02d", parsed_time.tm_hour);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* GMT hour */
 
     snprintf(buf, CF_BUFSIZE, "GMT_Hr%d\n", gmt_parsed_time.tm_hour);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* Quarter */
 
     quarter = parsed_time.tm_min / 15 + 1;
 
     snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
-    HardClass(buf);
+    HardClass(ctx, buf);
     snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", parsed_time.tm_hour, quarter);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
 /* Minute */
 
     snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
-    HardClass(buf);
+    HardClass(ctx, buf);
 
     interval_start = (parsed_time.tm_min / 5) * 5;
     interval_end = (interval_start + 5) % 60;
 
     snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
-    HardClass(buf);
+    HardClass(ctx, buf);
 }
 
 /*********************************************************************/
@@ -309,7 +309,7 @@ bool IsReadReady(int fd, int timeout_sec)
 
     if(ret < 0)
     {
-        CfOut(cf_error, "select", "!! IsReadReady: Failed checking for data");
+        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
         return false;
     }
 
@@ -324,7 +324,7 @@ bool IsReadReady(int fd, int timeout_sec)
     }
 
     // can we get here?
-    CfOut(cf_error, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
 
     return false;
 }

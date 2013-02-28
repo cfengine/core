@@ -33,18 +33,16 @@ ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
 ssize_t FileReadMax(char **output, char *filename, size_t size_max);
 bool FileWriteOver(char *filename, char *contents);
 
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp);
+int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp);
 
-int MakeParentDirectory(char *parentandchild, int force, const ReportContext *report_context);
-int MakeParentDirectory2(char *parentandchild, int force, const ReportContext *report_context, bool enforce_promise);
+int MakeParentDirectory(char *parentandchild, int force);
+int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
 int FileSanityChecks(char *path, Attributes a, Promise *pp);
-
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a, const Promise *pp);
 
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp);
 
 #endif

@@ -38,11 +38,11 @@ typedef struct
     int column;
     char **rowdata;
     char *blank;
-    enum cfdbtype type;
+    DatabaseType type;
     void *data;                 /* Generic pointer to RDBMS-specific data */
 } CfdbConn;
 
-int CfConnectDB(CfdbConn *cfdb, enum cfdbtype dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
+int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbuser, char *passwd, char *db);
 void CfCloseDB(CfdbConn *cfdb);
 void CfVoidQueryDB(CfdbConn *cfdb, char *query);
 void CfNewQueryDB(CfdbConn *cfdb, char *query);

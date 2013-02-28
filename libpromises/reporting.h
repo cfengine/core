@@ -30,22 +30,21 @@
 #include "sequence.h"
 #include "writer.h"
 
+struct ReportContext_
+{
+    Writer *report_writers[REPORT_OUTPUT_TYPE_MAX];
+};
+
 ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);
 
-void ReportHtmlPromiseBegin(Writer *writer);
-void ReportHtmlPromiseEnd(Writer *writer);
-
-void ShowPromises(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
-void ShowPromise(const ReportContext *context, ReportOutputType type, const Promise *pp, int indent);
+void ShowPromises(EvalContext *ctx, const ReportContext *context, const Seq *bundles, const Seq *bodies);
+void ShowPromise(EvalContext *ctx, const ReportContext *context, const Promise *pp, int indent);
 void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
-void ShowPromiseInReport(const ReportContext *context, ReportOutputType type, const char *version, const Promise *pp, int indent);
-void ShowPromisesInReport(const ReportContext *context, ReportOutputType type, const Seq *bundles, const Seq *bodies);
-void ShowContext(const ReportContext *report_context);
+void ShowContext(EvalContext *ctx, const ReportContext *report_context);
 
 // stdout only
-void SyntaxTree(void);
 void ReportError(char *s);
 void BannerSubType(const char *bundlename, const char *type, int p);
 void BannerSubSubType(const char *bundlename, const char *type);

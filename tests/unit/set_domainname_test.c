@@ -1,6 +1,8 @@
 #include "cf3.defs.h"
 
 #include "sysinfo.h"
+#include "env_context.h"
+#include "item_lib.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -44,7 +46,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void HardClass(const char *classname)
+void HardClass(EvalContext *ctx, const char *classname)
 {
     int i;
 
@@ -74,12 +76,12 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
+void NewScalar(const char *namespace, const char *varname, const char *value, DataType type)
 {
     int i;
 
     assert_string_equal(namespace, "sys");
-    assert_int_equal(type, cf_str);
+    assert_int_equal(type, DATA_TYPE_STRING);
 
     for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
     {
@@ -98,7 +100,8 @@ static void test_set_names(void **state)
 {
     int i = 0;
 
-    DetectDomainName("laptop.intra");
+    EvalContext *ctx = EvalContextNew();
+    DetectDomainName(ctx, "laptop.intra");
 
     for (i = 0; i < sizeof(expected_classes) / sizeof(expected_classes[0]); ++i)
     {
@@ -109,6 +112,7 @@ static void test_set_names(void **state)
     {
         assert_int_equal(expected_vars[i].found, true);
     }
+    EvalContextDestroy(ctx);
 }
 
 int main()
@@ -127,6 +131,47 @@ int main()
 
 int LOOKUP = false;
 
+EvalContext *EvalContextNew(void)
+{
+    EvalContext *ctx = xmalloc(sizeof(EvalContext));
+
+    ctx->heap_soft = StringSetNew();
+    ctx->heap_hard = StringSetNew();
+
+    return ctx;
+}
+
+void EvalContextDestroy(EvalContext *ctx)
+{
+    if (ctx)
+    {
+        StringSetDestroy(ctx->heap_soft);
+        StringSetDestroy(ctx->heap_hard);
+    }
+}
+
+void DeleteItemList(Item *item) /* delete starting from item */
+{
+    Item *ip, *next;
+
+    for (ip = item; ip != NULL; ip = next)
+    {
+        next = ip->next;        // save before free
+
+        if (ip->name != NULL)
+        {
+            free(ip->name);
+        }
+
+        if (ip->classes != NULL)
+        {
+            free(ip->classes);
+        }
+
+        free((char *) ip);
+    }
+}
+
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 {
     fail();
@@ -138,7 +183,7 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     fail();
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
 }
@@ -167,11 +212,6 @@ void FatalError(char *s, ...)
 {
     fail();
     exit(42);
-}
-
-void DeleteItemList(Item *item)
-{
-    fail();
 }
 
 Item *SplitString(const char *string, char sep)
@@ -219,7 +259,7 @@ void LoadSlowlyVaryingObservations(void)
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     fail();
 }
@@ -229,7 +269,7 @@ char *MapName(char *s)
     fail();
 }
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     fail();
 }
@@ -239,7 +279,7 @@ void Unix_GetInterfaceInfo(AgentType ag)
     fail();
 }
 
-void EnterpriseContext(void)
+void EnterpriseContext(EvalContext *ctx)
 {
     fail();
 }
@@ -254,7 +294,7 @@ ssize_t CfReadLine(char *buff, int size, FILE *fp)
     fail();
 }
 
-bool IsDefinedClass(const char *class)
+bool IsDefinedClass(EvalContext *ctx, const char *class, const char *ns)
 {
     fail();
 }
@@ -264,17 +304,17 @@ void DeleteVariable(const char *scope, const char *id)
     fail();
 }
 
-Rlist *ParseShownRlist(char *string)
+Rlist *RlistParseShown(char *string)
 {
     fail();
 }
 
-void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
+void NewList(const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }
 
-void DeleteRlist(Rlist *list)
+void RlistDestroy(Rlist *list)
 {
     fail();
 }
@@ -285,11 +325,11 @@ int DEBUG;
 AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;
-enum classes VSYSTEMHARDCLASS;
+PlatformContext VSYSTEMHARDCLASS;
 char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
-enum cfhashes CF_DEFAULT_DIGEST;
-char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3];
+HashMethod CF_DEFAULT_DIGEST;
+char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3];
 const char *VFSTAB[1];
 char *VRESOLVCONF[1];
 char *VMAILDIR[1];

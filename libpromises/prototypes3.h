@@ -38,11 +38,7 @@ void yyerror(const char *s);
 
 /* agent.c */
 
-int ScheduleAgentOperations(Bundle *bp, const ReportContext *report_context);
-
-/* agentdiagnostic.c */
-
-void AgentDiagnostic(void);
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context);
 
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
@@ -56,43 +52,32 @@ void ConnectionsCleanup(void);
 
 void SetSkipIdentify(bool enabled);
 
-/* dtypes.c */
-
-int IsSocketType(char *s);
-int IsTCPType(char *s);
-
 /* enterprise_stubs.c */
 
-void SyntaxExport(void);
 #if defined(__MINGW32__)
-void VerifyRegistryPromise(Attributes a, Promise *pp);
+void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
 #endif
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(char *stylesheet, char *banner, char *footer, char *webdriver);
 int IsEnterprise(void);
-void EnterpriseContext(void);
-int EnterpriseExpiry(void);
+void EnterpriseContext(EvalContext *ctx);
+int EnterpriseExpiry(EvalContext *ctx);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
-void RegisterBundleDependence(char *absscope, const Promise *pp);
-void ShowTopicRepresentation(const ReportContext *report_context);
-void PreSanitizePromise(Promise *pp);
-void Nova_ShowTopicRepresentation(FILE *fp);
+void PreSanitizePromise(EvalContext *ctx, Promise *pp);
 void GetObservable(int i, char *name, char *desc);
-void LookupObservable(int i, char *name, char *desc);
 void SetMeasurementPromises(Item **classlist);
-void LongHaul(time_t current);
-void VerifyServices(Attributes a, Promise *pp, const ReportContext *report_context);
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
 void LoadSlowlyVaryingObservations(void);
 void MonOtherInit(void);
 void MonOtherGatherData(double *cf_this);
 void RegisterLiteralServerData(char *handle, Promise *pp);
 int ReturnLiteralData(char *handle, char *ret);
-char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv);
-const char *PromiseID(const Promise *pp);     /* Not thread-safe */
-void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reasoin);
+char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
+const char *PromiseID(EvalContext *ctx, const Promise *pp);     /* Not thread-safe */
+void NotePromiseCompliance(EvalContext *ctx, const Promise *pp, double val, PromiseState state, char *reasoin);
 void LogTotalCompliance(const char *version, int background_tasks);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
@@ -108,49 +93,38 @@ int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
-void NewPromiser(Promise *pp);
+void NewPromiser(EvalContext *ctx, Promise *pp);
 void AnalyzePromiseConflicts(void);
-void AddGoalsToDB(char *goal_patterns);
-void VerifyWindowsService(Attributes a, Promise *pp);
-bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format);
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
+bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
-void SyntaxCompletion(char *s);
 void TryCollectCall(void);
-int SetServerListenState(size_t queue_size);
+int SetServerListenState(EvalContext *ctx, size_t queue_size);
 
 struct ServerConnectionState;
 
-int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer);
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer);
 
 /* files_editline.c */
 
-int ScheduleEditLineOperations(char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
-Bundle *MakeTemporaryBundleFromTemplate(Attributes a,Promise *pp);
+int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
+Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise *pp);
 
 /* files_editxml.c */
 
-int ScheduleEditXmlOperations(char *filename, Bundle *bp, Attributes a, Promise *parentp,
+int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
                               const ReportContext *report_context);
 #ifdef HAVE_LIBXML2
-int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a, Promise *pp);
+int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, Promise *pp);
 #endif
 
 /* files_select.c */
 
-int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
+int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 
 /* full_write.c */
 
 int FullWrite(int desc, const char *ptr, size_t len);
-
-/* html.c */
-
-void CfHtmlHeader(Writer *writer, char *title, char *css, char *webdriver, char *banner);
-void CfHtmlFooter(Writer *writer, char *footer);
-
-/* interfaces.c */
-
-void VerifyInterfacePromise(char *vifdev, char *vaddress, char *vnetmask, char *vbroadcast);
 
 /* manual.c */
 
@@ -203,26 +177,27 @@ off_t GetDiskUsage(char *file, enum cfsizes type);
 
 void SetTimeOut(int timeout);
 void TimeOut(void);
-void SetReferenceTime(int setclasses);
+void SetReferenceTime(EvalContext *ctx, int setclasses);
 void SetStartTime(void);
 bool IsReadReady(int fd, int timeout_sec);
 
 /* verify_files.c */
 
-void VerifyFilePromise(char *path, Promise *pp, const ReportContext *report_context);
+void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
 
-void LocateFilePromiserGroup(char *wildpath, Promise *pp, void (*fnptr) (char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context);
-void *FindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context);
+void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
+                             void (*fnptr)(EvalContext *, char *, Promise *, const ReportContext *),
+                             const ReportContext *report_context); /* FIXME */
+void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 
 /* verify_interfaces.c */
 
 void VerifyInterface(Attributes a, Promise *pp);
-void VerifyInterfacesPromise(Promise *pp);
+void VerifyInterfacesPromise(EvalContext *ctx, Promise *pp);
 
 /* verify_reports.c */
 
-void VerifyReportPromise(Promise *pp);
+void VerifyReportPromise(EvalContext *ctx, Promise *pp);
 
 /* misc */
 

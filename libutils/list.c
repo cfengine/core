@@ -25,6 +25,45 @@
 #include "alloc.h"
 #include "list.h"
 
+struct ListNode {
+    void *payload;
+    struct ListNode *next;
+    struct ListNode *previous;
+};
+typedef struct ListNode ListNode;
+struct ListMutableIterator {
+    int valid;
+    ListNode *current;
+    List *origin;
+};
+struct List {
+    // Number of nodes
+    int node_count;
+    // Incremental number that keeps track of the state of the list, only used for light iterators
+    unsigned int state;
+    // Nodes
+    ListNode *list;
+    // Link to the first element
+    ListNode *first;
+    // Link to the last element
+    ListNode *last;
+    // This function is used to compare two elements
+    int (*compare)(const void *a, const void *b);
+    // This function is used whenever there is need to perform a deep copy
+    void (*copy)(const void *source, void **destination);
+    // This function can be used to destroy the elements at destruction time
+    void (*destroy)(void *element);
+    // Reference counting
+    RefCount *ref_count;
+    // Mutable iterator.
+    ListMutableIterator *iterator;
+};
+struct ListIterator {
+    ListNode *current;
+    List *origin;
+    unsigned int state;
+};
+
 #define IsIteratorValid(iterator) \
     iterator->state != iterator->origin->state
 #define IsMutableIteratorValid(iterator) \
@@ -94,25 +133,22 @@ static void ListDetach(List *list)
     }
 }
 
-int ListNew(List **list, int (*compare)(const void *, const void *), void (*copy)(const void *source, void **destination), void (*destroy)(void *))
+List *ListNew(int (*compare)(const void *, const void *), void (*copy)(const void *, void **), void (*destroy)(void *))
 {
-    if (!list)
-    {
-        return -1;
-    }
-    *list = (List *)xmalloc(sizeof(List));
-    (*list)->list = NULL;
-    (*list)->first = NULL;
-    (*list)->last = NULL;
-    (*list)->node_count = 0;
-    (*list)->iterator = NULL;
-    (*list)->state = 0;
-    (*list)->compare = compare;
-    (*list)->destroy = destroy;
-    (*list)->copy = copy;
-    RefCountNew(&(*list)->ref_count);
-    RefCountAttach((*list)->ref_count, (*list));
-    return 0;
+    List *list = NULL;
+    list = (List *)xmalloc(sizeof(List));
+    list->list = NULL;
+    list->first = NULL;
+    list->last = NULL;
+    list->node_count = 0;
+    list->iterator = NULL;
+    list->state = 0;
+    list->compare = compare;
+    list->destroy = destroy;
+    list->copy = copy;
+    RefCountNew(&list->ref_count);
+    RefCountAttach(list->ref_count, list);
+    return list;
 }
 
 int ListDestroy(List **list)
@@ -389,23 +425,24 @@ int ListCount(List *list)
 /*
  * Functions for iterators
  */
-int ListIteratorGet(List *list, ListIterator **iterator)
+ListIterator *ListIteratorGet(List *list)
 {
-    if (!list || !iterator)
+    if (!list)
     {
-        return -1;
+        return NULL;
     }
     // You cannot get an iterator for an empty list.
     if (!list->first)
 	{
-        return -1;
+        return NULL;
 	}
-    *iterator = (ListIterator *)xmalloc(sizeof(ListIterator));
-    (*iterator)->current = list->list;
+    ListIterator *iterator = NULL;
+    iterator = (ListIterator *)xmalloc(sizeof(ListIterator));
+    iterator->current = list->list;
     // Remaining only works in one direction, we need two variables for this.
-    (*iterator)->origin = list;
-    (*iterator)->state = list->state;
-    return 0;
+    iterator->origin = list;
+    iterator->state = list->state;
+    return iterator;
 }
 
 int ListIteratorDestroy(ListIterator **iterator)
@@ -510,25 +547,68 @@ void *ListIteratorData(const ListIterator *iterator)
     return iterator->current->payload;
 }
 
+bool ListIteratorHasNext(const ListIterator *iterator)
+{
+    if (!iterator)
+    {
+        return false;
+    }
+    if (IsIteratorValid(iterator))
+    {
+        // The list has moved forward, the iterator is invalid now
+        return false;
+    }
+    if (iterator->current->next)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool ListIteratorHasPrevious(const ListIterator *iterator)
+{
+    if (!iterator)
+    {
+        return false;
+    }
+    if (IsIteratorValid(iterator))
+    {
+        // The list has moved forward, the iterator is invalid now
+        return false;
+    }
+    if (iterator->current->previous)
+    {
+        return true;
+    }
+    return false;
+}
+
 /*
  * Mutable iterator operations
  */
-int ListMutableIteratorGet(List *list, ListMutableIterator **iterator)
+ListMutableIterator *ListMutableIteratorGet(List *list)
 {
-    if (!list || !iterator)
-        return -1;
+    if (!list)
+    {
+        return NULL;
+    }
     if (list->iterator)
+    {
         // Only one iterator at a time
-        return -1;
+        return  NULL;
+    }
     // You cannot get an iterator for an empty list.
     if (!list->first)
-        return -1;
-    *iterator = (ListMutableIterator *)xmalloc(sizeof(ListMutableIterator));
-    (*iterator)->current = list->first;
-    (*iterator)->origin = list;
-    (*iterator)->valid = 1;
-    list->iterator = (*iterator);
-    return 0;
+    {
+        return  NULL;
+    }
+    ListMutableIterator *iterator = NULL;
+    iterator = (ListMutableIterator *)xmalloc(sizeof(ListMutableIterator));
+    iterator->current = list->first;
+    iterator->origin = list;
+    iterator->valid = 1;
+    list->iterator = iterator;
+    return iterator;
 }
 
 int ListMutableIteratorRelease(ListMutableIterator **iterator)
@@ -686,4 +766,30 @@ int ListMutableIteratorAppend(ListMutableIterator *iterator, void *payload)
     }
     iterator->origin->node_count++;
     return 0;
+}
+
+bool ListMutableIteratorHasNext(const ListMutableIterator *iterator)
+{
+    if (!iterator)
+    {
+        return false;
+    }
+    if (iterator->current->next)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool ListMutableIteratorHasPrevious(const ListMutableIterator *iterator)
+{
+    if (!iterator)
+    {
+        return false;
+    }
+    if (iterator->current->previous)
+    {
+        return true;
+    }
+    return false;
 }

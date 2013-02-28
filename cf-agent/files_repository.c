@@ -32,6 +32,7 @@
 #include "item_lib.h"
 #include "cfstream.h"
 #include "transaction.h"
+#include "policy.h"
 
 /*********************************************************************/
 
@@ -75,7 +76,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
     if (!JoinPath(destination, file))
     {
-        CfOut(cf_error, "", "Internal limit: Buffer ran out of space for long filename\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space for long filename\n");
         return false;
     }
 
@@ -92,7 +93,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const ReportContext *report_context)
+int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -103,14 +104,14 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
         return false;
     }
 
-    if (attr.copy.backup == cfa_nobackup)
+    if (attr.copy.backup == BACKUP_OPTION_NO_BACKUP)
     {
         return true;
     }
 
     if (IsItemIn(VREPOSLIST, file))
     {
-        CfOut(cf_inform, "",
+        CfOut(OUTPUT_LEVEL_INFORM, "",
               "The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",
               file);
         return true;
@@ -124,7 +125,7 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
     
     JoinPath(destination, CanonifyName(file));
 
-    if (!MakeParentDirectory(destination, attr.move_obstructions, report_context))
+    if (!MakeParentDirectory(destination, attr.move_obstructions))
     {
     }
 
@@ -138,14 +139,14 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp, const Re
 
     CheckForFileHoles(&sb, pp);
 
-    if (CopyRegularFileDisk(file, destination, pp->makeholes))
+    if (pp && CopyRegularFileDisk(file, destination, pp->makeholes))
     {
-        CfOut(cf_inform, "", "Moved %s to repository location %s\n", file, destination);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Moved %s to repository location %s\n", file, destination);
         return true;
     }
     else
     {
-        CfOut(cf_inform, "", "Failed to move %s to repository location %s\n", file, destination);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to move %s to repository location %s\n", file, destination);
         return false;
     }
 }

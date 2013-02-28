@@ -34,6 +34,7 @@
 #include "cfstream.h"
 #include "files_hashes.h"
 #include "logging.h"
+#include "policy.h"
 
 static void SetSessionKey(AgentConnection *conn);
 
@@ -69,7 +70,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
     if ((!SKIPIDENTIFY) && (strcmp(VDOMAIN, CF_START_DOMAIN) == 0))
     {
-        CfOut(cf_error, "", "Undefined domain name");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Undefined domain name");
         return false;
     }
 
@@ -92,13 +93,13 @@ int IdentifyAgent(int sd, char *localip, int family)
             break;
 #endif
         default:
-            CfOut(cf_error, "", "Software error in IdentifyForVerification, family = %d", family);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Software error in IdentifyForVerification, family = %d", family);
             return false;
         }
 
         if (getsockname(sd, (struct sockaddr *) &myaddr, &len) == -1)
         {
-            CfOut(cf_error, "getsockname", "Couldn't get socket address\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "getsockname", "Couldn't get socket address\n");
             return false;
         }
 
@@ -110,7 +111,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
         if ((err = getnameinfo((struct sockaddr *) &myaddr, len, dnsname, CF_MAXVARSIZE, NULL, 0, 0)) != 0)
         {
-            CfOut(cf_error, "", "Couldn't look up address v6 for %s: %s\n", dnsname, gai_strerror(err));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't look up address v6 for %s: %s\n", dnsname, gai_strerror(err));
             return false;
         }
 
@@ -122,7 +123,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
         if ((hp == NULL) || (hp->h_name == NULL))
         {
-            CfOut(cf_error, "gethostbyaddr", "Couldn't lookup IP address\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "gethostbyaddr", "Couldn't lookup IP address\n");
             return false;
         }
 
@@ -141,7 +142,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
         if (strlen(VFQNAME) > 0)
         {
-            CfOut(cf_verbose, "",
+            CfOut(OUTPUT_LEVEL_VERBOSE, "",
                   "skipidentify was promised, so we are trusting and simply announcing the identity as (%s) for this host\n",
                   VFQNAME);
             strcat(dnsname, VFQNAME);
@@ -183,7 +184,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
     if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
     {
-        CfOut(cf_error, "", "!! IdentifyAgent: Could not send auth response");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! IdentifyAgent: Could not send auth response");
         return false;
     }
 
@@ -194,7 +195,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
 /*********************************************************************/
 
-int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
+int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, Promise *pp)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
@@ -207,7 +208,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        CfOut(cf_error, "", "No public/private key pair found at %s\n", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", CFPUBKEYFILE);
         return false;
     }
 
@@ -219,7 +220,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     nonce_challenge = BN_new();
     if (nonce_challenge == NULL)
     {
-        CfOut(cf_error, "", "Cannot allocate BIGNUM structure for server challenge\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot allocate BIGNUM structure for server challenge\n");
         return false;
     }
 
@@ -232,7 +233,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
     else
     {
-        HashString(in, nonce_len, digest, cf_md5);
+        HashString(in, nonce_len, digest, HASH_METHOD_MD5);
     }
 
 /* We assume that the server bound to the remote socket is the official one i.e. = root's */
@@ -260,7 +261,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
-            cfPS(cf_error, CF_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
             free(out);
             RSA_free(server_pubkey);
             return false;
@@ -305,14 +306,14 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (1)");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (1)");
         RSA_free(server_pubkey);
         return false;
     }
 
     if (BadProtoReply(in))
     {
-        CfOut(cf_error, "", "%s", in);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "%s", in);
         RSA_free(server_pubkey);
         return false;
     }
@@ -324,30 +325,30 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(cf_error, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (2)");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (2)");
         RSA_free(server_pubkey);
         return false;
     }
 
-    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, cf_md5)))  // Legacy
+    if ((HashesMatch(digest, in, CF_DEFAULT_DIGEST)) || (HashesMatch(digest, in, HASH_METHOD_MD5)))  // Legacy
     {
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
-            CfOut(cf_verbose, "", ".....................[.h.a.i.l.].................................\n");
-            CfOut(cf_verbose, "", "Strong authentication of server=%s connection confirmed\n", pp->this_server);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", ".....................[.h.a.i.l.].................................\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Strong authentication of server=%s connection confirmed\n", pp->this_server);
         }
         else
         {
             if (attr.copy.trustkey)
             {
-                CfOut(cf_verbose, "", " -> Trusting server identity, promise to accept key from %s=%s", pp->this_server,
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trusting server identity, promise to accept key from %s=%s", pp->this_server,
                       conn->remoteip);
             }
             else
             {
-                CfOut(cf_error, "", " !! Not authorized to trust the server=%s's public key (trustkey=false)\n",
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Not authorized to trust the server=%s's public key (trustkey=false)\n",
                       pp->this_server);
-                PromiseRef(cf_verbose, pp);
+                PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                 RSA_free(server_pubkey);
                 return false;
             }
@@ -355,7 +356,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
     else
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
              conn->remoteip);
         RSA_free(server_pubkey);
         return false;
@@ -371,7 +372,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if (encrypted_len <= 0)
     {
-        CfOut(cf_error, "", "Protocol transaction sent illegal cipher length");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol transaction sent illegal cipher length");
         RSA_free(server_pubkey);
         return false;
     }
@@ -381,7 +382,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(cf_error, CF_INTERPT, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
              ERR_reason_error_string(err));
         RSA_free(server_pubkey);
         return false;
@@ -394,7 +395,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     }
     else
     {
-        HashString(decrypted_cchall, nonce_len, digest, cf_md5);
+        HashString(decrypted_cchall, nonce_len, digest, HASH_METHOD_MD5);
     }
 
     CfDebug("Replying to counter challenge with hash\n");
@@ -416,19 +417,19 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     {
         RSA *newkey = RSA_new();
 
-        CfOut(cf_verbose, "", " -> Collecting public key from server!\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Collecting public key from server!\n");
 
         /* proposition S4 - conditional */
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            CfOut(cf_error, "", "Protocol error in RSA authentation from IP %s\n", pp->this_server);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol error in RSA authentation from IP %s\n", pp->this_server);
             return false;
         }
 
         if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -437,7 +438,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            cfPS(cf_inform, CF_INTERPT, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
                  pp->this_server);
             RSA_free(newkey);
             return false;
@@ -446,7 +447,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
         if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(cf_error, CF_INTERPT, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -461,7 +462,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
 
     if (conn->session_key == NULL)
     {
-        CfOut(cf_error, "", "A random session key could not be established");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "A random session key could not be established");
         RSA_free(server_pubkey);
         return false;
     }
@@ -475,7 +476,7 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(cf_error, CF_INTERPT, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
         free(out);
         RSA_free(server_pubkey);
         return false;
@@ -486,10 +487,10 @@ int AuthenticateAgent(AgentConnection *conn, Attributes attr, Promise *pp)
     if (server_pubkey != NULL)
     {
         HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
-        CfOut(cf_verbose, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
               HashPrint(CF_DEFAULT_DIGEST, conn->digest));
         SavePublicKey(conn->username, conn->remoteip, HashPrint(CF_DEFAULT_DIGEST, conn->digest), server_pubkey);       // FIXME: username is local
-        LastSaw(conn->remoteip, conn->digest, cf_connect);
+        LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
     }
 
     free(out);

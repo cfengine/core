@@ -45,7 +45,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
     {
         if (ksize == 0)
         {
-            CfOut(cf_inform, "", "BundlesMigrationVersion0: Database structure error -- zero-length key.");
+            CfOut(OUTPUT_LEVEL_INFORM, "", "BundlesMigrationVersion0: Database structure error -- zero-length key.");
             continue;
         }
 
@@ -57,21 +57,21 @@ static bool BundlesMigrationVersion0(DBHandle *db)
         char *fqname = StringConcatenate(3, "default", ".", key);
         if (!WriteDB(db, fqname, value, vsize))
         {
-            CfOut(cf_inform, "", "Unable to write version 1 bundle entry for %s", key);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write version 1 bundle entry for %s", key);
             errors = true;
             continue;
         }
 
         if (!DBCursorDeleteEntry(cursor))
         {
-            CfOut(cf_inform, "", "Unable to delete version 0 bundle entry for %s", key);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to delete version 0 bundle entry for %s", key);
             errors = true;
         }
     }
 
     if (DeleteDBCursor(db, cursor) == false)
     {
-        CfOut(cf_error, "", "BundlesMigrationVersion0: Unable to close cursor");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "BundlesMigrationVersion0: Unable to close cursor");
         errors = true;
     }
 

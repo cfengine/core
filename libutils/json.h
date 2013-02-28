@@ -153,7 +153,7 @@ const JsonElement *JsonIteratorNextValue(JsonIterator *iter);
 const char *JsonIteratorCurrentKey(JsonIterator *iter);
 const JsonElement *JsonIteratorCurrentValue(JsonIterator *iter);
 JsonElementType JsonIteratorCurrentElementType(JsonIterator *iter);
-JsonContainerType JsonIteratorCurrentContrainerType(JsonIterator *iter);
+JsonContainerType JsonIteratorCurrentContainerType(JsonIterator *iter);
 JsonPrimitiveType JsonIteratorCurrentPrimitiveType(JsonIterator *iter);
 
 JsonElementType JsonGetElementType(const JsonElement *element);

@@ -36,11 +36,33 @@
 #include "string_lib.h"
 #include "misc_lib.h"
 
+typedef enum
+{
+    IP_TYPES_ICMP,
+    IP_TYPES_UDP,
+    IP_TYPES_DNS,
+    IP_TYPES_TCP_SYN,
+    IP_TYPES_TCP_ACK,
+    IP_TYPES_TCP_FIN,
+    IP_TYPES_TCP_MISC
+} IPTypes;
+
 /* Constants */
 
 #define CF_TCPDUMP_COMM "/usr/sbin/tcpdump -t -n -v"
 
 static const int SLEEPTIME = 2.5 * 60;  /* Should be a fraction of 5 minutes */
+
+static const char *TCPNAMES[CF_NETATTR] =
+{
+    "icmp",
+    "udp",
+    "dns",
+    "tcpsyn",
+    "tcpack",
+    "tcpfin",
+    "misc"
+};
 
 /* Global variables */
 
@@ -55,6 +77,7 @@ static Item *NETOUT_DIST[CF_NETATTR];
 
 static void Sniff(long iteration, double *cf_this);
 static void AnalyzeArrival(long iteration, char *arrival, double *cf_this);
+static void DePort(char *address);
 
 /* Implementation */
 
@@ -120,7 +143,7 @@ static void CfenvTimeOut(int signum)
 {
     alarm(0);
     TCPPAUSE = true;
-    CfOut(cf_verbose, "", "Time out\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out\n");
 }
 
 /******************************************************************************/
@@ -129,7 +152,7 @@ static void Sniff(long iteration, double *cf_this)
 {
     char tcpbuffer[CF_BUFSIZE];
 
-    CfOut(cf_verbose, "", "Reading from tcpdump...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reading from tcpdump...\n");
     memset(tcpbuffer, 0, CF_BUFSIZE);
     signal(SIGALRM, CfenvTimeOut);
     alarm(SLEEPTIME);
@@ -202,7 +225,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
 
     if (Chop(arrival, CF_EXPANDSIZE) == -1)
     {
-        CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
 /* Most hosts have only a few dominant services, so anomalies will
@@ -247,12 +270,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpsyn_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpsyn]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_SYN]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpsyn_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpsyn]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_SYN]), dest);
             }
             break;
 
@@ -261,12 +284,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpfin_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpfin]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_FIN]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpfin_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpfin]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_FIN]), dest);
             }
             break;
 
@@ -276,12 +299,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             if (isme_dest)
             {
                 cf_this[ob_tcpack_in]++;
-                IncrementCounter(&(NETIN_DIST[tcpack]), src);
+                IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_ACK]), src);
             }
             else if (isme_src)
             {
                 cf_this[ob_tcpack_out]++;
-                IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
+                IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_ACK]), dest);
             }
             break;
         }
@@ -298,12 +321,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_dns_in]++;
-            IncrementCounter(&(NETIN_DIST[dns]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_DNS]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_dns_out]++;
-            IncrementCounter(&(NETOUT_DIST[tcpack]), dest);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_TCP_ACK]), dest);
         }
     }
     else if (strstr(arrival, "proto UDP"))
@@ -318,12 +341,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_udp_in]++;
-            IncrementCounter(&(NETIN_DIST[udp]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_UDP]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_udp_out]++;
-            IncrementCounter(&(NETOUT_DIST[udp]), dest);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_UDP]), dest);
         }
     }
     else if (strstr(arrival, "proto ICMP"))
@@ -339,12 +362,12 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         if (isme_dest)
         {
             cf_this[ob_icmp_in]++;
-            IncrementCounter(&(NETIN_DIST[icmp]), src);
+            IncrementCounter(&(NETIN_DIST[IP_TYPES_ICMP]), src);
         }
         else if (isme_src)
         {
             cf_this[ob_icmp_out]++;
-            IncrementCounter(&(NETOUT_DIST[icmp]), src);
+            IncrementCounter(&(NETOUT_DIST[IP_TYPES_ICMP]), src);
         }
     }
     else
@@ -377,7 +400,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         {
             strncpy(dest, src, 60);
         }
-        IncrementCounter(&(NETIN_DIST[tcpmisc]), dest);
+        IncrementCounter(&(NETIN_DIST[IP_TYPES_TCP_MISC]), dest);
     }
 }
 
@@ -389,11 +412,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
     FILE *fp;
     char filename[CF_BUFSIZE];
 
-    CfOut(cf_verbose, "", "TCP Save %s\n", TCPNAMES[i]);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", TCPNAMES[i]);
 
     if (list == NULL)
     {
-        CfOut(cf_verbose, "", "No %s-%s events\n", TCPNAMES[i], inout);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No %s-%s events\n", TCPNAMES[i], inout);
         return;
     }
 
@@ -406,11 +429,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
         snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
     }
 
-    CfOut(cf_verbose, "", "TCP Save %s\n", filename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        CfOut(cf_verbose, "", "Unable to write datafile %s\n", filename);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to write datafile %s\n", filename);
         return;
     }
 
@@ -442,7 +465,7 @@ void MonNetworkSnifferGatherData(double *cf_this)
         {
             if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETIN_DIST[i]);
                 NETIN_DIST[i] = NULL;
                 continue;
@@ -470,7 +493,7 @@ void MonNetworkSnifferGatherData(double *cf_this)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(cf_verbose, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETOUT_DIST[i]);
                 NETOUT_DIST[i] = NULL;
                 continue;
@@ -484,4 +507,67 @@ void MonNetworkSnifferGatherData(double *cf_this)
         DeleteItemList(NETOUT_DIST[i]);
         NETOUT_DIST[i] = NULL;
     }
+}
+
+void DePort(char *address)
+{
+    char *sp, *chop, *fc = NULL, *fd = NULL, *ld = NULL;
+    int ccount = 0, dcount = 0;
+
+/* Start looking for ethernet/ipv6 addresses */
+
+    for (sp = address; *sp != '\0'; sp++)
+    {
+        if (*sp == ':')
+        {
+            if (!fc)
+            {
+                fc = sp;
+            }
+            ccount++;
+        }
+
+        if (*sp == '.')
+        {
+            if (!fd)
+            {
+                fd = sp;
+            }
+
+            ld = sp;
+
+            dcount++;
+        }
+    }
+
+    if (!fd)
+    {
+        /* This does not look like an IP address+port, maybe ethernet */
+        return;
+    }
+
+    if (dcount == 4)
+    {
+        chop = ld;
+    }
+    else if ((dcount > 1) && (fc != NULL))
+    {
+        chop = fc;
+    }
+    else if ((ccount > 1) && (fd != NULL))
+    {
+        chop = fd;
+    }
+    else
+    {
+        /* Don't recognize address */
+        return;
+    }
+
+    if (chop < address + strlen(address))
+    {
+        *chop = '\0';
+    }
+
+    return;
 }

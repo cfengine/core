@@ -68,7 +68,7 @@ int RemovePublicKey(const char *id)
         }
         else
         {
-            CfOut(cf_error, "opendir", "Unable to open keys directory");
+            CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Unable to open keys directory");
             return -1;
         }
     }
@@ -90,7 +90,7 @@ int RemovePublicKey(const char *id)
             {
                 if (errno != ENOENT)
                 {
-                    CfOut(cf_error, "unlink", "Unable to remove key file %s", dirp->d_name);
+                    CfOut(OUTPUT_LEVEL_ERROR, "unlink", "Unable to remove key file %s", dirp->d_name);
                     CloseDir(dirh);
                     return -1;
                 }
@@ -104,7 +104,7 @@ int RemovePublicKey(const char *id)
 
     if (errno)
     {
-        CfOut(cf_error, "ReadDir", "Unable to enumerate files in keys directory");
+        CfOut(OUTPUT_LEVEL_ERROR, "ReadDir", "Unable to enumerate files in keys directory");
         CloseDir(dirh);
         return -1;
     }

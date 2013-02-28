@@ -89,4 +89,12 @@ int StripTrailingNewline(char *str, size_t max_length);
  */
 int Chop(char *str, size_t max_length);
 
+/**
+ * @brief Check if a string ends with the given suffix
+ * @param str
+ * @param suffix
+ * @return True if suffix matches
+ */
+bool StringEndsWith(const char *str, const char *suffix);
+
 #endif

@@ -25,9 +25,9 @@
 #ifndef CFENGINE_FILES_NAMES_H
 #define CFENGINE_FILES_NAMES_H
 
-#include "platform.h"
+#include "cf3.defs.h"
 
-int IsNewerFileTree(char *dir, time_t reftime);
+int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);
 char *JoinPath(char *path, const char *leaf);

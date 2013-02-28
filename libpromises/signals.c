@@ -59,10 +59,10 @@ bool IsPendingTermination(void)
 
 void HandleSignalsForAgent(int signum)
 {
-    CfOut(cf_error, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+    CfOut(OUTPUT_LEVEL_ERROR, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
-    CfOut(cf_error, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
-    CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
+    CfOut(OUTPUT_LEVEL_ERROR, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
+    CfOut(OUTPUT_LEVEL_ERROR, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -86,10 +86,10 @@ void HandleSignalsForAgent(int signum)
 
 void HandleSignalsForDaemon(int signum)
 {
-    CfOut(cf_error, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+    CfOut(OUTPUT_LEVEL_ERROR, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
-    CfOut(cf_error, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
-    CfOut(cf_error, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
+    CfOut(OUTPUT_LEVEL_ERROR, "", "Logical start time %s ", cf_ctime(&CFSTARTTIME));
+    CfOut(OUTPUT_LEVEL_ERROR, "", "This sub-task started really at %s\n", cf_ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)

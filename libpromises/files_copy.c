@@ -29,6 +29,7 @@
 #include "files_interfaces.h"
 #include "instrumentation.h"
 #include "cfstream.h"
+#include "policy.h"
 
 /*****************************************************************************/
 /* Local low level                                                           */
@@ -71,7 +72,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
 
     if ((sd = open(source, O_RDONLY | O_BINARY)) == -1)
     {
-        CfOut(cf_inform, "open", "Can't copy %s!\n", source);
+        CfOut(OUTPUT_LEVEL_INFORM, "open", "Can't copy %s!\n", source);
         unlink(destination);
         return false;
     }
@@ -82,7 +83,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
 
     if (cfstat(source, &statbuf) == -1)
     {
-        CfOut(cf_inform, "stat", "Can't copy %s!\n", source);
+        CfOut(OUTPUT_LEVEL_INFORM, "stat", "Can't copy %s!\n", source);
         unlink(destination);
         return false;
     }
@@ -151,7 +152,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
                 /* Make a hole.  */
                 if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
                 {
-                    CfOut(cf_error, "lseek", "Copy failed (no space?) while doing %s to %s\n", source, destination);
+                    CfOut(OUTPUT_LEVEL_ERROR, "lseek", "Copy failed (no space?) while doing %s to %s\n", source, destination);
                     free(buf);
                     unlink(destination);
                     close(dd);
@@ -171,7 +172,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
         {
             if (FullWrite(dd, buf, n_read) < 0)
             {
-                CfOut(cf_error, "", "Copy failed (no space?) while doing %s to %s\n", source, destination);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Copy failed (no space?) while doing %s to %s\n", source, destination);
                 close(sd);
                 close(dd);
                 free(buf);
@@ -192,7 +193,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
 
         if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
         {
-            CfOut(cf_error, "write", "cfengine: full_write or ftruncate error in CopyReg\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "write", "cfengine: full_write or ftruncate error in CopyReg\n");
             free(buf);
             unlink(destination);
             close(sd);

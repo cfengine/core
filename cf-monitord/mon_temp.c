@@ -41,7 +41,7 @@ static bool LMSENSORS;
 /* Prototypes */
 
 #if defined(__linux__)
-static bool GetAcpi(double *cf_this);
+static bool GetAcpi(EvalContext *ctx, double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -53,12 +53,12 @@ static bool GetLMSensors(double *cf_this);
  * temperature is generally available. Several temperatures exist too ...
  ******************************************************************************/
 
-void MonTempGatherData(double *cf_this)
+void MonTempGatherData(EvalContext *ctx, double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
 #if defined(__linux__)
-    if (ACPI && GetAcpi(cf_this))
+    if (ACPI && GetAcpi(ctx, cf_this))
     {
         return;
     }
@@ -95,7 +95,7 @@ void MonTempInit(void)
 /******************************************************************************/
 
 #if defined(__linux__)
-static bool GetAcpi(double *cf_this)
+static bool GetAcpi(EvalContext *ctx, double *cf_this)
 {
     Dir *dirh;
     FILE *fp;
@@ -112,13 +112,13 @@ static bool GetAcpi(double *cf_this)
 
     if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
     {
-        CfOut(cf_verbose, "opendir", "Can't open directory %s\n", path);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
         return false;
     }
 
     for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
     {
-        if (!ConsiderFile(dirp->d_name, path, attr, NULL))
+        if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
         {
             continue;
         }
@@ -133,7 +133,7 @@ static bool GetAcpi(double *cf_this)
 
         if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
         {
-            CfOut(cf_error, "", "Failed to read line from stream '%s'", path);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }

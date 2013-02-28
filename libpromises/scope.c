@@ -34,6 +34,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "rlist.h"
 
 #include <assert.h>
 
@@ -93,7 +94,7 @@ void NewScope(const char *name)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -118,22 +119,22 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
+void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
     Rval retval;
     char *lval, naked[CF_BUFSIZE];
-    HashIterator i;
+    AssocHashTableIterator i;
     CfAssoc *assoc;
 
     if (RlistLen(lvals) != RlistLen(rvals))
     {
-        CfOut(cf_error, "", "While constructing scope \"%s\"\n", scope);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "While constructing scope \"%s\"\n", scope);
         fprintf(stderr, "Formal = ");
-        ShowRlist(stderr, lvals);
+        RlistShow(stderr, lvals);
         fprintf(stderr, ", Actual = ");
-        ShowRlist(stderr, rvals);
+        RlistShow(stderr, rvals);
         fprintf(stderr, "\n");
         FatalError("Augment scope, formal and actual parameter mismatch is fatal");
     }
@@ -142,35 +143,35 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
     {
         lval = (char *) rpl->item;
 
-        CfOut(cf_verbose, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
 
         if (IsNakedVar(rpr->item, '@'))
         {
-            enum cfdatatype vtype;
+            DataType vtype;
             char qnaked[CF_MAXVARSIZE];
             
             GetNaked(naked, rpr->item);
 
             if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
             {
-                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", namespace, CF_NS, naked);
+                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
             }
             
             vtype = GetVariable(scope, qnaked, &retval); 
 
             switch (vtype)
             {
-            case cf_slist:
-            case cf_ilist:
-            case cf_rlist:
-                NewList(scope, lval, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
+            case DATA_TYPE_STRING_LIST:
+            case DATA_TYPE_INT_LIST:
+            case DATA_TYPE_REAL_LIST:
+                NewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                CfOut(cf_error, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
-                NewScalar(scope, lval, rpr->item, cf_str);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
+                NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
                 break;
             }
         }
@@ -180,26 +181,26 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
         Promise *pp = NULL; // This argument should really get passed down.
         
         switch(rpr->type)
-           {
-           case CF_SCALAR:
-               NewScalar(scope, lval, rpr->item, cf_str);
-               break;
-               
-           case CF_FNCALL:
-               subfp = (FnCall *) rpr->item;
-               Rval rval = EvaluateFunctionCall(subfp, pp).rval;
-               if (rval.rtype == CF_SCALAR)
-               {
-                   NewScalar(scope, lval, rval.item, cf_str);
-               }
-               else
-               {
-                   CfOut(cf_error, "", "Only functions returning scalars can be used as arguments");
-               }
-               break;
-           default:
-               ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
-           }
+        {
+        case RVAL_TYPE_SCALAR:
+            NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            subfp = (FnCall *) rpr->item;
+            Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
+            if (rval.type == RVAL_TYPE_SCALAR)
+            {
+                NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
+            }
+            else
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
+            }
+            break;
+        default:
+            ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
+        }
 
         }
     }
@@ -214,7 +215,7 @@ void AugmentScope(char *scope, char *namespace, Rlist *lvals, Rlist *rvals)
     {
         retval = ExpandPrivateRval(scope, assoc->rval);
         // Retain the assoc, just replace rval
-        DeleteRvalItem(assoc->rval);
+        RvalDestroy(assoc->rval);
         assoc->rval = retval;
     }
 
@@ -231,7 +232,7 @@ void DeleteAllScope()
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -266,7 +267,7 @@ void DeleteScope(char *name)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -337,7 +338,7 @@ void CopyScope(const char *new_scopename, const char *old_scopename)
 
     if (!ThreadLock(cft_vscope))
     {
-        CfOut(cf_error, "", "!! Could not lock VSCOPE");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
         return;
     }
 
@@ -367,7 +368,7 @@ void PushThisScope()
     }
 
     CF_STCKFRAME++;
-    PushStack(&CF_STCK, (void *) op);
+    RlistPushStack(&CF_STCK, (void *) op);
     snprintf(name, CF_MAXVARSIZE, "this_%d", CF_STCKFRAME);
     free(op->scope);
     op->scope = xstrdup(name);
@@ -382,7 +383,7 @@ void PopThisScope()
     if (CF_STCKFRAME > 0)
     {
         DeleteScope("this");
-        PopStack(&CF_STCK, (void *) &op, sizeof(op));
+        RlistPopStack(&CF_STCK, (void *) &op, sizeof(op));
         if (op == NULL)
         {
             return;

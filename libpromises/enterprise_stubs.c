@@ -53,20 +53,20 @@ int IsEnterprise(void)
 
 /* all agents: sysinfo.c */
 
-void EnterpriseContext(void)
+void EnterpriseContext(EvalContext *ctx)
 {
 }
 
 void LoadSlowlyVaryingObservations()
 {
-    CfOut(cf_verbose, "", "# Extended system discovery is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in version Nova and above\n");
 }
 
 
 /* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
 
 
-int EnterpriseExpiry(void)
+int EnterpriseExpiry(EvalContext *ctx)
 {
     return false;
 }
@@ -75,24 +75,16 @@ int EnterpriseExpiry(void)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(const Promise *pp)
+const char *PromiseID(EvalContext *ctx, const Promise *pp)
 {
     return "";
-}
-
-
-/* all agents: expand.c */
-
-
-void RegisterBundleDependence(char *name, const Promise *pp)
-{
 }
 
 
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
+void NotePromiseCompliance(EvalContext *ctx, const Promise *pp, double val, PromiseState state, char *reason)
 {
 }
 
@@ -113,7 +105,7 @@ void LogTotalCompliance(const char *version, int background_tasks)
              (double) PR_REPAIRED / total,
              (double) PR_NOTKEPT / total);
 
-    CfOut(cf_verbose, "", "Total: %s", string);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Total: %s", string);
 
     PromiseLog(string);
 }
@@ -122,22 +114,14 @@ void LogTotalCompliance(const char *version, int background_tasks)
 /* all agents: constraints.c */
 
 
-void PreSanitizePromise(Promise *pp)
+void PreSanitizePromise(EvalContext *ctx, Promise *pp)
 {
 }
 
-void NewPromiser(Promise *pp)
+void NewPromiser(EvalContext *ctx, Promise *pp)
 {
 }
 
-
-/* FIXME: all agents: generic_agent.c */
-
-
-void ShowTopicRepresentation(const ReportContext *report_context)
-{
-    CfOut(cf_verbose, "", "# Knowledge map reporting feature is only available in version Nova and above\n");
-}
 
 /* cf-execd: cf-execd-runner.c */
 
@@ -187,20 +171,20 @@ void LastSawBundle(const Bundle *bundle, double comp)
 /* cf-agent: evalfunction.c */
 
 
-char *GetRemoteScalar(char *proto, char *handle, char *server, int encrypted, char *rcv)
+char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
     return "";
 }
 
 void CacheUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in version Nova and above\n");
 }
 
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(cf_verbose, "", "# Value fault-tolerance in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in version Nova and above\n");
     return false;
 }
 
@@ -213,51 +197,40 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(cf_error, "", "LDAP support is available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support is available in Nova and above");
     return NULL;
 }
 
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(cf_error, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
     return NULL;
 }
 
 void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
-    CfOut(cf_error, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
     return NULL;
 }
 
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
-    CfOut(cf_error, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
     return NULL;
 }
 
-bool CFDB_HostsWithClass(Rlist **return_list, char *class_name, char *return_format)
+bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
-    CfOut(cf_error, "", "!! Host class counting is only available in CFEngine Nova");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Nova");
     return false;
 }
-
-
-/* cf-agent: verify_databases.c */
-
-
-#if defined(__MINGW32__)
-void VerifyRegistryPromise(Attributes a, Promise *pp)
-{
-}
-#endif
-
 
 /* cf-agent: verify_services.c */
 
 
-void VerifyWindowsService(Attributes a, Promise *pp)
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {
-    CfOut(cf_error, "", "!! Windows service management is only supported in CFEngine Nova");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Nova");
 }
 
 
@@ -265,29 +238,6 @@ void VerifyWindowsService(Attributes a, Promise *pp)
 
 
 void AnalyzePromiseConflicts(void)
-{
-}
-
-void AddGoalsToDB(char *goal_patterns)
-{
-}
-
-
-/* cf-report: cf-report.c */
-
-void SyntaxExport(void)
-{
-    Writer *writer = FileWriter(stdout);
-    SyntaxPrintAsJson(writer);
-    WriterClose(writer);
-}
-
-void LookupObservable(int i, char *name, char *desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-void LongHaul(time_t current)
 {
 }
 
@@ -300,32 +250,26 @@ void TranslatePath(char *new, const char *old)
 
 void RegisterLiteralServerData(char *handle, Promise *pp)
 {
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
 }
 
 int ReturnLiteralData(char *handle, char *ret)
 {
-    CfOut(cf_verbose, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
     return 0;
 }
 
 void TryCollectCall(void)
 {
-    CfOut(cf_verbose, "", " !! Collect calling is only supported in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
-int ReceiveCollectCall(struct ServerConnectionState *conn, char *sendbuffer)
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer)
 {
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(cf_verbose, "", "  Collect Call are only supported in the Enterprise ");
-    CfOut(cf_verbose, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call are only supported in the Enterprise ");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
     return false;
-}
-
-/* cf-know */
-
-void SyntaxCompletion(char *s)
-{
 }
 
 #endif

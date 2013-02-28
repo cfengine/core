@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "cf3.defs.h"
+#include "rlist.h"
 
 #include "assoc.h"
 
@@ -21,12 +21,12 @@ static void test_prepend_scalar(void **state)
 {
     Rlist *list = NULL;
 
-    PrependRScalar(&list, "stuff", CF_SCALAR);
-    PrependRScalar(&list, "more-stuff", CF_SCALAR);
+    RlistPrependScalar(&list, "stuff");
+    RlistPrependScalar(&list, "more-stuff");
 
     assert_string_equal(list->item, "more-stuff");
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_length(void **state)
@@ -35,89 +35,89 @@ static void test_length(void **state)
 
     assert_int_equal(RlistLen(list), 0);
 
-    PrependRScalar(&list, "stuff", CF_SCALAR);
+    RlistPrependScalar(&list, "stuff");
     assert_int_equal(RlistLen(list), 1);
 
-    PrependRScalar(&list, "more-stuff", CF_SCALAR);
+    RlistPrependScalar(&list, "more-stuff");
     assert_int_equal(RlistLen(list), 2);
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_prepend_scalar_idempotent(void **state)
 {
     Rlist *list = NULL;
 
-    IdempPrependRScalar(&list, "stuff", CF_SCALAR);
-    IdempPrependRScalar(&list, "stuff", CF_SCALAR);
+    RlistPrependScalarIdemp(&list, "stuff");
+    RlistPrependScalarIdemp(&list, "stuff");
 
     assert_string_equal(list->item, "stuff");
     assert_int_equal(RlistLen(list), 1);
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_copy(void **state)
 {
     Rlist *list = NULL, *copy = NULL;
 
-    PrependRScalar(&list, "stuff", CF_SCALAR);
-    PrependRScalar(&list, "more-stuff", CF_SCALAR);
+    RlistPrependScalar(&list, "stuff");
+    RlistPrependScalar(&list, "more-stuff");
 
-    copy = CopyRlist(list);
+    copy = RlistCopy(list);
 
     assert_string_equal(list->item, copy->item);
     assert_string_equal(list->next->item, copy->next->item);
 
-    DeleteRlist(list);
-    DeleteRlist(copy);
+    RlistDestroy(list);
+    RlistDestroy(copy);
 }
 
 static void test_rval_to_scalar(void **state)
 {
-    Rval rval = { "abc", CF_SCALAR };
-    assert_string_equal("abc", ScalarRvalValue(rval));
+    Rval rval = { "abc", RVAL_TYPE_SCALAR };
+    assert_string_equal("abc", RvalScalarValue(rval));
 }
 
 static void test_rval_to_scalar2(void **state)
 {
-    Rval rval = { NULL, CF_FNCALL };
-    expect_assert_failure(ScalarRvalValue(rval));
+    Rval rval = { NULL, RVAL_TYPE_FNCALL };
+    expect_assert_failure(RvalScalarValue(rval));
 }
 
 static void test_rval_to_list(void **state)
 {
-    Rval rval = { NULL, CF_SCALAR };
-    expect_assert_failure(ListRvalValue(rval));
+    Rval rval = { NULL, RVAL_TYPE_SCALAR };
+    expect_assert_failure(RvalRlistValue(rval));
 }
 
 static void test_rval_to_list2(void **state)
 {
-    Rval rval = { NULL, CF_LIST };
-    assert_false(ListRvalValue(rval));
+    Rval rval = { NULL, RVAL_TYPE_LIST };
+    assert_false(RvalRlistValue(rval));
 }
 
 static void test_rval_to_fncall(void **state)
 {
-    Rval rval = { NULL, CF_SCALAR };
-    expect_assert_failure(FnCallRvalValue(rval));
+    Rval rval = { NULL, RVAL_TYPE_SCALAR };
+    expect_assert_failure(RvalFnCallValue(rval));
 }
 
 static void test_rval_to_fncall2(void **state)
 {
-    Rval rval = { NULL, CF_FNCALL };
-    assert_false(FnCallRvalValue(rval));
+    Rval rval = { NULL, RVAL_TYPE_FNCALL };
+    assert_false(RvalFnCallValue(rval));
 }
 
 static void test_last(void **state)
 {
     Rlist *l = NULL;
     assert_true(RlistLast(l) == NULL);
-    AppendRlist(&l, "a", CF_SCALAR);
-    assert_string_equal("a", ScalarValue(RlistLast(l)));
-    AppendRlist(&l, "b", CF_SCALAR);
-    assert_string_equal("b", ScalarValue(RlistLast(l)));
-    DeleteRlist(l);
+    RlistAppendScalar(&l, "a");
+    assert_string_equal("a", RlistScalarValue(RlistLast(l)));
+    RlistAppendScalar(&l, "b");
+    assert_string_equal("b", RlistScalarValue(RlistLast(l)));
+    RlistDestroy(l);
 }
 
 static bool is_even(void *item, void *data)
@@ -134,7 +134,7 @@ static void test_filter(void **state)
     for (int i = 0; i < 10; i++)
     {
         void *item = xmemdup(&i, sizeof(int));
-        AppendRlistAlien(&list, item);
+        RlistAppendAlien(&list, item);
     }
 
     assert_int_equal(10, RlistLen(list));
@@ -154,7 +154,7 @@ static void test_filter(void **state)
         i += 2;
     }
 
-    DeleteRlist(list);
+    RlistDestroy(list);
 }
 
 static void test_filter_everything(void **state)
@@ -163,7 +163,7 @@ static void test_filter_everything(void **state)
     for (int i = 1; i < 10; i += 2)
     {
         void *item = xmemdup(&i, sizeof(int));
-        AppendRlistAlien(&list, item);
+        RlistAppendAlien(&list, item);
     }
 
     assert_int_equal(5, RlistLen(list));
@@ -224,17 +224,22 @@ int ThreadUnlock(pthread_mutex_t *name)
     return true;
 }
 
-void ShowFnCall(FILE *fout, const FnCall *fp)
+void FnCallShow(FILE *fout, const FnCall *fp)
 {
     fail();
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
 }
 
 int IsNakedVar(const char *str, char vtype)
+{
+    fail();
+}
+
+int Join(char *path, const char *leaf, int bufsize)
 {
     fail();
 }
@@ -254,7 +259,7 @@ void GetNaked(char *s1, const char *s2)
     fail();
 }
 
-enum cfdatatype GetVariable(const char *scope, const char *lval, Rval *returnv)
+DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
 {
     fail();
 }
@@ -269,7 +274,7 @@ CfAssoc *CopyAssoc(CfAssoc *old)
     fail();
 }
 
-FnCall *CopyFnCall(const FnCall *f)
+FnCall *FnCallCopy(const FnCall *f)
 {
     fail();
 }
@@ -284,7 +289,7 @@ char *EscapeQuotes(const char *s, char *out, int outSz)
     fail();
 }
 
-void DeleteFnCall(FnCall *fp)
+void FnCallDestroy(FnCall *fp)
 {
     fail();
 }
@@ -310,6 +315,21 @@ int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e)
 }
 
 JsonElement *FnCallToJson(const FnCall *fp)
+{
+    fail();
+}
+
+JsonElement *JsonObjectCreate(size_t initialCapacity)
+{
+    fail();
+}
+
+void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
+{
+    fail();
+}
+
+void JsonObjectAppendString(JsonElement *obj, const char *key, const char *value)
 {
     fail();
 }

@@ -17,7 +17,7 @@ void client_callback(AvahiClient *c,
 
     if (state == AVAHI_CLIENT_FAILURE)
     {
-        CfOut(cf_error, "", "Server connection failure %s", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Server connection failure %s", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         avahi_simple_poll_quit_ptr(spoll);
     }
 }
@@ -38,14 +38,14 @@ void browse_callback(AvahiServiceBrowser *b,
     switch(event)
     {
     case AVAHI_BROWSER_FAILURE:
-        CfOut(cf_error, "", "Avahi browser error: %s", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi browser error: %s", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
         avahi_simple_poll_quit_ptr(spoll);
         return;
 
     case AVAHI_BROWSER_NEW:
         if (!(avahi_service_resolver_new_ptr(c, interface, protocol, name ,type, domain, AVAHI_PROTO_UNSPEC, 0, resolve_callback, c)))
         {
-            CfOut(cf_error, "", "Failed to resolve service: '%s': %s", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to resolve service: '%s': %s", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         }
         break;
 
@@ -82,7 +82,7 @@ void resolve_callback(AvahiServiceResolver *r,
     switch(event)
     {
     case AVAHI_RESOLVER_FAILURE:
-        CfOut(cf_error, "", "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s",
               name, type, domain, avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_resolver_get_client_ptr(r))));
         break;
 
@@ -103,7 +103,8 @@ void PrintList(List *list)
 {
     ListIterator *i = NULL;
 
-    if (ListIteratorGet(list, &i) != 0)
+    i = ListIteratorGet(list);
+    if (!i)
     {
         ProgrammingError("Unable to get iterator for hub list");
         return;
@@ -113,7 +114,7 @@ void PrintList(List *list)
     {
         HostProperties *hostprop = (HostProperties *)ListIteratorData(i);
 
-        CfOut(cf_reporting, "", "\nCFEngine Policy Server:\n"
+        CfOut(OUTPUT_LEVEL_REPORTING, "", "\nCFEngine Policy Server:\n"
                                 "Hostname: %s\n"
                                 "IP Address: %s\n"
                                 "Port: %d\n",
@@ -131,7 +132,8 @@ int ListHubs(List **list)
     AvahiServiceBrowser *sb = NULL;
     int error;
 
-    if (ListNew(&hublist, &CompareHosts, NULL, &free) < 0)
+    hublist = ListNew(&CompareHosts, NULL, &free);
+    if (!hublist)
     {
         return -1;
     }
@@ -143,13 +145,13 @@ int ListHubs(List **list)
 
     if (loadavahi() == -1)
     {
-        CfOut(cf_error, "", "Avahi was not found");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi was not found");
         return -1;
     }
 
     if (!(spoll = avahi_simple_poll_new_ptr()))
     {
-        CfOut(cf_error, "", "Failed to create simple poll object.");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create simple poll object.");
 
         if (spoll)
         {
@@ -162,7 +164,7 @@ int ListHubs(List **list)
 
     if (!client)
     {
-        CfOut(cf_error, "", "Failed to create client %s", avahi_strerror_ptr(error));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create client %s", avahi_strerror_ptr(error));
 
         if (client)
         {
@@ -179,7 +181,7 @@ int ListHubs(List **list)
 
     if (!(sb = avahi_service_browser_new_ptr(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_cfenginehub._tcp", NULL, 0, browse_callback, client)))
     {
-        CfOut(cf_error, "", "Failed to create service browser: %s", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create service browser: %s", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
         
         if (spoll)
         {

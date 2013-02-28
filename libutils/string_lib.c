@@ -790,3 +790,24 @@ int Chop(char *str, size_t max_length)
 
     return 0;
 }
+
+bool StringEndsWith(const char *str, const char *suffix)
+{
+    size_t str_len = strlen(str);
+    size_t suffix_len = strlen(suffix);
+
+    if (suffix_len > str_len)
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < suffix_len; i++)
+    {
+        if (str[str_len - i - 1] != suffix[suffix_len - i - 1])
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

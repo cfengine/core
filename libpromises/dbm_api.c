@@ -157,7 +157,7 @@ static void CloseAllDB(void)
             if (ret != 0)
             {
                 errno = ret;
-                CfOut(cf_error, "pthread_mutex_destroy",
+                CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
                       "Unable to close database %s", DB_PATHS[i]);
             }
         }
@@ -225,7 +225,7 @@ void CloseDB(DBHandle *handle)
 
     if (handle->refcount < 1)
     {
-        CfOut(cf_error, "", "Trying to close database %s which is not open", handle->filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Trying to close database %s which is not open", handle->filename);
     }
     else if (--handle->refcount == 0)
     {

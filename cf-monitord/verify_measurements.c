@@ -30,19 +30,21 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "policy.h"
+
 #ifdef HAVE_NOVA
 #include "history.h"
 #endif
 
 #ifndef HAVE_NOVA
-static void VerifyMeasurement(double *this, Attributes a, Promise *pp);
+static void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp);
 #endif
 
-static int CheckMeasureSanity(Attributes a, Promise *pp);
+static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyMeasurementPromise(double *this, Promise *pp)
+void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -50,46 +52,46 @@ void VerifyMeasurementPromise(double *this, Promise *pp)
     {
         if (pp->ref)
         {
-            CfOut(cf_verbose, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->ref);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->ref);
         }
         else
         {
-            CfOut(cf_verbose, "", "Skipping static observation %s, already done", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s, already done", pp->promiser);
         }
 
         return;
     }
 
-    PromiseBanner(pp);
+    PromiseBanner(ctx, pp);
 
-    a = GetMeasurementAttributes(pp);
+    a = GetMeasurementAttributes(ctx, pp);
 
-    if (!CheckMeasureSanity(a, pp))
+    if (!CheckMeasureSanity(ctx, a, pp))
     {
         return;
     }
 
-    VerifyMeasurement(this, a, pp);
+    VerifyMeasurement(ctx, this, a, pp);
 }
 
 /*****************************************************************************/
 
-static int CheckMeasureSanity(Attributes a, Promise *pp)
+static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
 {
     int retval = true;
 
     if (!IsAbsPath(pp->promiser))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
              pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
 
-    if (a.measure.data_type == cf_notype)
+    if (a.measure.data_type == DATA_TYPE_NONE)
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
-        PromiseRef(cf_error, pp);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
     else
@@ -98,16 +100,16 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
         {
             switch (a.measure.data_type)
             {
-            case cf_counter:
-            case cf_str:
-            case cf_int:
-            case cf_real:
+            case DATA_TYPE_COUNTER:
+            case DATA_TYPE_STRING:
+            case DATA_TYPE_INT:
+            case DATA_TYPE_REAL:
                 break;
 
             default:
-                cfPS(cf_error, CF_INTERPT, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                      "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
-                PromiseRef(cf_error, pp);
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 retval = false;
                 break;
             }
@@ -116,21 +118,21 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
 
     if ((a.measure.select_line_matching) && (a.measure.select_line_number != CF_NOINT))
     {
-        cfPS(cf_error, CF_INTERPT, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
              "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
-        PromiseRef(cf_error, pp);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
 
     if (!a.measure.extraction_regex)
     {
-        CfOut(cf_verbose, "", "No extraction regex, so assuming whole line is the value");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No extraction regex, so assuming whole line is the value");
     }
     else
     {
         if ((!strchr(a.measure.extraction_regex, '(')) && (!strchr(a.measure.extraction_regex, ')')))
         {
-            cfPS(cf_error, CF_INTERPT, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
                  "The extraction_regex must contain a single backreference for the extraction\n");
             retval = false;
         }
@@ -140,7 +142,7 @@ static int CheckMeasureSanity(Attributes a, Promise *pp)
 }
 
 #ifndef HAVE_NOVA
-static void VerifyMeasurement(double *this, Attributes a, Promise *pp)
+static void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp)
 {
 }
 #endif

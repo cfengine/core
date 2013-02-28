@@ -6,7 +6,6 @@ man_MANS = \
     cf-key.8 \
     cf-monitord.8 \
     cf-promises.8 \
-    cf-report.8 \
     cf-runagent.8 \
     cf-serverd.8
 
@@ -14,7 +13,6 @@ man_MANS = \
 #if MONGO
 #  man_MANS += cf-hub.8
 #endif
-#  man_MANS += cf-know.8
 #endif
 
 endif

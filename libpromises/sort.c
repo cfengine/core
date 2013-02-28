@@ -1,5 +1,3 @@
-#include "cf3.defs.h"
-
 /*******************************************************************/
 
 /* The following sort functions are trivial rewrites of merge-sort
@@ -27,6 +25,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#include "cf3.defs.h"
+
+#include "rlist.h"
+#include "item_lib.h"
 
 typedef bool (*LessFn)(void *lhs, void *rhs, void *ctx);
 typedef void * (*GetNextElementFn)(void *element);

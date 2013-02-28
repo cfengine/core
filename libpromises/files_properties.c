@@ -42,31 +42,25 @@ static bool SuspiciousFile(const char *filename)
     return IsItemIn(SUSPICIOUSLIST, filename);
 }
 
+static const char *SKIPFILES[] =
+{
+    ".",
+    "..",
+    "lost+found",
+    ".cfengine.rm",
+    NULL
+};
 
-/*********************************************************************/
-/* Files to be ignored when parsing directories                      */
-/*********************************************************************/
-
-/*********************************************************************/
-
-int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
+int ConsiderFile(EvalContext *ctx, const char *nodename, char *path, Attributes attr, Promise *pp)
 {
     int i;
     struct stat statbuf;
     const char *sp;
 
-    static char *skipfiles[] =
-{
-        ".",
-        "..",
-        "lost+found",
-        ".cfengine.rm",
-        NULL
-    };
 
     if (strlen(nodename) < 1)
     {
-        CfOut(cf_error, "", "Empty (null) filename detected in %s\n", path);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Empty (null) filename detected in %s\n", path);
         return true;
     }
 
@@ -78,7 +72,7 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         {
             if (S_ISREG(statbuf.st_mode))
             {
-                CfOut(cf_error, "", "Suspicious file %s found in %s\n", nodename, path);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious file %s found in %s\n", nodename, path);
                 return false;
             }
         }
@@ -86,13 +80,13 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
 
     if (strcmp(nodename, "...") == 0)
     {
-        CfOut(cf_verbose, "", "Possible DFS/FS cell node detected in %s...\n", path);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Possible DFS/FS cell node detected in %s...\n", path);
         return true;
     }
 
-    for (i = 0; skipfiles[i] != NULL; i++)
+    for (i = 0; SKIPFILES[i] != NULL; i++)
     {
-        if (strcmp(nodename, skipfiles[i]) == 0)
+        if (strcmp(nodename, SKIPFILES[i]) == 0)
         {
             CfDebug("Filename %s/%s is classified as ignorable\n", path, nodename);
             return false;
@@ -127,9 +121,9 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         }
     }
 
-    if (cf_lstat(buf, &statbuf, attr, pp) == -1)
+    if (cf_lstat(ctx, buf, &statbuf, attr, pp) == -1)
     {
-        CfOut(cf_verbose, "lstat", "Couldn't stat %s", buf);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Couldn't stat %s", buf);
         return true;
     }
 
@@ -138,19 +132,19 @@ int ConsiderFile(const char *nodename, char *path, Attributes attr, Promise *pp)
         return false;
     }
 
-    CfOut(cf_error, "", "Suspicious looking file object \"%s\" masquerading as hidden file in %s\n", nodename, path);
+    CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious looking file object \"%s\" masquerading as hidden file in %s\n", nodename, path);
     CfDebug("Filename looks suspicious\n");
 
     if (S_ISLNK(statbuf.st_mode))
     {
-        CfOut(cf_inform, "", "   %s is a symbolic link\n", nodename);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "   %s is a symbolic link\n", nodename);
     }
     else if (S_ISDIR(statbuf.st_mode))
     {
-        CfOut(cf_inform, "", "   %s is a directory\n", nodename);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "   %s is a directory\n", nodename);
     }
 
-    CfOut(cf_verbose, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (statbuf.st_size),
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (statbuf.st_size),
           (unsigned int) (statbuf.st_mode));
     return true;
 }

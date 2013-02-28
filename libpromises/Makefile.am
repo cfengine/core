@@ -32,7 +32,6 @@ libpromises_la_SOURCES = \
         client_protocol.c client_protocol.h \
         communication.c communication.h \
         constants.c \
-        constraints.c constraints.h \
         conversion.c conversion.h \
         crypto.c crypto.h \
         dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
@@ -42,13 +41,12 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.c dir.h dir_priv.h \
-        dtypes.c \
         enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
         expand.c expand.h \
-        files_copy.c \
+        files_copy.c files_copy.h \
         files_hashes.c files_hashes.h \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
@@ -58,7 +56,6 @@ libpromises_la_SOURCES = \
         full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
-        html.c \
         instrumentation.c instrumentation.h \
         item_lib.c item_lib.h \
         iteration.c iteration.h \
@@ -74,7 +71,6 @@ libpromises_la_SOURCES = \
         mod_exec.c mod_exec.h \
         mod_files.c mod_files.h \
         mod_interfaces.c mod_interfaces.h \
-        mod_knowledge.c mod_knowledge.h \
         mod_measurement.c mod_measurement.h \
         mod_methods.c mod_methods.h \
         mod_outputs.c mod_outputs.h \

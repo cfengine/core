@@ -33,7 +33,7 @@
 
 #include "misc_lib.h"
 #include "env_context.h"
-#include "constraints.h"
+#include "policy.h"
 #include "promises.h"
 #include "vars.h"
 #include "syntax.h"
@@ -51,26 +51,30 @@
 #include "iteration.h"
 #include "buffer.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
-static void SetAnyMissingDefaults(Promise *pp);
+static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
 static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars);
-static void CheckRecursion(const ReportContext *report_context, Promise *pp);
-static void ParseServices(const ReportContext *report_context, Promise *pp);
+static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context, Promise *pp);
+static void ParseServices(EvalContext *ctx, const ReportContext *report_context, Promise *pp);
 /*
 
 Expanding variables is easy -- expanding lists automagically requires
 some thought. Remember that
 
-promiser <=> CF_SCALAR
-promisee <=> CF_LIST
+promiser <=> RVAL_TYPE_SCALAR
+promisee <=> RVAL_TYPE_LIST
 
 Expanding all bodies in the constraint list, we have
 
-lval <=> CF_LIST|CF_SCALAR
+lval <=> RVAL_TYPE_LIST|RVAL_TYPE_SCALAR
 
 Now the rule for variable substitution is that any list variable @(name)
 substituted directly for a LIST is not iterated, but dropped into
@@ -118,7 +122,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnptr,
+void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, void *fnptr,
                    const ReportContext *report_context)
 {
     Rlist *listvars = NULL, *scalarvars = NULL;
@@ -132,15 +136,15 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
 
 //fix me wth a general function SetMissingDefaults
 
-    SetAnyMissingDefaults(pp);
+    SetAnyMissingDefaults(ctx, pp);
 
     DeleteScope("match");       /* in case we expand something expired accidentially */
 
     THIS_BUNDLE = scopeid;
 
-    pcopy = DeRefCopyPromise(scopeid, pp);
+    pcopy = DeRefCopyPromise(ctx, scopeid, pp);
 
-    MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) {pcopy->promiser, CF_SCALAR}, pp);
+    MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, pp);
 
     if (pcopy->promisee.item != NULL)
     {
@@ -156,38 +160,38 @@ void ExpandPromise(AgentType agent, const char *scopeid, Promise *pp, void *fnpt
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
     PushThisScope();
-    ExpandPromiseAndDo(agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
+    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
     PopThisScope();
 
     PromiseDestroy(pcopy);
-    DeleteRlist(scalarvars);
-    DeleteRlist(listvars);
+    RlistDestroy(scalarvars);
+    RlistDestroy(listvars);
 }
 
 /*********************************************************************/
 
-Rval ExpandDanglers(const char *scopeid, Rval rval, const Promise *pp)
+Rval ExpandDanglers(EvalContext *ctx, const char *scopeid, Rval rval, const Promise *pp)
 {
     Rval final;
 
     /* If there is still work left to do, expand and replace alloc */
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
 
         if (IsCf3VarString(rval.item))
         {
-            final = EvaluateFinalRval(scopeid, rval, false, pp);
+            final = EvaluateFinalRval(ctx, scopeid, rval, false, pp);
         }
         else
         {
-            final = CopyRvalItem(rval);
+            final = RvalCopy(rval);
         }
         break;
 
     default:
-        final = CopyRvalItem(rval);
+        final = RvalCopy(rval);
         break;
     }
 
@@ -207,20 +211,20 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listv
         return;
     }
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         MapIteratorsFromScalar(scopeid, scalarvars, listvars, (char *) rval.item, 0, pp);
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
             MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) {rp->item, rp->type}, pp);
         }
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
         fp = (FnCall *) rval.item;
 
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
@@ -284,16 +288,12 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
                     qualified = false;
                 }
 
-                // Interlude for knowledge map creation add dependency
-
-                RegisterBundleDependence(absscope, pp);
-
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
-                if (GetVariable(absscope, var, &rval) != cf_notype)
+                if (GetVariable(absscope, var, &rval) != DATA_TYPE_NONE)
                 {
-                    if (rval.rtype == CF_LIST)
+                    if (rval.type == RVAL_TYPE_LIST)
                     {
                         ExpandScalar(finalname, exp);
 
@@ -308,17 +308,17 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
                         if (level > 0)
                         {
-                            IdempPrependRScalar(its, exp, CF_SCALAR);
+                            RlistPrependScalarIdemp(its, exp);
                         }
                         else
                         {
-                            IdempAppendRScalar(its, exp, CF_SCALAR);
+                            RlistAppendScalarIdemp(its, exp);
                         }
                     }
-                    else if (rval.rtype == CF_SCALAR)
+                    else if (rval.type == RVAL_TYPE_SCALAR)
                     {
                         CfDebug("Scalar variable $(%s) found\n", var);
-                        IdempAppendRScalar(scal, var, CF_SCALAR);
+                        RlistAppendScalarIdemp(scal, var);
                     }
                 }
                 else
@@ -361,16 +361,16 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
 
     for (rp = (Rlist *) list; rp != NULL; rp = rp->next)
     {
-        if (!expandnaked && (rp->type == CF_SCALAR) && IsNakedVar(rp->item, '@'))
+        if (!expandnaked && (rp->type == RVAL_TYPE_SCALAR) && IsNakedVar(rp->item, '@'))
         {
             returnval.item = xstrdup(rp->item);
-            returnval.rtype = CF_SCALAR;
+            returnval.type = RVAL_TYPE_SCALAR;
         }
-        else if ((rp->type == CF_SCALAR) && IsNakedVar(rp->item, '@'))
+        else if ((rp->type == RVAL_TYPE_SCALAR) && IsNakedVar(rp->item, '@'))
         {
             GetNaked(naked, rp->item);
 
-            if (GetVariable(scopeid, naked, &returnval) != cf_notype)
+            if (GetVariable(scopeid, naked, &returnval) != DATA_TYPE_NONE)
             {
                 returnval = ExpandPrivateRval(scopeid, returnval);
             }
@@ -384,8 +384,8 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
             returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
         }
 
-        AppendRlist(&start, returnval.item, returnval.rtype);
-        DeleteRvalItem(returnval);
+        RlistAppend(&start, returnval.item, returnval.type);
+        RvalDestroy(returnval);
     }
 
     return start;
@@ -399,35 +399,38 @@ Rval ExpandPrivateRval(const char *scopeid, Rval rval)
     FnCall *fp, *fpe;
     Rval returnval;
 
-    CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n", scopeid, rval.rtype);
+    CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n", scopeid, rval.type);
 
 /* Allocates new memory for the copy */
 
     returnval.item = NULL;
-    returnval.rtype = CF_NOPROMISEE;
+    returnval.type = RVAL_TYPE_NOPROMISEE;
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
 
         ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
         returnval.item = xstrdup(buffer);
-        returnval.rtype = CF_SCALAR;
+        returnval.type = RVAL_TYPE_SCALAR;
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
 
         returnval.item = ExpandList(scopeid, rval.item, true);
-        returnval.rtype = CF_LIST;
+        returnval.type = RVAL_TYPE_LIST;
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
 
         /* Note expand function does not mean evaluate function, must preserve type */
         fp = (FnCall *) rval.item;
         fpe = ExpandFnCall(scopeid, fp, true);
         returnval.item = fpe;
-        returnval.rtype = CF_FNCALL;
+        returnval.type = RVAL_TYPE_FNCALL;
+        break;
+
+    default:
         break;
     }
 
@@ -438,30 +441,30 @@ Rval ExpandPrivateRval(const char *scopeid, Rval rval)
 
 Rval ExpandBundleReference(const char *scopeid, Rval rval)
 {
-    CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.rtype);
+    CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.type);
 
 /* Allocates new memory for the copy */
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
     {
         char buffer[CF_EXPANDSIZE];
 
         ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
-        return (Rval) {xstrdup(buffer), CF_SCALAR};
+        return (Rval) {xstrdup(buffer), RVAL_TYPE_SCALAR};
     }
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
     {
         /* Note expand function does not mean evaluate function, must preserve type */
         FnCall *fp = (FnCall *) rval.item;
 
-        return (Rval) {ExpandFnCall(scopeid, fp, false), CF_FNCALL};
+        return (Rval) {ExpandFnCall(scopeid, fp, false), RVAL_TYPE_FNCALL};
     }
 
     default:
-        return (Rval) {NULL, CF_NOPROMISEE};
+        return (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
     }
 }
 
@@ -473,7 +476,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
     if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(cf_error, "",
+        CfOut(OUTPUT_LEVEL_ERROR, "",
               "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n", str2,
               str1);
         return true;
@@ -583,9 +586,9 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         switch (GetVariable(scopeid, currentitem, &rval))
         {
-        case cf_str:
-        case cf_int:
-        case cf_real:
+        case DATA_TYPE_STRING:
+        case DATA_TYPE_INT:
+        case DATA_TYPE_REAL:
 
             if (ExpandOverflow(buffer, (char *) rval.item))
             {
@@ -595,10 +598,10 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
             strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
             break;
 
-        case cf_slist:
-        case cf_ilist:
-        case cf_rlist:
-        case cf_notype:
+        case DATA_TYPE_STRING_LIST:
+        case DATA_TYPE_INT_LIST:
+        case DATA_TYPE_REAL_LIST:
+        case DATA_TYPE_NONE:
             CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
 
             if (varstring == '}')
@@ -640,16 +643,16 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
+void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
                         void (*fnptr) (), const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
     const int cf_null_cutoff = 5;
-    char *handle = GetConstraintValue("handle", pp, CF_SCALAR), v[CF_MAXVARSIZE];
+    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR), v[CF_MAXVARSIZE];
     int cutoff = 0;
 
-    lol = NewIterationContext(scopeid, listvars);
+    lol = NewIterationContext(ctx, scopeid, listvars);
 
     if (lol && EndOfIteration(lol))
     {
@@ -690,27 +693,27 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
             // This ordering is necessary to get automated canonification
             ExpandScalar(handle,tmp);
             CanonifyNameInPlace(tmp);
-            NewScalar("this", "handle", tmp, cf_str);
+            NewScalar("this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            NewScalar("this", "handle", PromiseID(pp), cf_str);
+            NewScalar("this", "handle", PromiseID(ctx, pp), DATA_TYPE_STRING);
         }
 
         if (pp->audit && pp->audit->filename)
         {
-            NewScalar("this", "promise_filename", pp->audit->filename, cf_str);
+            NewScalar("this", "promise_filename", pp->audit->filename, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            NewScalar("this", "promise_linenumber", number, cf_str);
+            NewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        NewScalar("this", "promiser_uid", v, cf_int);
+        NewScalar("this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        NewScalar("this", "promiser_gid", v, cf_int);
+        NewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        NewScalar("this", "bundle", pp->bundle, cf_str);
-        NewScalar("this", "namespace", pp->ns, cf_str);
+        NewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
+        NewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -719,40 +722,40 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
 
         if (pp->has_subbundles)
         {
-            NewScalar("this", "promiser", pp->promiser, cf_str);
+            NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         /* End special variables */
 
-        pexp = ExpandDeRefPromise("this", pp);
+        pexp = ExpandDeRefPromise(ctx, "this", pp);
 
         switch (agent)
         {
         case AGENT_TYPE_COMMON:
-            ShowPromise(report_context, REPORT_OUTPUT_TYPE_TEXT, pexp, 6);
-            CheckRecursion(report_context, pexp);
-            ReCheckAllConstraints(pexp);
+            ShowPromise(ctx, report_context, pexp, 6);
+            CheckRecursion(ctx, report_context, pexp);
+            PromiseRecheckAllConstraints(ctx, pexp);
             break;
 
         default:
 
             if (fnptr != NULL)
             {
-                (*fnptr) (pexp);
+                (*fnptr) (ctx, pexp);
             }
             break;
         }
 
         if (strcmp(pp->agentsubtype, "vars") == 0)
         {
-            ConvergeVarHashPromise(pp->bundle, pexp, true);
+            ConvergeVarHashPromise(ctx, pp->bundle, pexp, true);
         }
 
         if (strcmp(pp->agentsubtype, "meta") == 0)
            {
-           char namespace[CF_BUFSIZE];
-           snprintf(namespace,CF_BUFSIZE,"%s_meta",pp->bundle);
-           ConvergeVarHashPromise(namespace, pp, true);
+           char ns[CF_BUFSIZE];
+           snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+           ConvergeVarHashPromise(ctx, ns, pp, true);
            }
         
         PromiseDestroy(pexp);
@@ -766,27 +769,27 @@ void ExpandPromiseAndDo(AgentType agent, const char *scopeid, Promise *pp, Rlist
 
 /*********************************************************************/
 
-Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Promise *pp)
+Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp)
 {
     Rlist *rp;
     Rval returnval, newret;
     char naked[CF_MAXVARSIZE];
     FnCall *fp;
 
-    CfDebug("EvaluateFinalRval -- type %c\n", rval.rtype);
+    CfDebug("EvaluateFinalRval -- type %c\n", rval.type);
 
-    if ((rval.rtype == CF_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
+    if ((rval.type == RVAL_TYPE_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
     {
         GetNaked(naked, rval.item);
 
-        if (GetVariable(scopeid, naked, &returnval) == cf_notype || returnval.rtype != CF_LIST)
+        if (GetVariable(scopeid, naked, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
         {
             returnval = ExpandPrivateRval("this", rval);
         }
         else
         {
             returnval.item = ExpandList(scopeid, returnval.item, true);
-            returnval.rtype = CF_LIST;
+            returnval.type = RVAL_TYPE_LIST;
         }
     }
     else
@@ -797,9 +800,9 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
         }
         else
         {
-            if (IsBuiltinFnCall(rval))
+            if (FnCallIsBuiltIn(rval))
             {
-                returnval = CopyRvalItem(rval);
+                returnval = RvalCopy(rval);
             }
             else
             {
@@ -808,22 +811,22 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
         }
     }
 
-    switch (returnval.rtype)
+    switch (returnval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         for (rp = (Rlist *) returnval.item; rp != NULL; rp = rp->next)
         {
-            if (rp->type == CF_FNCALL)
+            if (rp->type == RVAL_TYPE_FNCALL)
             {
                 fp = (FnCall *) rp->item;
-                FnCallResult res = EvaluateFunctionCall(fp, pp);
+                FnCallResult res = FnCallEvaluate(ctx, fp, pp);
 
-                DeleteFnCall(fp);
+                FnCallDestroy(fp);
                 rp->item = res.rval.item;
-                rp->type = res.rval.rtype;
+                rp->type = res.rval.type;
                 CfDebug("Replacing function call with new type (%c)\n", rp->type);
             }
             else
@@ -845,17 +848,17 @@ Rval EvaluateFinalRval(const char *scopeid, Rval rval, int forcelist, const Prom
         }
         break;
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
 
         // Also have to eval function now
         fp = (FnCall *) returnval.item;
-        returnval = EvaluateFunctionCall(fp, pp).rval;
-        DeleteFnCall(fp);
+        returnval = FnCallEvaluate(ctx, fp, pp).rval;
+        FnCallDestroy(fp);
         break;
 
     default:
         returnval.item = NULL;
-        returnval.rtype = CF_NOPROMISEE;
+        returnval.type = RVAL_TYPE_NOPROMISEE;
         break;
     }
 
@@ -899,7 +902,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             GetVariable(orgscope, orgname, &retval);
 
-            NewList(scope, rp->item, CopyRvalItem((Rval) {retval.item, CF_LIST}).item, cf_slist);
+            NewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1052,7 +1055,7 @@ void GetNaked(char *s2, const char *s1)
 {
     if (strlen(s1) < 4)
     {
-        CfOut(cf_error, "", "Naked variable expected, but \"%s\" is malformed", s1);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Naked variable expected, but \"%s\" is malformed", s1);
         strncpy(s2, s1, CF_MAXVARSIZE - 1);
         return;
     }
@@ -1082,15 +1085,15 @@ bool IsVarList(const char *var)
 
 /*********************************************************************/
 
-static void SetAnyMissingDefaults(Promise *pp)
+static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
 {
     if (strcmp(pp->agentsubtype, "packages") == 0)
     {
-        if (GetConstraint(pp, "package_method") == NULL)
+        if (PromiseGetConstraint(ctx, pp, "package_method") == NULL)
         {
-            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", CF_SCALAR}, "any", true);
+            PromiseAppendConstraint(pp, "package_method", (Rval) {"generic", RVAL_TYPE_SCALAR}, "any", true);
         }
     }
 }
@@ -1099,7 +1102,7 @@ static void SetAnyMissingDefaults(Promise *pp)
 /* General                                                           */
 /*********************************************************************/
 
-void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
+void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int allow_redefine)
 {
     Constraint *cp, *cp_save = NULL;
     Attributes a = { {0} };
@@ -1113,7 +1116,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         return;
     }
 
-    if (IsExcluded(pp->classes, pp->ns))
+    if (IsExcluded(ctx, pp->classes, pp->ns))
     {
         return;
     }
@@ -1136,35 +1139,35 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         {
             Rval res;
 
-            switch (cp->rval.rtype)
+            switch (cp->rval.type)
             {
-            case CF_SCALAR:
+            case RVAL_TYPE_SCALAR:
 
-                if (IsExcluded(cp->rval.item, pp->ns))
+                if (IsExcluded(ctx, cp->rval.item, pp->ns))
                 {
                     return;
                 }
 
                 break;
 
-            case CF_FNCALL:
+            case RVAL_TYPE_FNCALL:
             {
                 bool excluded = false;
 
                 /* eval it: e.g. ifvarclass => not("a_class") */
 
-                res = EvaluateFunctionCall(cp->rval.item, NULL).rval;
+                res = FnCallEvaluate(ctx, cp->rval.item, NULL).rval;
 
                 /* Don't continue unless function was evaluated properly */
-                if (res.rtype != CF_SCALAR)
+                if (res.type != RVAL_TYPE_SCALAR)
                 {
-                    DeleteRvalItem(res);
+                    RvalDestroy(res);
                     return;
                 }
 
-                excluded = IsExcluded(res.item, pp->ns);
+                excluded = IsExcluded(ctx, res.item, pp->ns);
 
-                DeleteRvalItem(res);
+                RvalDestroy(res);
 
                 if (excluded)
                 {
@@ -1174,7 +1177,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                 break;
 
             default:
-                CfOut(cf_error, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.rtype);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "!! Invalid ifvarclass type '%c': should be string or function", cp->rval.type);
                 continue;
             }
 
@@ -1209,23 +1212,23 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
     if (cp == NULL)
     {
-        CfOut(cf_inform, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
-        PromiseRef(cf_inform, pp);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_INFORM, pp);
         return;
     }
 
     if (num_values > 2)
     {
-        CfOut(cf_error, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
-        PromiseRef(cf_error, pp);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
 
 //More consideration needs to be given to using these
 //a.transaction = GetTransactionConstraints(pp);
-    a.classes = GetClassDefinitionConstraints(pp);
+    a.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    enum cfdatatype existing_var = GetVariable(scope, pp->promiser, &retval);
+    DataType existing_var = GetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(pp->ns, "default") == 0)
@@ -1278,21 +1281,21 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
     {
         FnCall *fp = (FnCall *) rval.item;
 
-        if (cp->rval.rtype == CF_FNCALL)
+        if (cp->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_var != cf_notype)
+            if (existing_var != DATA_TYPE_NONE)
             {
                 // Already did this
                 BufferDestroy(&qualified_scope);
                 return;
             }
 
-            FnCallResult res = EvaluateFunctionCall(fp, pp);
+            FnCallResult res = FnCallEvaluate(ctx, fp, pp);
 
             if (res.status == FNCALL_FAILURE)
             {
                 /* We do not assign variables to failed fn calls */
-                DeleteRvalItem(res.rval);
+                RvalDestroy(res.rval);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1307,7 +1310,7 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
 
             if (strcmp(cp->lval, "int") == 0)
             {
-                result = BufferPrintf(conv, "%ld", Str2Int(cp->rval.item));
+                result = BufferPrintf(conv, "%ld", IntFromString(cp->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -1319,11 +1322,11 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&conv);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.rtype});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else if (strcmp(cp->lval, "real") == 0)
             {
-                result = BufferPrintf(conv, "%lf", Str2Double(cp->rval.item));
+                result = BufferPrintf(conv, "%lf", DoubleFromString(cp->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -1335,33 +1338,33 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
                     BufferDestroy(&qualified_scope);
                     return;
                 }
-                rval = CopyRvalItem((Rval) {BufferData(conv), cp->rval.rtype});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
             }
             else
             {
-                rval = CopyRvalItem(cp->rval);
+                rval = RvalCopy(cp->rval);
             }
             BufferDestroy(&conv);
         }
 
         if (Epimenides(pp->promiser, rval, 0))
         {
-            CfOut(cf_error, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
         }
         else
         {
             /* See if the variable needs recursively expanding again */
 
-            Rval returnval = EvaluateFinalRval(BufferData(qualified_scope), rval, true, pp);
+            Rval returnval = EvaluateFinalRval(ctx, BufferData(qualified_scope), rval, true, pp);
 
-            DeleteRvalItem(rval);
+            RvalDestroy(rval);
 
             // freed before function exit
             rval = returnval;
         }
 
-        if (existing_var != cf_notype)
+        if (existing_var != DATA_TYPE_NONE)
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
@@ -1369,21 +1372,27 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(retval, rval) == false))
             {
-                switch (rval.rtype)
+                switch (rval.type)
                 {
-                char valbuf[CF_BUFSIZE];
-                case CF_SCALAR:
-                    CfOut(cf_verbose, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
-                          pp->promiser, ScalarRvalValue(retval), ScalarRvalValue(rval));
-                    PromiseRef(cf_verbose, pp);
+                case RVAL_TYPE_SCALAR:
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                          pp->promiser, RvalScalarValue(retval), RvalScalarValue(rval));
+                    PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                     break;
-                case CF_LIST:
-                    CfOut(cf_verbose, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
-                    PrintRlist(valbuf, CF_BUFSIZE, retval.item);
-                    CfOut(cf_verbose, "", "Old value: %s", valbuf);
-                    PrintRlist(valbuf, CF_BUFSIZE, rval.item);
-                    CfOut(cf_verbose, "", " New value: %s", valbuf);
-                    PromiseRef(cf_verbose, pp);
+
+                case RVAL_TYPE_LIST:
+                    {
+                        char valbuf[CF_BUFSIZE];
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
+                        RlistPrint(valbuf, CF_BUFSIZE, retval.item);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", valbuf);
+                        RlistPrint(valbuf, CF_BUFSIZE, rval.item);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " New value: %s", valbuf);
+                        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                    }
+                    break;
+
+                default:
                     break;
                 }
             }
@@ -1392,21 +1401,21 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
         if (IsCf3VarString(pp->promiser))
         {
             // Unexpanded variables, we don't do anything with
-            DeleteRvalItem(rval);
+            RvalDestroy(rval);
             BufferDestroy(&qualified_scope);
             return;
         }
 
         if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
-            CfOut(cf_error, "", " !! Variable identifier contains illegal characters");
-            PromiseRef(cf_error, pp);
-            DeleteRvalItem(rval);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable identifier contains illegal characters");
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            RvalDestroy(rval);
             BufferDestroy(&qualified_scope);
             return;
         }
 
-        if (drop_undefined && rval.rtype == CF_LIST)
+        if (drop_undefined && rval.type == RVAL_TYPE_LIST)
         {
             for (rp = rval.item; rp != NULL; rp = rp->next)
             {
@@ -1418,26 +1427,26 @@ void ConvergeVarHashPromise(char *scope, const Promise *pp, int allow_redefine)
             }
         }
 
-        if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, Typename2Datatype(cp->lval),
+        if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
-            CfOut(cf_verbose, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
-            PromiseRef(cf_verbose, pp);
-            cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
+            PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+            cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
         }
         else
         {
-            cfPS(cf_noreport, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_NONE, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
         }
     }
     else
     {
-        CfOut(cf_error, "", " !! Variable %s has no promised value\n", pp->promiser);
-        CfOut(cf_error, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
-        cfPS(cf_noreport, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+        cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
     BufferDestroy(&qualified_scope);
-    DeleteRvalItem(rval);
+    RvalDestroy(rval);
 }
 
 /*********************************************************************/
@@ -1449,13 +1458,13 @@ static int Epimenides(const char *var, Rval rval, int level)
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
 
-    switch (rval.rtype)
+    switch (rval.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
 
         if (StringContainsVar(rval.item, var))
         {
-            CfOut(cf_error, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable \"%s\" contains itself (non-convergent): %s", var, (char *) rval.item);
             return true;
         }
 
@@ -1470,7 +1479,7 @@ static int Epimenides(const char *var, Rval rval, int level)
                 return false;
             }
 
-            if (Epimenides(var, (Rval) {exp, CF_SCALAR}, level + 1))
+            if (Epimenides(var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -1478,7 +1487,7 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         list = (Rlist *) rval.item;
 
         for (rp = list; rp != NULL; rp = rp->next)
@@ -1501,14 +1510,14 @@ static int Epimenides(const char *var, Rval rval, int level)
 
 static int CompareRval(Rval rval1, Rval rval2)
 {
-    if (rval1.rtype != rval2.rtype)
+    if (rval1.type != rval2.type)
     {
         return -1;
     }
 
-    switch (rval1.rtype)
+    switch (rval1.type)
     {
-    case CF_SCALAR:
+    case RVAL_TYPE_SCALAR:
 
         if (IsCf3VarString((char *) rval1.item) || IsCf3VarString((char *) rval2.item))
         {
@@ -1522,10 +1531,13 @@ static int CompareRval(Rval rval1, Rval rval2)
 
         break;
 
-    case CF_LIST:
+    case RVAL_TYPE_LIST:
         return CompareRlist(rval1.item, rval2.item);
 
-    case CF_FNCALL:
+    case RVAL_TYPE_FNCALL:
+        return -1;
+
+    default:
         return -1;
     }
 
@@ -1546,7 +1558,7 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
         {
             Rlist *rc1, *rc2;
 
-            if (rp1->type == CF_FNCALL || rp2->type == CF_FNCALL)
+            if (rp1->type == RVAL_TYPE_FNCALL || rp2->type == RVAL_TYPE_FNCALL)
             {
                 return -1;      // inconclusive
             }
@@ -1556,12 +1568,12 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
             // Check for list nesting with { fncall(), "x" ... }
 
-            if (rp1->type == CF_LIST)
+            if (rp1->type == RVAL_TYPE_LIST)
             {
                 rc1 = rp1->item;
             }
 
-            if (rp2->type == CF_LIST)
+            if (rp2->type == RVAL_TYPE_LIST)
             {
                 rc2 = rp2->item;
             }
@@ -1587,7 +1599,7 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
 /*******************************************************************/
 
-static void CheckRecursion(const ReportContext *report_context, Promise *pp)
+static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context, Promise *pp)
 {
     char *type;
     char *scope;
@@ -1597,9 +1609,9 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
     // Check for recursion of bundles so that knowledge map will reflect these cases
 
     if (strcmp("services", pp->agentsubtype) == 0)
-       {
-       ParseServices(report_context, pp);
-       }
+    {
+        ParseServices(ctx, report_context, pp);
+    }
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -1618,13 +1630,13 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
             continue;
         }
 
-        switch (cp->rval.rtype)
+        switch (cp->rval.type)
         {
-           case CF_SCALAR:
+           case RVAL_TYPE_SCALAR:
                scope = (char *)cp->rval.item;
                break;
 
-           case CF_FNCALL:
+           case RVAL_TYPE_FNCALL:
                fp = (FnCall *)cp->rval.item;
                scope = fp->name;
                break;
@@ -1633,8 +1645,17 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
                continue;
         }
 
-       if ((bp = GetBundle(PolicyFromPromise(pp), scope, type)))
-       {
+        {
+            Policy *policy = PolicyFromPromise(pp);
+            bp = PolicyGetBundle(policy, NULL, type, scope);
+            if (!bp)
+            {
+                bp = PolicyGetBundle(policy, NULL, "common", scope);
+            }
+        }
+
+        if (bp)
+        {
            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
            {
                SubType *sbp = SeqAt(bp->subtypes, j);
@@ -1642,56 +1663,56 @@ static void CheckRecursion(const ReportContext *report_context, Promise *pp)
                for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                {
                    Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                   ExpandPromise(AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
+                   ExpandPromise(ctx, AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
                }
            }
-       }
+        }
     }
 }
 
 /*****************************************************************************/
 
-static void ParseServices(const ReportContext *report_context, Promise *pp)
+static void ParseServices(EvalContext *ctx, const ReportContext *report_context, Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
     Attributes a = { {0} };
 
-    a = GetServicesAttributes(pp);
+    a = GetServicesAttributes(ctx, pp);
 
     // Need to set up the default service pack to eliminate syntax, analogous to verify_services.c
 
-    if (GetConstraintValue("service_bundle", pp, CF_SCALAR) == NULL)
+    if (ConstraintGetRvalValue(ctx, "service_bundle", pp, RVAL_TYPE_SCALAR) == NULL)
     {
         switch (a.service.service_policy)
         {
-        case cfsrv_start:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "start", CF_SCALAR);
+        case SERVICE_POLICY_START:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "start");
             break;
 
-        case cfsrv_restart:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+        case SERVICE_POLICY_RESTART:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
 
-        case cfsrv_reload:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "restart", CF_SCALAR);
+        case SERVICE_POLICY_RELOAD:
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "restart");
             break;
 
-        case cfsrv_stop:
-        case cfsrv_disable:
+        case SERVICE_POLICY_STOP:
+        case SERVICE_POLICY_DISABLE:
         default:
-            AppendRlist(&args, pp->promiser, CF_SCALAR);
-            AppendRlist(&args, "stop", CF_SCALAR);
+            RlistAppendScalar(&args, pp->promiser);
+            RlistAppendScalar(&args, "stop");
             break;
 
         }
 
-        default_bundle = NewFnCall("standard_services", args);
+        default_bundle = FnCallNew("standard_services", args);
 
-        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, CF_FNCALL}, "any", false);
+        PromiseAppendConstraint(pp, "service_bundle", (Rval) {default_bundle, RVAL_TYPE_FNCALL}, "any", false);
         a.havebundle = true;
     }
 
@@ -1699,35 +1720,39 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
 
     switch (a.service.service_policy)
     {
-    case cfsrv_start:
-        NewScalar("this", "service_policy", "start", cf_str);
+    case SERVICE_POLICY_START:
+        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
-    case cfsrv_restart:
-        NewScalar("this", "service_policy", "restart", cf_str);
+    case SERVICE_POLICY_RESTART:
+        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
-    case cfsrv_reload:
-        NewScalar("this", "service_policy", "reload", cf_str);
+    case SERVICE_POLICY_RELOAD:
+        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
-    case cfsrv_stop:
-    case cfsrv_disable:
+    case SERVICE_POLICY_STOP:
+    case SERVICE_POLICY_DISABLE:
     default:
-        NewScalar("this", "service_policy", "stop", cf_str);
+        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 
-    if (default_bundle && GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent") == NULL)
+    Bundle *bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", default_bundle->name);
+    if (!bp)
+    {
+        bp = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", default_bundle->name);
+    }
+
+    if (default_bundle && bp == NULL)
     {
         return;
     }
 
-    Bundle *bp = NULL;
-
-    if ((bp = GetBundle(PolicyFromPromise(pp), default_bundle->name, "agent")))
+    if (bp)
     {
-        MapBodyArgs(bp->name, args, bp->args);
+        MapBodyArgs(ctx, bp->name, args, bp->args);
 
         for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
         {
@@ -1736,7 +1761,7 @@ static void ParseServices(const ReportContext *report_context, Promise *pp)
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {
                 Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                ExpandPromise(AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
+                ExpandPromise(ctx, AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
             }
         }
     }

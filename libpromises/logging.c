@@ -33,7 +33,12 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "transaction.h"
-#include "constraints.h"
+#include "policy.h"
+#include "rlist.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 #define CF_VALUE_LOG      "cf_value.log"
 
@@ -77,26 +82,26 @@ void EndAudit(int background_tasks)
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if (BooleanControl("control_agent", CFA_CONTROLBODY[cfa_track_value].lval))
+    if (BooleanControl("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
     {
         FILE *fout;
         char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
         time_t now = time(NULL);
 
-        CfOut(cf_inform, "", " -> Recording promise valuations");
+        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
 
         snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
         snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
 
         if ((fout = fopen(name, "a")) == NULL)
         {
-            CfOut(cf_inform, "", " !! Unable to write to the value log %s\n", name);
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
             return;
         }
 
         if (Chop(datestr, CF_EXPANDSIZE) == -1)
         {
-            CfOut(cf_error, "", "Chop was called on a string that seemed to have no terminator");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
         }
         fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
         TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
@@ -105,7 +110,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (GetVariable("control_common", "version", &retval) != cf_notype)
+    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }
@@ -117,7 +122,7 @@ void EndAudit(int background_tasks)
     if (total == 0)
     {
         *string = '\0';
-        CfOut(cf_verbose, "", "Outcome of version %s: No checks were scheduled\n", sp);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Outcome of version %s: No checks were scheduled\n", sp);
         return;
     }
     else
@@ -153,7 +158,7 @@ static bool IsPromiseValuableForLogging(const Promise *pp)
 
 /*****************************************************************************/
 
-void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
 {
     switch (status)
     {
@@ -167,19 +172,19 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
                 VAL_REPAIRED += attr.transaction.value_repaired;
 
 #ifdef HAVE_NOVA
-                EnterpriseTrackTotalCompliance(pp, 'r');
+                EnterpriseTrackTotalCompliance(ctx, pp, 'r');
 #endif
             }
         }
 
-        AddAllClasses(pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer);
-        MarkPromiseHandleDone(pp);
-        DeleteAllClasses(attr.classes.del_change);
+        AddAllClasses(ctx, pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        MarkPromiseHandleDone(ctx, pp);
+        DeleteAllClasses(ctx, attr.classes.del_change);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_repaired);
+            NotePromiseCompliance(ctx, pp, 0.5, PROMISE_STATE_REPAIRED, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_repaired);
         }
         break;
 
@@ -191,13 +196,13 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
         }
         break;
 
@@ -209,17 +214,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -231,17 +236,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -253,17 +258,17 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -275,30 +280,30 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
 #endif
         }
 
-        AddAllClasses(pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer);
-        DeleteAllClasses(attr.classes.del_notkept);
+        AddAllClasses(ctx, pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
+            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
 
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer);
-        DeleteAllClasses(attr.classes.del_kept);
+        AddAllClasses(ctx, pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        DeleteAllClasses(ctx, attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_kept);
+            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_ANY, reason);
+            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_kept);
         }
 
         if (IsPromiseValuableForStatus(pp))
@@ -307,11 +312,11 @@ void ClassAuditLog(const Promise *pp, Attributes attr, char status, char *reason
             VAL_KEPT += attr.transaction.value_kept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'c');
+            EnterpriseTrackTotalCompliance(ctx, pp, 'c');
 #endif
         }
 
-        MarkPromiseHandleDone(pp);
+        MarkPromiseHandleDone(ctx, pp);
         break;
     }
 }
@@ -334,7 +339,7 @@ void PromiseLog(char *s)
 
     if ((fout = fopen(filename, "a")) == NULL)
     {
-        CfOut(cf_error, "fopen", "Could not open %s", filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
         return;
     }
 
@@ -344,12 +349,12 @@ void PromiseLog(char *s)
 
 /************************************************************************/
 
-void PromiseBanner(Promise *pp)
+void PromiseBanner(EvalContext *ctx, Promise *pp)
 {
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = GetConstraintValue("handle", pp, CF_SCALAR)) || (sp = PromiseID(pp)))
+    if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }
@@ -358,8 +363,8 @@ void PromiseBanner(Promise *pp)
         strcpy(handle, "(enterprise only)");
     }
 
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "    .........................................................\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -372,7 +377,7 @@ void PromiseBanner(Promise *pp)
         if (VERBOSE)
         {
             printf("\n%s>     Promise made to (stakeholders): ", VPREFIX);
-            ShowRval(stdout, pp->promisee);
+            RvalShow(stdout, pp->promisee);
         }
     }
 
@@ -383,20 +388,20 @@ void PromiseBanner(Promise *pp)
 
     if (pp->ref)
     {
-        CfOut(cf_verbose, "", "\n");
-        CfOut(cf_verbose, "", "    Comment:  %s\n", pp->ref);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    Comment:  %s\n", pp->ref);
     }
 
-    CfOut(cf_verbose, "", "    .........................................................\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /************************************************************************/
 
 void BannerSubBundle(Bundle *bp, Rlist *params)
 {
-    CfOut(cf_verbose, "", "\n");
-    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -406,7 +411,7 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
     if (params && (VERBOSE || DEBUG))
     {
         printf("(");
-        ShowRlist(stdout, params);
+        RlistShow(stdout, params);
         printf(" )\n");
     }
     else
@@ -414,8 +419,8 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
         if (VERBOSE || DEBUG)
             printf("\n");
     }
-    CfOut(cf_verbose, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-    CfOut(cf_verbose, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /************************************************************************/
@@ -430,7 +435,7 @@ void FatalError(char *s, ...)
         va_start(ap, s);
         vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
         va_end(ap);
-        CfOut(cf_error, "", "Fatal CFEngine error: %s", buf);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
     }
 
     EndAudit(0);

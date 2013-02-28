@@ -28,6 +28,6 @@
 
 #include "cf3.defs.h"
 
-void VerifyExecPromise(Promise *pp);
+void VerifyExecPromise(EvalContext *ctx, Promise *pp);
 
 #endif

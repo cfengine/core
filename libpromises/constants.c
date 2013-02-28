@@ -90,83 +90,12 @@ const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
     CF_MONITORC,
     CF_EXECC,
     CF_RUNC,
-    CF_KNOWC,
-    CF_REPORTC,
     CF_KEYGEN,
     CF_HUBC,
     CF_GENDOC,
     "<notype>",
 };
 
-/* These string lengths should not exceed CF_MAXDIGESTNAMELEN
-   characters for packing */
-
-const char *CF_DIGEST_TYPES[10][2] =
-{
-    {"md5", "m"},
-    {"sha224", "c"},
-    {"sha256", "C"},
-    {"sha384", "h"},
-    {"sha512", "H"},
-    {"sha1", "S"},
-    {"sha", "s"},               /* Should come last, since substring */
-    {"best", "b"},
-    {"crypt", "o"},
-    {NULL, NULL}
-};
-
-const int CF_DIGEST_SIZES[10] =
-{
-    CF_MD5_LEN,
-    CF_SHA224_LEN,
-    CF_SHA256_LEN,
-    CF_SHA384_LEN,
-    CF_SHA512_LEN,
-    CF_SHA1_LEN,
-    CF_SHA_LEN,
-    CF_BEST_LEN,
-    CF_CRYPT_LEN,
-    0
-};
-
-/*******************************************************************/
-/* Anomaly                                                         */
-/*******************************************************************/
-
-const Sock ECGSOCKS[ATTR] =     /* extended to map old to new using enum */
-{
-    {"137", "netbiosns", ob_netbiosns_in, ob_netbiosns_out},
-    {"138", "netbiosdgm", ob_netbiosdgm_in, ob_netbiosdgm_out},
-    {"139", "netbiosssn", ob_netbiosssn_in, ob_netbiosssn_out},
-    {"445", "microsoft_ds", ob_microsoft_ds_in, ob_microsoft_ds_out},
-    {"5308", "cfengine", ob_cfengine_in, ob_cfengine_out},
-    {"2049", "nfsd", ob_nfsd_in, ob_nfsd_out},
-    {"25", "smtp", ob_smtp_in, ob_smtp_out},
-    {"80", "www", ob_www_in, ob_www_out},
-    {"8080", "www-alt", ob_www_alt_in, ob_www_alt_out},
-    {"21", "ftp", ob_ftp_in, ob_ftp_out},
-    {"22", "ssh", ob_ssh_in, ob_ssh_out},
-    {"443", "wwws", ob_wwws_in, ob_wwws_out},
-    {"143", "imap", ob_imap_in, ob_imap_out},
-    {"993", "imaps", ob_imaps_in, ob_imaps_out},
-    {"389", "ldap", ob_ldap_in, ob_ldap_out},
-    {"636", "ldaps", ob_ldaps_in, ob_ldaps_out},
-    {"27017", "mongo", ob_mongo_in, ob_mongo_out},
-    {"3306", "mysql", ob_mysql_in, ob_mysql_out},
-    {"5432", "postgresql", ob_postgresql_in, ob_postgresql_out},
-    {"631", "ipp", ob_ipp_in, ob_ipp_out},
-};
-
-const char *TCPNAMES[CF_NETATTR] =
-{
-    "icmp",
-    "udp",
-    "dns",
-    "tcpsyn",
-    "tcpack",
-    "tcpfin",
-    "misc"
-};
 
 const char *OBS[CF_OBSERVABLES][2] =
 {

@@ -45,15 +45,15 @@
 #include "pipes.h"
 
 void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(int argc, char **argv);
+GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 int OpenReceiverChannel(void);
-void CheckFileChanges(Policy **policy, GenericAgentConfig *config, const ReportContext *report_context);
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context);
 int InitServer(size_t queue_size);
 
 #if !defined(HAVE_GETADDRINFO)
 in_addr_t GetInetAddr(char *host);
 #endif
 
-void StartServer(Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 
 #endif // CFSERVERDFUNCTIONS_H

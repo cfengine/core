@@ -30,6 +30,7 @@
 #include "sort.h"
 #include "scope.h"
 #include "assoc.h"
+#include "rlist.h"
 
 static char *MANUAL_DIRECTORY;
 
@@ -65,7 +66,7 @@ static void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st);
 static void XmlExportControl(Writer *writer, SubTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
 static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
-static void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range);
+static void XmlExportType(Writer *writer, DataType dtype, const void *range);
 
 /*****************************************************************************/
 
@@ -148,18 +149,18 @@ static void XmlExportVariables(Writer *writer, const char *scope)
     for (rp = list; rp != NULL; rp = rp->next)
     {
         /* START XML ELEMENT -- VARIABLE */
-        XmlAttribute var_name_attr = { "name", ScalarValue(rp) };
+        XmlAttribute var_name_attr = { "name", RlistScalarValue(rp) };
         XmlStartTag(writer, XMLTAG_VARIABLE, 1, var_name_attr);
 
         /* XML ELEMENT -- LONG-DESCRIPTION */
-        filebuffer = ReadTexinfoFileF("vars/%s_%s.texinfo", scope, ScalarValue(rp));
+        filebuffer = ReadTexinfoFileF("vars/%s_%s.texinfo", scope, RlistScalarValue(rp));
         XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
         free(filebuffer);
 
         /* END XML ELEMENT -- VARIABLE */
         XmlEndTag(writer, XMLTAG_VARIABLE);
     }
-    DeleteRlist(list);
+    RlistDestroy(list);
 
 /* END XML ELEMENT -- VARIABLE-SCOPE */
     XmlEndTag(writer, XMLTAG_VARSCOPE);
@@ -359,10 +360,10 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
 
     switch (bs->dtype)
     {
-    case cf_body:
-    case cf_bundle:
-    case cf_notype:
-    case cf_counter:
+    case DATA_TYPE_BODY:
+    case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_NONE:
+    case DATA_TYPE_COUNTER:
         /* NO ADDITIONAL INFO */
         break;
 
@@ -387,7 +388,7 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
+void XmlExportType(Writer *writer, DataType dtype, const void *range)
 {
     Rlist *list = NULL;
     Rlist *rp = NULL;
@@ -398,17 +399,17 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
 
     switch (dtype)
     {
-    case cf_body:
+    case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
         XmlExportConstraints(writer, (BodySyntax *) range);
         break;
 
-    case cf_int:
-    case cf_real:
-    case cf_ilist:
-    case cf_rlist:
-    case cf_irange:
-    case cf_rrange:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_REAL:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_REAL_LIST:
+    case DATA_TYPE_INT_RANGE:
+    case DATA_TYPE_REAL_RANGE:
         if (range != NULL)
         {
             /* START XML ELEMENT -- RANGE */
@@ -417,19 +418,19 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
             /* XML ELEMENT -- MIN/MAX */
             int i = 0;
 
-            list = SplitStringAsRList((char *) range, ',');
+            list = RlistFromSplitString((char *) range, ',');
             for (rp = list; rp != NULL; rp = rp->next, i++)
             {
                 if (i == 0)
                 {
-                    XmlTag(writer, XMLTAG_MIN, ScalarValue(rp), 0);
+                    XmlTag(writer, XMLTAG_MIN, RlistScalarValue(rp), 0);
                 }
                 else
                 {
-                    XmlTag(writer, XMLTAG_MAX, ScalarValue(rp), 0);
+                    XmlTag(writer, XMLTAG_MAX, RlistScalarValue(rp), 0);
                 }
             }
-            DeleteRlist(list);
+            RlistDestroy(list);
 
             /* END XML ELEMENT -- RANGE */
             XmlEndTag(writer, XMLTAG_RANGE);
@@ -437,20 +438,20 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
             break;
         }
 
-    case cf_opts:
-    case cf_olist:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_OPTION_LIST:
         if (range != NULL)
         {
             /* START XML ELEMENT -- OPTIONS */
             XmlStartTag(writer, XMLTAG_OPTIONS, 0);
 
             /* XML ELEMENT -- VALUE */
-            list = SplitStringAsRList((char *) range, ',');
+            list = RlistFromSplitString((char *) range, ',');
             for (rp = list; rp != NULL; rp = rp->next)
             {
-                XmlTag(writer, XMLTAG_VALUE, ScalarValue(rp), 0);
+                XmlTag(writer, XMLTAG_VALUE, RlistScalarValue(rp), 0);
             }
-            DeleteRlist(list);
+            RlistDestroy(list);
 
             /* END XML ELEMENT -- OPTIONS */
             XmlEndTag(writer, XMLTAG_OPTIONS);
@@ -458,10 +459,10 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
             break;
         }
 
-    case cf_str:
-    case cf_slist:
-    case cf_class:
-    case cf_clist:
+    case DATA_TYPE_STRING:
+    case DATA_TYPE_STRING_LIST:
+    case DATA_TYPE_CONTEXT:
+    case DATA_TYPE_CONTEXT_LIST:
         /* XML ELEMENT -- ACCEPTED-VALUES */
         if (strlen((char *) range) == 0)
         {
@@ -474,9 +475,9 @@ void XmlExportType(Writer *writer, enum cfdatatype dtype, const void *range)
 
         break;
 
-    case cf_bundle:
-    case cf_notype:
-    case cf_counter:
+    case DATA_TYPE_BUNDLE:
+    case DATA_TYPE_NONE:
+    case DATA_TYPE_COUNTER:
         /* NONE */
         break;
     }

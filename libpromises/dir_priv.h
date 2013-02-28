@@ -41,6 +41,6 @@ void CloseDirLocal(Dir *dir);
 
 struct dirent *AllocateDirentForFilename(const char *filename);
 
-Dir *OpenDirRemote(const char *dirname, Attributes attr, Promise *pp);
+Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
 
 #endif

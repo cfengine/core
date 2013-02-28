@@ -1,6 +1,6 @@
 sbin_PROGRAMS = cf-monitord
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA
@@ -16,7 +16,7 @@ cf_monitord_LDADD += ../nova/libcfmonitord/libcfmonitord.la
 endif
 
 cf_monitord_SOURCES = \
-        verify_measurements.c \
+        verify_measurements.c verify_measurements.h \
         env_monitor.c env_monitor.h \
         mon.h \
         mon_cpu.c \

@@ -1,6 +1,8 @@
-SUBDIRS = data
+# Just recursively include in dist tarball all data we need for unit tests
+EXTRA_DIST = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
@@ -61,6 +63,8 @@ check_PROGRAMS = \
 	timeout_test \
 	connection_management_test
 
+#	ipaddress_test
+
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 check_PROGRAMS += \
@@ -90,7 +94,7 @@ rlist_test_LDADD = libtest.la libstr.la
 
 set_domainname_test_SOURCES = set_domainname_test.c \
 	../../libpromises/sysinfo.c
-set_domainname_test_LDADD = libstr.la
+set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la
 
 str_test_SOURCES = str_test.c
 str_test_LDADD = libstr.la
@@ -98,11 +102,14 @@ str_test_LDADD = libstr.la
 xml_writer_test_SOURCES = xml_writer_test.c ../../libutils/xml_writer.c
 xml_writer_test_LDADD = libtest.la libstr.la
 
-list_test_SOURCES = list_test.c ../../libutils/list.c
+list_test_SOURCES = list_test.c 
 
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+
+#ipaddress_test_SOURCES = ipaddress_test.c 
+
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 

@@ -120,7 +120,6 @@ int main()
             unit_test(test_recreate),
         };
 
-    PRINT_TEST_BANNER();
     int ret = run_tests(tests);
 
     tests_teardown();

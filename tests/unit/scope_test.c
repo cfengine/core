@@ -43,6 +43,5 @@ int main()
         unit_test(test_name_join),
     };
 
-    PRINT_TEST_BANNER();
     return run_tests(tests);
 }

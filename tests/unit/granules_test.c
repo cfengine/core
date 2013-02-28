@@ -42,6 +42,5 @@ int main()
         unit_test(test_measurement_slot_time)
     };
 
-    PRINT_TEST_BANNER();
     return run_tests(tests);
 }

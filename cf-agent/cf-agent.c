@@ -987,7 +987,9 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
-            DeletePrivateClassContext(ctx);        // Each time we change bundle
+
+            EvalContextStackFrameClear(ctx);
+
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
         }

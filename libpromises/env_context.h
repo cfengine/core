@@ -35,6 +35,8 @@
 typedef struct
 {
     StringSet *contexts;
+    StringSet *contexts_negated;
+
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
 } StackFrame;
 
@@ -60,6 +62,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
+void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
@@ -110,7 +113,6 @@ void LoadPersistentContext(EvalContext *ctx);
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
 void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
-void DeletePrivateClassContext(EvalContext *ctx);
 void DeletePersistentContext(const char *name);
 
 /* - Rest - */

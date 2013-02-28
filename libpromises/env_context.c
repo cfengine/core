@@ -58,6 +58,8 @@ static int GetORAtom(const char *start, char *buffer);
 static int HasBrackets(const char *s, Promise *pp);
 static int IsBracketed(const char *s);
 
+static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context);
+
 /*****************************************************************************/
 
 static AlphaList VHANDLES;
@@ -65,7 +67,6 @@ static AlphaList VHANDLES;
 Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
-static Item *VDELCLASSES = NULL;
 
 static bool ABORTBUNDLE = false;
 
@@ -1097,7 +1098,7 @@ static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname,
     {
         return false;
     }
-    if (IsItemIn(VDELCLASSES, qualified_class))
+    if (EvalContextStackFrameContainsNegated(ctx, qualified_class))
     {
         return false;
     }
@@ -1223,15 +1224,6 @@ bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *
 bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr)
 {
     return EvalWithTokenFromList(ctx, file_result, leaf_attr);
-}
-
-/*****************************************************************************/
-
-void DeletePrivateClassContext(EvalContext *ctx)
-{
-    EvalContextStackFrameClear(ctx);
-    DeleteItemList(VDELCLASSES);
-    VDELCLASSES = NULL;
 }
 
 /*****************************************************************************/
@@ -1628,7 +1620,7 @@ void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
 
-        AppendItem(&VDELCLASSES, CanonifyName(string), NULL);
+        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
     }
 }
 
@@ -1768,6 +1760,7 @@ static void StackFrameDestroy(StackFrame *frame)
     if (frame)
     {
         StringSetDestroy(frame->contexts);
+        StringSetDestroy(frame->contexts_negated);
     }
 }
 
@@ -1826,6 +1819,11 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     StringSetAdd(EvalContextStackFrame(ctx)->contexts, xstrdup(context));
 }
 
+void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
+{
+    StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
+}
+
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
@@ -1864,6 +1862,11 @@ bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
 
     size_t stack_index = SeqLength(ctx->stack) - 1;
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
+}
+
+static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context)
+{
+    return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
 }
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
@@ -1934,6 +1937,7 @@ static StackFrame *StackFrameNew(bool inherit_previous)
     StackFrame *frame = xmalloc(sizeof(StackFrame));
 
     frame->contexts = StringSetNew();
+    frame->contexts_negated = StringSetNew();
 
     frame->inherits_previous = inherit_previous;
 
@@ -1960,6 +1964,7 @@ void EvalContextStackFrameClear(EvalContext *ctx)
 {
     StackFrame *frame = EvalContextStackFrame(ctx);
     StringSetClear(frame->contexts);
+    StringSetClear(frame->contexts_negated);
 }
 
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)

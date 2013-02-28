@@ -213,6 +213,15 @@ static void test_util_bundle_qualified_name(void **state)
     free(b);
 }
 
+static void test_constraint_lval_invalid(void **state)
+{
+    Seq *errs = LoadAndCheck("constraint_lval_invalid.cf");
+    assert_int_equal(1, errs->length);
+
+    SeqDestroy(errs);
+}
+
+
 int main()
 {
     const UnitTest tests[] =
@@ -227,7 +236,9 @@ int main()
 
         unit_test(test_policy_json_to_from),
 
-        unit_test(test_util_bundle_qualified_name)
+        unit_test(test_util_bundle_qualified_name),
+
+        unit_test(test_constraint_lval_invalid)
     };
 
     return run_tests(tests);

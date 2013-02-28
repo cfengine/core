@@ -61,6 +61,7 @@ static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type cat
 static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
 static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
 static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
+static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
 
 //************************************************************************
 
@@ -243,6 +244,73 @@ char *BundleQualifiedName(const Bundle *bundle)
 
 /*************************************************************************/
 
+/* Get the syntax of a constraint according to its subtype and lvalue. Return
+   NULL if lvalue is invalid for given subtype and errors != NULL.
+
+   E.g. if subtype is "files"
+        lvalue should be one of "copy_from", "create", "delete" etc.
+*/
+static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint, Seq *errors)
+{
+    if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
+    {
+        ProgrammingError("Attempted to get the syntax for a constraint not belonging to a promise");
+    }
+
+    const Promise *promise = constraint->parent.promise;
+    const SubType *subtype = promise->parent_subtype;
+    const Bundle *bundle = subtype->parent_bundle;
+
+    const SubTypeSyntax subtype_syntax = SubTypeSyntaxLookup(bundle->type, subtype->name);
+
+    /* Now check the functional modules - extra level of indirection.
+       Note that we only check body attributes relative to promise type.
+       We can enter any promise types in any bundle, but only recognized
+       types will be dealt with. */
+    for (size_t i = 0; subtype_syntax.bs[i].lval != NULL; i++)
+    {
+        const BodySyntax *body_syntax = &subtype_syntax.bs[i];
+        if (strcmp(body_syntax->lval, constraint->lval) == 0)
+        {
+            return body_syntax;
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_BODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_BODIES[i];
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_EDITBODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_EDITBODIES[i];
+        }
+    }
+
+    for (size_t i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
+    {
+        if (strcmp(constraint->lval, CF_COMMON_XMLBODIES[i].lval) == 0)
+        {
+            return &CF_COMMON_XMLBODIES[i];
+        }
+    }
+
+    /* lval is unknown for this promise type */
+    SeqAppend(errors,
+              PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                             POLICY_ERROR_LVAL_INVALID,
+                             constraint->parent.promise->parent_subtype->name,
+                             constraint->lval));
+    return NULL;
+}
+
+/*************************************************************************/
+
 static bool PolicyCheckPromiseVars(const Promise *pp, Seq *errors)
 {
     bool success = true;
@@ -313,17 +381,26 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
 
 /*************************************************************************/
 
-bool PolicyCheckPromise(const Promise *pp, Seq *errors)
+bool PolicyCheckPromise(const Promise *promise, Seq *errors)
 {
     bool success = true;
+    size_t i;
 
-    if (StringSafeCompare(pp->agentsubtype, "vars") == 0)
+    if (StringSafeCompare(promise->agentsubtype, "vars") == 0)
     {
-        success &= PolicyCheckPromiseVars(pp, errors);
+        success &= PolicyCheckPromiseVars(promise, errors);
     }
-    else if (StringSafeCompare(pp->agentsubtype, "methods") == 0)
+    else if (StringSafeCompare(promise->agentsubtype, "methods") == 0)
     {
-        success &= PolicyCheckPromiseMethods(pp, errors);
+        success &= PolicyCheckPromiseMethods(promise, errors);
+    }
+
+    /* Check if promise's constraints are valid. */
+    for (i = 0; i < SeqLength(promise->conlist); i++)
+    {
+        Constraint *constraint = SeqAt(promise->conlist, i);
+        const BodySyntax *syntax = ConstraintGetSyntax(constraint, errors);
+        success &= (syntax != NULL);
     }
 
     return success;
@@ -395,55 +472,6 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 }
 
 /*************************************************************************/
-
-static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
-{
-    if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
-    {
-        ProgrammingError("Attempted to get the syntax for a constraint not belonging to a promise");
-    }
-
-    const Promise *promise = constraint->parent.promise;
-    const SubType *subtype = promise->parent_subtype;
-    const Bundle *bundle = subtype->parent_bundle;
-
-    const SubTypeSyntax subtype_syntax = SubTypeSyntaxLookup(bundle->type, subtype->name);
-
-    for (size_t i = 0; subtype_syntax.bs[i].lval != NULL; i++)
-    {
-        const BodySyntax *body_syntax = &subtype_syntax.bs[i];
-        if (strcmp(body_syntax->lval, constraint->lval) == 0)
-        {
-            return body_syntax;
-        }
-    }
-
-    for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
-    {
-        if (strcmp(constraint->lval, CF_COMMON_BODIES[i].lval) == 0)
-        {
-            return &CF_COMMON_BODIES[i];
-        }
-    }
-
-    for (size_t i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
-    {
-        if (strcmp(constraint->lval, CF_COMMON_EDITBODIES[i].lval) == 0)
-        {
-            return &CF_COMMON_EDITBODIES[i];
-        }
-    }
-
-    for (size_t i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
-    {
-        if (strcmp(constraint->lval, CF_COMMON_XMLBODIES[i].lval) == 0)
-        {
-            return &CF_COMMON_XMLBODIES[i];
-        }
-    }
-
-    return NULL;
-}
 
 /**
  * @return A reference to the full symbol value of the Rval regardless of type, e.g. "foo:bar" -> "foo:bar"
@@ -519,8 +547,9 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                 {
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
-                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == DATA_TYPE_BODY)
+                    /* Errors are checked in PolicyCheckPromise() from PolicyCheckPartial() */
+                    const BodySyntax *syntax = ConstraintGetSyntax(constraint, NULL);
+                    if (syntax != NULL && syntax->dtype == DATA_TYPE_BODY)
                     {
                         char *ns = RvalNamespaceComponent(&constraint->rval);
                         char *symbol = RvalSymbolComponent(&constraint->rval);
@@ -564,8 +593,11 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                 {
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
-                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
-                    if (syntax->dtype == DATA_TYPE_BUNDLE && !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
+                    /* Errors are checked in PolicyCheckPromise() from PolicyCheckPartial() */
+                    const BodySyntax *syntax = ConstraintGetSyntax(constraint, NULL);
+                    if (syntax != NULL &&
+                        syntax->dtype == DATA_TYPE_BUNDLE &&
+                        !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
                         char *ns = RvalNamespaceComponent(&constraint->rval);
                         char *symbol = RvalSymbolComponent(&constraint->rval);

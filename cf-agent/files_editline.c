@@ -92,7 +92,7 @@ static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, Promise *pp);
 static int SelectLine(char *line, Attributes a, Promise *pp);
 static int NotAnchored(char *s);
-static void EditClassBanner(enum editlinetypesequence type);
+static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence type);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp);
 static int MultiLineString(char *s);
 static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr, Item *end_ptr, Item *location, Item *prev, Attributes a, Promise *pp);
@@ -142,14 +142,14 @@ int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Att
     {
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
         {
-            EditClassBanner(type);
+            EditClassBanner(ctx, type);
 
             if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
 
-            BannerSubSubType(bp->name, sp->name);
+            BannerSubSubType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
             SetScope(bp->name);
 
@@ -321,23 +321,26 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise 
 /* Level                                                                   */
 /***************************************************************************/
 
-static void EditClassBanner(enum editlinetypesequence type)
+// TODO: more really ugly output
+static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence type)
 {
     if (type != elp_delete)     /* Just parsed all local classes */
     {
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
-
-    AlphaListIterator i = AlphaListIteratorInit(&VADDCLASSES);
-
-    for (const Item *ip = AlphaListIteratorNext(&i); ip != NULL; ip = AlphaListIteratorNext(&i))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", ip->name);
-    }
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", context);
+        }
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    }
 }
 
 /***************************************************************************/

@@ -47,7 +47,7 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context);
 // stdout only
 void ReportError(char *s);
 void BannerSubType(const char *bundlename, const char *type, int p);
-void BannerSubSubType(const char *bundlename, const char *type);
+void BannerSubSubType(EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);
 
 #endif

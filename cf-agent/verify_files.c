@@ -543,9 +543,13 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             HashVariables(ctx, policy, bp->name, report_context);
 
             AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
+
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
+
+            EvalContextStackPopFrame(ctx);
+
             DeleteScope(bp->name);
         }
         else
@@ -595,9 +599,13 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             HashVariables(ctx, policy, bp->name, report_context);
 
             AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
+
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
+
+            EvalContextStackPopFrame(ctx);
+
             DeleteScope(bp->name);
         }
     }
@@ -614,9 +622,12 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             NewScope(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            PushPrivateClassContext(a.edits.inherit);
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
+
+            EvalContextStackPopFrame(ctx);
+
             DeleteScope(bp->name);
         }
         // FIXME: why it crashes? DeleteBundles(bp);

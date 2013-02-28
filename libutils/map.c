@@ -27,6 +27,8 @@
 #include "alloc.h"
 #include "array_map_priv.h"
 #include "hash_map_priv.h"
+#include "string_lib.h"
+#include "hashes.h"
 
 /*
  * This associative array implementation uses array with linear search up to
@@ -238,3 +240,9 @@ MapKeyValue *MapIteratorNext(MapIterator *i)
         return HashMapIteratorNext(&i->hashmap_iter);
     }
 }
+
+TYPED_MAP_DEFINE(String, char *, char *,
+                 (MapHashFn)&OatHash,
+                 (MapKeyEqualFn)&StringSafeEqual,
+                 &free,
+                 &free)

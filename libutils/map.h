@@ -152,4 +152,6 @@ void MapDestroy(Map *map);
         free(map);                                                      \
     }
 
+TYPED_MAP_DECLARE(String, char *, char *)
+
 #endif

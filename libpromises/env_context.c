@@ -49,6 +49,8 @@
 #include "cf.nova.h"
 #endif
 
+#include <assert.h>
+
 /*****************************************************************************/
 
 static bool ValidClassName(const char *str);
@@ -60,7 +62,6 @@ static int IsBracketed(const char *s);
 
 static AlphaList VHANDLES;
 
-AlphaList VADDCLASSES;
 Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
@@ -500,8 +501,7 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
     }
 
     EvalContextHeapRemoveSoft(ctx, context);
-
-    DeleteFromAlphaList(&VADDCLASSES, context);
+    EvalContextStackFrameRemoveSoft(ctx, context);
 }
 
 /*******************************************************************/
@@ -610,12 +610,12 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
         CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
     }
 
-    if (InAlphaList(&VADDCLASSES, copy))
+    if (EvalContextStackFrameContainsSoft(ctx, copy))
     {
         return;
     }
 
-    PrependAlphaList(&VADDCLASSES, copy);
+    EvalContextStackFrameAddSoft(ctx, copy);
 
     for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
     {
@@ -1110,7 +1110,7 @@ static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname,
     {
         return true;
     }
-    if (InAlphaList(&VADDCLASSES, qualified_class))
+    if (EvalContextStackFrameContainsSoft(ctx, qualified_class))
     {
         return true;
     }
@@ -1228,15 +1228,14 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_a
 
 /*****************************************************************************/
 
-void DeletePrivateClassContext()
+void DeletePrivateClassContext(EvalContext *ctx)
 {
-    DeleteAlphaList(&VADDCLASSES);
-    InitAlphaList(&VADDCLASSES);
+    EvalContextStackFrameClear(ctx);
     DeleteItemList(VDELCLASSES);
     VDELCLASSES = NULL;
 }
 
-/*****************************************************************************/
+/*
 
 void PushPrivateClassContext(int inherit)
 {
@@ -1255,7 +1254,6 @@ void PushPrivateClassContext(int inherit)
     
 }
 
-/*****************************************************************************/
 
 void PopPrivateClassContext()
 {
@@ -1266,6 +1264,8 @@ void PopPrivateClassContext()
     CopyAlphaListPointers(&VADDCLASSES, ap);
     free(ap);
 }
+
+*/
 
 /*****************************************************************************/
 
@@ -1621,7 +1621,17 @@ void SaveClassEnvironment(EvalContext *ctx)
         }
     }
 
-    ListAlphaList(ctx, writer, VADDCLASSES, '\n');
+    {
+        SetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
 
     WriterClose(writer);
 }
@@ -1646,9 +1656,11 @@ void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
         const char *string = (char *) (rp->item);
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+
         DeletePersistentContext(string);
+
         EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
-        DeleteFromAlphaList(&VADDCLASSES, CanonifyName(string));
+
         AppendItem(&VDELCLASSES, CanonifyName(string), NULL);
     }
 }
@@ -1784,6 +1796,14 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
     return false;
 }
 
+static void StackFrameDestroy(StackFrame *frame)
+{
+    if (frame)
+    {
+        StringSetDestroy(frame->contexts);
+    }
+}
+
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
@@ -1791,6 +1811,12 @@ EvalContext *EvalContextNew(void)
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
     ctx->heap_negated = StringSetNew();
+
+    ctx->stack = SeqNew(10, StackFrameDestroy);
+
+    // TODO: this should probably rather be done when evaluating a new bundle, not just when
+    // bundles call other bundles. We should not need a 'base frame' like this.
+    EvalContextStackPushFrame(ctx, false);
 
     return ctx;
 }
@@ -1802,6 +1828,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
         StringSetDestroy(ctx->heap_negated);
+
+        SeqDestroy(ctx->stack);
     }
 }
 
@@ -1820,6 +1848,17 @@ void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
     StringSetAdd(ctx->heap_negated, xstrdup(context));
 }
 
+static StackFrame *EvalContextStackFrame(const EvalContext *ctx)
+{
+    assert(SeqLength(ctx->stack) > 0);
+    return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1);
+}
+
+void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
+{
+    StringSetAdd(EvalContextStackFrame(ctx)->contexts, xstrdup(context));
+}
+
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
@@ -1833,6 +1872,31 @@ bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
 bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_negated, context);
+}
+
+bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size_t stack_index)
+{
+    StackFrame *frame = SeqAt(ctx->stack, stack_index);
+    if (StringSetContains(frame->contexts, context))
+    {
+        return true;
+    }
+    else if (stack_index > 0 && frame->inherits_previous)
+    {
+        return StackFrameContainsSoftRecursive(ctx, context, stack_index - 1);
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
+{
+    assert(SeqLength(ctx->stack) > 0);
+
+    size_t stack_index = SeqLength(ctx->stack) - 1;
+    return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
@@ -1878,6 +1942,11 @@ size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context
     return StringSetMatchCount(ctx->heap_hard, context_regex);
 }
 
+size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex)
+{
+    return StringSetMatchCount(EvalContextStackFrame(ctx)->contexts, context_regex);
+}
+
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
 {
     return StringSetIteratorInit(ctx->heap_soft);
@@ -1891,4 +1960,43 @@ StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx)
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
 {
     return StringSetIteratorInit(ctx->heap_negated);
+}
+
+static StackFrame *StackFrameNew(bool inherit_previous)
+{
+    StackFrame *frame = xmalloc(sizeof(StackFrame));
+
+    frame->contexts = StringSetNew();
+
+    frame->inherits_previous = inherit_previous;
+
+    return frame;
+}
+
+void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
+{
+    StringSetRemove(EvalContextStackFrame(ctx)->contexts, context);
+}
+
+void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous)
+{
+    StackFrame *frame = StackFrameNew(inherits_previous);
+    SeqAppend(ctx->stack, frame);
+}
+
+void EvalContextStackPopFrame(EvalContext *ctx)
+{
+    assert(SeqLength(ctx->stack) > 0);
+}
+
+void EvalContextStackFrameClear(EvalContext *ctx)
+{
+    StackFrame *frame = EvalContextStackFrame(ctx);
+    StringSetClear(frame->contexts);
+}
+
+StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
+{
+    StackFrame *frame = EvalContextStackFrame(ctx);
+    return StringSetIteratorInit(frame->contexts);
 }

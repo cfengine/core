@@ -30,19 +30,22 @@
 #include "alphalist.h"
 #include "writer.h"
 #include "set.h"
+#include "sequence.h"
+
+typedef struct
+{
+    StringSet *contexts;
+    bool inherits_previous; // whether or not this frame inherits context from the previous frame
+} StackFrame;
 
 struct EvalContext_
 {
     StringSet *heap_soft;
     StringSet *heap_hard;
     StringSet *heap_negated;
-};
 
-/**
-  The bundle heap
-  Classes are added to a local bundle heap using NewBundleClass().
-  */
-extern AlphaList VADDCLASSES;
+    Seq *stack;
+};
 
 /**
   List of classes that, if defined by a bundle, will cause the bundle to abort
@@ -56,22 +59,37 @@ void EvalContextDestroy(EvalContext *ctx);
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
+void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 
 bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
 bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context);
+bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
+void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
 void EvalContextHeapClear(EvalContext *ctx);
+void EvalContextStackFrameClear(EvalContext *ctx); // TODO: this should probably not exists
 
 size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
+size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
+StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
+
+
+void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous);
+void EvalContextStackPopFrame(EvalContext *ctx);
+
+//void PushPrivateClassContext(int inherit);
+//void PopPrivateClassContext(void);
+
+
 
 
 /* - Parsing/evaluating expressions - */
@@ -98,14 +116,12 @@ void LoadPersistentContext(EvalContext *ctx);
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
 void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
-void DeletePrivateClassContext(void);
+void DeletePrivateClassContext(EvalContext *ctx);
 void DeletePersistentContext(const char *name);
 
 /* - Rest - */
 int Abort(void);
 void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
-void PushPrivateClassContext(int inherit);
-void PopPrivateClassContext(void);
 Rlist *SplitContextExpression(const char *context, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 bool IsSoftClass(EvalContext *ctx, const char *sp);

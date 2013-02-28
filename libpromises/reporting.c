@@ -271,23 +271,23 @@ void BannerSubType(const char *bundlename, const char *type, int pass)
 
 /**************************************************************/
 
-void BannerSubSubType(const char *bundlename, const char *type)
+// TODO: this output looks ugly as hell
+void BannerSubSubType(EvalContext *ctx, const char *bundlename, const char *type)
 {
     if (strcmp(type, "processes") == 0)
     {
-
-        /* Just parsed all local classes */
-
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??? Local class context: \n");
-
-        AlphaListIterator it = AlphaListIteratorInit(&VADDCLASSES);
-
-        for (const Item *ip = AlphaListIteratorNext(&it); ip != NULL; ip = AlphaListIteratorNext(&it))
         {
-            printf("       %s\n", ip->name);
-        }
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??? Local class context: \n");
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+            StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+            const char *context = NULL;
+            while ((context = StringSetIteratorNext(&it)))
+            {
+                printf("       %s\n", context);
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        }
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");

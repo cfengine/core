@@ -27,7 +27,6 @@
 
 #include "cf3.defs.h"
 
-#include "alphalist.h"
 #include "writer.h"
 #include "set.h"
 #include "sequence.h"
@@ -96,8 +95,8 @@ void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);
 bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *proc_attr);
-bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr);
+bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
+bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
 
 
 // Add new contexts
@@ -125,7 +124,6 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 bool IsSoftClass(EvalContext *ctx, const char *sp);
 bool IsTimeClass(const char *sp);
 void SaveClassEnvironment(EvalContext *ctx);
-void ListAlphaList(EvalContext *ctx, Writer *writer, AlphaList al, char sep);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
 

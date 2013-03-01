@@ -260,10 +260,10 @@ int main(int argc, char *argv[])
     if (!config->input_file)
     {
         StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
-        NoteClassUsageFromStringSetIterator(soft_iter, true);
+        NoteClassUsage(soft_iter, true);
 
         StringSetIterator hard_iter = EvalContextHeapIteratorHard(ctx);
-        NoteClassUsageFromStringSetIterator(hard_iter, true);
+        NoteClassUsage(hard_iter, true);
     }
 #ifdef HAVE_NOVA
     Nova_NoteVarUsageDB();
@@ -1053,7 +1053,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (Abort())
                 {
-                    NoteClassUsageFromStringSetIterator(EvalContextStackFrameIteratorSoft(ctx) , false);
+                    NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
                     DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
@@ -1064,7 +1064,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
         }
     }
 
-    NoteClassUsageFromStringSetIterator(EvalContextStackFrameIteratorSoft(ctx) , false);
+    NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 

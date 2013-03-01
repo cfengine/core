@@ -1174,12 +1174,13 @@ bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
 
 static ExpressionValue EvalTokenFromList(EvalContext *ctx, const char *token, void *param)
 {
-    return InAlphaList((AlphaList *) param, token);
+    StringSet *set = param;
+    return StringSetContains(set, token);
 }
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, AlphaList *token_list)
+static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet *token_set)
 {
     ParseResult res = ParseExpression(expr, 0, strlen(expr));
 
@@ -1197,7 +1198,7 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, AlphaList 
                                            res.result,
                                            &EvalTokenFromList,
                                            &EvalVarRef,
-                                           token_list);
+                                           token_set);
 
         FreeExpression(res.result);
 
@@ -1210,7 +1211,7 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, AlphaList 
 
 /* Process result expression */
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *proc_attr)
+bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr)
 {
     return EvalWithTokenFromList(ctx, process_result, proc_attr);
 }
@@ -1219,7 +1220,7 @@ bool EvalProcessResult(EvalContext *ctx, const char *process_result, AlphaList *
 
 /* File result expressions */
 
-bool EvalFileResult(EvalContext *ctx, const char *file_result, AlphaList *leaf_attr)
+bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr)
 {
     return EvalWithTokenFromList(ctx, file_result, leaf_attr);
 }
@@ -1664,21 +1665,6 @@ void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool per
                 NewClass(ctx, classname, ns);
                 break;
             }
-        }
-    }
-}
-
-/*****************************************************************************/
-
-void ListAlphaList(EvalContext *ctx, Writer *writer, AlphaList al, char sep)
-{
-    AlphaListIterator i = AlphaListIteratorInit(&al);
-
-    for (const Item *ip = AlphaListIteratorNext(&i); ip != NULL; ip = AlphaListIteratorNext(&i))
-    {
-        if (!EvalContextHeapContainsNegated(ctx, ip->name))
-        {
-            WriterWriteF(writer, "%s%c", ip->name, sep);
         }
     }
 }

@@ -2,8 +2,6 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 
-#include "alphalist.h"
-
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
 
@@ -72,16 +70,6 @@ const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
-
-AlphaListIterator AlphaListIteratorInit(AlphaList *al)
-{
-    exit(42);
-}
-
-const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
-{
-    exit(42);
-}
 
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
 {

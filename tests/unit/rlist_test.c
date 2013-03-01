@@ -244,11 +244,6 @@ int Join(char *path, const char *leaf, int bufsize)
     fail();
 }
 
-int JoinSilent(char *path, const char *leaf, int bufsize)
-{
-    fail();
-}
-
 void FnCallPrint(Writer *writer, const FnCall *fp)
 {
     fail();

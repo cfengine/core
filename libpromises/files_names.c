@@ -203,28 +203,6 @@ int Join(char *path, const char *leaf, int bufsize)
     return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);
 }
 
-/*********************************************************************/
-
-int JoinSilent(char *path, const char *leaf, int bufsize)
-/* Don't warn on buffer limits - just return the value */
-{
-    int len = strlen(leaf);
-
-    if ((strlen(path) + len) > (bufsize - CF_BUFFERMARGIN))
-    {
-        strncat(path, leaf, (bufsize - CF_BUFFERMARGIN));
-        EndJoin(path, "...TRUNCATED", bufsize);
-
-        return false;
-    }
-
-    strcat(path, leaf);
-
-    return true;
-}
-
-/*********************************************************************/
-
 int EndJoin(char *path, char *leaf, int bufsize)
 {
     return JoinMargin(path, leaf, NULL, bufsize, 0);

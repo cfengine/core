@@ -34,7 +34,6 @@ char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path, char *leaf);
 int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin);
 int Join(char *path, const char *leaf, int bufsize);
-int JoinSilent(char *path, const char *leaf, int bufsize);
 int EndJoin(char *path, char *leaf, int bufsize);
 int IsAbsPath(char *path);
 void AddSlash(char *str);

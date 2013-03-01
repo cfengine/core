@@ -553,7 +553,7 @@ version => "Community Promises.cf 1.0.0";
 }
 @end verbatim
        
-Modify this section by adding the new bundle name and input file:
+Modify this section by adding the new bundle name in the bundlesequence and file name in the input section:
 
 @verbatim
 body common control 

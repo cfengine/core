@@ -214,7 +214,7 @@ The difference between the two cfengine-nova-3.0.xxx packages (for hub and clien
 @item RedHat/SuSE   	
 @smallexample
 rpm -ihv cfengine-nova-<version_number>.rpm
-rpm -ihv cfengine-nova-<version_number>.rpm
+rpm -ihv cfengine-nova-expansion-<version_number>.rpm
 @end smallexample
 
 @item Debian/Ubuntu

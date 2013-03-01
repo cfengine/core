@@ -473,49 +473,6 @@ bool IsStrCaseIn(const char *str, const char **strs)
     return false;
 }
 
-int SubStrnCopyChr(char *to, const char *from, int len, char sep)
-{
-    char *sto = to;
-    int count = 0;
-
-    memset(to, 0, len);
-
-    if (from == NULL)
-    {
-        return 0;
-    }
-
-    if (from && (strlen(from) == 0))
-    {
-        return 0;
-    }
-
-    for (const char *sp = from; *sp != '\0'; sp++)
-    {
-        if (count > len - 1)
-        {
-            break;
-        }
-
-        if ((*sp == '\\') && (*(sp + 1) == sep))
-        {
-            *sto++ = *++sp;
-        }
-        else if (*sp == sep)
-        {
-            break;
-        }
-        else
-        {
-            *sto++ = *sp;
-        }
-
-        count++;
-    }
-
-    return count;
-}
-
 int CountChar(const char *string, char sep)
 {
     int count = 0;

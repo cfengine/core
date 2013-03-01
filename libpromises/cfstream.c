@@ -251,12 +251,13 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
                 break;
 
             case RVAL_TYPE_LIST:
-                
-                snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to (stakeholders): ");
-                RlistPrint(output+strlen(output), CF_BUFSIZE, (Rlist *)pp->promisee.item);
-                AppendItem(&mess, output, NULL);
+            {
+                Writer *w = StringWriter();
+                WriterWriteF(w, "I: The promise was made to (stakeholders): ");
+                RlistWrite(w, pp->promisee.item);
+                AppendItem(&mess, StringWriterClose(w), NULL);
                 break;
-
+            }
             default:
                 break;
             }

@@ -368,87 +368,52 @@ static const char *EscapeJsonString(const char *unescapedString)
     return StringWriterClose(writer);
 }
 
-static void _JsonObjectAppendPrimitive(JsonElement *object, const char *key, JsonElement *child_primitive)
-{
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
-
-    assert(child_primitive);
-    assert(child_primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
-
-    JsonElementSetPropertyName(child_primitive, key);
-
-    SeqAppend(object->container.children, child_primitive);
-}
-
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
-    assert(key);
-    assert(value);
-
-    JsonElement *child = JsonElementCreatePrimitive(JSON_PRIMITIVE_TYPE_STRING, EscapeJsonString(value));
-    _JsonObjectAppendPrimitive(object, key, child);
+    JsonElement *child = JsonStringCreate(value);
+    JsonObjectAppendElement(object, key, child);
 }
 
 void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
 {
-    assert(key);
-
     JsonElement *child = JsonIntegerCreate(value);
-    _JsonObjectAppendPrimitive(object, key, child);
+    JsonObjectAppendElement(object, key, child);
 }
 
 void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value)
 {
-    assert(key);
-
     JsonElement *child = JsonBoolCreate(value);
-    _JsonObjectAppendPrimitive(object, key, child);
+    JsonObjectAppendElement(object, key, child);
 }
 
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
-    assert(key);
-
     JsonElement *child = JsonRealCreate(value);
-    _JsonObjectAppendPrimitive(object, key, child);
+    JsonObjectAppendElement(object, key, child);
 }
 
 void JsonObjectAppendNull(JsonElement *object, const char *key)
 {
-    assert(key);
-
     JsonElement *child = JsonNullCreate();
-    _JsonObjectAppendPrimitive(object, key, child);
+    JsonObjectAppendElement(object, key, child);
 }
 
 void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
-    assert(key);
     assert(array);
     assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    JsonElementSetPropertyName(array, key);
-    SeqAppend(object->container.children, array);
+    JsonObjectAppendElement(object, key, array);
 }
 
 void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
-    assert(key);
     assert(childObject);
     assert(childObject->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(childObject->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
-    JsonElementSetPropertyName(childObject, key);
-    SeqAppend(object->container.children, childObject);
+    JsonObjectAppendElement(object, key, childObject);
 }
 
 void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *element)
@@ -602,72 +567,52 @@ JsonElement *JsonArrayCreate(size_t initialCapacity)
     return JsonElementCreateContainer(JSON_CONTAINER_TYPE_ARRAY, NULL, initialCapacity);
 }
 
-static void _JsonArrayAppendPrimitive(JsonElement *array, JsonElement *child_primitive)
-{
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
-
-    assert(child_primitive);
-    assert(child_primitive->type == JSON_ELEMENT_TYPE_PRIMITIVE);
-
-    SeqAppend(array->container.children, child_primitive);
-}
-
 void JsonArrayAppendString(JsonElement *array, const char *value)
 {
-    assert(value);
-
     JsonElement *child = JsonStringCreate(value);
-    _JsonArrayAppendPrimitive(array, child);
+    JsonArrayAppendElement(array, child);
 }
 
 void JsonArrayAppendBool(JsonElement *array, bool value)
 {
     JsonElement *child = JsonBoolCreate(value);
-    _JsonArrayAppendPrimitive(array, child);
+    JsonArrayAppendElement(array, child);
 }
 
 void JsonArrayAppendInteger(JsonElement *array, int value)
 {
     JsonElement *child = JsonIntegerCreate(value);
-    _JsonArrayAppendPrimitive(array, child);
+    JsonArrayAppendElement(array, child);
 }
 
 void JsonArrayAppendReal(JsonElement *array, double value)
 {
     JsonElement *child = JsonRealCreate(value);
-    _JsonArrayAppendPrimitive(array, child);
+    JsonArrayAppendElement(array, child);
 }
 
-void JsonArrayAppendNull(JsonElement *object)
+void JsonArrayAppendNull(JsonElement *array)
 {
     JsonElement *child = JsonNullCreate();
-    _JsonArrayAppendPrimitive(object, child);
+    JsonArrayAppendElement(array, child);
 }
 
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
     assert(childArray);
     assert(childArray->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(childArray->container.type == JSON_CONTAINER_TYPE_ARRAY);
 
-    SeqAppend(array->container.children, childArray);
+    JsonArrayAppendElement(array, childArray);
 }
 
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
     assert(object);
     assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
-    SeqAppend(array->container.children, object);
+    JsonArrayAppendElement(array, object);
 }
 
 void JsonArrayAppendElement(JsonElement *array, JsonElement *element)
@@ -1259,21 +1204,21 @@ static JsonParseError JsonParseAsArray(const char **data, JsonElement **json_out
                 }
                 assert(child);
 
-                _JsonArrayAppendPrimitive(array, child);
+                JsonArrayAppendElement(array, child);
                 break;
             }
 
             JsonElement *child_bool = JsonParseAsBoolean(data);
             if (child_bool)
             {
-                _JsonArrayAppendPrimitive(array, child_bool);
+                JsonArrayAppendElement(array, child_bool);
                 break;
             }
 
             JsonElement *child_null = JsonParseAsNull(data);
             if (child_null)
             {
-                _JsonArrayAppendPrimitive(array, child_null);
+                JsonArrayAppendElement(array, child_null);
                 break;
             }
 
@@ -1432,7 +1377,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                         JsonElementDestroy(object);
                         return err;
                     }
-                    _JsonObjectAppendPrimitive(object, property_name, child);
+                    JsonObjectAppendElement(object, property_name, child);
                     free(property_name);
                     property_name = NULL;
                     break;
@@ -1441,7 +1386,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 JsonElement *child_bool = JsonParseAsBoolean(data);
                 if (child_bool)
                 {
-                    _JsonObjectAppendPrimitive(object, property_name, child_bool);
+                    JsonObjectAppendElement(object, property_name, child_bool);
                     free(property_name);
                     property_name = NULL;
                     break;
@@ -1450,7 +1395,7 @@ static JsonParseError JsonParseAsObject(const char **data, JsonElement **json_ou
                 JsonElement *child_null = JsonParseAsNull(data);
                 if (child_null)
                 {
-                    _JsonObjectAppendPrimitive(object, property_name, child_null);
+                    JsonObjectAppendElement(object, property_name, child_null);
                     free(property_name);
                     property_name = NULL;
                     break;

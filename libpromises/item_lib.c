@@ -33,43 +33,23 @@
 
 /*******************************************************************/
 
-int PrintItemList(char *buffer, int bufsize, const Item *list)
+void PrintItemList(const Item *list, Writer *w)
 {
-    StartJoin(buffer, "{", bufsize);
+    WriterWriteChar(w, '{');
 
     for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
-        if (!JoinSilent(buffer, "'", bufsize))
+        if (ip != list)
         {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
+            WriterWriteChar(w, ',');
         }
 
-        if (!Join(buffer,ip->name,bufsize))
-        {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
-        }
-
-        if (!JoinSilent(buffer, "'", bufsize))
-        {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
-        }
-
-        if (ip->next != NULL)
-        {
-            if (!JoinSilent(buffer, ",", bufsize))
-            {
-                EndJoin(buffer, "}", bufsize);
-                return false;
-            }
-        }
+        WriterWriteChar(w, '\'');
+        WriterWrite(w, ip->name);
+        WriterWriteChar(w, '\'');
     }
 
-    EndJoin(buffer, "}", bufsize);
-
-    return true;
+    WriterWriteChar(w, '}');
 }
 
 /*********************************************************************/

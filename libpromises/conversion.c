@@ -53,39 +53,6 @@ char *MapAddress(char *unspec_address)
     }
 }
 
-/***************************************************************************/
-
-char *EscapeQuotes(const char *s, char *out, int outSz)
-{
-    char *spt;
-    const char *spf;
-    int i = 0;
-
-    memset(out, 0, outSz);
-
-    for (spf = s, spt = out; (i < outSz - 2) && (*spf != '\0'); spf++, spt++, i++)
-    {
-        switch (*spf)
-        {
-        case '\'':
-        case '\"':
-            *spt++ = '\\';
-            *spt = *spf;
-            i += 3;
-            break;
-
-        default:
-            *spt = *spf;
-            i++;
-            break;
-        }
-    }
-
-    return out;
-}
-
-/***************************************************************************/
-
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value)
 {
     if (needle == NULL)

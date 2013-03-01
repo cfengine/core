@@ -26,6 +26,7 @@
 #define CFENGINE_ITEM_LIB_H
 
 #include "cf3.defs.h"
+#include "writer.h"
 
 struct Item_
 {
@@ -48,7 +49,7 @@ typedef enum
     ITEM_MATCH_TYPE_REGEX_COMPLETE_NOT
 } ItemMatchType;
 
-int PrintItemList(char *buffer, int bufsize, const Item *list);
+void PrintItemList(const Item *list, Writer *w);
 void PrependFullItem(Item **liststart, const char *itemstring, const char *classes, int counter, time_t t);
 Item *ReturnItemIn(Item *list, const char *item);
 Item *ReturnItemInClass(Item *list, const char *item, const char *classes);

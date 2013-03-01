@@ -232,6 +232,14 @@ void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *ar
 void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject);
 
 /**
+  @brief Append any JSON element to an object.
+  @param object [in] The JSON object parent.
+  @param key [in] the key of the field.
+  @param element [in] The element to append
+*/
+void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *element);
+
+/**
   @brief Get the value of a field in an object, as a string.
   @param object [in] The JSON object parent.
   @param key [in] the key of the field.
@@ -299,6 +307,13 @@ void JsonArrayAppendArray(JsonElement *array, JsonElement *child_array);
   @param object [in] The object value to append.
   */
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
+
+/**
+  @brief Append any JSON element to an array.
+  @param array [in] The JSON array parent.
+  @param element [in] The object to append.
+  */
+void JsonArrayAppendElement(JsonElement *array, JsonElement *element);
 
 /**
   @brief Remove an inclusive range from a JSON array.

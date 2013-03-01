@@ -451,6 +451,18 @@ void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *c
     SeqAppend(object->container.children, childObject);
 }
 
+void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *element)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+    assert(element);
+
+    JsonElementSetPropertyName(element, key);
+    SeqAppend(object->container.children, element);
+}
+
 static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, void *_user_data)
 {
     assert(propertyName);
@@ -656,6 +668,16 @@ void JsonArrayAppendObject(JsonElement *array, JsonElement *object)
     assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
 
     SeqAppend(array->container.children, object);
+}
+
+void JsonArrayAppendElement(JsonElement *array, JsonElement *element)
+{
+    assert(array);
+    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
+    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
+    assert(element);
+
+    SeqAppend(array->container.children, element);
 }
 
 void JsonArrayRemoveRange(JsonElement *array, size_t start, size_t end)

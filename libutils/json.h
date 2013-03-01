@@ -209,6 +209,13 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value);
 void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value);
 
 /**
+  @brief Append null field to an object.
+  @param object [in] The JSON object parent.
+  @param key [in] the key of the field.
+  */
+void JsonObjectAppendNull(JsonElement *object, const char *key);
+
+/**
   @brief Append an array field to an object.
   @param object [in] The JSON object parent.
   @param key [in] the key of the field.
@@ -272,6 +279,12 @@ void JsonArrayAppendInteger(JsonElement *array, int value);
   @param value [in] The real value to append.
   */
 void JsonArrayAppendReal(JsonElement *array, double value);
+
+/**
+  @brief Append null to an array.
+  @param array [in] The JSON array parent.
+  */
+void JsonArrayAppendNull(JsonElement *array);
 
 /**
   @brief Append an array to an array.

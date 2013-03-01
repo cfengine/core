@@ -427,6 +427,17 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
     _JsonObjectAppendPrimitive(object, key, child);
 }
 
+void JsonObjectAppendNull(JsonElement *object, const char *key)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMNT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
+    assert(key);
+
+    JsonElement *child = JsonNullCreate();
+    _JsonObjectAppendPrimitive(object, key, child);
+}
+
 void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *array)
 {
     assert(object);
@@ -645,6 +656,16 @@ void JsonArrayAppendReal(JsonElement *array, double value)
 
     JsonElement *child = JsonRealCreate(value);
     _JsonArrayAppendPrimitive(array, child);
+}
+
+void JsonArrayAppendNull(JsonElement *object)
+{
+    assert(object);
+    assert(object->type == JSON_ELEMNT_TYPE_CONTAINER);
+    assert(object->container.type == JSON_CONTAINER_TYPE_ARRAY);
+
+    JsonElement *child = JsonNullCreate();
+    _JsonArrayAppendPrimitive(object, child);
 }
 
 void JsonArrayAppendArray(JsonElement *array, JsonElement *childArray)

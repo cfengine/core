@@ -32,67 +32,67 @@
  * @brief Sets CONTEXTID = id
  * @param id
  */
-void SetScope(char *id);
+void ScopeSet(char *id);
 
 /**
  * @brief NewScope; SetScope;
  * @param id
  */
-void SetNewScope(char *id);
+void ScopeSetNew(char *id);
 
 /**
  * @brief alloc a Scope, idempotent prepend to VSCOPE
  * @param name
  */
-void NewScope(const char *name);
+void ScopeNew(const char *name);
 
 /**
  * @brief remove a Scope from VSCOPE, and dealloc it. removes only the first it finds in the list.
  * @param name
  */
-void DeleteScope(char *name);
+void ScopeDelete(char *name);
 
 /**
  * @brief find a Scope in VSCOPE
  * @param scope
  * @return
  */
-Scope *GetScope(const char *scope);
+Scope *ScopeGet(const char *scope);
 
 /**
  * @brief copy an existing Scope, prepend to VSCOPE with a new name
  * @param new_scopename
  * @param old_scopename
  */
-void CopyScope(const char *new_scopename, const char *old_scopename);
+void ScopeCopy(const char *new_scopename, const char *old_scopename);
 
 /**
  * @brief clear VSCOPE
  */
-void DeleteAllScope(void);
+void ScopeDeleteAll(void);
 
 /**
  * @brief augments a scope, expecting corresponding lists of lvals and rvals (implying same length).
  *        in addition to copying them in, also attempts to do one-pass resolution of variables,
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
-void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals);
+void ScopeAugment(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals);
 
 
 /**
  * @brief Expects a scalar list (e.g., args)! remove from scope if found.
  */
-void DeleteFromScope(char *scope, Rlist *args);
+void ScopeDeleteScalars(char *scope, Rlist *args);
 
 /**
  * @brief prepend GetScope("this") to CF_STCK
  */
-void PushThisScope(void);
+void ScopePushThis(void);
 
 /**
  * @brief pop a scope from CF_STCK, names the scope "this" by force, not sure why because the Scope is dealloced
  */
-void PopThisScope(void);
+void ScopePopThis(void);
 
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best

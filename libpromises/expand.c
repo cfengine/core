@@ -138,7 +138,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     SetAnyMissingDefaults(ctx, pp);
 
-    DeleteScope("match");       /* in case we expand something expired accidentially */
+    ScopeDelete("match");       /* in case we expand something expired accidentially */
 
     THIS_BUNDLE = scopeid;
 
@@ -159,9 +159,9 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
-    PushThisScope();
+    ScopePushThis();
     ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
-    PopThisScope();
+    ScopePopThis();
 
     PromiseDestroy(pcopy);
     RlistDestroy(scalarvars);
@@ -291,7 +291,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
-                if (GetVariable(absscope, var, &rval) != DATA_TYPE_NONE)
+                if (ScopeGetVariable(absscope, var, &rval) != DATA_TYPE_NONE)
                 {
                     if (rval.type == RVAL_TYPE_LIST)
                     {
@@ -370,7 +370,7 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
         {
             GetNaked(naked, rp->item);
 
-            if (GetVariable(scopeid, naked, &returnval) != DATA_TYPE_NONE)
+            if (ScopeGetVariable(scopeid, naked, &returnval) != DATA_TYPE_NONE)
             {
                 returnval = ExpandPrivateRval(scopeid, returnval);
             }
@@ -584,7 +584,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         increment = strlen(var) - 1;
 
-        switch (GetVariable(scopeid, currentitem, &rval))
+        switch (ScopeGetVariable(scopeid, currentitem, &rval))
         {
         case DATA_TYPE_STRING:
         case DATA_TYPE_INT:
@@ -682,7 +682,7 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
         char number[CF_SMALLBUF];
 
         /* Set scope "this" first to ensure list expansion ! */
-        SetScope("this");
+        ScopeSet("this");
         DeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */
@@ -693,27 +693,27 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
             // This ordering is necessary to get automated canonification
             ExpandScalar(handle,tmp);
             CanonifyNameInPlace(tmp);
-            NewScalar("this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewScalar("this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            NewScalar("this", "handle", PromiseID(ctx, pp), DATA_TYPE_STRING);
+            ScopeNewScalar("this", "handle", PromiseID(ctx, pp), DATA_TYPE_STRING);
         }
 
         if (pp->audit && pp->audit->filename)
         {
-            NewScalar("this", "promise_filename", pp->audit->filename, DATA_TYPE_STRING);
+            ScopeNewScalar("this", "promise_filename", pp->audit->filename, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            NewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        NewScalar("this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewScalar("this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        NewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        NewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
-        NewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -722,7 +722,7 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
 
         if (pp->has_subbundles)
         {
-            NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -782,7 +782,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
     {
         GetNaked(naked, rval.item);
 
-        if (GetVariable(scopeid, naked, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
+        if (ScopeGetVariable(scopeid, naked, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
         {
             returnval = ExpandPrivateRval("this", rval);
         }
@@ -831,7 +831,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
             }
             else
             {
-                Scope *ptr = GetScope("this");
+                Scope *ptr = ScopeGet("this");
 
                 if (ptr != NULL)
                 {
@@ -900,9 +900,9 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             sscanf(rp->item, format, orgscope, orgname);
 
-            GetVariable(orgscope, orgname, &retval);
+            ScopeGetVariable(orgscope, orgname, &retval);
 
-            NewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+            ScopeNewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1228,7 +1228,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
 //a.transaction = GetTransactionConstraints(pp);
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    DataType existing_var = GetVariable(scope, pp->promiser, &retval);
+    DataType existing_var = ScopeGetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(pp->ns, "default") == 0)
@@ -1368,7 +1368,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         {
             if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
-                DeleteVariable(BufferData(qualified_scope), pp->promiser);
+                ScopeDeleteVariable(BufferData(qualified_scope), pp->promiser);
             }
             else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(retval, rval) == false))
             {
@@ -1727,21 +1727,21 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

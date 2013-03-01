@@ -51,7 +51,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *re
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp, report_context);
-    DeleteScalar("this", "promiser");
+    ScopeDeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/
@@ -123,16 +123,16 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         BannerSubBundle(bp, params);
 
-        DeleteScope(bp->name);
-        NewScope(bp->name);
+        ScopeDelete(bp->name);
+        ScopeNew(bp->name);
         HashVariables(ctx, PolicyFromPromise(pp), bp->name, report_context);
 
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
-        NewScope(ns);
+        ScopeNew(ns);
         SetBundleOutputs(bp->name);
 
-        AugmentScope(ctx, method_deref, pp->ns, bp->args, params);
+        ScopeAugment(ctx, method_deref, pp->ns, bp->args, params);
 
         THIS_BUNDLE = bp->name;
 
@@ -163,7 +163,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         }
 
-        DeleteFromScope(bp->name, bp->args);
+        ScopeDeleteScalars(bp->name, bp->args);
     }
     else
     {
@@ -202,7 +202,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
         Scope *ptr;
         char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];    
 
-        if ((ptr = GetScope(scope)) == NULL)
+        if ((ptr = ScopeGet(scope)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", " !! useresult was specified but the method returned no data");
             return;
@@ -238,7 +238,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                NewScalar(pp->bundle, newname, assoc->rval.item, DATA_TYPE_STRING);           
+                ScopeNewScalar(pp->bundle, newname, assoc->rval.item, DATA_TYPE_STRING);           
             }
         }
         

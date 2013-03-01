@@ -82,7 +82,7 @@ void EndAudit(int background_tasks)
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if (BooleanControl("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
+    if (ScopeGetVariableAsBoolean("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
     {
         FILE *fout;
         char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
@@ -110,7 +110,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }

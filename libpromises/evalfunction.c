@@ -940,7 +940,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function REGLIST was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1002,7 +1002,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function regarray was promised an array called \"%s\" but this was not found\n",
               arrayname);
@@ -1057,7 +1057,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
@@ -1130,7 +1130,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
@@ -1202,14 +1202,14 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1262,13 +1262,13 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"sum\" was promised a list in scope \"%s\" but this was not found\n", scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"sum\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1326,14 +1326,14 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"product\" was promised a list in scope \"%s\" but this was not found\n",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"product\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1393,14 +1393,14 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, "this");
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"join\" was promised an array in scope \"%s\" but this was not found\n",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found\n",
               scopeid, name);
@@ -1502,7 +1502,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             for (rp = newlist; rp != NULL; rp = rp->next)
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                NewScalar(THIS_BUNDLE, name, RlistScalarValue(rp), DATA_TYPE_STRING);
+                ScopeNewScalar(THIS_BUNDLE, name, RlistScalarValue(rp), DATA_TYPE_STRING);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> getfields: defining %s = %s\n", name, RlistScalarValue(rp));
                 vcount++;
             }
@@ -1663,14 +1663,14 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = GetScope(scopeid)) == NULL)
+    if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"maplist\" was promised an list in scope \"%s\" but this was not found\n",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    retype = GetVariable(scopeid, lval, &rval);
+    retype = ScopeGetVariable(scopeid, lval, &rval);
 
     if (retype != DATA_TYPE_STRING_LIST && retype != DATA_TYPE_INT_LIST && retype != DATA_TYPE_REAL_LIST)
     {
@@ -1679,7 +1679,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
-        NewScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(map, expbuf);
 
@@ -1690,7 +1690,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
 
         RlistAppendScalar(&newlist, expbuf);
-        DeleteScalar("this", "this");
+        ScopeDeleteScalar("this", "this");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };
@@ -1731,7 +1731,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",
@@ -1809,7 +1809,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive and responding correctly\n", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                NewScalar(CONTEXTID, buffer, rp->item, DATA_TYPE_STRING);
+                ScopeNewScalar(CONTEXTID, buffer, rp->item, DATA_TYPE_STRING);
                 count++;
             }
         }
@@ -1817,7 +1817,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive\n", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            NewScalar(CONTEXTID, buffer, rp->item, DATA_TYPE_STRING);
+            ScopeNewScalar(CONTEXTID, buffer, rp->item, DATA_TYPE_STRING);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), fp->ns))
             {
@@ -2107,7 +2107,7 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (DefinedVariable(RlistScalarValue(finalargs)))
+    if (ScopeVariableExistsInThis(RlistScalarValue(finalargs)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }
@@ -2610,7 +2610,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
         strcpy(buffer, "!any");
     }
 
-    ptr = GetScope("match");
+    ptr = ScopeGet("match");
 
     if (ptr && ptr->hashtable)
     {
@@ -2630,7 +2630,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             else
             {
                 snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                NewScalar(THIS_BUNDLE, var, assoc->rval.item, DATA_TYPE_STRING);
+                ScopeNewScalar(THIS_BUNDLE, var, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
     }
@@ -3471,7 +3471,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (GetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable(CONTEXTID, naked, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function filesexist was promised a list called \"%s\" but this was not found\n",
               listvar);
@@ -3935,7 +3935,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
                 snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
             }
 
-            NewScalar(THIS_BUNDLE, name, this_rval, type);
+            ScopeNewScalar(THIS_BUNDLE, name, this_rval, type);
             vcount++;
         }
 
@@ -4033,7 +4033,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
     strcpy(context, filename);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Module context: %s\n", context);
 
-    NewScope(context);
+    ScopeNew(context);
     name[0] = '\0';
     content[0] = '\0';
 
@@ -4060,7 +4060,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         if (CheckID(name))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
-            NewScalar(context, name, content, DATA_TYPE_STRING);
+            ScopeNewScalar(context, name, content, DATA_TYPE_STRING);
         }
         break;
 
@@ -4074,7 +4074,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
             list = RlistParseShown(content);
-            NewList(context, name, list, DATA_TYPE_STRING_LIST);
+            ScopeNewList(context, name, list, DATA_TYPE_STRING_LIST);
         }
         break;
 

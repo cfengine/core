@@ -165,8 +165,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         return false;
     }
 
-    NewScope("edit");
-    NewScalar("edit", "filename", filename, DATA_TYPE_STRING);
+    ScopeNew("edit");
+    ScopeNewScalar("edit", "filename", filename, DATA_TYPE_STRING);
 
 /* Reset the done state for every call here, since bundle is reusable */
 
@@ -197,7 +197,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
 
             BannerSubSubType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
-            SetScope(bp->name);
+            ScopeSet(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -212,7 +212,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
                 if (Abort())
                 {
                     THIS_BUNDLE = bp_stack;
-                    DeleteScope("edit");
+                    ScopeDelete("edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -220,8 +220,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         }
     }
 
-    DeleteScope("edit");
-    SetScope(parentp->bundle);
+    ScopeDelete("edit");
+    ScopeSet(parentp->bundle);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;

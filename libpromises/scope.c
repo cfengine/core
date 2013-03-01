@@ -40,7 +40,7 @@
 
 /*******************************************************************/
 
-Scope *GetScope(const char *scope)
+Scope *ScopeGet(const char *scope)
 /* 
  * Not thread safe - returns pointer to global memory
  */
@@ -68,22 +68,22 @@ Scope *GetScope(const char *scope)
 
 /*******************************************************************/
 
-void SetScope(char *id)
+void ScopeSet(char *id)
 {
     strlcpy(CONTEXTID, id, CF_MAXVARSIZE);
 }
 
 /*******************************************************************/
 
-void SetNewScope(char *id)
+void ScopeSetNew(char *id)
 {
-    NewScope(id);
-    SetScope(id);
+    ScopeNew(id);
+    ScopeSet(id);
 }
 
 /*******************************************************************/
 
-void NewScope(const char *name)
+void ScopeNew(const char *name)
 /*
  * Thread safe
  */
@@ -119,7 +119,7 @@ void NewScope(const char *name)
 
 /*******************************************************************/
 
-void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals)
+void ScopeAugment(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -160,18 +160,18 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
                 snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
             }
             
-            vtype = GetVariable(scope, qnaked, &retval); 
+            vtype = ScopeGetVariable(scope, qnaked, &retval);
 
             switch (vtype)
             {
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                NewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                ScopeNewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
-                NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
+                ScopeNewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
                 break;
             }
         }
@@ -183,7 +183,7 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
+                ScopeNewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -191,7 +191,7 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
                 Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                 if (rval.type == RVAL_TYPE_SCALAR)
                 {
-                    NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
+                    ScopeNewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
                 }
                 else
                 {
@@ -206,7 +206,7 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 
-    ptr = GetScope(scope);
+    ptr = ScopeGet(scope);
 
     i = HashIteratorInit(ptr->hashtable);
 
@@ -223,7 +223,7 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
 
 /*******************************************************************/
 
-void DeleteAllScope()
+void ScopeDeleteAll()
 {
     Scope *ptr, *this;
 
@@ -254,7 +254,7 @@ void DeleteAllScope()
 
 /*******************************************************************/
 
-void DeleteScope(char *name)
+void ScopeDelete(char *name)
 /*
  * Thread safe
  */
@@ -310,7 +310,7 @@ void DeleteScope(char *name)
 
 /*******************************************************************/
 
-void DeleteFromScope(char *scope, Rlist *args)
+void ScopeDeleteScalars(char *scope, Rlist *args)
 {
     Rlist *rp;
     char *lval;
@@ -318,13 +318,13 @@ void DeleteFromScope(char *scope, Rlist *args)
     for (rp = args; rp != NULL; rp = rp->next)
     {
         lval = (char *) rp->item;
-        DeleteScalar(scope, lval);
+        ScopeDeleteScalar(scope, lval);
     }
 }
 
 /*******************************************************************/
 
-void CopyScope(const char *new_scopename, const char *old_scopename)
+void ScopeCopy(const char *new_scopename, const char *old_scopename)
 /*
  * Thread safe
  */
@@ -333,7 +333,7 @@ void CopyScope(const char *new_scopename, const char *old_scopename)
 
     CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scopename, new_scopename);
 
-    NewScope(new_scopename);
+    ScopeNew(new_scopename);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -341,9 +341,9 @@ void CopyScope(const char *new_scopename, const char *old_scopename)
         return;
     }
 
-    if ((op = GetScope(old_scopename)))
+    if ((op = ScopeGet(old_scopename)))
     {
-        np = GetScope(new_scopename);
+        np = ScopeGet(new_scopename);
         HashCopy(np->hashtable, op->hashtable);
     }
 
@@ -354,12 +354,12 @@ void CopyScope(const char *new_scopename, const char *old_scopename)
 /* Stack frames                                                    */
 /*******************************************************************/
 
-void PushThisScope()
+void ScopePushThis()
 {
     Scope *op;
     char name[CF_MAXVARSIZE];
 
-    op = GetScope("this");
+    op = ScopeGet("this");
 
     if (op == NULL)
     {
@@ -375,13 +375,13 @@ void PushThisScope()
 
 /*******************************************************************/
 
-void PopThisScope()
+void ScopePopThis()
 {
     Scope *op = NULL;
 
     if (CF_STCKFRAME > 0)
     {
-        DeleteScope("this");
+        ScopeDelete("this");
         RlistPopStack(&CF_STCK, (void *) &op, sizeof(op));
         if (op == NULL)
         {

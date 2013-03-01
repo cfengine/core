@@ -205,7 +205,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
     if (level == OUTPUT_LEVEL_ERROR)
     {
-        if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
+        if (ScopeGetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
         {
             v = (char *) retval.item;
         }

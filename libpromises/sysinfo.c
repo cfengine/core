@@ -260,10 +260,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     HardClass(ctx, VUQNAME);
     HardClass(ctx, VDOMAIN);
 
-    NewScalar("sys", "host", nodename, DATA_TYPE_STRING);
-    NewScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
-    NewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-    NewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "host", nodename, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
 }
 
 /*******************************************************************/
@@ -339,7 +339,7 @@ void GetNameInfo3(EvalContext *ctx)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
-                    NewScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
+                    ScopeNewScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
                     break;
                 }
             }
@@ -393,27 +393,27 @@ void GetNameInfo3(EvalContext *ctx)
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
-    NewScalar("sys", "date", workbuf, DATA_TYPE_STRING);
-    NewScalar("sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
-    NewScalar("sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
-    NewScalar("sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
-    NewScalar("sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
-    NewScalar("sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
-    NewScalar("sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
-    NewScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    NewScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    NewScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    NewScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    NewScalar("sys", "expires", EXPIRY, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "date", workbuf, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "expires", EXPIRY, DATA_TYPE_STRING);
 /* FIXME: type conversion */
-    NewScalar("sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 
     if (PUBKEY)
     {
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         HashPrintSafe(CF_DEFAULT_DIGEST, digest, PUBKEY_DIGEST);
 
-        NewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
 
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", PUBKEY_DIGEST);
         CanonifyNameInPlace(workbuf);
@@ -445,7 +445,7 @@ void GetNameInfo3(EvalContext *ctx)
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            NewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
+            ScopeNewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
             have_component[i] = true;
         }
     }
@@ -466,7 +466,7 @@ void GetNameInfo3(EvalContext *ctx)
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            NewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
+            ScopeNewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
         }
     }
 
@@ -505,10 +505,10 @@ void GetNameInfo3(EvalContext *ctx)
 
 // defs on Unix for manual-building purposes
 
-    NewScalar("sys", "windir", "/dev/null", DATA_TYPE_STRING);
-    NewScalar("sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
-    NewScalar("sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
-    NewScalar("sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "windir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
 
 #endif /* !__MINGW32__ */
 
@@ -573,13 +573,13 @@ void GetNameInfo3(EvalContext *ctx)
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    NewScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
     HardClass(ctx, sp);
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    NewScalar("sys", "ostype", sp, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "ostype", sp, DATA_TYPE_STRING);
     HardClass(ctx, sp);
     free(sp);
 
@@ -670,8 +670,8 @@ void Get3Environment(EvalContext *ctx)
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
-    DeleteVariable("mon", "env_time");
-    NewScalar("mon", "env_time", value, DATA_TYPE_STRING);
+    ScopeDeleteVariable("mon", "env_time");
+    ScopeNewScalar("mon", "env_time", value, DATA_TYPE_STRING);
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Loading environment...\n");
 
@@ -708,8 +708,8 @@ void Get3Environment(EvalContext *ctx)
            
             CfDebug(" -> Setting new monitoring list %s => %s", name, value);
             list = RlistParseShown(value);
-            DeleteVariable("mon", name);
-            NewList("mon", name, list, DATA_TYPE_STRING_LIST);
+            ScopeDeleteVariable("mon", name);
+            ScopeNewList("mon", name, list, DATA_TYPE_STRING_LIST);
 
             RlistDestroy(list);
         }
@@ -719,8 +719,8 @@ void Get3Environment(EvalContext *ctx)
 
             if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR)
             {
-                DeleteVariable("mon", name);
-                NewScalar("mon", name, value, DATA_TYPE_STRING);
+                ScopeDeleteVariable("mon", name);
+                ScopeNewScalar("mon", name, value, DATA_TYPE_STRING);
                 CfDebug(" -> Setting new monitoring scalar %s => %s", name, value);
             }
         }
@@ -789,8 +789,8 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
     HardClass(ctx, flavour);
-    NewScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
-    NewScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
 }
 
 void OSClasses(EvalContext *ctx)
@@ -1031,7 +1031,7 @@ void OSClasses(EvalContext *ctx)
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
 
-        NewScalar("sys", "crontab", vbuff, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "crontab", vbuff, DATA_TYPE_STRING);
     }
 
 #endif
@@ -1053,17 +1053,17 @@ void OSClasses(EvalContext *ctx)
 
     if (IsDefinedClass(ctx, "redhat", NULL))
     {
-        NewScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "SuSE", NULL))
     {
-        NewScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "debian", NULL))
     {
-        NewScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
     }
 }
 
@@ -2293,11 +2293,11 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count == 1) {
         HardClass(ctx, buf);  // "1_cpu" from init - change if buf is ever used above
-        NewScalar("sys", "cpus", "1", DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "cpus", "1", DATA_TYPE_STRING);
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         HardClass(ctx, buf);
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        NewScalar("sys", "cpus", buf, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "cpus", buf, DATA_TYPE_STRING);
     }
 }

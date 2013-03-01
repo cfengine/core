@@ -399,7 +399,7 @@ static void KeepKeyPromises(const char *public_key_file, const char *private_key
     const EVP_CIPHER *cipher;
     char vbuff[CF_BUFSIZE];
 
-    NewScope("common");
+    ScopeNew("common");
 
     cipher = EVP_des_ede3_cbc();
 

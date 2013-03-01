@@ -1121,7 +1121,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         const Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
-        SetNewScope(bp->name);
+        ScopeSetNew(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -1138,12 +1138,12 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         }
     }
 
-    DeleteAllScope();
-    NewScope("const");
-    NewScope("control_monitor");
-    NewScope("control_common");
-    NewScope("mon");
-    NewScope("sys");
+    ScopeDeleteAll();
+    ScopeNew("const");
+    ScopeNew("control_monitor");
+    ScopeNew("control_common");
+    ScopeNew("mon");
+    ScopeNew("sys");
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
     Get3Environment(ctx);

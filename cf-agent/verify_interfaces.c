@@ -36,7 +36,7 @@ void VerifyInterfacesPromise(EvalContext *ctx, Promise *pp)
 
     a = GetInterfacesAttributes(ctx, pp);
     VerifyInterface(a, pp);
-    DeleteScalar("this", "promiser");
+    ScopeDeleteScalar("this", "promiser");
 }
 
 /*****************************************************************************/

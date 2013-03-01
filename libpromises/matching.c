@@ -59,12 +59,12 @@ void ForceScalar(char *lval, char *rval)
 {
     Rval retval;
 
-    if (GetVariable("match", lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("match", lval, &retval) != DATA_TYPE_NONE)
     {
-        DeleteVariable("match", lval);
+        ScopeDeleteVariable("match", lval);
     }
 
-    NewScalar("match", lval, rval, DATA_TYPE_STRING);
+    ScopeNewScalar("match", lval, rval, DATA_TYPE_STRING);
     CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
 }
 
@@ -77,8 +77,8 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
         *start = ovector[0];
         *end = ovector[1];
 
-        DeleteScope("match");
-        NewScope("match");
+        ScopeDelete("match");
+        ScopeNew("match");
 
         for (i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
         {

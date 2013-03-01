@@ -277,7 +277,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (GetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
@@ -475,23 +475,23 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         }
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
@@ -510,7 +510,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
         Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
-        SetNewScope(bp->name);
+        ScopeSetNew(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -529,8 +529,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerSubType(scope, sp->name, 0);
-                SetScope(scope);
-                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
+                ScopeSet(scope);
+                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -555,7 +555,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
         Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
-        SetNewScope(bp->name);
+        ScopeSetNew(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -574,8 +574,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerSubType(scope, sp->name, 0);
-                SetScope(scope);
-                AugmentScope(ctx, scope, bp->ns, NULL, NULL);
+                ScopeSet(scope);
+                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

@@ -518,13 +518,13 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (GetVariable("control_common", cp->lval, &retval) != DATA_TYPE_NONE)
+            if (ScopeGetVariable("control_common", cp->lval, &retval) != DATA_TYPE_NONE)
             {
                 /* Already handled in generic_agent */
                 continue;
             }
 
-            if (GetVariable("control_agent", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable("control_agent", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in agent control body", cp->lval);
                 continue;
@@ -849,24 +849,24 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (GetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
@@ -893,7 +893,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (GetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
+    else if (ScopeGetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
     {
         // TODO: somewhat frenzied way of telling user about an error
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -981,10 +981,10 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         {
             char ns[CF_BUFSIZE];
             snprintf(ns,CF_BUFSIZE,"%s_meta", name);
-            NewScope(ns);
+            ScopeNew(ns);
 
             SetBundleOutputs(bp->name);
-            AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
 
@@ -1028,7 +1028,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
             }
 
             BannerSubType(bp->name, sp->name, pass);
-            SetScope(bp->name);
+            ScopeSet(bp->name);
 
             if (!NewTypeContext(type))
             {
@@ -1143,7 +1143,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    dt = GetVariable("this", pp->promiser, &rval);
+    dt = ScopeGetVariable("this", pp->promiser, &rval);
 
     switch (dt)
        {
@@ -1190,7 +1190,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
            break;
        }
 
-    DeleteScalar(pp->bundle, pp->promiser);
+    ScopeDeleteScalar(pp->bundle, pp->promiser);
     ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
 }
 
@@ -1236,7 +1236,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     {
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
-        NewScope(ns);
+        ScopeNew(ns);
         ConvergeVarHashPromise(ctx, ns, pp, true);
         return;
     }

@@ -172,7 +172,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
-                NewScope("body");
+                ScopeNew("body");
 
                 if (fp && bp && fp->args && bp->args && !MapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
@@ -191,7 +191,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *
                     PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
-                DeleteScope("body");
+                ScopeDelete("body");
             }
             else
             {
@@ -458,7 +458,7 @@ void PromiseRef(OutputLevel level, const Promise *pp)
         return;
     }
 
-    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }

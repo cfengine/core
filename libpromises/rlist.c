@@ -247,7 +247,7 @@ static Rval RvalCopyList(Rval rval)
             GetNaked(naked, rp->item);
 
             Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
-            if (GetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
+            if (ScopeGetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
             {
                 switch (rv.type)
                 {

@@ -39,7 +39,6 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
 void DeleteFromScope(char *scope, Rlist *args);
 void PushThisScope(void);
 void PopThisScope(void);
-void ShowScope(char *);
 
 void SplitScopeName(const char *scope_name, char namespace_out[CF_MAXVARSIZE], char bundle_out[CF_MAXVARSIZE]);
 void JoinScopeName(const char *ns, const char *bundle, char scope_out[CF_MAXVARSIZE]);

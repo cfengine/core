@@ -62,8 +62,6 @@ static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *c
 
 /*****************************************************************************/
 
-static AlphaList VHANDLES;
-
 Item *ABORTBUNDLEHEAP = NULL;
 
 static Item *ABORTHEAP = NULL;
@@ -1713,8 +1711,7 @@ void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
     }
     
     snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, handle);
-    IdempPrependAlphaList(&VHANDLES, name);
-
+    StringSetAdd(ctx->dependency_handles, xstrdup(name));
 }
 
 /*****************************************************************************/
@@ -1730,27 +1727,27 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
     Rlist *rp, *deps = PromiseGetConstraintAsList(ctx, "depends_on", pp);
     
     for (rp = deps; rp != NULL; rp = rp->next)
-       {
-       if (strchr(rp->item, ':'))
-          {
-          d = (char *)rp->item;
-          }
-       else
-          {
-          snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, (char *)rp->item);
-          d = name;
-          }
+    {
+        if (strchr(rp->item, ':'))
+        {
+            d = (char *)rp->item;
+        }
+        else
+        {
+            snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, (char *)rp->item);
+            d = name;
+        }
 
-       if (!InAlphaList(&VHANDLES, d))
-          {
-          CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-          CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-          CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
-          CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (!StringSetContains(ctx->dependency_handles, d))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
 
-          return true;
-          }
-       }
+            return true;
+        }
+    }
 
     return false;
 }
@@ -1778,6 +1775,8 @@ EvalContext *EvalContextNew(void)
     // bundles call other bundles. We should not need a 'base frame' like this.
     EvalContextStackPushFrame(ctx, false);
 
+    ctx->dependency_handles = StringSetNew();
+
     return ctx;
 }
 
@@ -1790,6 +1789,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_negated);
 
         SeqDestroy(ctx->stack);
+
+        StringSetDestroy(ctx->dependency_handles);
     }
 }
 

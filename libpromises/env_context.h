@@ -47,6 +47,8 @@ struct EvalContext_
     StringSet *heap_negated;
 
     Seq *stack;
+
+    StringSet *dependency_handles;
 };
 
 /**

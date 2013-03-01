@@ -177,31 +177,30 @@ void AugmentScope(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *
         }
         else
         {
-        FnCall *subfp;
-        Promise *pp = NULL; // This argument should really get passed down.
-        
-        switch(rpr->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
-            break;
+            FnCall *subfp;
+            Promise *pp = NULL; // This argument should really get passed down.
 
-        case RVAL_TYPE_FNCALL:
-            subfp = (FnCall *) rpr->item;
-            Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
-            if (rval.type == RVAL_TYPE_SCALAR)
+            switch(rpr->type)
             {
-                NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
-            }
-            else
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
-            }
-            break;
-        default:
-            ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
-        }
+            case RVAL_TYPE_SCALAR:
+                NewScalar(scope, lval, rpr->item, DATA_TYPE_STRING);
+                break;
 
+            case RVAL_TYPE_FNCALL:
+                subfp = (FnCall *) rpr->item;
+                Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
+                if (rval.type == RVAL_TYPE_SCALAR)
+                {
+                    NewScalar(scope, lval, rval.item, DATA_TYPE_STRING);
+                }
+                else
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
+                }
+                break;
+            default:
+                ProgrammingError("An argument neither a scalar nor a list seemed to appear. Impossible");
+            }
         }
     }
 

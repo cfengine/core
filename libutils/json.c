@@ -384,9 +384,6 @@ static void _JsonObjectAppendPrimitive(JsonElement *object, const char *key, Jso
 
 void JsonObjectAppendString(JsonElement *object, const char *key, const char *value)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
     assert(value);
 
@@ -396,9 +393,6 @@ void JsonObjectAppendString(JsonElement *object, const char *key, const char *va
 
 void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
     JsonElement *child = JsonIntegerCreate(value);
@@ -407,9 +401,6 @@ void JsonObjectAppendInteger(JsonElement *object, const char *key, int value)
 
 void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
     JsonElement *child = JsonBoolCreate(value);
@@ -418,9 +409,6 @@ void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value)
 
 void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
     JsonElement *child = JsonRealCreate(value);
@@ -429,9 +417,6 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value)
 
 void JsonObjectAppendNull(JsonElement *object, const char *key)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMNT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_OBJECT);
     assert(key);
 
     JsonElement *child = JsonNullCreate();
@@ -619,9 +604,6 @@ static void _JsonArrayAppendPrimitive(JsonElement *array, JsonElement *child_pri
 
 void JsonArrayAppendString(JsonElement *array, const char *value)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
     assert(value);
 
     JsonElement *child = JsonStringCreate(value);
@@ -630,40 +612,24 @@ void JsonArrayAppendString(JsonElement *array, const char *value)
 
 void JsonArrayAppendBool(JsonElement *array, bool value)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
-
     JsonElement *child = JsonBoolCreate(value);
     _JsonArrayAppendPrimitive(array, child);
 }
 
 void JsonArrayAppendInteger(JsonElement *array, int value)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
-
     JsonElement *child = JsonIntegerCreate(value);
     _JsonArrayAppendPrimitive(array, child);
 }
 
 void JsonArrayAppendReal(JsonElement *array, double value)
 {
-    assert(array);
-    assert(array->type == JSON_ELEMENT_TYPE_CONTAINER);
-    assert(array->container.type == JSON_CONTAINER_TYPE_ARRAY);
-
     JsonElement *child = JsonRealCreate(value);
     _JsonArrayAppendPrimitive(array, child);
 }
 
 void JsonArrayAppendNull(JsonElement *object)
 {
-    assert(object);
-    assert(object->type == JSON_ELEMNT_TYPE_CONTAINER);
-    assert(object->container.type == JSON_CONTAINER_TYPE_ARRAY);
-
     JsonElement *child = JsonNullCreate();
     _JsonArrayAppendPrimitive(object, child);
 }

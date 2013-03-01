@@ -274,11 +274,6 @@ FnCall *FnCallCopy(const FnCall *f)
     fail();
 }
 
-int EndJoin(char *path, char *leaf, int bufsize)
-{
-    fail();
-}
-
 void FnCallDestroy(FnCall *fp)
 {
     fail();

@@ -42,11 +42,12 @@ FnCall *RvalFnCallValue(Rval rval);
 Rlist *RvalRlistValue(Rval rval);
 Rval RvalCopy(Rval rval);
 void RvalDestroy(Rval rval);
-int RvalPrint(char *buffer, int bufsize, Rval rval);
 JsonElement *RvalToJson(Rval rval);
 void RvalShow(FILE *fp, Rval rval);
 void RvalWrite(Writer *writer, Rval rval);
 
+void RlistPrintToWriter(const Rlist *list, Writer *w);
+void RvalPrintToWriter(Rval rval, Writer *w);
 
 Rlist *RlistCopy(const Rlist *list);
 void RlistDestroy(Rlist *list);
@@ -81,7 +82,6 @@ Rlist *RlistFromSplitString(const char *string, char sep);
 Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
 void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
-int RlistPrint(char *buffer, int bufsize, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 

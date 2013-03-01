@@ -198,16 +198,6 @@ char *JoinSuffix(char *path, char *leaf)
     return path;
 }
 
-/*********************************************************************/
-
-int StartJoin(char *path, char *leaf, int bufsize)
-{
-    memset(path, 0, bufsize);
-    return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);
-}
-
-/*********************************************************************/
-
 int Join(char *path, const char *leaf, int bufsize)
 {
     return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);

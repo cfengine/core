@@ -452,7 +452,6 @@ void PromiseRef(OutputLevel level, const Promise *pp)
 {
     char *v;
     Rval retval;
-    char buffer[CF_BUFSIZE];
 
     if (pp == NULL)
     {
@@ -490,9 +489,14 @@ void PromiseRef(OutputLevel level, const Promise *pp)
            CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
            break;
        case RVAL_TYPE_LIST:
-           RlistPrint(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
-           CfOut(level, "", "This was a promise to: %s",buffer);
+       {
+           Writer *w = StringWriter();
+           RlistWrite(w, pp->promisee.item);
+           char *p = StringWriterClose(w);
+           CfOut(level, "", "This was a promise to: %s", p);
+           free(p);
            break;
+       }
        default:
            break;
     }

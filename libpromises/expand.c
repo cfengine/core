@@ -1382,12 +1382,18 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
 
                 case RVAL_TYPE_LIST:
                     {
-                        char valbuf[CF_BUFSIZE];
                         CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
-                        RlistPrint(valbuf, CF_BUFSIZE, retval.item);
-                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", valbuf);
-                        RlistPrint(valbuf, CF_BUFSIZE, rval.item);
-                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " New value: %s", valbuf);
+                        Writer *w = StringWriter();
+                        RlistWrite(w, retval.item);
+                        char *oldstr = StringWriterClose(w);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", oldstr);
+                        free(oldstr);
+
+                        w = StringWriter();
+                        RlistWrite(w, rval.item);
+                        char *newstr = StringWriterClose(w);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", " New value: %s", newstr);
+                        free(newstr);
                         PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                     }
                     break;

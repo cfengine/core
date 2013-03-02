@@ -3042,26 +3042,27 @@ bundle common paths
       "yum"       string => "/usr/bin/yum";
 
     debian::
-      "awk"      string => "/usr/bin/awk";
-      "crontabs" string => "/var/spool/cron";
-      "df"       string => "/bin/df";
-      "dig"      string => "/usr/bin/dig";
-      "egrep"    string => "/bin/egrep";
-      "grep"     string => "/bin/grep";
-      "ls"       string => "/bin/ls";
-      "netstat"  string => "/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
-      "printf"   string => "/usr/bin/printf";
-      "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
+      "awk"       string => "/usr/bin/awk";
+      "bc"        string => "/usr/bin/bc";
+      "cat"       string => "/bin/cat";
+      "cksum"     string => "/usr/bin/cksum";
+      "crontabs"  string => "/var/spool/cron";
+      "cut"       string => "/usr/bin/cut";
+      "dc"        string => "/usr/bin/dc";
+      "df"        string => "/bin/df";
+      "diff"      string => "/usr/bin/diff";
+      "dig"       string => "/usr/bin/dig";
+      "dmidecode" string => "/usr/sbin/dmidecode";
+      "echo"      string => "/bin/echo";
+      "egrep"     string => "/bin/egrep";
+      "find"      string => "/usr/bin/find";
+      "grep"      string => "/bin/grep";
+      "ls"        string => "/bin/ls";
+      "netstat"   string => "/bin/netstat";
+      "printf"    string => "/usr/bin/printf";
+      "sed"       string => "/bin/sed";
+      "sort"      string => "/usr/bin/sort";
+      "tr"        string => "/usr/bin/tr";
 
       #
       "apt_cache"           string => "/usr/bin/apt-cache";
@@ -3101,6 +3102,7 @@ bundle common paths
                                 "df",
                                 "diff",
                                 "dig",
+                                "dmidecode",
                                 "dpkg",
                                 "echo",
                                 "egrep",

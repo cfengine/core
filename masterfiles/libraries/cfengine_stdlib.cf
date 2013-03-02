@@ -3082,7 +3082,7 @@ bundle common paths
       "useradd"             string => "/usr/sbin/useradd";
 
 
-    all::
+    any::
       "ping" string => "/usr/bin/ping";
 
       "all_paths" slist => { 

@@ -578,7 +578,10 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
 
             AddSlash(filename);
 
-            Join(filename, dirp->d_name, CF_BUFSIZE - 1);
+            if (strlcat(filename, dirp->d_name, CF_BUFSIZE) >= CF_BUFSIZE)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Path name is too long in PurgeLocalFiles");
+            }
 
             if (DONTDO)
             {

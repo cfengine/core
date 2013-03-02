@@ -3132,6 +3132,7 @@ bundle common paths
                               };
 
   classes:
-    "_stdlib_has_path_$(all_paths)" expression => isvariable("$(all_paths)");
+    "_stdlib_has_path_$(all_paths)"    expression => isvariable("$(all_paths)");
+    "_stdlib_path_exists_$(all_paths)" expression => fileexists("$(all_paths)");
 
 }

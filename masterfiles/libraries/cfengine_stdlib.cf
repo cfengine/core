@@ -2909,98 +2909,102 @@ bundle common paths
       #
       # Common full pathname of commands for OS
       #
+
     aix::
 
       "awk"      string => "/usr/bin/awk";
+      "bc"       string => "/usr/bin/bc";
+      "cat"      string => "/bin/cat";
+      "cksum"    string => "/usr/bin/cksum";
       "crontabs" string => "/var/spool/cron/crontabs";
+      "cut"      string => "/usr/bin/cut";
+      "dc"       string => "/usr/bin/dc";
       "df"       string => "/usr/bin/df";
+      "diff"     string => "/usr/bin/diff";
       "dig"      string => "/usr/bin/dig";
+      "echo"     string => "/usr/bin/echo";
       "egrep"    string => "/usr/bin/egrep";
+      "find"     string => "/usr/bin/find";
       "grep"     string => "/usr/bin/grep";
       "ls"       string => "/usr/bin/ls";
       "netstat"  string => "/usr/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/usr/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
+      "ping"     string => "/usr/bin/ping";
       "printf"   string => "/usr/bin/printf";
+      "sed"      string => "/usr/bin/sed";
+      "sort"     string => "/usr/bin/sort";
       "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/usr/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
 
     freebsd|netbsd::
-    
+
       "awk"      string => "/usr/bin/awk";
+      "bc"       string => "/usr/bin/bc";
+      "cat"      string => "/bin/cat";
+      "cksum"    string => "/usr/bin/cksum";
       "crontabs" string => "/var/cron/tabs";
+      "cut"      string => "/usr/bin/cut";
+      "dc"       string => "/usr/bin/dc";
       "df"       string => "/bin/df";
+      "diff"     string => "/usr/bin/diff";
       "dig"      string => "/usr/bin/dig";
+      "echo"     string => "/bin/echo";
       "egrep"    string => "/usr/bin/egrep";
+      "find"     string => "/usr/bin/find";
       "grep"     string => "/usr/bin/grep";
       "ls"       string => "/bin/ls";
       "netstat"  string => "/usr/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/usr/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
+      "ping"     string => "/usr/bin/ping";
       "printf"   string => "/usr/bin/printf";
+      "sed"      string => "/usr/bin/sed";
+      "sort"     string => "/usr/bin/sort";
       "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
 
     openbsd::
-    
+
       "awk"      string => "/usr/bin/awk";
+      "bc"       string => "/usr/bin/bc";
+      "cat"      string => "/bin/cat";
+      "cksum"    string => "/bin/cksum";
       "crontabs" string => "/var/cron/tabs";
+      "cut"      string => "/usr/bin/cut";
+      "dc"       string => "/usr/bin/dc";
       "df"       string => "/bin/df";
+      "diff"     string => "/usr/bin/diff";
       "dig"      string => "/usr/sbin/dig";
+      "echo"     string => "/bin/echo";
       "egrep"    string => "/usr/bin/egrep";
+      "find"     string => "/usr/bin/find";
       "grep"     string => "/usr/bin/grep";
       "ls"       string => "/bin/ls";
       "netstat"  string => "/usr/bin/netstat";
-      "cksum"    string => "/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/usr/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
+      "ping"     string => "/usr/bin/ping";
       "printf"   string => "/usr/bin/printf";
+      "sed"      string => "/usr/bin/sed";
+      "sort"     string => "/usr/bin/sort";
       "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
 
     solaris::
 
       "awk"      string => "/usr/bin/awk";
+      "bc"       string => "/usr/bin/bc";
+      "cat"      string => "/usr/bin/cat";
+      "cksum"    string => "/usr/bin/cksum";
       "crontabs" string => "/var/spool/cron/crontabs";
+      "cut"      string => "/usr/bin/cut";
+      "dc"       string => "/usr/bin/dc";
       "df"       string => "/usr/bin/df";
+      "diff"     string => "/usr/bin/diff";
       "dig"      string => "/usr/sbin/dig";
+      "echo"     string => "/usr/bin/echo";
       "egrep"    string => "/usr/bin/egrep";
+      "find"     string => "/usr/bin/find";
       "grep"     string => "/usr/bin/grep";
       "ls"       string => "/usr/bin/ls";
       "netstat"  string => "/usr/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
-      "sort"     string => "/usr/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/usr/bin/cat";
-      "sed"      string => "/usr/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/usr/bin/cut";
+      "ping"     string => "/usr/bin/ping";
       "printf"   string => "/usr/bin/printf";
+      "sed"      string => "/usr/bin/sed";
+      "sort"     string => "/usr/bin/sort";
       "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/usr/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
-
       #
       "svcs"     string => "/usr/bin/svcs";
       "svcadm"   string => "/usr/sbin/svcadm";
@@ -3008,25 +3012,26 @@ bundle common paths
     redhat::
 
       "awk"      string => "/bin/awk";
+      "bc"       string => "/usr/bin/bc";
+      "cat"      string => "/bin/cat";
+      "cksum"    string => "/usr/bin/cksum";
       "crontabs" string => "/var/spool/cron";
+      "cut"      string => "/bin/cut";
+      "dc"       string => "/usr/bin/dc";
       "df"       string => "/bin/df";
+      "diff"     string => "/usr/bin/diff";
       "dig"      string => "/usr/bin/dig";
+      "echo"     string => "/bin/echo";
       "egrep"    string => "/bin/egrep";
+      "find"     string => "/usr/bin/find";
       "grep"     string => "/bin/grep";
       "ls"       string => "/bin/ls";
       "netstat"  string => "/bin/netstat";
-      "cksum"    string => "/usr/bin/cksum";
-      "sort"     string => "/bin/sort";
-      "find"     string => "/usr/bin/find";
-      "cat"      string => "/bin/cat";
-      "sed"      string => "/bin/sed";
-      "diff"     string => "/usr/bin/diff";
-      "cut"      string => "/bin/cut";
+      "ping"     string => "/usr/bin/ping";
       "printf"   string => "/usr/bin/printf";
+      "sed"      string => "/bin/sed";
+      "sort"     string => "/bin/sort";
       "tr"       string => "/usr/bin/tr";
-      "echo"     string => "/bin/echo";
-      "bc"       string => "/usr/bin/bc";
-      "dc"       string => "/usr/bin/dc";
 
       #
       "chkconfig" string => "/sbin/chkconfig";
@@ -3059,6 +3064,7 @@ bundle common paths
       "grep"      string => "/bin/grep";
       "ls"        string => "/bin/ls";
       "netstat"   string => "/bin/netstat";
+      "ping"      string => "/bin/ping";
       "printf"    string => "/usr/bin/printf";
       "sed"       string => "/bin/sed";
       "sort"      string => "/usr/bin/sort";
@@ -3074,7 +3080,6 @@ bundle common paths
       "groupadd"            string => "/usr/sbin/groupadd";
       "ifconfig"            string => "/sbin/ifconfig";
       "ip"                  string => "/sbin/ip";
-      "ping"                string => "/bin/ping";
       "service"             string => "/usr/sbin/service";
       "svc"                 string => "/usr/sbin/service";
       "update_alternatives" string => "/usr/bin/update-alternatives";
@@ -3083,8 +3088,6 @@ bundle common paths
 
 
     all::
-      "ping" string => "/usr/bin/ping";
-
       "all_paths" slist => { 
                                 "apt_cache",
                                 "apt_config",

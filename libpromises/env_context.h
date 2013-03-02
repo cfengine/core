@@ -119,7 +119,6 @@ void DeletePersistentContext(const char *name);
 /* - Rest - */
 int Abort(void);
 void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
-Rlist *SplitContextExpression(const char *context, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 bool IsSoftClass(EvalContext *ctx, const char *sp);
 bool IsTimeClass(const char *sp);

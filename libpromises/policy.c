@@ -2638,11 +2638,6 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
 /* Special promise type checks */
 
-    if (SHOWREPORTS)
-    {
-        NewPromiser(ctx, pp);
-    }
-
     if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return;

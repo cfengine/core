@@ -6,7 +6,6 @@
 EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, const Promise *pp);
 void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise *pp);
 int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attributes a, Promise *pp);
-int AppendIfNoSuchLine(const char *filename, const char *line);
 
 #ifdef HAVE_LIBXML2
 int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp);

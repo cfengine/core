@@ -239,16 +239,6 @@ int IsNakedVar(const char *str, char vtype)
     fail();
 }
 
-int Join(char *path, const char *leaf, int bufsize)
-{
-    fail();
-}
-
-int JoinSilent(char *path, const char *leaf, int bufsize)
-{
-    fail();
-}
-
 void FnCallPrint(Writer *writer, const FnCall *fp)
 {
     fail();
@@ -275,11 +265,6 @@ CfAssoc *CopyAssoc(CfAssoc *old)
 }
 
 FnCall *FnCallCopy(const FnCall *f)
-{
-    fail();
-}
-
-int EndJoin(char *path, char *leaf, int bufsize)
 {
     fail();
 }

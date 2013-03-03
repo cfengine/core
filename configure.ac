@@ -936,9 +936,19 @@ dnl ######################################################################
 AC_MSG_RESULT( )
 AC_MSG_RESULT(    Summary of options...)
 
+AC_MSG_RESULT([> Required libraries])
+
 AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
+
+if test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+elif test $WITH_QDBM = 1; then
+  AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
+fi
+
+AC_MSG_RESULT([> Optional libraries])
 
 if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" = "xyes"; then
   AC_MSG_RESULT([-> MySQL connector: $MYSQL_PATH])
@@ -950,12 +960,6 @@ if test "x$ac_cv_lib_pq_PQconnectdb" = "xyes"; then
   AC_MSG_RESULT([-> PostgreSQL connector: $POSTGRESQL_PATH])
 else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
-fi
-
-if test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
-elif test $WITH_QDBM = 1; then
-  AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi
 
 if test "x$ac_cv_lib_virt_virConnectOpen" = xyes; then

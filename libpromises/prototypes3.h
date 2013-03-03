@@ -93,8 +93,6 @@ int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
-void NewPromiser(EvalContext *ctx, Promise *pp);
-void AnalyzePromiseConflicts(void);
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 

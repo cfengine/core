@@ -134,7 +134,6 @@ int main(int argc, char *argv[])
     }
 
     ThisAgentInit();
-    AnalyzePromiseConflicts();
 
     GenericAgentConfigDestroy(config);
     CloseReports("commmon", report_context);

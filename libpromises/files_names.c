@@ -198,41 +198,7 @@ char *JoinSuffix(char *path, char *leaf)
     return path;
 }
 
-int Join(char *path, const char *leaf, int bufsize)
-{
-    return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);
-}
-
-/*********************************************************************/
-
-int JoinSilent(char *path, const char *leaf, int bufsize)
-/* Don't warn on buffer limits - just return the value */
-{
-    int len = strlen(leaf);
-
-    if ((strlen(path) + len) > (bufsize - CF_BUFFERMARGIN))
-    {
-        strncat(path, leaf, (bufsize - CF_BUFFERMARGIN));
-        EndJoin(path, "...TRUNCATED", bufsize);
-
-        return false;
-    }
-
-    strcat(path, leaf);
-
-    return true;
-}
-
-/*********************************************************************/
-
-int EndJoin(char *path, char *leaf, int bufsize)
-{
-    return JoinMargin(path, leaf, NULL, bufsize, 0);
-}
-
-/*********************************************************************/
-
-int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin)
+static int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin)
 {
     int len = strlen(leaf);
 
@@ -269,7 +235,15 @@ int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int m
     return true;
 }
 
-/*********************************************************************/
+int Join(char *path, const char *leaf, int bufsize)
+{
+    return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);
+}
+
+int EndJoin(char *path, char *leaf, int bufsize)
+{
+    return JoinMargin(path, leaf, NULL, bufsize, 0);
+}
 
 int IsAbsPath(char *path)
 {

@@ -118,11 +118,6 @@ void PreSanitizePromise(EvalContext *ctx, Promise *pp)
 {
 }
 
-void NewPromiser(EvalContext *ctx, Promise *pp)
-{
-}
-
-
 /* cf-execd: cf-execd-runner.c */
 
 
@@ -231,14 +226,6 @@ bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Nova");
-}
-
-
-/* cf-promises: cf-promises.c */
-
-
-void AnalyzePromiseConflicts(void)
-{
 }
 
 /* cf-serverd: server_transform.c, cf-serverd.c */

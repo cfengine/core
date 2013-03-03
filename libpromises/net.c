@@ -215,12 +215,10 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 int SetReceiveTimeout(int fd, const struct timeval *tv)
 {
     /*
-     * NB: recv() timeout is not portable.  struct timeval is very
-     *     unstable - interpreted differently on different
-     *     platforms. E.g. setting tv_sec to 50 (and tv_usec to 0)
-     *     results in a timeout of 0.5 seconds on Windows, but 50
-     *     seconds on Linux. Thus it must be tested thoroughly on
-     *     the affected platforms. */
+      NB: recv() timeout interpretation differs under Windows: setting tv_sec to
+      50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
+      50 seconds on Linux.
+    */
 
 # ifdef __linux__
 

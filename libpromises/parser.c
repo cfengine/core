@@ -33,32 +33,32 @@ struct ParserState P = { 0 };
 
 extern FILE *yyin;
 
-static void ParserStateReset()
+static void ParserStateReset(ParserState *p)
 {
-    P.policy = NULL;
+    p->policy = NULL;
 
-    P.line_no = 1;
-    P.line_pos = 1;
-    P.list_nesting = 0;
-    P.arg_nesting = 0;
+    p->line_no = 1;
+    p->line_pos = 1;
+    p->list_nesting = 0;
+    p->arg_nesting = 0;
 
-    free(P.current_namespace);
-    P.current_namespace = xstrdup("default");
+    free(p->current_namespace);
+    p->current_namespace = xstrdup("default");
 
-    P.currentid[0] = '\0';
-    P.currentstring = NULL;
-    P.currenttype[0] = '\0';
-    P.currentclasses = NULL;
-    P.currentRlist = NULL;
-    P.currentpromise = NULL;
-    P.promiser = NULL;
-    P.blockid[0] = '\0';
-    P.blocktype[0] = '\0';
+    p->currentid[0] = '\0';
+    p->currentstring = NULL;
+    p->currenttype[0] = '\0';
+    p->currentclasses = NULL;
+    p->currentRlist = NULL;
+    p->currentpromise = NULL;
+    p->promiser = NULL;
+    p->blockid[0] = '\0';
+    p->blocktype[0] = '\0';
 }
 
 Policy *ParserParseFile(const char *path)
 {
-    ParserStateReset();
+    ParserStateReset(&P);
     P.policy = PolicyNew();
 
     strncpy(P.filename, path, CF_MAXVARSIZE);

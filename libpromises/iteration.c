@@ -94,9 +94,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     CfDebug("\n*\nNewIterationContext(from %s)\n*\n", scopeid);
 
-    CopyScope("this", scopeid);
+    ScopeCopy("this", scopeid);
 
-    GetScope("this");
+    ScopeGet("this");
 
     if (namelist == NULL)
     {
@@ -106,7 +106,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = GetVariable(scopeid, rp->item, &retval);
+        dtype = ScopeGetVariable(scopeid, rp->item, &retval);
 
         if (dtype == DATA_TYPE_NONE)
         {
@@ -158,7 +158,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
 void DeleteIterationContext(Rlist *deref)
 {
-    DeleteScope("this");
+    ScopeDelete("this");
 
     if (deref != NULL)
     {

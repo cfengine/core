@@ -76,11 +76,11 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void NewScalar(const char *namespace, const char *varname, const char *value, DataType type)
+void ScopeNewScalar(const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
-    assert_string_equal(namespace, "sys");
+    assert_string_equal(ns, "sys");
     assert_int_equal(type, DATA_TYPE_STRING);
 
     for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
@@ -92,7 +92,7 @@ void NewScalar(const char *namespace, const char *varname, const char *value, Da
             return;
         }
     }
-    fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type);  /* LCOV_EXCL_LINE */
+    fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, value, type);  /* LCOV_EXCL_LINE */
     fail();                     /* LCOV_EXCL_LINE */
 }
 
@@ -269,7 +269,7 @@ char *MapName(char *s)
     fail();
 }
 
-char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     fail();
 }
@@ -299,7 +299,7 @@ bool IsDefinedClass(EvalContext *ctx, const char *class, const char *ns)
     fail();
 }
 
-void DeleteVariable(const char *scope, const char *id)
+void ScopeDeleteVariable(const char *scope, const char *id)
 {
     fail();
 }
@@ -309,7 +309,7 @@ Rlist *RlistParseShown(char *string)
     fail();
 }
 
-void NewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }

@@ -4,7 +4,6 @@
 #include "array_map_priv.h"
 #include "hash_map_priv.h"
 #include "map.h"
-#include "string_map.h"
 #include "string_lib.h"
 
 #include "alloc.h"

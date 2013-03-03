@@ -2221,10 +2221,9 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (VERBOSE)
     {
-        ThreadLock(cft_output);
+        char buffer[EVP_MAX_MD_SIZE * 4];
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Public key identity of host \"%s\" is \"%s\"", conn->ipaddr,
-              HashPrint(CF_DEFAULT_DIGEST, conn->digest));
-        ThreadUnlock(cft_output);
+              HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
     }
 
     LastSaw(conn->ipaddr, conn->digest, LAST_SEEN_ROLE_ACCEPT);
@@ -3309,10 +3308,9 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 {
     RSA *savedkey;
     char udigest[CF_MAXVARSIZE];
+    char buffer[EVP_MAX_MD_SIZE * 4];
 
-    ThreadLock(cft_output);
-    snprintf(udigest, CF_MAXVARSIZE - 1, "%s", HashPrint(CF_DEFAULT_DIGEST, conn->digest));
-    ThreadUnlock(cft_output);
+    snprintf(udigest, CF_MAXVARSIZE - 1, "%s", HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
 
     if ((savedkey = HavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest)))
     {

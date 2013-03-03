@@ -68,7 +68,7 @@ char *EDITXMLTYPESEQUENCE[] =
     NULL
 };
 
-static void EditXmlClassBanner(enum editxmltypesequence type);
+static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type);
 static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp);
 #ifdef HAVE_LIBXML2
 static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp);
@@ -165,8 +165,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         return false;
     }
 
-    NewScope("edit");
-    NewScalar("edit", "filename", filename, DATA_TYPE_STRING);
+    ScopeNew("edit");
+    ScopeNewScalar("edit", "filename", filename, DATA_TYPE_STRING);
 
 /* Reset the done state for every call here, since bundle is reusable */
 
@@ -188,16 +188,16 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
         {
-            EditXmlClassBanner(type);
+            EditXmlClassBanner(ctx, type);
 
             if ((sp = BundleGetSubType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
 
-            BannerSubSubType(bp->name, sp->name);
+            BannerSubSubType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
-            SetScope(bp->name);
+            ScopeSet(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -212,7 +212,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
                 if (Abort())
                 {
                     THIS_BUNDLE = bp_stack;
-                    DeleteScope("edit");
+                    ScopeDelete("edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -220,8 +220,8 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         }
     }
 
-    DeleteScope("edit");
-    SetScope(parentp->bundle);
+    ScopeDelete("edit");
+    ScopeSet(parentp->bundle);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;
@@ -231,23 +231,26 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
 /* Level                                                                   */
 /***************************************************************************/
 
-static void EditXmlClassBanner(enum editxmltypesequence type)
+static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type)
 {
     if (type != elx_delete)     /* Just parsed all local classes */
     {
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
-
-    AlphaListIterator i = AlphaListIteratorInit(&VADDCLASSES);
-
-    for (const Item *ip = AlphaListIteratorNext(&i); ip != NULL; ip = AlphaListIteratorNext(&i))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", ip->name);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
+
+        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", context);
+        }
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /***************************************************************************/

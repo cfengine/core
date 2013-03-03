@@ -252,8 +252,8 @@ void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportCo
         return;
     }
 
-    DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, DATA_TYPE_STRING); 
+    ScopeDeleteScalar("this", "promiser");
+    ScopeNewScalar("this", "promiser", path, DATA_TYPE_STRING); 
     
     thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
 
@@ -538,15 +538,19 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             BannerSubBundle(bp, params);
 
-            DeleteScope(bp->name);
-            NewScope(bp->name);
+            ScopeDelete(bp->name);
+            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
+
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
+
+            EvalContextStackPopFrame(ctx);
+
+            ScopeDelete(bp->name);
         }
         else
            {
@@ -590,15 +594,19 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             BannerSubBundle(bp, params);
 
-            DeleteScope(bp->name);
-            NewScope(bp->name);
+            ScopeDelete(bp->name);
+            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            AugmentScope(ctx, bp->name, bp->ns, bp->args, params);
-            PushPrivateClassContext(a.edits.inherit);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
+
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
+
+            EvalContextStackPopFrame(ctx);
+
+            ScopeDelete(bp->name);
         }
     }
 
@@ -610,14 +618,17 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp,params);
             a.haveeditline = true;
 
-            DeleteScope(bp->name);
-            NewScope(bp->name);
+            ScopeDelete(bp->name);
+            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            PushPrivateClassContext(a.edits.inherit);
+            EvalContextStackPushFrame(ctx, a.edits.inherit);
+
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
-            PopPrivateClassContext();
-            DeleteScope(bp->name);
+
+            EvalContextStackPopFrame(ctx);
+
+            ScopeDelete(bp->name);
         }
         // FIXME: why it crashes? DeleteBundles(bp);
     }
@@ -656,7 +667,7 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportC
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         VerifyFilePromise(ctx, pp->promiser, pp, report_context);
     }
     else                        // Default is to expand regex paths

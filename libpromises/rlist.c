@@ -247,7 +247,7 @@ static Rval RvalCopyList(Rval rval)
             GetNaked(naked, rp->item);
 
             Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
-            if (GetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
+            if (ScopeGetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
             {
                 switch (rv.type)
                 {
@@ -660,243 +660,6 @@ Rlist *RlistParseShown(char *string)
     return newlist;
 }
 
-/*******************************************************************/
-
-void RlistShow(FILE *fp, const Rlist *list)
-{
-    fprintf(fp, " {");
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        fprintf(fp, "\'");
-        RvalShow(fp, (Rval) {rp->item, rp->type});
-        fprintf(fp, "\'");
-
-        if (rp->next != NULL)
-        {
-            fprintf(fp, ",");
-        }
-    }
-    fprintf(fp, "}");
-}
-
-/*******************************************************************/
-
-int RlistPrint(char *buffer, int bufsize, const Rlist *list)
-{
-    StartJoin(buffer, "{", bufsize);
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        if (!JoinSilent(buffer, "'", bufsize))
-        {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
-        }
-
-        if (!RvalPrint(buffer, bufsize, (Rval) {rp->item, rp->type}))
-        {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
-        }
-
-        if (!JoinSilent(buffer, "'", bufsize))
-        {
-            EndJoin(buffer, "'}", bufsize);
-            return false;
-        }
-
-        if (rp->next != NULL)
-        {
-            if (!JoinSilent(buffer, ",", bufsize))
-            {
-                EndJoin(buffer, "}", bufsize);
-                return false;
-            }
-        }
-    }
-
-    EndJoin(buffer, "}", bufsize);
-
-    return true;
-}
-
-/*******************************************************************/
-
-static int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
-{
-    Rlist *rp;
-    char work[CF_MAXVARSIZE];
-
-    snprintf(buffer, bufsize, "%s(", fp->name);
-
-    for (rp = fp->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            Join(buffer, (char *) rp->item, bufsize);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            PrintFnCall(work, CF_MAXVARSIZE, (FnCall *) rp->item);
-            Join(buffer, work, bufsize);
-            break;
-
-        default:
-            break;
-        }
-
-        if (rp->next != NULL)
-        {
-            strcat(buffer, ",");
-        }
-    }
-
-    strcat(buffer, ")");
-
-    return strlen(buffer);
-}
-
-int RvalPrint(char *buffer, int bufsize, Rval rval)
-{
-    if (rval.item == NULL)
-    {
-        return 0;
-    }
-
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        return JoinSilent(buffer, (const char *) rval.item, bufsize);
-    case RVAL_TYPE_LIST:
-        return RlistPrint(buffer, bufsize, (Rlist *) rval.item);
-    case RVAL_TYPE_FNCALL:
-        return PrintFnCall(buffer, bufsize, (FnCall *) rval.item);
-    default:
-        return 0;
-    }
-}
-
-/*******************************************************************/
-
-static JsonElement *FnCallToJson(const FnCall *fp)
-{
-    assert(fp);
-
-    JsonElement *object = JsonObjectCreate(3);
-
-    JsonObjectAppendString(object, "name", fp->name);
-    JsonObjectAppendString(object, "type", "function-call");
-
-    JsonElement *argsArray = JsonArrayCreate(5);
-
-    for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            JsonArrayAppendString(argsArray, (const char *) rp->item);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            JsonArrayAppendObject(argsArray, FnCallToJson((FnCall *) rp->item));
-            break;
-
-        default:
-            assert(false && "Unknown argument type");
-            break;
-        }
-    }
-    JsonObjectAppendArray(object, "arguments", argsArray);
-
-    return object;
-}
-
-static JsonElement *RlistToJson(Rlist *list)
-{
-    JsonElement *array = JsonArrayCreate(RlistLen(list));
-
-    for (Rlist *rp = list; rp; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            JsonArrayAppendString(array, (const char *) rp->item);
-            break;
-
-        case RVAL_TYPE_LIST:
-            JsonArrayAppendArray(array, RlistToJson((Rlist *) rp->item));
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            JsonArrayAppendObject(array, FnCallToJson((FnCall *) rp->item));
-            break;
-
-        default:
-            assert(false && "Unsupported item type in rlist");
-            break;
-        }
-    }
-
-    return array;
-}
-
-JsonElement *RvalToJson(Rval rval)
-{
-    assert(rval.item);
-
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        return JsonStringCreate((const char *) rval.item);
-    case RVAL_TYPE_LIST:
-        return RlistToJson((Rlist *) rval.item);
-    case RVAL_TYPE_FNCALL:
-        return FnCallToJson((FnCall *) rval.item);
-    default:
-        assert(false && "Invalid rval type");
-        return JsonStringCreate("");
-    }
-}
-
-/*******************************************************************/
-
-void RvalShow(FILE *fp, Rval rval)
-{
-    char buf[CF_BUFSIZE];
-
-    if (rval.item == NULL)
-    {
-        return;
-    }
-
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        EscapeQuotes((const char *) rval.item, buf, sizeof(buf));
-        fprintf(fp, "%s", buf);
-        break;
-
-    case RVAL_TYPE_LIST:
-        RlistShow(fp, (Rlist *) rval.item);
-        break;
-
-    case RVAL_TYPE_FNCALL:
-        FnCallShow(fp, (FnCall *) rval.item);
-        break;
-
-    case RVAL_TYPE_NOPROMISEE:
-        fprintf(fp, "(no-one)");
-        break;
-
-    default:
-        break;
-    }
-}
-
-/*******************************************************************/
-
 void RvalDestroy(Rval rval)
 {
     Rlist *clist, *next = NULL;
@@ -1098,6 +861,56 @@ void RlistPopStack(Rlist **liststart, void **item, size_t size)
 
 /*******************************************************************/
 
+/*
+ * Copies from <from> to <to>, reading up to <len> characters from <from>,
+ * stopping at first <sep>.
+ *
+ * \<sep> is not counted as the separator, but copied to <to> as <sep>.
+ * Any other escape sequences are not supported.
+ */
+static int SubStrnCopyChr(char *to, const char *from, int len, char sep)
+{
+    char *sto = to;
+    int count = 0;
+
+    memset(to, 0, len);
+
+    if (from == NULL)
+    {
+        return 0;
+    }
+
+    if (from && (strlen(from) == 0))
+    {
+        return 0;
+    }
+
+    for (const char *sp = from; *sp != '\0'; sp++)
+    {
+        if (count > len - 1)
+        {
+            break;
+        }
+
+        if ((*sp == '\\') && (*(sp + 1) == sep))
+        {
+            *sto++ = *++sp;
+        }
+        else if (*sp == sep)
+        {
+            break;
+        }
+        else
+        {
+            *sto++ = *sp;
+        }
+
+        count++;
+    }
+
+    return count;
+}
+
 Rlist *RlistFromSplitString(const char *string, char sep)
  /* Splits a string containing a separator like "," 
     into a linked list of separate items, supports
@@ -1197,86 +1010,6 @@ Rlist *RlistLast(Rlist *start)
     return rp;
 }
 
-/*******************************************************************/
-
-void RlistWrite(Writer *writer, const Rlist *list)
-{
-    WriterWrite(writer, " {");
-
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        WriterWriteChar(writer, '\'');
-        RvalWrite(writer, (Rval) {rp->item, rp->type});
-        WriterWriteChar(writer, '\'');
-
-        if (rp->next != NULL)
-        {
-            WriterWriteChar(writer, ',');
-        }
-    }
-
-    WriterWriteChar(writer, '}');
-}
-
-static void FnCallPrint(Writer *writer, const FnCall *call)
-{
-    for (const Rlist *rp = call->args; rp != NULL; rp = rp->next)
-    {
-        switch (rp->type)
-        {
-        case RVAL_TYPE_SCALAR:
-            WriterWriteF(writer, "%s,", (const char *) rp->item);
-            break;
-
-        case RVAL_TYPE_FNCALL:
-            FnCallPrint(writer, (FnCall *) rp->item);
-            break;
-
-        default:
-            WriterWrite(writer, "(** Unknown argument **)\n");
-            break;
-        }
-    }
-}
-
-void RvalWrite(Writer *writer, Rval rval)
-{
-    if (rval.item == NULL)
-    {
-        return;
-    }
-
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-    {
-        size_t buffer_size = (strlen((const char *) rval.item) * 2) + 1;
-        char *buffer = xcalloc(buffer_size, sizeof(char));
-
-        EscapeQuotes((const char *) rval.item, buffer, buffer_size);
-        WriterWrite(writer, buffer);
-        free(buffer);
-    }
-        break;
-
-    case RVAL_TYPE_LIST:
-        RlistWrite(writer, (Rlist *) rval.item);
-        break;
-
-    case RVAL_TYPE_FNCALL:
-        FnCallPrint(writer, (FnCall *) rval.item);
-        break;
-
-    case RVAL_TYPE_NOPROMISEE:
-        WriterWrite(writer, "(no-one)");
-        break;
-
-    case RVAL_TYPE_ASSOC:
-        // TODO: do something here, but not handled previously
-        break;
-    }
-}
-
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *predicate_user_data, void (*DestroyItem)(void *))
 {
     assert(KeepPredicate);
@@ -1313,5 +1046,202 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *pred
             prev = rp;
             rp = rp->next;
         }
+    }
+}
+
+/* Human-readable serialization */
+
+static void FnCallPrint(Writer *writer, const FnCall *call)
+{
+    WriterWrite(writer, call->name);
+    WriterWriteChar(writer, '(');
+
+    for (const Rlist *rp = call->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            WriterWrite(writer, RlistScalarValue(rp));
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            FnCallPrint(writer, RlistFnCallValue(rp));
+            break;
+
+        default:
+            WriterWrite(writer, "(** Unknown argument **)\n");
+            break;
+        }
+
+        if (rp->next != NULL)
+        {
+            WriterWriteChar(writer, ',');
+        }
+    }
+
+    WriterWriteChar(writer, ')');
+}
+
+void RlistWrite(Writer *writer, const Rlist *list)
+{
+    WriterWrite(writer, " {");
+
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        WriterWriteChar(writer, '\'');
+        RvalWrite(writer, (Rval) {rp->item, rp->type});
+        WriterWriteChar(writer, '\'');
+
+        if (rp->next != NULL)
+        {
+            WriterWriteChar(writer, ',');
+        }
+    }
+
+    WriterWriteChar(writer, '}');
+}
+
+/* Note: only single quotes are escaped, as they are used in RlistWrite to
+   delimit strings. If double quotes would be escaped, they would be mangled by
+   RlistParseShown */
+
+static void ScalarWrite(Writer *w, const char *s)
+{
+    for (; *s; s++)
+    {
+        if (*s == '\'')
+        {
+            WriterWriteChar(w, '\\');
+        }
+        WriterWriteChar(w, *s);
+    }
+}
+
+void RvalWrite(Writer *writer, Rval rval)
+{
+    if (rval.item == NULL)
+    {
+        return;
+    }
+
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        ScalarWrite(writer, RvalScalarValue(rval));
+        break;
+
+    case RVAL_TYPE_LIST:
+        RlistWrite(writer, RvalRlistValue(rval));
+        break;
+
+    case RVAL_TYPE_FNCALL:
+        FnCallPrint(writer, RvalFnCallValue(rval));
+        break;
+
+    case RVAL_TYPE_NOPROMISEE:
+        WriterWrite(writer, "(no-one)");
+        break;
+
+    case RVAL_TYPE_ASSOC:
+        // TODO: do something here, but not handled previously
+        break;
+    }
+}
+
+/* Human-readable serialization to FILE* */
+
+void RlistShow(FILE *fp, const Rlist *list)
+{
+    Writer *w = FileWriter(fp);
+    RlistWrite(w, list);
+    FileWriterDetach(w);
+}
+
+void RvalShow(FILE *fp, Rval rval)
+{
+    Writer *w = FileWriter(fp);
+    RvalWrite(w, rval);
+    FileWriterDetach(w);
+}
+
+/* JSON serialization */
+
+static JsonElement *FnCallToJson(const FnCall *fp)
+{
+    assert(fp);
+
+    JsonElement *object = JsonObjectCreate(3);
+
+    JsonObjectAppendString(object, "name", fp->name);
+    JsonObjectAppendString(object, "type", "function-call");
+
+    JsonElement *argsArray = JsonArrayCreate(5);
+
+    for (Rlist *rp = fp->args; rp != NULL; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            JsonArrayAppendString(argsArray, RlistScalarValue(rp));
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            JsonArrayAppendObject(argsArray, FnCallToJson(RlistFnCallValue(rp)));
+            break;
+
+        default:
+            assert(false && "Unknown argument type");
+            break;
+        }
+    }
+    JsonObjectAppendArray(object, "arguments", argsArray);
+
+    return object;
+}
+
+static JsonElement *RlistToJson(Rlist *list)
+{
+    JsonElement *array = JsonArrayCreate(RlistLen(list));
+
+    for (Rlist *rp = list; rp; rp = rp->next)
+    {
+        switch (rp->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            JsonArrayAppendString(array, RlistScalarValue(rp));
+            break;
+
+        case RVAL_TYPE_LIST:
+            JsonArrayAppendArray(array, RlistToJson(RlistRlistValue(rp)));
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            JsonArrayAppendObject(array, FnCallToJson(RlistFnCallValue(rp)));
+            break;
+
+        default:
+            assert(false && "Unsupported item type in rlist");
+            break;
+        }
+    }
+
+    return array;
+}
+
+JsonElement *RvalToJson(Rval rval)
+{
+    assert(rval.item);
+
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return JsonStringCreate(RvalScalarValue(rval));
+    case RVAL_TYPE_LIST:
+        return RlistToJson(RvalRlistValue(rval));
+    case RVAL_TYPE_FNCALL:
+        return FnCallToJson(RvalFnCallValue(rval));
+    default:
+        assert(false && "Invalid rval type");
+        return JsonStringCreate("");
     }
 }

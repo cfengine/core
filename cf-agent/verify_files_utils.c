@@ -93,7 +93,7 @@ static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mo
 static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
 #ifdef __APPLE__
-static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp);
+static int VerifyFinderType(EvalContext *ctx, char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
@@ -124,8 +124,8 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 
 /* We still need to augment the scope of context "this" for commands */
 
-    DeleteScalar("this", "promiser");
-    NewScalar("this", "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
+    ScopeDeleteScalar("this", "promiser");
+    ScopeNewScalar("this", "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
 
     if (attr.transformer != NULL)
     {
@@ -165,7 +165,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
         }
     }
 
-    DeleteScalar("this", "promiser");
+    ScopeDeleteScalar("this", "promiser");
     return true;
 }
 
@@ -1912,7 +1912,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
     VerifySetUidGid(ctx, file, dstat, newperm, pp, attr);
 
 # ifdef __APPLE__
-    if (VerifyFinderType(file, dstat, attr, pp))
+    if (VerifyFinderType(ctx, file, dstat, attr, pp))
     {
         /* nop */
     }
@@ -2811,7 +2811,7 @@ static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mo
 
 #ifdef __APPLE__
 
-static int VerifyFinderType(char *file, struct stat *statbuf, Attributes a, Promise *pp)
+static int VerifyFinderType(EvalContext *ctx, char *file, struct stat *statbuf, Attributes a, Promise *pp)
 {                               /* Code modeled after hfstar's extract.c */
     typedef struct
     {

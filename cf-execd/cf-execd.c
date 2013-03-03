@@ -355,7 +355,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
             }
 
             Rval retval;
-            if (GetVariable("control_executor", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable("control_executor", cp->lval, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
                 continue;
@@ -708,14 +708,12 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         CfOut(OUTPUT_LEVEL_INFORM, "", "Re-reading promise file %s..\n", config->input_file);
 
         EvalContextHeapClear(ctx);
-
-        DeleteAlphaList(&VADDCLASSES);
-        InitAlphaList(&VADDCLASSES);
+        EvalContextStackFrameClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        DeleteAllScope();
+        ScopeDeleteAll();
 
         strcpy(VDOMAIN, "undefinded.domain");
         POLICY_SERVER[0] = '\0';
@@ -725,17 +723,17 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         ERRORCOUNT = 0;
 
-        NewScope("sys");
+        ScopeNew("sys");
 
         SetPolicyServer(POLICY_SERVER);
-        NewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
-        NewScope("const");
-        NewScope("this");
-        NewScope("mon");
-        NewScope("control_server");
-        NewScope("control_common");
-        NewScope("remote_access");
+        ScopeNew("const");
+        ScopeNew("this");
+        ScopeNew("mon");
+        ScopeNew("control_server");
+        ScopeNew("control_common");
+        ScopeNew("remote_access");
 
         GetNameInfo3(ctx);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
@@ -757,21 +755,18 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         /* Environment reload */
 
         EvalContextHeapClear(ctx);
-
-        DeleteAlphaList(&VADDCLASSES);
-        InitAlphaList(&VADDCLASSES);
-
+        EvalContextStackFrameClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
 
-        DeleteScope("this");
-        DeleteScope("mon");
-        DeleteScope("sys");
-        NewScope("this");
-        NewScope("mon");
-        NewScope("sys");
+        ScopeDelete("this");
+        ScopeDelete("mon");
+        ScopeDelete("sys");
+        ScopeNew("this");
+        ScopeNew("mon");
+        ScopeNew("sys");
 
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
         Get3Environment(ctx);

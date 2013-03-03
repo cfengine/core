@@ -56,14 +56,13 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
-    AlphaList proc_attr;
     int result = true, i;
     char *column[CF_PROCCOLS];
     Rlist *rp;
 
     CfDebug("SelectProcess(%s)\n", procentry);
 
-    InitAlphaList(&proc_attr);
+    StringSet *proc_attr = StringSetNew();
 
     if (!SplitProcLine(procentry, names, start, end, column))
     {
@@ -82,76 +81,76 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
     {
         if (SelectProcRegexMatch("USER", "UID", (char *) rp->item, names, column))
         {
-            PrependAlphaList(&proc_attr, "process_owner");
+            StringSetAdd(proc_attr, xstrdup("process_owner"));
             break;
         }
     }
 
     if (SelectProcRangeMatch("PID", "PID", a.min_pid, a.max_pid, names, column))
     {
-        PrependAlphaList(&proc_attr, "pid");
+        StringSetAdd(proc_attr, xstrdup("pid"));
     }
 
     if (SelectProcRangeMatch("PPID", "PPID", a.min_ppid, a.max_ppid, names, column))
     {
-        PrependAlphaList(&proc_attr, "ppid");
+        StringSetAdd(proc_attr, xstrdup("ppid"));
     }
 
     if (SelectProcRangeMatch("PGID", "PGID", a.min_pgid, a.max_pgid, names, column))
     {
-        PrependAlphaList(&proc_attr, "pgid");
+        StringSetAdd(proc_attr, xstrdup("pgid"));
     }
 
     if (SelectProcRangeMatch("VSZ", "SZ", a.min_vsize, a.max_vsize, names, column))
     {
-        PrependAlphaList(&proc_attr, "vsize");
+        StringSetAdd(proc_attr, xstrdup("vsize"));
     }
 
     if (SelectProcRangeMatch("RSS", "RSS", a.min_rsize, a.max_rsize, names, column))
     {
-        PrependAlphaList(&proc_attr, "rsize");
+        StringSetAdd(proc_attr, xstrdup("rsize"));
     }
 
     if (SelectProcTimeCounterRangeMatch
         ("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
-        PrependAlphaList(&proc_attr, "ttime");
+        StringSetAdd(proc_attr, xstrdup("ttime"));
     }
 
     if (SelectProcTimeAbsRangeMatch
         ("STIME", "START", a.min_stime, a.max_stime, names, column))
     {
-        PrependAlphaList(&proc_attr, "stime");
+        StringSetAdd(proc_attr, xstrdup("stime"));
     }
 
     if (SelectProcRangeMatch("NI", "PRI", a.min_pri, a.max_pri, names, column))
     {
-        PrependAlphaList(&proc_attr, "priority");
+        StringSetAdd(proc_attr, xstrdup("priority"));
     }
 
     if (SelectProcRangeMatch("NLWP", "NLWP", a.min_thread, a.max_thread, names, column))
     {
-        PrependAlphaList(&proc_attr, "threads");
+        StringSetAdd(proc_attr, xstrdup("threads"));
     }
 
     if (SelectProcRegexMatch("S", "STAT", a.status, names, column))
     {
-        PrependAlphaList(&proc_attr, "status");
+        StringSetAdd(proc_attr, xstrdup("status"));
     }
 
     if (SelectProcRegexMatch("CMD", "COMMAND", a.command, names, column))
     {
-        PrependAlphaList(&proc_attr, "command");
+        StringSetAdd(proc_attr, xstrdup("command"));
     }
 
     if (SelectProcRegexMatch("TTY", "TTY", a.tty, names, column))
     {
-        PrependAlphaList(&proc_attr, "tty");
+        StringSetAdd(proc_attr, xstrdup("tty"));
     }
 
-    result = EvalProcessResult(ctx, a.process_result, &proc_attr);
+    result = EvalProcessResult(ctx, a.process_result, proc_attr);
 
-    DeleteAlphaList(&proc_attr);
+    StringSetDestroy(proc_attr);
 
     for (i = 0; column[i] != NULL; i++)
     {

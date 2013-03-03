@@ -561,6 +561,21 @@ static void PublishEnvironment(Item *classes)
 
 /*********************************************************************/
 
+static void AddOpenPortsClasses(const char *name, const Item *value, Item **classlist)
+{
+    Writer *w = StringWriter();
+    WriterWriteF(w, "@%s=", name);
+    PrintItemList(value, w);
+    if (StringWriterLength(w) <= 1500)
+    {
+        AppendItem(classlist, StringWriterClose(w), NULL);
+    }
+    else
+    {
+        WriterClose(w);
+    }
+}
+
 static void ArmClasses(Averages av, char *timekey)
 {
     double sigma;
@@ -657,50 +672,11 @@ static void ArmClasses(Averages av, char *timekey)
 
     // Report on the open ports, in various ways
 
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,ALL_INCOMING);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP6);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_udp6_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_UDP4);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_udp4_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_TCP6);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_tcp6_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
-
-    ldt_buff[0] = '\0';
-    PrintItemList(ldt_buff,CF_BUFSIZE,MON_TCP4);
-
-    if (strlen(ldt_buff) < 1500)
-    {
-        snprintf(buff,CF_BUFSIZE,"@listening_tcp4_ports=%s",ldt_buff);
-        AppendItem(&classlist,buff,NULL);
-    }
+    AddOpenPortsClasses("listening_ports", ALL_INCOMING, &classlist);
+    AddOpenPortsClasses("listening_udp6_ports", MON_UDP6, &classlist);
+    AddOpenPortsClasses("listening_udp4_ports", MON_UDP4, &classlist);
+    AddOpenPortsClasses("listening_tcp6_ports", MON_TCP6, &classlist);
+    AddOpenPortsClasses("listening_tcp4_ports", MON_TCP4, &classlist);
 
     // Port addresses
 
@@ -1145,7 +1121,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         const Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
-        SetNewScope(bp->name);
+        ScopeSetNew(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -1162,12 +1138,12 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         }
     }
 
-    DeleteAllScope();
-    NewScope("const");
-    NewScope("control_monitor");
-    NewScope("control_common");
-    NewScope("mon");
-    NewScope("sys");
+    ScopeDeleteAll();
+    ScopeNew("const");
+    ScopeNew("control_monitor");
+    ScopeNew("control_common");
+    ScopeNew("mon");
+    ScopeNew("sys");
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
     Get3Environment(ctx);

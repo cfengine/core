@@ -43,11 +43,11 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap);
 
 void LoadSystemConstants()
 {
-    NewScalar("const", "dollar", "$", DATA_TYPE_STRING);
-    NewScalar("const", "n", "\n", DATA_TYPE_STRING);
-    NewScalar("const", "r", "\r", DATA_TYPE_STRING);
-    NewScalar("const", "t", "\t", DATA_TYPE_STRING);
-    NewScalar("const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewScalar("const", "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewScalar("const", "n", "\n", DATA_TYPE_STRING);
+    ScopeNewScalar("const", "r", "\r", DATA_TYPE_STRING);
+    ScopeNewScalar("const", "t", "\t", DATA_TYPE_STRING);
+    ScopeNewScalar("const", "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
 }
@@ -56,14 +56,14 @@ void LoadSystemConstants()
 /* Variables                                                       */
 /*******************************************************************/
 
-void NewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
+void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
 {
     Rval rvald;
     Scope *ptr;
 
     CfDebug("NewScalar(%s,%s,%s)\n", scope, lval, rval);
 
-    ptr = GetScope(scope);
+    ptr = ScopeGet(scope);
 
     if (ptr == NULL)
     {
@@ -73,9 +73,9 @@ void NewScalar(const char *scope, const char *lval, const char *rval, DataType d
 
 // Newscalar allocates memory through NewAssoc
 
-    if (GetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
     {
-        DeleteScalar(scope, lval);
+        ScopeDeleteScalar(scope, lval);
     }
 
 /*
@@ -87,9 +87,9 @@ void NewScalar(const char *scope, const char *lval, const char *rval, DataType d
 
 /*******************************************************************/
 
-void DeleteScalar(const char *scope_name, const char *lval)
+void ScopeDeleteScalar(const char *scope_name, const char *lval)
 {
-    Scope *scope = GetScope(scope_name);
+    Scope *scope = ScopeGet(scope_name);
 
     if (scope == NULL)
     {
@@ -104,13 +104,13 @@ void DeleteScalar(const char *scope_name, const char *lval)
 
 /*******************************************************************/
 
-void NewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 {
     Rval rvald;
 
-    if (GetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
     {
-        DeleteVariable(scope, lval);
+        ScopeDeleteVariable(scope, lval);
     }
 
     AddVariableHash(scope, lval, (Rval) {rval, RVAL_TYPE_LIST }, dt, NULL, 0);
@@ -118,7 +118,7 @@ void NewList(const char *scope, const char *lval, void *rval, DataType dt)
 
 /*******************************************************************/
 
-DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
+DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
 {
     Scope *ptr = NULL;
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
@@ -158,7 +158,7 @@ DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
         scopeid[0] = '\0';
         sscanf(sval, "%[^.].%s", scopeid, vlval);
         CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
-        ptr = GetScope(scopeid);
+        ptr = ScopeGet(scopeid);
     }
     else
     {
@@ -170,7 +170,7 @@ DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
     {
         /* Assume current scope */
         strcpy(vlval, lval);
-        ptr = GetScope(scopeid);
+        ptr = ScopeGet(scopeid);
     }
 
     if (ptr == NULL)
@@ -212,9 +212,9 @@ DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
 
 /*******************************************************************/
 
-void DeleteVariable(const char *scope, const char *id)
+void ScopeDeleteVariable(const char *scope, const char *id)
 {
-    Scope *ptr = GetScope(scope);
+    Scope *ptr = ScopeGet(scope);
 
     if (ptr == NULL)
     {
@@ -536,7 +536,7 @@ static int IsCf3Scalar(char *str)
 
 /*******************************************************************/
 
-int DefinedVariable(char *name)
+bool ScopeVariableExistsInThis(const char *name)
 {
     Rval rval;
 
@@ -545,7 +545,7 @@ int DefinedVariable(char *name)
         return false;
     }
 
-    if (GetVariable("this", name, &rval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable("this", name, &rval) == DATA_TYPE_NONE)
     {
         return false;
     }
@@ -555,7 +555,7 @@ int DefinedVariable(char *name)
 
 /*******************************************************************/
 
-int BooleanControl(const char *scope, const char *name)
+bool ScopeGetVariableAsBoolean(const char *scope, const char *name)
 {
     Rval retval;
 
@@ -564,7 +564,7 @@ int BooleanControl(const char *scope, const char *name)
         return false;
     }
 
-    if (GetVariable(scope, name, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable(scope, name, &retval) != DATA_TYPE_NONE)
     {
         return BooleanFromString(retval.item);
     }
@@ -819,7 +819,7 @@ int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dty
         }
     }
 
-    ptr = GetScope(scope);
+    ptr = ScopeGet(scope);
 
     if (ptr == NULL)
     {
@@ -912,7 +912,7 @@ void DeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
         return;
     }
 
-    ptr = GetScope(scope);
+    ptr = ScopeGet(scope);
     i = HashIteratorInit(ptr->hashtable);
 
     while ((assoc = HashIteratorNext(&i)))

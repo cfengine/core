@@ -141,7 +141,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
-    SetNewScope("sys");
+    ScopeSetNew("sys");
 
     if (EnterpriseExpiry(ctx))
     {
@@ -160,9 +160,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }
 
-    NewScope("const");
-    NewScope("match");
-    NewScope("mon");
+    ScopeNew("const");
+    ScopeNew("match");
+    ScopeNew("mon");
     GetNameInfo3(ctx);
     GetInterfacesInfo(ctx, config->agent_type);
 
@@ -174,9 +174,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
-    SetNewScope(vbuff);
-    NewScope("this");
-    NewScope("match");
+    ScopeSetNew(vbuff);
+    ScopeNew("this");
+    ScopeNew("match");
 
     if (BOOTSTRAP)
     {
@@ -403,7 +403,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
     {
         Rval rval = { 0 };
 
-        switch (GetVariable("control_common", "cfinputs_version", &rval))
+        switch (ScopeGetVariable("control_common", "cfinputs_version", &rval))
         {
         case DATA_TYPE_STRING:
             AUDITPTR->version = xstrdup((char *) rval.item);
@@ -1141,12 +1141,6 @@ static void CheckWorkingDirectories(void)
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    if (strlen(CFPRIVKEYFILE) == 0)
-    {
-        snprintf(CFPRIVKEYFILE, CF_BUFSIZE, "%s%cppkeys%clocalhost.priv", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-        snprintf(CFPUBKEYFILE, CF_BUFSIZE, "%s%cppkeys%clocalhost.pub", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
-    }
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking integrity of the state database\n");
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
 
@@ -1428,7 +1422,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             returnval = EvaluateFinalRval(ctx, CONTEXTID, cp->rval, true, NULL);
         }
 
-        DeleteVariable(scope, cp->lval);
+        ScopeDeleteVariable(scope, cp->lval);
 
         if (!AddVariableHash(scope, cp->lval, returnval,
                              BodySyntaxGetDataType(bp, cp->lval), cp->audit->filename, cp->offset.line))
@@ -1445,11 +1439,11 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         {
             strcpy(VDOMAIN, cp->rval.item);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET domain = %s\n", VDOMAIN);
-            DeleteScalar("sys", "domain");
-            DeleteScalar("sys", "fqhost");
+            ScopeDeleteScalar("sys", "domain");
+            ScopeDeleteScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            NewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-            NewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+            ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+            ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             DeleteClass(ctx, "undefined_domain", NULL);
             HardClass(ctx, VDOMAIN);
         }
@@ -1677,10 +1671,10 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
             continue;
         }
 
-        SetNewScope(bp->name);
+        ScopeSetNew(bp->name);
         char scope[CF_BUFSIZE];
         snprintf(scope,CF_BUFSIZE,"%s_meta", bp->name);
-        NewScope(scope);
+        ScopeNew(scope);
 
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
@@ -1721,8 +1715,8 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         {
             snprintf(buf, CF_BUFSIZE, "%s_%s", bdp->name, bdp->type);
             CfDebug("Initiate control variable convergence...%s\n", buf);
-            DeleteScope(buf);
-            SetNewScope(buf);
+            ScopeDelete(buf);
+            ScopeSetNew(buf);
             CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);
         }
     }
@@ -1738,7 +1732,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
     int ok = true;
     FnCall *fp;
 
-    if (GetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !!! No bundlesequence in the common control body");
         return false;

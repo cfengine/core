@@ -29,21 +29,25 @@
 #include "assoc.h"
 
 void LoadSystemConstants(void);
-void NewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
-void DeleteScalar(const char *scope, const char *lval);
-void NewList(const char *scope, const char *lval, void *rval, DataType dt);
 
+void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
+void ScopeDeleteScalar(const char *scope, const char *lval);
+void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.
  */
-DataType GetVariable(const char *scope, const char *lval, Rval *returnv);
+DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
+bool ScopeGetVariableAsBoolean(const char *scope, const char *name);
+void ScopeDeleteVariable(const char *scope, const char *id);
+bool ScopeVariableExistsInThis(const char *name);
 
-void DeleteVariable(const char *scope, const char *id);
-bool StringContainsVar(const char *s, const char *v);
-int DefinedVariable(char *name);
-bool IsCf3VarString(const char *str);
-int BooleanControl(const char *scope, const char *name);
+
+
+
+
+
+
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);
@@ -52,5 +56,8 @@ int IsQualifiedVariable(char *var);
 
 int AddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void DeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
+
+bool StringContainsVar(const char *s, const char *v);
+bool IsCf3VarString(const char *str);
 
 #endif

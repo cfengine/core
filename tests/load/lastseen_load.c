@@ -2,8 +2,6 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 
-#include "alphalist.h"
-
 char CFWORKDIR[CF_BUFSIZE] = "/tmp";
 
 
@@ -73,16 +71,6 @@ pthread_mutex_t *cft_output;
 char VIPADDRESS[18];
 RSA *PUBKEY;
 
-AlphaListIterator AlphaListIteratorInit(AlphaList *al)
-{
-    exit(42);
-}
-
-const Item *AlphaListIteratorNext(AlphaListIterator *iterator)
-{
-    exit(42);
-}
-
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)
 {
     exit(42);
@@ -107,7 +95,7 @@ char *MapAddress(char *addr)
     exit(42);
 }
 
-char *HashPrint(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     exit(42);
 }

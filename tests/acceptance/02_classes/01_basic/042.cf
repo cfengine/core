@@ -37,7 +37,7 @@ vars:
 
   # Only one of these should be set at a time
 
-  "num" int => countclassesmatching("(Min00_05|Min05_10|Min10_15|Min15_20|Min20_25|Min25_30|Min30_35|Min31|Min35_40|Min40_45|Min45_50|Min50_55|Min55_00)");
+  "num" int => countclassesmatching("(Min00_05|Min05_10|Min10_15|Min15_20|Min20_25|Min25_30|Min30_35|Min35_40|Min40_45|Min45_50|Min50_55|Min55_00)");
 
 classes:
 

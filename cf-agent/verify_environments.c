@@ -136,7 +136,7 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
         CF_OCCUR++;
 
         PromiseBanner(ctx, pp);
-        NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
         pexp = ExpandDeRefPromise(ctx, "this", pp);
         VerifyEnvironments(ctx, a, pp);

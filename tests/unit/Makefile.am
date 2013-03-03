@@ -20,7 +20,6 @@ libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
-	alphalist_test \
 	arg_split_test \
 	assoc_test \
 	atexit_test \

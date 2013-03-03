@@ -11,7 +11,6 @@ libutils_la_SOURCES = \
 	set.c set.h \
 	statistics.c statistics.h \
 	string_lib.c string_lib.h \
-	string_map.c string_map.h \
 	platform.h \
 	proc_keyvalue.c proc_keyvalue.h \
 	bool.h \

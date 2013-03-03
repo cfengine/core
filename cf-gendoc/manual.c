@@ -250,11 +250,11 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 // scopes const and sys
 
-    NewScope("edit");
-    NewScalar("edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNew("edit");
+    ScopeNewScalar("edit", "filename", "x", DATA_TYPE_STRING);
 
-    NewScope("match");
-    NewScalar("match", "0", "x", DATA_TYPE_STRING);
+    ScopeNew("match");
+    ScopeNewScalar("match", "0", "x", DATA_TYPE_STRING);
 
     for (const char **s = scopes; *s != NULL; ++s)
     {
@@ -524,7 +524,7 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
 
     char *extra_mon[] = { "listening_udp4_ports", "listening_tcp4_ports", "listening_udp6_ports", "listening_tcp6_ports", NULL };
     
-    HashToList(GetScope(scope), &list);
+    HashToList(ScopeGet(scope), &list);
     list = AlphaSortRListNames(list);
 
     fprintf(fout, "\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n", scope, scope);

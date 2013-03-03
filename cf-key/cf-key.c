@@ -37,6 +37,7 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "env_context.h"
+#include "crypto.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
@@ -51,13 +52,15 @@ const char *remove_keys_host;
 static char *print_digest_arg = NULL;
 static char *trust_key_arg = NULL;
 
+static char *KEY_PATH;
+
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
 
 static int PrintDigest(const char* pubkey);
 static int TrustKey(const char* pubkey);
 static void ShowLastSeenHosts(void);
 static int RemoveKeys(const char *host);
-static void KeepKeyPromises(void);
+static void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
 
 #ifndef HAVE_NOVA
 bool LicenseInstall(char *path_source);
@@ -138,7 +141,23 @@ int main(int argc, char *argv[])
         return TrustKey(trust_key_arg);
     }
 
-    KeepKeyPromises();
+    char *public_key_file, *private_key_file;
+
+    if (KEY_PATH)
+    {
+        xasprintf(&public_key_file, "%s.pub", KEY_PATH);
+        xasprintf(&private_key_file, "%s.priv", KEY_PATH);
+    }
+    else
+    {
+        public_key_file = xstrdup(PublicKeyFile());
+        private_key_file = xstrdup(PrivateKeyFile());
+    }
+
+    KeepKeyPromises(public_key_file, private_key_file);
+
+    free(public_key_file);
+    free(private_key_file);
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
@@ -162,9 +181,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'f':
-
-            snprintf(CFPRIVKEYFILE, CF_BUFSIZE, "%s.priv", optarg);
-            snprintf(CFPUBKEYFILE, CF_BUFSIZE, "%s.pub", optarg);
+            KEY_PATH = optarg;
             break;
 
         case 'd':
@@ -371,7 +388,7 @@ static int RemoveKeys(const char *host)
 }
 
 
-static void KeepKeyPromises(void)
+static void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 {
     unsigned long err;
     RSA *pair;
@@ -382,19 +399,19 @@ static void KeepKeyPromises(void)
     const EVP_CIPHER *cipher;
     char vbuff[CF_BUFSIZE];
 
-    NewScope("common");
+    ScopeNew("common");
 
     cipher = EVP_des_ede3_cbc();
 
-    if (cfstat(CFPUBKEYFILE, &statbuf) != -1)
+    if (cfstat(public_key_file, &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", public_key_file);
         return;
     }
 
-    if (cfstat(CFPRIVKEYFILE, &statbuf) != -1)
+    if (cfstat(private_key_file, &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", CFPRIVKEYFILE);
+        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", private_key_file);
         return;
     }
 
@@ -414,22 +431,22 @@ static void KeepKeyPromises(void)
         RSA_print_fp(stdout, pair, 0);
     }
 
-    fd = open(CFPRIVKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Open %s failed: %s.", CFPRIVKEYFILE, strerror(errno));
+        CfOut(OUTPUT_LEVEL_ERROR, "open", "Open %s failed: %s.", private_key_file, strerror(errno));
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Couldn't open private key %s.", CFPRIVKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Couldn't open private key %s.", private_key_file);
         close(fd);
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing private key to %s\n", CFPRIVKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing private key to %s\n", private_key_file);
 
     if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
     {
@@ -440,22 +457,22 @@ static void KeepKeyPromises(void)
 
     fclose(fp);
 
-    fd = open(CFPUBKEYFILE, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    fd = open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Unable to open public key %s.", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "open", "Unable to open public key %s.", public_key_file);
         return;
     }
 
     if ((fp = fdopen(fd, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Open %s failed.", CFPUBKEYFILE);
+        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Open %s failed.", public_key_file);
         close(fd);
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing public key to %s\n", CFPUBKEYFILE);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing public key to %s\n", public_key_file);
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {

@@ -233,7 +233,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 void ThisAgentInit(void)
 {
-    NewScope("remote_access");
+    ScopeNew("remote_access");
     umask(077);
 }
 
@@ -572,9 +572,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             /* Free & reload -- lock this to avoid access errors during reload */
             
             EvalContextHeapClear(ctx);
-            
-            DeleteAlphaList(&VADDCLASSES);
-            InitAlphaList(&VADDCLASSES);
+            EvalContextStackFrameClear(ctx);
 
             DeleteItemList(IPADDRESSES);
             IPADDRESSES = NULL;
@@ -595,7 +593,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
-            DeleteAllScope();
+            ScopeDeleteAll();
 
             strcpy(VDOMAIN, "undefined.domain");
             POLICY_SERVER[0] = '\0';
@@ -619,10 +617,10 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             ERRORCOUNT = 0;
 
-            NewScope("sys");
+            ScopeNew("sys");
 
             SetPolicyServer(POLICY_SERVER);
-            NewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+            ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
             if (EnterpriseExpiry(ctx))
             {
@@ -630,12 +628,12 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
                       "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
             }
 
-            NewScope("const");
-            NewScope("this");
-            NewScope("control_server");
-            NewScope("control_common");
-            NewScope("mon");
-            NewScope("remote_access");
+            ScopeNew("const");
+            ScopeNew("this");
+            ScopeNew("control_server");
+            ScopeNew("control_common");
+            ScopeNew("mon");
+            ScopeNew("remote_access");
             GetNameInfo3(ctx);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
             Get3Environment(ctx);

@@ -169,7 +169,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
         return;
     }
 
-    NewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(ctx, pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
@@ -181,7 +181,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
         DoVerifyServices(ctx, a, pp, report_context);
     }
 
-    DeleteScalar("this", "promiser");
+    ScopeDeleteScalar("this", "promiser");
     YieldCurrentLock(thislock);
 }
 
@@ -235,21 +235,21 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const 
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        NewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        NewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        NewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        NewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

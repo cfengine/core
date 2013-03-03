@@ -259,7 +259,7 @@ void GetNaked(char *s1, const char *s2)
     fail();
 }
 
-DataType GetVariable(const char *scope, const char *lval, Rval *returnv)
+DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
 {
     fail();
 }
@@ -284,27 +284,12 @@ int EndJoin(char *path, char *leaf, int bufsize)
     fail();
 }
 
-char *EscapeQuotes(const char *s, char *out, int outSz)
-{
-    fail();
-}
-
 void FnCallDestroy(FnCall *fp)
 {
     fail();
 }
 
-int PrintFnCall(char *buffer, int bufsize, const FnCall *fp)
-{
-    fail();
-}
-
 int SubStrnCopyChr(char *to, const char *from, int len, char sep)
-{
-    fail();
-}
-
-int StartJoin(char *path, char *leaf, int bufsize)
 {
     fail();
 }

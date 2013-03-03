@@ -172,7 +172,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
-                NewScope("body");
+                ScopeNew("body");
 
                 if (fp && bp && fp->args && bp->args && !MapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
@@ -191,7 +191,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *
                     PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
-                DeleteScope("body");
+                ScopeDelete("body");
             }
             else
             {
@@ -452,14 +452,13 @@ void PromiseRef(OutputLevel level, const Promise *pp)
 {
     char *v;
     Rval retval;
-    char buffer[CF_BUFSIZE];
 
     if (pp == NULL)
     {
         return;
     }
 
-    if (GetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }
@@ -490,9 +489,14 @@ void PromiseRef(OutputLevel level, const Promise *pp)
            CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
            break;
        case RVAL_TYPE_LIST:
-           RlistPrint(buffer, CF_BUFSIZE, (Rlist *)pp->promisee.item);
-           CfOut(level, "", "This was a promise to: %s",buffer);
+       {
+           Writer *w = StringWriter();
+           RlistWrite(w, pp->promisee.item);
+           char *p = StringWriterClose(w);
+           CfOut(level, "", "This was a promise to: %s", p);
+           free(p);
            break;
+       }
        default:
            break;
     }

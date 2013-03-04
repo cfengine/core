@@ -67,7 +67,7 @@
 #include <math.h>
 
 #ifndef _GETOPT_H
-# include "../pub/getopt.h"
+# include "../libcompat/getopt.h"
 #endif
 
 #ifdef HAVE_STDLIB_H

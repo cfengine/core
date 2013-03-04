@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libutils.la
 
-libutils_la_LIBADD = ../pub/libcfpub.la
+libutils_la_LIBADD = ../libcompat/libcompat.la
 
 libutils_la_SOURCES = \
 	alloc.c alloc.h \
@@ -40,9 +40,9 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 #
 MAINTAINERCLEANFILES = config.h.in
 
-# libcfpub dependency
+# libcompat dependency
 
-.PRECIOUS: ../pub/libcfpub.la
+.PRECIOUS: ../libcompat/libcompat.la
 
-../pub/libcfpub.la:
-	$(MAKE) -C ../pub $(AM_MAKEFLAGS) libcfpub.la
+../libcompat/libcompat.la:
+	$(MAKE) -C ../libcompat $(AM_MAKEFLAGS) libcompat.la

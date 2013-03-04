@@ -8,7 +8,7 @@ LDADD = ../../libpromises/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c
-libtest_la_LIBADD = ../../pub/libcfpub.la
+libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
 libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c

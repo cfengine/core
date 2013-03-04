@@ -198,53 +198,6 @@ char *JoinSuffix(char *path, char *leaf)
     return path;
 }
 
-static int JoinMargin(char *path, const char *leaf, char **nextFree, int bufsize, int margin)
-{
-    int len = strlen(leaf);
-
-    if (margin < 0)
-    {
-        FatalError("Negative margin in JoinMargin()");
-    }
-
-    if (nextFree)
-    {
-        if ((*nextFree - path) + len > (bufsize - margin))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "",
-                  "Internal limit 3: Buffer ran out of space constructing string (using nextFree), len = %zd > %d.\n",
-                  (strlen(path) + len), (bufsize - CF_BUFFERMARGIN));
-            return false;
-        }
-
-        strcpy(*nextFree, leaf);
-        *nextFree += len;
-    }
-    else
-    {
-        if ((strlen(path) + len) > (bufsize - margin))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit 4: Buffer ran out of space constructing string (%zd > %d).\n",
-                  (strlen(path) + len), (bufsize - CF_BUFFERMARGIN));
-            return false;
-        }
-
-        strcat(path, leaf);
-    }
-
-    return true;
-}
-
-int Join(char *path, const char *leaf, int bufsize)
-{
-    return JoinMargin(path, leaf, NULL, bufsize, CF_BUFFERMARGIN);
-}
-
-int EndJoin(char *path, char *leaf, int bufsize)
-{
-    return JoinMargin(path, leaf, NULL, bufsize, 0);
-}
-
 int IsAbsPath(char *path)
 {
     if (IsFileSep(*path))

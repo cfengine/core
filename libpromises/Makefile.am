@@ -96,7 +96,6 @@ libpromises_la_SOURCES = \
         sort.c sort.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
-        symbol_table.c symbol_table.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
         timeout.c \

@@ -1298,26 +1298,6 @@ static bool ServerOffline(const char *server)
     return false;
 }
 
-/*********************************************************************/
-
-/*
- * We need to destroy connection as it has got an fatal (or non-fatal) error
- */
-void DestroyServerConnection(AgentConnection *conn)
-{
-    Rlist *entry = RlistKeyIn(SERVERLIST, conn->remoteip);
-
-    DisconnectServer(conn);
-
-    if (entry != NULL)
-    {
-        entry->item = NULL;     /* Has been freed by DisconnectServer */
-        RlistDestroyEntry(&SERVERLIST, entry);
-    }
-}
-
-/*********************************************************************/
-
 static AgentConnection *GetIdleConnectionToServer(const char *server)
 {
     Rlist *rp;

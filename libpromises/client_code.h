@@ -40,6 +40,5 @@ int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, 
 int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
 int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
 int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp);
-void DestroyServerConnection(AgentConnection *conn);
 
 #endif

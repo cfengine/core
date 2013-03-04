@@ -569,6 +569,8 @@ AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 
+AC_CHECK_MEMBERS([struct stat.st_mtim, struct stat.st_mtimespec])
+
 AC_MSG_CHECKING([for PRIuMAX/PRIdMAX macros])
 AC_EGREP_CPP([primacros_found],
   AC_INCLUDES_DEFAULT

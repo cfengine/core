@@ -29,7 +29,7 @@
 
 int yyparse(void);
 
-struct ParserState P = { 0 };
+ParserState P = { 0 };
 
 extern FILE *yyin;
 

@@ -95,6 +95,8 @@ void ScopePushThis(void);
 void ScopePopThis(void);
 
 
+void ScopeToList(Scope *sp, Rlist **list);
+
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table
 void SplitScopeName(const char *scope_name, char namespace_out[CF_MAXVARSIZE], char bundle_out[CF_MAXVARSIZE]);

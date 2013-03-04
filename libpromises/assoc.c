@@ -476,21 +476,3 @@ CfAssoc *HashIteratorNext(AssocHashTableIterator *i)
         return TinyHashIteratorNext(i);
     }
 }
-
-/*******************************************************************/
-
-void HashToList(Scope *sp, Rlist **list)
-{
-    if (sp == NULL)
-    {
-        return;
-    }
-
-    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        RlistPrependScalar(list, assoc->lval);
-    }
-}

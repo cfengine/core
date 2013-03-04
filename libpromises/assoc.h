@@ -63,7 +63,7 @@ void HashClear(AssocHashTable *hashtable);
 void HashFree(AssocHashTable *hashtable);
 
 /* HashToList */
-void HashToList(Scope *sp, Rlist **list);
+void ScopeToList(Scope *sp, Rlist **list);
 
 
 /*

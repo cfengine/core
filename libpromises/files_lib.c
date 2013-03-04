@@ -399,7 +399,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     char *tmpstr;
 #endif
 
-    CfDebug("Trying to create a parent directory for %s%s", parentandchild, force ? " (force applied)" : "");
+    CfDebug("Trying to create a parent directory for %s%s\n", parentandchild, force ? " (force applied)" : "");
 
     if (!IsAbsoluteFileName(parentandchild))
     {

@@ -104,7 +104,6 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
  * allocated.
  */
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
-bool ScopeGetVariableAsBoolean(const char *scope, const char *name);
 void ScopeDeleteVariable(const char *scope, const char *id);
 bool ScopeVariableExistsInThis(const char *name);
 

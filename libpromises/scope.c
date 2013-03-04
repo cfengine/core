@@ -602,25 +602,6 @@ bool ScopeVariableExistsInThis(const char *name)
 
 /*******************************************************************/
 
-bool ScopeGetVariableAsBoolean(const char *scope, const char *name)
-{
-    Rval retval;
-
-    if (name == NULL)
-    {
-        return false;
-    }
-
-    if (ScopeGetVariable(scope, name, &retval) != DATA_TYPE_NONE)
-    {
-        return BooleanFromString(retval.item);
-    }
-
-    return false;
-}
-
-/*******************************************************************/
-
 static int CompareVariableValue(Rval rval, CfAssoc *ap)
 {
     const Rlist *list, *rp;

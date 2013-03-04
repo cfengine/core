@@ -35,6 +35,7 @@
 #include "transaction.h"
 #include "policy.h"
 #include "rlist.h"
+#include "conversion.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -82,30 +83,39 @@ void EndAudit(int background_tasks)
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if (ScopeGetVariableAsBoolean("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
     {
-        FILE *fout;
-        char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
-        time_t now = time(NULL);
-
-        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
-
-        snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
-        snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
-
-        if ((fout = fopen(name, "a")) == NULL)
+        Rval track_value_rval = { 0 };
+        bool track_value = false;
+        if (ScopeGetVariable("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, &track_value_rval) != DATA_TYPE_NONE)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
-            return;
+            track_value = BooleanFromString(retval.item);
         }
 
-        if (Chop(datestr, CF_EXPANDSIZE) == -1)
+        if (track_value)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            FILE *fout;
+            char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
+            time_t now = time(NULL);
+
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
+
+            snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
+            snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
+
+            if ((fout = fopen(name, "a")) == NULL)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
+                return;
+            }
+
+            if (Chop(datestr, CF_EXPANDSIZE) == -1)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            }
+            fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+            TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+            fclose(fout);
         }
-        fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-        TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-        fclose(fout);
     }
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;

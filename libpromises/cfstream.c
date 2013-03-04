@@ -41,7 +41,7 @@
 
 #include <stdarg.h>
 
-/*****************************************************************************/
+static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
 
 /*
  * Log a list of strings into provided FILE
@@ -165,7 +165,7 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
     va_end(ap);
 }
 
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
+static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
 {
     VLog(stdout, level, errstr, fmt, ap);
 }

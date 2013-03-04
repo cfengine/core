@@ -60,7 +60,8 @@ check_PROGRAMS = \
 	list_test \
 	buffer_test \
 	timeout_test \
-	connection_management_test
+	connection_management_test \
+	symbol_table_test
 
 #	ipaddress_test
 

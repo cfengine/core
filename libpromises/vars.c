@@ -39,7 +39,6 @@
 #include "policy.h"
 
 static int IsCf3Scalar(char *str);
-static int CompareVariableValue(Rval rval, CfAssoc *ap);
 
 void LoadSystemConstants()
 {

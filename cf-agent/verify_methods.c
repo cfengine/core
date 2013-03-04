@@ -39,6 +39,7 @@
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
+#include "rlist.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     
@@ -163,7 +164,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         }
 
-        ScopeDeleteScalars(bp->name, bp->args);
+        for (const Rlist *rp = bp->args; rp; rp = rp->next)
+        {
+            const char *lval = rp->item;
+            ScopeDeleteScalar(bp->name, lval);
+        }
     }
     else
     {

@@ -312,20 +312,6 @@ void ScopeDelete(char *name)
 
 /*******************************************************************/
 
-void ScopeDeleteScalars(char *scope, Rlist *args)
-{
-    Rlist *rp;
-    char *lval;
-
-    for (rp = args; rp != NULL; rp = rp->next)
-    {
-        lval = (char *) rp->item;
-        ScopeDeleteScalar(scope, lval);
-    }
-}
-
-/*******************************************************************/
-
 void ScopeCopy(const char *new_scopename, const char *old_scopename)
 /*
  * Thread safe

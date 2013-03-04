@@ -78,12 +78,6 @@ void ScopeDeleteAll(void);
  */
 void ScopeAugment(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals);
 
-
-/**
- * @brief Expects a scalar list (e.g., args)! remove from scope if found.
- */
-void ScopeDeleteScalars(char *scope, Rlist *args);
-
 /**
  * @brief prepend GetScope("this") to CF_STCK
  */

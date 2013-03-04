@@ -31,7 +31,6 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "sort.h"
-#include "vars.h"
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
@@ -40,6 +39,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "policy.h"
+#include "scope.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 

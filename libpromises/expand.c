@@ -683,7 +683,7 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
 
         /* Set scope "this" first to ensure list expansion ! */
         ScopeSet("this");
-        DeRefListsInHashtable("this", listvars, lol);
+        ScopeDeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */
 
@@ -1433,7 +1433,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             }
         }
 
-        if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
+        if (!ScopeAddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
@@ -1758,7 +1758,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
 
     if (bp)
     {
-        MapBodyArgs(ctx, bp->name, args, bp->args);
+        ScopeMapBodyArgs(ctx, bp->name, args, bp->args);
 
         for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
         {

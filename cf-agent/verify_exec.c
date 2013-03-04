@@ -42,6 +42,7 @@
 #include "writer.h"
 #include "policy.h"
 #include "string_lib.h"
+#include "scope.h"
 
 typedef enum
 {

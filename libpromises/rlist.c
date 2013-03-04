@@ -29,13 +29,14 @@
 #include "conversion.h"
 #include "expand.h"
 #include "matching.h"
-#include "vars.h"
+#include "scope.h"
 #include "cfstream.h"
 #include "fncall.h"
 #include "string_lib.h"
 #include "transaction.h"
 #include "logging.h"
 #include "misc_lib.h"
+#include "assoc.h"
 
 #include <assert.h>
 

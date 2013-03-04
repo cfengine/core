@@ -34,6 +34,7 @@
 #include "transaction.h"
 #include "logging.h"
 #include "policy.h"
+#include "scope.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/

@@ -34,6 +34,7 @@
 #include "logging.h"
 #include "rlist.h"
 #include "policy.h"
+#include "scope.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);

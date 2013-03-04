@@ -174,7 +174,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *
 
                 ScopeNew("body");
 
-                if (fp && bp && fp->args && bp->args && !MapBodyArgs(ctx, "body", fp->args, bp->args))
+                if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
                     ERRORCOUNT++;
                     CfOut(OUTPUT_LEVEL_ERROR, "",

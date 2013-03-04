@@ -96,6 +96,22 @@ void ScopePopThis(void);
 
 
 void ScopeToList(Scope *sp, Rlist **list);
+void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
+void ScopeDeleteScalar(const char *scope, const char *lval);
+void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
+/*
+ * Do not modify returned Rval, its contents may be constant and statically
+ * allocated.
+ */
+DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
+bool ScopeGetVariableAsBoolean(const char *scope, const char *name);
+void ScopeDeleteVariable(const char *scope, const char *id);
+bool ScopeVariableExistsInThis(const char *name);
+
+int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
+void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
+
+int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table

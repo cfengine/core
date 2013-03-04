@@ -41,6 +41,7 @@
 #include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "runagent.h"

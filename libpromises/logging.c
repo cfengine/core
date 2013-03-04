@@ -29,7 +29,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "atexit.h"
-#include "vars.h"
+#include "scope.h"
 #include "cfstream.h"
 #include "string_lib.h"
 #include "transaction.h"

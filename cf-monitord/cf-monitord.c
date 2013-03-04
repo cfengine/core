@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "cfstream.h"
 #include "signals.h"
+#include "scope.h"
 
 
 typedef enum

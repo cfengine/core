@@ -53,6 +53,7 @@
 #include "files_lib.h"
 #include "rlist.h"
 #include "policy.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

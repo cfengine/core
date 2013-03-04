@@ -39,6 +39,7 @@
 #include "exec_tools.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "scope.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>

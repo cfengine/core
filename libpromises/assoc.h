@@ -38,7 +38,6 @@ typedef struct
 CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt);
 void DeleteAssoc(CfAssoc *ap);
 CfAssoc *CopyAssoc(CfAssoc *old);
-CfAssoc *AssocNewReference(const char *lval, Rval rval, DataType dtype);
 
 /* - hashtable operations - */
 

@@ -74,7 +74,6 @@ DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
 char *MapAddress(char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);
-int NonEmptyLine(char *s);
 const char *DataTypeShortToType(char *short_type);
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 

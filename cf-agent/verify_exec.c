@@ -41,6 +41,7 @@
 #include "misc_lib.h"
 #include "writer.h"
 #include "policy.h"
+#include "string_lib.h"
 
 typedef enum
 {
@@ -336,7 +337,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
                 {
                     ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, pp->ns);
                 }
-                else if ((!a.contain.nooutput) && (NonEmptyLine(line)))
+                else if ((!a.contain.nooutput) && (!EmptyString(line)))
                 {
                     lineOutLen = strlen(comm) + strlen(line) + 12;
 

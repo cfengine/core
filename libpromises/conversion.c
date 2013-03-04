@@ -830,25 +830,6 @@ void CommandPrefix(char *execstr, char *comm)
     strncpy(comm, sp, 15);
 }
 
-/*************************************************************/
-
-int NonEmptyLine(char *line)
-{
-    char *sp;
-
-    for (sp = line; *sp != '\0'; sp++)
-    {
-        if (!isspace((int) *sp))
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-/*******************************************************************/
-
 static int IsSpace(char *remainder)
 {
     char *sp;

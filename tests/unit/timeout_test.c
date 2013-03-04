@@ -1,8 +1,7 @@
 #include "cf3.defs.h"
 #include "prototypes3.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 #define TMP_FILE "/tmp/timeout_test.XXXXXX"
 #define TMP_FILE_CONTENTS "duh.\nuduh."
@@ -105,12 +104,13 @@ static void test_read_ready_eof(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_read_ready_timeout),
-            unit_test(test_read_ready_data),
-            unit_test(test_read_ready_eof)
-        };
+    {
+        unit_test(test_read_ready_timeout),
+        unit_test(test_read_ready_data),
+        unit_test(test_read_ready_eof)
+    };
 
     return run_tests(tests);
 }

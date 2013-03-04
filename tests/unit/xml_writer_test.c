@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "xml_writer.h"
 
@@ -64,8 +62,9 @@ void test_escape(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_comment),
         unit_test(test_no_attr),
         unit_test(test_tag),

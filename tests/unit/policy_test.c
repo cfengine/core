@@ -215,6 +215,7 @@ static void test_util_bundle_qualified_name(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_bundle_redefinition),

@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "writer.h"
 
@@ -81,8 +79,9 @@ void test_release_string(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_empty_string_buffer),
         unit_test(test_write_empty_string_buffer),
         unit_test(test_write_string_buffer),

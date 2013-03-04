@@ -1,7 +1,5 @@
-#include <setjmp.h>
-#include <sys/types.h>
-#include <stdarg.h>
-#include "cmockery.h"
+#include "test.h"
+
 #include "list.c"
 #include "list.h"
 
@@ -803,7 +801,9 @@ static void test_mutableIterator(void **state)
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
         unit_test(test_initList)
         , unit_test(test_destroyList)
         , unit_test(test_destroyer)

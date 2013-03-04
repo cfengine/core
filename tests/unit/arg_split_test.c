@@ -1,4 +1,4 @@
-#include "cf3.defs.h"
+#include "test.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -151,8 +151,9 @@ static void test_command_promiser(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_split_empty),
         unit_test(test_split_easy),
         unit_test(test_split_quoted_beginning),

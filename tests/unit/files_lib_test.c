@@ -1,10 +1,7 @@
+#include "test.h"
+
 #include "cf3.defs.h"
-
 #include "files_lib.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
-#include <stdarg.h>
 
 #define FILE_CONTENTS "8aysd9a8ydhsdkjnaldn12lk\njndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljew\nnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1l\rkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1\r\nlkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn3"
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
@@ -105,6 +102,7 @@ void test_file_read_invalid(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     tests_setup();
 
     const UnitTest tests[] =

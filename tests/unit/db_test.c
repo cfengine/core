@@ -110,6 +110,7 @@ void test_recreate(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     tests_setup();
 
     const UnitTest tests[] =

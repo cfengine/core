@@ -1,6 +1,5 @@
-#include <setjmp.h>
-#include <sys/types.h>
-#include <stdarg.h>
+#include "test.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include "cmockery.h"
@@ -617,7 +616,9 @@ static void test_vprintf(void **state)
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
         unit_test(test_createBuffer)
         , unit_test(test_createBufferFrom)
         , unit_test(test_destroyBuffer)

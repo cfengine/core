@@ -77,6 +77,7 @@ static void test_hostinnetgroup_not_found(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_hostinnetgroup_found),

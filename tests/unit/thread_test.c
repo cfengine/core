@@ -1,7 +1,6 @@
 #include "cf3.defs.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 #define NUM_THREADS 100
 
@@ -148,15 +147,16 @@ static void join_children(pthread_t tids[NUM_THREADS])
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_init_destroy),
-            unit_test(test_trylock_dynamic),
-            unit_test(test_trylock_static),
-            unit_test(test_trylock_static_errorcheck),
-            unit_test(test_create),
-            unit_test(test_lock),
-        };
+    {
+        unit_test(test_init_destroy),
+        unit_test(test_trylock_dynamic),
+        unit_test(test_trylock_static),
+        unit_test(test_trylock_static_errorcheck),
+        unit_test(test_create),
+        unit_test(test_lock),
+    };
 
     return run_tests(tests);
 }

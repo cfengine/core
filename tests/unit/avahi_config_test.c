@@ -1,6 +1,5 @@
-#include <setjmp.h>
-#include <stdarg.h>
-#include <sys/types.h>
+#include "test.h"
+
 #include <string.h>
 #include "cmockery.h"
 #include "cf-serverd-functions.c"
@@ -55,7 +54,9 @@ static void test_generateAvahiConfig()
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
           unit_test(test_generateAvahiConfig)
     };
 

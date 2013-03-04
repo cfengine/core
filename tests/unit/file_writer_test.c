@@ -1,9 +1,6 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
-
+#include "alloc.h"
 #include "writer.h"
 
 static Writer *global_w;
@@ -89,8 +86,9 @@ void test_multiwrite_file_buffer(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_empty_file_buffer),
         unit_test(test_write_empty_file_buffer),
         unit_test(test_write_file_buffer),

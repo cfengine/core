@@ -3,8 +3,7 @@
 
 #include "conversion.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 static const char *lo_alphabet = "abcdefghijklmnopqrstuvwxyz";
 static const char *hi_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -418,8 +417,9 @@ static void test_ends_with(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_mix_case_tolower),
         unit_test(test_empty_tolower),
         unit_test(test_weird_chars_tolower),

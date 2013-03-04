@@ -1,6 +1,4 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
+#include "test.h"
 
 #include "cmockery.h"
 #include "conversion.h"
@@ -13,7 +11,9 @@ static void str_to_service_policy(void **state)
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
         unit_test(str_to_service_policy)
     };
 

@@ -4,8 +4,7 @@
 #include "env_context.h"
 #include "item_lib.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 /* Global variables we care about */
 
@@ -117,8 +116,9 @@ static void test_set_names(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_set_names),
     };
 

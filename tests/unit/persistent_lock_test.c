@@ -2,8 +2,7 @@
 
 #include "transaction.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 static void tests_setup(void)
 {
@@ -67,6 +66,7 @@ static void test_lock_invalidate(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     tests_setup();
 
     const UnitTest tests[] =

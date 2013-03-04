@@ -1,7 +1,4 @@
-#include "cf3.defs.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "files_names.h"
 
@@ -77,11 +74,12 @@ static void test_get_parent_directory_copy(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_first_file_separator),
-            unit_test(test_get_parent_directory_copy)
-        };
+    {
+        unit_test(test_first_file_separator),
+        unit_test(test_get_parent_directory_copy)
+    };
 
     return run_tests(tests);
 }

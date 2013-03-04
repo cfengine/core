@@ -83,7 +83,7 @@ m4_ifdef([LT_INIT],
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
-AC_CONFIG_LIBOBJ_DIR(pub)
+AC_CONFIG_LIBOBJ_DIR(libcompat)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
@@ -995,7 +995,7 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
-	pub/Makefile
+	libcompat/Makefile
 	libutils/Makefile
 	libpromises/Makefile
 	cf-agent/Makefile

@@ -1,8 +1,8 @@
-noinst_LTLIBRARIES = libcfpub.la
+noinst_LTLIBRARIES = libcompat.la
 
-libcfpub_la_LIBADD = $(LTLIBOBJS)
+libcompat_la_LIBADD = $(LTLIBOBJS)
 
-libcfpub_la_SOURCES = \
+libcompat_la_SOURCES = \
 	getopt.c \
 	getopt1.c
 

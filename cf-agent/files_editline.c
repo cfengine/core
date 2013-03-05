@@ -202,6 +202,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise 
     bp->type = xstrdup("edit_line");
     bp->args = NULL;
     bp->subtypes = SeqNew(10, SubTypeDestroy);
+    xasprintf(&bp->ns, "temp_cf_ns_%s", CanonifyName(a.template));
 
     tp = BundleAppendSubType(bp, "insert_lines");
 
@@ -230,9 +231,9 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise 
         // Get Action operator
         if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
         {
-            char operator[CF_BUFSIZE], brack[CF_SMALLBUF];
+            char op[CF_BUFSIZE], brack[CF_SMALLBUF];
 
-            sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", operator, brack);
+            sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", op, brack);
 
             if (strcmp(brack, "%]") != 0)
             {
@@ -240,7 +241,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise 
                 return NULL;
             }
 
-            if (strcmp(operator, "BEGIN") == 0)
+            if (strcmp(op, "BEGIN") == 0)
             {
                 // start new buffer
          
@@ -253,16 +254,16 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise 
                 continue;
             }
 
-            if (strcmp(operator, "END") == 0)
+            if (strcmp(op, "END") == 0)
             {
                 // install buffer
                 level--;
             }
 
-            if (strcmp(operator+strlen(operator)-2, "::") == 0)
+            if (strcmp(op + strlen(op)-2, "::") == 0)
             {
-                *(operator+strlen(operator)-2) = '\0';
-                strcpy(context, operator);
+                *(op + strlen(op)-2) = '\0';
+                strcpy(context, op);
                 continue;
             }
 

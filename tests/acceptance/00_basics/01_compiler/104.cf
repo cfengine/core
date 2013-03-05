@@ -1,4 +1,4 @@
-# Check that empty input lists work
+# Check that we are not trying to load "cf_null" as an input_file
 
 body common control
 {
@@ -12,7 +12,7 @@ nova_edition::
 bundle common g
 {
 vars:
-  "inputs" slist => { };
+  "inputs" slist => { "cf_null" };
 }
 
 bundle agent check

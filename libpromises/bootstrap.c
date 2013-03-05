@@ -350,7 +350,7 @@ static void CreateFailSafe(char *name)
             "   \" -> Updated local policy from policy server\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to pull policy from policy server\",\n"
+            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
             "  server_started::\n"
             "   \" -> Started the server\",\n"

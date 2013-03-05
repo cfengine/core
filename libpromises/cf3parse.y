@@ -532,6 +532,10 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
+                           if (RlistLen(P.currentRlist) == 0)
+                           {
+                               RlistAppendScalar(&P.currentRlist, CF_NULL_VALUE);
+                           }
                            P.rval = (Rval) { RlistCopy(P.currentRlist), RVAL_TYPE_LIST };
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
@@ -545,9 +549,8 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  '{'
-                       litems
-                       '}';
+list:                  '{' '}'
+                     | '{' litems '}';
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

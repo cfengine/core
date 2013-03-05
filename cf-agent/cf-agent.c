@@ -103,6 +103,7 @@ extern int PR_NOTKEPT;
 static bool ALLCLASSESREPORT;
 static bool ALWAYS_VALIDATE;
 static bool CFPARANOID = false;
+static bool BOOTSTRAP_AVAHI = false;
 
 static Rlist *ACCESSLIST;
 
@@ -149,6 +150,7 @@ static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static bool HasAvahiSupport(void);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
 static int AutomaticBootstrap();
@@ -182,7 +184,7 @@ static const struct option OPTIONS[15] =
 
 static const char *HINTS[15] =
 {
-    "Bootstrap CFEngine to the given policy server IP or hostname",
+    "Bootstrap CFEngine to the given policy server IP, hostname or :avahi (automatic detection)",
     "Set or override bundlesequence from command line",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
@@ -217,7 +219,7 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-    if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
+    if (BOOTSTRAP_AVAHI)
     {
         int ret = AutomaticBootstrap();
 
@@ -328,6 +330,18 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'B':
+
+            if(strcmp(optarg, ":avahi") == 0)
+            {
+                if(!HasAvahiSupport())
+                {
+                    FatalError("Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                }
+
+                BOOTSTRAP_AVAHI = true;
+                break;
+            }
+
             if(IsLoopbackAddress(optarg))
             {
                 FatalError("Use a non-loopback address when bootstrapping");
@@ -1645,8 +1659,24 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     return CF_NOP;
 }
 
+#if !defined(HAVE_AVAHI_CLIENT_CLIENT_H) || !defined(HAVE_AVAHI_COMMON_ADDRESS_H)
+
+static bool HasAvahiSupport(void)
+{
+    return false;
+}
+
+#endif
+
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+
+static bool HasAvahiSupport(void)
+{
+    return true;
+}
+
+
 static int AutomaticBootstrap()
 {
     List *foundhubs = NULL;

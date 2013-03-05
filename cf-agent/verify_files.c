@@ -470,7 +470,6 @@ void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportCo
 
 int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp, const ReportContext *report_context)
 {
-    Bundle *bp;
     void *vp;
     FnCall *fp;
     char edit_bundle_name[CF_BUFSIZE], lockname[CF_BUFSIZE], qualified_edit[CF_BUFSIZE], *method_deref;
@@ -535,6 +534,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
         // add current filename to context - already there?
+        Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
             BannerSubBundle(bp, params);
@@ -554,9 +554,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeDelete(bp->name);
         }
         else
-           {
-           printf("DIDN*T FIND %s ... %s \n", method_deref, edit_bundle_name);
-           }
+        {
+            printf("DIDN*T FIND %s ... %s \n", method_deref, edit_bundle_name);
+        }
     }
 
 
@@ -581,16 +581,17 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
-           {
-           method_deref = strchr(edit_bundle_name, CF_NS) + 1;
-           }
+        {
+            method_deref = strchr(edit_bundle_name, CF_NS) + 1;
+        }
         else
-           {
-           method_deref = edit_bundle_name;
-           }
+        {
+            method_deref = edit_bundle_name;
+        }
         
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_xml bundle %s\n", method_deref);
 
+        Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))
         {
             BannerSubBundle(bp, params);
@@ -614,7 +615,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     
     if (a.template)
     {
-        if ((bp = MakeTemporaryBundleFromTemplate(ctx, a,pp)))
+        Policy *tmp_policy = PolicyNew();
+
+        Bundle *bp = NULL;
+        if ((bp = MakeTemporaryBundleFromTemplate(ctx, tmp_policy, a, pp)))
         {
             BannerSubBundle(bp,params);
             a.haveeditline = true;
@@ -631,7 +635,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             ScopeDelete(bp->name);
         }
-        // FIXME: why it crashes? DeleteBundles(bp);
+
+        PolicyDestroy(tmp_policy);
     }
 
     FinishEditContext(ctx, pp->edcontext, a, pp);

@@ -59,7 +59,6 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
-	timeout_test \
 	connection_management_test
 
 #	ipaddress_test

@@ -172,7 +172,6 @@ void SetTimeOut(int timeout);
 void TimeOut(void);
 void SetReferenceTime(EvalContext *ctx, int setclasses);
 void SetStartTime(void);
-bool IsReadReady(int fd, int timeout_sec);
 
 /* verify_files.c */
 

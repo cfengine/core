@@ -35,6 +35,12 @@
 #include "logging.h"
 #include "exec_tools.h"
 
+#ifdef HAVE_NOVA
+# if defined(__MINGW32__)
+#  include "win_execd_pipe.h"
+# endif
+#endif
+
 /*******************************************************************/
 
 static const int INF_LINES = -2;
@@ -104,6 +110,45 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
              CFWORKDIR, twin_exists ? TwinFilename() : AgentFilename(),
              CFWORKDIR, AgentFilename(), scheduled_run ? ":scheduled_run" : "");
 }
+
+#ifndef __MINGW32__
+
+static bool IsReadReady(int fd, int timeout_sec)
+{
+    fd_set  rset;
+    FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+
+    struct timeval tv = {
+        .tv_sec = timeout_sec,
+        .tv_usec = 0,
+    };
+
+    int ret = select(fd + 1, &rset, NULL, NULL, &tv);
+
+    if(ret < 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
+        return false;
+    }
+
+    if(FD_ISSET(fd, &rset))
+    {
+        return true;
+    }
+
+    if(ret == 0)  // timeout
+    {
+        return false;
+    }
+
+    // can we get here?
+    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+
+    return false;
+}
+
+#endif  /* __MINGW32__ */
 
 void LocalExec(const ExecConfig *config)
 {

@@ -723,7 +723,6 @@ typedef enum
     RVAL_TYPE_SCALAR = 's',
     RVAL_TYPE_LIST = 'l',
     RVAL_TYPE_FNCALL = 'f',
-    RVAL_TYPE_ASSOC = 'a',
     RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
 } RvalType;
 

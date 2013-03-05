@@ -278,12 +278,6 @@ static Rval RvalCopyList(Rval rval)
     return (Rval) {start, RVAL_TYPE_LIST};
 }
 
-static Rval RvalCopyAssoc(Rval rval)
-{
-    assert(rval.type == RVAL_TYPE_ASSOC);
-    return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
-}
-
 static Rval RvalCopyFnCall(Rval rval)
 {
     assert(rval.type == RVAL_TYPE_FNCALL);
@@ -296,9 +290,6 @@ Rval RvalCopy(Rval rval)
     {
     case RVAL_TYPE_SCALAR:
         return RvalCopyScalar(rval);
-
-    case RVAL_TYPE_ASSOC:
-        return RvalCopyAssoc(rval);
 
     case RVAL_TYPE_FNCALL:
         return RvalCopyFnCall(rval);
@@ -479,10 +470,6 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
     {
     case RVAL_TYPE_SCALAR:
         return RlistAppendScalar(start, item);
-
-    case RVAL_TYPE_ASSOC:
-        CfDebug("Appending assoc to rval-list [%s]\n", (char *) item);
-        break;
 
     case RVAL_TYPE_FNCALL:
         CfDebug("Appending function to rval-list function call: ");
@@ -687,10 +674,6 @@ void RvalDestroy(Rval rval)
         ThreadLock(cft_lock);
         free((char *) rval.item);
         ThreadUnlock(cft_lock);
-        break;
-
-    case RVAL_TYPE_ASSOC:             /* What? */
-        DeleteAssoc((CfAssoc *) rval.item);
         break;
 
     case RVAL_TYPE_LIST:
@@ -1143,9 +1126,8 @@ void RvalWrite(Writer *writer, Rval rval)
         WriterWrite(writer, "(no-one)");
         break;
 
-    case RVAL_TYPE_ASSOC:
-        // TODO: do something here, but not handled previously
-        break;
+    default:
+        ProgrammingError("Unknown rval type %c", rval.type);
     }
 }
 

@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_editline.h"
 
 #include "env_context.h"
 #include "promises.h"
@@ -183,7 +183,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Att
 
 /*****************************************************************************/
 
-Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise *pp)
+Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, const Promise *pp)
 {
     char bundlename[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
     char *sp, *promiser, context[CF_BUFSIZE] = "any";

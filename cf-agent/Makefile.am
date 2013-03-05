@@ -55,7 +55,7 @@ cf_agent_SOURCES = \
         verify_services.c verify_services.h \
         verify_environments.c verify_environments.h \
         files_edit.c files_edit.h \
-        files_editline.c \
+        files_editline.c files_editline.h \
         files_editxml.c \
         files_links.c files_links.h \
         files_operators.c files_operators.h \

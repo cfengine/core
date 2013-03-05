@@ -103,11 +103,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer);
 
-/* files_editline.c */
-
-int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
-Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise *pp);
-
 /* files_editxml.c */
 
 int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,

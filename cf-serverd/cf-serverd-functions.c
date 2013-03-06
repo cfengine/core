@@ -34,6 +34,8 @@
 #include "exec_tools.h"
 #include "unix.h"
 
+#include <assert.h>
+
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
 
@@ -245,7 +247,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Promise *pp = NewPromise("server_cfengine", config->input_file);
     Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
@@ -272,10 +273,21 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 1;
 
+    Policy *server_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(server_cfengine_policy, NamespaceDefault(), "server_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "server_cfengine");
+
+        pp = SubTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(server_cfengine_policy);
         return;
     }
 
@@ -386,6 +398,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
             }
         }
     }
+
+    PolicyDestroy(server_cfengine_policy);
 }
 
 /*********************************************************************/

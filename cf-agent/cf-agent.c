@@ -902,12 +902,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         exit(1);
     }
 
-    // TODO: should've been checked a long time ago, remove?
-    if (retval.type != RVAL_TYPE_LIST)
-    {
-        FatalError("Promised bundlesequence was not a list");
-    }
-
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
     {
         switch (rp->type)

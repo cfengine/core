@@ -365,21 +365,24 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
     Policy *main_policy = Cf3ParseFile(ctx, config, config->input_file, errors);
 
-    HashVariables(ctx, main_policy, NULL, report_context);
-    HashControls(ctx, main_policy, config);
-
-    if (PolicyIsRunnable(main_policy))
+    if( main_policy )
     {
-        Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
-        if (aux_policy)
-        {
-            main_policy = PolicyMerge(main_policy, aux_policy);
-        }
+        HashVariables(ctx, main_policy, NULL, report_context);
+        HashControls(ctx, main_policy, config);
 
-        if (config->check_runnable)
+        if (PolicyIsRunnable(main_policy))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-            PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
+            if (aux_policy)
+            {
+                main_policy = PolicyMerge(main_policy, aux_policy);
+            }
+
+            if (config->check_runnable)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
+                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            }
         }
     }
 

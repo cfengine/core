@@ -113,7 +113,7 @@ static Bundle *IsBundle(Seq *bundles, const char *key)
     return NULL;
 }
 
-Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp)
+Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 {
     Promise *pcopy;
     Rval returnval;

@@ -142,7 +142,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     THIS_BUNDLE = scopeid;
 
-    pcopy = DeRefCopyPromise(ctx, scopeid, pp);
+    pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, pp);
 

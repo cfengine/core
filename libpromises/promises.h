@@ -29,7 +29,7 @@
 
 #include "sequence.h"
 
-Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp);
+Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp);
 Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp);
 void PromiseRef(OutputLevel level, const Promise *pp);
 

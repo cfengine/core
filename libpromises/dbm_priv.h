@@ -33,8 +33,18 @@ typedef struct DBCursorPriv_ DBCursorPriv;
 
 const char *DBPrivGetFileExtension(void);
 
+#define DB_PRIV_DATABASE_BROKEN ((DBPriv *)-1)
+
 /*
  * These two functions will always be called with a per-database lock held.
+ */
+
+/*
+ * Should return either
+ * - NULL in case of generic error
+ * - DB_PRIV_DATABASE_BROKEN in case database file is broken, need to be moved
+      away and attempt to open database again should be performed.
+ * - valid pointer to DBPriv * in case database was opened succesfully.
  */
 DBPriv *DBPrivOpenDB(const char *dbpath);
 void DBPrivCloseDB(DBPriv *hdbp);

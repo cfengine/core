@@ -27,7 +27,6 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
-#include "dbm_lib.h"
 #include "dbm_migration.h"
 #include "atexit.h"
 #include "cfstream.h"
@@ -35,7 +34,9 @@
 
 #include <assert.h>
 
-/******************************************************************************/
+static int DBPathLock(const char *filename);
+static void DBPathUnLock(int fd);
+static void DBPathMoveBroken(const char *filename);
 
 struct DBHandle_
 {
@@ -184,6 +185,17 @@ bool OpenDB(DBHandle **dbp, dbid id)
         if(lock_fd != -1)
         {
             handle->priv = DBPrivOpenDB(handle->filename);
+
+            if (handle->priv == DB_PRIV_DATABASE_BROKEN)
+            {
+                DBPathMoveBroken(handle->filename);
+                handle->priv = DBPrivOpenDB(handle->filename);
+                if (handle->priv == DB_PRIV_DATABASE_BROKEN)
+                {
+                    handle->priv = NULL;
+                }
+            }
+
             DBPathUnLock(lock_fd);
         }
 
@@ -313,4 +325,57 @@ bool DeleteDBCursor(DBHandle *handle, DBCursor *cursor)
     DBPrivCloseCursor(cursor->cursor);
     free(cursor);
     return true;
+}
+
+static int DBPathLock(const char *filename)
+{
+    char *filename_lock;
+    if (xasprintf(&filename_lock, "%s.lock", filename) == -1)
+    {
+        FatalError("Unable to construct lock database filename for file %s",
+                   filename);
+    }
+
+    int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
+
+    free(filename_lock);
+
+    if(fd == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file");
+        return -1;
+    }
+
+    if (ExclusiveLockFile(fd) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
+static void DBPathUnLock(int fd)
+{
+    if(ExclusiveUnlockFile(fd) != 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "close", "!! Could not close db lock-file");
+    }
+}
+
+static void DBPathMoveBroken(const char *filename)
+{
+    char *filename_broken;
+    if (xasprintf(&filename_broken, "%s.broken", filename) == -1)
+    {
+        FatalError("Unable to construct broken database filename for file %s", filename);
+    }
+
+    if(cf_rename(filename, filename_broken) != 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed moving broken db out of the way");
+    }
+
+    free(filename_broken);
 }

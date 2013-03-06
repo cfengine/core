@@ -115,10 +115,6 @@ int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, 
 
 int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 
-/* full_write.c */
-
-int FullWrite(int desc, const char *ptr, size_t len);
-
 /* manual.c */
 
 void TexinfoManual(const char *source_dir, const char *output_file);
@@ -181,11 +177,6 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
                              void (*fnptr)(EvalContext *, char *, Promise *, const ReportContext *),
                              const ReportContext *report_context); /* FIXME */
 void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-
-/* verify_interfaces.c */
-
-void VerifyInterface(Attributes a, Promise *pp);
-void VerifyInterfacesPromise(EvalContext *ctx, Promise *pp);
 
 /* verify_reports.c */
 

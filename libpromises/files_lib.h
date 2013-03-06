@@ -45,4 +45,8 @@ void CreateEmptyFile(char *name);
 
 void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp);
 
+/* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
+   Return LEN upon success, write's (negative) error code otherwise.  */
+int FullWrite(int desc, const char *ptr, size_t len);
+
 #endif

@@ -33,7 +33,7 @@ libpromises_la_SOURCES = \
         constants.c \
         conversion.c conversion.h \
         crypto.c crypto.h \
-        dbm_api.c dbm_api.h dbm_lib.h dbm_lib.c dbm_priv.h \
+        dbm_api.c dbm_api.h dbm_priv.h \
         dbm_migration.c dbm_migration.h \
         dbm_migration_lastseen.c \
         dbm_migration_bundles.c \
@@ -52,7 +52,6 @@ libpromises_la_SOURCES = \
         files_names.c files_names.h \
         files_properties.c files_properties.h \
         fncall.c fncall.h \
-        full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
         instrumentation.c instrumentation.h \
@@ -69,7 +68,6 @@ libpromises_la_SOURCES = \
         mod_environ.c mod_environ.h \
         mod_exec.c mod_exec.h \
         mod_files.c mod_files.h \
-        mod_interfaces.c mod_interfaces.h \
         mod_measurement.c mod_measurement.h \
         mod_methods.c mod_methods.h \
         mod_outputs.c mod_outputs.h \

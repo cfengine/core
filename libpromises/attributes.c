@@ -340,28 +340,6 @@ Attributes GetMethodAttributes(EvalContext *ctx, const Promise *pp)
     return attr;
 }
 
-/*******************************************************************/
-
-Attributes GetInterfacesAttributes(EvalContext *ctx, const Promise *pp)
-{
-    Attributes attr = { {0} };
-
-    attr.havetcpip = PromiseBundleConstraintExists(ctx, "usebundle", pp);
-    attr.tcpip = GetTCPIPAttributes(ctx, pp);
-
-/* Common ("included") */
-
-    attr.havetrans = PromiseGetConstraintAsBoolean(ctx, CF_TRANSACTION, pp);
-    attr.transaction = GetTransactionConstraints(ctx, pp);
-
-    attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
-    attr.classes = GetClassDefinitionConstraints(ctx, pp);
-
-    return attr;
-}
-
-/*******************************************************************/
-
 Attributes GetMeasurementAttributes(EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
@@ -1531,20 +1509,6 @@ StorageVolume GetVolumeConstraints(EvalContext *ctx, const Promise *pp)
 
     return v;
 }
-
-/*******************************************************************/
-
-TcpIp GetTCPIPAttributes(EvalContext *ctx, const Promise *pp)
-{
-    TcpIp t;
-
-    t.ipv4_address = ConstraintGetRvalValue(ctx, "ipv4_address", pp, RVAL_TYPE_SCALAR);
-    t.ipv4_netmask = ConstraintGetRvalValue(ctx, "ipv4_netmask", pp, RVAL_TYPE_SCALAR);
-
-    return t;
-}
-
-/*******************************************************************/
 
 Report GetReportConstraints(EvalContext *ctx, const Promise *pp)
 {

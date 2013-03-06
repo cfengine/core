@@ -48,5 +48,4 @@ int CompressPath(char *dest, const char *src);
 int IsAbsoluteFileName(const char *f);
 bool IsFileOutsideDefaultRepository(const char *f);
 int RootDirLength(const char *f);
-const char *GetSoftwareCacheFilename(char *buffer);
 #endif

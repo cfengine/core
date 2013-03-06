@@ -674,10 +674,3 @@ int RootDirLength(const char *f)
 #endif
 }
 
-/* Buffer should be at least CF_MAXVARSIZE large */
-const char *GetSoftwareCacheFilename(char *buffer)
-{
-    snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PACKAGES_CACHE);
-    MapName(buffer);
-    return buffer;
-}

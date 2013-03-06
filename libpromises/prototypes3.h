@@ -94,7 +94,7 @@ void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
-bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
+bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);

@@ -65,10 +65,10 @@ void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context);
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context);
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
@@ -92,7 +92,7 @@ void EvalContextStackPopFrame(EvalContext *ctx);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
 bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
 
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);

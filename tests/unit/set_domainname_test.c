@@ -294,7 +294,7 @@ ssize_t CfReadLine(char *buff, int size, FILE *fp)
     fail();
 }
 
-bool IsDefinedClass(EvalContext *ctx, const char *class, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
 {
     fail();
 }

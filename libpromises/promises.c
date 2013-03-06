@@ -307,7 +307,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
 /*****************************************************************************/
 
-Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp)
+Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
     Rval returnval, final;

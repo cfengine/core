@@ -55,7 +55,7 @@
 
 static bool ValidClassName(const char *str);
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context);
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
 /*****************************************************************************/
 
@@ -807,7 +807,7 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname, void *ns)
+static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *classname, void *ns)
 {
     char qualified_class[CF_MAXVARSIZE];
 
@@ -873,7 +873,7 @@ static char *EvalVarRef(const char *varname, void *param)
 
 /**********************************************************************/
 
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 {
     ParseResult res;
 
@@ -916,7 +916,7 @@ bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenFromList(EvalContext *ctx, const char *token, void *param)
+static ExpressionValue EvalTokenFromList(const EvalContext *ctx, const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);
@@ -1555,22 +1555,22 @@ void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
     StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
 }
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
 }
 
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_hard, context);
 }
 
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_negated, context);
 }
 
-bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size_t stack_index)
+bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
     if (StringSetContains(frame->contexts, context))
@@ -1587,7 +1587,7 @@ bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size
     }
 }
 
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
 
@@ -1595,7 +1595,7 @@ bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context)
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
 }

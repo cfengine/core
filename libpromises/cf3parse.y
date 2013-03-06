@@ -921,10 +921,8 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
 static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss)
 {
-    int lmatch = false;
-    int i, l, allowed = false;
+    int l;
     const BodySyntax *bs;
-    char output[CF_BUFSIZE];
 
     CfDebug("CheckConstraint(%s,%s,", type, lval);
 
@@ -951,75 +949,19 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
                 {
                     /* If we get here we have found the lval and it is valid
                        for this subtype */
-
-                    lmatch = true;
                     CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n", lval);
 
-                    if (bs[l].dtype == DATA_TYPE_BODY)
+                    /* For bodies and bundles definitions can be elsewhere, so
+                       they are checked in PolicyCheckRunnable(). */
+                    if (bs[l].dtype != DATA_TYPE_BODY &&
+                        bs[l].dtype != DATA_TYPE_BUNDLE)
                     {
-                        CfDebug("Constraint syntax ok, but definition of body is elsewhere %s=%c\n", lval, rval.type);
-                        return SYNTAX_TYPE_MATCH_OK;
-                    }
-                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
-                    {
-                        CfDebug("Constraint syntax ok, but definition of relevant bundle is elsewhere %s=%c\n", lval,
-                                rval.type);
-                        return SYNTAX_TYPE_MATCH_OK;
-                    }
-                    else
-                    {
-                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype,
+                                                        (char *) bs[l].range, 0);
                     }
                 }
             }
         }
-    }
-
-/* Now check the functional modules - extra level of indirection
-   Note that we only check body attributes relative to promise type.
-   We can enter any promise types in any bundle, but only recognized
-   types will be dealt with. */
-
-    for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
-    {
-        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_BODIES[i].lval);
-
-        if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
-        {
-            CfDebug("Found a match for lval %s in the common constraint attributes\n", lval);
-            return SYNTAX_TYPE_MATCH_OK;
-        }
-    }
-
-    for (i = 0; CF_COMMON_EDITBODIES[i].lval != NULL; i++)
-    {
-        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_EDITBODIES[i].lval);
-
-        if (strcmp(lval, CF_COMMON_EDITBODIES[i].lval) == 0)
-        {
-            CfDebug("Found a match for lval %s in the common edit_line constraint attributes\n", lval);
-            return SYNTAX_TYPE_MATCH_OK;
-        }
-    }
-
-    for (i = 0; CF_COMMON_XMLBODIES[i].lval != NULL; i++)
-    {
-        CfDebug("CMP-common # %s,%s\n", lval, CF_COMMON_XMLBODIES[i].lval);
-
-        if (strcmp(lval, CF_COMMON_XMLBODIES[i].lval) == 0)
-        {
-            CfDebug("Found a match for lval %s in the common edit_xml constraint attributes\n", lval);
-            return SYNTAX_TYPE_MATCH_OK;
-        }
-    }
-
-
-// Now check if it is in the common list...
-
-    if (!lmatch || !allowed)
-    {
-        snprintf(output, CF_BUFSIZE, "Constraint lvalue \'%s\' is not allowed in bundle category \'%s\'", lval, type);
-        yyerror(output);
     }
 
     return SYNTAX_TYPE_MATCH_OK;

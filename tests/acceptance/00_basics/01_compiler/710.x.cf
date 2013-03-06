@@ -39,7 +39,7 @@ classes:
         "ok" not => fileexists("$(G.testdir)/shouldnotexist");
 reports:
     DEBUG::
-        "Expected to crash - illegal body contstraint name";
+        "This test should fail";
     ok::
         "$(this.promise_filename) Pass";
     !ok::

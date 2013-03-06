@@ -545,12 +545,12 @@ static const char *RvalFullSymbol(const Rval *rval)
 /**
  * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar" -> "foo"
  */
-static char *RvalNamespaceComponent(const Rval *rval)
+char *QualifiedNameNamespaceComponent(const char *qualified_name)
 {
-    if (strchr(RvalFullSymbol(rval), CF_NS))
+    if (strchr(qualified_name, CF_NS))
     {
         char ns[CF_BUFSIZE] = { 0 };
-        sscanf(RvalFullSymbol(rval), "%[^:]", ns);
+        sscanf(qualified_name, "%[^:]", ns);
 
         return xstrdup(ns);
     }
@@ -563,16 +563,16 @@ static char *RvalNamespaceComponent(const Rval *rval)
 /**
  * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar" -> "bar"
  */
-static char *RvalSymbolComponent(const Rval *rval)
+char *QualifiedNameSymbolComponent(const char *qualified_name)
 {
-    char *sep = strchr(RvalFullSymbol(rval), CF_NS);
+    char *sep = strchr(qualified_name, CF_NS);
     if (sep)
     {
         return xstrdup(sep + 1);
     }
     else
     {
-        return xstrdup(RvalFullSymbol(rval));
+        return xstrdup(qualified_name);
     }
 }
 
@@ -599,8 +599,8 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     const BodySyntax *syntax = ConstraintGetSyntax(constraint);
                     if (syntax->dtype == DATA_TYPE_BODY)
                     {
-                        char *ns = RvalNamespaceComponent(&constraint->rval);
-                        char *symbol = RvalSymbolComponent(&constraint->rval);
+                        char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
 
                         Body *referenced_body = PolicyGetBody(policy, ns, constraint->lval, symbol);
                         if (!referenced_body)
@@ -645,8 +645,8 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                     if (syntax->dtype == DATA_TYPE_BUNDLE &&
                         !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
-                        char *ns = RvalNamespaceComponent(&constraint->rval);
-                        char *symbol = RvalSymbolComponent(&constraint->rval);
+                        char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
 
                         const Bundle *referenced_bundle = NULL;
                         if (strcmp(constraint->lval, "usebundle") == 0)

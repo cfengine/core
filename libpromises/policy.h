@@ -380,4 +380,15 @@ void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *
  */
 int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints);
 
+
+/**
+ * @return A copy of the namespace compoent of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
+ */
+char *QualifiedNameNamespaceComponent(const char *qualified_name);
+
+/**
+ * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
+ */
+char *QualifiedNameSymbolComponent(const char *qualified_name);
+
 #endif

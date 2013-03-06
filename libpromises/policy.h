@@ -153,6 +153,7 @@ struct Constraint_
     SourceOffset offset;
 };
 
+const char *NamespaceDefault(void);
 
 Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);

@@ -47,8 +47,6 @@
 
 //************************************************************************
 
-static const char *DEFAULT_NAMESPACE = "default";
-
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
@@ -68,6 +66,12 @@ static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attr
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
 static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
+
+
+const char *NamespaceDefault(void)
+{
+    return "default";
+}
 
 Policy *PolicyNew(void)
 {
@@ -235,7 +239,7 @@ char *BundleQualifiedName(const Bundle *bundle)
 
     if (bundle->name)
     {
-        const char *ns = bundle->ns ? bundle->ns : DEFAULT_NAMESPACE;
+        const char *ns = bundle->ns ? bundle->ns : NamespaceDefault();
         return StringConcatenate(3, ns, ":", bundle->name);  // CF_NS == ':'
     }
 

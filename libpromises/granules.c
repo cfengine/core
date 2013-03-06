@@ -24,6 +24,7 @@
 */
 
 #include "granules.h"
+#include "misc_lib.h"
 #include <math.h>
 #include <assert.h>
 
@@ -46,38 +47,10 @@ int GetTimeSlot(time_t here_and_now)
     return ((here_and_now - (4 * 24 * 60 * 60)) % SECONDS_PER_WEEK) / (long)CF_MEASURE_INTERVAL;
 }
 
-/*****************************************************************************/
-
-int GetShiftSlot(time_t here_and_now)
+int GetShiftSlot(time_t t)
 {
-    time_t now = time(NULL);
-    int slot = 0, chour = -1;
-    char cstr[64];
-    char str[64];
-    char buf[10], cbuf[10];
-    int hour = -1;
-    char timebuf[26];
-
-    snprintf(cstr, sizeof(str), "%s", cf_strtimestamp_utc(here_and_now, timebuf));
-    sscanf(cstr, "%s %*s %*s %d", cbuf, &chour);
-
-// Format Tue Sep 28 14:58:27 CEST 2010
-
-    for (now = CF_MONDAY_MORNING; now < CF_MONDAY_MORNING + SECONDS_PER_WEEK; now += CF_SHIFT_INTERVAL, slot++)
-    {
-        snprintf(str, sizeof(str), "%s", cf_strtimestamp_utc(now, timebuf));
-        sscanf(str, "%s %*s %*s %d", buf, &hour);
-
-        if ((hour / 6 == chour / 6) && (strcmp(cbuf, buf) == 0))
-        {
-            return slot;
-        }
-    }
-
-    return -1;
+    return UnsignedModulus((t - CF_MONDAY_MORNING), SECONDS_PER_WEEK) / CF_SHIFT_INTERVAL;
 }
-
-/*****************************************************************************/
 
 time_t GetShiftSlotStart(time_t t)
 {

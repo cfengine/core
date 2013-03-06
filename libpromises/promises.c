@@ -45,6 +45,77 @@ static void DereferenceComment(Promise *pp);
 
 /*****************************************************************************/
 
+static Body *IsBody(Seq *bodies, const char *ns, const char *key)
+{
+    char fqname[CF_BUFSIZE];
+
+    for (size_t i = 0; i < SeqLength(bodies); i++)
+    {
+        Body *bp = SeqAt(bodies, i);
+
+        // bp->namespace is where the body belongs, namespace is where we are now
+        if (strchr(key, CF_NS) || strcmp(ns,"default") == 0)
+        {
+            if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
+            {
+                strcpy(fqname,strchr(key,CF_NS)+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }
+        }
+        else
+        {
+            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", ns, CF_NS, key);
+        }
+
+        if (strcmp(bp->name, fqname) == 0)
+        {
+            return bp;
+        }
+    }
+
+    return NULL;
+}
+
+static Bundle *IsBundle(Seq *bundles, const char *key)
+{
+    char fqname[CF_BUFSIZE];
+
+    for (size_t i = 0; i < SeqLength(bundles); i++)
+    {
+        Bundle *bp = SeqAt(bundles, i);
+
+        if (strcmp(bp->ns, "default") == 0)
+        {
+            if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'
+            {
+                strcpy(fqname,strchr(key, CF_NS)+1);
+            }
+            else
+            {
+                strcpy(fqname,key);
+            }
+        }
+        else if (strncmp(bp->ns, key, strlen(bp->ns)) == 0)
+        {
+            strcpy(fqname,key);
+        }
+        else
+        {
+            snprintf(fqname, CF_BUFSIZE-1, "%s%c%s", bp->ns, CF_NS, key);
+        }
+
+        if (strcmp(bp->name, fqname) == 0)
+        {
+            return bp;
+        }
+    }
+
+    return NULL;
+}
+
 Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp)
 {
     Promise *pcopy;
@@ -337,81 +408,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp)
     }
 
     return pcopy;
-}
-
-/*******************************************************************/
-
-Body *IsBody(Seq *bodies, const char *ns, const char *key)
-{
-    char fqname[CF_BUFSIZE];
-
-    for (size_t i = 0; i < SeqLength(bodies); i++)
-    {
-        Body *bp = SeqAt(bodies, i);
-
-        // bp->namespace is where the body belongs, namespace is where we are now
-        if (strchr(key, CF_NS) || strcmp(ns,"default") == 0)
-        {
-            if (strncmp(key,"default:",strlen("default:")) == 0) // CF_NS == ':'
-            {
-                strcpy(fqname,strchr(key,CF_NS)+1);
-            }
-            else
-            {
-                strcpy(fqname,key);
-            }        
-        }
-        else
-        {
-            snprintf(fqname,CF_BUFSIZE-1, "%s%c%s", ns, CF_NS, key);
-        }
-
-        if (strcmp(bp->name, fqname) == 0)
-        {
-            return bp;
-        }
-    }
-
-    return NULL;
-}
-
-/*******************************************************************/
-
-Bundle *IsBundle(Seq *bundles, const char *key)
-{
-    char fqname[CF_BUFSIZE];
-
-    for (size_t i = 0; i < SeqLength(bundles); i++)
-    {
-        Bundle *bp = SeqAt(bundles, i);
-
-        if (strcmp(bp->ns, "default") == 0)
-        {
-            if (strncmp(key,"default:",strlen("default:")) == 0)  // CF_NS == ':'
-            {
-                strcpy(fqname,strchr(key, CF_NS)+1);
-            }
-            else
-            {
-                strcpy(fqname,key);
-            }        
-        }
-        else if (strncmp(bp->ns, key, strlen(bp->ns)) == 0)
-        {
-            strcpy(fqname,key);
-        }
-        else
-        {
-            snprintf(fqname, CF_BUFSIZE-1, "%s%c%s", bp->ns, CF_NS, key);
-        }
-
-        if (strcmp(bp->name, fqname) == 0)
-        {
-            return bp;
-        }
-    }
-
-    return NULL;
 }
 
 /*****************************************************************************/

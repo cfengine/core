@@ -29,8 +29,6 @@
 
 #include "sequence.h"
 
-Body *IsBody(Seq *bodies, const char *ns, const char *key);
-Bundle *IsBundle(Seq *bundles, const char *key);
 Promise *DeRefCopyPromise(EvalContext *ctx, const char *scopeid, const Promise *pp);
 Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp);
 void PromiseRef(OutputLevel level, const Promise *pp);

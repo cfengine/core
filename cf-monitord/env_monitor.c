@@ -51,6 +51,7 @@
 #endif
 
 #include <math.h>
+#include <assert.h>
 
 #ifndef HAVE_NOVA
 static void HistoryUpdate(EvalContext *ctx, Averages newvals);
@@ -268,7 +269,17 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
-    Promise *pp = NewPromise("monitor_cfengine", "the monitor daemon");
+
+    Policy *monitor_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "monitor_cfengine");
+
+        pp = SubTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     Attributes dummyattr;
     CfLock thislock;
 
@@ -302,6 +313,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(monitor_cfengine_policy);
         return;
     }
 
@@ -323,6 +335,8 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
         ITER++;
     }
+
+    PolicyDestroy(monitor_cfengine_policy);
 }
 
 /*********************************************************************/

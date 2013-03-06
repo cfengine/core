@@ -589,7 +589,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    AddAbortClass(name, cp->classes);
+                    EvalContextHeapAddAbort(ctx, name, cp->classes);
                 }
 
                 continue;

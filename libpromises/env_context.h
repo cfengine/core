@@ -44,6 +44,7 @@ struct EvalContext_
     StringSet *heap_soft;
     StringSet *heap_hard;
     StringSet *heap_negated;
+    Item *heap_abort;
 
     Seq *stack;
 
@@ -62,6 +63,7 @@ void EvalContextDestroy(EvalContext *ctx);
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
@@ -101,7 +103,6 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 
 // Add new contexts
 void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
-void AddAbortClass(const char *name, const char *classes);
 void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);

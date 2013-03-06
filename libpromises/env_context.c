@@ -61,8 +61,6 @@ static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const c
 
 Item *ABORTBUNDLEHEAP = NULL;
 
-static Item *ABORTHEAP = NULL;
-
 static bool ABORTBUNDLE = false;
 
 /*****************************************************************************/
@@ -404,7 +402,6 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 {
-    Item *ip;
     char context[CF_MAXVARSIZE];
     char canonclass[CF_MAXVARSIZE];
 
@@ -416,13 +413,13 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
     CanonifyNameInPlace(canonclass);
     
     if (ns && strcmp(ns, "default") != 0)
-       {
-       snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
-       }
+    {
+        snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
+    }
     else
-       {
-       strncpy(context, canonclass, CF_MAXVARSIZE);
-       }
+    {
+        strncpy(context, canonclass, CF_MAXVARSIZE);
+    }
     
     CfDebug("NewClass(%s)\n", context);
 
@@ -437,7 +434,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
@@ -450,7 +447,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     EvalContextHeapAddSoft(ctx, context);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -461,7 +458,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -503,7 +500,6 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
 
 void HardClass(EvalContext *ctx, const char *oclass)
 {
-    Item *ip;
     char context[CF_MAXVARSIZE];
 
     strcpy(context, oclass);
@@ -526,7 +522,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
@@ -539,7 +535,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
 
     EvalContextHeapAddHard(ctx, context);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
@@ -550,7 +546,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
@@ -565,7 +561,6 @@ void HardClass(EvalContext *ctx, const char *oclass)
 void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
 {
     char copy[CF_BUFSIZE];
-    Item *ip;
 
     if (ns && strcmp(ns, "default") != 0)
     {
@@ -594,7 +589,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
         exit(1);
@@ -612,7 +607,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     EvalContextStackFrameAddSoft(ctx, copy);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -623,7 +618,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -1415,11 +1410,11 @@ void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool per
 
 /*****************************************************************************/
 
-void AddAbortClass(const char *name, const char *classes)
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
-    if (!IsItemIn(ABORTHEAP, name))
+    if (!IsItemIn(ctx->heap_abort, context))
     {
-        AppendItem(&ABORTHEAP, name, classes);
+        AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
 }
 
@@ -1498,6 +1493,7 @@ EvalContext *EvalContextNew(void)
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
     ctx->heap_negated = StringSetNew();
+    ctx->heap_abort = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
@@ -1517,6 +1513,7 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
         StringSetDestroy(ctx->heap_negated);
+        DeleteItemList(ctx->heap_abort);
 
         SeqDestroy(ctx->stack);
 

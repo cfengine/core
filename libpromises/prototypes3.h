@@ -182,11 +182,6 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
                              const ReportContext *report_context); /* FIXME */
 void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 
-/* verify_interfaces.c */
-
-void VerifyInterface(Attributes a, Promise *pp);
-void VerifyInterfacesPromise(EvalContext *ctx, Promise *pp);
-
 /* verify_reports.c */
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp);

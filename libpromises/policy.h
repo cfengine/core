@@ -267,6 +267,8 @@ void SubTypeDestroy(SubType *subtype);
 
 void PromiseDestroy(Promise *pp);
 
+void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
+
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 
 /**

@@ -29,7 +29,6 @@
 #include "syntax.h"
 #include "expand.h"
 #include "files_names.h"
-#include "files_hashes.h"
 #include "scope.h"
 #include "vars.h"
 #include "cfstream.h"
@@ -38,8 +37,6 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "fncall.h"
-
-#define PACK_UPIFELAPSED_SALT "packageuplist"
 
 static void DereferenceComment(Promise *pp);
 
@@ -462,104 +459,6 @@ void PromiseRef(OutputLevel level, const Promise *pp)
        default:
            break;
     }
-}
-
-/*******************************************************************/
-
-void HashPromise(char *salt, Promise *pp, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
-{
-    EVP_MD_CTX context;
-    int md_len;
-    const EVP_MD *md = NULL;
-    Rlist *rp;
-    FnCall *fp;
-
-    char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
-    int doHash;
-
-    md = EVP_get_digestbyname(FileHashName(type));
-
-    EVP_DigestInit(&context, md);
-
-// multiple packages (promisers) may share same package_list_update_ifelapsed lock
-    if (!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
-    {
-        EVP_DigestUpdate(&context, pp->promiser, strlen(pp->promiser));
-    }
-
-    if (pp->ref)
-    {
-        EVP_DigestUpdate(&context, pp->ref, strlen(pp->ref));
-    }
-
-    if (pp->this_server)
-    {
-        EVP_DigestUpdate(&context, pp->this_server, strlen(pp->this_server));
-    }
-
-    if (salt)
-    {
-        EVP_DigestUpdate(&context, salt, strlen(salt));
-    }
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-    {
-        Constraint *cp = SeqAt(pp->conlist, i);
-
-        EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
-
-        // don't hash rvals that change (e.g. times)
-        doHash = true;
-
-        for (int j = 0; noRvalHash[j] != NULL; j++)
-        {
-            if (strcmp(cp->lval, noRvalHash[j]) == 0)
-            {
-                doHash = false;
-                break;
-            }
-        }
-
-        if (!doHash)
-        {
-            continue;
-        }
-
-        switch (cp->rval.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
-            break;
-
-        case RVAL_TYPE_LIST:
-            for (rp = cp->rval.item; rp != NULL; rp = rp->next)
-            {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
-            }
-            break;
-
-        case RVAL_TYPE_FNCALL:
-
-            /* Body or bundle */
-
-            fp = (FnCall *) cp->rval.item;
-
-            EVP_DigestUpdate(&context, fp->name, strlen(fp->name));
-
-            for (rp = fp->args; rp != NULL; rp = rp->next)
-            {
-                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
-            }
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    EVP_DigestFinal(&context, digest, &md_len);
-
-/* Digest length stored in md_len */
 }
 
 /*******************************************************************/

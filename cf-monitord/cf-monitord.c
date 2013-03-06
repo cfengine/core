@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy, report_context);
 
-    MonitorStartServer(policy, report_context);
+    MonitorStartServer(ctx, policy, report_context);
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);

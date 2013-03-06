@@ -1549,16 +1549,6 @@ typedef struct
     int growing;
 } Measurement;
 
-/*************************************************************************/
-
-typedef struct
-{
-    char *ipv4_address;
-    char *ipv4_netmask;
-} TcpIp;
-
-/*************************************************************************/
-
 typedef struct
 {
     char *db_server_owner;
@@ -1679,7 +1669,6 @@ typedef struct
     StorageMount mount;
     StorageVolume volume;
 
-    TcpIp tcpip;
     int havedepthsearch;
     int haveselect;
     int haverename;
@@ -1698,7 +1687,6 @@ typedef struct
     int havemount;
     int havevolume;
     int havebundle;
-    int havetcpip;
     int havepackages;
 
     /* editline */

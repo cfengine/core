@@ -1276,12 +1276,6 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     SetPromiseOutputs(ctx, pp);
 
-    if (strcmp("interfaces", pp->parent_subtype->name) == 0)
-    {
-        VerifyInterfacesPromise(ctx, pp);
-        return;
-    }
-
     if (strcmp("processes", pp->parent_subtype->name) == 0)
     {
         VerifyProcessesPromise(ctx, pp);

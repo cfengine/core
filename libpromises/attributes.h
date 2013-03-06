@@ -36,7 +36,6 @@ Attributes GetExecAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetInferencesAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetInsertionAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetInterfacesAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetMeasurementAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetMethodAttributes(EvalContext *ctx, const Promise *pp);
 Attributes GetOccurrenceAttributes(EvalContext *ctx, const Promise *pp);
@@ -78,7 +77,6 @@ Report GetReportConstraints(EvalContext *ctx, const Promise *pp);
 Services GetServicesConstraints(EvalContext *ctx, const Promise *pp);
 StorageMount GetMountConstraints(EvalContext *ctx, const Promise *pp);
 StorageVolume GetVolumeConstraints(EvalContext *ctx, const Promise *pp);
-TcpIp GetTCPIPAttributes(EvalContext *ctx, const Promise *pp);
 TransactionContext GetTransactionConstraints(EvalContext *ctx, const Promise *pp);
 
 /* Default values for attributes */

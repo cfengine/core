@@ -71,7 +71,6 @@ libpromises_la_SOURCES = \
         mod_environ.c mod_environ.h \
         mod_exec.c mod_exec.h \
         mod_files.c mod_files.h \
-        mod_interfaces.c mod_interfaces.h \
         mod_measurement.c mod_measurement.h \
         mod_methods.c mod_methods.h \
         mod_outputs.c mod_outputs.h \

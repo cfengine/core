@@ -29,7 +29,6 @@
 #include "mod_environ.h"
 #include "mod_outputs.h"
 #include "mod_access.h"
-#include "mod_interfaces.h"
 #include "mod_storage.h"
 #include "mod_databases.h"
 #include "mod_packages.h"
@@ -382,7 +381,6 @@ const PromiseTypeSyntax *CF_ALL_SUBTYPES[] =
     CF_DATABASES_SUBTYPES,      /* mod_databases.c */
     CF_ENVIRONMENT_SUBTYPES,    /* mod_environ.c */
     CF_FILES_SUBTYPES,          /* mod_files.c */
-    CF_INTERFACES_SUBTYPES,     /* mod_interfaces.c */
     CF_METHOD_SUBTYPES,         /* mod_methods.c */
     CF_OUTPUTS_SUBTYPES,        /* mod_outputs.c */
     CF_PACKAGES_SUBTYPES,       /* mod_packages.c */

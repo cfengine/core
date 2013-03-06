@@ -57,10 +57,6 @@ static bool ValidClassName(const char *str);
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
-/*****************************************************************************/
-
-Item *ABORTBUNDLEHEAP = NULL;
-
 static bool ABORTBUNDLE = false;
 
 /*****************************************************************************/
@@ -428,7 +424,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
@@ -458,7 +454,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     if (!ABORTBUNDLE)
     {
-        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -516,7 +512,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
@@ -546,7 +542,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
 
     if (!ABORTBUNDLE)
     {
-        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
@@ -583,7 +579,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     CfDebug("NewBundleClass(%s)\n", copy);
     
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
         ABORTBUNDLE = true;
@@ -618,7 +614,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     if (!ABORTBUNDLE)
     {
-        for (const Item *ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -1418,6 +1414,14 @@ void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *
     }
 }
 
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
+{
+    if (!IsItemIn(ctx->heap_abort_current_bundle, context))
+    {
+        AppendItem(&ctx->heap_abort_current_bundle, context, activated_on_context);
+    }
+}
+
 /*****************************************************************************/
 
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
@@ -1494,6 +1498,7 @@ EvalContext *EvalContextNew(void)
     ctx->heap_hard = StringSetNew();
     ctx->heap_negated = StringSetNew();
     ctx->heap_abort = NULL;
+    ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
@@ -1514,6 +1519,7 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_hard);
         StringSetDestroy(ctx->heap_negated);
         DeleteItemList(ctx->heap_abort);
+        DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
 

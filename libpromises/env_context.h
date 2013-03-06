@@ -45,17 +45,12 @@ struct EvalContext_
     StringSet *heap_hard;
     StringSet *heap_negated;
     Item *heap_abort;
+    Item *heap_abort_current_bundle;
 
     Seq *stack;
 
     StringSet *dependency_handles;
 };
-
-/**
-  List of classes that, if defined by a bundle, will cause the bundle to abort
-  */
-extern Item *ABORTBUNDLEHEAP;
-
 
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
@@ -64,6 +59,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 

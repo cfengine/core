@@ -604,13 +604,9 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     char name[CF_MAXVARSIZE] = "";
-
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    if (!IsItemIn(ABORTBUNDLEHEAP, name))
-                    {
-                        AppendItem(&ABORTBUNDLEHEAP, name, cp->classes);
-                    }
+                    EvalContextHeapAddAbortCurrentBundle(ctx, name, cp->classes);
                 }
 
                 continue;

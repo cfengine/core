@@ -45,6 +45,8 @@
 #include "exec_tools.h"
 #include "rlist.h"
 
+#include <assert.h>
+
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
@@ -446,7 +448,17 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
 #endif
-    Promise *pp = NewPromise("exec_cfengine", "the executor agent");
+
+    Policy *exec_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(exec_cfengine_policy, NamespaceDefault(), "exec_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "exec_cfengine");
+
+        pp = SubTypeAppendPromise(tp, "the executor agent", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     Attributes dummyattr;
     CfLock thislock;
 
@@ -467,7 +479,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
         if (thislock.lock == NULL)
         {
-            PromiseDestroy(pp);
+            PolicyDestroy(exec_cfengine_policy);
             return;
         }
 
@@ -545,6 +557,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
         YieldCurrentLock(thislock);
     }
+
+    PolicyDestroy(exec_cfengine_policy);
 }
 
 /*****************************************************************************/

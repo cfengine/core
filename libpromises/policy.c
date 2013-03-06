@@ -1169,7 +1169,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     sp = xstrdup(promiser);
 
-    if (!classes || strlen(classes) > 0)
+    if (classes && strlen(classes) > 0)
     {
         spe = xstrdup(classes);
     }

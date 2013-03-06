@@ -16,6 +16,16 @@ TESTS_ENVIRONMENT = env \
 	CF_KEY=`pwd`/../../cf-key/cf-key \
 	MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
 
+testall: setperms
+
+# Permissions should be already set in distributed tarballs, this is for compiling from repository
+setperms:
+	@if find $(srcdir) -name '*.cf*' | xargs ls -l | cut -c5-10 | grep -q w; \
+	then \
+		echo -e "\n==== WARNING chmod'ing $(srcdir) to remove writable permissions! ====\n"; \
+		chmod -R go-w $(srcdir); \
+	fi
+
 dist-hook:
 	cd $(srcdir); tar -c -f - [0-9]* | tar -x -C $(abspath $(distdir)) -f -
 	chmod -R go-w $(distdir)

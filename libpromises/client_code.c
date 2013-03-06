@@ -41,6 +41,7 @@
 #include "rlist.h"
 #include "policy.h"
 #include "item_lib.h"
+#include "files_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

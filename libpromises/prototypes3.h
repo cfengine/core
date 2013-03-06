@@ -115,10 +115,6 @@ int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, 
 
 int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 
-/* full_write.c */
-
-int FullWrite(int desc, const char *ptr, size_t len);
-
 /* manual.c */
 
 void TexinfoManual(const char *source_dir, const char *output_file);

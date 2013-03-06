@@ -30,6 +30,7 @@
 #include "instrumentation.h"
 #include "cfstream.h"
 #include "policy.h"
+#include "files_lib.h"
 
 /*****************************************************************************/
 /* Local low level                                                           */

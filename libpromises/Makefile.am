@@ -53,7 +53,6 @@ libpromises_la_SOURCES = \
         files_names.c files_names.h \
         files_properties.c files_properties.h \
         fncall.c fncall.h \
-        full_write.c \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
         instrumentation.c instrumentation.h \

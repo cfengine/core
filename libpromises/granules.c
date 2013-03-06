@@ -27,87 +27,18 @@
 #include <math.h>
 #include <assert.h>
 
-static char *ConvTimeKey(char *str)
-{
-    int i;
-    char buf1[10], buf2[10], buf3[10], buf4[10], buf5[10], buf[10], out[10];
-    static char timekey[64];
-
-    sscanf(str, "%s %s %s %s %s", buf1, buf2, buf3, buf4, buf5);
-
-    timekey[0] = '\0';
-
-/* Day */
-
-    sprintf(timekey, "%s:", buf1);
-
-/* Hours */
-
-    sscanf(buf4, "%[^:]", buf);
-    sprintf(out, "Hr%s", buf);
-    strcat(timekey, out);
-
-/* Minutes */
-
-    sscanf(buf4, "%*[^:]:%[^:]", buf);
-    sprintf(out, "Min%s", buf);
-    strcat(timekey, ":");
-
-    sscanf(buf, "%d", &i);
-
-    switch ((i / 5))
-    {
-    case 0:
-        strcat(timekey, "Min00_05");
-        break;
-    case 1:
-        strcat(timekey, "Min05_10");
-        break;
-    case 2:
-        strcat(timekey, "Min10_15");
-        break;
-    case 3:
-        strcat(timekey, "Min15_20");
-        break;
-    case 4:
-        strcat(timekey, "Min20_25");
-        break;
-    case 5:
-        strcat(timekey, "Min25_30");
-        break;
-    case 6:
-        strcat(timekey, "Min30_35");
-        break;
-    case 7:
-        strcat(timekey, "Min35_40");
-        break;
-    case 8:
-        strcat(timekey, "Min40_45");
-        break;
-    case 9:
-        strcat(timekey, "Min45_50");
-        break;
-    case 10:
-        strcat(timekey, "Min50_55");
-        break;
-    case 11:
-        strcat(timekey, "Min55_00");
-        break;
-    }
-
-    return timekey;
-}
-
-/*****************************************************************************/
-
 char *GenTimeKey(time_t now)
 {
-    static char str[64];
-    char timebuf[26];
+    struct tm tm;
+    static char buf[18];
 
-    snprintf(str, sizeof(str), "%s", cf_strtimestamp_utc(now, timebuf));
+    gmtime_r(&now, &tm);
 
-    return ConvTimeKey(str);
+    snprintf(buf, sizeof(buf), "%3.3s:Hr%02d:Min%02d_%02d",
+             DAY_TEXT[tm.tm_wday ? (tm.tm_wday - 1) : 6],
+             tm.tm_hour, tm.tm_min / 5 * 5, (tm.tm_min + 4) / 5 * 5);
+
+    return buf;
 }
 
 int GetTimeSlot(time_t here_and_now)

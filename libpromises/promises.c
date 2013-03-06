@@ -410,40 +410,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, Promise *pp)
     return pcopy;
 }
 
-/*****************************************************************************/
-
-Promise *NewPromise(char *type, char *promiser)
-{
-    Promise *pp;
-
-    ThreadLock(cft_policy);
-
-    pp = xcalloc(1, sizeof(Promise));
-
-    pp->audit = AUDITPTR;
-    pp->bundle = xstrdup("cfe_internal_bundle_hardcoded");
-    pp->ns = xstrdup("default");
-    pp->promiser = xstrdup(promiser);
-    pp->conlist = SeqNew(10, ConstraintDestroy);
-
-    ThreadUnlock(cft_policy);
-
-    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
-    pp->donep = &(pp->done);
-
-    pp->agentsubtype = type;        /* cache this, do not copy string */
-    pp->ref_alloc = 'n';
-    pp->has_subbundles = false;
-
-    PromiseAppendConstraint(pp, "handle",
-                            (Rval) {xstrdup("cfe_internal_promise_hardcoded"),
-                            RVAL_TYPE_SCALAR }, NULL, false);
-
-    return pp;
-}
-
-/*****************************************************************************/
-
 void PromiseRef(OutputLevel level, const Promise *pp)
 {
     char *v;

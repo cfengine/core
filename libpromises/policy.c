@@ -1157,8 +1157,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     if (type == NULL)
     {
-        yyerror("Software error. Attempt to add a promise without a type\n");
-        FatalError("Stopped");
+        ReportError("Software error. Attempt to add a promise without a type\n");
     }
 
 /* Check here for broken promises - or later with more info? */
@@ -1198,7 +1197,11 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     SeqAppend(type->promises, pp);
 
     pp->parent_subtype = type;
-    pp->audit = AUDITPTR;
+
+    ThreadLock(cft_policy);
+    pp->audit = AUDITPTR; // TODO: need to get rid of this, whatever it is.
+    ThreadUnlock(cft_policy);
+
     pp->bundle = xstrdup(type->parent_bundle->name);
     pp->ns = xstrdup(type->parent_bundle->ns);
     pp->promiser = sp;

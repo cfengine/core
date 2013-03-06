@@ -1169,7 +1169,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     sp = xstrdup(promiser);
 
-    if (strlen(classes) > 0)
+    if (!classes || strlen(classes) > 0)
     {
         spe = xstrdup(classes);
     }
@@ -1182,7 +1182,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     {
         if ((isdigit((int)*promiser)) && (IntFromString(promiser) != CF_NOINT))
         {
-            yyerror("Variable or class identifier is purely numerical, which is not allowed");
+            ReportError("Variable or class identifier is purely numerical, which is not allowed");
         }
     }
 

@@ -1112,11 +1112,11 @@ promise_repaired => { "$(cl)" };
 body classes generic(x)
 # Define x prefixed with promise outcome
 {
-  promise_repaired => { "promise_repaired_$(x)" };
-  repair_failed => { "repair_failed_$(x)" };
-  repair_denied => { "repair_denied_$(x)" };
-  repair_timeout => { "repair_timeout_$(x)" };
-  promise_kept => { "promise_kept_$(x)" };
+  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired" };
+  repair_failed => { "repair_failed_$(x)", "$(x)_failed" };
+  repair_denied => { "repair_denied_$(x)", "$(x)_denied" };
+  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout" };
+  promise_kept => { "promise_kept_$(x)", "$(x)_kept" };
 }
 
 ##-------------------------------------------------------

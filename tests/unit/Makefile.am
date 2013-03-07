@@ -59,6 +59,7 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
+	cf_key_functions_test \
 	connection_management_test
 
 #	ipaddress_test
@@ -105,6 +106,8 @@ list_test_SOURCES = list_test.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+
+cf_key_functions_test_SOURCES = cf_key_functions_test.c
 
 #ipaddress_test_SOURCES = ipaddress_test.c 
 

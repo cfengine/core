@@ -106,7 +106,6 @@ void LoadPersistentContext(EvalContext *ctx);
 
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
-void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
 void DeletePersistentContext(const char *name);
 
 /* - Rest - */

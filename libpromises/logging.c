@@ -36,6 +36,7 @@
 #include "policy.h"
 #include "rlist.h"
 #include "conversion.h"
+#include "syntax.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -209,6 +210,33 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
                 break;
             }
         }
+    }
+}
+
+static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        {
+            return; // TODO: interesting course of action, but why is the check there in the first place?
+        }
+
+        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+                  RlistScalarValue(rp));
+        }
+
+        const char *string = (char *) (rp->item);
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+
+        DeletePersistentContext(string);
+
+        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
+
+        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
     }
 }
 

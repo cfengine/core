@@ -1856,7 +1856,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError("Cannot negate the reserved class [%s]\n", context);
             }
 
-            EvalContextHeapAddSoft(ctx, context, NULL);
+            EvalContextHeapAddNegated(ctx, context);
         }
     }
 }

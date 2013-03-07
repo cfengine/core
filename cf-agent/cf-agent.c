@@ -213,7 +213,10 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     EvalContext *ctx = EvalContextNew();
+
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfigApply(ctx, config);
+
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
     if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
@@ -380,7 +383,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(ctx, optarg);
+            config->heap_soft = StringSetFromString(optarg, ',');
             break;
 
         case 'N':

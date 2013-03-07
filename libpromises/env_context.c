@@ -1080,37 +1080,6 @@ void LoadPersistentContext(EvalContext *ctx)
 
 /*********************************************************************/
 
-void NewClassesFromString(EvalContext *ctx, const char *classlist)
-{
-    char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
-
-    if ((classlist == NULL) || strlen(classlist) == 0)
-    {
-        return;
-    }
-
-    memset(local, 0, CF_MAXVARSIZE);
-    strncpy(local, classlist, CF_MAXVARSIZE - 1);
-
-    for (sp = local; *sp != '\0'; sp++)
-    {
-        memset(currentitem, 0, CF_MAXVARSIZE);
-
-        sscanf(sp, "%250[^,]", currentitem);
-
-        sp += strlen(currentitem);
-
-        if (EvalContextHeapContainsHard(ctx, currentitem))
-        {
-            FatalError("cfengine: You cannot use -D to define a reserved class!");
-        }
-
-        NewClass(ctx, currentitem, NULL);
-    }
-}
-
-/*********************************************************************/
-
 void NegateClassesFromString(EvalContext *ctx, const char *classlist)
 {
     char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];

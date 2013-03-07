@@ -156,7 +156,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(ctx, optarg);
+            config->heap_soft = StringSetFromString(optarg, ',');
             break;
 
         case 'N':

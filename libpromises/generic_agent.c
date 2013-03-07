@@ -1801,6 +1801,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
 
+    config->heap_soft = NULL;
+
     switch (agent_type)
     {
     case AGENT_TYPE_COMMON:
@@ -1819,7 +1821,26 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
     if (config)
     {
         RlistDestroy(config->bundlesequence);
+        StringSetDestroy(config->heap_soft);
         free(config->input_file);
+    }
+}
+
+void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
+{
+    if (config->heap_soft)
+    {
+        StringSetIterator it = StringSetIteratorInit(config->heap_soft);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            if (EvalContextHeapContainsHard(ctx, context))
+            {
+                FatalError("cfengine: You cannot use -D to define a reserved class!");
+            }
+
+            NewClass(ctx, context, NULL);
+        }
     }
 }
 

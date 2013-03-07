@@ -107,7 +107,9 @@ static const char *HINTS[17] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    GenericAgentConfigApply(ctx, config);
 
     THIS_AGENT_TYPE = config->agent_type;
 

@@ -60,6 +60,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
@@ -96,7 +97,6 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 
 
 // Add new contexts
-void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 void LoadPersistentContext(EvalContext *ctx);
 

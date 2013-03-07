@@ -2622,7 +2622,7 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
 
     if (changed)
     {
-        NewPersistentContext(pp->ns, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+        EvalContextHeapPersistentSave(pp->ns, "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         LogHashChange(ctx, file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
     }
 

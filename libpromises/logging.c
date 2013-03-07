@@ -191,7 +191,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
             }
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
-            NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
+            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else

@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy, report_context);
 
-    MonitorStartServer(policy, report_context);
+    MonitorStartServer(ctx, policy, report_context);
 
     ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
@@ -143,7 +143,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             NO_FORK = true;
             break;
@@ -212,7 +212,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }

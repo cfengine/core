@@ -213,6 +213,69 @@ static void test_util_bundle_qualified_name(void **state)
     free(b);
 }
 
+static void test_util_qualified_name_components(void **state)
+{
+    {
+        char *ns = QualifiedNameNamespaceComponent(":");
+        assert_string_equal("", ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent(":");
+        assert_string_equal("", sym);
+        free(sym);
+    }
+
+    {
+        char *ns = QualifiedNameNamespaceComponent("");
+        assert_false(ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent("");
+        assert_string_equal("", sym);
+        free(sym);
+    }
+
+    {
+        char *ns = QualifiedNameNamespaceComponent("foo");
+        assert_false(ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent("foo");
+        assert_string_equal("foo", sym);
+        free(sym);
+    }
+
+    {
+        char *ns = QualifiedNameNamespaceComponent(":foo");
+        assert_string_equal("", ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent(":foo");
+        assert_string_equal("foo", sym);
+        free(sym);
+    }
+
+    {
+        char *ns = QualifiedNameNamespaceComponent("foo:");
+        assert_string_equal("foo", ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent("foo:");
+        assert_string_equal("", sym);
+        free(sym);
+    }
+
+    {
+        char *ns = QualifiedNameNamespaceComponent("foo:bar");
+        assert_string_equal("foo", ns);
+        free(ns);
+
+        char *sym = QualifiedNameSymbolComponent("foo:bar");
+        assert_string_equal("bar", sym);
+        free(sym);
+    }
+}
+
 static void test_constraint_lval_invalid(void **state)
 {
     Seq *errs = LoadAndCheck("constraint_lval_invalid.cf");
@@ -238,6 +301,7 @@ int main()
         unit_test(test_policy_json_to_from),
 
         unit_test(test_util_bundle_qualified_name),
+        unit_test(test_util_qualified_name_components),
 
         unit_test(test_constraint_lval_invalid)
     };

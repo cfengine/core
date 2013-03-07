@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
@@ -323,7 +323,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -332,7 +332,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
-            HardClass(ctx, "bootstrap_mode");
+            EvalContextHeapAddHard(ctx, "bootstrap_mode");
             break;
 
         case 's':
@@ -398,7 +398,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 'V':
@@ -513,7 +513,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -589,7 +589,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    AddAbortClass(name, cp->classes);
+                    EvalContextHeapAddAbort(ctx, name, cp->classes);
                 }
 
                 continue;
@@ -604,13 +604,9 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     char name[CF_MAXVARSIZE] = "";
-
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    if (!IsItemIn(ABORTBUNDLEHEAP, name))
-                    {
-                        AppendItem(&ABORTBUNDLEHEAP, name, cp->classes);
-                    }
+                    EvalContextHeapAddAbortCurrentBundle(ctx, name, cp->classes);
                 }
 
                 continue;
@@ -902,12 +898,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         exit(1);
     }
 
-    // TODO: should've been checked a long time ago, remove?
-    if (retval.type != RVAL_TYPE_LIST)
-    {
-        FatalError("Promised bundlesequence was not a list");
-    }
-
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
     {
         switch (rp->type)
@@ -1041,7 +1031,20 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (ALLCLASSESREPORT)
                 {
-                    SaveClassEnvironment(ctx);
+                    char context_report_file[CF_BUFSIZE];
+                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+                    FILE *fp = NULL;
+                    if ((fp = fopen(context_report_file, "w")) == NULL)
+                    {
+                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
+                    }
+                    else
+                    {
+                        Writer *writer = FileWriter(fp);
+                        SaveClassEnvironment(ctx, writer);
+                        WriterClose(writer);
+                    }
                 }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency

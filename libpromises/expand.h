@@ -31,8 +31,7 @@
 #include "reporting.h"
 
 void ExpandPromise(EvalContext *ctx, AgentType ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
-void ExpandPromiseAndDo(EvalContext *ctx, AgentType ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) (), const ReportContext *report_context);
+
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
 

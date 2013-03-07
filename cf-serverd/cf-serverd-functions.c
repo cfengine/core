@@ -34,6 +34,8 @@
 #include "exec_tools.h"
 #include "unix.h"
 
+#include <assert.h>
+
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
 
@@ -103,16 +105,16 @@ static void KeepHardClasses(EvalContext *ctx)
 
             if (stat(name, &sb) != -1)
             {
-                HardClass(ctx, "am_policy_hub");
+                EvalContextHeapAddHard(ctx, "am_policy_hub");
             }
         }
     }
 
 #if defined HAVE_NOVA
-    HardClass(ctx, "nova_edition");
-    HardClass(ctx, "enterprise_edition");
+    EvalContextHeapAddHard(ctx, "nova_edition");
+    EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
-    HardClass(ctx, "community_edition");
+    EvalContextHeapAddHard(ctx, "community_edition");
 #endif
 }
 
@@ -245,7 +247,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Promise *pp = NewPromise("server_cfengine", config->input_file);
     Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
@@ -272,10 +273,21 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 1;
 
+    Policy *server_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(server_cfengine_policy, NamespaceDefault(), "server_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "server_cfengine");
+
+        pp = SubTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(server_cfengine_policy);
         return;
     }
 
@@ -386,6 +398,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
             }
         }
     }
+
+    PolicyDestroy(server_cfengine_policy);
 }
 
 /*********************************************************************/
@@ -641,7 +655,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             OSClasses(ctx);
             KeepHardClasses(ctx);
 
-            HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(ctx, true);
             *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);

@@ -42,6 +42,7 @@
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"
+#include "policy.h"
 
 #ifdef HAVE_NOVA
 #include "runagent.h"
@@ -70,7 +71,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
-static Promise *MakeDefaultRunAgentPromise(void);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
 static void DeleteStream(FILE *fp);
@@ -151,7 +151,6 @@ char MENU[CF_MAXVARSIZE];
 int main(int argc, char *argv[])
 {
     Rlist *rp;
-    Promise *pp;
 #if !defined(__MINGW32__)
     int count = 0;
     int status;
@@ -176,7 +175,17 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    pp = MakeDefaultRunAgentPromise();
+    Policy *runagent_adhoc_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(policy, NamespaceDefault(), "runagent_adhoc_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "runagent");
+
+        pp = SubTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
+
+        // TODO: wat?
+        pp->donep = &(pp->done);
+    }
 
 /* HvB */
     if (HOSTLIST)
@@ -238,7 +247,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    PromiseDestroy(pp);
+    PolicyDestroy(runagent_adhoc_policy);
 
     GenericAgentConfigDestroy(config);
     ReportContextDestroy(report_context);
@@ -276,7 +285,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -338,7 +347,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 't':
@@ -544,7 +553,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -646,24 +655,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-}
-
-/********************************************************************/
-
-static Promise *MakeDefaultRunAgentPromise()
-{
-    // TODO: ad-hoc promise
-/* The default promise here is to hail associates */
-
-    Promise *pp = xcalloc(1, sizeof(Promise));
-
-    pp->bundle = xstrdup("implicit internal bundle for runagent");
-    pp->promiser = xstrdup("runagent");
-    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
-    pp->donep = &(pp->done);
-    pp->conlist = SeqNew(10, ConstraintDestroy);
-
-    return pp;
 }
 
 /********************************************************************/

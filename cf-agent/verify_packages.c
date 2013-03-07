@@ -555,7 +555,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
         if (strcmp(thismanager, mgr) == 0)
         {
             CfDebug("READPKG: %s\n", line);
-            PrependPackageItem(ctx, &list, name, version, arch, a, pp);
+            PrependPackageItem(ctx, &list, name, version, arch, pp);
         }
     }
 
@@ -935,7 +935,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                   a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
         }
         else
         {
@@ -983,7 +983,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                   a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
         }
         else
         {
@@ -1011,12 +1011,12 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                       a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
             }
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                   a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
         }
         else
         {
@@ -1125,12 +1125,12 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
                                       a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id_del, "any", "any", a, pp);
+                PrependPackageItem(ctx, &(manager->pack_list), id_del, "any", "any", pp);
 
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
                                       a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
             }
             else
             {
@@ -1138,7 +1138,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 manager =
                     NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_update_command, PACKAGE_ACTION_UPDATE,
                                       a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
             }
         }
         else
@@ -1156,7 +1156,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_patch_command, PACKAGE_ACTION_PATCH,
                                   a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->patch_list), id, "any", "any", a, pp);
+            PrependPackageItem(ctx, &(manager->patch_list), id, "any", "any", pp);
         }
         else
         {
@@ -1173,7 +1173,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             manager =
                 NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY,
                                   a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", a, pp);
+            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
         }
         else
         {
@@ -2208,7 +2208,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
     return retval;
 }
 
-int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch, Attributes a, Promise *pp)
+int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, const char *version, const char *arch, Promise *pp)
 {
     PackageItem *pi;
 
@@ -2237,7 +2237,7 @@ int PrependPackageItem(EvalContext *ctx, PackageItem ** list, const char *name, 
 
 /* Finally we need these for later schedule exec, once this iteration context has gone */
 
-    pi->pp = DeRefCopyPromise(ctx, "this", pp);
+    pi->pp = DeRefCopyPromise(ctx, pp);
     return true;
 }
 
@@ -2301,7 +2301,7 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
         return false;
     }
 
-    return PrependPackageItem(ctx, list, name, version, arch, a, pp);
+    return PrependPackageItem(ctx, list, name, version, arch, pp);
 }
 
 static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, char *item, int reset, const char *default_arch,
@@ -2325,7 +2325,7 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
             CfDebug(" -?      with version \"%s\"\n", version);
             CfDebug(" -?      with architecture \"%s\"\n", arch);
 
-            PrependPackageItem(ctx, list, name, version, arch, a, pp);
+            PrependPackageItem(ctx, list, name, version, arch, pp);
         }
 
         strcpy(name, "CF_NOMATCH");
@@ -2390,7 +2390,7 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *i
     CfDebug(" -?      with version \"%s\"\n", version);
     CfDebug(" -?      with architecture \"%s\"\n", arch);
 
-    return PrependPackageItem(ctx, list, name, version, arch, a, pp);
+    return PrependPackageItem(ctx, list, name, version, arch, pp);
 }
 
 static char *GetDefaultArch(const char *command)

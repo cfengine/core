@@ -153,6 +153,7 @@ struct Constraint_
     SourceOffset offset;
 };
 
+const char *NamespaceDefault(void);
 
 Policy *PolicyNew(void);
 int PolicyCompare(const void *a, const void *b);
@@ -265,6 +266,8 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 void SubTypeDestroy(SubType *subtype);
 
 void PromiseDestroy(Promise *pp);
+
+void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 
@@ -379,5 +382,16 @@ void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *
  * @return True/false, or CF_UNDEFINED if not found
  */
 int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints);
+
+
+/**
+ * @return A copy of the namespace compoent of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
+ */
+char *QualifiedNameNamespaceComponent(const char *qualified_name);
+
+/**
+ * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
+ */
+char *QualifiedNameSymbolComponent(const char *qualified_name);
 
 #endif

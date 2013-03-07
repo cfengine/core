@@ -42,12 +42,11 @@
 #include "env_context.h"
 #include "promises.h"
 #include "item_lib.h"
+#include "files_hashes.h"
 
 #include <assert.h>
 
 //************************************************************************
-
-static const char *DEFAULT_NAMESPACE = "default";
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
@@ -68,6 +67,12 @@ static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attr
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
 static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
+
+
+const char *NamespaceDefault(void)
+{
+    return "default";
+}
 
 Policy *PolicyNew(void)
 {
@@ -235,7 +240,7 @@ char *BundleQualifiedName(const Bundle *bundle)
 
     if (bundle->name)
     {
-        const char *ns = bundle->ns ? bundle->ns : DEFAULT_NAMESPACE;
+        const char *ns = bundle->ns ? bundle->ns : NamespaceDefault();
         return StringConcatenate(3, ns, ":", bundle->name);  // CF_NS == ':'
     }
 
@@ -545,12 +550,12 @@ static const char *RvalFullSymbol(const Rval *rval)
 /**
  * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar" -> "foo"
  */
-static char *RvalNamespaceComponent(const Rval *rval)
+char *QualifiedNameNamespaceComponent(const char *qualified_name)
 {
-    if (strchr(RvalFullSymbol(rval), CF_NS))
+    if (strchr(qualified_name, CF_NS))
     {
         char ns[CF_BUFSIZE] = { 0 };
-        sscanf(RvalFullSymbol(rval), "%[^:]", ns);
+        sscanf(qualified_name, "%[^:]", ns);
 
         return xstrdup(ns);
     }
@@ -563,16 +568,16 @@ static char *RvalNamespaceComponent(const Rval *rval)
 /**
  * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar" -> "bar"
  */
-static char *RvalSymbolComponent(const Rval *rval)
+char *QualifiedNameSymbolComponent(const char *qualified_name)
 {
-    char *sep = strchr(RvalFullSymbol(rval), CF_NS);
+    char *sep = strchr(qualified_name, CF_NS);
     if (sep)
     {
         return xstrdup(sep + 1);
     }
     else
     {
-        return xstrdup(RvalFullSymbol(rval));
+        return xstrdup(qualified_name);
     }
 }
 
@@ -599,8 +604,8 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     const BodySyntax *syntax = ConstraintGetSyntax(constraint);
                     if (syntax->dtype == DATA_TYPE_BODY)
                     {
-                        char *ns = RvalNamespaceComponent(&constraint->rval);
-                        char *symbol = RvalSymbolComponent(&constraint->rval);
+                        char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
 
                         Body *referenced_body = PolicyGetBody(policy, ns, constraint->lval, symbol);
                         if (!referenced_body)
@@ -645,8 +650,8 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                     if (syntax->dtype == DATA_TYPE_BUNDLE &&
                         !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
-                        char *ns = RvalNamespaceComponent(&constraint->rval);
-                        char *symbol = RvalSymbolComponent(&constraint->rval);
+                        char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
 
                         const Bundle *referenced_bundle = NULL;
                         if (strcmp(constraint->lval, "usebundle") == 0)
@@ -1153,8 +1158,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     if (type == NULL)
     {
-        yyerror("Software error. Attempt to add a promise without a type\n");
-        FatalError("Stopped");
+        ReportError("Software error. Attempt to add a promise without a type\n");
     }
 
 /* Check here for broken promises - or later with more info? */
@@ -1165,7 +1169,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
 
     sp = xstrdup(promiser);
 
-    if (strlen(classes) > 0)
+    if (classes && strlen(classes) > 0)
     {
         spe = xstrdup(classes);
     }
@@ -1178,7 +1182,7 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     {
         if ((isdigit((int)*promiser)) && (IntFromString(promiser) != CF_NOINT))
         {
-            yyerror("Variable or class identifier is purely numerical, which is not allowed");
+            ReportError("Variable or class identifier is purely numerical, which is not allowed");
         }
     }
 
@@ -1194,7 +1198,11 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     SeqAppend(type->promises, pp);
 
     pp->parent_subtype = type;
-    pp->audit = AUDITPTR;
+
+    ThreadLock(cft_policy);
+    pp->audit = AUDITPTR; // TODO: need to get rid of this, whatever it is.
+    ThreadUnlock(cft_policy);
+
     pp->bundle = xstrdup(type->parent_bundle->name);
     pp->ns = xstrdup(type->parent_bundle->ns);
     pp->promiser = sp;
@@ -1846,6 +1854,104 @@ void BundleToString(Writer *writer, Bundle *bundle)
     }
 
     WriterWrite(writer, "\n}\n");
+}
+
+void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+{
+    static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
+
+    EVP_MD_CTX context;
+    int md_len;
+    const EVP_MD *md = NULL;
+    Rlist *rp;
+    FnCall *fp;
+
+    char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
+    int doHash;
+
+    md = EVP_get_digestbyname(FileHashName(type));
+
+    EVP_DigestInit(&context, md);
+
+// multiple packages (promisers) may share same package_list_update_ifelapsed lock
+    if (!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
+    {
+        EVP_DigestUpdate(&context, pp->promiser, strlen(pp->promiser));
+    }
+
+    if (pp->ref)
+    {
+        EVP_DigestUpdate(&context, pp->ref, strlen(pp->ref));
+    }
+
+    if (pp->this_server)
+    {
+        EVP_DigestUpdate(&context, pp->this_server, strlen(pp->this_server));
+    }
+
+    if (salt)
+    {
+        EVP_DigestUpdate(&context, salt, strlen(salt));
+    }
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
+
+        // don't hash rvals that change (e.g. times)
+        doHash = true;
+
+        for (int j = 0; noRvalHash[j] != NULL; j++)
+        {
+            if (strcmp(cp->lval, noRvalHash[j]) == 0)
+            {
+                doHash = false;
+                break;
+            }
+        }
+
+        if (!doHash)
+        {
+            continue;
+        }
+
+        switch (cp->rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
+            break;
+
+        case RVAL_TYPE_LIST:
+            for (rp = cp->rval.item; rp != NULL; rp = rp->next)
+            {
+                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+            }
+            break;
+
+        case RVAL_TYPE_FNCALL:
+
+            /* Body or bundle */
+
+            fp = (FnCall *) cp->rval.item;
+
+            EVP_DigestUpdate(&context, fp->name, strlen(fp->name));
+
+            for (rp = fp->args; rp != NULL; rp = rp->next)
+            {
+                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    EVP_DigestFinal(&context, digest, &md_len);
+
+/* Digest length stored in md_len */
 }
 
 void PolicyToString(const Policy *policy, Writer *writer)

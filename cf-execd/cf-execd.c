@@ -45,6 +45,8 @@
 #include "exec_tools.h"
 #include "rlist.h"
 
+#include <assert.h>
+
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
 
@@ -143,7 +145,7 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
@@ -211,7 +213,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -239,7 +241,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 'L':
@@ -349,7 +351,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -446,7 +448,17 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
 #endif
-    Promise *pp = NewPromise("exec_cfengine", "the executor agent");
+
+    Policy *exec_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(exec_cfengine_policy, NamespaceDefault(), "exec_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "exec_cfengine");
+
+        pp = SubTypeAppendPromise(tp, "the executor agent", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     Attributes dummyattr;
     CfLock thislock;
 
@@ -467,7 +479,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
         if (thislock.lock == NULL)
         {
-            PromiseDestroy(pp);
+            PolicyDestroy(exec_cfengine_policy);
             return;
         }
 
@@ -545,6 +557,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
         YieldCurrentLock(thislock);
     }
+
+    PolicyDestroy(exec_cfengine_policy);
 }
 
 /*****************************************************************************/
@@ -741,7 +755,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         BuiltinClasses(ctx);
         OSClasses(ctx);
 
-        HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+        EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(ctx, true);
 

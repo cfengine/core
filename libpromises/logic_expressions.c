@@ -190,7 +190,7 @@ ParseResult ParseExpression(const char *expr, int start, int end)
 
 /* Evaluation */
 
-ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
+ExpressionValue EvalExpression(const EvalContext *ctx, const Expression *expr,
                                NameEvaluator nameevalfn, VarRefEvaluator varrefevalfn, void *param)
 {
     switch (expr->op)

@@ -62,6 +62,7 @@
 #endif
 
 #include <libgen.h>
+#include <assert.h>
 
 typedef enum
 {
@@ -1702,14 +1703,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
  /* ReadTCP(localhost,80,'GET index.html',1000) */
 {
     AgentConnection *conn = NULL;
-    Rlist *rp, *hostnameip;
+    Rlist *hostnameip;
     char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
     int val = 0, n_read = 0, count = 0;
     short portnum;
     Attributes attr = { {0} };
     Rval retval;
-    Promise *pp;
-
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -1767,9 +1766,18 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
     }
 
-    pp = NewPromise("select_server", "function");
+    Policy *select_server_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(), "select_server_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "select_server");
 
-    for (rp = hostnameip; rp != NULL; rp = rp->next)
+        pp = SubTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+
+    assert(pp);
+
+    for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {
         CfDebug("Want to read %d bytes from port %d at %s\n", val, portnum, (char *) rp->item);
 
@@ -1833,7 +1841,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         DeleteAgentConn(conn);
     }
 
-    PromiseDestroy(pp);
+    PolicyDestroy(select_server_policy);
 
 /* Return the subset that is alive and responding correctly */
 

@@ -110,7 +110,7 @@ void CheckLicenses(EvalContext *ctx)
 
     if (stat(name, &sb) != -1)
     {
-        HardClass(ctx, "am_policy_hub");
+        EvalContextHeapAddHard(ctx, "am_policy_hub");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Additional class defined: am_policy_hub");
     }
 }
@@ -138,7 +138,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
     ScopeSetNew("sys");
@@ -465,30 +465,30 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    HardClass(ctx, "any");
+    EvalContextHeapAddHard(ctx, "any");
 
 #if defined HAVE_NOVA
-    HardClass(ctx, "nova_edition");
-    HardClass(ctx, "enterprise_edition");
+    EvalContextHeapAddHard(ctx, "nova_edition");
+    EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
-    HardClass(ctx, "community_edition");
+    EvalContextHeapAddHard(ctx, "community_edition");
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
     if (VERBOSE)
     {
-        HardClass(ctx, "verbose_mode");
+        EvalContextHeapAddHard(ctx, "verbose_mode");
     }
 
     if (INFORM)
     {
-        HardClass(ctx, "inform_mode");
+        EvalContextHeapAddHard(ctx, "inform_mode");
     }
 
     if (DEBUG)
     {
-        HardClass(ctx, "debug_mode");
+        EvalContextHeapAddHard(ctx, "debug_mode");
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
@@ -1411,7 +1411,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     {
         Constraint *cp = SeqAt(controllist, i);
 
-        if (IsExcluded(ctx, cp->classes, NULL))
+        if (!IsDefinedClass(ctx, cp->classes, NULL))
         {
             continue;
         }
@@ -1448,7 +1448,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
             ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             DeleteClass(ctx, "undefined_domain", NULL);
-            HardClass(ctx, VDOMAIN);
+            EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)

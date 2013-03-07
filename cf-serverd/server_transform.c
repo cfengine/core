@@ -272,7 +272,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }

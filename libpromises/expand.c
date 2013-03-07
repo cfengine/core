@@ -55,6 +55,8 @@
 #include "cf.nova.h"
 #endif
 
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
+                               void (*fnptr) (), const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
@@ -142,7 +144,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     THIS_BUNDLE = scopeid;
 
-    pcopy = DeRefCopyPromise(ctx, scopeid, pp);
+    pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, pp);
 
@@ -160,7 +162,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
+    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, listvars, fnptr, report_context);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -643,8 +645,8 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) (), const ReportContext *report_context)
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
+                               void (*fnptr) (), const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -752,11 +754,11 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
         }
 
         if (strcmp(pp->agentsubtype, "meta") == 0)
-           {
-           char ns[CF_BUFSIZE];
-           snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
-           ConvergeVarHashPromise(ctx, ns, pp, true);
-           }
+        {
+            char ns[CF_BUFSIZE];
+            snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+            ConvergeVarHashPromise(ctx, ns, pp, true);
+        }
         
         PromiseDestroy(pexp);
 
@@ -1116,7 +1118,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         return;
     }
 
-    if (IsExcluded(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return;
     }
@@ -1143,7 +1145,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             {
             case RVAL_TYPE_SCALAR:
 
-                if (IsExcluded(ctx, cp->rval.item, pp->ns))
+                if (!IsDefinedClass(ctx, cp->rval.item, pp->ns))
                 {
                     return;
                 }
@@ -1165,7 +1167,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     return;
                 }
 
-                excluded = IsExcluded(ctx, res.item, pp->ns);
+                excluded = !IsDefinedClass(ctx, res.item, pp->ns);
 
                 RvalDestroy(res);
 

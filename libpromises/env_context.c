@@ -55,13 +55,7 @@
 
 static bool ValidClassName(const char *str);
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context);
-
-/*****************************************************************************/
-
-Item *ABORTBUNDLEHEAP = NULL;
-
-static Item *ABORTHEAP = NULL;
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
 static bool ABORTBUNDLE = false;
 
@@ -404,7 +398,6 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 {
-    Item *ip;
     char context[CF_MAXVARSIZE];
     char canonclass[CF_MAXVARSIZE];
 
@@ -416,13 +409,13 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
     CanonifyNameInPlace(canonclass);
     
     if (ns && strcmp(ns, "default") != 0)
-       {
-       snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
-       }
+    {
+        snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
+    }
     else
-       {
-       strncpy(context, canonclass, CF_MAXVARSIZE);
-       }
+    {
+        strncpy(context, canonclass, CF_MAXVARSIZE);
+    }
     
     CfDebug("NewClass(%s)\n", context);
 
@@ -431,13 +424,13 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
         exit(1);
@@ -450,7 +443,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     EvalContextHeapAddSoft(ctx, context);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -461,7 +454,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -501,45 +494,44 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
 
 /*******************************************************************/
 
-void HardClass(EvalContext *ctx, const char *oclass)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 {
-    Item *ip;
-    char context[CF_MAXVARSIZE];
+    char context_copy[CF_MAXVARSIZE];
 
-    strcpy(context, oclass);
-    if (Chop(context, CF_EXPANDSIZE) == -1)
+    strcpy(context_copy, context);
+    if (Chop(context_copy, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
-    CanonifyNameInPlace(context);
+    CanonifyNameInPlace(context_copy);
 
-    CfDebug("HardClass(%s)\n", context);
+    CfDebug("EvalContextHeapAddHard(%s)\n", context_copy);
 
-    if (strlen(context) == 0)
+    if (strlen(context_copy) == 0)
     {
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
-    if (EvalContextHeapContainsHard(ctx, context))
+    if (EvalContextHeapContainsHard(ctx, context_copy))
     {
         return;
     }
 
-    EvalContextHeapAddHard(ctx, context);
+    StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
@@ -550,11 +542,11 @@ void HardClass(EvalContext *ctx, const char *oclass)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -565,7 +557,6 @@ void HardClass(EvalContext *ctx, const char *oclass)
 void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
 {
     char copy[CF_BUFSIZE];
-    Item *ip;
 
     if (ns && strcmp(ns, "default") != 0)
     {
@@ -588,13 +579,13 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     CfDebug("NewBundleClass(%s)\n", copy);
     
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
         exit(1);
@@ -612,7 +603,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     EvalContextStackFrameAddSoft(ctx, copy);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -623,7 +614,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -807,7 +798,7 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname, void *ns)
+static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *classname, void *ns)
 {
     char qualified_class[CF_MAXVARSIZE];
 
@@ -873,7 +864,7 @@ static char *EvalVarRef(const char *varname, void *param)
 
 /**********************************************************************/
 
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 {
     ParseResult res;
 
@@ -909,14 +900,7 @@ bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
 
 /**********************************************************************/
 
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
-{
-    return !IsDefinedClass(ctx, exception, ns);
-}
-
-/**********************************************************************/
-
-static ExpressionValue EvalTokenFromList(EvalContext *ctx, const char *token, void *param)
+static ExpressionValue EvalTokenFromList(const EvalContext *ctx, const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);
@@ -1094,19 +1078,6 @@ void LoadPersistentContext(EvalContext *ctx)
     Banner("Loaded persistent memory");
 }
 
-/*****************************************************************************/
-
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns)
-{
-    for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
-    {
-        if (!EvalContextHeapContainsSoft(ctx, rp->item))
-        {
-            NewClass(ctx, rp->item, ns);
-        }
-    }
-}
-
 /*********************************************************************/
 
 void NewClassesFromString(EvalContext *ctx, const char *classlist)
@@ -1169,73 +1140,6 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
     }
 }
 
-/*********************************************************************/
-
-bool IsSoftClass(EvalContext *ctx, const char *sp)
-{
-    return !EvalContextHeapContainsHard(ctx, sp);
-}
-
-/***************************************************************************/
-
-bool IsTimeClass(const char *sp)
-{
-
-    if (IsStrIn(sp, DAY_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, MONTH_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, SHIFT_TEXT))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Min", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Hr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Yr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Day", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "GMT", 3) == 0 && *(sp + 3) == '_')
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Lcycle", strlen("Lcycle")) == 0)
-    {
-        return true;
-    }
-
-    const char *quarters[] = { "Q1", "Q2", "Q3", "Q4", NULL };
-
-    if (IsStrIn(sp, quarters))
-    {
-        return true;
-    }
-
-    return false;
-}
-
 /***************************************************************************/
 
 int Abort()
@@ -1285,20 +1189,8 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
 
 /*******************************************************************/
 
-void SaveClassEnvironment(EvalContext *ctx)
+void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
 {
-    char file[CF_BUFSIZE];
-    FILE *fp;
-
-    snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-    if ((fp = fopen(file, "w")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-        return;
-    }
-
-    Writer *writer = FileWriter(fp);
-
     {
         SetIterator it = EvalContextHeapIteratorHard(ctx);
         const char *context = NULL;
@@ -1334,92 +1226,23 @@ void SaveClassEnvironment(EvalContext *ctx)
             }
         }
     }
-
-    WriterClose(writer);
-}
-
-/**********************************************************************/
-
-void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
-{
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
-        {
-            return; // TODO: interesting course of action, but why is the check there in the first place?
-        }
-
-        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
-                  RlistScalarValue(rp));
-        }
-
-        const char *string = (char *) (rp->item);
-
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
-
-        DeletePersistentContext(string);
-
-        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
-
-        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
-    }
 }
 
 /*****************************************************************************/
 
-void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    if (!IsItemIn(ctx->heap_abort, context))
     {
-        char *classname = xstrdup(rp->item);
-
-        CanonifyNameInPlace(classname);
-
-        if (EvalContextHeapContainsHard(ctx, classname))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
-            // TODO: ok.. but should we take any action? continue; maybe?
-        }
-
-        if (persist > 0)
-        {
-            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
-            }
-
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
-            NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
-            NewClass(ctx, classname, ns);
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
-
-            switch (context_scope)
-            {
-            case CONTEXT_SCOPE_BUNDLE:
-                NewBundleClass(ctx, classname, THIS_BUNDLE, ns);
-                break;
-
-            default:
-            case CONTEXT_SCOPE_NAMESPACE:
-                NewClass(ctx, classname, ns);
-                break;
-            }
-        }
+        AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
 }
 
-/*****************************************************************************/
-
-void AddAbortClass(const char *name, const char *classes)
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
-    if (!IsItemIn(ABORTHEAP, name))
+    if (!IsItemIn(ctx->heap_abort_current_bundle, context))
     {
-        AppendItem(&ABORTHEAP, name, classes);
+        AppendItem(&ctx->heap_abort_current_bundle, context, activated_on_context);
     }
 }
 
@@ -1498,6 +1321,8 @@ EvalContext *EvalContextNew(void)
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
     ctx->heap_negated = StringSetNew();
+    ctx->heap_abort = NULL;
+    ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
@@ -1517,6 +1342,8 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
         StringSetDestroy(ctx->heap_negated);
+        DeleteItemList(ctx->heap_abort);
+        DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
 
@@ -1527,11 +1354,6 @@ void EvalContextDestroy(EvalContext *ctx)
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
 {
     StringSetAdd(ctx->heap_soft, xstrdup(context));
-}
-
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_hard, xstrdup(context));
 }
 
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
@@ -1555,22 +1377,22 @@ void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
     StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
 }
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
 }
 
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_hard, context);
 }
 
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_negated, context);
 }
 
-bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size_t stack_index)
+bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
     if (StringSetContains(frame->contexts, context))
@@ -1587,7 +1409,7 @@ bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size
     }
 }
 
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
 
@@ -1595,7 +1417,7 @@ bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context)
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
 }

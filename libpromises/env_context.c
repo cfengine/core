@@ -1140,13 +1140,6 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
     }
 }
 
-/*********************************************************************/
-
-bool IsSoftClass(EvalContext *ctx, const char *sp)
-{
-    return !EvalContextHeapContainsHard(ctx, sp);
-}
-
 /***************************************************************************/
 
 bool IsTimeClass(const char *sp)

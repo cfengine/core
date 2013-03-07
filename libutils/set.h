@@ -93,8 +93,11 @@ void *SetIteratorNext(SetIterator *i);
                                                                         \
     void Prefix##SetDestroy(Prefix##Set *set)                           \
     {                                                                   \
-        SetDestroy(set->impl);                                          \
-        free(set);                                                      \
+        if (set)                                                        \
+        {                                                               \
+            SetDestroy(set->impl);                                      \
+            free(set);                                                  \
+        }                                                               \
     }                                                                   \
                                                                         \
     Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set)       \

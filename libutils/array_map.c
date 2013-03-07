@@ -106,9 +106,12 @@ void ArrayMapClear(ArrayMap *map)
 
 void ArrayMapDestroy(ArrayMap *map)
 {
-    ArrayMapClear(map);
-    free(map->values);
-    free(map);
+    if (map)
+    {
+        ArrayMapClear(map);
+        free(map->values);
+        free(map);
+    }
 }
 
 /******************************************************************************/

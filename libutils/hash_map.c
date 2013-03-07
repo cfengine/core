@@ -141,9 +141,12 @@ void HashMapClear(HashMap *map)
 
 void HashMapDestroy(HashMap *map)
 {
-    HashMapClear(map);
-    free(map->buckets);
-    free(map);
+    if (map)
+    {
+        HashMapClear(map);
+        free(map->buckets);
+        free(map);
+    }
 }
 
 /******************************************************************************/

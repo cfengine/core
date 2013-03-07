@@ -163,7 +163,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             {
                 if (!EvalContextHeapContainsSoft(ctx, rp->item))
                 {
-                    NewClass(ctx, rp->item, pp->ns);
+                    EvalContextHeapAddSoft(ctx, rp->item, pp->ns);
                 }
             }
             out_of_range = true;
@@ -174,7 +174,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             {
                 if (!EvalContextHeapContainsSoft(ctx, rp->item))
                 {
-                    NewClass(ctx, rp->item, pp->ns);
+                    EvalContextHeapAddSoft(ctx, rp->item, pp->ns);
                 }
             }
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
@@ -252,7 +252,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         else
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
-            NewClass(ctx, a.restart_class, pp->ns);
+            EvalContextHeapAddSoft(ctx, a.restart_class, pp->ns);
         }
     }
 }

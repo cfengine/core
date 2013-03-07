@@ -55,7 +55,7 @@ struct EvalContext_
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
@@ -97,7 +97,6 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 
 // Add new contexts
 void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
-void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 void LoadPersistentContext(EvalContext *ctx);
 

@@ -624,7 +624,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> ... %s\n", RlistScalarValue(rp));
-                    NewClass(ctx, rp->item, NULL);
+                    EvalContextHeapAddSoft(ctx, rp->item, NULL);
                 }
 
                 continue;

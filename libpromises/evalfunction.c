@@ -1831,7 +1831,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This host is in the list and has promised to join the class %s - joined\n",
                       array_lval);
-                NewClass(ctx, array_lval, fp->ns);
+                EvalContextHeapAddSoft(ctx, array_lval, fp->ns);
             }
 
             count++;
@@ -4051,7 +4051,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Activated classes: %s\n", line + 1);
         if (CheckID(line + 1))
         {
-             NewClass(ctx, line + 1, ns);
+             EvalContextHeapAddSoft(ctx, line + 1, ns);
         }
         break;
     case '-':
@@ -4068,7 +4068,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                     FatalError("Cannot negate the reserved class [%s]\n", context);
                 }
 
-                NewClass(ctx, context, NULL);
+                EvalContextHeapAddSoft(ctx, context, NULL);
             }
         }
         break;

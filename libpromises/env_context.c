@@ -193,7 +193,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                NewClass(ctx, rp->item, pp->ns);
+                EvalContextHeapAddSoft(ctx, rp->item, pp->ns);
                 return true;
             }
         }
@@ -262,7 +262,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
                 if (strcmp(pp->bundletype, "common") == 0)
                 {
-                    NewClass(ctx, buffer, pp->ns);
+                    EvalContextHeapAddSoft(ctx, buffer, pp->ns);
                 }
                 else
                 {
@@ -341,12 +341,12 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
                 }
             }
         }
@@ -377,7 +377,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
                     NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
                 }
                 else
                 {
@@ -396,52 +396,52 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 /*******************************************************************/
 
-void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
 {
-    char context[CF_MAXVARSIZE];
-    char canonclass[CF_MAXVARSIZE];
+    char context_copy[CF_MAXVARSIZE];
+    char canonified_context[CF_MAXVARSIZE];
 
-    strcpy(canonclass, oclass);
-    if (Chop(canonclass, CF_EXPANDSIZE) == -1)
+    strcpy(canonified_context, context);
+    if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
-    CanonifyNameInPlace(canonclass);
+    CanonifyNameInPlace(canonified_context);
     
     if (ns && strcmp(ns, "default") != 0)
     {
-        snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
+        snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
     }
     else
     {
-        strncpy(context, canonclass, CF_MAXVARSIZE);
+        strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
     }
     
-    CfDebug("NewClass(%s)\n", context);
+    CfDebug("EvalContextHeapAddSoft(%s)\n", context_copy);
 
-    if (strlen(context) == 0)
+    if (strlen(context_copy) == 0)
     {
         return;
     }
 
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ctx->heap_abort, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
-    if (EvalContextHeapContainsSoft(ctx, context))
+    if (EvalContextHeapContainsSoft(ctx, context_copy))
     {
         return;
     }
 
-    EvalContextHeapAddSoft(ctx, context);
+    StringSetAdd(ctx->heap_soft, xstrdup(context_copy));
 
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
@@ -458,7 +458,7 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -1063,11 +1063,11 @@ void LoadPersistentContext(EvalContext *ctx)
                ns[0] = '\0';
                name[0] = '\0';
                sscanf(key, "%[^:]:%[^\n]", ns, name);
-               NewClass(ctx, name, ns);
+               EvalContextHeapAddSoft(ctx, name, ns);
                }
             else
                {
-               NewClass(ctx, key, NULL);
+               EvalContextHeapAddSoft(ctx, key, NULL);
                }
         }
     }
@@ -1287,11 +1287,6 @@ void EvalContextDestroy(EvalContext *ctx)
 
         StringSetDestroy(ctx->dependency_handles);
     }
-}
-
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_soft, xstrdup(context));
 }
 
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)

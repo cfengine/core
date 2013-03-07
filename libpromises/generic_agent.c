@@ -1841,7 +1841,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError("cfengine: You cannot use -D to define a reserved class!");
             }
 
-            NewClass(ctx, context, NULL);
+            EvalContextHeapAddSoft(ctx, context, NULL);
         }
     }
 
@@ -1856,7 +1856,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
                 FatalError("Cannot negate the reserved class [%s]\n", context);
             }
 
-            NewClass(ctx, context, NULL);
+            EvalContextHeapAddSoft(ctx, context, NULL);
         }
     }
 }

@@ -2722,7 +2722,7 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns)
     char context[CF_MAXVARSIZE];
 
     snprintf(context, CF_MAXVARSIZE, "auto_%s", CanonifyName(destfile));
-    NewClass(ctx, context,  ns);
+    EvalContextHeapAddSoft(ctx, context, ns);
     CfOut(OUTPUT_LEVEL_INFORM, "", "Auto defining class %s\n", context);
 }
 

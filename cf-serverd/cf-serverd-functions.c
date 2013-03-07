@@ -105,16 +105,16 @@ static void KeepHardClasses(EvalContext *ctx)
 
             if (stat(name, &sb) != -1)
             {
-                HardClass(ctx, "am_policy_hub");
+                EvalContextHeapAddHard(ctx, "am_policy_hub");
             }
         }
     }
 
 #if defined HAVE_NOVA
-    HardClass(ctx, "nova_edition");
-    HardClass(ctx, "enterprise_edition");
+    EvalContextHeapAddHard(ctx, "nova_edition");
+    EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
-    HardClass(ctx, "community_edition");
+    EvalContextHeapAddHard(ctx, "community_edition");
 #endif
 }
 
@@ -655,7 +655,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             OSClasses(ctx);
             KeepHardClasses(ctx);
 
-            HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
             SetReferenceTime(ctx, true);
             *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);

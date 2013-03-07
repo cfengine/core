@@ -156,7 +156,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     if (am_appliance)
     {
-        HardClass(ctx, "am_policy_hub");
+        EvalContextHeapAddHard(ctx, "am_policy_hub");
         printf
             (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
         printf

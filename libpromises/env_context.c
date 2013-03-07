@@ -494,42 +494,42 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
 
 /*******************************************************************/
 
-void HardClass(EvalContext *ctx, const char *oclass)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 {
-    char context[CF_MAXVARSIZE];
+    char context_copy[CF_MAXVARSIZE];
 
-    strcpy(context, oclass);
-    if (Chop(context, CF_EXPANDSIZE) == -1)
+    strcpy(context_copy, context);
+    if (Chop(context_copy, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
-    CanonifyNameInPlace(context);
+    CanonifyNameInPlace(context_copy);
 
-    CfDebug("HardClass(%s)\n", context);
+    CfDebug("EvalContextHeapAddHard(%s)\n", context_copy);
 
-    if (strlen(context) == 0)
+    if (strlen(context_copy) == 0)
     {
         return;
     }
 
-    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ctx->heap_abort, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
-    if (EvalContextHeapContainsHard(ctx, context))
+    if (EvalContextHeapContainsHard(ctx, context_copy))
     {
         return;
     }
 
-    EvalContextHeapAddHard(ctx, context);
+    StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
 
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
@@ -546,7 +546,7 @@ void HardClass(EvalContext *ctx, const char *oclass)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -896,13 +896,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
         /* r is EvalResult which could be ERROR */
         return r == true;
     }
-}
-
-/**********************************************************************/
-
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
-{
-    return !IsDefinedClass(ctx, exception, ns);
 }
 
 /**********************************************************************/
@@ -1530,11 +1523,6 @@ void EvalContextDestroy(EvalContext *ctx)
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
 {
     StringSetAdd(ctx->heap_soft, xstrdup(context));
-}
-
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_hard, xstrdup(context));
 }
 
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)

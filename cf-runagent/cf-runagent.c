@@ -285,7 +285,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -347,7 +347,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 't':
@@ -553,7 +553,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }

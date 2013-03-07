@@ -45,7 +45,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void HardClass(EvalContext *ctx, const char *classname)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *classname)
 {
     int i;
 

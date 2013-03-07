@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
@@ -213,7 +213,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
+            EvalContextHeapAddHard(ctx, "opt_debug");
             DEBUG = true;
             break;
 
@@ -241,7 +241,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 'L':
@@ -351,7 +351,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -755,7 +755,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         BuiltinClasses(ctx);
         OSClasses(ctx);
 
-        HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+        EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
         SetReferenceTime(ctx, true);
 

@@ -91,7 +91,6 @@ void EvalContextStackPopFrame(EvalContext *ctx);
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
 
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
@@ -102,7 +101,6 @@ void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, 
 void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
-void HardClass(EvalContext *ctx, const char *oclass);
 void NewClassesFromString(EvalContext *ctx, const char *classlist);
 void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns);
 void NegateClassesFromString(EvalContext *ctx, const char *classlist);

@@ -1118,7 +1118,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         return;
     }
 
-    if (IsExcluded(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
     {
         return;
     }
@@ -1145,7 +1145,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             {
             case RVAL_TYPE_SCALAR:
 
-                if (IsExcluded(ctx, cp->rval.item, pp->ns))
+                if (!IsDefinedClass(ctx, cp->rval.item, pp->ns))
                 {
                     return;
                 }
@@ -1167,7 +1167,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     return;
                 }
 
-                excluded = IsExcluded(ctx, res.item, pp->ns);
+                excluded = !IsDefinedClass(ctx, res.item, pp->ns);
 
                 RvalDestroy(res);
 

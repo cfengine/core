@@ -1012,7 +1012,7 @@ void DeletePersistentContext(const char *name)
 
 /*****************************************************************************/
 
-void LoadPersistentContext(EvalContext *ctx)
+void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;

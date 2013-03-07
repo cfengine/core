@@ -170,7 +170,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     BuiltinClasses(ctx);
     OSClasses(ctx);
 
-    LoadPersistentContext(ctx);
+    EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);

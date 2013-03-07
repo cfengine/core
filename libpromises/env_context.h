@@ -102,7 +102,6 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Cop
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
 void NewClassesFromString(EvalContext *ctx, const char *classlist);
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns);
 void NegateClassesFromString(EvalContext *ctx, const char *classlist);
 void LoadPersistentContext(EvalContext *ctx);
 

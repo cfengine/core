@@ -1078,19 +1078,6 @@ void LoadPersistentContext(EvalContext *ctx)
     Banner("Loaded persistent memory");
 }
 
-/*****************************************************************************/
-
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns)
-{
-    for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
-    {
-        if (!EvalContextHeapContainsSoft(ctx, rp->item))
-        {
-            NewClass(ctx, rp->item, ns);
-        }
-    }
-}
-
 /*********************************************************************/
 
 void NewClassesFromString(EvalContext *ctx, const char *classlist)

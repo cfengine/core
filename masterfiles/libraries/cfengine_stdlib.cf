@@ -1109,6 +1109,16 @@ repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
+body classes generic(x)
+# Define x prefixed with promise outcome
+{
+  promise_repaired => { "promise_repaired_$(x)" };
+  repair_failed => { "repair_failed_$(x)" };
+  repair_denied => { "repair_denied_$(x)" };
+  repair_timeout => { "repair_timeout_$(x)" };
+  promise_kept => { "promise_kept_$(x)" };
+}
+
 ##-------------------------------------------------------
 ## Persistent classes
 ##-------------------------------------------------------

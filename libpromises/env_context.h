@@ -99,7 +99,6 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
 void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
-void NegateClassesFromString(EvalContext *ctx, const char *classlist);
 void LoadPersistentContext(EvalContext *ctx);
 
 // Remove contexts

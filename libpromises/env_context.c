@@ -1078,37 +1078,6 @@ void LoadPersistentContext(EvalContext *ctx)
     Banner("Loaded persistent memory");
 }
 
-/*********************************************************************/
-
-void NegateClassesFromString(EvalContext *ctx, const char *classlist)
-{
-    char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
-
-    if ((classlist == NULL) || strlen(classlist) == 0)
-    {
-        return;
-    }
-
-    memset(local, 0, CF_MAXVARSIZE);
-    strncpy(local, classlist, CF_MAXVARSIZE - 1);
-
-    for (sp = local; *sp != '\0'; sp++)
-    {
-        memset(currentitem, 0, CF_MAXVARSIZE);
-
-        sscanf(sp, "%250[^,]", currentitem);
-
-        sp += strlen(currentitem);
-
-        if (EvalContextHeapContainsHard(ctx, currentitem))
-        {
-            FatalError("Cannot negate the reserved class [%s]\n", currentitem);
-        }
-
-        EvalContextHeapAddNegated(ctx, currentitem);
-    }
-}
-
 /***************************************************************************/
 
 int Abort()

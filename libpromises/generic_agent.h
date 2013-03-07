@@ -40,6 +40,7 @@ typedef struct
     bool check_runnable;
 
     StringSet *heap_soft;
+    StringSet *heap_negated;
 
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
 

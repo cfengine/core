@@ -387,7 +387,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'N':
-            NegateClassesFromString(ctx, optarg);
+            config->heap_negated = StringSetFromString(optarg, ',');
             break;
 
         case 'I':

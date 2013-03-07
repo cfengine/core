@@ -3012,27 +3012,30 @@ bundle common paths
 
     redhat::
 
-      "path[awk]"      string => "/bin/awk";
-      "path[bc]"       string => "/usr/bin/bc";
-      "path[cat]"      string => "/bin/cat";
-      "path[cksum]"    string => "/usr/bin/cksum";
-      "path[crontabs]" string => "/var/spool/cron";
-      "path[cut]"      string => "/bin/cut";
-      "path[dc]"       string => "/usr/bin/dc";
-      "path[df]"       string => "/bin/df";
-      "path[diff]"     string => "/usr/bin/diff";
-      "path[dig]"      string => "/usr/bin/dig";
-      "path[echo]"     string => "/bin/echo";
-      "path[egrep]"    string => "/bin/egrep";
-      "path[find]"     string => "/usr/bin/find";
-      "path[grep]"     string => "/bin/grep";
-      "path[ls]"       string => "/bin/ls";
-      "path[netstat]"  string => "/bin/netstat";
-      "path[ping]"     string => "/usr/bin/ping";
-      "path[printf]"   string => "/usr/bin/printf";
-      "path[sed]"      string => "/bin/sed";
-      "path[sort]"     string => "/bin/sort";
-      "path[tr]"       string => "/usr/bin/tr";
+      "path[awk]"        string => "/bin/awk";
+      "path[bc]"         string => "/usr/bin/bc";
+      "path[cat]"        string => "/bin/cat";
+      "path[cksum]"      string => "/usr/bin/cksum";
+      "path[crontab]"    string => "/usr/bin/crontab";
+      "path[crontabs]"   string => "/var/spool/cron";
+      "path[cut]"        string => "/bin/cut";
+      "path[dc]"         string => "/usr/bin/dc";
+      "path[df]"         string => "/bin/df";
+      "path[diff]"       string => "/usr/bin/diff";
+      "path[dig]"        string => "/usr/bin/dig";
+      "path[domainname]" string => "/bin/domainname";
+      "path[echo]"       string => "/bin/echo";
+      "path[egrep]"      string => "/bin/egrep";
+      "path[find]"       string => "/usr/bin/find";
+      "path[grep]"       string => "/bin/grep";
+      "path[hostname]"   string => "/bin/hostname";
+      "path[ls]"         string => "/bin/ls";
+      "path[netstat]"    string => "/bin/netstat";
+      "path[ping]"       string => "/usr/bin/ping";
+      "path[printf]"     string => "/usr/bin/printf";
+      "path[sed]"        string => "/bin/sed";
+      "path[sort]"       string => "/bin/sort";
+      "path[tr]"         string => "/usr/bin/tr";
 
       #
       "path[chkconfig]" string => "/sbin/chkconfig";
@@ -3048,28 +3051,32 @@ bundle common paths
       "path[yum]"       string => "/usr/bin/yum";
 
     debian::
-      "path[awk]"       string => "/usr/bin/awk";
-      "path[bc]"        string => "/usr/bin/bc";
-      "path[cat]"       string => "/bin/cat";
-      "path[cksum]"     string => "/usr/bin/cksum";
-      "path[crontabs]"  string => "/var/spool/cron";
-      "path[cut]"       string => "/usr/bin/cut";
-      "path[dc]"        string => "/usr/bin/dc";
-      "path[df]"        string => "/bin/df";
-      "path[diff]"      string => "/usr/bin/diff";
-      "path[dig]"       string => "/usr/bin/dig";
-      "path[dmidecode]" string => "/usr/sbin/dmidecode";
-      "path[echo]"      string => "/bin/echo";
-      "path[egrep]"     string => "/bin/egrep";
-      "path[find]"      string => "/usr/bin/find";
-      "path[grep]"      string => "/bin/grep";
-      "path[ls]"        string => "/bin/ls";
-      "path[netstat]"   string => "/bin/netstat";
-      "path[ping]"      string => "/bin/ping";
-      "path[printf]"    string => "/usr/bin/printf";
-      "path[sed]"       string => "/bin/sed";
-      "path[sort]"      string => "/usr/bin/sort";
-      "path[tr]"        string => "/usr/bin/tr";
+
+      "path[awk]"        string => "/usr/bin/awk";
+      "path[bc]"         string => "/usr/bin/bc";
+      "path[cat]"        string => "/bin/cat";
+      "path[cksum]"      string => "/usr/bin/cksum";
+      "path[crontab]"    string => "/usr/bin/crontab";
+      "path[crontabs]"   string => "/var/spool/cron/crontabs";
+      "path[cut]"        string => "/usr/bin/cut";
+      "path[dc]"         string => "/usr/bin/dc";
+      "path[df]"         string => "/bin/df";
+      "path[diff]"       string => "/usr/bin/diff";
+      "path[dig]"        string => "/usr/bin/dig";
+      "path[dmidecode]"  string => "/usr/sbin/dmidecode";
+      "path[domainname]" string => "/bin/domainname";
+      "path[echo]"       string => "/bin/echo";
+      "path[egrep]"      string => "/bin/egrep";
+      "path[find]"       string => "/usr/bin/find";
+      "path[grep]"       string => "/bin/grep";
+      "path[hostname]"   string => "/bin/hostname";
+      "path[ls]"         string => "/bin/ls";
+      "path[netstat]"    string => "/bin/netstat";
+      "path[ping]"       string => "/bin/ping";
+      "path[printf]"     string => "/usr/bin/printf";
+      "path[sed]"        string => "/bin/sed";
+      "path[sort]"       string => "/usr/bin/sort";
+      "path[tr]"         string => "/usr/bin/tr";
 
       #
       "path[apt_cache]"           string => "/usr/bin/apt-cache";

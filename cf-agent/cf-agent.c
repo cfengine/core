@@ -1031,7 +1031,20 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (ALLCLASSESREPORT)
                 {
-                    SaveClassEnvironment(ctx);
+                    char context_report_file[CF_BUFSIZE];
+                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+                    FILE *fp = NULL;
+                    if ((fp = fopen(context_report_file, "w")) == NULL)
+                    {
+                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
+                    }
+                    else
+                    {
+                        Writer *writer = FileWriter(fp);
+                        SaveClassEnvironment(ctx, writer);
+                        WriterClose(writer);
+                    }
                 }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency

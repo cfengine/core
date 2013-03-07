@@ -1249,20 +1249,8 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
 
 /*******************************************************************/
 
-void SaveClassEnvironment(EvalContext *ctx)
+void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
 {
-    char file[CF_BUFSIZE];
-    FILE *fp;
-
-    snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-    if ((fp = fopen(file, "w")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-        return;
-    }
-
-    Writer *writer = FileWriter(fp);
-
     {
         SetIterator it = EvalContextHeapIteratorHard(ctx);
         const char *context = NULL;
@@ -1298,8 +1286,6 @@ void SaveClassEnvironment(EvalContext *ctx)
             }
         }
     }
-
-    WriterClose(writer);
 }
 
 /**********************************************************************/

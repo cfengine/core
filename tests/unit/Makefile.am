@@ -27,6 +27,7 @@ check_PROGRAMS = \
 	item_test \
 	rlist_test \
 	domainname_test \
+	set_test \
 	set_domainname_test \
 	str_test \
 	json_test \

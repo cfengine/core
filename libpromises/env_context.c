@@ -1142,66 +1142,6 @@ void NegateClassesFromString(EvalContext *ctx, const char *classlist)
 
 /***************************************************************************/
 
-bool IsTimeClass(const char *sp)
-{
-
-    if (IsStrIn(sp, DAY_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, MONTH_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, SHIFT_TEXT))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Min", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Hr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Yr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Day", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "GMT", 3) == 0 && *(sp + 3) == '_')
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Lcycle", strlen("Lcycle")) == 0)
-    {
-        return true;
-    }
-
-    const char *quarters[] = { "Q1", "Q2", "Q3", "Q4", NULL };
-
-    if (IsStrIn(sp, quarters))
-    {
-        return true;
-    }
-
-    return false;
-}
-
-/***************************************************************************/
-
 int Abort()
 {
     if (ABORTBUNDLE)

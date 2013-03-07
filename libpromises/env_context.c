@@ -95,7 +95,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
-            DeletePersistentContext(pp->promiser);
+            EvalContextHeapPersistentRemove(pp->promiser);
         }
         return false;
     }
@@ -996,7 +996,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
 
 /*****************************************************************************/
 
-void DeletePersistentContext(const char *name)
+void EvalContextHeapPersistentRemove(const char *context)
 {
     CF_DB *dbp;
 
@@ -1005,8 +1005,8 @@ void DeletePersistentContext(const char *name)
         return;
     }
 
-    DeleteDB(dbp, name);
-    CfDebug("Deleted any persistent state %s\n", name);
+    DeleteDB(dbp, context);
+    CfDebug("Deleted any persistent state %s\n", context);
     CloseDB(dbp);
 }
 

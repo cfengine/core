@@ -232,7 +232,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
 
-        DeletePersistentContext(string);
+        EvalContextHeapPersistentRemove(string);
 
         EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
 

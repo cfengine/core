@@ -64,6 +64,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
 void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
+void EvalContextHeapPersistentRemove(const char *context);
 void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
 
 bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
@@ -103,7 +104,6 @@ void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, co
 
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
-void DeletePersistentContext(const char *name);
 
 /* - Rest - */
 int Abort(void);

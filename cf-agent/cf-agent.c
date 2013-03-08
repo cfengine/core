@@ -981,8 +981,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
 
-            EvalContextStackFrameClear(ctx);
-
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
         }
@@ -996,6 +994,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
+    EvalContextStackPushFrame(ctx, false);
+
     SubType *sp;
     TypeSequence type;
     int pass;
@@ -1071,6 +1071,9 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
     }
 
     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
+
+    EvalContextStackPopFrame(ctx);
+
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 

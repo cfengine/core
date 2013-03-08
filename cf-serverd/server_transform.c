@@ -509,6 +509,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
+        EvalContextStackPushFrame(ctx, false);
+
         scope = bp->name;
         ScopeSetNew(bp->name);
 
@@ -539,6 +541,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 }
 
@@ -553,6 +557,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
+
+        EvalContextStackPushFrame(ctx, false);
 
         scope = bp->name;
         ScopeSetNew(bp->name);
@@ -584,6 +590,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 }
 

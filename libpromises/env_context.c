@@ -1264,10 +1264,6 @@ EvalContext *EvalContextNew(void)
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
-    // TODO: this should probably rather be done when evaluating a new bundle, not just when
-    // bundles call other bundles. We should not need a 'base frame' like this.
-    EvalContextStackPushFrame(ctx, false);
-
     ctx->dependency_handles = StringSetNew();
 
     return ctx;
@@ -1344,7 +1340,10 @@ bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context
 
 bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
-    assert(SeqLength(ctx->stack) > 0);
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return false;
+    }
 
     size_t stack_index = SeqLength(ctx->stack) - 1;
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
@@ -1352,6 +1351,11 @@ bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *conte
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
 {
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return false;
+    }
+
     return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
 }
 
@@ -1400,6 +1404,11 @@ size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context
 
 size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex)
 {
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return 0;
+    }
+
     return StringSetMatchCount(EvalContextStackFrame(ctx)->contexts, context_regex);
 }
 

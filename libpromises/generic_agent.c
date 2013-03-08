@@ -1800,6 +1800,7 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->debug_mode = false;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;
@@ -1858,6 +1859,12 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
             EvalContextHeapAddNegated(ctx, context);
         }
+    }
+
+    if (config->debug_mode)
+    {
+        EvalContextHeapAddHard(ctx, "opt_debug");
+        DEBUG = true;
     }
 }
 

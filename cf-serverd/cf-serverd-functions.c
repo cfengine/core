@@ -148,7 +148,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            DEBUG = true;
+            config->debug_mode = true;
             NO_FORK = true;
 
         case 'K':

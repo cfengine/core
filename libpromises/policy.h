@@ -112,7 +112,6 @@ struct Promise_
     char *promiser;
     Rval promisee;
     Audit *audit;
-    char *bundle;
     Seq *conlist;
 
     /* Runtime bus for private flags and work space */

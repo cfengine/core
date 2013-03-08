@@ -158,7 +158,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->parent_subtype = pp->parent_subtype;
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
-    pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->done = pp->done;
@@ -344,7 +343,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->donep = pp->donep;
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
-    pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->cache = pp->cache;
@@ -422,12 +420,12 @@ void PromiseRef(OutputLevel level, const Promise *pp)
 
     if (pp->audit)
     {
-        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %zu\n", v, pp->bundle,
+        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %zu\n", v, PromiseGetBundle(pp)->name,
               pp->audit->filename, pp->offset.line);
     }
     else
     {
-        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' near line %zu\n", v, pp->bundle,
+        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' near line %zu\n", v, PromiseGetBundle(pp)->name,
               pp->offset.line);
     }
 

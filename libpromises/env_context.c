@@ -266,7 +266,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
                 }
                 else
                 {
-                    NewBundleClass(ctx, buffer, pp->bundle, PromiseGetNamespace(pp));
+                    NewBundleClass(ctx, buffer, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -382,7 +382,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(ctx, pp->promiser, pp->bundle, PromiseGetNamespace(pp));
+                    NewBundleClass(ctx, pp->promiser, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
                 }
             }
         }

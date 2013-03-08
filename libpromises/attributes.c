@@ -1592,7 +1592,7 @@ Report GetReportConstraints(EvalContext *ctx, const Promise *pp)
 
     if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, pp->bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
     
     return r;

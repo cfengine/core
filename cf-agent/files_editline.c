@@ -179,7 +179,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
     }
 
     ScopeDelete("edit");
-    ScopeSet(parentp->bundle);
+    ScopeSet(PromiseGetBundle(parentp)->name);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;

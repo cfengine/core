@@ -221,7 +221,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
     }
 
     ScopeDelete("edit");
-    ScopeSet(parentp->bundle);
+    ScopeSet(PromiseGetBundle(parentp)->name);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;

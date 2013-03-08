@@ -1198,8 +1198,8 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
            break;
        }
 
-    ScopeDeleteScalar(pp->bundle, pp->promiser);
-    ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
+    ScopeDeleteScalar(PromiseGetBundle(pp)->name, pp->promiser);
+    ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pp, true);
 }
 
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
@@ -1243,7 +1243,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     if (strcmp("meta", pp->parent_subtype->name) == 0)
     {
         char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+        snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
         ScopeNew(ns);
         ConvergeVarHashPromise(ctx, ns, pp, true);
         return;
@@ -1251,7 +1251,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     if (strcmp("vars", pp->parent_subtype->name) == 0)
     {
-        ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
+        ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pp, true);
         return;
     }
 

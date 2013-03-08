@@ -714,7 +714,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
         ScopeNewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
         ScopeNewScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
@@ -750,13 +750,13 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
 
         if (strcmp(pp->parent_subtype->name, "vars") == 0)
         {
-            ConvergeVarHashPromise(ctx, pp->bundle, pexp, true);
+            ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pexp, true);
         }
 
         if (strcmp(pp->parent_subtype->name, "meta") == 0)
         {
             char ns[CF_BUFSIZE];
-            snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+            snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
             ConvergeVarHashPromise(ctx, ns, pp, true);
         }
         

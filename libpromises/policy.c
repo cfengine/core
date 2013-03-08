@@ -1203,7 +1203,6 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     pp->audit = AUDITPTR; // TODO: need to get rid of this, whatever it is.
     ThreadUnlock(cft_policy);
 
-    pp->bundle = xstrdup(type->parent_bundle->name);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
@@ -1256,7 +1255,6 @@ void PromiseDestroy(Promise *pp)
             RvalDestroy(pp->promisee);
         }
 
-        free(pp->bundle);
         free(pp->classes);
 
         // ref and agentsubtype are only references, do not free
@@ -2847,7 +2845,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
         {
             if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
             {
-                if (strcmp(ptr->classes, pp->bundle) == 0)
+                if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
                 {
                     CfOut(OUTPUT_LEVEL_INFORM, "",
                           " !! insert_lines promise uses the same select_line_matching anchor (\"%s\") as another promise. This will lead to non-convergent behaviour unless \"empty_file_before_editing\" is set.",
@@ -2857,7 +2855,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
             }
             else
             {
-                PrependItem(&EDIT_ANCHORS, sp, pp->bundle);
+                PrependItem(&EDIT_ANCHORS, sp, PromiseGetBundle(pp)->name);
             }
         }
     }

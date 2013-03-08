@@ -218,19 +218,6 @@ field_edits:
 
 ##
 
-bundle edit_line regex_replace(find,replace)
-# You can think of this like a PCRE powered sed.
-# Find exactly a regular expression and replace exactly the match with a string.
-{
-replace_patterns:
-
- "$(find)"
-     replace_with => value("$(replace)"),
-          comment => "Search and replace string";
-}
-
-##
-
 bundle edit_line resolvconf(search,list)
 
  # search is the search domains with space
@@ -296,7 +283,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
     field_edits:
 
     # If the line is there, but commented out, first uncomment it
-        "#+\s*$(index)\s*=.*"
+        "#+$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
             edit_field => col("=","1","$(index)","set"),
             ifvarclass => "edit_$(cindex[$(index)])";
@@ -371,7 +358,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
     field_edits:
 
     # If the line is there, but commented out, first uncomment it
-        "#+\s*$(index)\s*=.*"
+        "#+$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
             edit_field => col("=","1","$(index)","set"),
             ifvarclass => "edit_$(cindex[$(index)])";
@@ -417,7 +404,6 @@ vars:
   # Be careful if the index string contains funny chars
 
   "cindex[$(index)]" string => canonify("$(index)");
-  "cv"               string => canonify("$(v)");
 
 field_edits:
 
@@ -426,7 +412,7 @@ field_edits:
   "\s*$(index)\s*=.*"
 
      edit_field => col("=","2","$($(v)[$(index)])","set"),
-        classes => if_ok("$(cv)_$(cindex[$(index)])_in_file"),
+        classes => if_ok("$(cindex[$(index)])_in_file"),
         comment => "Match a line starting like key = something";
 
 insert_lines:
@@ -434,7 +420,7 @@ insert_lines:
   "$(index)=$($(v)[$(index)])",
 
          comment => "Insert a variable definition",
-      ifvarclass => "!$(cv)_$(cindex[$(index)])_in_file";
+      ifvarclass => "!$(cindex[$(index)])_in_file";
 }
 
 bundle edit_line set_config_values(v)
@@ -1109,16 +1095,6 @@ repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
-body classes generic(x)
-# Define x prefixed/suffixed with promise outcome
-{
-  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired" };
-}
-
 ##-------------------------------------------------------
 ## Persistent classes
 ##-------------------------------------------------------
@@ -1513,29 +1489,6 @@ leaf_name => { ".*" };
 file_result => "leaf_name";
 }
 
-##
-
-body file_select filetype_older_than(filetype, days)
-# Select files of specified type older than specified number of days
-# Note: This body only takes a single filetype, see filetypes_older_than
-#       if you want to select more than one type of file
-{
-file_types => { "$(filetype)" };
-mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
-file_result => "file_types.mtime";
-}
-
-##
-
-body file_select filetypes_older_than(filetypes, days)
-# Select files of specified type older than specified number of days
-# Note: This body only takes a list of filetypes
-{
-file_types => { @(filetypes) };
-mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
-file_result => "file_types.mtime";
-}
-
 ##-------------------------------------------------------
 ## changes
 ##-------------------------------------------------------
@@ -1579,17 +1532,6 @@ body changes diff
 {
 hash           => "sha256";
 report_changes => "content";
-report_diffs   => "true";
-update_hashes  => "yes";
-}
-
-##
-
-body changes all_changes
-# Generates diff report (Nova and above)
-{
-hash           => "sha256";
-report_changes => "all";
 report_diffs   => "true";
 update_hashes  => "yes";
 }
@@ -1824,7 +1766,7 @@ package_list_version_regex => "[^\s]\s+([^\s]+).*";
 package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
 package_installed_regex => ".*(installed|\s+@).*";
-package_name_convention => "$(name)-$(version).$(arch)";
+package_name_convention => "$(name).$(arch)";
 
 # set it to "0" to avoid caching of list during upgrade
 package_list_update_command => "/usr/bin/yum --quiet check-update";
@@ -2061,21 +2003,6 @@ body package_method freebsd
 
 ##
 
-body package_method alpinelinux
-{
- package_changes => "bulk";
- package_list_command => "/sbin/apk info -v";
- package_list_name_regex    => "([^\s]+)-.*";
- package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => ".*";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
- package_add_command => "/sbin/apk add";
- package_delete_command => "/sbin/apk del";
-}
-
-##
-
 body package_method emerge
 {
  package_changes => "individual";
@@ -2229,17 +2156,6 @@ freebsd::
  package_name_convention => "$(name)-$(version)";
  package_add_command => "/usr/sbin/pkg_add -r";
  package_delete_command => "/usr/sbin/pkg_delete";
-
-alpinelinux::
- package_changes => "bulk";
- package_list_command => "/sbin/apk info -v";
- package_list_name_regex    => "([^\s]+)-.*";
- package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => ".*";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
- package_add_command => "/sbin/apk add";
- package_delete_command => "/sbin/apk del";
 
 gentoo::
  package_changes => "individual";
@@ -2479,6 +2395,98 @@ vars:
 
 
  redhat::
+"startcommand[abrt-ccpp]" string => "/etc/init.d/abrt-ccpp start";
+"stopcommand[abrt-ccpp]" string => "/etc/init.d/abrt-ccpp stop";
+"pattern[abrt-ccpp]" string => ".*abrt-ccpp.*";
+
+"startcommand[abrt-oops]" string => "/etc/init.d/abrt-oops start";
+"stopcommand[abrt-oops]" string => "/etc/init.d/abrt-oops stop";
+"pattern[abrt-oops]" string => ".*abrt-oops.*";
+
+"startcommand[abrtd]" string => "/etc/init.d/abrtd start";
+"stopcommand[abrtd]" string => "/etc/init.d/abrtd stop";
+"pattern[abrtd]" string => ".*abrtd.*";
+
+"startcommand[avahi-daemon]" string => "/etc/init.d/avahi-daemon start";
+"stopcommand[avahi-daemon]" string => "/etc/init.d/avahi-daemon stop";
+"pattern[avahi-daemon]" string => ".*avahi-daemon.*";
+
+"startcommand[cups]" string => "/etc/init.d/cups start";
+"stopcommand[cups]" string => "/etc/init.d/cups stop";
+"pattern[cups]" string => ".*cups.*";
+
+"startcommand[dkms_autoinstaller]" string => "/etc/init.d/dkms_autoinstaller start";
+"stopcommand[dkms_autoinstaller]" string => "/etc/init.d/dkms_autoinstaller stop";
+"pattern[dkms_autoinstaller]" string => ".*dkms_autoinstaller.*";
+
+"startcommand[firstboot]" string => "/etc/init.d/firstboot start";
+"stopcommand[firstboot]" string => "/etc/init.d/firstboot stop";
+"pattern[firstboot]" string => ".*firstboot.*";
+
+"startcommand[kdump]" string => "/etc/init.d/kdump start";
+"stopcommand[kdump]" string => "/etc/init.d/kdump stop";
+"pattern[kdump]" string => ".*kdump.*";
+
+"startcommand[netconsole]" string => "/etc/init.d/netconsole start";
+"stopcommand[netconsole]" string => "/etc/init.d/netconsole stop";
+"pattern[netconsole]" string => ".*netconsole.*";
+
+"startcommand[netfs]" string => "/etc/init.d/netfs start";
+"stopcommand[netfs]" string => "/etc/init.d/netfs stop";
+"pattern[netfs]" string => ".*netfs.*";
+
+"startcommand[ntpd]" string => "/etc/init.d/ntpd start";
+"stopcommand[ntpd]" string => "/etc/init.d/ntpd stop";
+"pattern[ntpd]" string => ".*ntpd.*";
+
+"startcommand[ntpdate]" string => "/etc/init.d/ntpdate start";
+"stopcommand[ntpdate]" string => "/etc/init.d/ntpdate stop";
+"pattern[ntpdate]" string => ".*ntpdate.*";
+
+"startcommand[portreserve]" string => "/etc/init.d/portreserve start";
+"stopcommand[portreserve]" string => "/etc/init.d/portreserve stop";
+"pattern[portreserve]" string => ".*portreserve.*";
+
+"startcommand[psacct]" string => "/etc/init.d/psacct start";
+"stopcommand[psacct]" string => "/etc/init.d/psacct stop";
+"pattern[psacct]" string => ".*psacct.*";
+
+"startcommand[quota_nld]" string => "/etc/init.d/quota_nld start";
+"stopcommand[quota_nld]" string => "/etc/init.d/quota_nld stop";
+"pattern[quota_nld]" string => ".*quota_nld.*";
+
+"startcommand[rngd]" string => "/etc/init.d/rngd start";
+"stopcommand[rngd]" string => "/etc/init.d/rngd stop";
+"pattern[rngd]" string => ".*rngd.*";
+
+"startcommand[spice-vdagentd]" string => "/etc/init.d/spice-vdagentd start";
+"stopcommand[spice-vdagentd]" string => "/etc/init.d/spice-vdagentd stop";
+"pattern[spice-vdagentd]" string => ".*spice-vdagentd.*";
+
+"startcommand[sysstat]" string => "/etc/init.d/sysstat start";
+"stopcommand[sysstat]" string => "/etc/init.d/sysstat stop";
+"pattern[sysstat]" string => ".*sysstat.*";
+
+"startcommand[udev-post]" string => "/etc/init.d/udev-post start";
+"stopcommand[udev-post]" string => "/etc/init.d/udev-post stop";
+"pattern[udev-post]" string => ".*udev-post.*";
+
+"startcommand[vboxadd]" string => "/etc/init.d/vboxadd start";
+"stopcommand[vboxadd]" string => "/etc/init.d/vboxadd stop";
+"pattern[vboxadd]" string => ".*vboxadd.*";
+
+"startcommand[vboxadd-service]" string => "/etc/init.d/vboxadd-service start";
+"stopcommand[vboxadd-service]" string => "/etc/init.d/vboxadd-service stop";
+"pattern[vboxadd-service]" string => ".*vboxadd-service.*";
+
+"startcommand[vboxadd-x11]" string => "/etc/init.d/vboxadd-x11 start";
+"stopcommand[vboxadd-x11]" string => "/etc/init.d/vboxadd-x11 stop";
+"pattern[vboxadd-x11]" string => ".*vboxadd-x11.*";
+
+"startcommand[wdaemon]" string => "/etc/init.d/wdaemon start";
+"stopcommand[wdaemon]" string => "/etc/init.d/wdaemon stop";
+"pattern[wdaemon]" string => ".*wdaemon.*";
+
 
   "startcommand[anacron]" string => "/etc/init.d/anacron start";
   "stopcommand[anacron]"  string => "/etc/init.d/anacron stop";
@@ -2544,13 +2552,13 @@ vars:
   "stopcommand[hidd]"  string => "/etc/init.d/hidd stop";
   "pattern[hidd]"      string => ".*hidd.*";
 
-#  "startcommand[ip6tables]" string => "/etc/init.d/ip6tables start";
-#  "stopcommand[ip6tables]"  string => "/etc/init.d/ip6tables stop";
-#  "pattern[ip6tables]"      string => ".*ip6tables.*";
+  "startcommand[ip6tables]" string => "/etc/init.d/ip6tables start";
+  "stopcommand[ip6tables]"  string => "/etc/init.d/ip6tables stop";
+  "pattern[ip6tables]"      string => ".*ip6tables.*";
 
-#  "startcommand[iptables]" string => "/etc/init.d/iptables start";
-#  "stopcommand[iptables]"  string => "/etc/init.d/iptables stop";
-#  "pattern[iptables]"      string => ".*iptables.*";
+  "startcommand[iptables]" string => "/etc/init.d/iptables start";
+  "stopcommand[iptables]"  string => "/etc/init.d/iptables stop";
+  "pattern[iptables]"      string => ".*iptables.*";
 
   "startcommand[irda]" string => "/etc/init.d/irda start";
   "stopcommand[irda]"  string => "/etc/init.d/irda stop";
@@ -2705,6 +2713,186 @@ vars:
   "pattern[yum-updatesd]"      string => ".*yum-updatesd.*";
 
  debian|ubuntu::
+"startcommand[acpi-support]" string => "/etc/init.d/acpi-support start";
+"stopcommand[acpi-support]" string => "/etc/init.d/acpi-support stop";
+"pattern[acpi-support]" string => ".*acpi-support.*";
+
+"startcommand[alsa-restore]" string => "/etc/init.d/alsa-restore start";
+"stopcommand[alsa-restore]" string => "/etc/init.d/alsa-restore stop";
+"pattern[alsa-restore]" string => ".*alsa-restore.*";
+
+"startcommand[alsa-store]" string => "/etc/init.d/alsa-store start";
+"stopcommand[alsa-store]" string => "/etc/init.d/alsa-store stop";
+"pattern[alsa-store]" string => ".*alsa-store.*";
+
+"startcommand[brltty]" string => "/etc/init.d/brltty start";
+"stopcommand[brltty]" string => "/etc/init.d/brltty stop";
+"pattern[brltty]" string => ".*brltty.*";
+
+"startcommand[console-font]" string => "/etc/init.d/console-font start";
+"stopcommand[console-font]" string => "/etc/init.d/console-font stop";
+"pattern[console-font]" string => ".*console-font.*";
+
+"startcommand[dmesg]" string => "/etc/init.d/dmesg start";
+"stopcommand[dmesg]" string => "/etc/init.d/dmesg stop";
+"pattern[dmesg]" string => ".*dmesg.*";
+
+"startcommand[dns-clean]" string => "/etc/init.d/dns-clean start";
+"stopcommand[dns-clean]" string => "/etc/init.d/dns-clean stop";
+"pattern[dns-clean]" string => ".*dns-clean.*";
+
+"startcommand[friendly-rec]" string => "/etc/init.d/friendly-rec start";
+"stopcommand[friendly-rec]" string => "/etc/init.d/friendly-rec stop";
+"pattern[friendly-rec]" string => ".*friendly-rec.*";
+
+"startcommand[gdm]" string => "/etc/init.d/gdm start";
+"stopcommand[gdm]" string => "/etc/init.d/gdm stop";
+"pattern[gdm]" string => ".*gdm.*";
+
+"startcommand[grub-common]" string => "/etc/init.d/grub-common start";
+"stopcommand[grub-common]" string => "/etc/init.d/grub-common stop";
+"pattern[grub-common]" string => ".*grub-common.*";
+
+"startcommand[halt]" string => "/etc/init.d/halt start";
+"stopcommand[halt]" string => "/etc/init.d/halt stop";
+"pattern[halt]" string => ".*halt.*";
+
+"startcommand[hostname]" string => "/etc/init.d/hostname start";
+"stopcommand[hostname]" string => "/etc/init.d/hostname stop";
+"pattern[hostname]" string => ".*hostname.*";
+
+"startcommand[hwclock]" string => "/etc/init.d/hwclock start";
+"stopcommand[hwclock]" string => "/etc/init.d/hwclock stop";
+"pattern[hwclock]" string => ".*hwclock.*";
+
+"startcommand[hwclock-save]" string => "/etc/init.d/hwclock-save start";
+"stopcommand[hwclock-save]" string => "/etc/init.d/hwclock-save stop";
+"pattern[hwclock-save]" string => ".*hwclock-save.*";
+
+"startcommand[killprocs]" string => "/etc/init.d/killprocs start";
+"stopcommand[killprocs]" string => "/etc/init.d/killprocs stop";
+"pattern[killprocs]" string => ".*killprocs.*";
+
+"startcommand[lm-sensors]" string => "/etc/init.d/lm-sensors start";
+"stopcommand[lm-sensors]" string => "/etc/init.d/lm-sensors stop";
+"pattern[lm-sensors]" string => ".*lm-sensors.*";
+
+"startcommand[mintsystem]" string => "/etc/init.d/mintsystem start";
+"stopcommand[mintsystem]" string => "/etc/init.d/mintsystem stop";
+"pattern[mintsystem]" string => ".*mintsystem.*";
+
+"startcommand[modemmanager]" string => "/etc/init.d/modemmanager start";
+"stopcommand[modemmanager]" string => "/etc/init.d/modemmanager stop";
+"pattern[modemmanager]" string => ".*modemmanager.*";
+
+"startcommand[networking]" string => "/etc/init.d/networking start";
+"stopcommand[networking]" string => "/etc/init.d/networking stop";
+"pattern[networking]" string => ".*networking.*";
+
+"startcommand[nmbd]" string => "/etc/init.d/nmbd start";
+"stopcommand[nmbd]" string => "/etc/init.d/nmbd stop";
+"pattern[nmbd]" string => ".*nmbd.*";
+
+"startcommand[plymouth-log]" string => "/etc/init.d/plymouth-log start";
+"stopcommand[plymouth-log]" string => "/etc/init.d/plymouth-log stop";
+"pattern[plymouth-log]" string => ".*plymouth-log.*";
+
+"startcommand[pppd-dns]" string => "/etc/init.d/pppd-dns start";
+"stopcommand[pppd-dns]" string => "/etc/init.d/pppd-dns stop";
+"pattern[pppd-dns]" string => ".*pppd-dns.*";
+
+"startcommand[procps]" string => "/etc/init.d/procps start";
+"stopcommand[procps]" string => "/etc/init.d/procps stop";
+"pattern[procps]" string => ".*procps.*";
+
+"startcommand[pulseaudio]" string => "/etc/init.d/pulseaudio start";
+"stopcommand[pulseaudio]" string => "/etc/init.d/pulseaudio stop";
+"pattern[pulseaudio]" string => ".*pulseaudio.*";
+
+"startcommand[rc.local]" string => "/etc/init.d/rc.local start";
+"stopcommand[rc.local]" string => "/etc/init.d/rc.local stop";
+"pattern[rc.local]" string => ".*rc.local.*";
+
+"startcommand[reload-smbd]" string => "/etc/init.d/reload-smbd start";
+"stopcommand[reload-smbd]" string => "/etc/init.d/reload-smbd stop";
+"pattern[reload-smbd]" string => ".*reload-smbd.*";
+
+"startcommand[rfkill-store]" string => "/etc/init.d/rfkill-store start";
+"stopcommand[rfkill-store]" string => "/etc/init.d/rfkill-store stop";
+"pattern[rfkill-store]" string => ".*rfkill-store.*";
+
+"startcommand[samba]" string => "/etc/init.d/samba start";
+"stopcommand[samba]" string => "/etc/init.d/samba stop";
+"pattern[samba]" string => ".*samba.*";
+
+"startcommand[sendsigs]" string => "/etc/init.d/sendsigs start";
+"stopcommand[sendsigs]" string => "/etc/init.d/sendsigs stop";
+"pattern[sendsigs]" string => ".*sendsigs.*";
+
+"startcommand[setvtrgb]" string => "/etc/init.d/setvtrgb start";
+"stopcommand[setvtrgb]" string => "/etc/init.d/setvtrgb stop";
+"pattern[setvtrgb]" string => ".*setvtrgb.*";
+
+"startcommand[smbd]" string => "/etc/init.d/smbd start";
+"stopcommand[smbd]" string => "/etc/init.d/smbd stop";
+"pattern[smbd]" string => ".*smbd.*";
+
+"startcommand[spamassassin]" string => "/etc/init.d/spamassassin start";
+"stopcommand[spamassassin]" string => "/etc/init.d/spamassassin stop";
+"pattern[spamassassin]" string => ".*spamassassin.*";
+
+"startcommand[speech-dispa]" string => "/etc/init.d/speech-dispa start";
+"stopcommand[speech-dispa]" string => "/etc/init.d/speech-dispa stop";
+"pattern[speech-dispa]" string => ".*speech-dispa.*";
+
+"startcommand[stop-bootlog]" string => "/etc/init.d/stop-bootlog start";
+"stopcommand[stop-bootlog]" string => "/etc/init.d/stop-bootlog stop";
+"pattern[stop-bootlog]" string => ".*stop-bootlog.*";
+
+"startcommand[stop-bootlog]" string => "/etc/init.d/stop-bootlog start";
+"stopcommand[stop-bootlog]" string => "/etc/init.d/stop-bootlog stop";
+"pattern[stop-bootlog]" string => ".*stop-bootlog.*";
+
+"startcommand[sudo]" string => "/etc/init.d/sudo start";
+"stopcommand[sudo]" string => "/etc/init.d/sudo stop";
+"pattern[sudo]" string => ".*sudo.*";
+
+"startcommand[udev-finish]" string => "/etc/init.d/udev-finish start";
+"stopcommand[udev-finish]" string => "/etc/init.d/udev-finish stop";
+"pattern[udev-finish]" string => ".*udev-finish.*";
+
+"startcommand[udevtrigger]" string => "/etc/init.d/udevtrigger start";
+"stopcommand[udevtrigger]" string => "/etc/init.d/udevtrigger stop";
+"pattern[udevtrigger]" string => ".*udevtrigger.*";
+
+"startcommand[ufw]" string => "/etc/init.d/ufw start";
+"stopcommand[ufw]" string => "/etc/init.d/ufw stop";
+"pattern[ufw]" string => ".*ufw.*";
+
+"startcommand[umountfs]" string => "/etc/init.d/umountfs start";
+"stopcommand[umountfs]" string => "/etc/init.d/umountfs stop";
+"pattern[umountfs]" string => ".*umountfs.*";
+
+"startcommand[umountroot]" string => "/etc/init.d/umountroot start";
+"stopcommand[umountroot]" string => "/etc/init.d/umountroot stop";
+"pattern[umountroot]" string => ".*umountroot.*";
+
+"startcommand[urandom]" string => "/etc/init.d/urandom start";
+"stopcommand[urandom]" string => "/etc/init.d/urandom stop";
+"pattern[urandom]" string => ".*urandom.*";
+
+"startcommand[virtualbox-guest-utils]" string => "/etc/init.d/virtualbox-guest-utils start";
+"stopcommand[virtualbox-guest-utils]" string => "/etc/init.d/virtualbox-guest-utils stop";
+"pattern[virtualbox-guest-utils]" string => ".*virtualbox-guest-utils.*";
+
+"startcommand[vmware-USBAr]" string => "/etc/init.d/vmware-USBAr start";
+"stopcommand[vmware-USBAr]" string => "/etc/init.d/vmware-USBAr stop";
+"pattern[vmware-USBAr]" string => ".*vmware-USBAr.*";
+
+"startcommand[x11-common]" string => "/etc/init.d/x11-common start";
+"stopcommand[x11-common]" string => "/etc/init.d/x11-common stop";
+"pattern[x11-common]" string => ".*x11-common.*";
+
 
   "startcommand[atd]" string => "/etc/init.d/atd start";
   "stopcommand[atd]"  string => "/etc/init.d/atd stop";
@@ -2762,8 +2950,8 @@ vars:
   "stopcommand[udevmonitor]"  string => "/etc/init.d/udevmonitor stop";
   "pattern[udevmonitor]"      string => ".*udevadm.*monitor.*";
 
-  "startcommand[www]"     string => "/etc/init.d/apache2 start";
-  "stopcommand[www]"      string => "/etc/init.d/apache2 stop";
+  "startcommand[www]"     string => "/etc/init.d/httpd stop";
+  "stopcommand[www]"      string => "/etc/init.d/httpd stop";
   "pattern[www]"          string => ".*apache2.*";
 
 
@@ -2911,210 +3099,91 @@ expireafter => "10";
 
 
 bundle common paths
-# In addition to defining common paths, this bundle also defines context
-# classes for paths that are defined (_stdlib_has_path_xxx) and paths that
-# exist (_stdlib_path_exists_xxx)
 {
   vars:
 
       #
       # Common full pathname of commands for OS
       #
-
     aix::
 
-      "path[awk]"      string => "/usr/bin/awk";
-      "path[bc]"       string => "/usr/bin/bc";
-      "path[cat]"      string => "/bin/cat";
-      "path[cksum]"    string => "/usr/bin/cksum";
-      "path[crontabs]" string => "/var/spool/cron/crontabs";
-      "path[cut]"      string => "/usr/bin/cut";
-      "path[dc]"       string => "/usr/bin/dc";
-      "path[df]"       string => "/usr/bin/df";
-      "path[diff]"     string => "/usr/bin/diff";
-      "path[dig]"      string => "/usr/bin/dig";
-      "path[echo]"     string => "/usr/bin/echo";
-      "path[egrep]"    string => "/usr/bin/egrep";
-      "path[find]"     string => "/usr/bin/find";
-      "path[grep]"     string => "/usr/bin/grep";
-      "path[ls]"       string => "/usr/bin/ls";
-      "path[netstat]"  string => "/usr/bin/netstat";
-      "path[ping]"     string => "/usr/bin/ping";
-      "path[printf]"   string => "/usr/bin/printf";
-      "path[sed]"      string => "/usr/bin/sed";
-      "path[sort]"     string => "/usr/bin/sort";
-      "path[tr]"       string => "/usr/bin/tr";
-
-    freebsd|netbsd::
-
-      "path[awk]"      string => "/usr/bin/awk";
-      "path[bc]"       string => "/usr/bin/bc";
-      "path[cat]"      string => "/bin/cat";
-      "path[cksum]"    string => "/usr/bin/cksum";
-      "path[crontabs]" string => "/var/cron/tabs";
-      "path[cut]"      string => "/usr/bin/cut";
-      "path[dc]"       string => "/usr/bin/dc";
-      "path[df]"       string => "/bin/df";
-      "path[diff]"     string => "/usr/bin/diff";
-      "path[dig]"      string => "/usr/bin/dig";
-      "path[echo]"     string => "/bin/echo";
-      "path[egrep]"    string => "/usr/bin/egrep";
-      "path[find]"     string => "/usr/bin/find";
-      "path[grep]"     string => "/usr/bin/grep";
-      "path[ls]"       string => "/bin/ls";
-      "path[netstat]"  string => "/usr/bin/netstat";
-      "path[ping]"     string => "/usr/bin/ping";
-      "path[printf]"   string => "/usr/bin/printf";
-      "path[sed]"      string => "/usr/bin/sed";
-      "path[sort]"     string => "/usr/bin/sort";
-      "path[tr]"       string => "/usr/bin/tr";
-
-    openbsd::
-
-      "path[awk]"      string => "/usr/bin/awk";
-      "path[bc]"       string => "/usr/bin/bc";
-      "path[cat]"      string => "/bin/cat";
-      "path[cksum]"    string => "/bin/cksum";
-      "path[crontabs]" string => "/var/cron/tabs";
-      "path[cut]"      string => "/usr/bin/cut";
-      "path[dc]"       string => "/usr/bin/dc";
-      "path[df]"       string => "/bin/df";
-      "path[diff]"     string => "/usr/bin/diff";
-      "path[dig]"      string => "/usr/sbin/dig";
-      "path[echo]"     string => "/bin/echo";
-      "path[egrep]"    string => "/usr/bin/egrep";
-      "path[find]"     string => "/usr/bin/find";
-      "path[grep]"     string => "/usr/bin/grep";
-      "path[ls]"       string => "/bin/ls";
-      "path[netstat]"  string => "/usr/bin/netstat";
-      "path[ping]"     string => "/usr/bin/ping";
-      "path[printf]"   string => "/usr/bin/printf";
-      "path[sed]"      string => "/usr/bin/sed";
-      "path[sort]"     string => "/usr/bin/sort";
-      "path[tr]"       string => "/usr/bin/tr";
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron/crontabs";
+      "df"       string => "/usr/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/usr/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/usr/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
 
     solaris::
 
-      "path[awk]"      string => "/usr/bin/awk";
-      "path[bc]"       string => "/usr/bin/bc";
-      "path[cat]"      string => "/usr/bin/cat";
-      "path[cksum]"    string => "/usr/bin/cksum";
-      "path[crontabs]" string => "/var/spool/cron/crontabs";
-      "path[cut]"      string => "/usr/bin/cut";
-      "path[dc]"       string => "/usr/bin/dc";
-      "path[df]"       string => "/usr/bin/df";
-      "path[diff]"     string => "/usr/bin/diff";
-      "path[dig]"      string => "/usr/sbin/dig";
-      "path[echo]"     string => "/usr/bin/echo";
-      "path[egrep]"    string => "/usr/bin/egrep";
-      "path[find]"     string => "/usr/bin/find";
-      "path[grep]"     string => "/usr/bin/grep";
-      "path[ls]"       string => "/usr/bin/ls";
-      "path[netstat]"  string => "/usr/bin/netstat";
-      "path[ping]"     string => "/usr/bin/ping";
-      "path[printf]"   string => "/usr/bin/printf";
-      "path[sed]"      string => "/usr/bin/sed";
-      "path[sort]"     string => "/usr/bin/sort";
-      "path[tr]"       string => "/usr/bin/tr";
+      "awk"      string => "/usr/bin/awk";
+      "crontabs" string => "/var/spool/cron/crontabs";
+      "df"       string => "/usr/bin/df";
+      "dig"      string => "/usr/sbin/dig";
+      "egrep"    string => "/usr/bin/egrep";
+      "grep"     string => "/usr/bin/grep";
+      "ls"       string => "/usr/bin/ls";
+      "netstat"  string => "/usr/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/usr/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/usr/bin/cat";
+      "sed"      string => "/usr/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/usr/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/usr/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
+
       #
-      "path[svcs]"     string => "/usr/bin/svcs";
-      "path[svcadm]"   string => "/usr/sbin/svcadm";
+      "svcs"     string => "/usr/bin/svcs";
+      "svcadm"   string => "/usr/sbin/svcadm";
 
     redhat::
 
-      "path[awk]"        string => "/bin/awk";
-      "path[bc]"         string => "/usr/bin/bc";
-      "path[cat]"        string => "/bin/cat";
-      "path[cksum]"      string => "/usr/bin/cksum";
-      "path[crontab]"    string => "/usr/bin/crontab";
-      "path[crontabs]"   string => "/var/spool/cron";
-      "path[cut]"        string => "/bin/cut";
-      "path[dc]"         string => "/usr/bin/dc";
-      "path[df]"         string => "/bin/df";
-      "path[diff]"       string => "/usr/bin/diff";
-      "path[dig]"        string => "/usr/bin/dig";
-      "path[domainname]" string => "/bin/domainname";
-      "path[echo]"       string => "/bin/echo";
-      "path[egrep]"      string => "/bin/egrep";
-      "path[find]"       string => "/usr/bin/find";
-      "path[grep]"       string => "/bin/grep";
-      "path[hostname]"   string => "/bin/hostname";
-      "path[ls]"         string => "/bin/ls";
-      "path[netstat]"    string => "/bin/netstat";
-      "path[ping]"       string => "/usr/bin/ping";
-      "path[printf]"     string => "/usr/bin/printf";
-      "path[sed]"        string => "/bin/sed";
-      "path[sort]"       string => "/bin/sort";
-      "path[tr]"         string => "/usr/bin/tr";
+      "awk"      string => "/bin/awk";
+      "crontabs" string => "/var/spool/cron";
+      "df"       string => "/bin/df";
+      "dig"      string => "/usr/bin/dig";
+      "egrep"    string => "/bin/egrep";
+      "grep"     string => "/bin/grep";
+      "ls"       string => "/bin/ls";
+      "netstat"  string => "/bin/netstat";
+      "cksum"    string => "/usr/bin/cksum";
+      "sort"     string => "/bin/sort";
+      "find"     string => "/usr/bin/find";
+      "cat"      string => "/bin/cat";
+      "sed"      string => "/bin/sed";
+      "diff"     string => "/usr/bin/diff";
+      "cut"      string => "/bin/cut";
+      "printf"   string => "/usr/bin/printf";
+      "tr"       string => "/usr/bin/tr";
+      "echo"     string => "/bin/echo";
+      "bc"       string => "/usr/bin/bc";
+      "dc"       string => "/usr/bin/dc";
 
       #
-      "path[chkconfig]" string => "/sbin/chkconfig";
-      "path[groupadd]"  string => "/usr/sbin/groupadd";
-      "path[groupdel]"  string => "/usr/sbin/groupdel";
-      "path[ifconfig]"  string => "/sbin/ifconfig";
-      "path[ip]"        string => "/sbin/ip";
-      "path[rpm]"       string => "/bin/rpm";
-      "path[service]"   string => "/sbin/service";
-      "path[svc]"       string => "/sbin/service";
-      "path[useradd]"   string => "/usr/sbin/useradd";
-      "path[userdel]"   string => "/usr/sbin/userdel";
-      "path[yum]"       string => "/usr/bin/yum";
+      "svc"      string => "/sbin/service";
+      "useradd"  string => "/usr/sbin/useradd";
+      "groupadd" string => "/usr/sbin/groupadd";
 
-    debian::
+    all::
+      "ping" string => "/usr/bin/ping";
 
-      "path[awk]"        string => "/usr/bin/awk";
-      "path[bc]"         string => "/usr/bin/bc";
-      "path[cat]"        string => "/bin/cat";
-      "path[cksum]"      string => "/usr/bin/cksum";
-      "path[crontab]"    string => "/usr/bin/crontab";
-      "path[crontabs]"   string => "/var/spool/cron/crontabs";
-      "path[cut]"        string => "/usr/bin/cut";
-      "path[dc]"         string => "/usr/bin/dc";
-      "path[df]"         string => "/bin/df";
-      "path[diff]"       string => "/usr/bin/diff";
-      "path[dig]"        string => "/usr/bin/dig";
-      "path[dmidecode]"  string => "/usr/sbin/dmidecode";
-      "path[domainname]" string => "/bin/domainname";
-      "path[echo]"       string => "/bin/echo";
-      "path[egrep]"      string => "/bin/egrep";
-      "path[find]"       string => "/usr/bin/find";
-      "path[grep]"       string => "/bin/grep";
-      "path[hostname]"   string => "/bin/hostname";
-      "path[ls]"         string => "/bin/ls";
-      "path[netstat]"    string => "/bin/netstat";
-      "path[ping]"       string => "/bin/ping";
-      "path[printf]"     string => "/usr/bin/printf";
-      "path[sed]"        string => "/bin/sed";
-      "path[sort]"       string => "/usr/bin/sort";
-      "path[tr]"         string => "/usr/bin/tr";
-
-      #
-      "path[apt_cache]"           string => "/usr/bin/apt-cache";
-      "path[apt_config]"          string => "/usr/bin/apt-config";
-      "path[apt_get]"             string => "/usr/bin/apt-get";
-      "path[apt_key]"             string => "/usr/bin/apt-key";
-      "path[aptitude]"            string => "/usr/bin/aptitude";
-      "path[dpkg]"                string => "/usr/bin/dpkg";
-      "path[groupadd]"            string => "/usr/sbin/groupadd";
-      "path[ifconfig]"            string => "/sbin/ifconfig";
-      "path[ip]"                  string => "/sbin/ip";
-      "path[service]"             string => "/usr/sbin/service";
-      "path[svc]"                 string => "/usr/sbin/service";
-      "path[update_alternatives]" string => "/usr/bin/update-alternatives";
-      "path[update_rc_d]"         string => "/usr/sbin/update-rc.d";
-      "path[useradd]"             string => "/usr/sbin/useradd";
-
-
-    any::
-      "all_paths"     slist => getindices("path");
-      "$(all_paths)" string => "$(all_paths)";
-
-  classes:
-    "_stdlib_has_path_$(all_paths)"
-      expression => isvariable("$(all_paths)"),
-      comment    => "It's useful to know if a given path is defined";
-
-    "_stdlib_path_exists_$(all_paths)"
-      expression => fileexists("$(path[$(all_paths)])"),
-      comment    => "It's useful to know if $(all_paths) exists on the filesystem as defined";
 }

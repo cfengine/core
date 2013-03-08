@@ -138,7 +138,7 @@ static char *BodyName(const Promise *pp)
 
     name = xmalloc(CF_MAXVARSIZE);
 
-    sp = pp->agentsubtype;
+    sp = pp->parent_subtype->name;
 
     if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
     {

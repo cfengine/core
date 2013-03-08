@@ -1193,13 +1193,13 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("measurements", pp->agentsubtype) == 0)
+    if (strcmp("measurements", pp->parent_subtype->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
         *pp->donep = false;

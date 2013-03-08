@@ -162,7 +162,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->agentsubtype = pp->agentsubtype;
     pcopy->done = pp->done;
     pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;
@@ -350,7 +349,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->bundle = xstrdup(pp->bundle);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->agentsubtype = pp->agentsubtype;
     pcopy->cache = pp->cache;
     pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;

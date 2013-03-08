@@ -384,11 +384,11 @@ bool PolicyCheckPromise(const Promise *promise, Seq *errors)
     bool success = true;
     size_t i;
 
-    if (StringSafeCompare(promise->agentsubtype, "vars") == 0)
+    if (StringSafeCompare(promise->parent_subtype->name, "vars") == 0)
     {
         success &= PolicyCheckPromiseVars(promise, errors);
     }
-    else if (StringSafeCompare(promise->agentsubtype, "methods") == 0)
+    else if (StringSafeCompare(promise->parent_subtype->name, "methods") == 0)
     {
         success &= PolicyCheckPromiseMethods(promise, errors);
     }
@@ -1213,8 +1213,6 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     pp->org_pp = NULL;
 
     pp->bundletype = xstrdup(type->parent_bundle->type);       /* cache agent,common,server etc */
-
-    pp->agentsubtype = type->name;      /* Cache the typename */
 
     pp->ref_alloc = 'n';
 
@@ -2837,10 +2835,10 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        ConstraintPostCheck(pp->agentsubtype, cp->lval, cp->rval);
+        ConstraintPostCheck(pp->parent_subtype->name, cp->lval, cp->rval);
     }
 
-    if (strcmp(pp->agentsubtype, "insert_lines") == 0)
+    if (strcmp(pp->parent_subtype->name, "insert_lines") == 0)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 

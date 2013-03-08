@@ -152,7 +152,7 @@ void EndAudit(int background_tasks)
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_STATUS_TYPES));
+    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_STATUS_TYPES));
 }
 
 /*****************************************************************************/
@@ -164,7 +164,7 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_LOG_TYPES));
+    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_LOG_TYPES));
 }
 
 /*****************************************************************************/

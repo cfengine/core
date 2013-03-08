@@ -117,7 +117,6 @@ struct Promise_
     Seq *conlist;
 
     /* Runtime bus for private flags and work space */
-    char *agentsubtype;         /* cache the promise subtype */
     char *bundletype;           /* cache the agent type */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */

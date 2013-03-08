@@ -80,7 +80,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return false;
     }
@@ -90,7 +90,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (IsDefinedClass(ctx, pp->promiser, pp->ns))
+    if (IsDefinedClass(ctx, pp->promiser, PromiseGetNamespace(pp)))
     {
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
@@ -136,7 +136,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
         {
             return true;
         }
@@ -153,7 +153,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
         {
             return false;
         }
@@ -193,7 +193,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                EvalContextHeapAddSoft(ctx, rp->item, pp->ns);
+                EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
                 return true;
             }
         }
@@ -244,7 +244,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        result = IsDefinedClass(ctx, (char *) (rp->item), pp->ns);
+        result = IsDefinedClass(ctx, (char *) (rp->item), PromiseGetNamespace(pp));
 
         result_and = result_and && result;
         result_or = result_or || result;
@@ -262,11 +262,11 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
                 if (strcmp(pp->bundletype, "common") == 0)
                 {
-                    EvalContextHeapAddSoft(ctx, buffer, pp->ns);
+                    EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
                 }
                 else
                 {
-                    NewBundleClass(ctx, buffer, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, buffer, pp->bundle, PromiseGetNamespace(pp));
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -340,13 +340,13 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    EvalContextHeapPersistentSave(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
             }
         }
@@ -376,13 +376,13 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                           a.context.persistent);
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    EvalContextHeapPersistentSave(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(ctx, pp->promiser, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, pp->promiser, pp->bundle, PromiseGetNamespace(pp));
                 }
             }
         }
@@ -1115,7 +1115,7 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(ctx, *classes, pp->ns))
+    if (*classes && IsDefinedClass(ctx, *classes, PromiseGetNamespace(pp)))
     {
         return false;
     }
@@ -1201,7 +1201,7 @@ void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
        return;
     }
     
-    snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, handle);
+    snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), handle);
     StringSetAdd(ctx->dependency_handles, xstrdup(name));
 }
 
@@ -1225,7 +1225,7 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, (char *)rp->item);
+            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), (char *)rp->item);
             d = name;
         }
 

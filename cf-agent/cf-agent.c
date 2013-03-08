@@ -1208,7 +1208,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");

@@ -102,9 +102,9 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
     {
         method_deref = strchr(method_name, CF_NS) + 1;
     }
-    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(pp->ns, "default") != 0))
+    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
     {
-        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, method_name);
+        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, method_name);
         method_deref = qualified_method;
     }
     else
@@ -133,7 +133,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         ScopeNew(ns);
         SetBundleOutputs(bp->name);
 
-        ScopeAugment(ctx, method_deref, pp->ns, bp->args, params);
+        ScopeAugment(ctx, method_deref, PromiseGetNamespace(pp), bp->args, params);
 
         THIS_BUNDLE = bp->name;
 

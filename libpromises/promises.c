@@ -160,7 +160,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
-    pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;
@@ -196,14 +195,14 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             bodyname = (char *) cp->rval.item;
             if (cp->references_body)
             {
-                bp = IsBody(bodies, pp->ns, bodyname);
+                bp = IsBody(bodies, PromiseGetNamespace(pp), bodyname);
             }
             fp = NULL;
             break;
         case RVAL_TYPE_FNCALL:
             fp = (FnCall *) cp->rval.item;
             bodyname = fp->name;
-            bp = IsBody(bodies, pp->ns, bodyname);
+            bp = IsBody(bodies, PromiseGetNamespace(pp), bodyname);
             break;
         default:
             bp = NULL;
@@ -349,7 +348,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
-    pcopy->ns = xstrdup(pp->ns);
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->agentsubtype = pp->agentsubtype;

@@ -411,7 +411,7 @@ void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportCo
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass(ctx, "repaired" , pp->ns))
+            if (!IsDefinedClass(ctx, "repaired" , PromiseGetNamespace(pp)))
             {
                 cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
@@ -521,9 +521,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             method_deref = strchr(edit_bundle_name, CF_NS) + 1;
         }
-        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(pp->ns, "default") != 0))
+        else if ((strchr(edit_bundle_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
         {
-            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, edit_bundle_name);
+            snprintf(qualified_edit, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, edit_bundle_name);
             method_deref = qualified_edit;
         }
         else            

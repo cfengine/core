@@ -152,7 +152,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
     {
         for (ip = ec->file_classes; ip != NULL; ip = ip->next)
         {
-            EvalContextHeapAddSoft(ctx, ip->name, pp->ns);
+            EvalContextHeapAddSoft(ctx, ip->name, PromiseGetNamespace(pp));
         }
 
         DeleteItemList(ec->file_classes);

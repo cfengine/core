@@ -715,7 +715,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
         ScopeNewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
         ScopeNewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
-        ScopeNewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -1118,7 +1118,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         return;
     }
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return;
     }
@@ -1145,7 +1145,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             {
             case RVAL_TYPE_SCALAR:
 
-                if (!IsDefinedClass(ctx, cp->rval.item, pp->ns))
+                if (!IsDefinedClass(ctx, cp->rval.item, PromiseGetNamespace(pp)))
                 {
                     return;
                 }
@@ -1167,7 +1167,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     return;
                 }
 
-                excluded = !IsDefinedClass(ctx, res.item, pp->ns);
+                excluded = !IsDefinedClass(ctx, res.item, PromiseGetNamespace(pp));
 
                 RvalDestroy(res);
 
@@ -1233,7 +1233,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
     DataType existing_var = ScopeGetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
-    if (strcmp(pp->ns, "default") == 0)
+    if (strcmp(PromiseGetNamespace(pp), "default") == 0)
     {
         result = BufferSet(qualified_scope, scope, strlen(scope));
         if (result < 0)
@@ -1251,7 +1251,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
     {
         if (strchr(scope, ':') == NULL)
         {
-            result = BufferPrintf(qualified_scope, "%s:%s", pp->ns, scope);
+            result = BufferPrintf(qualified_scope, "%s:%s", PromiseGetNamespace(pp), scope);
             if (result < 0)
             {
                 /*

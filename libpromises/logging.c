@@ -259,7 +259,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             }
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         MarkPromiseHandleDone(ctx, pp);
         DeleteAllClasses(ctx, attr.classes.del_change);
 
@@ -300,7 +300,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -322,7 +322,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -344,7 +344,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -366,7 +366,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -379,7 +379,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(ctx, pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))

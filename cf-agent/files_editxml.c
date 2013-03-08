@@ -260,7 +260,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
     char *sp = NULL;
     Attributes a = { {0} };
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");

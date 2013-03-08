@@ -348,7 +348,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");

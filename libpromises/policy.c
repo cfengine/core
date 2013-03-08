@@ -1204,7 +1204,6 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     ThreadUnlock(cft_policy);
 
     pp->bundle = xstrdup(type->parent_bundle->name);
-    pp->ns = xstrdup(type->parent_bundle->ns);
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
@@ -1265,7 +1264,6 @@ void PromiseDestroy(Promise *pp)
         free(pp->bundle);
         free(pp->bundletype);
         free(pp->classes);
-        free(pp->ns);
 
         // ref and agentsubtype are only references, do not free
         SeqDestroy(pp->conlist);
@@ -2273,7 +2271,7 @@ int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Prom
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2379,7 +2377,7 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2408,7 +2406,10 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
     return false;
 }
 
-/*****************************************************************************/
+const char *PromiseGetNamespace(const Promise *pp)
+{
+    return pp->parent_subtype->parent_bundle->ns;
+}
 
 int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)
 {
@@ -2420,7 +2421,7 @@ int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise 
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_NOINT)
                 {
@@ -2460,7 +2461,7 @@ double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Prom
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_NODOUBLE)
                 {
@@ -2521,7 +2522,7 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != 077)
                 {
@@ -2571,7 +2572,7 @@ uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promis
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2624,7 +2625,7 @@ gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != CF_UNDEFINED)
                 {
@@ -2666,7 +2667,7 @@ Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Prom
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != NULL)
                 {
@@ -2780,7 +2781,7 @@ Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *pp, const char
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (IsDefinedClass(ctx, cp->classes, pp->ns))
+            if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
                 if (retval != NULL)
                 {
@@ -2822,7 +2823,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
 /* Special promise type checks */
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return;
     }

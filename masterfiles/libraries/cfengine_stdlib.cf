@@ -3026,6 +3026,7 @@ bundle common paths
       "path[bc]"         string => "/usr/bin/bc";
       "path[cat]"        string => "/bin/cat";
       "path[cksum]"      string => "/usr/bin/cksum";
+      "path[createrepo]" string => "/usr/bin/createrepo";
       "path[crontab]"    string => "/usr/bin/crontab";
       "path[crontabs]"   string => "/var/spool/cron";
       "path[cut]"        string => "/bin/cut";
@@ -3066,6 +3067,7 @@ bundle common paths
       "path[bc]"         string => "/usr/bin/bc";
       "path[cat]"        string => "/bin/cat";
       "path[cksum]"      string => "/usr/bin/cksum";
+      "path[createrepo]" string => "/usr/bin/createrepo";
       "path[crontab]"    string => "/usr/bin/crontab";
       "path[crontabs]"   string => "/var/spool/cron/crontabs";
       "path[cut]"        string => "/usr/bin/cut";

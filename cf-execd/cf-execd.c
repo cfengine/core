@@ -604,7 +604,6 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 static void Apoptosis(EvalContext *ctx)
 {
-    Promise pp = { 0 };
     Rlist *signals = NULL, *owners = NULL;
     char mypid[32];
     static char promiser_buf[CF_SMALLBUF];
@@ -621,46 +620,38 @@ static void Apoptosis(EvalContext *ctx)
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
 #endif
 
-    pp.promiser = promiser_buf;
-    pp.promisee = (Rval) {"cfengine", RVAL_TYPE_SCALAR};
-    pp.classes = "any";
-    pp.offset.line = 0;
-    pp.audit = NULL;
-    pp.conlist = SeqNew(100, ConstraintDestroy);
+    Policy *aptosis_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(aptosis_policy, NamespaceDefault(), "exec_apoptosis", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "processes");
 
-    pp.bundletype = "agent";
-    pp.bundle = "exec_apoptosis";
-    pp.ref = "Programmed death";
-    pp.done = false;
-    pp.cache = NULL;
-    pp.inode_cache = NULL;
-    pp.this_server = NULL;
-    pp.donep = &(pp.done);
-    pp.conn = NULL;
+        pp = SubTypeAppendPromise(tp, promiser_buf, (Rval) {"cfengine", RVAL_TYPE_SCALAR}, "any");
+    }
 
     GetCurrentUserName(mypid, 31);
 
     RlistPrependScalar(&signals, "term");
     RlistPrependScalar(&owners, mypid);
 
-    PromiseAppendConstraint(&pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
-    PromiseAppendConstraint(&pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_owner", (Rval) {owners, RVAL_TYPE_LIST }, "any", false);
-    PromiseAppendConstraint(&pp, "ifelapsed", (Rval) {xstrdup("0"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_count", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "match_range", (Rval) {xstrdup("0,2"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(&pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
+    PromiseAppendConstraint(pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(pp, "process_owner", (Rval) {owners, RVAL_TYPE_LIST }, "any", false);
+    PromiseAppendConstraint(pp, "ifelapsed", (Rval) {xstrdup("0"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(pp, "process_count", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(pp, "match_range", (Rval) {xstrdup("0,2"), RVAL_TYPE_SCALAR}, "any", false);
+    PromiseAppendConstraint(pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), RVAL_TYPE_SCALAR}, "any", false);
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
-        VerifyProcessesPromise(ctx, &pp);
+        VerifyProcessesPromise(ctx, pp);
     }
 
     DeleteItemList(PROCESSTABLE);
 
-    SeqDestroy(pp.conlist);
+    PolicyDestroy(aptosis_policy);
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Pruning complete");
 }

@@ -3109,7 +3109,7 @@ bundle common paths
 
     any::
       "all_paths"     slist => getindices("path");
-      "$(all_paths)" string => "$(all_paths)";
+      "$(all_paths)" string => "$(path[$(all_paths)])";
 
   classes:
     "_stdlib_has_path_$(all_paths)"

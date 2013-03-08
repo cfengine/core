@@ -81,11 +81,11 @@ StringSet *StringSetFromString(const char *str, char delimiter)
     delimiters[0] = delimiter;
 
     char *copy = xstrdup(str);
-    char *curr = strtok(copy, delimiters);
-    while (curr)
+    char *curr = NULL;
+
+    while ((curr = strsep(&copy, delimiters)))
     {
         StringSetAdd(set, xstrdup(curr));
-        curr = strtok(NULL, delimiters);
     }
 
     free(copy);

@@ -156,7 +156,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     }
 
     pcopy->parent_subtype = pp->parent_subtype;
-    pcopy->bundletype = xstrdup(pp->bundletype);
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->bundle = xstrdup(pp->bundle);
@@ -341,7 +340,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     }
 
     pcopy->parent_subtype = pp->parent_subtype;
-    pcopy->bundletype = xstrdup(pp->bundletype);
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
     pcopy->audit = pp->audit;

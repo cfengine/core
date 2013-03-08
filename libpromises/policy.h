@@ -111,13 +111,11 @@ struct Promise_
     char ref_alloc;
     char *promiser;
     Rval promisee;
-    char *bundle;
     Audit *audit;
-
+    char *bundle;
     Seq *conlist;
 
     /* Runtime bus for private flags and work space */
-    char *bundletype;           /* cache the agent type */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */
     int makeholes;
@@ -270,6 +268,7 @@ void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_M
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 
 const char *PromiseGetNamespace(const Promise *pp);
+const Bundle *PromiseGetBundle(const Promise *pp);
 
 /**
  * @brief Get the int value of the first effective constraint found matching, from a promise

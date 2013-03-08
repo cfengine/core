@@ -1211,9 +1211,6 @@ Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee
     pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = NULL;
-
-    pp->bundletype = xstrdup(type->parent_bundle->type);       /* cache agent,common,server etc */
-
     pp->ref_alloc = 'n';
 
     return pp;
@@ -1260,7 +1257,6 @@ void PromiseDestroy(Promise *pp)
         }
 
         free(pp->bundle);
-        free(pp->bundletype);
         free(pp->classes);
 
         // ref and agentsubtype are only references, do not free
@@ -2407,6 +2403,11 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
 const char *PromiseGetNamespace(const Promise *pp)
 {
     return pp->parent_subtype->parent_bundle->ns;
+}
+
+const Bundle *PromiseGetBundle(const Promise *pp)
+{
+    return pp->parent_subtype->parent_bundle;
 }
 
 int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)

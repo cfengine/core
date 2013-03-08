@@ -260,7 +260,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
                 *(pp->donep) = true;
 
-                if (strcmp(pp->bundletype, "common") == 0)
+                if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
                 {
                     EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
                 }
@@ -323,7 +323,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 // If this is a common bundle ...
 
-    if (strcmp(pp->bundletype, "common") == 0)
+    if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {
@@ -359,7 +359,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 // If this is some other kind of bundle (else here??)
 
-    if (strcmp(pp->bundletype, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", pp->bundletype))
+    if (strcmp(PromiseGetBundle(pp)->type, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", PromiseGetBundle(pp)->type))
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {

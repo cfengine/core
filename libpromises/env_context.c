@@ -1453,6 +1453,7 @@ void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous)
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(SeqLength(ctx->stack) > 0);
+    SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
 }
 
 void EvalContextStackFrameClear(EvalContext *ctx)

@@ -1,10 +1,10 @@
 ############################################################################
 #  Copyright (C) Cfengine AS
-# 
+#
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU Lesser General Public License LGPL as published by the
 #  Free Software Foundation; version 3.
-#   
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -79,7 +79,7 @@ bundle edit_line comment_lines_matching(regex,comment)
 {
 replace_patterns:
 
- "^($(regex))$" 
+ "^($(regex))$"
 
      replace_with => comment("$(comment)"),
           comment => "Search and replace string";
@@ -94,8 +94,8 @@ bundle edit_line uncomment_lines_matching(regex,comment)
 
 {
 replace_patterns:
- 
- "^$(comment)\s?($(regex))$" 
+
+ "^$(comment)\s?($(regex))$"
 
        replace_with => uncomment,
             comment => "Uncomment lines matching a regular expression";
@@ -109,8 +109,8 @@ bundle edit_line comment_lines_containing(regex,comment)
 
 {
 replace_patterns:
- 
- "^(.*$(regex).*)$" 
+
+ "^(.*$(regex).*)$"
 
      replace_with => comment("$(comment)"),
           comment => "Comment out lines in a file";
@@ -125,8 +125,8 @@ bundle edit_line uncomment_lines_containing(regex,comment)
 
 {
 replace_patterns:
- 
- "^$(comment)\s?(.*$(regex).*)$" 
+
+ "^$(comment)\s?(.*$(regex).*)$"
 
     replace_with => uncomment,
          comment => "Uncomment a line containing a fragment";
@@ -149,7 +149,7 @@ bundle edit_line warn_lines_matching(regex)
 {
 delete_lines:
 
-  "$(regex)"  
+  "$(regex)"
 
    comment => "Warn about lines in a file",
     action => warn_only;
@@ -185,7 +185,7 @@ bundle edit_line replace_line_end(start,end)
 # whitespaces will be left unmodified.
 # For example, replace_line_end("ftp", "2121/tcp") would replace
 # "ftp             21/tcp"
-# with 
+# with
 # "ftp             2121/tcp"
 {
 field_edits:
@@ -203,7 +203,7 @@ bundle edit_line append_to_line_end(start,end)
 # will get appended with "$(end)", whitespaces will be left unmodified.
 # For example, append_to_line_end("kernel", "vga=791") would replace
 # "kernel /boot/vmlinuz root=/dev/sda7"
-# with 
+# with
 # "kernel /boot/vmlinuz root=/dev/sda7 resume=/dev/sda9 vga=791"
 #
 # WARNING: Be careful not to have multiple promises matching the same line,
@@ -260,7 +260,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
  # The argument is an associative array containing tab[SectionName][LHS]="RHS"
  # don't change value when the RHS is dontchange
 
- # Based on set_variable_values_ini 
+ # Based on set_variable_values_ini
  # Added delete lines section to empty out undefined variable values for INI section
 
  # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
@@ -280,7 +280,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
  #         edit_line   => manage_variable_values_ini("context.array", "SectionName"),
  #         create => "true",
  #         comment     => "Set the variale values only in the specified ini region";
- # 
+ #
 
 {
     vars:
@@ -291,7 +291,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 
     classes:
         "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
-                                   comment => "Create conditions to make changes"; 
+                                   comment => "Create conditions to make changes";
 
     field_edits:
 
@@ -355,7 +355,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
  #         edit_line   => set_variable_values_ini("context.array", "SectionName"),
  #         create => "true",
  #         comment     => "Set the variale values only in the specified ini region";
- # 
+ #
 
 {
     vars:
@@ -691,12 +691,12 @@ vars:
   redhat|fedora::
    "crontab" string => "/var/spool/cron";
  !(SuSE|redhat|fedora)::
-    "crontab" string => "/var/spool/cron/crontabs"; 
+    "crontab" string => "/var/spool/cron/crontabs";
 
 files:
 
 !windows::
-  "$(crontab)/$(user)" 
+  "$(crontab)/$(user)"
 
     comment => "A user's regular batch jobs are added to this file",
      create => "true",
@@ -1134,7 +1134,7 @@ persist_time => "10";
 body classes enumerate(x)
 
 #
-# This is used by commercial editions to count 
+# This is used by commercial editions to count
 # instances of jobs in a cluster
 #
 
@@ -1447,8 +1447,8 @@ newname => "$(file)";
 body file_select name_age(name,days)
 {
 leaf_name   => { "$(name)" };
-mtime       => irange(0,ago(0,0,"$(days)",0,0,0));  
-file_result => "mtime.leaf_name"; 
+mtime       => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "mtime.leaf_name";
 }
 
 ##
@@ -1662,7 +1662,7 @@ have_aptitude::
 
    package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
-   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*"; 
+   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 !have_aptitude::
    package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
@@ -1706,7 +1706,7 @@ debian.i686::
 have_aptitude::
    package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
-   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*"; 
+   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 !have_aptitude::
    package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
@@ -1777,7 +1777,7 @@ package_changes => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
- 
+
 package_name_convention => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
@@ -1800,7 +1800,7 @@ package_changes => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
- 
+
 package_name_convention => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
@@ -1891,7 +1891,7 @@ body package_method rpm_filebased(path)
 # Based on yum_rpm body in COPBL by Trond Hasle Amundsen.
 # Purpose: install packages from local filesystem-based package repository.
 # Note: Specify the path to the local package repository in the argument.
-  
+
 # Example of how to use it:
 #
 # {{{
@@ -1906,18 +1906,18 @@ body package_method rpm_filebased(path)
 {
   package_file_repositories => { "$(path)" };
   # the above is an addition to Trond's yum_rpm body
-  
+
   package_add_command => "/bin/rpm -ihv ";
   # The above is a change from Trond's yum_rpm body, this makes the commands rpm only.
   # The reason I changed the install command from yum to rpm is yum will be default
   # refuse to install the epel-release RPM as it does not have the EPEL GPG key,
   # but rpm goes ahead and installs the epel-release RPM and the EPEL GPG key.
-  
+
   package_name_convention => "$(name)-$(version).$(arch).rpm";
   # The above is a change from Tron's yum_rpm body. When package_file_repositories is in play,
   # package_name_convention has to match the file name, not the package name, per the
   # CFEngine 3 Reference Manual
- 
+
   # set it to "0" to avoid caching of list during upgrade
   package_list_update_command => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
@@ -1925,13 +1925,13 @@ body package_method rpm_filebased(path)
   # The rest is unchanged from Trond's yum_rpm body
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
-  
+
   package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
   package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
   package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
-  
+
   package_installed_regex => ".*";
-  
+
 
   package_delete_command => "/bin/rpm -e --allmatches";
   package_verify_command => "/bin/rpm -V";
@@ -1942,7 +1942,7 @@ body package_method rpm_filebased(path)
 # OpenSolaris based systems (Solaris 11, Illumos, etc) use the much better
 # Image Package System.
 
-body package_method ips 
+body package_method ips
 {
   package_changes => "bulk";
   package_list_command => "/usr/bin/pkg list -v --no-refresh";
@@ -2087,7 +2087,7 @@ body package_method emerge
  package_list_update_command => "/bin/true";               # I prefer manual syncing
  #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
-    
+
  package_add_command => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
@@ -2251,7 +2251,7 @@ gentoo::
  package_list_update_command => "/bin/true";               # I prefer manual syncing
  #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
-    
+
  package_add_command => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
@@ -2377,7 +2377,7 @@ windows::
 
 bundle agent standard_services(service,state)
 {
- # DATA, 
+ # DATA,
 
 vars:
 
@@ -2387,7 +2387,7 @@ vars:
   "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
   "stakeholders[mongod]" slist => { "mongo_in" };
   "stakeholders[postfix]" slist => { "smtp_in" };
-  "stakeholders[sendmail]" slist => { "smtp_in" };       
+  "stakeholders[sendmail]" slist => { "smtp_in" };
   "stakeholders[www]" slist => { "www_in", "wwws_in", "www_alt_in" };
   "stakeholders[ssh]" slist => { "ssh_in" };
   "stakeholders[mysql]" slist => { "mysql_in" };

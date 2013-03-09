@@ -31,7 +31,6 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "sort.h"
-#include "vars.h"
 #include "attributes.h"
 #include "cfstream.h"
 #include "communication.h"
@@ -40,6 +39,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "policy.h"
+#include "scope.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 
@@ -72,7 +72,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        ScopeNewScalar(pp->bundle, unique_name, pp->promiser, DATA_TYPE_STRING);
+        ScopeNewScalar(PromiseGetBundle(pp)->name, unique_name, pp->promiser, DATA_TYPE_STRING);
         return;
     }
        

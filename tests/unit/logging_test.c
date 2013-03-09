@@ -1,10 +1,9 @@
+#include "test.h"
+
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
 #include "transaction.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
 
 static struct sockaddr *got_address;
 
@@ -43,8 +42,9 @@ static void test_set_host(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_set_port),
         unit_test(test_set_host),
     };

@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 
 #include "misc_lib.h"
@@ -24,6 +20,7 @@ static void test_unsigned_modulus(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_unsigned_modulus),

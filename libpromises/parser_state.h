@@ -28,9 +28,8 @@
 #include "cf3.defs.h"
 #include "rlist.h"
 
-extern struct ParserState P;
 
-struct ParserState
+typedef struct
 {
     char *block;                // body/bundle
     char blocktype[CF_MAXVARSIZE];
@@ -79,6 +78,8 @@ struct ParserState
         size_t last_subtype_id;
         size_t last_class_id;
     } offsets;
-};
+} ParserState;
+
+extern ParserState P;
 
 #endif

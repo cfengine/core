@@ -901,6 +901,7 @@ static void test_detach_key_from_object(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_new_delete),

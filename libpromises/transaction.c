@@ -138,7 +138,7 @@ static char *BodyName(const Promise *pp)
 
     name = xmalloc(CF_MAXVARSIZE);
 
-    sp = pp->agentsubtype;
+    sp = pp->parent_subtype->name;
 
     if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
     {
@@ -210,7 +210,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
         /* Must not set pp->done = true for editfiles etc */
     }
 
-    HashPromise(operand, pp, digest, CF_DEFAULT_DIGEST);
+    PromiseHash(pp, operand, digest, CF_DEFAULT_DIGEST);
     HashPrintSafe(CF_DEFAULT_DIGEST, digest, str_digest);
 
 /* As a backup to "done" we need something immune to re-use */
@@ -256,10 +256,10 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
     }
 
     snprintf(cflog, CF_BUFSIZE, "%s/cf3.%.40s.runlog", CFWORKDIR, host);
-    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", pp->bundle, cc_operator, cc_operand, sum, str_digest);
-    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", pp->bundle, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
+    snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    CfDebug("LOCK(%s)[%s]\n", pp->bundle, cflock);
+    CfDebug("LOCK(%s)[%s]\n", PromiseGetBundle(pp)->name, cflock);
 
 // Now see if we can get exclusivity to edit the locks
 

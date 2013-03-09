@@ -1,9 +1,7 @@
+#include "test.h"
+
 #include "cf3.defs.h"
-
 #include "crypto.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
 
 #define PLAINTEXT "123456789012345678901234567890123"
 #define KEY "1234567890123456789012345678901234567890123456789012345678901234"  /* at least 512 bits long (to be sure) */
@@ -67,14 +65,15 @@ static void test_symmetric_decrypt(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     CryptoInitialize();
 
     const UnitTest tests[] =
-      {
+    {
         unit_test(test_cipher_init),
         unit_test(test_symmetric_encrypt),
         unit_test(test_symmetric_decrypt),
-      };
+    };
     
     return run_tests(tests);
 }

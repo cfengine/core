@@ -44,31 +44,33 @@ struct EvalContext_
     StringSet *heap_soft;
     StringSet *heap_hard;
     StringSet *heap_negated;
+    Item *heap_abort;
+    Item *heap_abort_current_bundle;
 
     Seq *stack;
 
     StringSet *dependency_handles;
 };
 
-/**
-  List of classes that, if defined by a bundle, will cause the bundle to abort
-  */
-extern Item *ABORTBUNDLEHEAP;
-
-
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context);
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
+void EvalContextHeapPersistentRemove(const char *context);
+void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
+
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context);
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
@@ -86,44 +88,28 @@ StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
-
 void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
 
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
 
 
 // Add new contexts
-void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
-void AddAbortClass(const char *name, const char *classes);
-void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
 void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
-void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
-void HardClass(EvalContext *ctx, const char *oclass);
-void NewClassesFromString(EvalContext *ctx, const char *classlist);
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns);
-void NegateClassesFromString(EvalContext *ctx, const char *classlist);
-void LoadPersistentContext(EvalContext *ctx);
 
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
-void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
-void DeletePersistentContext(const char *name);
 
 /* - Rest - */
 int Abort(void);
 void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
-Rlist *SplitContextExpression(const char *context, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
-bool IsSoftClass(EvalContext *ctx, const char *sp);
-bool IsTimeClass(const char *sp);
-void SaveClassEnvironment(EvalContext *ctx);
+void SaveClassEnvironment(EvalContext *ctx, Writer *writer);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
 

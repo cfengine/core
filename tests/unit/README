@@ -79,7 +79,7 @@ How to add unit tests
    you probably want to be more specific, for example
 
    str_test_SOURCES = $(MOCKERY_SOURCES) str_test.c ../../libpromises/string_lib.c
-   str_test_LDADD = ../../pub/libcfpub.la
+   str_test_LDADD = ../../libcompat/libcompat.la
 
    Finally, if you made some mocking functions and you think it will be useful to
    other tests later, consider extracting them in a separate file, e.g. db_mock.c.

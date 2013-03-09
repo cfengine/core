@@ -29,12 +29,14 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "atexit.h"
-#include "vars.h"
+#include "scope.h"
 #include "cfstream.h"
 #include "string_lib.h"
 #include "transaction.h"
 #include "policy.h"
 #include "rlist.h"
+#include "conversion.h"
+#include "syntax.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -82,30 +84,39 @@ void EndAudit(int background_tasks)
     memset(&dummyp, 0, sizeof(dummyp));
     memset(&dummyattr, 0, sizeof(dummyattr));
 
-    if (ScopeGetVariableAsBoolean("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval))
     {
-        FILE *fout;
-        char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
-        time_t now = time(NULL);
-
-        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
-
-        snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
-        snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
-
-        if ((fout = fopen(name, "a")) == NULL)
+        Rval track_value_rval = { 0 };
+        bool track_value = false;
+        if (ScopeGetVariable("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, &track_value_rval) != DATA_TYPE_NONE)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
-            return;
+            track_value = BooleanFromString(retval.item);
         }
 
-        if (Chop(datestr, CF_EXPANDSIZE) == -1)
+        if (track_value)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            FILE *fout;
+            char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
+            time_t now = time(NULL);
+
+            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
+
+            snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
+            snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
+
+            if ((fout = fopen(name, "a")) == NULL)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
+                return;
+            }
+
+            if (Chop(datestr, CF_EXPANDSIZE) == -1)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            }
+            fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+            TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
+            fclose(fout);
         }
-        fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-        TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-        fclose(fout);
     }
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
@@ -141,7 +152,7 @@ void EndAudit(int background_tasks)
  */
 static bool IsPromiseValuableForStatus(const Promise *pp)
 {
-    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_STATUS_TYPES));
+    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_STATUS_TYPES));
 }
 
 /*****************************************************************************/
@@ -153,10 +164,81 @@ static bool IsPromiseValuableForStatus(const Promise *pp)
 
 static bool IsPromiseValuableForLogging(const Promise *pp)
 {
-    return pp && (pp->agentsubtype != NULL) && (!IsStrIn(pp->agentsubtype, NO_LOG_TYPES));
+    return pp && (pp->parent_subtype->name != NULL) && (!IsStrIn(pp->parent_subtype->name, NO_LOG_TYPES));
 }
 
 /*****************************************************************************/
+
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        char *classname = xstrdup(rp->item);
+
+        CanonifyNameInPlace(classname);
+
+        if (EvalContextHeapContainsHard(ctx, classname))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            // TODO: ok.. but should we take any action? continue; maybe?
+        }
+
+        if (persist > 0)
+        {
+            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
+            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
+            EvalContextHeapAddSoft(ctx, classname, ns);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
+
+            switch (context_scope)
+            {
+            case CONTEXT_SCOPE_BUNDLE:
+                NewBundleClass(ctx, classname, THIS_BUNDLE, ns);
+                break;
+
+            default:
+            case CONTEXT_SCOPE_NAMESPACE:
+                EvalContextHeapAddSoft(ctx, classname, ns);
+                break;
+            }
+        }
+    }
+}
+
+static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        {
+            return; // TODO: interesting course of action, but why is the check there in the first place?
+        }
+
+        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+                  RlistScalarValue(rp));
+        }
+
+        const char *string = (char *) (rp->item);
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+
+        EvalContextHeapPersistentRemove(string);
+
+        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
+
+        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
+    }
+}
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
 {
@@ -177,7 +259,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             }
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         MarkPromiseHandleDone(ctx, pp);
         DeleteAllClasses(ctx, attr.classes.del_change);
 
@@ -218,7 +300,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -240,7 +322,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -262,7 +344,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -284,7 +366,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #endif
         }
 
-        AddAllClasses(ctx, pp->ns, attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_notkept);
 
         if (IsPromiseValuableForLogging(pp))
@@ -297,7 +379,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
     case CF_UNKNOWN:
     case CF_NOP:
 
-        AddAllClasses(ctx, pp->ns, attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
         DeleteAllClasses(ctx, attr.classes.del_kept);
 
         if (IsPromiseValuableForLogging(pp))

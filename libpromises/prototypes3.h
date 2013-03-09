@@ -93,10 +93,8 @@ int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
-void NewPromiser(EvalContext *ctx, Promise *pp);
-void AnalyzePromiseConflicts(void);
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
-bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
+bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
@@ -104,11 +102,6 @@ int SetServerListenState(EvalContext *ctx, size_t queue_size);
 struct ServerConnectionState;
 
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer);
-
-/* files_editline.c */
-
-int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *pp, const ReportContext *report_context);
-Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise *pp);
 
 /* files_editxml.c */
 
@@ -179,7 +172,6 @@ void SetTimeOut(int timeout);
 void TimeOut(void);
 void SetReferenceTime(EvalContext *ctx, int setclasses);
 void SetStartTime(void);
-bool IsReadReady(int fd, int timeout_sec);
 
 /* verify_files.c */
 

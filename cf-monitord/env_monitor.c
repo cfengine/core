@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "env_monitor.h"
 
 #include "env_context.h"
 #include "mon.h"
@@ -51,6 +51,7 @@
 #endif
 
 #include <math.h>
+#include <assert.h>
 
 #ifndef HAVE_NOVA
 static void HistoryUpdate(EvalContext *ctx, Averages newvals);
@@ -268,7 +269,17 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
-    Promise *pp = NewPromise("monitor_cfengine", "the monitor daemon");
+
+    Policy *monitor_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
+        SubType *tp = BundleAppendSubType(bp, "monitor_cfengine");
+
+        pp = SubTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     Attributes dummyattr;
     CfLock thislock;
 
@@ -302,6 +313,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(monitor_cfengine_policy);
         return;
     }
 
@@ -323,6 +335,8 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
         ITER++;
     }
+
+    PolicyDestroy(monitor_cfengine_policy);
 }
 
 /*********************************************************************/
@@ -644,7 +658,7 @@ static void ArmClasses(Averages av, char *timekey)
             }
 
             AppendItem(&classlist, buff, "2");
-            NewPersistentContext(buff, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buff, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
         else
         {
@@ -954,7 +968,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_microanomaly");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         return sig;             /* Granularity makes this silly */
@@ -1001,7 +1015,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_dev2");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         if (dev > 3.0 * sqrt(2.0))
@@ -1009,7 +1023,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_anomaly");
             AppendItem(classlist, buffer2, "3");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         return sig;
@@ -1159,7 +1173,7 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1179,13 +1193,13 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("measurements", pp->agentsubtype) == 0)
+    if (strcmp("measurements", pp->parent_subtype->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
         *pp->donep = false;

@@ -2,9 +2,7 @@
 
 #include "env_context.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
-#include <stdarg.h>
+#include "test.h"
 
 
 typedef enum
@@ -242,6 +240,7 @@ void uneven_lengths_20(void **context)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     VERBOSE = 1;
 
     const UnitTest tests[] =

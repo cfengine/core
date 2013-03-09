@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfigApply(ctx, config);
 
     ReportContext *report_context = OpenReports(config->agent_type);
     GenericAgentDiscoverContext(ctx, config, report_context);
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }

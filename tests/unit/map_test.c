@@ -180,6 +180,7 @@ static void test_hashmap_degenerate_hash_fn(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_new_destroy),

@@ -89,6 +89,7 @@ static void test_cfreadline_corrupted(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     tests_setup();
 
     const UnitTest tests[] =

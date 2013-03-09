@@ -35,6 +35,8 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "conversion.h"
+#include "syntax.h"
 
 #include <assert.h>
 
@@ -119,7 +121,7 @@ void ScopeNew(const char *name)
 
 /*******************************************************************/
 
-void ScopeAugment(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals)
+void ScopeAugment(EvalContext *ctx, char *scope, const char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
@@ -310,20 +312,6 @@ void ScopeDelete(char *name)
 
 /*******************************************************************/
 
-void ScopeDeleteScalars(char *scope, Rlist *args)
-{
-    Rlist *rp;
-    char *lval;
-
-    for (rp = args; rp != NULL; rp = rp->next)
-    {
-        lval = (char *) rp->item;
-        ScopeDeleteScalar(scope, lval);
-    }
-}
-
-/*******************************************************************/
-
 void ScopeCopy(const char *new_scopename, const char *old_scopename)
 /*
  * Thread safe
@@ -392,6 +380,561 @@ void ScopePopThis()
         free(op->scope);
         op->scope = xstrdup("this");
     }
+}
+
+void ScopeToList(Scope *sp, Rlist **list)
+{
+    if (sp == NULL)
+    {
+        return;
+    }
+
+    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
+    CfAssoc *assoc;
+
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        RlistPrependScalar(list, assoc->lval);
+    }
+}
+
+void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
+{
+    Rval rvald;
+    Scope *ptr;
+
+    CfDebug("NewScalar(%s,%s,%s)\n", scope, lval, rval);
+
+    ptr = ScopeGet(scope);
+
+    if (ptr == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
+        return;
+    }
+
+// Newscalar allocates memory through NewAssoc
+
+    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    {
+        ScopeDeleteScalar(scope, lval);
+    }
+
+/*
+ * We know AddVariableHash does not change passed Rval structure or its
+ * contents, but we have no easy way to express it in C type system, hence cast.
+ */
+    ScopeAddVariableHash(scope, lval, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt, NULL, 0);
+}
+
+/*******************************************************************/
+
+void ScopeDeleteScalar(const char *scope_name, const char *lval)
+{
+    Scope *scope = ScopeGet(scope_name);
+
+    if (scope == NULL)
+    {
+        return;
+    }
+
+    if (HashDeleteElement(scope->hashtable, lval) == false)
+    {
+        CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope_name);
+    }
+}
+
+/*******************************************************************/
+
+void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
+{
+    Rval rvald;
+
+    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    {
+        ScopeDeleteVariable(scope, lval);
+    }
+
+    ScopeAddVariableHash(scope, lval, (Rval) {rval, RVAL_TYPE_LIST }, dt, NULL, 0);
+}
+
+/*******************************************************************/
+
+DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
+{
+    Scope *ptr = NULL;
+    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
+    char expbuf[CF_EXPANDSIZE];
+    CfAssoc *assoc;
+
+    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", scope, lval);
+
+    if (lval == NULL)
+    {
+        *returnv = (Rval) {NULL, RVAL_TYPE_SCALAR };
+        return DATA_TYPE_NONE;
+    }
+
+    if (!IsExpandable(lval))
+    {
+        strncpy(sval, lval, CF_MAXVARSIZE - 1);
+    }
+    else
+    {
+        if (ExpandScalar(lval, expbuf))
+        {
+            strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
+        }
+        else
+        {
+            /* C type system does not allow us to express the fact that returned
+               value may contain immutable string. */
+            *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
+            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval);
+            return DATA_TYPE_NONE;
+        }
+    }
+
+    if (IsQualifiedVariable(sval))
+    {
+        scopeid[0] = '\0';
+        sscanf(sval, "%[^.].%s", scopeid, vlval);
+        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
+        ptr = ScopeGet(scopeid);
+    }
+    else
+    {
+        strlcpy(vlval, sval, sizeof(vlval));
+        strlcpy(scopeid, scope, sizeof(scopeid));
+    }
+
+    if (ptr == NULL)
+    {
+        /* Assume current scope */
+        strcpy(vlval, lval);
+        ptr = ScopeGet(scopeid);
+    }
+
+    if (ptr == NULL)
+    {
+        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
+        /* C type system does not allow us to express the fact that returned
+           value may contain immutable string. */
+        *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
+        return DATA_TYPE_NONE;
+    }
+
+    CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n", scopeid, vlval, ptr->scope, vlval);
+
+    assoc = HashLookupElement(ptr->hashtable, vlval);
+
+    if (assoc == NULL)
+    {
+        CfDebug("No such variable found %s.%s\n\n", scopeid, lval);
+        /* C type system does not allow us to express the fact that returned
+           value may contain immutable string. */
+
+
+        *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
+        return DATA_TYPE_NONE;
+
+    }
+
+    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
+
+    if (DEBUG)
+    {
+        RvalShow(stdout, assoc->rval);
+    }
+    CfDebug("}\n");
+
+    *returnv = assoc->rval;
+    return assoc->dtype;
+}
+
+/*******************************************************************/
+
+void ScopeDeleteVariable(const char *scope, const char *id)
+{
+    Scope *ptr = ScopeGet(scope);
+
+    if (ptr == NULL)
+    {
+        return;
+    }
+
+    if (HashDeleteElement(ptr->hashtable, id) == false)
+    {
+        CfDebug("No variable matched %s\n", id);
+    }
+}
+
+bool ScopeVariableExistsInThis(const char *name)
+{
+    Rval rval;
+
+    if (name == NULL)
+    {
+        return false;
+    }
+
+    if (ScopeGetVariable("this", name, &rval) == DATA_TYPE_NONE)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/*******************************************************************/
+
+static int CompareVariableValue(Rval rval, CfAssoc *ap)
+{
+    const Rlist *list, *rp;
+
+    if (ap == NULL || rval.item == NULL)
+    {
+        return 1;
+    }
+
+    switch (rval.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        return strcmp(ap->rval.item, rval.item);
+
+    case RVAL_TYPE_LIST:
+        list = (const Rlist *) rval.item;
+
+        for (rp = list; rp != NULL; rp = rp->next)
+        {
+            if (!CompareVariableValue((Rval) {rp->item, rp->type}, ap))
+            {
+                return -1;
+            }
+        }
+
+        return 0;
+
+    default:
+        return 0;
+    }
+
+    return strcmp(ap->rval.item, rval.item);
+}
+
+int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname,
+                    int lineno)
+{
+    Scope *ptr;
+    const Rlist *rp;
+    CfAssoc *assoc;
+
+    if (rval.type == RVAL_TYPE_SCALAR)
+    {
+        CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n", scope, lval, (const char *) rval.item, CF_DATATYPES[dtype],
+                rval.type);
+    }
+    else
+    {
+        CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n", scope, lval, CF_DATATYPES[dtype], rval.type);
+    }
+
+    if (lval == NULL || scope == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "scope.value = %s.%s", scope, lval);
+        ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
+    }
+
+    if (rval.item == NULL)
+    {
+        CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
+        return false;
+    }
+
+    if (strlen(lval) > CF_MAXVARSIZE)
+    {
+        ReportError("variable lval too long");
+        return false;
+    }
+
+/* If we are not expanding a body template, check for recursive singularities */
+
+    if (strcmp(scope, "body") != 0)
+    {
+        switch (rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+
+            if (StringContainsVar((char *) rval.item, lval))
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", scope, lval,
+                      (char *) rval.item);
+                return false;
+            }
+            break;
+
+        case RVAL_TYPE_LIST:
+
+            for (rp = rval.item; rp != NULL; rp = rp->next)
+            {
+                if (StringContainsVar((char *) rp->item, lval))
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval);
+                    return false;
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    ptr = ScopeGet(scope);
+
+    if (ptr == NULL)
+    {
+        return false;
+    }
+
+// Look for outstanding lists in variable rvals
+
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        Rlist *listvars = NULL, *scalarvars = NULL;
+
+        if (strcmp(CONTEXTID, "this") != 0)
+        {
+            MapIteratorsFromRval(CONTEXTID, &scalarvars, &listvars, rval, NULL);
+
+            if (listvars != NULL)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                      lval, CONTEXTID);
+            }
+
+            RlistDestroy(scalarvars);
+            RlistDestroy(listvars);
+        }
+    }
+
+    assoc = HashLookupElement(ptr->hashtable, lval);
+
+    if (assoc)
+    {
+        if (CompareVariableValue(rval, assoc) == 0)
+        {
+            /* Identical value, keep as is */
+        }
+        else
+        {
+            /* Different value, bark and replace */
+            if (!UnresolvedVariables(assoc, rval.type))
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
+                if (fname)
+                {
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " !! Rule from %s at/before line %d\n", fname, lineno);
+                }
+                else
+                {
+                    CfOut(OUTPUT_LEVEL_INFORM, "", " !! in bundle parameterization\n");
+                }
+            }
+            RvalDestroy(assoc->rval);
+            assoc->rval = RvalCopy(rval);
+            assoc->dtype = dtype;
+            CfDebug("Stored \"%s\" in context %s\n", lval, scope);
+        }
+    }
+    else
+    {
+        if (!HashInsertElement(ptr->hashtable, lval, rval, dtype))
+        {
+            ProgrammingError("Hash table is full");
+        }
+    }
+
+    CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval, scope);
+    return true;
+}
+
+/*******************************************************************/
+
+void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
+// Go through scope and for each variable in name-list, replace with a
+// value from the deref "lol" (list of lists) clock
+{
+    int len;
+    Scope *ptr;
+    Rlist *rp;
+    CfAssoc *cplist;
+    AssocHashTableIterator i;
+    CfAssoc *assoc;
+
+    if ((len = RlistLen(namelist)) != RlistLen(dereflist))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Name list %d, dereflist %d\n", len, RlistLen(dereflist));
+        ProgrammingError("Software Error DeRefLists... correlated lists not same length");
+    }
+
+    if (len == 0)
+    {
+        return;
+    }
+
+    ptr = ScopeGet(scope);
+    i = HashIteratorInit(ptr->hashtable);
+
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        for (rp = dereflist; rp != NULL; rp = rp->next)
+        {
+            cplist = (CfAssoc *) rp->item;
+
+            if (strcmp(cplist->lval, assoc->lval) == 0)
+            {
+                /* Link up temp hash to variable lol */
+
+                if (rp->state_ptr == NULL || rp->state_ptr->type == RVAL_TYPE_FNCALL)
+                {
+                    /* Unexpanded function, or blank variable must be skipped. */
+                    return;
+                }
+
+                if (rp->state_ptr)
+                {
+                    CfDebug("Rewriting expanded type for %s from %s to %s\n", assoc->lval, CF_DATATYPES[assoc->dtype],
+                            (char *) rp->state_ptr->item);
+
+                    // must first free existing rval in scope, then allocate new (should always be string)
+                    RvalDestroy(assoc->rval);
+
+                    // avoids double free - borrowing value from lol (freed in DeleteScope())
+                    assoc->rval.item = xstrdup(rp->state_ptr->item);
+                }
+
+                switch (assoc->dtype)
+                {
+                case DATA_TYPE_STRING_LIST:
+                    assoc->dtype = DATA_TYPE_STRING;
+                    assoc->rval.type = RVAL_TYPE_SCALAR;
+                    break;
+                case DATA_TYPE_INT_LIST:
+                    assoc->dtype = DATA_TYPE_INT;
+                    assoc->rval.type = RVAL_TYPE_SCALAR;
+                    break;
+                case DATA_TYPE_REAL_LIST:
+                    assoc->dtype = DATA_TYPE_REAL;
+                    assoc->rval.type = RVAL_TYPE_SCALAR;
+                    break;
+                default:
+                    /* Only lists need to be converted */
+                    break;
+                }
+
+                CfDebug(" to %s\n", CF_DATATYPES[assoc->dtype]);
+            }
+        }
+    }
+}
+
+int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take)
+{
+    Rlist *rpg = NULL;
+    const Rlist *rpt = NULL;
+    FnCall *fp;
+    DataType dtg = DATA_TYPE_NONE, dtt = DATA_TYPE_NONE;
+    char *lval;
+    void *rval;
+    int len1, len2;
+
+    CfDebug("MapBodyArgs(begin)\n");
+
+    len1 = RlistLen(give);
+    len2 = RlistLen(take);
+
+    if (len1 != len2)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
+        return false;
+    }
+
+    for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg = rpg->next, rpt = rpt->next)
+    {
+        dtg = StringDataType(scopeid, (char *) rpg->item);
+        dtt = StringDataType(scopeid, (char *) rpt->item);
+
+        if (dtg != dtt)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
+                  (char *) rpt->item);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, CF_DATATYPES[dtg],
+                  (char *) rpt->item, CF_DATATYPES[dtt]);
+        }
+
+        switch (rpg->type)
+        {
+        case RVAL_TYPE_SCALAR:
+            lval = (char *) rpt->item;
+            rval = rpg->item;
+            CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char *) rval);
+            ScopeAddVariableHash(scopeid, lval, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg, NULL, 0);
+            break;
+
+        case RVAL_TYPE_LIST:
+            lval = (char *) rpt->item;
+            rval = rpg->item;
+            ScopeAddVariableHash(scopeid, lval, (Rval) { rval, RVAL_TYPE_LIST }, dtg, NULL, 0);
+            break;
+
+        case RVAL_TYPE_FNCALL:
+            fp = (FnCall *) rpg->item;
+            dtg = DATA_TYPE_NONE;
+            {
+                const FnCallType *fncall_type = FnCallTypeGet(fp->name);
+                if (fncall_type)
+                {
+                    dtg = fncall_type->dtype;
+                }
+            }
+
+            FnCallResult res = FnCallEvaluate(ctx, fp, NULL);
+
+            if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
+            {
+                // Unresolved variables
+                if (VERBOSE)
+                {
+                    printf
+                        (" !! Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
+                    FnCallShow(stdout, fp);
+                    printf(" (try simplifying)\n");
+                }
+            }
+            else
+            {
+                FnCallDestroy(fp);
+
+                rpg->item = res.rval.item;
+                rpg->type = res.rval.type;
+
+                lval = (char *) rpt->item;
+                rval = rpg->item;
+
+                ScopeAddVariableHash(scopeid, lval, (Rval) {rval, RVAL_TYPE_SCALAR }, dtg, NULL, 0);
+            }
+
+            break;
+
+        default:
+            /* Nothing else should happen */
+            ProgrammingError("Software error: something not a scalar/function in argument literal");
+        }
+    }
+
+    CfDebug("MapBodyArgs(end)\n");
+    return true;
 }
 
 /*******************************************************************/

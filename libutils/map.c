@@ -200,15 +200,18 @@ void MapClear(Map *map)
 
 void MapDestroy(Map *map)
 {
-    if (IsArrayMap(map))
+    if (map)
     {
-        ArrayMapDestroy(map->arraymap);
+        if (IsArrayMap(map))
+        {
+            ArrayMapDestroy(map->arraymap);
+        }
+        else
+        {
+            HashMapDestroy(map->hashmap);
+        }
+        free(map);
     }
-    else
-    {
-        HashMapDestroy(map->hashmap);
-    }
-    free(map);
 }
 
 /******************************************************************************/

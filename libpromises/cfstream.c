@@ -28,7 +28,7 @@
 #include "files_names.h"
 #include "policy.h"
 #include "item_lib.h"
-#include "vars.h"
+#include "scope.h"
 #include "transaction.h"
 #include "logging.h"
 #include "string_lib.h"
@@ -41,7 +41,7 @@
 
 #include <stdarg.h>
 
-/*****************************************************************************/
+static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
 
 /*
  * Log a list of strings into provided FILE
@@ -165,7 +165,7 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
     va_end(ap);
 }
 
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
+static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
 {
     VLog(stdout, level, errstr, fmt, ap);
 }

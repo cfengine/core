@@ -1,7 +1,5 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
 #include "item_lib.h"
 
 static void test_prepend_item(void **state)
@@ -79,8 +77,9 @@ static void test_list_select_last_matching_not_found(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_prepend_item),
         unit_test(test_list_len),
         unit_test(test_list_select_last_matching_finds_first),

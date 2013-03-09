@@ -72,21 +72,6 @@ CfAssoc *CopyAssoc(CfAssoc *old)
     return NewAssoc(old->lval, old->rval, old->dtype);
 }
 
-/*******************************************************************/
-
-CfAssoc *AssocNewReference(const char *lval, Rval rval, DataType dtype)
-{
-    CfAssoc *ap = NULL;
-
-    ap = xmalloc(sizeof(CfAssoc));
-
-    ap->lval = xstrdup(lval);
-    ap->rval = rval;
-    ap->dtype = dtype;
-
-    return ap;
-}
-
 /*
  * This associative array implementation uses array with linear search up to
  * TINY_LIMIT elements, and then converts into full-fledged hash table with open
@@ -489,23 +474,5 @@ CfAssoc *HashIteratorNext(AssocHashTableIterator *i)
     else
     {
         return TinyHashIteratorNext(i);
-    }
-}
-
-/*******************************************************************/
-
-void HashToList(Scope *sp, Rlist **list)
-{
-    if (sp == NULL)
-    {
-        return;
-    }
-
-    AssocHashTableIterator i = HashIteratorInit(sp->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        RlistPrependScalar(list, assoc->lval);
     }
 }

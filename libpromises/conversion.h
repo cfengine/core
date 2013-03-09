@@ -74,7 +74,6 @@ DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
 char *MapAddress(char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);
-int NonEmptyLine(char *s);
 const char *DataTypeShortToType(char *short_type);
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
@@ -90,8 +89,6 @@ gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
 const char *Nova_LongArch(const char *arch);
 const char *Nova_ShortArch(const char *arch);
 int Nova_CoarseLaterThan(const char *key, const char *from);
-int Nova_YearSlot(const char *day, const char *month, const char *lifecycle);
-int Nova_LaterThan(const char *bigger, const char *smaller);
 bool BundleQualifiedNameSplit(const char *qualified_bundle_name, char namespace_out[CF_MAXVARSIZE], char bundle_name_out[CF_MAXVARSIZE]);
 
 /* Timestamp-functions are not standardised across SQL databases - provide a standard layer for simple functions */

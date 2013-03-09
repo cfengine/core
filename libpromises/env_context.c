@@ -54,17 +54,8 @@
 /*****************************************************************************/
 
 static bool ValidClassName(const char *str);
-static int GetORAtom(const char *start, char *buffer);
-static int HasBrackets(const char *s, Promise *pp);
-static int IsBracketed(const char *s);
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context);
-
-/*****************************************************************************/
-
-Item *ABORTBUNDLEHEAP = NULL;
-
-static Item *ABORTHEAP = NULL;
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
 static bool ABORTBUNDLE = false;
 
@@ -89,7 +80,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return false;
     }
@@ -99,12 +90,12 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (IsDefinedClass(ctx, pp->promiser, pp->ns))
+    if (IsDefinedClass(ctx, pp->promiser, PromiseGetNamespace(pp)))
     {
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
-            DeletePersistentContext(pp->promiser);
+            EvalContextHeapPersistentRemove(pp->promiser);
         }
         return false;
     }
@@ -145,7 +136,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
         {
             return true;
         }
@@ -162,7 +153,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, pp->ns))
+        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
         {
             return false;
         }
@@ -202,7 +193,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         {
             if (i == n)
             {
-                NewClass(ctx, rp->item, pp->ns);
+                EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
                 return true;
             }
         }
@@ -253,7 +244,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             return false;
         }
 
-        result = IsDefinedClass(ctx, (char *) (rp->item), pp->ns);
+        result = IsDefinedClass(ctx, (char *) (rp->item), PromiseGetNamespace(pp));
 
         result_and = result_and && result;
         result_or = result_or || result;
@@ -269,13 +260,13 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
                 *(pp->donep) = true;
 
-                if (strcmp(pp->bundletype, "common") == 0)
+                if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
                 {
-                    NewClass(ctx, buffer, pp->ns);
+                    EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
                 }
                 else
                 {
-                    NewBundleClass(ctx, buffer, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, buffer, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -332,7 +323,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 // If this is a common bundle ...
 
-    if (strcmp(pp->bundletype, "common") == 0)
+    if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {
@@ -349,13 +340,13 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
             }
         }
@@ -368,7 +359,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 // If this is some other kind of bundle (else here??)
 
-    if (strcmp(pp->bundletype, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", pp->bundletype))
+    if (strcmp(PromiseGetBundle(pp)->type, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", PromiseGetBundle(pp)->type))
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {
@@ -385,13 +376,13 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                           a.context.persistent);
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    NewClass(ctx, pp->promiser, pp->ns);
+                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(ctx, pp->promiser, pp->bundle, pp->ns);
+                    NewBundleClass(ctx, pp->promiser, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
                 }
             }
         }
@@ -405,55 +396,54 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 
 /*******************************************************************/
 
-void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
 {
-    Item *ip;
-    char context[CF_MAXVARSIZE];
-    char canonclass[CF_MAXVARSIZE];
+    char context_copy[CF_MAXVARSIZE];
+    char canonified_context[CF_MAXVARSIZE];
 
-    strcpy(canonclass, oclass);
-    if (Chop(canonclass, CF_EXPANDSIZE) == -1)
+    strcpy(canonified_context, context);
+    if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
-    CanonifyNameInPlace(canonclass);
+    CanonifyNameInPlace(canonified_context);
     
     if (ns && strcmp(ns, "default") != 0)
-       {
-       snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, canonclass);
-       }
+    {
+        snprintf(context_copy, CF_MAXVARSIZE, "%s:%s", ns, canonified_context);
+    }
     else
-       {
-       strncpy(context, canonclass, CF_MAXVARSIZE);
-       }
+    {
+        strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
+    }
     
-    CfDebug("NewClass(%s)\n", context);
+    CfDebug("EvalContextHeapAddSoft(%s)\n", context_copy);
 
-    if (strlen(context) == 0)
+    if (strlen(context_copy) == 0)
     {
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
-    if (EvalContextHeapContainsSoft(ctx, context))
+    if (EvalContextHeapContainsSoft(ctx, context_copy))
     {
         return;
     }
 
-    EvalContextHeapAddSoft(ctx, context);
+    StringSetAdd(ctx->heap_soft, xstrdup(context_copy));
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -464,11 +454,11 @@ void NewClass(EvalContext *ctx, const char *oclass, const char *ns)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -504,45 +494,44 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
 
 /*******************************************************************/
 
-void HardClass(EvalContext *ctx, const char *oclass)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 {
-    Item *ip;
-    char context[CF_MAXVARSIZE];
+    char context_copy[CF_MAXVARSIZE];
 
-    strcpy(context, oclass);
-    if (Chop(context, CF_EXPANDSIZE) == -1)
+    strcpy(context_copy, context);
+    if (Chop(context_copy, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
-    CanonifyNameInPlace(context);
+    CanonifyNameInPlace(context_copy);
 
-    CfDebug("HardClass(%s)\n", context);
+    CfDebug("EvalContextHeapAddHard(%s)\n", context_copy);
 
-    if (strlen(context) == 0)
+    if (strlen(context_copy) == 0)
     {
         return;
     }
 
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, context))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
-    if (EvalContextHeapContainsHard(ctx, context))
+    if (EvalContextHeapContainsHard(ctx, context_copy))
     {
         return;
     }
 
-    EvalContextHeapAddHard(ctx, context);
+    StringSetAdd(ctx->heap_hard, xstrdup(context_copy));
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
@@ -553,11 +542,11 @@ void HardClass(EvalContext *ctx, const char *oclass)
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -568,7 +557,6 @@ void HardClass(EvalContext *ctx, const char *oclass)
 void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
 {
     char copy[CF_BUFSIZE];
-    Item *ip;
 
     if (ns && strcmp(ns, "default") != 0)
     {
@@ -591,13 +579,13 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     CfDebug("NewBundleClass(%s)\n", copy);
     
-    if (IsRegexItemIn(ctx, ABORTBUNDLEHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
         ABORTBUNDLE = true;
     }
 
-    if (IsRegexItemIn(ctx, ABORTHEAP, copy))
+    if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
         exit(1);
@@ -615,7 +603,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     EvalContextStackFrameAddSoft(ctx, copy);
 
-    for (ip = ABORTHEAP; ip != NULL; ip = ip->next)
+    for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
@@ -626,7 +614,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
 
     if (!ABORTBUNDLE)
     {
-        for (ip = ABORTBUNDLEHEAP; ip != NULL; ip = ip->next)
+        for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
@@ -636,259 +624,6 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
             }
         }
     }
-}
-
-/*********************************************************************/
-
-Rlist *SplitContextExpression(const char *context, Promise *pp)
-{
-    Rlist *list = NULL;
-    char cbuff[CF_MAXVARSIZE];
-
-    if (context == NULL)
-    {
-        RlistPrependScalar(&list, "any");
-    }
-    else
-    {
-        for (const char *sp = context; *sp != '\0'; sp++)
-        {
-            while (*sp == '|')
-            {
-                sp++;
-            }
-
-            memset(cbuff, 0, CF_MAXVARSIZE);
-
-            sp += GetORAtom(sp, cbuff);
-
-            if (strlen(cbuff) == 0)
-            {
-                break;
-            }
-
-            if (IsBracketed(cbuff))
-            {
-                // Fully bracketed atom (protected)
-                cbuff[strlen(cbuff) - 1] = '\0';
-                RlistPrependScalar(&list, cbuff + 1);
-            }
-            else
-            {
-                if (HasBrackets(cbuff, pp))
-                {
-                    Rlist *andlist = RlistFromSplitRegex(cbuff, "[.&]+", 99, false);
-                    Rlist *rp, *orlist = NULL;
-                    char buff[CF_MAXVARSIZE];
-                    char orstring[CF_MAXVARSIZE] = { 0 };
-                    char andstring[CF_MAXVARSIZE] = { 0 };
-
-                    // Apply distribution P.(A|B) -> P.A|P.B
-
-                    for (rp = andlist; rp != NULL; rp = rp->next)
-                    {
-                        if (IsBracketed(rp->item))
-                        {
-                            // This must be an OR string to be ORed and split into a list
-                            *((char *) rp->item + strlen((char *) rp->item) - 1) = '\0';
-
-                            if (strlen(orstring) > 0)
-                            {
-                                strcat(orstring, "|");
-                            }
-
-                            Join(orstring, (char *) (rp->item) + 1, CF_MAXVARSIZE);
-                        }
-                        else
-                        {
-                            if (strlen(andstring) > 0)
-                            {
-                                strcat(andstring, ".");
-                            }
-
-                            Join(andstring, rp->item, CF_MAXVARSIZE);
-                        }
-
-                        // foreach ORlist, AND with AND string
-                    }
-
-                    if (strlen(orstring) > 0)
-                    {
-                        orlist = RlistFromSplitRegex(orstring, "[|]+", 99, false);
-
-                        for (rp = orlist; rp != NULL; rp = rp->next)
-                        {
-                            snprintf(buff, CF_MAXVARSIZE, "%s.%s", (char *) rp->item, andstring);
-                            RlistPrependScalar(&list, buff);
-                        }
-                    }
-                    else
-                    {
-                        RlistPrependScalar(&list, andstring);
-                    }
-
-                    RlistDestroy(orlist);
-                    RlistDestroy(andlist);
-                }
-                else
-                {
-                    // Clean atom
-                    RlistPrependScalar(&list, cbuff);
-                }
-            }
-
-            if (*sp == '\0')
-            {
-                break;
-            }
-        }
-    }
-
-    return list;
-}
-
-/*********************************************************************/
-
-static int IsBracketed(const char *s)
- /* return true if the entire string is bracketed, not just if
-    if contains brackets */
-{
-    int i, level = 0, yes = 0;
-
-    if (*s != '(')
-    {
-        return false;
-    }
-
-    if (*(s + strlen(s) - 1) != ')')
-    {
-        return false;
-    }
-
-    if (strstr(s, ")("))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has broken brackets", s);
-        return false;
-    }
-
-    for (i = 0; i < strlen(s); i++)
-    {
-        if (s[i] == '(')
-        {
-            yes++;
-            level++;
-            if (i > 0 && !strchr(".&|!(", s[i - 1]))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
-            }
-        }
-
-        if (s[i] == ')')
-        {
-            yes++;
-            level--;
-            if (i < strlen(s) - 1 && !strchr(".&|!)", s[i + 1]))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator after of ')'", s);
-            }
-        }
-    }
-
-    if (level != 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has broken brackets", s);
-        return false;           /* premature ) */
-    }
-
-    if (yes > 2)
-    {
-        // e.g. (a|b).c.(d|e)
-        return false;
-    }
-
-    return true;
-}
-
-/*********************************************************************/
-
-static int GetORAtom(const char *start, char *buffer)
-{
-    const char *sp = start;
-    char *spc = buffer;
-    int bracklevel = 0, len = 0;
-
-    while ((*sp != '\0') && !((*sp == '|') && (bracklevel == 0)))
-    {
-        if (*sp == '(')
-        {
-            CfDebug("+(\n");
-            bracklevel++;
-        }
-
-        if (*sp == ')')
-        {
-            CfDebug("-)\n");
-            bracklevel--;
-        }
-
-        CfDebug("(%c)", *sp);
-        *spc++ = *sp++;
-        len++;
-    }
-
-    *spc = '\0';
-
-    CfDebug("\nGetORATom(%s)->%s\n", start, buffer);
-    return len;
-}
-
-/*********************************************************************/
-
-static int HasBrackets(const char *s, Promise *pp)
- /* return true if contains brackets */
-{
-    int i, level = 0, yes = 0;
-
-    for (i = 0; i < strlen(s); i++)
-    {
-        if (s[i] == '(')
-        {
-            yes++;
-            level++;
-            if (i > 0 && !strchr(".&|!(", s[i - 1]))
-            {
-                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator in front of '(' at position %d", s, i);
-            }
-        }
-
-        if (s[i] == ')')
-        {
-            level--;
-            if (i < strlen(s) - 1 && !strchr(".&|!)", s[i + 1]))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has a missing operator after ')'", s);
-            }
-        }
-    }
-
-    if (level != 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has unbalanced brackets", s);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return true;
-    }
-
-    if (yes > 1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Class expression \"%s\" has multiple brackets", s);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-    }
-    else if (yes)
-    {
-        return true;
-    }
-
-    return false;
 }
 
 /**********************************************************************/
@@ -1063,7 +798,7 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(EvalContext *ctx, const char *classname, void *ns)
+static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *classname, void *ns)
 {
     char qualified_class[CF_MAXVARSIZE];
 
@@ -1129,7 +864,7 @@ static char *EvalVarRef(const char *varname, void *param)
 
 /**********************************************************************/
 
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 {
     ParseResult res;
 
@@ -1165,14 +900,7 @@ bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns)
 
 /**********************************************************************/
 
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns)
-{
-    return !IsDefinedClass(ctx, exception, ns);
-}
-
-/**********************************************************************/
-
-static ExpressionValue EvalTokenFromList(EvalContext *ctx, const char *token, void *param)
+static ExpressionValue EvalTokenFromList(const EvalContext *ctx, const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);
@@ -1227,7 +955,7 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 
 /*****************************************************************************/
 
-void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
 {
     CF_DB *dbp;
     CfState state;
@@ -1239,7 +967,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
         return;
     }
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, unqualifiedname);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, context);
     
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
@@ -1268,7 +996,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
 
 /*****************************************************************************/
 
-void DeletePersistentContext(const char *name)
+void EvalContextHeapPersistentRemove(const char *context)
 {
     CF_DB *dbp;
 
@@ -1277,14 +1005,14 @@ void DeletePersistentContext(const char *name)
         return;
     }
 
-    DeleteDB(dbp, name);
-    CfDebug("Deleted any persistent state %s\n", name);
+    DeleteDB(dbp, context);
+    CfDebug("Deleted any persistent state %s\n", context);
     CloseDB(dbp);
 }
 
 /*****************************************************************************/
 
-void LoadPersistentContext(EvalContext *ctx)
+void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;
@@ -1335,11 +1063,11 @@ void LoadPersistentContext(EvalContext *ctx)
                ns[0] = '\0';
                name[0] = '\0';
                sscanf(key, "%[^:]:%[^\n]", ns, name);
-               NewClass(ctx, name, ns);
+               EvalContextHeapAddSoft(ctx, name, ns);
                }
             else
                {
-               NewClass(ctx, key, NULL);
+               EvalContextHeapAddSoft(ctx, key, NULL);
                }
         }
     }
@@ -1348,148 +1076,6 @@ void LoadPersistentContext(EvalContext *ctx)
     CloseDB(dbp);
 
     Banner("Loaded persistent memory");
-}
-
-/*****************************************************************************/
-
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns)
-{
-    for (const Rlist *rp = classlist; rp != NULL; rp = rp->next)
-    {
-        if (!EvalContextHeapContainsSoft(ctx, rp->item))
-        {
-            NewClass(ctx, rp->item, ns);
-        }
-    }
-}
-
-/*********************************************************************/
-
-void NewClassesFromString(EvalContext *ctx, const char *classlist)
-{
-    char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
-
-    if ((classlist == NULL) || strlen(classlist) == 0)
-    {
-        return;
-    }
-
-    memset(local, 0, CF_MAXVARSIZE);
-    strncpy(local, classlist, CF_MAXVARSIZE - 1);
-
-    for (sp = local; *sp != '\0'; sp++)
-    {
-        memset(currentitem, 0, CF_MAXVARSIZE);
-
-        sscanf(sp, "%250[^,]", currentitem);
-
-        sp += strlen(currentitem);
-
-        if (EvalContextHeapContainsHard(ctx, currentitem))
-        {
-            FatalError("cfengine: You cannot use -D to define a reserved class!");
-        }
-
-        NewClass(ctx, currentitem, NULL);
-    }
-}
-
-/*********************************************************************/
-
-void NegateClassesFromString(EvalContext *ctx, const char *classlist)
-{
-    char *sp, currentitem[CF_MAXVARSIZE], local[CF_MAXVARSIZE];
-
-    if ((classlist == NULL) || strlen(classlist) == 0)
-    {
-        return;
-    }
-
-    memset(local, 0, CF_MAXVARSIZE);
-    strncpy(local, classlist, CF_MAXVARSIZE - 1);
-
-    for (sp = local; *sp != '\0'; sp++)
-    {
-        memset(currentitem, 0, CF_MAXVARSIZE);
-
-        sscanf(sp, "%250[^,]", currentitem);
-
-        sp += strlen(currentitem);
-
-        if (EvalContextHeapContainsHard(ctx, currentitem))
-        {
-            FatalError("Cannot negate the reserved class [%s]\n", currentitem);
-        }
-
-        EvalContextHeapAddNegated(ctx, currentitem);
-    }
-}
-
-/*********************************************************************/
-
-bool IsSoftClass(EvalContext *ctx, const char *sp)
-{
-    return !EvalContextHeapContainsHard(ctx, sp);
-}
-
-/***************************************************************************/
-
-bool IsTimeClass(const char *sp)
-{
-
-    if (IsStrIn(sp, DAY_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, MONTH_TEXT))
-    {
-        return true;
-    }
-
-    if (IsStrIn(sp, SHIFT_TEXT))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Min", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Hr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Yr", 2) == 0 && isdigit((int)*(sp + 2)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Day", 3) == 0 && isdigit((int)*(sp + 3)))
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "GMT", 3) == 0 && *(sp + 3) == '_')
-    {
-        return true;
-    }
-
-    if (strncmp(sp, "Lcycle", strlen("Lcycle")) == 0)
-    {
-        return true;
-    }
-
-    const char *quarters[] = { "Q1", "Q2", "Q3", "Q4", NULL };
-
-    if (IsStrIn(sp, quarters))
-    {
-        return true;
-    }
-
-    return false;
 }
 
 /***************************************************************************/
@@ -1529,7 +1115,7 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
         return true;
     }
 
-    if (*classes && IsDefinedClass(ctx, *classes, pp->ns))
+    if (*classes && IsDefinedClass(ctx, *classes, PromiseGetNamespace(pp)))
     {
         return false;
     }
@@ -1541,20 +1127,8 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
 
 /*******************************************************************/
 
-void SaveClassEnvironment(EvalContext *ctx)
+void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
 {
-    char file[CF_BUFSIZE];
-    FILE *fp;
-
-    snprintf(file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-    if ((fp = fopen(file, "w")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-        return;
-    }
-
-    Writer *writer = FileWriter(fp);
-
     {
         SetIterator it = EvalContextHeapIteratorHard(ctx);
         const char *context = NULL;
@@ -1590,92 +1164,23 @@ void SaveClassEnvironment(EvalContext *ctx)
             }
         }
     }
-
-    WriterClose(writer);
-}
-
-/**********************************************************************/
-
-void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
-{
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
-    {
-        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
-        {
-            return; // TODO: interesting course of action, but why is the check there in the first place?
-        }
-
-        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
-                  RlistScalarValue(rp));
-        }
-
-        const char *string = (char *) (rp->item);
-
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
-
-        DeletePersistentContext(string);
-
-        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
-
-        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
-    }
 }
 
 /*****************************************************************************/
 
-void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
-    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    if (!IsItemIn(ctx->heap_abort, context))
     {
-        char *classname = xstrdup(rp->item);
-
-        CanonifyNameInPlace(classname);
-
-        if (EvalContextHeapContainsHard(ctx, classname))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
-            // TODO: ok.. but should we take any action? continue; maybe?
-        }
-
-        if (persist > 0)
-        {
-            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
-            }
-
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
-            NewPersistentContext(CanonifyName(rp->item), ns, persist, policy);
-            NewClass(ctx, classname, ns);
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
-
-            switch (context_scope)
-            {
-            case CONTEXT_SCOPE_BUNDLE:
-                NewBundleClass(ctx, classname, THIS_BUNDLE, ns);
-                break;
-
-            default:
-            case CONTEXT_SCOPE_NAMESPACE:
-                NewClass(ctx, classname, ns);
-                break;
-            }
-        }
+        AppendItem(&ctx->heap_abort, context, activated_on_context);
     }
 }
 
-/*****************************************************************************/
-
-void AddAbortClass(const char *name, const char *classes)
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
-    if (!IsItemIn(ABORTHEAP, name))
+    if (!IsItemIn(ctx->heap_abort_current_bundle, context))
     {
-        AppendItem(&ABORTHEAP, name, classes);
+        AppendItem(&ctx->heap_abort_current_bundle, context, activated_on_context);
     }
 }
 
@@ -1696,7 +1201,7 @@ void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
        return;
     }
     
-    snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, handle);
+    snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), handle);
     StringSetAdd(ctx->dependency_handles, xstrdup(name));
 }
 
@@ -1720,7 +1225,7 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
         }
         else
         {
-            snprintf(name, CF_BUFSIZE, "%s:%s", pp->ns, (char *)rp->item);
+            snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), (char *)rp->item);
             d = name;
         }
 
@@ -1754,12 +1259,10 @@ EvalContext *EvalContextNew(void)
     ctx->heap_soft = StringSetNew();
     ctx->heap_hard = StringSetNew();
     ctx->heap_negated = StringSetNew();
+    ctx->heap_abort = NULL;
+    ctx->heap_abort_current_bundle = NULL;
 
     ctx->stack = SeqNew(10, StackFrameDestroy);
-
-    // TODO: this should probably rather be done when evaluating a new bundle, not just when
-    // bundles call other bundles. We should not need a 'base frame' like this.
-    EvalContextStackPushFrame(ctx, false);
 
     ctx->dependency_handles = StringSetNew();
 
@@ -1773,21 +1276,13 @@ void EvalContextDestroy(EvalContext *ctx)
         StringSetDestroy(ctx->heap_soft);
         StringSetDestroy(ctx->heap_hard);
         StringSetDestroy(ctx->heap_negated);
+        DeleteItemList(ctx->heap_abort);
+        DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
 
         StringSetDestroy(ctx->dependency_handles);
     }
-}
-
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_soft, xstrdup(context));
-}
-
-void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(ctx->heap_hard, xstrdup(context));
 }
 
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
@@ -1811,22 +1306,22 @@ void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
     StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
 }
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_soft, context);
 }
 
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_hard, context);
 }
 
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context)
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
 {
     return StringSetContains(ctx->heap_negated, context);
 }
 
-bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size_t stack_index)
+bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
     if (StringSetContains(frame->contexts, context))
@@ -1843,16 +1338,24 @@ bool StackFrameContainsSoftRecursive(EvalContext *ctx, const char *context, size
     }
 }
 
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context)
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context)
 {
-    assert(SeqLength(ctx->stack) > 0);
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return false;
+    }
 
     size_t stack_index = SeqLength(ctx->stack) - 1;
     return StackFrameContainsSoftRecursive(ctx, context, stack_index);
 }
 
-static bool EvalContextStackFrameContainsNegated(EvalContext *ctx, const char *context)
+static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context)
 {
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return false;
+    }
+
     return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
 }
 
@@ -1901,6 +1404,11 @@ size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context
 
 size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex)
 {
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return 0;
+    }
+
     return StringSetMatchCount(EvalContextStackFrame(ctx)->contexts, context_regex);
 }
 
@@ -1945,6 +1453,7 @@ void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous)
 void EvalContextStackPopFrame(EvalContext *ctx)
 {
     assert(SeqLength(ctx->stack) > 0);
+    SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
 }
 
 void EvalContextStackFrameClear(EvalContext *ctx)

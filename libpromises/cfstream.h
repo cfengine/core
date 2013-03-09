@@ -30,7 +30,6 @@
 
 void CfFOut(char *filename, OutputLevel level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
 void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
 
 #endif

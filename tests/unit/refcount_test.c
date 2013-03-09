@@ -1,9 +1,6 @@
-#include <setjmp.h>
-#include <sys/types.h>
-#include <stdarg.h>
-#include <string.h>
-#include <cmockery.h>
-#include <refcount.h>
+#include "test.h"
+
+#include "refcount.h"
 
 // Simple initialization test
 static void test_initRefCount(void **state)

@@ -34,7 +34,6 @@
 #include "transaction.h"
 #include "logging.h"
 
-static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static void RandomSeed(void);
 
 static char *CFPUBKEYFILE;
@@ -66,7 +65,6 @@ void CryptoInitialize()
 
 static void RandomSeed(void)
 {
-    static unsigned char digest[EVP_MAX_MD_SIZE + 1];
     char vbuff[CF_BUFSIZE];
 
 /* Use the system database as the entropy source for random numbers */
@@ -81,11 +79,13 @@ static void RandomSeed(void)
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not read sufficient randomness from %s\n", vbuff);
     }
 
-    while (!RAND_status())
-    {
-        MD5Random(digest);
-        RAND_seed((void *) digest, 16);
-    }
+    /* Submit some random data to random pool */
+    RAND_seed(&CFSTARTTIME, sizeof(time_t));
+    RAND_seed(VFQNAME, strlen(VFQNAME));
+    time_t now = time(NULL);
+    RAND_seed(&now, sizeof(time_t));
+    char uninitbuffer[100];
+    RAND_seed(uninitbuffer, sizeof(uninitbuffer));
 }
 
 /*********************************************************************/
@@ -312,63 +312,6 @@ void SavePublicKey(char *user, char *ipaddress, char *digest, RSA *key)
     ThreadUnlock(cft_system);
     fclose(fp);
 }
-
-/*********************************************************************/
-
-static void MD5Random(unsigned char digest[EVP_MAX_MD_SIZE + 1])
-   /* Make a decent random number by crunching some system states & garbage through
-      MD5. We can use this as a seed for pseudo random generator */
-{
-    unsigned char buffer[CF_BUFSIZE];
-    char pscomm[CF_BUFSIZE];
-    char uninitbuffer[100];
-    int md_len;
-    const EVP_MD *md;
-    EVP_MD_CTX context;
-    FILE *pp;
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for a random number seed...\n");
-
-#ifdef HAVE_NOVA
-    md = EVP_get_digestbyname("sha256");
-#else
-    md = EVP_get_digestbyname("md5");
-#endif
-
-    EVP_DigestInit(&context, md);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "...\n");
-
-    snprintf(buffer, CF_BUFSIZE, "%d%d%25s", (int) CFSTARTTIME, (int) *digest, VFQNAME);
-
-    EVP_DigestUpdate(&context, buffer, CF_BUFSIZE);
-
-    snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
-
-    if ((pp = cf_popen(pscomm, "r")) != NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open the process list with command %s\n", pscomm);
-
-        while (!feof(pp))
-        {
-            if (CfReadLine(buffer, CF_BUFSIZE, pp) == -1)
-            {
-                FatalError("Error in CfReadLine");
-            }
-            EVP_DigestUpdate(&context, buffer, CF_BUFSIZE);
-        }
-    }
-
-    uninitbuffer[99] = '\0';
-    snprintf(buffer, CF_BUFSIZE - 1, "%ld %s", time(NULL), uninitbuffer);
-    EVP_DigestUpdate(&context, buffer, CF_BUFSIZE);
-
-    cf_pclose(pp);
-
-    EVP_DigestFinal(&context, digest, &md_len);
-}
-
-/*********************************************************************/
 
 int EncryptString(char type, char *in, char *out, unsigned char *key, int plainlen)
 {

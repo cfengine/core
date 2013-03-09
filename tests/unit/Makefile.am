@@ -8,7 +8,7 @@ LDADD = ../../libpromises/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c
-libtest_la_LIBADD = ../../pub/libcfpub.la
+libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
 libstr_la_SOURCES = ../../libutils/string_lib.c ../../libutils/writer.c
@@ -27,6 +27,7 @@ check_PROGRAMS = \
 	item_test \
 	rlist_test \
 	domainname_test \
+	set_test \
 	set_domainname_test \
 	str_test \
 	json_test \
@@ -59,7 +60,7 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
-	timeout_test \
+	cf_key_functions_test \
 	connection_management_test
 
 #	ipaddress_test
@@ -106,6 +107,8 @@ list_test_SOURCES = list_test.c
 refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
+
+cf_key_functions_test_SOURCES = cf_key_functions_test.c
 
 #ipaddress_test_SOURCES = ipaddress_test.c 
 

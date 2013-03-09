@@ -216,8 +216,9 @@ static void test_len(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_create_destroy),
         unit_test(test_append),
         unit_test(test_lookup),

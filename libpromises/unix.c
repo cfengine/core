@@ -39,6 +39,7 @@
 #include "exec_tools.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "scope.h"
 
 #ifdef HAVE_SYS_UIO_H
 # include <sys/uio.h>
@@ -395,10 +396,10 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
-    HardClass(ctx, name);
+    EvalContextHeapAddHard(ctx, name);
 # else
     ScopeNewScalar("sys", name, "mac_unknown", DATA_TYPE_STRING);
-    HardClass(ctx, "mac_unknown");
+    EvalContextHeapAddHard(ctx, "mac_unknown");
 # endif
 }
 
@@ -507,7 +508,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
         snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
 
-        HardClass(ctx, workbuf);
+        EvalContextHeapAddHard(ctx, workbuf);
 
         if (ifp->ifr_addr.sa_family == AF_INET)
         {
@@ -530,7 +531,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                 }
 
                 CfDebug("Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
-                HardClass(ctx, inet_ntoa(sin->sin_addr));
+                EvalContextHeapAddHard(ctx, inet_ntoa(sin->sin_addr));
 
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
@@ -542,14 +543,14 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     if (hp->h_name != NULL)
                     {
                         CfDebug("Adding hostname %s..\n", hp->h_name);
-                        HardClass(ctx, hp->h_name);
+                        EvalContextHeapAddHard(ctx, hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
                                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Adding alias %s..\n", hp->h_aliases[i]);
-                                HardClass(ctx, hp->h_aliases[i]);
+                                EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
                             }
                         }
                     }
@@ -569,7 +570,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            HardClass(ctx, ip);
+                            EvalContextHeapAddHard(ctx, ip);
                         }
                     }
 
@@ -590,7 +591,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 strncpy(ip, "ipv4_", CF_MAXVARSIZE);
                 strncat(ip, inet_ntoa(sin->sin_addr), CF_MAXVARSIZE - 6);
-                HardClass(ctx, ip);
+                EvalContextHeapAddHard(ctx, ip);
 
                 if (!ipdefault)
                 {
@@ -608,7 +609,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     if (*sp == '.')
                     {
                         *sp = '\0';
-                        HardClass(ctx, ip);
+                        EvalContextHeapAddHard(ctx, ip);
                     }
                 }
 
@@ -745,7 +746,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found IPv6 address %s\n", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
-                    HardClass(ctx, ip->name);
+                    EvalContextHeapAddHard(ctx, ip->name);
                 }
             }
 

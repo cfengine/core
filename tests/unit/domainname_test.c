@@ -1,7 +1,6 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "cf3.defs.h"
 
 char fqname[CF_BUFSIZE];
 char uqname[CF_BUFSIZE];
@@ -86,8 +85,9 @@ static void test_wrong_fqname(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_fqname),
         unit_test(test_uqname),
         unit_test(test_uqname2),

@@ -55,6 +55,8 @@
 #include "cf.nova.h"
 #endif
 
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
+                               void (*fnptr) (), const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level, const Promise *pp);
 static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
@@ -142,7 +144,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     THIS_BUNDLE = scopeid;
 
-    pcopy = DeRefCopyPromise(ctx, scopeid, pp);
+    pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR }, pp);
 
@@ -160,7 +162,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, scalarvars, listvars, fnptr, report_context);
+    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, listvars, fnptr, report_context);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -643,8 +645,8 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) (), const ReportContext *report_context)
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
+                               void (*fnptr) (), const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -683,7 +685,7 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
 
         /* Set scope "this" first to ensure list expansion ! */
         ScopeSet("this");
-        DeRefListsInHashtable("this", listvars, lol);
+        ScopeDeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */
 
@@ -712,8 +714,8 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
         ScopeNewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewScalar("this", "bundle", pp->bundle, DATA_TYPE_STRING);
-        ScopeNewScalar("this", "namespace", pp->ns, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        ScopeNewScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -746,17 +748,17 @@ void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, 
             break;
         }
 
-        if (strcmp(pp->agentsubtype, "vars") == 0)
+        if (strcmp(pp->parent_subtype->name, "vars") == 0)
         {
-            ConvergeVarHashPromise(ctx, pp->bundle, pexp, true);
+            ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pexp, true);
         }
 
-        if (strcmp(pp->agentsubtype, "meta") == 0)
-           {
-           char ns[CF_BUFSIZE];
-           snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
-           ConvergeVarHashPromise(ctx, ns, pp, true);
-           }
+        if (strcmp(pp->parent_subtype->name, "meta") == 0)
+        {
+            char ns[CF_BUFSIZE];
+            snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
+            ConvergeVarHashPromise(ctx, ns, pp, true);
+        }
         
         PromiseDestroy(pexp);
 
@@ -1089,7 +1091,7 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
 {
-    if (strcmp(pp->agentsubtype, "packages") == 0)
+    if (strcmp(pp->parent_subtype->name, "packages") == 0)
     {
         if (PromiseGetConstraint(ctx, pp, "package_method") == NULL)
         {
@@ -1116,7 +1118,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         return;
     }
 
-    if (IsExcluded(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return;
     }
@@ -1143,7 +1145,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             {
             case RVAL_TYPE_SCALAR:
 
-                if (IsExcluded(ctx, cp->rval.item, pp->ns))
+                if (!IsDefinedClass(ctx, cp->rval.item, PromiseGetNamespace(pp)))
                 {
                     return;
                 }
@@ -1165,7 +1167,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     return;
                 }
 
-                excluded = IsExcluded(ctx, res.item, pp->ns);
+                excluded = !IsDefinedClass(ctx, res.item, PromiseGetNamespace(pp));
 
                 RvalDestroy(res);
 
@@ -1231,7 +1233,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
     DataType existing_var = ScopeGetVariable(scope, pp->promiser, &retval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
-    if (strcmp(pp->ns, "default") == 0)
+    if (strcmp(PromiseGetNamespace(pp), "default") == 0)
     {
         result = BufferSet(qualified_scope, scope, strlen(scope));
         if (result < 0)
@@ -1249,7 +1251,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
     {
         if (strchr(scope, ':') == NULL)
         {
-            result = BufferPrintf(qualified_scope, "%s:%s", pp->ns, scope);
+            result = BufferPrintf(qualified_scope, "%s:%s", PromiseGetNamespace(pp), scope);
             if (result < 0)
             {
                 /*
@@ -1433,7 +1435,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             }
         }
 
-        if (!AddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
+        if (!ScopeAddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
                              cp->audit->filename, cp->offset.line))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
@@ -1614,7 +1616,7 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
 
     // Check for recursion of bundles so that knowledge map will reflect these cases
 
-    if (strcmp("services", pp->agentsubtype) == 0)
+    if (strcmp("services", pp->parent_subtype->name) == 0)
     {
         ParseServices(ctx, report_context, pp);
     }
@@ -1758,7 +1760,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
 
     if (bp)
     {
-        MapBodyArgs(ctx, bp->name, args, bp->args);
+        ScopeMapBodyArgs(ctx, bp->name, args, bp->args);
 
         for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
         {

@@ -39,6 +39,7 @@
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
+#include "rlist.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     
@@ -101,9 +102,9 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
     {
         method_deref = strchr(method_name, CF_NS) + 1;
     }
-    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(pp->ns, "default") != 0))
+    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
     {
-        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, method_name);
+        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, method_name);
         method_deref = qualified_method;
     }
     else
@@ -132,7 +133,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         ScopeNew(ns);
         SetBundleOutputs(bp->name);
 
-        ScopeAugment(ctx, method_deref, pp->ns, bp->args, params);
+        ScopeAugment(ctx, method_deref, PromiseGetNamespace(pp), bp->args, params);
 
         THIS_BUNDLE = bp->name;
 
@@ -163,7 +164,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         }
 
-        ScopeDeleteScalars(bp->name, bp->args);
+        for (const Rlist *rp = bp->args; rp; rp = rp->next)
+        {
+            const char *lval = rp->item;
+            ScopeDeleteScalar(bp->name, lval);
+        }
     }
     else
     {
@@ -238,7 +243,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                ScopeNewScalar(pp->bundle, newname, assoc->rval.item, DATA_TYPE_STRING);           
+                ScopeNewScalar(PromiseGetBundle(pp)->name, newname, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
         

@@ -1,10 +1,7 @@
-#include "cf3.defs.h"
+#include "test.h"
+
 #include "item_lib.h"
 #include "server.h"
-
-
-#include <setjmp.h>
-#include <cmockery.h>
 
 const int CONNECTION_MAX_AGE_SECONDS = SECONDS_PER_HOUR * 2;
 
@@ -135,13 +132,14 @@ static void test_purge_old_connections_purge_last(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_purge_old_connections_nochange),
-            unit_test(test_purge_old_connections_purge_first),
-            unit_test(test_purge_old_connections_purge_middle),
-            unit_test(test_purge_old_connections_purge_last)
-        };
+    {
+        unit_test(test_purge_old_connections_nochange),
+        unit_test(test_purge_old_connections_purge_first),
+        unit_test(test_purge_old_connections_purge_middle),
+        unit_test(test_purge_old_connections_purge_last)
+    };
 
     return run_tests(tests);
 }

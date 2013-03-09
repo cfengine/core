@@ -72,3 +72,22 @@ void *SetIteratorNext(SetIterator *i)
     MapKeyValue *kv = MapIteratorNext(i);
     return kv ? kv->key : NULL;
 }
+
+StringSet *StringSetFromString(const char *str, char delimiter)
+{
+    StringSet *set = StringSetNew();
+
+    char delimiters[2] = { 0 };
+    delimiters[0] = delimiter;
+
+    char *copy = xstrdup(str);
+    char *curr = NULL;
+
+    while ((curr = strsep(&copy, delimiters)))
+    {
+        StringSetAdd(set, xstrdup(curr));
+    }
+
+    free(copy);
+    return set;
+}

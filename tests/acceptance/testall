@@ -208,8 +208,6 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
     echo >> $LOG
     echo "Return code is $RETVAL." >> $LOG
 
-    $GAINROOT rm -rf $WORKDIR
-
     TEST_END_TIME=$(unix_seconds)
     echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> $XMLTMP
 
@@ -225,6 +223,10 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       else
         RESULT="FAILed to crash"
       fi
+    fi
+
+    if [ $RESULT = Pass ]; then
+      $GAINROOT rm -rf $WORKDIR
     fi
 
     if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then

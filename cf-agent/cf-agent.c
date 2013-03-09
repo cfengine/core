@@ -213,7 +213,10 @@ int main(int argc, char *argv[])
     int ret = 0;
 
     EvalContext *ctx = EvalContextNew();
+
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfigApply(ctx, config);
+
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
     if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
@@ -244,7 +247,7 @@ int main(int argc, char *argv[])
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
     }
@@ -323,8 +326,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
-            DEBUG = true;
+            config->debug_mode = true;
             break;
 
         case 'B':
@@ -332,7 +334,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
-            HardClass(ctx, "bootstrap_mode");
+            EvalContextHeapAddHard(ctx, "bootstrap_mode");
             break;
 
         case 's':
@@ -380,11 +382,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(ctx, optarg);
+            config->heap_soft = StringSetFromString(optarg, ',');
             break;
 
         case 'N':
-            NegateClassesFromString(ctx, optarg);
+            config->heap_negated = StringSetFromString(optarg, ',');
             break;
 
         case 'I':
@@ -398,7 +400,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 'V':
@@ -513,7 +515,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -589,7 +591,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    AddAbortClass(name, cp->classes);
+                    EvalContextHeapAddAbort(ctx, name, cp->classes);
                 }
 
                 continue;
@@ -604,13 +606,9 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     char name[CF_MAXVARSIZE] = "";
-
                     strncpy(name, rp->item, CF_MAXVARSIZE - 1);
 
-                    if (!IsItemIn(ABORTBUNDLEHEAP, name))
-                    {
-                        AppendItem(&ABORTBUNDLEHEAP, name, cp->classes);
-                    }
+                    EvalContextHeapAddAbortCurrentBundle(ctx, name, cp->classes);
                 }
 
                 continue;
@@ -625,7 +623,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> ... %s\n", RlistScalarValue(rp));
-                    NewClass(ctx, rp->item, NULL);
+                    EvalContextHeapAddSoft(ctx, rp->item, NULL);
                 }
 
                 continue;
@@ -902,12 +900,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         exit(1);
     }
 
-    // TODO: should've been checked a long time ago, remove?
-    if (retval.type != RVAL_TYPE_LIST)
-    {
-        FatalError("Promised bundlesequence was not a list");
-    }
-
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
     {
         switch (rp->type)
@@ -988,8 +980,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             BannerBundle(bp, params);
             THIS_BUNDLE = bp->name;
 
-            EvalContextStackFrameClear(ctx);
-
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
         }
@@ -1003,6 +993,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
+    EvalContextStackPushFrame(ctx, false);
+
     SubType *sp;
     TypeSequence type;
     int pass;
@@ -1041,7 +1033,20 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
                 if (ALLCLASSESREPORT)
                 {
-                    SaveClassEnvironment(ctx);
+                    char context_report_file[CF_BUFSIZE];
+                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+                    FILE *fp = NULL;
+                    if ((fp = fopen(context_report_file, "w")) == NULL)
+                    {
+                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
+                    }
+                    else
+                    {
+                        Writer *writer = FileWriter(fp);
+                        SaveClassEnvironment(ctx, writer);
+                        WriterClose(writer);
+                    }
                 }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency
@@ -1065,6 +1070,9 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
     }
 
     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
+
+    EvalContextStackPopFrame(ctx);
+
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
@@ -1190,8 +1198,8 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
            break;
        }
 
-    ScopeDeleteScalar(pp->bundle, pp->promiser);
-    ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
+    ScopeDeleteScalar(PromiseGetBundle(pp)->name, pp->promiser);
+    ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pp, true);
 }
 
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
@@ -1199,7 +1207,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1232,35 +1240,35 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     
 // Record promises examined for efficiency calc
 
-    if (strcmp("meta", pp->agentsubtype) == 0)
+    if (strcmp("meta", pp->parent_subtype->name) == 0)
     {
         char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
+        snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
         ScopeNew(ns);
         ConvergeVarHashPromise(ctx, ns, pp, true);
         return;
     }
 
-    if (strcmp("vars", pp->agentsubtype) == 0)
+    if (strcmp("vars", pp->parent_subtype->name) == 0)
     {
-        ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
+        ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pp, true);
         return;
     }
 
-    if (strcmp("defaults", pp->agentsubtype) == 0)
+    if (strcmp("defaults", pp->parent_subtype->name) == 0)
     {
         DefaultVarPromise(ctx, pp);
         return;
     }
 
     
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("outputs", pp->agentsubtype) == 0)
+    if (strcmp("outputs", pp->parent_subtype->name) == 0)
     {
         VerifyOutputsPromise(ctx, pp);
         return;
@@ -1268,33 +1276,33 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     SetPromiseOutputs(ctx, pp);
 
-    if (strcmp("interfaces", pp->agentsubtype) == 0)
+    if (strcmp("interfaces", pp->parent_subtype->name) == 0)
     {
         VerifyInterfacesPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("processes", pp->agentsubtype) == 0)
+    if (strcmp("processes", pp->parent_subtype->name) == 0)
     {
         VerifyProcessesPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("storage", pp->agentsubtype) == 0)
+    if (strcmp("storage", pp->parent_subtype->name) == 0)
     {
         FindAndVerifyStoragePromises(ctx, pp, report_context);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("packages", pp->agentsubtype) == 0)
+    if (strcmp("packages", pp->parent_subtype->name) == 0)
     {
         VerifyPackagesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("files", pp->agentsubtype) == 0)
+    if (strcmp("files", pp->parent_subtype->name) == 0)
     {
         if (PromiseGetConstraintAsBoolean(ctx, "background", pp))
         {
@@ -1309,42 +1317,42 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
         return;
     }
 
-    if (strcmp("commands", pp->agentsubtype) == 0)
+    if (strcmp("commands", pp->parent_subtype->name) == 0)
     {
         VerifyExecPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("databases", pp->agentsubtype) == 0)
+    if (strcmp("databases", pp->parent_subtype->name) == 0)
     {
         VerifyDatabasePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("methods", pp->agentsubtype) == 0)
+    if (strcmp("methods", pp->parent_subtype->name) == 0)
     {
         VerifyMethodsPromise(ctx, pp, report_context);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("services", pp->agentsubtype) == 0)
+    if (strcmp("services", pp->parent_subtype->name) == 0)
     {
         VerifyServicesPromise(ctx, pp, report_context);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("guest_environments", pp->agentsubtype) == 0)
+    if (strcmp("guest_environments", pp->parent_subtype->name) == 0)
     {
         VerifyEnvironmentsPromise(pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("reports", pp->agentsubtype) == 0)
+    if (strcmp("reports", pp->parent_subtype->name) == 0)
     {
         VerifyReportPromise(ctx, pp);
         return;

@@ -83,7 +83,7 @@ m4_ifdef([LT_INIT],
 AM_PROG_LEX
 AC_PROG_YACC
 AC_PROG_INSTALL
-AC_CONFIG_LIBOBJ_DIR(pub)
+AC_CONFIG_LIBOBJ_DIR(libcompat)
 AC_FUNC_GETLOADAVG 
 AC_PATH_PROG(GETCONF, getconf, false, $PATH:$prefix/bin:/usr/bin:/usr/local/bin:/sw/bin)
 
@@ -569,6 +569,8 @@ AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
 AC_CHECK_FUNCS(fpathconf)
 
+AC_CHECK_MEMBERS([struct stat.st_mtim, struct stat.st_mtimespec])
+
 AC_MSG_CHECKING([for PRIuMAX/PRIdMAX macros])
 AC_EGREP_CPP([primacros_found],
   AC_INCLUDES_DEFAULT
@@ -936,9 +938,19 @@ dnl ######################################################################
 AC_MSG_RESULT( )
 AC_MSG_RESULT(    Summary of options...)
 
+AC_MSG_RESULT([> Required libraries])
+
 AC_MSG_RESULT([-> OpenSSL: $OPENSSL_PATH])
 
 AC_MSG_RESULT([-> PCRE: $PCRE_PATH])
+
+if test $WITH_TOKYO = 1; then
+  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
+elif test $WITH_QDBM = 1; then
+  AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
+fi
+
+AC_MSG_RESULT([> Optional libraries])
 
 if test "x$ac_cv_lib_mysqlclient_mysql_real_connect" = "xyes"; then
   AC_MSG_RESULT([-> MySQL connector: $MYSQL_PATH])
@@ -950,12 +962,6 @@ if test "x$ac_cv_lib_pq_PQconnectdb" = "xyes"; then
   AC_MSG_RESULT([-> PostgreSQL connector: $POSTGRESQL_PATH])
 else
   AC_MSG_RESULT([-> PostgreSQL connector: disabled])
-fi
-
-if test $WITH_TOKYO = 1; then
-  AC_MSG_RESULT([-> DB: Tokyo Cabinet: $TOKYOCABINET_PATH])
-elif test $WITH_QDBM = 1; then
-  AC_MSG_RESULT([-> DB: QDBM: $QDBM_PATH])
 fi
 
 if test "x$ac_cv_lib_virt_virConnectOpen" = xyes; then
@@ -989,7 +995,7 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
-	pub/Makefile
+	libcompat/Makefile
 	libutils/Makefile
 	libpromises/Makefile
 	cf-agent/Makefile

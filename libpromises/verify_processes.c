@@ -38,6 +38,7 @@
 #include "logging.h"
 #include "rlist.h"
 #include "policy.h"
+#include "scope.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -158,12 +159,24 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
-            AddEphemeralClasses(ctx, a.process_count.out_of_range_define, pp->ns);
+            for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
+            {
+                if (!EvalContextHeapContainsSoft(ctx, rp->item))
+                {
+                    EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                }
+            }
             out_of_range = true;
         }
         else
         {
-            AddEphemeralClasses(ctx, a.process_count.in_range_define, pp->ns);
+            for (const Rlist *rp = a.process_count.in_range_define; rp != NULL; rp = rp->next)
+            {
+                if (!EvalContextHeapContainsSoft(ctx, rp->item))
+                {
+                    EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
+                }
+            }
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
@@ -239,7 +252,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         else
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
-            NewClass(ctx, a.restart_class, pp->ns);
+            EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
         }
     }
 }

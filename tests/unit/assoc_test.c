@@ -24,8 +24,9 @@ static void test_copy(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_create_destroy),
         unit_test(test_copy)
     };

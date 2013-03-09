@@ -28,6 +28,7 @@
 #include "cf3.defs.h"
 
 #include "policy.h"
+#include "set.h"
 
 typedef struct
 {
@@ -37,6 +38,11 @@ typedef struct
     char *input_file;
     bool check_not_writable_by_others;
     bool check_runnable;
+    bool debug_mode;
+
+    StringSet *heap_soft;
+    StringSet *heap_negated;
+
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
 
     // change to evaluation behavior from the policy itself
@@ -99,6 +105,7 @@ void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
+void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);
 
 const char *AgentTypeToString(AgentType agent_type);
 

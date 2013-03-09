@@ -209,6 +209,13 @@ void JsonObjectAppendReal(JsonElement *object, const char *key, double value);
 void JsonObjectAppendBool(JsonElement *object, const char *key, _Bool value);
 
 /**
+  @brief Append null field to an object.
+  @param object [in] The JSON object parent.
+  @param key [in] the key of the field.
+  */
+void JsonObjectAppendNull(JsonElement *object, const char *key);
+
+/**
   @brief Append an array field to an object.
   @param object [in] The JSON object parent.
   @param key [in] the key of the field.
@@ -223,6 +230,14 @@ void JsonObjectAppendArray(JsonElement *object, const char *key, JsonElement *ar
   @param value [in] The value of the field.
   */
 void JsonObjectAppendObject(JsonElement *object, const char *key, JsonElement *childObject);
+
+/**
+  @brief Append any JSON element to an object.
+  @param object [in] The JSON object parent.
+  @param key [in] the key of the field.
+  @param element [in] The element to append
+*/
+void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *element);
 
 /**
   @brief Get the value of a field in an object, as a string.
@@ -274,6 +289,12 @@ void JsonArrayAppendInteger(JsonElement *array, int value);
 void JsonArrayAppendReal(JsonElement *array, double value);
 
 /**
+  @brief Append null to an array.
+  @param array [in] The JSON array parent.
+  */
+void JsonArrayAppendNull(JsonElement *array);
+
+/**
   @brief Append an array to an array.
   @param array [in] The JSON array parent.
   @param child_array [in] The array value to append.
@@ -286,6 +307,13 @@ void JsonArrayAppendArray(JsonElement *array, JsonElement *child_array);
   @param object [in] The object value to append.
   */
 void JsonArrayAppendObject(JsonElement *array, JsonElement *object);
+
+/**
+  @brief Append any JSON element to an array.
+  @param array [in] The JSON array parent.
+  @param element [in] The object to append.
+  */
+void JsonArrayAppendElement(JsonElement *array, JsonElement *element);
 
 /**
   @brief Remove an inclusive range from a JSON array.

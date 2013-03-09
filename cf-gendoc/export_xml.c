@@ -144,7 +144,7 @@ static void XmlExportVariables(Writer *writer, const char *scope)
     XmlTag(writer, XMLTAG_INTRO, filebuffer, 0);
     free(filebuffer);
 
-    HashToList(ScopeGet(scope), &list);
+    ScopeToList(ScopeGet(scope), &list);
     list = AlphaSortRListNames(list);
     for (rp = list; rp != NULL; rp = rp->next)
     {

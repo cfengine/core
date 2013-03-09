@@ -238,8 +238,7 @@ static char *EvalConcat(const StringExpression *expr, VarRefEvaluator evalfn, vo
         return NULL;
     }
 
-    res = xmalloc(strlen(lhs) + strlen(rhs) + 1);
-    sprintf(res, "%s%s", lhs, rhs);
+    xasprintf(&res, "%s%s", lhs, rhs);
     free(lhs);
     free(rhs);
     return res;

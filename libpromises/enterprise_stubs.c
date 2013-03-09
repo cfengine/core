@@ -118,11 +118,6 @@ void PreSanitizePromise(EvalContext *ctx, Promise *pp)
 {
 }
 
-void NewPromiser(EvalContext *ctx, Promise *pp)
-{
-}
-
-
 /* cf-execd: cf-execd-runner.c */
 
 
@@ -219,7 +214,7 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
     return NULL;
 }
 
-bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
+bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Nova");
     return false;
@@ -231,14 +226,6 @@ bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Nova");
-}
-
-
-/* cf-promises: cf-promises.c */
-
-
-void AnalyzePromiseConflicts(void)
-{
 }
 
 /* cf-serverd: server_transform.c, cf-serverd.c */

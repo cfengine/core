@@ -110,7 +110,7 @@ void CheckLicenses(EvalContext *ctx)
 
     if (stat(name, &sb) != -1)
     {
-        HardClass(ctx, "am_policy_hub");
+        EvalContextHeapAddHard(ctx, "am_policy_hub");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Additional class defined: am_policy_hub");
     }
 }
@@ -138,7 +138,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
     ScopeSetNew("sys");
@@ -170,7 +170,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     BuiltinClasses(ctx);
     OSClasses(ctx);
 
-    LoadPersistentContext(ctx);
+    EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
@@ -365,21 +365,24 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
     Policy *main_policy = Cf3ParseFile(ctx, config, config->input_file, errors);
 
-    HashVariables(ctx, main_policy, NULL, report_context);
-    HashControls(ctx, main_policy, config);
-
-    if (PolicyIsRunnable(main_policy))
+    if( main_policy )
     {
-        Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
-        if (aux_policy)
-        {
-            main_policy = PolicyMerge(main_policy, aux_policy);
-        }
+        HashVariables(ctx, main_policy, NULL, report_context);
+        HashControls(ctx, main_policy, config);
 
-        if (config->check_runnable)
+        if (PolicyIsRunnable(main_policy))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-            PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
+            if (aux_policy)
+            {
+                main_policy = PolicyMerge(main_policy, aux_policy);
+            }
+
+            if (config->check_runnable)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
+                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            }
         }
     }
 
@@ -462,30 +465,30 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     SHORT_CFENGINEPORT = htons((unsigned short) 5308);
     snprintf(STR_CFENGINEPORT, 15, "5308");
 
-    HardClass(ctx, "any");
+    EvalContextHeapAddHard(ctx, "any");
 
 #if defined HAVE_NOVA
-    HardClass(ctx, "nova_edition");
-    HardClass(ctx, "enterprise_edition");
+    EvalContextHeapAddHard(ctx, "nova_edition");
+    EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
-    HardClass(ctx, "community_edition");
+    EvalContextHeapAddHard(ctx, "community_edition");
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
 
     if (VERBOSE)
     {
-        HardClass(ctx, "verbose_mode");
+        EvalContextHeapAddHard(ctx, "verbose_mode");
     }
 
     if (INFORM)
     {
-        HardClass(ctx, "inform_mode");
+        EvalContextHeapAddHard(ctx, "inform_mode");
     }
 
     if (DEBUG)
     {
-        HardClass(ctx, "debug_mode");
+        EvalContextHeapAddHard(ctx, "debug_mode");
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
@@ -1408,7 +1411,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     {
         Constraint *cp = SeqAt(controllist, i);
 
-        if (IsExcluded(ctx, cp->classes, NULL))
+        if (!IsDefinedClass(ctx, cp->classes, NULL))
         {
             continue;
         }
@@ -1424,7 +1427,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         ScopeDeleteVariable(scope, cp->lval);
 
-        if (!AddVariableHash(scope, cp->lval, returnval,
+        if (!ScopeAddVariableHash(scope, cp->lval, returnval,
                              BodySyntaxGetDataType(bp, cp->lval), cp->audit->filename, cp->offset.line))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
@@ -1445,7 +1448,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
             ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             DeleteClass(ctx, "undefined_domain", NULL);
-            HardClass(ctx, VDOMAIN);
+            EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
@@ -1797,6 +1800,10 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
+    config->debug_mode = false;
+
+    config->heap_soft = NULL;
+    config->heap_negated = NULL;
 
     switch (agent_type)
     {
@@ -1816,7 +1823,48 @@ void GenericAgentConfigDestroy(GenericAgentConfig *config)
     if (config)
     {
         RlistDestroy(config->bundlesequence);
+        StringSetDestroy(config->heap_soft);
+        StringSetDestroy(config->heap_negated);
         free(config->input_file);
+    }
+}
+
+void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
+{
+    if (config->heap_soft)
+    {
+        StringSetIterator it = StringSetIteratorInit(config->heap_soft);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            if (EvalContextHeapContainsHard(ctx, context))
+            {
+                FatalError("cfengine: You cannot use -D to define a reserved class!");
+            }
+
+            EvalContextHeapAddSoft(ctx, context, NULL);
+        }
+    }
+
+    if (config->heap_negated)
+    {
+        StringSetIterator it = StringSetIteratorInit(config->heap_negated);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            if (EvalContextHeapContainsHard(ctx, context))
+            {
+                FatalError("Cannot negate the reserved class [%s]\n", context);
+            }
+
+            EvalContextHeapAddNegated(ctx, context);
+        }
+    }
+
+    if (config->debug_mode)
+    {
+        EvalContextHeapAddHard(ctx, "opt_debug");
+        DEBUG = true;
     }
 }
 

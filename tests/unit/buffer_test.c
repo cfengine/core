@@ -1,6 +1,5 @@
-#include <setjmp.h>
-#include <sys/types.h>
-#include <stdarg.h>
+#include "test.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include "cmockery.h"
@@ -51,10 +50,8 @@ static void test_setBuffer(void **state)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
-    const char *element0pointer = NULL;
     char element1[2 * DEFAULT_BUFFER_SIZE + 2];
     unsigned int element1size = 2 * DEFAULT_BUFFER_SIZE + 1;
-    const char *element1pointer = NULL;
     char element2[DEFAULT_MEMORY_CAP * 2];
     unsigned int element2size = 2 * DEFAULT_MEMORY_CAP;
 
@@ -62,7 +59,6 @@ static void test_setBuffer(void **state)
     assert_true(buffer != NULL);
     // Smaller than the allocated buffer
     assert_int_equal(element0size, BufferSet(buffer, element0, element0size));
-    element0pointer = buffer->buffer;
     assert_int_equal(element0size, buffer->used);
     assert_int_equal(element0size, BufferSize(buffer));
     assert_string_equal(element0, buffer->buffer);
@@ -74,8 +70,6 @@ static void test_setBuffer(void **state)
         element1[i] = 'a';
     element1[element1size] = '\0';
     assert_int_equal(element1size, BufferSet(buffer, element1, element1size));
-    element1pointer = buffer->buffer;
-    assert_true(element0pointer != element1pointer);
     assert_int_equal(element1size, buffer->used);
     assert_string_equal(element1, buffer->buffer);
     assert_string_equal(element1, BufferData(buffer));
@@ -617,7 +611,9 @@ static void test_vprintf(void **state)
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
         unit_test(test_createBuffer)
         , unit_test(test_createBufferFrom)
         , unit_test(test_destroyBuffer)

@@ -1,4 +1,6 @@
-#include "cf3.defs.h"
+#include "test.h"
+
+#include "alloc.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
@@ -35,8 +37,9 @@ void test_xvasprintf(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_xasprintf),
         unit_test(test_xvasprintf),
     };

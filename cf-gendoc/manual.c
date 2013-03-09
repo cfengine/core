@@ -524,7 +524,7 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
 
     char *extra_mon[] = { "listening_udp4_ports", "listening_tcp4_ports", "listening_udp6_ports", "listening_tcp6_ports", NULL };
     
-    HashToList(ScopeGet(scope), &list);
+    ScopeToList(ScopeGet(scope), &list);
     list = AlphaSortRListNames(list);
 
     fprintf(fout, "\n\n@node Variable context %s\n@section Variable context @code{%s}\n\n", scope, scope);

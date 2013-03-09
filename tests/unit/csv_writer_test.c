@@ -1,8 +1,4 @@
-#include "cf3.defs.h"
-
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "csv_writer.h"
 
@@ -92,8 +88,9 @@ void test_escape(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_empty),
         unit_test(test_single_field),
         unit_test(test_several_fields),

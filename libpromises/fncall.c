@@ -179,7 +179,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, pp->ns))
+    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
@@ -194,7 +194,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 
     if (pp != NULL)
     {
-        fp->ns = pp->ns;
+        fp->ns = (char *)PromiseGetNamespace(pp);
     }
     else
     {

@@ -272,7 +272,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
@@ -509,6 +509,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
+        EvalContextStackPushFrame(ctx, false);
+
         scope = bp->name;
         ScopeSetNew(bp->name);
 
@@ -539,6 +541,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 }
 
@@ -553,6 +557,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
+
+        EvalContextStackPushFrame(ctx, false);
 
         scope = bp->name;
         ScopeSetNew(bp->name);
@@ -584,6 +590,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 }
 
@@ -595,7 +603,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
@@ -611,7 +619,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "classes") == 0)
+    if (strcmp(pp->parent_subtype->name, "classes") == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
@@ -619,25 +627,25 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
     sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
+    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "literal");
         return;
     }
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
+    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "variable");
         return;
     }
     
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
+    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(ctx, pp, "query");
         return;
     }
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
+    if ((strcmp(pp->parent_subtype->name, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "context");
         return;
@@ -645,13 +653,13 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
 /* Default behaviour is file access */
 
-    if (strcmp(pp->agentsubtype, "access") == 0)
+    if (strcmp(pp->parent_subtype->name, "access") == 0)
     {
         KeepFileAccessPromise(ctx, pp);
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "roles") == 0)
+    if (strcmp(pp->parent_subtype->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
         return;
@@ -687,7 +695,7 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -801,7 +809,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -879,7 +887,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -944,7 +952,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }

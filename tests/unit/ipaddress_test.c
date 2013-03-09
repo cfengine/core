@@ -1,11 +1,9 @@
-#include <setjmp.h>
-#include <sys/types.h>
-#include <stdarg.h>
+#include "test.h"
+
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
-#include "cmockery.h"
 #include "buffer.h"
 #include "ip_address.c"
 #include "ip_address.h"
@@ -321,7 +319,9 @@ static void test_generic_interface(void **state)
 
 int main()
 {
-    const UnitTest tests[] = {
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
         unit_test(test_ipv4)
         , unit_test(test_char2hex)
         , unit_test(test_ipv6)

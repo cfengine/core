@@ -4,9 +4,7 @@
 #include "rlist.h"
 #include "item_lib.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
-#include <stdarg.h>
+#include "test.h"
 
 /*
  * Those testcases only perform smoke testing of sorting functionality.
@@ -122,15 +120,16 @@ void test_alpha_sort_rlist_names(void **ctx)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_sort_item_list_names),
-            unit_test(test_sort_item_list_classes),
-            unit_test(test_sort_item_list_counters),
-            unit_test(test_sort_item_list_times),
-            unit_test(test_sort_rlist),
-            unit_test(test_alpha_sort_rlist_names),
-        };
+    {
+        unit_test(test_sort_item_list_names),
+        unit_test(test_sort_item_list_classes),
+        unit_test(test_sort_item_list_counters),
+        unit_test(test_sort_item_list_times),
+        unit_test(test_sort_rlist),
+        unit_test(test_alpha_sort_rlist_names),
+    };
 
     return run_tests(tests);
 }

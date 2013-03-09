@@ -23,7 +23,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "files_editline.h"
 
 #include "env_context.h"
 #include "promises.h"
@@ -44,6 +44,8 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
+
+#include <assert.h>
 
 /*****************************************************************************/
 
@@ -101,7 +103,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
+int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *bp, Attributes a, Promise *parentp,
                                const ReportContext *report_context)
 {
     enum editlinetypesequence type;
@@ -158,7 +160,9 @@ int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Att
                 Promise *pp = SeqAt(sp->promises, ppi);
 
                 pp->edcontext = parentp->edcontext;
-                pp->this_server = filename;
+
+                free(pp->this_server);
+                pp->this_server = xstrdup(filename);
                 pp->donep = &(pp->done);
 
                 ExpandPromise(ctx, AGENT_TYPE_AGENT, bp->name, pp, KeepEditLinePromise, report_context);
@@ -175,7 +179,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Att
     }
 
     ScopeDelete("edit");
-    ScopeSet(parentp->bundle);
+    ScopeSet(PromiseGetBundle(parentp)->name);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;
@@ -183,132 +187,127 @@ int ScheduleEditLineOperations(EvalContext *ctx, char *filename, Bundle *bp, Att
 
 /*****************************************************************************/
 
-Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Attributes a, Promise *pp)
+Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attributes a, const Promise *pp)
 {
-    char bundlename[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
-    char *sp, *promiser, context[CF_BUFSIZE] = "any";
-    Bundle *bp;
-    Promise *np;
-    SubType *tp;
-    FILE *fp;
-    int level = 0, size, lineno = 0;
-    Item *ip, *lines = NULL;
- 
-    snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.template));
-
-    // TODO: this should be illegal
-    bp = xcalloc(1, sizeof(Bundle));
-    bp->name = xstrdup(bundlename);
-    bp->type = xstrdup("edit_line");
-    bp->args = NULL;
-    bp->subtypes = SeqNew(10, SubTypeDestroy);
-
-    tp = BundleAppendSubType(bp, "insert_lines");
-
-// Now parse the template file
-
-    if ((fp = fopen(a.template,"r")) == NULL)
+    FILE *fp = NULL;
+    if ((fp = fopen(a.template, "r" )) == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Unable to open template file \"%s\" to make \"%s\"", a.template, pp->promiser);
-        return NULL;   
+        return NULL;
     }
 
-    while(!feof(fp))
+    Bundle *bp = NULL;
     {
-        buffer[0] = '\0';
-        if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+        char bundlename[CF_MAXVARSIZE];
+        snprintf(bundlename, CF_MAXVARSIZE, "temp_cf_bundle_%s", CanonifyName(a.template));
+
+        bp = PolicyAppendBundle(policy, "temp", bundlename, "edit_line", NULL, NULL);
+    }
+    assert(bp);
+
+    {
+        SubType *tp = BundleAppendSubType(bp, "insert_lines");
+        Promise *np = NULL;
+        Item *lines = NULL;
+        char context[CF_BUFSIZE] = "any";
+        int lineno = 0;
+        size_t level = 0;
+        char buffer[CF_BUFSIZE];
+
+        while(!feof(fp))
         {
-            if (strlen(buffer))
+            buffer[0] = '\0';
+            if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
             {
-                UnexpectedError("Failed to read line from stream");
-            }
-        }
-        lineno++;
-   
-        // Check closing syntax
-
-        // Get Action operator
-        if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
-        {
-            char operator[CF_BUFSIZE], brack[CF_SMALLBUF];
-
-            sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", operator, brack);
-
-            if (strcmp(brack, "%]") != 0)
-            {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
-                return NULL;
-            }
-
-            if (strcmp(operator, "BEGIN") == 0)
-            {
-                // start new buffer
-         
-                if (++level > 1)
+                if (strlen(buffer))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                    UnexpectedError("Failed to read line from stream");
+                }
+            }
+            lineno++;
+
+            // Check closing syntax
+
+            // Get Action operator
+            if (strncmp(buffer, "[%CFEngine", strlen("[%CFEngine")) == 0)
+            {
+                char op[CF_BUFSIZE], brack[CF_SMALLBUF];
+
+                sscanf(buffer+strlen("[%CFEngine"), "%1024s %s", op, brack);
+
+                if (strcmp(brack, "%]") != 0)
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" syntax error, missing close \"%%]\" at line %d", a.template, lineno);
                     return NULL;
                 }
 
-                continue;
-            }
+                if (strcmp(op, "BEGIN") == 0)
+                {
+                    // start new buffer
 
-            if (strcmp(operator, "END") == 0)
-            {
-                // install buffer
-                level--;
-            }
+                    if (++level > 1)
+                    {
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Template file \"%s\" contains nested blocks which are not allowed, near line %d", a.template, lineno);
+                        return NULL;
+                    }
 
-            if (strcmp(operator+strlen(operator)-2, "::") == 0)
-            {
-                *(operator+strlen(operator)-2) = '\0';
-                strcpy(context, operator);
-                continue;
-            }
+                    continue;
+                }
 
-            // In all these cases, we should start a new promise
+                if (strcmp(op, "END") == 0)
+                {
+                    // install buffer
+                    level--;
+                }
 
-            promiser = NULL;
-            size = 0;
-      
-            for (ip = lines; ip != NULL; ip = ip->next)
-            {
-                size += strlen(ip->name);
-            }
+                if (strcmp(op + strlen(op)-2, "::") == 0)
+                {
+                    *(op + strlen(op)-2) = '\0';
+                    strcpy(context, op);
+                    continue;
+                }
 
-            sp = promiser = xcalloc(1, size+1);
+                size_t size = 0;
+                for (const Item *ip = lines; ip != NULL; ip = ip->next)
+                {
+                    size += strlen(ip->name);
+                }
 
-            for (ip = lines; ip != NULL; ip = ip->next)
-            {
-                int len = strlen(ip->name);
-                strncpy(sp, ip->name, len);
-                sp += len;
-            }
+                char *promiser = NULL;
+                char *sp = promiser = xcalloc(1, size+1);
 
-            *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
+                for (const Item *ip = lines; ip != NULL; ip = ip->next)
+                {
+                    int len = strlen(ip->name);
+                    strncpy(sp, ip->name, len);
+                    sp += len;
+                }
 
-            np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-            PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
+                *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-            DeleteItemList(lines);
-            free(promiser);
-            lines = NULL;
-        }
-        else
-        {
-            if (level > 0)
-            {
-                AppendItem(&lines, buffer, NULL);
+                np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
+
+                DeleteItemList(lines);
+                free(promiser);
+                lines = NULL;
             }
             else
             {
-                //install independent promise line
-                if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
+                if (level > 0)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
+                    AppendItem(&lines, buffer, NULL);
                 }
-                np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
-                PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
+                else
+                {
+                    //install independent promise line
+                    if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
+                    }
+                    np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                    PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
+                }
             }
         }
     }
@@ -349,7 +348,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
@@ -375,37 +374,37 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_subtype->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("delete_lines", pp->agentsubtype) == 0)
+    if (strcmp("delete_lines", pp->parent_subtype->name) == 0)
     {
         VerifyLineDeletions(ctx, pp);
         return;
     }
 
-    if (strcmp("field_edits", pp->agentsubtype) == 0)
+    if (strcmp("field_edits", pp->parent_subtype->name) == 0)
     {
         VerifyColumnEdits(ctx, pp);
         return;
     }
 
-    if (strcmp("insert_lines", pp->agentsubtype) == 0)
+    if (strcmp("insert_lines", pp->parent_subtype->name) == 0)
     {
         VerifyLineInsertions(ctx, pp);
         return;
     }
 
-    if (strcmp("replace_patterns", pp->agentsubtype) == 0)
+    if (strcmp("replace_patterns", pp->parent_subtype->name) == 0)
     {
         VerifyPatterns(ctx, pp);
         return;
     }
 
-    if (strcmp("reports", pp->agentsubtype) == 0)
+    if (strcmp("reports", pp->parent_subtype->name) == 0)
     {
         VerifyReportPromise(ctx, pp);
         return;

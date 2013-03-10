@@ -43,6 +43,22 @@ typedef struct
     Item *multiconnlist;
     Item *trustkeylist;
     Item *skipverify;
+
+    Auth *admit;
+    Auth *admittop;
+
+    Auth *deny;
+    Auth *denytop;
+
+    Auth *varadmit;
+    Auth *varadmittop;
+
+    Auth *vardeny;
+    Auth *vardenytop;
+
+    Auth *roles;
+    Auth *rolestop;
+
     int logconns;
 } ServerAccess;
 
@@ -116,20 +132,7 @@ extern int LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
 
-extern Auth *ROLES;
-extern Auth *ROLESTOP;
-
 extern ServerAccess SV;
-
-extern Auth *VADMIT;
-extern Auth *VADMITTOP;
-extern Auth *VDENY;
-extern Auth *VDENYTOP;
-
-extern Auth *VARADMIT;
-extern Auth *VARADMITTOP;
-extern Auth *VARDENY;
-extern Auth *VARDENYTOP;
 
 extern char CFRUNCOMMAND[];
 

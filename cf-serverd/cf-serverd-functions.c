@@ -598,13 +598,13 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteItemList(SV.nonattackerlist);
             DeleteItemList(SV.multiconnlist);
 
-            DeleteAuthList(VADMIT);
-            DeleteAuthList(VDENY);
+            DeleteAuthList(SV.admit);
+            DeleteAuthList(SV.deny);
 
-            DeleteAuthList(VARADMIT);
-            DeleteAuthList(VARDENY);
+            DeleteAuthList(SV.varadmit);
+            DeleteAuthList(SV.vardeny);
 
-            DeleteAuthList(ROLES);
+            DeleteAuthList(SV.roles);
 
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
@@ -613,13 +613,20 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             strcpy(VDOMAIN, "undefined.domain");
             POLICY_SERVER[0] = '\0';
 
-            VADMIT = VADMITTOP = NULL;
-            VDENY = VDENYTOP = NULL;
+            SV.admit = NULL;
+            SV.admittop = NULL;
 
-            VARADMIT = VARADMITTOP = NULL;
-            VARDENY = VARDENYTOP = NULL;
+            SV.varadmit = NULL;
+            SV.varadmittop = NULL;
 
-            ROLES = ROLESTOP = NULL;
+            SV.deny = NULL;
+            SV.denytop = NULL;
+
+            SV.vardeny = NULL;
+            SV.vardenytop = NULL;
+
+            SV.roles = NULL;
+            SV.rolestop = NULL;
 
             SV.trustkeylist = NULL;
             SV.skipverify = NULL;

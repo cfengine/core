@@ -112,8 +112,6 @@ extern int MAXTRIES;
 extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern Item *CONNECTIONLIST;
-extern Auth *ROLES;
-extern Auth *ROLESTOP;
 
 /*******************************************************************/
 
@@ -143,7 +141,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to paths :\n");
 
-    for (ptr = VADMIT; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
@@ -159,7 +157,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to paths :\n");
 
-    for (ptr = VDENY; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s\n", ptr->path);
 
@@ -171,7 +169,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to literal/variable/query data :\n");
 
-    for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
@@ -187,7 +185,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to literal/variable/query data :\n");
 
-    for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s\n", ptr->path);
 
@@ -678,18 +676,18 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
         DeleteSlash(pp->promiser);
     }
 
-    if (!GetAuthPath(pp->promiser, VADMIT))
+    if (!GetAuthPath(pp->promiser, SV.admit))
     {
-        InstallServerAuthPath(pp->promiser, &VADMIT, &VADMITTOP);
+        InstallServerAuthPath(pp->promiser, &SV.admit, &SV.admittop);
     }
 
-    if (!GetAuthPath(pp->promiser, VDENY))
+    if (!GetAuthPath(pp->promiser, SV.deny))
     {
-        InstallServerAuthPath(pp->promiser, &VDENY, &VDENYTOP);
+        InstallServerAuthPath(pp->promiser, &SV.deny, &SV.denytop);
     }
 
-    ap = GetAuthPath(pp->promiser, VADMIT);
-    dp = GetAuthPath(pp->promiser, VDENY);
+    ap = GetAuthPath(pp->promiser, SV.admit);
+    dp = GetAuthPath(pp->promiser, SV.deny);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -760,47 +758,47 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
 
-        if (!GetAuthPath(handle, VARADMIT))
+        if (!GetAuthPath(handle, SV.varadmit))
         {
-            InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
+            InstallServerAuthPath(handle, &SV.varadmit, &SV.varadmittop);
         }
 
-        if (!GetAuthPath(handle, VARDENY))
+        if (!GetAuthPath(handle, SV.vardeny))
         {
-            InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
+            InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytop);
         }
 
         RegisterLiteralServerData(handle, pp);
-        ap = GetAuthPath(handle, VARADMIT);
-        dp = GetAuthPath(handle, VARDENY);
+        ap = GetAuthPath(handle, SV.varadmit);
+        dp = GetAuthPath(handle, SV.vardeny);
         ap->literal = true;
     }
     else
     {
         CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
-        if (!GetAuthPath(pp->promiser, VARADMIT))
+        if (!GetAuthPath(pp->promiser, SV.varadmit))
         {
-            InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+            InstallServerAuthPath(pp->promiser, &SV.varadmittop, &SV.varadmittop);
         }
 
-        if (!GetAuthPath(pp->promiser, VARDENY))
+        if (!GetAuthPath(pp->promiser, SV.vardeny))
         {
-            InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+            InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
         }
 
 
         if (strcmp(type, "context") == 0)
         {
-            ap = GetAuthPath(pp->promiser, VARADMIT);
-            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap = GetAuthPath(pp->promiser, SV.varadmit);
+            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->classpattern = true;
         }
 
         if (strcmp(type, "variable") == 0)
         {
-            ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
-            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap = GetAuthPath(pp->promiser, SV.varadmit); // Allow the promiser (preferred) as well as handle as variable name
+            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->variable = true;
         }
     }
@@ -863,20 +861,20 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     Rlist *rp;
     Auth *ap, *dp;
 
-    if (!GetAuthPath(pp->promiser, VARADMIT))
+    if (!GetAuthPath(pp->promiser, SV.varadmit))
     {
-        InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+        InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
     }
 
     RegisterLiteralServerData(pp->promiser, pp);
 
-    if (!GetAuthPath(pp->promiser, VARDENY))
+    if (!GetAuthPath(pp->promiser, SV.vardeny))
     {
-        InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+        InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
     }
 
-    ap = GetAuthPath(pp->promiser, VARADMIT);
-    dp = GetAuthPath(pp->promiser, VARDENY);
+    ap = GetAuthPath(pp->promiser, SV.varadmit);
+    dp = GetAuthPath(pp->promiser, SV.vardeny);
 
     if (strcmp(type, "query") == 0)
     {
@@ -941,12 +939,12 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
     Rlist *rp;
     Auth *ap;
 
-    if (!GetAuthPath(pp->promiser, ROLES))
+    if (!GetAuthPath(pp->promiser, SV.roles))
     {
-        InstallServerAuthPath(pp->promiser, &ROLES, &ROLESTOP);
+        InstallServerAuthPath(pp->promiser, &SV.roles, &SV.rolestop);
     }
 
-    ap = GetAuthPath(pp->promiser, ROLES);
+    ap = GetAuthPath(pp->promiser, SV.roles);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {

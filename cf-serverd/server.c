@@ -87,20 +87,7 @@ int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
 bool SERVER_LISTEN = true;
 
-Auth *ROLES = NULL;
-Auth *ROLESTOP = NULL;
-
 ServerAccess SV;
-
-Auth *VADMIT = NULL;
-Auth *VADMITTOP = NULL;
-Auth *VDENY = NULL;
-Auth *VDENYTOP = NULL;
-
-Auth *VARADMIT = NULL;
-Auth *VARADMITTOP = NULL;
-Auth *VARDENY = NULL;
-Auth *VARDENYTOP = NULL;
 
 char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
 
@@ -480,7 +467,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false, SV.admit, SV.deny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to denied access to requested object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -559,7 +546,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, false, SV.admit, SV.deny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access denied to get object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -627,7 +614,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -684,7 +671,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -706,7 +693,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "DIR access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -783,7 +770,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control in sync\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -873,7 +860,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted, SV.varadmit, SV.vardeny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Literal access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -916,7 +903,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY)) == NULL)
+        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted, SV.varadmit, SV.vardeny)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Context access failure on %s\n", recvbuffer);
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -954,7 +941,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, SV.varadmit, SV.vardeny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -996,7 +983,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, SV.varadmit, SV.vardeny))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -2005,7 +1992,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying %s\n", RlistScalarValue(rp));
 
-        for (ap = ROLES; ap != NULL; ap = ap->next)
+        for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
             if (FullTextMatch(ap->path, rp->item))
             {

@@ -143,7 +143,6 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd);
 static void DeleteConn(ServerConnectionState *conn);
 static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
 static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen);
-static int SafeOpen(char *filename);
 static int OptionFound(char *args, char *pos, char *word);
 
 //******************************************************************/
@@ -2596,7 +2595,7 @@ static void CfGetFile(ServerFileGetState *args)
 
 /* File transfer */
 
-    if ((fd = SafeOpen(filename)) == -1)
+    if ((fd = open(filename, O_RDONLY)) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "open", "Open error of file [%s]\n", filename);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
@@ -2718,7 +2717,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     EVP_CIPHER_CTX_init(&ctx);
 
-    if ((fd = SafeOpen(filename)) == -1)
+    if ((fd = open(filename, O_RDONLY)) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "open", "Open error of file [%s]\n", filename);
         FailedTransfer(sd, sendbuffer, filename);
@@ -3415,24 +3414,6 @@ static void DeleteConn(ServerConnectionState *conn)
 
     free((char *) conn);
 }
-
-/***************************************************************/
-/* ERS                                                         */
-/***************************************************************/
-
-static int SafeOpen(char *filename)
-{
-    int fd;
-
-    ThreadLock(cft_system);
-
-    fd = open(filename, O_RDONLY);
-
-    ThreadUnlock(cft_system);
-    return fd;
-}
-
-/***************************************************************/
 
 static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
 {

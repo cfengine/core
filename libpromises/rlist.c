@@ -536,11 +536,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval)
 {
-    ThreadLock(cft_system);
-
     Rlist *rp = xmalloc(sizeof(Rlist));
-
-    ThreadUnlock(cft_system);
 
     rp->next = *start;
     rp->item = rval.item;
@@ -588,11 +584,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
         return NULL;
     }
 
-    ThreadLock(cft_system);
-
     rp = xmalloc(sizeof(Rlist));
-
-    ThreadUnlock(cft_system);
 
     rp->next = *start;
     rp->item = RvalCopy((Rval) { (void *)item, type}).item;

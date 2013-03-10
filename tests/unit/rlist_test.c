@@ -213,7 +213,6 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
 }
 
 pthread_mutex_t *cft_lock;
-pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
 {
     return true;

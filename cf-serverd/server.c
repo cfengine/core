@@ -1285,14 +1285,10 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     CfDebug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n", ipstring, fqname, username, conn->ipaddr);
 
-    ThreadLock(cft_system);
-
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
     ToLowerStrInplace(dns_assert);
 
     strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
-
-    ThreadUnlock(cft_system);
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
@@ -2120,12 +2116,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     CfDebug("Challenge encryption = %c, nonce = %d, buf = %d\n", iscrypt, nonce_len, crypt_len);
 
-    ThreadLock(cft_system);
 
     decrypted_nonce = xmalloc(crypt_len);
 
     if (iscrypt == 'y')
     {
+        ThreadLock(cft_system);
+
         if (RSA_private_decrypt
             (crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET, decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
@@ -2136,12 +2133,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             free(decrypted_nonce);
             return false;
         }
+
+        ThreadUnlock(cft_system);
     }
     else
     {
         if (nonce_len > crypt_len)
         {
-            ThreadUnlock(cft_system);
             CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal challenge\n");
             free(decrypted_nonce);
             return false;
@@ -2149,8 +2147,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         memcpy(decrypted_nonce, recvbuffer + CF_RSA_PROTO_OFFSET, nonce_len);
     }
-
-    ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with digest */
 
@@ -2351,8 +2347,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    ThreadLock(cft_system);
-
     session_size = CfSessionKeySize(enterprise_field);
     conn->session_key = xmalloc(session_size);
     conn->encryption_type = enterprise_field;
@@ -2369,6 +2363,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         /* New protocol encrypted */
 
+        ThreadLock(cft_system);
+
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
             ThreadUnlock(cft_system);
@@ -2377,11 +2373,10 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             return false;
         }
 
+        ThreadUnlock(cft_system);
+
         memcpy(conn->session_key, out, session_size);
     }
-
-    ThreadUnlock(cft_system);
-
 
     BN_free(counter_challenge);
     free(out);
@@ -3362,11 +3357,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
        return NULL;
        }
     
-    ThreadLock(cft_system);
-
     conn = xmalloc(sizeof(ServerConnectionState));
-
-    ThreadUnlock(cft_system);
 
     conn->ctx = ctx;
     conn->sd_reply = sd;

@@ -1684,7 +1684,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         ExpandScalar(map, expbuf);
 
-        if (strstr(expbuf, "$(this)"))
+        if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
         {
             RlistDestroy(newlist);
             return (FnCallResult) { FNCALL_FAILURE };

@@ -16,7 +16,7 @@ commands:
 bundle agent run_test(test_name)
 {
 commands:
-  "$(sys.cf_agent) -Kvf $(test_name) -D AUTO,ok";
+  "$(sys.cf_agent) -Kf $(test_name) -D AUTO,ok";
 }
 
 bundle agent stop_server(server_name)

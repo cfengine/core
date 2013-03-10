@@ -106,9 +106,9 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 static ProtocolCommand GetCommand(char *str);
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
 static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg);
-static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
 static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted, Item *classes);
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key);
 static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
@@ -467,7 +467,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false, SV.admit, SV.deny))
+        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to denied access to requested object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -546,7 +546,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, false, SV.admit, SV.deny))
+        if (!AccessControl(ctx, filename, conn, false))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access denied to get object\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -614,7 +614,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))
+        if (!AccessControl(ctx, filename, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -671,7 +671,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -693,7 +693,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "DIR access error\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -770,7 +770,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
-        if (!AccessControl(ctx, filename, conn, true, SV.admit, SV.deny))
+        if (!AccessControl(ctx, filename, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control in sync\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -860,7 +860,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted, SV.varadmit, SV.vardeny))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Literal access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -903,7 +903,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted, SV.varadmit, SV.vardeny)) == NULL)
+        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Context access failure on %s\n", recvbuffer);
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -941,7 +941,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, SV.varadmit, SV.vardeny))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -983,7 +983,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, SV.varadmit, SV.vardeny))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
             RefuseAccess(conn, sendbuffer, 0, recvbuffer);
@@ -1548,7 +1548,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
 /**************************************************************/
 
-static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1581,7 +1581,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     CfDebug("AccessControl, match(%s,%s) encrypt request=%d\n", transrequest, conn->hostname, encrypt);
 
-    if (vadmit == NULL)
+    if (SV.admit == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd access list is empty, no files are visible\n");
         return false;
@@ -1589,7 +1589,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     conn->maproot = false;
 
-    for (ap = vadmit; ap != NULL; ap = ap->next)
+    for (ap = SV.admit; ap != NULL; ap = ap->next)
     {
         int res = false;
 
@@ -1656,7 +1656,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     if (strncmp(transpath, transrequest, strlen(transpath)) == 0)
     {
-        for (ap = vdeny; ap != NULL; ap = ap->next)
+        for (ap = SV.deny; ap != NULL; ap = ap->next)
         {
             if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
             {
@@ -1693,7 +1693,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
 /**************************************************************/
 
-static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1718,7 +1718,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
     conn->maproot = false;
 
-    for (ap = vadmit; ap != NULL; ap = ap->next)
+    for (ap = SV.varadmit; ap != NULL; ap = ap->next)
     {
         int res = false;
 
@@ -1772,7 +1772,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
         }
     }
 
-    for (ap = vdeny; ap != NULL; ap = ap->next)
+    for (ap = SV.vardeny; ap != NULL; ap = ap->next)
     {
         if (strcmp(ap->path, name) == 0)
         {
@@ -1812,7 +1812,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
 /**************************************************************/
 
-static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1867,7 +1867,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
     for (ip = candidates; ip != NULL; ip = ip->next)
     {
-        for (ap = vadmit; ap != NULL; ap = ap->next)
+        for (ap = SV.varadmit; ap != NULL; ap = ap->next)
         {
             int res = false;
 
@@ -1920,7 +1920,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
             }
         }
 
-        for (ap = vdeny; ap != NULL; ap = ap->next)
+        for (ap = SV.vardeny; ap != NULL; ap = ap->next)
         {
             if (strcmp(ap->path, ip->name) == 0)
             {

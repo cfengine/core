@@ -33,7 +33,6 @@ extern pthread_mutex_t *cft_getaddr;
 extern pthread_mutex_t *cft_lock;
 extern pthread_mutex_t *cft_output;
 extern pthread_mutex_t *cft_policy;
-extern pthread_mutex_t *cft_report;
 extern pthread_mutex_t *cft_vscope;
 extern pthread_mutex_t *cft_server_children;
 

@@ -35,7 +35,6 @@ static pthread_mutex_t MUTEXES[] =
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
-    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
 };
 
 pthread_mutex_t *cft_system = &MUTEXES[0];
@@ -44,9 +43,8 @@ pthread_mutex_t *cft_count = &MUTEXES[2];
 pthread_mutex_t *cft_output = &MUTEXES[3];
 pthread_mutex_t *cft_policy = &MUTEXES[4];
 pthread_mutex_t *cft_getaddr = &MUTEXES[5];
-pthread_mutex_t *cft_report = &MUTEXES[6];
-pthread_mutex_t *cft_vscope = &MUTEXES[7];
-pthread_mutex_t *cft_server_children = &MUTEXES[8];
+pthread_mutex_t *cft_vscope = &MUTEXES[6];
+pthread_mutex_t *cft_server_children = &MUTEXES[7];
 
 #define MUTEX_NAME_SIZE 32
 

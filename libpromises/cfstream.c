@@ -368,8 +368,6 @@ static void LogList(FILE *fh, const Item *mess, bool has_prefix)
 {
     for (const Item *ip = mess; ip != NULL; ip = ip->next)
     {
-        ThreadLock(cft_report);
-
         if (has_prefix)
         {
             fprintf(fh, "%s> %s\n", VPREFIX, ip->name);
@@ -378,8 +376,6 @@ static void LogList(FILE *fh, const Item *mess, bool has_prefix)
         {
             fprintf(fh, "%s\n", ip->name);
         }
-
-        ThreadUnlock(cft_report);
     }
 }
 

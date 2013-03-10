@@ -36,7 +36,7 @@
 #include "cfstream.h"
 #include "files_hashes.h"
 #include "files_copy.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "logging.h"
 #include "rlist.h"
 #include "policy.h"

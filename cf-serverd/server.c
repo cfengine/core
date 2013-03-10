@@ -38,7 +38,7 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "signals.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "logging.h"
 #include "net.h"
 #include "rlist.h"

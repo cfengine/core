@@ -30,7 +30,7 @@
 #include "files_links.h"
 #include "files_copy.h"
 #include "files_properties.h"
-#include "transaction.h"
+#include "locks.h"
 #include "instrumentation.h"
 #include "matching.h"
 #include "files_interfaces.h"

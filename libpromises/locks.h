@@ -20,25 +20,28 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_LOGGING_H
-#define CFENGINE_LOGGING_H
+#ifndef CFENGINE_LOCKS_H
+#define CFENGINE_LOCKS_H
 
-#include "cf3.defs.h"
+#include "platform.h"
+#include "env_context.h"
 
-void BeginAudit(void);
-void EndAudit(int background_tasks);
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason);
-void PromiseLog(char *s);
-void PromiseBanner(EvalContext *ctx, Promise *pp);
-void BannerSubBundle(Bundle *bp, Rlist *params);
-void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
+bool AcquireLockByID(char *lock_id, int acquire_after_minutes);
+time_t FindLockTime(char *name);
+bool InvalidateLockTime(char *lock_id);
 
-void SetSyslogHost(const char *host);
-void SetSyslogPort(uint16_t port);
-void SetSyslogFacility(int facility);
-void RemoteSysLog(int log_priority, const char *log_string);
+
+CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
+void YieldCurrentLock(CfLock this);
+void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
+
+void PurgeLocks(void);
+int ShiftChange(EvalContext *ctx);
+
+int WriteLock(char *lock);
+CF_DB *OpenLock(void);
+void CloseLock(CF_DB *dbp);
 
 #endif

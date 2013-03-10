@@ -31,7 +31,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "string_lib.h"
-#include "transaction.h"
+#include "locks.h"
 #include "cf_sql.h"
 #include "logging.h"
 #include "rlist.h"

@@ -26,7 +26,7 @@
 #include "pipes.h"
 
 #include "cfstream.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "policy.h"

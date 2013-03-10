@@ -34,7 +34,7 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "pipes.h"
-#include "transaction.h"
+#include "locks.h"
 #include "logging.h"
 #include "evalfunction.h"
 #include "exec_tools.h"

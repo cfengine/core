@@ -33,7 +33,7 @@
 #include "matching.h"
 #include "attributes.h"
 #include "cfstream.h"
-#include "transaction.h"
+#include "locks.h"
 #include "exec_tools.h"
 #include "logging.h"
 #include "rlist.h"

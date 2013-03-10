@@ -31,7 +31,7 @@
 #include "hashes.h"
 #include "cfstream.h"
 #include "pipes.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "logging.h"
 
 static void RandomSeed(void);

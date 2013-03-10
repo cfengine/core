@@ -28,7 +28,7 @@
 #include "conversion.h"
 #include "cfstream.h"
 #include "files_hashes.h"
-#include "transaction.h"
+#include "locks.h"
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);

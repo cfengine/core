@@ -31,7 +31,7 @@
 #include "files_copy.h"
 #include "item_lib.h"
 #include "cfstream.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "policy.h"
 
 /*********************************************************************/

@@ -46,7 +46,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
-#include "transaction.h"
+#include "locks.h"
 #include "scope.h"
 #include "matching.h"
 #include "instrumentation.h"

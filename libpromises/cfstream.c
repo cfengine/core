@@ -29,7 +29,7 @@
 #include "policy.h"
 #include "item_lib.h"
 #include "scope.h"
-#include "transaction.h"
+#include "mutex.h"
 #include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"

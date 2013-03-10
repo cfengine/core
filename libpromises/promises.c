@@ -33,7 +33,7 @@
 #include "vars.h"
 #include "cfstream.h"
 #include "args.h"
-#include "transaction.h"
+#include "locks.h"
 #include "logging.h"
 #include "misc_lib.h"
 #include "fncall.h"

@@ -24,7 +24,7 @@ libpromises_la_SOURCES = \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \
-		cf-key-functions.c cf-key-functions.h \
+        cf-key-functions.c cf-key-functions.h \
         cfstream.c cfstream.h \
         chflags.c chflags.h \
         classes.c \
@@ -61,6 +61,7 @@ libpromises_la_SOURCES = \
         iteration.c iteration.h \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
+        locks.c locks.h \
         logging.c logging.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \
@@ -80,6 +81,7 @@ libpromises_la_SOURCES = \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
         modes.c \
+        mutex.c mutex.h \
         net.c net.h \
         policy.c policy.h \
         parser.c parser.h \
@@ -100,7 +102,6 @@ libpromises_la_SOURCES = \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
         timeout.c \
-        transaction.c transaction.h \
         unix.c unix.h \
         vars.c vars.h \
         verify_processes.c verify_processes.h \

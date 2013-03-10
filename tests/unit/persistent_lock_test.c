@@ -1,11 +1,12 @@
 #include "cf3.defs.h"
 
-#include "transaction.h"
+#include "locks.h"
 
 #include "test.h"
 
 static void tests_setup(void)
 {
+    /* FIXME: get rid of hardcoded filenames */
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/persistent_lock_test.XXXXXX");
     mkdtemp(CFWORKDIR);
 

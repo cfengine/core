@@ -39,7 +39,7 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
-#include "transaction.h"
+#include "locks.h"
 #include "logging.h"
 #include "exec_tools.h"
 #include "policy.h"

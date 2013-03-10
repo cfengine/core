@@ -31,7 +31,7 @@
 #include "conversion.h"
 #include "attributes.h"
 #include "cfstream.h"
-#include "transaction.h"
+#include "locks.h"
 #include "logging.h"
 #include "policy.h"
 #include "scope.h"

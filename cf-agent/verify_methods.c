@@ -34,7 +34,7 @@
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
-#include "transaction.h"
+#include "locks.h"
 #include "logging.h"
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables

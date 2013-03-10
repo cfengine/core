@@ -30,7 +30,7 @@
 #include "files_interfaces.h"
 #include "files_operators.h"
 #include "files_lib.h"
-#include "transaction.h"
+#include "locks.h"
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
@@ -53,6 +53,11 @@ char VerifyLink(char *destination, const char *source, Attributes attr, Promise 
 }
 
 #else
+
+static bool EnforcePromise(enum cfopaction action)
+{
+    return ((!DONTDO) && (action != cfa_warn));
+}
 
 char VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
 {

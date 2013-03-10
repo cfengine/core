@@ -22,34 +22,24 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_TRANSACTION_H
-#define CFENGINE_TRANSACTION_H
+#ifndef CFENGINE_MUTEX_H
+#define CFENGINE_MUTEX_H
 
-#include "cf3.defs.h"
+#include "platform.h"
 
-bool AcquireLockByID(char *lock_id, int acquire_after_minutes);
-time_t FindLockTime(char *name);
-bool InvalidateLockTime(char *lock_id);
-bool EnforcePromise(enum cfopaction action);
-
-void SetSyslogHost(const char *host);
-void SetSyslogPort(uint16_t port);
-void SetSyslogFacility(int facility);
-void RemoteSysLog(int log_priority, const char *log_string);
-
-void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promise *pp, const char *logname);
-CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
-void YieldCurrentLock(CfLock this);
-void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
+extern pthread_mutex_t *cft_system;
+extern pthread_mutex_t *cft_count;
+extern pthread_mutex_t *cft_getaddr;
+extern pthread_mutex_t *cft_lock;
+extern pthread_mutex_t *cft_output;
+extern pthread_mutex_t *cft_dbhandle;
+extern pthread_mutex_t *cft_policy;
+extern pthread_mutex_t *cft_report;
+extern pthread_mutex_t *cft_vscope;
+extern pthread_mutex_t *cft_server_keyseen;
+extern pthread_mutex_t *cft_server_children;
 
 int ThreadLock(pthread_mutex_t *name);
 int ThreadUnlock(pthread_mutex_t *name);
-
-void PurgeLocks(void);
-int ShiftChange(EvalContext *ctx);
-
-int WriteLock(char *lock);
-CF_DB *OpenLock(void);
-void CloseLock(CF_DB *dbp);
 
 #endif

@@ -38,7 +38,7 @@
 #include "sysinfo.h"
 #include "cfstream.h"
 #include "signals.h"
-#include "transaction.h"
+#include "locks.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // WritePID
 #include "files_lib.h"

@@ -34,7 +34,7 @@
 #include "files_properties.h"
 #include "attributes.h"
 #include "cfstream.h"
-#include "transaction.h"
+#include "locks.h"
 #include "nfs.h"
 #include "logging.h"
 #include "rlist.h"

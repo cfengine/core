@@ -34,6 +34,20 @@
 // TYPES
 //*******************************************************************
 
+typedef struct Auth_ Auth;
+
+struct Auth_
+{
+    char *path;
+    Item *accesslist;
+    Item *maproot;              /* which hosts should have root read access */
+    int encrypt;                /* which files HAVE to be transmitted securely */
+    int literal;
+    int classpattern;
+    int variable;
+    Auth *next;
+};
+
 typedef struct
 {
     Item *nonattackerlist;

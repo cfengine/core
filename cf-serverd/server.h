@@ -36,14 +36,14 @@
 
 typedef struct
 {
-   Item *nonattackerlist;
-   Item *attackerlist;
-   Item *connectionlist;
-   Item *allowuserlist;
-   Item *multiconnlist;
-   Item *trustkeylist;
-   Item *skipverify;
-   int logconns;
+    Item *nonattackerlist;
+    Item *attackerlist;
+    Item *connectionlist;
+    Item *allowuserlist;
+    Item *multiconnlist;
+    Item *trustkeylist;
+    Item *skipverify;
+    int logconns;
 } ServerAccess;
 
 typedef struct ServerConnectionState

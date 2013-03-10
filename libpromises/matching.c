@@ -36,6 +36,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
+/* Pure */
 static pcre *CompileRegExp(const char *regexp)
 {
     pcre *rx;
@@ -53,9 +54,8 @@ static pcre *CompileRegExp(const char *regexp)
     return rx;
 }
 
-/*********************************************************************/
-
-void ForceScalar(char *lval, char *rval)
+/* Sets variables */
+static void ForceScalar(char *lval, char *rval)
 {
     Rval retval;
 
@@ -68,6 +68,7 @@ void ForceScalar(char *lval, char *rval)
     CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
 }
 
+/* Sets variables */
 static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int *end)
 {
     int ovector[OVECCOUNT], i, rc;
@@ -109,8 +110,7 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
     return rc >= 0;
 }
 
-/*********************************************************************/
-
+/* Sets variables */
 static int RegExMatchFullString(pcre *rx, const char *teststring)
 {
     int match_start;
@@ -126,8 +126,7 @@ static int RegExMatchFullString(pcre *rx, const char *teststring)
     }
 }
 
-/*********************************************************************/
-
+/* Pure, non-thread-safe */
 static char *FirstBackReference(pcre *rx, const char *teststring)
 {
     static char backreference[CF_BUFSIZE];
@@ -166,10 +165,6 @@ bool ValidateRegEx(const char *regex)
     return regex_valid;
 }
 
-/*************************************************************************/
-/* WILDCARD TOOLKIT : Level 0                                            */
-/*************************************************************************/
-
 int FullTextMatch(const char *regexp, const char *teststring)
 {
     pcre *rx;
@@ -195,8 +190,6 @@ int FullTextMatch(const char *regexp, const char *teststring)
         return false;
     }
 }
-
-/*************************************************************************/
 
 char *ExtractFirstReference(const char *regexp, const char *teststring)
 {
@@ -233,8 +226,6 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
     return backreference;
 }
 
-/*************************************************************************/
-
 int BlockTextMatch(const char *regexp, const char *teststring, int *start, int *end)
 {
     pcre *rx = CompileRegExp(regexp);
@@ -253,8 +244,6 @@ int BlockTextMatch(const char *regexp, const char *teststring, int *start, int *
         return false;
     }
 }
-
-/*********************************************************************/
 
 int IsRegex(char *str)
 {
@@ -353,8 +342,6 @@ int IsRegex(char *str)
     }
 }
 
-/*********************************************************************/
-
 int IsPathRegex(char *str)
 {
     char *sp;
@@ -404,10 +391,9 @@ int IsPathRegex(char *str)
     return result;
 }
 
-/*********************************************************************/
+/* Checks whether item matches a list of wildcards */
 
 int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
-   /* Checks whether item matches a list of wildcards */
 {
     Item *ptr;
 
@@ -436,8 +422,6 @@ int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
 
     return (false);
 }
-
-/*********************************************************************/
 
 int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Promise *pp)
 {
@@ -566,10 +550,9 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
     return ok;
 }
 
-/*********************************************************************/
 
+/* Checks whether item matches a list of wildcards */
 int MatchRlistItem(Rlist *listofregex, const char *teststring)
-   /* Checks whether item matches a list of wildcards */
 {
     Rlist *rp;
 
@@ -594,17 +577,9 @@ int MatchRlistItem(Rlist *listofregex, const char *teststring)
     return false;
 }
 
-/*********************************************************************/
-/* Enumerated languages - fuzzy match model                          */
-/*********************************************************************/
-
-
-/*********************************************************************/
-
-void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
-
 /* Escapes non-alphanumeric chars, except sequence given in noEscSeq */
 
+void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, char *noEscList)
 {
     char *sp;
     int strEscPos = 0;
@@ -646,11 +621,8 @@ void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscSeq, c
         strEsc[strEscPos++] = *sp;
     }
 }
-    
-/*********************************************************************/
 
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
-
 {
     char *sp;
     int strEscPos = 0;
@@ -672,11 +644,10 @@ void EscapeRegexChars(char *str, char *strEsc, int strEscSz)
         strEsc[strEscPos++] = *sp;
     }
 }
-    
-/*********************************************************************/
+
+/* Escapes characters esc in the string str of size strSz  */
 
 char *EscapeChar(char *str, int strSz, char esc)
-/* Escapes characters esc in the string str of size strSz  */
 {
     char strDup[CF_BUFSIZE];
     int strPos, strDupPos;
@@ -703,8 +674,6 @@ char *EscapeChar(char *str, int strSz, char esc)
     return str;
 }
 
-/*********************************************************************/
-
 void AnchorRegex(const char *regex, char *out, int outSz)
 {
     if (NULL_OR_EMPTY(regex))
@@ -716,5 +685,3 @@ void AnchorRegex(const char *regex, char *out, int outSz)
         snprintf(out, outSz, "^(%s)$", regex);
     }
 }
-
-/* EOF */

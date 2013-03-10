@@ -274,9 +274,9 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "monitor_cfengine");
+        PromiseType *tp = BundleAppendPromiseType(bp, "monitor_cfengine");
 
-        pp = SubTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+        pp = PromiseTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
     assert(pp);
 
@@ -1141,7 +1141,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         {
             for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->subtypes, j);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

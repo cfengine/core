@@ -70,7 +70,7 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
-SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
+PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
 
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);

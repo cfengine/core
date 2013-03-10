@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_MEASUREMENT_H
 #define CFENGINE_MOD_MEASUREMENT_H
 
-extern const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+extern const PromiseTypeSyntax CF_MEASUREMENT_SUBTYPES[];
 
 #endif

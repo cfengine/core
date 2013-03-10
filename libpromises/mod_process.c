@@ -66,7 +66,7 @@ static const BodySyntax CF_PROCESS_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_PROCESS_SUBTYPES[] =
+const PromiseTypeSyntax CF_PROCESS_SUBTYPES[] =
 {
     {"agent", "processes", CF_PROCESS_BODIES},
     {NULL, NULL, NULL},

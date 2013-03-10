@@ -107,7 +107,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
                                const ReportContext *report_context)
 {
     enum editlinetypesequence type;
-    SubType *sp;
+    PromiseType *sp;
     char lockname[CF_BUFSIZE];
     const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
@@ -128,7 +128,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
 
     for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
     {
-        if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
+        if ((sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
         {
             continue;
         }
@@ -146,12 +146,12 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
         {
             EditClassBanner(ctx, type);
 
-            if ((sp = BundleGetSubType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
+            if ((sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
 
-            BannerSubSubType(ctx, bp->name, sp->name);
+            BannerSubPromiseType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
             ScopeSet(bp->name);
 
@@ -206,7 +206,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
     assert(bp);
 
     {
-        SubType *tp = BundleAppendSubType(bp, "insert_lines");
+        PromiseType *tp = BundleAppendPromiseType(bp, "insert_lines");
         Promise *np = NULL;
         Item *lines = NULL;
         char context[CF_BUFSIZE] = "any";
@@ -285,7 +285,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
 
                 *(sp-1) = '\0'; // StripTrailingNewline(promiser) and terminate
 
-                np = SubTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                np = PromiseTypeAppendPromise(tp, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                 PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
 
                 DeleteItemList(lines);
@@ -305,7 +305,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     {
                         CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
                     }
-                    np = SubTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+                    np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                     PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
                 }
             }

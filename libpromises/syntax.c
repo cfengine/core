@@ -53,11 +53,11 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
+PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
-        const SubTypeSyntax *syntax = NULL;
+        const PromiseTypeSyntax *syntax = NULL;
 
         if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
         {
@@ -75,7 +75,7 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
         }
     }
 
-    return (SubTypeSyntax) { NULL, NULL, NULL };
+    return (PromiseTypeSyntax) { NULL, NULL, NULL };
 }
 
 /****************************************************************************/
@@ -84,7 +84,7 @@ DataType ExpectedDataType(const char *lvalname)
 {
     int i, j, k, l;
     const BodySyntax *bs, *bs2;
-    const SubTypeSyntax *ss;
+    const PromiseTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
@@ -934,7 +934,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
-    const SubTypeSyntax *st;
+    const PromiseTypeSyntax *st;
     int i = 0, j = 0;
 
     for (i = 0; i < CF3_MODULES; i++)

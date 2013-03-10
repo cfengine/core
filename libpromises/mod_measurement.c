@@ -48,7 +48,7 @@ static const BodySyntax CF_MEASURE_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
+const PromiseTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
 {
     {"monitor", "measurements", CF_MEASURE_BODIES},
     {NULL, NULL, NULL},

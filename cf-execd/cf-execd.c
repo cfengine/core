@@ -454,9 +454,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(exec_cfengine_policy, NamespaceDefault(), "exec_cfengine_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "exec_cfengine");
+        PromiseType *tp = BundleAppendPromiseType(bp, "exec_cfengine");
 
-        pp = SubTypeAppendPromise(tp, "the executor agent", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+        pp = PromiseTypeAppendPromise(tp, "the executor agent", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
     assert(pp);
 
@@ -623,9 +623,9 @@ static void Apoptosis(EvalContext *ctx)
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(aptosis_policy, NamespaceDefault(), "exec_apoptosis", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "processes");
+        PromiseType *tp = BundleAppendPromiseType(bp, "processes");
 
-        pp = SubTypeAppendPromise(tp, promiser_buf, (Rval) {"cfengine", RVAL_TYPE_SCALAR}, "any");
+        pp = PromiseTypeAppendPromise(tp, promiser_buf, (Rval) {"cfengine", RVAL_TYPE_SCALAR}, "any");
     }
 
     GetCurrentUserName(mypid, 31);

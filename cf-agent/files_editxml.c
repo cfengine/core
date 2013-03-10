@@ -151,7 +151,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
                               const ReportContext *report_context)
 {
     enum editxmltypesequence type;
-    SubType *sp;
+    PromiseType *sp;
     char lockname[CF_BUFSIZE];
     const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
@@ -172,7 +172,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
 
     for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
     {
-        if ((sp = BundleGetSubType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
+        if ((sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
         {
             continue;
         }
@@ -190,12 +190,12 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         {
             EditXmlClassBanner(ctx, type);
 
-            if ((sp = BundleGetSubType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
+            if ((sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
 
-            BannerSubSubType(ctx, bp->name, sp->name);
+            BannerSubPromiseType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
             ScopeSet(bp->name);
 

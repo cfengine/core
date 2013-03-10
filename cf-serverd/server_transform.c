@@ -523,14 +523,14 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
             for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->subtypes, j);
 
                 if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
                 {
                     continue;
                 }
 
-                BannerSubType(scope, sp->name, 0);
+                BannerPromiseType(scope, sp->name, 0);
                 ScopeSet(scope);
                 ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
 
@@ -572,14 +572,14 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
             for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->subtypes, j);
 
                 if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
                 {
                     continue;
                 }
 
-                BannerSubType(scope, sp->name, 0);
+                BannerPromiseType(scope, sp->name, 0);
                 ScopeSet(scope);
                 ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
 

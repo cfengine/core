@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_DATABASES_H
 #define CFENGINE_MOD_DATABASES_H
 
-extern const SubTypeSyntax CF_DATABASES_SUBTYPES[];
+extern const PromiseTypeSyntax CF_DATABASES_SUBTYPES[];
 
 #endif

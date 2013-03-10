@@ -66,7 +66,7 @@ const BodySyntax CF_REMROLE_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_REMACCESS_SUBTYPES[] =
+const PromiseTypeSyntax CF_REMACCESS_SUBTYPES[] =
 {
     {"server", "access", CF_REMACCESS_BODIES},
     {"server", "roles", CF_REMROLE_BODIES},

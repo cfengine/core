@@ -1666,7 +1666,7 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
         {
            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
            {
-               SubType *sbp = SeqAt(bp->subtypes, j);
+               PromiseType *sbp = SeqAt(bp->subtypes, j);
 
                for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                {
@@ -1764,7 +1764,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
 
         for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
         {
-            SubType *sbp = SeqAt(bp->subtypes, i);
+            PromiseType *sbp = SeqAt(bp->subtypes, i);
 
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {

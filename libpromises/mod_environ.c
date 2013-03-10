@@ -57,7 +57,7 @@ static const BodySyntax CF_ENVIRON_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
+const PromiseTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
 {
     {"agent", "guest_environments", CF_ENVIRON_BODIES},
     {NULL, NULL, NULL},

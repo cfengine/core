@@ -39,7 +39,7 @@ static const BodySyntax CF_INTERFACES_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_INTERFACES_SUBTYPES[] =
+const PromiseTypeSyntax CF_INTERFACES_SUBTYPES[] =
 {
     {"agent", "interfaces", CF_INTERFACES_BODIES},
     {NULL, NULL, NULL},

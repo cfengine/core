@@ -34,7 +34,7 @@ static const BodySyntax CF_OUTPUTS_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_OUTPUTS_SUBTYPES[] =
+const PromiseTypeSyntax CF_OUTPUTS_SUBTYPES[] =
 {
     {"agent", "outputs", CF_OUTPUTS_BODIES},
     {NULL, NULL, NULL},

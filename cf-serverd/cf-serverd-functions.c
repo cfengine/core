@@ -277,9 +277,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(server_cfengine_policy, NamespaceDefault(), "server_cfengine_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "server_cfengine");
+        PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
 
-        pp = SubTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+        pp = PromiseTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
     assert(pp);
 

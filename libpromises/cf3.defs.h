@@ -510,7 +510,7 @@ typedef struct Policy_ Policy;
 typedef struct Bundle_ Bundle;
 typedef struct Body_ Body;
 typedef struct Promise_ Promise;
-typedef struct SubType_ SubType;
+typedef struct PromiseType_ PromiseType;
 typedef struct FnCall_ FnCall;
 
 /*************************************************************************/
@@ -762,7 +762,7 @@ typedef struct
     const char *bundle_type;
     const char *subtype;
     const BodySyntax *bs;
-} SubTypeSyntax;
+} PromiseTypeSyntax;
 
 /*************************************************************************/
 
@@ -1770,12 +1770,12 @@ typedef struct
 
 extern const BodySyntax CF_COMMON_BODIES[];
 extern const BodySyntax CF_VARBODY[];
-extern const SubTypeSyntax *CF_ALL_SUBTYPES[];
+extern const PromiseTypeSyntax *CF_ALL_SUBTYPES[];
 extern const BodySyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const SubTypeSyntax CF_ALL_BODIES[];
+extern const PromiseTypeSyntax CF_ALL_BODIES[];
 extern const BodySyntax CFH_CONTROLBODY[];
-extern const SubTypeSyntax CF_COMMON_SUBTYPES[];
+extern const PromiseTypeSyntax CF_COMMON_SUBTYPES[];
 extern const BodySyntax CF_CLASSBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const BodySyntax CFEX_CONTROLBODY[];

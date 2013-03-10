@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MOD_REPORT_H
 #define CFENGINE_MOD_REPORT_H
 
-extern const SubTypeSyntax CF_REPORT_SUBTYPES[];
+extern const PromiseTypeSyntax CF_REPORT_SUBTYPES[];
 extern const BodySyntax CF_REPORT_BODIES[];
 
 #endif

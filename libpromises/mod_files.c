@@ -343,7 +343,7 @@ static const BodySyntax CF_DELETEATTRIBUTES_BODIES[] =
 
 // Master Syntax for Files 
 
-const SubTypeSyntax CF_FILES_SUBTYPES[] =
+const PromiseTypeSyntax CF_FILES_SUBTYPES[] =
 {
     /* Body lists belonging to "files:" type in Agent */
 

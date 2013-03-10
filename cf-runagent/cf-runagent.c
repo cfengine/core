@@ -182,9 +182,9 @@ int main(int argc, char *argv[])
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(policy, NamespaceDefault(), "runagent_adhoc_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "runagent");
+        PromiseType *tp = BundleAppendPromiseType(bp, "runagent");
 
-        pp = SubTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
+        pp = PromiseTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
         // TODO: wat?
         pp->donep = &(pp->done);

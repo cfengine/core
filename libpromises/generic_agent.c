@@ -1297,7 +1297,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
 
         for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
-            SubType *sp = SeqAt(bp->subtypes, j);
+            PromiseType *sp = SeqAt(bp->subtypes, j);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -1684,7 +1684,7 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
 
         for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
         {
-            SubType *sp = SeqAt(bp->subtypes, j);
+            PromiseType *sp = SeqAt(bp->subtypes, j);
 
             if (strcmp(sp->name, "vars") == 0)
             {

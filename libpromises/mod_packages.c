@@ -88,7 +88,7 @@ static const BodySyntax CF_PACKAGES_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const SubTypeSyntax CF_PACKAGES_SUBTYPES[] =
+const PromiseTypeSyntax CF_PACKAGES_SUBTYPES[] =
 {
     {"agent", "packages", CF_PACKAGES_BODIES},
     {NULL, NULL, NULL},

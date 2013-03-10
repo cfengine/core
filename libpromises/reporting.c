@@ -260,7 +260,7 @@ static void ReportBannerText(Writer *writer, const char *s)
 
 /**************************************************************/
 
-void BannerSubType(const char *bundlename, const char *type, int pass)
+void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
@@ -272,7 +272,7 @@ void BannerSubType(const char *bundlename, const char *type, int pass)
 /**************************************************************/
 
 // TODO: this output looks ugly as hell
-void BannerSubSubType(EvalContext *ctx, const char *bundlename, const char *type)
+void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type)
 {
     if (strcmp(type, "processes") == 0)
     {

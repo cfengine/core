@@ -995,7 +995,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 {
     EvalContextStackPushFrame(ctx, false);
 
-    SubType *sp;
+    PromiseType *sp;
     TypeSequence type;
     int pass;
     int save_pr_kept = PR_KEPT;
@@ -1014,12 +1014,12 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
         {
             ClassBanner(ctx, type);
 
-            if ((sp = BundleGetSubType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
+            if ((sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
             {
                 continue;
             }
 
-            BannerSubType(bp->name, sp->name, pass);
+            BannerPromiseType(bp->name, sp->name, pass);
             ScopeSet(bp->name);
 
             if (!NewTypeContext(type))

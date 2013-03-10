@@ -47,7 +47,7 @@ static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
 static bool LvalWantsBody(char *stype, char *lval);
 static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss);
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss);
 static void fatal_yyerror(const char *s);
 
 static bool INSTALL_SKIP = false;
@@ -329,7 +329,7 @@ category:              CATEGORY                  /* BUNDLE ONLY */
                            {
                                if (!INSTALL_SKIP)
                                {
-                                   P.currentstype = BundleAppendSubType(P.currentbundle,P.currenttype);
+                                   P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
                                    P.currentstype->offset.line = P.line_no;
                                    P.currentstype->offset.start = P.offsets.last_subtype_id;
                                }
@@ -350,7 +350,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
+                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                        P.rval,
                                                                        P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
@@ -386,7 +386,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               P.currentpromise = SubTypeAppendPromise(P.currentstype, P.promiser,
+                               P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
@@ -434,7 +434,7 @@ constraint:            id                        /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                Constraint *cp = NULL;
-                               SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
+                               PromiseTypeSyntax ss = PromiseTypeSyntaxLookup(P.blocktype,P.currenttype);
                                {
                                    SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
                                    if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
@@ -761,7 +761,7 @@ static int RelevantBundle(const char *agent, const char *blocktype)
 static bool LvalWantsBody(char *stype, char *lval)
 {
     int i, j, l;
-    const SubTypeSyntax *ss;
+    const PromiseTypeSyntax *ss;
     const BodySyntax *bs;
 
     for (i = 0; i < CF3_MODULES; i++)
@@ -807,7 +807,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 {
     int lmatch = false;
     int i, j, k, l;
-    const SubTypeSyntax *ss;
+    const PromiseTypeSyntax *ss;
     const BodySyntax *bs, *bs2;
     char output[CF_BUFSIZE];
 
@@ -919,7 +919,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
     return SYNTAX_TYPE_MATCH_OK;
 }
 
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, SubTypeSyntax ss)
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss)
 {
     int l;
     const BodySyntax *bs;

@@ -315,7 +315,7 @@ const BodySyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 /* This list is for checking free standing body lval => rval bindings */
 
-const SubTypeSyntax CF_ALL_BODIES[] =
+const PromiseTypeSyntax CF_ALL_BODIES[] =
 {
     {CF_COMMONC, "control", CFG_CONTROLBODY},
     {CF_AGENTC, "control", CFA_CONTROLBODY},
@@ -356,7 +356,7 @@ const BodySyntax CF_COMMON_BODIES[] =
  /* This is where we place promise subtypes that apply
     to more than one type of bundle, e.g. agent,server.. */
 
-const SubTypeSyntax CF_COMMON_SUBTYPES[] =
+const PromiseTypeSyntax CF_COMMON_SUBTYPES[] =
 {
 
     {"*", "classes", CF_CLASSBODY},
@@ -375,7 +375,7 @@ const SubTypeSyntax CF_COMMON_SUBTYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-const SubTypeSyntax *CF_ALL_SUBTYPES[] =
+const PromiseTypeSyntax *CF_ALL_SUBTYPES[] =
 {
     CF_COMMON_SUBTYPES,         /* Add modules after this, mod_report.c is here */
     CF_EXEC_SUBTYPES,           /* mod_exec.c */

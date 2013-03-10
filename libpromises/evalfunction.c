@@ -1770,9 +1770,9 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     Promise *pp = NULL;
     {
         Bundle *bp = PolicyAppendBundle(select_server_policy, NamespaceDefault(), "select_server_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "select_server");
+        PromiseType *tp = BundleAppendPromiseType(bp, "select_server");
 
-        pp = SubTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+        pp = PromiseTypeAppendPromise(tp, "function", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
     }
 
     assert(pp);

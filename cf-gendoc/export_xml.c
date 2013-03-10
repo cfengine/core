@@ -62,8 +62,8 @@ static char *MANUAL_DIRECTORY;
 
 static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
-static void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st);
-static void XmlExportControl(Writer *writer, SubTypeSyntax body);
+static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
+static void XmlExportControl(Writer *writer, PromiseTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
 static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
 static void XmlExportType(Writer *writer, DataType dtype, const void *range);
@@ -74,7 +74,7 @@ void XmlManual(const char *mandir, FILE *fout)
 {
     Writer *writer = NULL;
     int i;
-    const SubTypeSyntax *st = NULL;
+    const PromiseTypeSyntax *st = NULL;
 
     MANUAL_DIRECTORY = (char *) mandir;
     AddSlash(MANUAL_DIRECTORY);
@@ -221,7 +221,7 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
 
 /*****************************************************************************/
 
-static void XmlExportControl(Writer *writer, SubTypeSyntax type)
+static void XmlExportControl(Writer *writer, PromiseTypeSyntax type)
 {
     char *filebuffer = NULL;
 
@@ -248,7 +248,7 @@ static void XmlExportControl(Writer *writer, SubTypeSyntax type)
 
 /*****************************************************************************/
 
-void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
+void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
 {
     int i;
     char *filebuffer = NULL;

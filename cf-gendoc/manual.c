@@ -52,7 +52,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
 static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs);
 static void TexinfoShowRange(FILE *fout, char *s, DataType type);
 static void IncludeManualFile(const char *source_dir, FILE *fout, char *filename);
-static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const SubTypeSyntax *st);
+static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st);
 static void TexinfoSpecialFunction(const char *source_dir, FILE *fout, FnCallType fn);
 static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope);
 static char *TexInfoEscape(char *s);
@@ -63,7 +63,7 @@ static void PrintPattern(FILE *fout, const char *pattern);
 void TexinfoManual(const char *source_dir, const char *output_file)
 {
     char filename[CF_BUFSIZE];
-    const SubTypeSyntax *st;
+    const PromiseTypeSyntax *st;
     Item *done = NULL;
     FILE *fout;
     int i;
@@ -392,7 +392,7 @@ static void TexinfoFooter(FILE *fout)
 
 /*****************************************************************************/
 
-static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const SubTypeSyntax *st)
+static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st)
 {
     int j;
     char filename[CF_BUFSIZE];

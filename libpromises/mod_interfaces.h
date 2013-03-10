@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_INTERFACES_H
 #define CFENGINE_MOD_INTERFACES_H
 
-extern const SubTypeSyntax CF_INTERFACES_SUBTYPES[];
+extern const PromiseTypeSyntax CF_INTERFACES_SUBTYPES[];
 
 #endif

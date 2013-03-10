@@ -105,7 +105,7 @@ static void test_policy_json_to_from(void **state)
         assert_true(main_bundle);
         {
             {
-                SubType *files = BundleGetSubType(main_bundle, "files");
+                PromiseType *files = BundleGetPromiseType(main_bundle, "files");
                 assert_true(files);
                 assert_int_equal(1, SeqLength(files->promises));
 
@@ -142,7 +142,7 @@ static void test_policy_json_to_from(void **state)
             }
 
             {
-                SubType *reports = BundleGetSubType(main_bundle, "reports");
+                PromiseType *reports = BundleGetPromiseType(main_bundle, "reports");
                 assert_true(reports);
                 assert_int_equal(1, SeqLength(reports->promises));
 

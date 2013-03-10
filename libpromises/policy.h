@@ -92,7 +92,7 @@ struct Body_
     SourceOffset offset;
 };
 
-struct SubType_
+struct PromiseType_
 {
     Bundle *parent_bundle;
 
@@ -104,7 +104,7 @@ struct SubType_
 
 struct Promise_
 {
-    SubType *parent_subtype;
+    PromiseType *parent_subtype;
 
     char *classes;
     char *ref;                  /* comment */
@@ -242,8 +242,8 @@ Policy *PolicyFromJson(JsonElement *json_policy);
  */
 void PolicyToString(const Policy *policy, Writer *writer);
 
-SubType *BundleAppendSubType(Bundle *bundle, const char *name);
-SubType *BundleGetSubType(Bundle *bp, const char *name);
+PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name);
+PromiseType *BundleGetPromiseType(Bundle *bp, const char *name);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 
@@ -257,8 +257,8 @@ Seq *BodyGetConstraint(Body *body, const char *lval);
 
 const char *ConstraintGetNamespace(const Constraint *cp);
 
-Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes);
-void SubTypeDestroy(SubType *subtype);
+Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes);
+void PromiseTypeDestroy(PromiseType *subtype);
 
 void PromiseDestroy(Promise *pp);
 

@@ -60,7 +60,7 @@ typedef struct
     Bundle *currentbundle;
     Body *currentbody;
     Promise *currentpromise;
-    SubType *currentstype;
+    PromiseType *currentstype;
     Rlist *useargs;
 
     Rlist *currentRlist;

@@ -118,7 +118,7 @@ int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 
-void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv);
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void DeleteAuthList(Auth *ap);

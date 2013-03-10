@@ -165,7 +165,7 @@ static int TRIES = 0;
 
 /*******************************************************************/
 
-void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv)
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
 
 {
     char intime[64];
@@ -173,14 +173,14 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
     
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
     
-    if ((sv.nonattackerlist) && (!IsMatchItemIn(sv.nonattackerlist, MapAddress(ipaddr))))
+    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Not allowing connection from non-authorized IP %s\n", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
-    if (IsMatchItemIn(sv.attackerlist, MapAddress(ipaddr)))
+    if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Denying connection from non-authorized IP %s\n", ipaddr);
         cf_closesocket(sd_reply);
@@ -192,16 +192,16 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
        now = 0;
        }
     
-    PurgeOldConnections(&sv.connectionlist, now);
+    PurgeOldConnections(&SV.connectionlist, now);
     
-    if (!IsMatchItemIn(sv.multiconnlist, MapAddress(ipaddr)))
+    if (!IsMatchItemIn(SV.multiconnlist, MapAddress(ipaddr)))
     {
         if (!ThreadLock(cft_count))
         {
             return;
         }
 
-        if (IsItemIn(sv.connectionlist, MapAddress(ipaddr)))
+        if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
             CfOut(OUTPUT_LEVEL_ERROR, "", "Denying repeated connection from \"%s\"\n", ipaddr);
@@ -212,7 +212,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
         ThreadUnlock(cft_count);
     }
     
-    if (sv.logconns)
+    if (SV.logconns)
     {
         CfOut(OUTPUT_LEVEL_LOG, "", "Accepting connection from \"%s\"\n", ipaddr);
     }
@@ -228,7 +228,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
         return;
     }
     
-    PrependItem(&sv.connectionlist, MapAddress(ipaddr), intime);
+    PrependItem(&SV.connectionlist, MapAddress(ipaddr), intime);
     
     if (!ThreadUnlock(cft_count))
     {

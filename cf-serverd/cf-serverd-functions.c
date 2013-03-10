@@ -395,7 +395,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
                 snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
                 ThreadUnlock(cft_getaddr);
 
-                ServerEntryPoint(ctx, sd_reply, ipaddr, SV);
+                ServerEntryPoint(ctx, sd_reply, ipaddr);
             }
         }
     }

@@ -1574,6 +1574,7 @@ update_hashes  => "yes";
 body changes detect_all_change_using(hash)
 
 # Detect all changes using a configurable hashing algorithm
+# for times when you care about both content and file stats e.g. mtime
 # hash - supported hashing algorithm (md5, sha1, sha224, sha256, sha384,
 #   sha512, best)
 
@@ -1591,6 +1592,21 @@ body changes detect_content
 
 {
 hash           => "md5";
+report_changes => "content";
+update_hashes  => "yes";
+}
+
+##
+
+body changes detect_content_using(hash)
+
+# Detect content changes using a configurable hashing algorithm
+# for times when you only care about content, not file stats e.g. mtime
+# hash - supported hashing algorithm (md5, sha1, sha224, sha256, sha384,
+#   sha512, best)
+
+{
+hash           => "$(hash)";
 report_changes => "content";
 update_hashes  => "yes";
 }

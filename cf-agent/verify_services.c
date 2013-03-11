@@ -36,6 +36,10 @@
 #include "policy.h"
 #include "scope.h"
 
+#ifdef __MINGW32__
+#include "cf.nova.h"
+#endif
+
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
 static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);

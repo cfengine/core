@@ -32,6 +32,10 @@
 #include "string_lib.h"
 #include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /*****************************************************************************/
 
 // Valid operations (first char of mode)

@@ -58,7 +58,7 @@ static const BodySyntax CF_STORAGE_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const PromiseTypeSyntax CF_STORAGE_SUBTYPES[] =
+const PromiseTypeSyntax CF_STORAGE_PROMISE_TYPES[] =
 {
     {"agent", "storage", CF_STORAGE_BODIES},
     {NULL, NULL, NULL},

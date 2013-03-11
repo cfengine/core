@@ -44,7 +44,7 @@ const const BodySyntax CF_REPORT_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-const PromiseTypeSyntax CF_REPORT_SUBTYPES[] =
+const PromiseTypeSyntax CF_REPORT_PROMISE_TYPES[] =
 {
     /* Body lists belonging to "reports:" type in Agent */
 

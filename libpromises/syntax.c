@@ -59,7 +59,7 @@ PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *p
     {
         const PromiseTypeSyntax *syntax = NULL;
 
-        if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((syntax = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
@@ -88,7 +88,7 @@ DataType ExpectedDataType(const char *lvalname)
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
@@ -939,7 +939,7 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = CF_ALL_SUBTYPES[i];
+        st = CF_ALL_PROMISE_TYPES[i];
 
         for (j = 0; st[j].bundle_type != NULL; j++)
         {

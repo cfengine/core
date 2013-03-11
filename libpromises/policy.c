@@ -56,8 +56,8 @@ static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of b
 static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
 static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
 static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
-static const char *POLICY_ERROR_SUBTYPE_MISSING_NAME = "Missing promise type category for %s bundle";
-static const char *POLICY_ERROR_SUBTYPE_INVALID = "%s is not a valid type category for bundle %s";
+static const char *POLICY_ERROR_PROMISE_TYPE_MISSING_NAME = "Missing promise type category for %s bundle";
+static const char *POLICY_ERROR_PROMISE_TYPE_INVALID = "%s is not a valid type category for bundle %s";
 static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
 static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
 static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
@@ -417,8 +417,8 @@ static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
     // FIX: if you are able to write a unit test for this error, please do
     if (!promise_type->name)
     {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, promise_type,
-                                              POLICY_ERROR_SUBTYPE_MISSING_NAME,
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise_type,
+                                              POLICY_ERROR_PROMISE_TYPE_MISSING_NAME,
                                               promise_type->parent_bundle));
         success = false;
     }
@@ -426,8 +426,8 @@ static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
     // ensure promise_type is allowed in bundle (type)
     if (!PromiseTypeSyntaxLookup(promise_type->parent_bundle->type, promise_type->name).promise_type)
     {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, promise_type,
-                                              POLICY_ERROR_SUBTYPE_INVALID,
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise_type,
+                                              POLICY_ERROR_PROMISE_TYPE_INVALID,
                                               promise_type->name, promise_type->parent_bundle->name));
         success = false;
     }
@@ -920,7 +920,7 @@ static SourceOffset PolicyElementSourceOffset(PolicyElementType type, const void
             return body->offset;
         }
 
-        case POLICY_ELEMENT_TYPE_SUBTYPE:
+        case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
         {
             const PromiseType *type = (const PromiseType *)element;
             return type->offset;
@@ -967,7 +967,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
             return body->source_path;
         }
 
-        case POLICY_ELEMENT_TYPE_SUBTYPE:
+        case POLICY_ELEMENT_TYPE_PROMISE_TYPE:
         {
             const PromiseType *type = (const PromiseType *)element;
             return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_BUNDLE, type->parent_bundle);
@@ -976,7 +976,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
         case POLICY_ELEMENT_TYPE_PROMISE:
         {
             const Promise *promise = (const Promise *)element;
-            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_SUBTYPE, promise->parent_promise_type);
+            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise->parent_promise_type);
         }
 
         case POLICY_ELEMENT_TYPE_CONSTRAINT:
@@ -2705,7 +2705,7 @@ static int VerifyConstraintName(const char *lval)
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ssp = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
@@ -2896,7 +2896,7 @@ static void ConstraintPostCheck(const char *bundle_promise_type, const char *lva
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        if ((ssp = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ssp = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }

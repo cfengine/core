@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_PROCESS_H
 #define CFENGINE_MOD_PROCESS_H
 
-extern const PromiseTypeSyntax CF_PROCESS_SUBTYPES[];
+extern const PromiseTypeSyntax CF_PROCESS_PROMISE_TYPES[];
 
 #endif

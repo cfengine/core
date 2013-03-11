@@ -117,10 +117,10 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = (CF_ALL_SUBTYPES[i]);
+        st = (CF_ALL_PROMISE_TYPES[i]);
 
-        if ((st == CF_COMMON_SUBTYPES) || (st == CF_EXEC_SUBTYPES) || (st == CF_REMACCESS_SUBTYPES)
-            || (st == CF_MEASUREMENT_SUBTYPES))
+        if ((st == CF_COMMON_PROMISE_TYPES) || (st == CF_EXEC_PROMISE_TYPES) || (st == CF_REMACCESS_PROMISE_TYPES)
+            || (st == CF_MEASUREMENT_PROMISE_TYPES))
 
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
@@ -158,29 +158,29 @@ void TexinfoManual(const char *source_dir, const char *output_file)
             fprintf(fout, "@menu\n");
             for (int k = 0; k < CF3_MODULES; ++k)
             {
-                for (int j = 0; CF_ALL_SUBTYPES[k][j].bundle_type != NULL; ++j)
+                for (int j = 0; CF_ALL_PROMISE_TYPES[k][j].bundle_type != NULL; ++j)
                 {
                     const char *constraint_type_name;
-                    if (strcmp(CF_ALL_SUBTYPES[k][j].promise_type, "*") == 0)
+                    if (strcmp(CF_ALL_PROMISE_TYPES[k][j].promise_type, "*") == 0)
                     {
                         constraint_type_name = "Miscellaneous";
                     }
                     else
                     {
-                        constraint_type_name = CF_ALL_SUBTYPES[k][j].promise_type;
+                        constraint_type_name = CF_ALL_PROMISE_TYPES[k][j].promise_type;
                     }
 
                     const char *bundle_type_name;
-                    if (strcmp(CF_ALL_SUBTYPES[k][j].bundle_type, "*") == 0)
+                    if (strcmp(CF_ALL_PROMISE_TYPES[k][j].bundle_type, "*") == 0)
                     {
                         bundle_type_name = "common";
                     }
                     else
                     {
-                        bundle_type_name = CF_ALL_SUBTYPES[k][j].bundle_type;
+                        bundle_type_name = CF_ALL_PROMISE_TYPES[k][j].bundle_type;
                     }
 
-                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_SUBTYPES[k][j].promise_type,
+                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_PROMISE_TYPES[k][j].promise_type,
                             bundle_type_name,
                             constraint_type_name,
                             bundle_type_name);

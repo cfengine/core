@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MOD_PACKAGES_H
 #define CFENGINE_MOD_PACKAGES_H
 
-extern const PromiseTypeSyntax CF_PACKAGES_SUBTYPES[];
+extern const PromiseTypeSyntax CF_PACKAGES_PROMISE_TYPES[];
 
 #endif
 

@@ -355,7 +355,7 @@ const BodySyntax CF_COMMON_BODIES[] =
  /* This is where we place promise promise_types that apply
     to more than one type of bundle, e.g. agent,server.. */
 
-const PromiseTypeSyntax CF_COMMON_SUBTYPES[] =
+const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
     {"*", "classes", CF_CLASSBODY},
@@ -374,21 +374,21 @@ const PromiseTypeSyntax CF_COMMON_SUBTYPES[] =
 /* Read in all parsable Bundle definitions */
 /* REMEMBER TO REGISTER THESE IN cf3.extern.h */
 
-const PromiseTypeSyntax *CF_ALL_SUBTYPES[] =
+const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[] =
 {
-    CF_COMMON_SUBTYPES,         /* Add modules after this, mod_report.c is here */
-    CF_EXEC_SUBTYPES,           /* mod_exec.c */
-    CF_DATABASES_SUBTYPES,      /* mod_databases.c */
-    CF_ENVIRONMENT_SUBTYPES,    /* mod_environ.c */
-    CF_FILES_SUBTYPES,          /* mod_files.c */
-    CF_METHOD_SUBTYPES,         /* mod_methods.c */
-    CF_OUTPUTS_SUBTYPES,        /* mod_outputs.c */
-    CF_PACKAGES_SUBTYPES,       /* mod_packages.c */
-    CF_PROCESS_SUBTYPES,        /* mod_process.c */
-    CF_SERVICES_SUBTYPES,       /* mod_services.c */
-    CF_STORAGE_SUBTYPES,        /* mod_storage.c */
-    CF_REMACCESS_SUBTYPES,      /* mod_access.c */
-    CF_MEASUREMENT_SUBTYPES,    /* mod_measurement.c */
+    CF_COMMON_PROMISE_TYPES,         /* Add modules after this, mod_report.c is here */
+    CF_EXEC_PROMISE_TYPES,           /* mod_exec.c */
+    CF_DATABASES_PROMISE_TYPES,      /* mod_databases.c */
+    CF_ENVIRONMENT_PROMISE_TYPES,    /* mod_environ.c */
+    CF_FILES_PROMISE_TYPES,          /* mod_files.c */
+    CF_METHOD_PROMISE_TYPES,         /* mod_methods.c */
+    CF_OUTPUTS_PROMISE_TYPES,        /* mod_outputs.c */
+    CF_PACKAGES_PROMISE_TYPES,       /* mod_packages.c */
+    CF_PROCESS_PROMISE_TYPES,        /* mod_process.c */
+    CF_SERVICES_PROMISE_TYPES,       /* mod_services.c */
+    CF_STORAGE_PROMISE_TYPES,        /* mod_storage.c */
+    CF_REMACCESS_PROMISE_TYPES,      /* mod_access.c */
+    CF_MEASUREMENT_PROMISE_TYPES,    /* mod_measurement.c */
 };
 
-const int CF3_MODULES = (sizeof(CF_ALL_SUBTYPES) / sizeof(CF_ALL_SUBTYPES[0]));
+const int CF3_MODULES = (sizeof(CF_ALL_PROMISE_TYPES) / sizeof(CF_ALL_PROMISE_TYPES[0]));

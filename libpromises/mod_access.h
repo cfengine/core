@@ -25,7 +25,7 @@
 #ifndef CFENGINE_MOD_ACCESS_H
 #define CFENGINE_MOD_ACCESS_H
 
-extern const PromiseTypeSyntax CF_REMACCESS_SUBTYPES[];
+extern const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[];
 extern const BodySyntax CF_REMACCESS_BODIES[];
 
 #endif

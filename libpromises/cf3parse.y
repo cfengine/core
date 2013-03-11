@@ -766,7 +766,7 @@ static bool LvalWantsBody(char *stype, char *lval)
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
@@ -862,7 +862,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
     {
         CfDebug("Trying function module %d for matching lval %s\n", i, lval);
 
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }

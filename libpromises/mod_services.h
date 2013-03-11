@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_SERVICES_H
 #define CFENGINE_MOD_SERVICES_H
 
-extern const PromiseTypeSyntax CF_SERVICES_SUBTYPES[];
+extern const PromiseTypeSyntax CF_SERVICES_PROMISE_TYPES[];
 
 #endif

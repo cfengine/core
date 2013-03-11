@@ -118,7 +118,7 @@ void XmlManual(const char *mandir, FILE *fout)
     XmlStartTag(writer, XMLTAG_PROMISETYPES_ROOT, 0);
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = CF_ALL_SUBTYPES[i];
+        st = CF_ALL_PROMISE_TYPES[i];
         XmlExportPromiseType(writer, st);
     }
     XmlEndTag(writer, XMLTAG_PROMISETYPES_ROOT);

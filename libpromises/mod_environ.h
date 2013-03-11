@@ -25,6 +25,6 @@
 #ifndef CFENGINE_MOD_ENVIRON_H
 #define CFENGINE_MOD_ENVIRON_H
 
-extern const PromiseTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
+extern const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[];
 
 #endif

@@ -26,7 +26,7 @@
   This file can act as a template for adding functionality to cfengine 3.  All
   functionality can be added by extending the main array
 
-  CF_MOD_SUBTYPES[CF3_MODULES]
+  CF_MOD_PROMISE_TYPES[CF3_MODULES]
 
   and its array dimension, in mod_common, in the manner shown here.
 */
@@ -66,7 +66,7 @@ const BodySyntax CF_REMROLE_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const PromiseTypeSyntax CF_REMACCESS_SUBTYPES[] =
+const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[] =
 {
     {"server", "access", CF_REMACCESS_BODIES},
     {"server", "roles", CF_REMROLE_BODIES},

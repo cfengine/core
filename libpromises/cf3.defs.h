@@ -1723,12 +1723,12 @@ typedef struct
 
 extern const BodySyntax CF_COMMON_BODIES[];
 extern const BodySyntax CF_VARBODY[];
-extern const PromiseTypeSyntax *CF_ALL_SUBTYPES[];
+extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
 extern const BodySyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
 extern const PromiseTypeSyntax CF_ALL_BODIES[];
 extern const BodySyntax CFH_CONTROLBODY[];
-extern const PromiseTypeSyntax CF_COMMON_SUBTYPES[];
+extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
 extern const BodySyntax CF_CLASSBODY[];
 extern const BodySyntax CFA_CONTROLBODY[];
 extern const BodySyntax CFEX_CONTROLBODY[];

@@ -33,7 +33,7 @@ static const BodySyntax CF_METHOD_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
-const PromiseTypeSyntax CF_METHOD_SUBTYPES[] =
+const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[] =
 {
     {"agent", "methods", CF_METHOD_BODIES},
     {NULL, NULL, NULL},

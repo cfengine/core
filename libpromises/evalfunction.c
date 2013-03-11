@@ -1183,7 +1183,6 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
     Rlist *rp, *returnlist = NULL;
-    Scope *ptr;
 
 /* begin fn specific content */
 
@@ -1203,7 +1202,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!ScopeExists(scopeid))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",
               scopeid);
@@ -1243,7 +1242,6 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
     Rlist *rp;
-    Scope *ptr;
     double sum = 0;
 
 /* begin fn specific content */
@@ -1263,7 +1261,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!ScopeExists(scopeid))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"sum\" was promised a list in scope \"%s\" but this was not found\n", scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1307,7 +1305,6 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
     Rlist *rp;
-    Scope *ptr;
     double product = 1.0;
 
 /* begin fn specific content */
@@ -1327,7 +1324,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!ScopeExists(scopeid))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"product\" was promised a list in scope \"%s\" but this was not found\n",
               scopeid);
@@ -1373,7 +1370,6 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
     Rlist *rp;
-    Scope *ptr;
     int size = 0;
 
 /* begin fn specific content */
@@ -1394,7 +1390,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         strcpy(scopeid, "this");
     }
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!ScopeExists(scopeid))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"join\" was promised an array in scope \"%s\" but this was not found\n",
               scopeid);
@@ -1632,7 +1628,6 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
     Rlist *rp, *newlist = NULL;
     Rval rval;
-    Scope *ptr;
     DataType retype;
 
 /* begin fn specific content */
@@ -1664,7 +1659,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         strcpy(scopeid, CONTEXTID);
     }
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if (!ScopeExists(scopeid))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"maplist\" was promised an list in scope \"%s\" but this was not found\n",
               scopeid);

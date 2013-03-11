@@ -833,9 +833,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
             }
             else
             {
-                Scope *ptr = ScopeGet("this");
-
-                if (ptr != NULL)
+                if (ScopeExists("this"))
                 {
                     if (IsCf3VarString(rp->item))
                     {

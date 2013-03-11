@@ -70,6 +70,11 @@ Scope *ScopeGet(const char *scope)
 
 /*******************************************************************/
 
+bool ScopeExists(const char *name)
+{
+    return ScopeGet(name) != NULL;
+}
+
 void ScopeSet(char *id)
 {
     strlcpy(CONTEXTID, id, CF_MAXVARSIZE);

@@ -28,6 +28,8 @@
 
 #include "cf3.defs.h"
 
+bool ScopeExists(const char *name);
+
 /**
  * @brief Sets CONTEXTID = id
  * @param id

@@ -83,7 +83,9 @@ static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
 static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
 static int cf_stat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp);
+#ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
+#endif
 static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
 static int DeviceBoundary(struct stat *sb, Promise *pp);

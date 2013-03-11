@@ -625,7 +625,7 @@ static void Apoptosis(EvalContext *ctx)
         Bundle *bp = PolicyAppendBundle(aptosis_policy, NamespaceDefault(), "exec_apoptosis", "agent", NULL, NULL);
         PromiseType *tp = BundleAppendPromiseType(bp, "processes");
 
-        pp = PromiseTypeAppendPromise(tp, promiser_buf, (Rval) {"cfengine", RVAL_TYPE_SCALAR}, "any");
+        pp = PromiseTypeAppendPromise(tp, promiser_buf, (Rval) {xstrdup("cfengine"), RVAL_TYPE_SCALAR}, "any");
     }
 
     GetCurrentUserName(mypid, 31);

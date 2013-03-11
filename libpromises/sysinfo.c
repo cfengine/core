@@ -475,29 +475,29 @@ void GetNameInfo3(EvalContext *ctx)
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "windir", workbuf, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "windir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winsysdir", workbuf, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "winsysdir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winprogdir", workbuf, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "winprogdir", workbuf, DATA_TYPE_STRING);
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        NewScalar("sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
+        ScopeNewScalar("sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
     }
 
 # else/* NOT _WIN64 */
 
-    NewScalar("sys", "winprogdir86", "", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "winprogdir86", "", DATA_TYPE_STRING);
 
 # endif
 
@@ -622,7 +622,7 @@ void GetNameInfo3(EvalContext *ctx)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    NewScalar("sys", "zone", zone, DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "zone", zone, DATA_TYPE_STRING);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     EvalContextHeapAddHard(ctx, vbuff);
 
@@ -982,7 +982,7 @@ void OSClasses(EvalContext *ctx)
         }
     }
 
-    NewScalar("sys", "crontab", "", DATA_TYPE_STRING);
+    ScopeNewScalar("sys", "crontab", "", DATA_TYPE_STRING);
 
 #endif /* __CYGWIN__ */
 

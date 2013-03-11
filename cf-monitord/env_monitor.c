@@ -1139,9 +1139,9 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
-                PromiseType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->promise_types, j);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -1193,13 +1193,13 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("classes", pp->parent_subtype->name) == 0)
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("measurements", pp->parent_subtype->name) == 0)
+    if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
         *pp->donep = false;

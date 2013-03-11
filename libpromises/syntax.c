@@ -53,7 +53,7 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
+PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
@@ -66,7 +66,7 @@ PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *s
 
         for (int j = 0; syntax[j].bundle_type != NULL; j++)
         {
-            if (StringSafeEqual(subtype_name, syntax[j].subtype) &&
+            if (StringSafeEqual(promise_type_name, syntax[j].promise_type) &&
                     (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
                      StringSafeEqual("*", syntax[j].bundle_type)))
             {
@@ -93,7 +93,7 @@ DataType ExpectedDataType(const char *lvalname)
             continue;
         }
 
-        for (j = 0; ss[j].subtype != NULL; j++)
+        for (j = 0; ss[j].promise_type != NULL; j++)
         {
             if ((bs = ss[j].bs) == NULL)
             {
@@ -947,7 +947,7 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
             {
                 JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
 
-                JsonObjectAppendObject(json, st[j].subtype, attributes);
+                JsonObjectAppendObject(json, st[j].promise_type, attributes);
             }
         }
     }

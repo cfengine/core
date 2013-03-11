@@ -71,7 +71,7 @@ struct Bundle_
     char *ns;
     Rlist *args;
 
-    Seq *subtypes;
+    Seq *promise_types;
 
     char *source_path;
     SourceOffset offset;
@@ -104,7 +104,7 @@ struct PromiseType_
 
 struct Promise_
 {
-    PromiseType *parent_subtype;
+    PromiseType *parent_promise_type;
 
     char *classes;
     char *ref;                  /* comment */
@@ -258,7 +258,7 @@ Seq *BodyGetConstraint(Body *body, const char *lval);
 const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes);
-void PromiseTypeDestroy(PromiseType *subtype);
+void PromiseTypeDestroy(PromiseType *promise_type);
 
 void PromiseDestroy(Promise *pp);
 

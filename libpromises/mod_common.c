@@ -337,7 +337,7 @@ const PromiseTypeSyntax CF_ALL_BODIES[] =
 /*********************************************************/
 
  /* This is where we place lval => rval bindings that
-    apply to more than one subtype, e.g. generic
+    apply to more than one promise_type, e.g. generic
     processing behavioural details */
 
 const BodySyntax CF_COMMON_BODIES[] =
@@ -352,7 +352,7 @@ const BodySyntax CF_COMMON_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
- /* This is where we place promise subtypes that apply
+ /* This is where we place promise promise_types that apply
     to more than one type of bundle, e.g. agent,server.. */
 
 const PromiseTypeSyntax CF_COMMON_SUBTYPES[] =

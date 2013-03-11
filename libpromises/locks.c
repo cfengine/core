@@ -380,7 +380,7 @@ static char *BodyName(const Promise *pp)
 
     name = xmalloc(CF_MAXVARSIZE);
 
-    sp = pp->parent_subtype->name;
+    sp = pp->parent_promise_type->name;
 
     if (size + strlen(sp) < CF_MAXVARSIZE - CF_BUFFERMARGIN)
     {

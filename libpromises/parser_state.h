@@ -75,7 +75,7 @@ typedef struct
         size_t last_id;
         size_t last_string;
         size_t last_block_id;
-        size_t last_subtype_id;
+        size_t last_promise_type_id;
         size_t last_class_id;
     } offsets;
 } ParserState;

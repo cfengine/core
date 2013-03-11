@@ -155,7 +155,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
         ProgrammingError("Unable to copy promise");
     }
 
-    pcopy->parent_subtype = pp->parent_subtype;
+    pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->ref = pp->ref;
@@ -338,7 +338,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
         ProgrammingError("ExpandPromise returned NULL");
     }
 
-    pcopy->parent_subtype = pp->parent_subtype;
+    pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
     pcopy->audit = pp->audit;

@@ -66,7 +66,7 @@ static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attr
 
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
-static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval);
+static void ConstraintPostCheck(const char *bundle_promise_type, const char *lval, Rval rval);
 
 
 const char *NamespaceDefault(void)
@@ -208,7 +208,7 @@ const char *ConstraintGetNamespace(const Constraint *cp)
         return cp->parent.body->ns;
 
     case POLICY_ELEMENT_TYPE_PROMISE:
-        return cp->parent.promise->parent_subtype->parent_bundle->ns;
+        return cp->parent.promise->parent_promise_type->parent_bundle->ns;
 
     default:
         ProgrammingError("Constraint has parent type: %d", cp->type);
@@ -221,10 +221,10 @@ Policy *PolicyFromPromise(const Promise *promise)
 {
     assert(promise);
 
-    PromiseType *subtype = promise->parent_subtype;
-    assert(subtype);
+    PromiseType *promise_type = promise->parent_promise_type;
+    assert(promise_type);
 
-    Bundle *bundle = subtype->parent_bundle;
+    Bundle *bundle = promise_type->parent_bundle;
     assert(bundle);
 
     return bundle->parent_policy;
@@ -319,7 +319,7 @@ static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
 
 /*************************************************************************/
 
-/* Check if a constraint's syntax is correct according to its subtype and
+/* Check if a constraint's syntax is correct according to its promise_type and
    lvalue.
 */
 bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
@@ -330,21 +330,21 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
                          " not belonging to a promise");
     }
 
-    const PromiseType *subtype = constraint->parent.promise->parent_subtype;
-    const Bundle *bundle = subtype->parent_bundle;
+    const PromiseType *promise_type = constraint->parent.promise->parent_promise_type;
+    const Bundle *bundle = promise_type->parent_bundle;
 
-    /* Check if lvalue is valid for the bundle's specific subtype. */
-    const PromiseTypeSyntax subtype_syntax = PromiseTypeSyntaxLookup(bundle->type, subtype->name);
-    for (size_t i = 0; subtype_syntax.bs[i].lval != NULL; i++)
+    /* Check if lvalue is valid for the bundle's specific promise_type. */
+    const PromiseTypeSyntax promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
+    for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
     {
-        const BodySyntax *body_syntax = &subtype_syntax.bs[i];
+        const BodySyntax *body_syntax = &promise_type_syntax.bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return true;
         }
     }
-    /* FIX: Call a VerifyConstraint() hook for the specific subtype, defined
-       in verify_TYPE.c, that checks for subtype-specific constraint syntax. */
+    /* FIX: Call a VerifyConstraint() hook for the specific promise_type, defined
+       in verify_TYPE.c, that checks for promise_type-specific constraint syntax. */
 
     /* Check if lvalue is valid for all bodies. */
     for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
@@ -374,7 +374,7 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
         SeqAppend(errors,
                   PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
                                  POLICY_ERROR_LVAL_INVALID,
-                                 constraint->parent.promise->parent_subtype->name,
+                                 constraint->parent.promise->parent_promise_type->name,
                                  constraint->lval));
     return false;
 }
@@ -384,11 +384,11 @@ bool PolicyCheckPromise(const Promise *promise, Seq *errors)
     bool success = true;
     size_t i;
 
-    if (StringSafeCompare(promise->parent_subtype->name, "vars") == 0)
+    if (StringSafeCompare(promise->parent_promise_type->name, "vars") == 0)
     {
         success &= PolicyCheckPromiseVars(promise, errors);
     }
-    else if (StringSafeCompare(promise->parent_subtype->name, "methods") == 0)
+    else if (StringSafeCompare(promise->parent_promise_type->name, "methods") == 0)
     {
         success &= PolicyCheckPromiseMethods(promise, errors);
     }
@@ -405,36 +405,36 @@ bool PolicyCheckPromise(const Promise *promise, Seq *errors)
 
 /*************************************************************************/
 
-static bool PolicyCheckPromiseType(const PromiseType *subtype, Seq *errors)
+static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
 {
-    assert(subtype);
-    assert(subtype->parent_bundle);
+    assert(promise_type);
+    assert(promise_type->parent_bundle);
     bool success = true;
 
-    // ensure subtype name is defined
+    // ensure promise_type name is defined
     // FIX: shouldn't this be a syntax error in the parser?
     // FIX: this was copied from syntax:CheckPromiseType
     // FIX: if you are able to write a unit test for this error, please do
-    if (!subtype->name)
+    if (!promise_type->name)
     {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, subtype,
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, promise_type,
                                               POLICY_ERROR_SUBTYPE_MISSING_NAME,
-                                              subtype->parent_bundle));
+                                              promise_type->parent_bundle));
         success = false;
     }
 
-    // ensure subtype is allowed in bundle (type)
-    if (!PromiseTypeSyntaxLookup(subtype->parent_bundle->type, subtype->name).subtype)
+    // ensure promise_type is allowed in bundle (type)
+    if (!PromiseTypeSyntaxLookup(promise_type->parent_bundle->type, promise_type->name).promise_type)
     {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, subtype,
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_SUBTYPE, promise_type,
                                               POLICY_ERROR_SUBTYPE_INVALID,
-                                              subtype->name, subtype->parent_bundle->name));
+                                              promise_type->name, promise_type->parent_bundle->name));
         success = false;
     }
 
-    for (size_t i = 0; i < SeqLength(subtype->promises); i++)
+    for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
     {
-        const Promise *pp = SeqAt(subtype->promises, i);
+        const Promise *pp = SeqAt(promise_type->promises, i);
         success &= PolicyCheckPromise(pp, errors);
     }
 
@@ -459,9 +459,9 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
         }
     }
 
-    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
     {
-        const PromiseType *type = SeqAt(bundle->subtypes, i);
+        const PromiseType *type = SeqAt(bundle->promise_types, i);
         success &= PolicyCheckPromiseType(type, errors);
     }
 
@@ -470,7 +470,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 
 /*************************************************************************/
 
-/* Get the syntax of a constraint according to its subtype and lvalue.
+/* Get the syntax of a constraint according to its promise_type and lvalue.
    Make sure you've already checked the constraint's validity.
 */
 static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
@@ -481,15 +481,15 @@ static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
     }
 
     const Promise *promise = constraint->parent.promise;
-    const PromiseType *subtype = promise->parent_subtype;
-    const Bundle *bundle = subtype->parent_bundle;
+    const PromiseType *promise_type = promise->parent_promise_type;
+    const Bundle *bundle = promise_type->parent_bundle;
 
-    const PromiseTypeSyntax subtype_syntax = PromiseTypeSyntaxLookup(bundle->type, subtype->name);
+    const PromiseTypeSyntax promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
 
-    /* Check if lvalue is valid for the bundle's specific subtype. */
-    for (size_t i = 0; subtype_syntax.bs[i].lval != NULL; i++)
+    /* Check if lvalue is valid for the bundle's specific promise_type. */
+    for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
     {
-        const BodySyntax *body_syntax = &subtype_syntax.bs[i];
+        const BodySyntax *body_syntax = &promise_type_syntax.bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return body_syntax;
@@ -589,13 +589,13 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
         {
-            PromiseType *subtype = SeqAt(bundle->subtypes, sti);
+            PromiseType *promise_type = SeqAt(bundle->promise_types, sti);
 
-            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
             {
-                Promise *promise = SeqAt(subtype->promises, ppi);
+                Promise *promise = SeqAt(promise_type->promises, ppi);
 
                 for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
                 {
@@ -620,7 +620,7 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     }
                 } // constraints
             } // promises
-        } // subtypes
+        } // promise_types
     } // bundles
 
     return success;
@@ -634,13 +634,13 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
         {
-            PromiseType *subtype = SeqAt(bundle->subtypes, sti);
+            PromiseType *promise_type = SeqAt(bundle->promise_types, sti);
 
-            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
             {
-                Promise *promise = SeqAt(subtype->promises, ppi);
+                Promise *promise = SeqAt(promise_type->promises, ppi);
 
                 for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
                 {
@@ -679,7 +679,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                     }
                 } // constraints
             } // promises
-        } // subtypes
+        } // promise_types
     } // bundles
 
     return success;
@@ -702,13 +702,13 @@ static bool PolicyCheckRequiredComments(EvalContext *ctx, const Policy *policy, 
         {
             Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-            for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+            for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
             {
-                PromiseType *subtype = SeqAt(bundle->subtypes, sti);
+                PromiseType *promise_type = SeqAt(bundle->promise_types, sti);
 
-                for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+                for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
                 {
-                    Promise *promise = SeqAt(subtype->promises, ppi);
+                    Promise *promise = SeqAt(promise_type->promises, ppi);
 
                     bool promise_has_comment = false;
                     for (size_t cpi = 0; cpi < SeqLength(promise->conlist); cpi++)
@@ -729,7 +729,7 @@ static bool PolicyCheckRequiredComments(EvalContext *ctx, const Policy *policy, 
                         success = false;
                     }
                 } // promises
-            } // subtypes
+            } // promise_types
         } // bundles
 
         return success;
@@ -750,13 +750,13 @@ bool PolicyCheckDuplicateHandles(EvalContext *ctx, const Policy *policy, Seq *er
     {
         Bundle *bundle = SeqAt(policy->bundles, bpi);
 
-        for (size_t sti = 0; sti < SeqLength(bundle->subtypes); sti++)
+        for (size_t sti = 0; sti < SeqLength(bundle->promise_types); sti++)
         {
-            PromiseType *subtype = SeqAt(bundle->subtypes, sti);
+            PromiseType *promise_type = SeqAt(bundle->promise_types, sti);
 
-            for (size_t ppi = 0; ppi < SeqLength(subtype->promises); ppi++)
+            for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
             {
-                Promise *promise = SeqAt(subtype->promises, ppi);
+                Promise *promise = SeqAt(promise_type->promises, ppi);
                 char *handle = ConstraintGetRvalValue(ctx, "handle", promise, RVAL_TYPE_SCALAR);
 
                 if (handle)
@@ -976,7 +976,7 @@ static const char *PolicyElementSourceFile(PolicyElementType type, const void *e
         case POLICY_ELEMENT_TYPE_PROMISE:
         {
             const Promise *promise = (const Promise *)element;
-            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_SUBTYPE, promise->parent_subtype);
+            return PolicyElementSourceFile(POLICY_ELEMENT_TYPE_SUBTYPE, promise->parent_promise_type);
         }
 
         case POLICY_ELEMENT_TYPE_CONSTRAINT:
@@ -1015,13 +1015,13 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 
 /*************************************************************************/
 
-void PromiseTypeDestroy(PromiseType *subtype)
+void PromiseTypeDestroy(PromiseType *promise_type)
 {
-    if (subtype)
+    if (promise_type)
     {
-        for (size_t i = 0; i < SeqLength(subtype->promises); i++)
+        for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
         {
-            Promise *pp = SeqAt(subtype->promises, i);
+            Promise *pp = SeqAt(promise_type->promises, i);
 
             if (pp->this_server != NULL)
             {
@@ -1037,11 +1037,11 @@ void PromiseTypeDestroy(PromiseType *subtype)
             }
         }
 
-        SeqDestroy(subtype->promises);
+        SeqDestroy(promise_type->promises);
 
 
-        free(subtype->name);
-        free(subtype);
+        free(promise_type->name);
+        free(promise_type);
     }
 }
 
@@ -1077,7 +1077,7 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
     bundle->ns = xstrdup(ns);
     bundle->args = RlistCopy(args);
     bundle->source_path = SafeStringDuplicate(source_path);
-    bundle->subtypes = SeqNew(10, PromiseTypeDestroy);
+    bundle->promise_types = SeqNew(10, PromiseTypeDestroy);
 
     return bundle;
 }
@@ -1129,9 +1129,9 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
     }
 
     // TODO: review SeqLookup
-    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
     {
-        PromiseType *existing = SeqAt(bundle->subtypes, i);
+        PromiseType *existing = SeqAt(bundle->promise_types, i);
         if (strcmp(existing->name, name) == 0)
         {
             return existing;
@@ -1144,7 +1144,7 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
     tp->name = xstrdup(name);
     tp->promises = SeqNew(10, PromiseDestroy);
 
-    SeqAppend(bundle->subtypes, tp);
+    SeqAppend(bundle->promise_types, tp);
 
     return tp;
 }
@@ -1197,7 +1197,7 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
     SeqAppend(type->promises, pp);
 
-    pp->parent_subtype = type;
+    pp->parent_promise_type = type;
 
     ThreadLock(cft_policy);
     pp->audit = AUDITPTR; // TODO: need to get rid of this, whatever it is.
@@ -1223,7 +1223,7 @@ static void BundleDestroy(Bundle *bundle)
         free(bundle->type);
 
         RlistDestroy(bundle->args);
-        SeqDestroy(bundle->subtypes);
+        SeqDestroy(bundle->promise_types);
         free(bundle);
     }
 }
@@ -1257,7 +1257,7 @@ void PromiseDestroy(Promise *pp)
 
         free(pp->classes);
 
-        // ref and agentsubtype are only references, do not free
+        // ref and agentpromise_type are only references, do not free
         SeqDestroy(pp->conlist);
 
         free((char *) pp);
@@ -1336,9 +1336,9 @@ PromiseType *BundleGetPromiseType(Bundle *bp, const char *name)
         return NULL;
     }
 
-    for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
+    for (size_t i = 0; i < SeqLength(bp->promise_types); i++)
     {
-        PromiseType *sp = SeqAt(bp->subtypes, i);
+        PromiseType *sp = SeqAt(bp->promise_types, i);
 
         if (strcmp(name, sp->name) == 0)
         {
@@ -1616,9 +1616,9 @@ static JsonElement *BundleToJson(const Bundle *bundle)
     {
         JsonElement *json_promise_types = JsonArrayCreate(10);
 
-        for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+        for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
         {
-            const PromiseType *sp = SeqAt(bundle->subtypes, i);
+            const PromiseType *sp = SeqAt(bundle->promise_types, i);
 
             JsonElement *json_promise_type = JsonObjectCreate(10);
 
@@ -1794,9 +1794,9 @@ void BundleToString(Writer *writer, Bundle *bundle)
     ArgumentsToString(writer, bundle->args);
     WriterWrite(writer, "\n{");
 
-    for (size_t i = 0; i < SeqLength(bundle->subtypes); i++)
+    for (size_t i = 0; i < SeqLength(bundle->promise_types); i++)
     {
-        PromiseType *promise_type = SeqAt(bundle->subtypes, i);
+        PromiseType *promise_type = SeqAt(bundle->promise_types, i);
 
         WriterWriteF(writer, "\n%s:\n", promise_type->name);
 
@@ -1837,7 +1837,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
             }
         }
 
-        if (i == (SeqLength(bundle->subtypes) - 1))
+        if (i == (SeqLength(bundle->promise_types) - 1))
         {
             WriterWriteChar(writer, '\n');
         }
@@ -2022,11 +2022,11 @@ static Constraint *PromiseAppendConstraintJson(Promise *promise, JsonElement *js
     return cp;
 }
 
-static Promise *PromiseTypeAppendPromiseJson(PromiseType *subtype, JsonElement *json_promise, const char *context)
+static Promise *PromiseTypeAppendPromiseJson(PromiseType *promise_type, JsonElement *json_promise, const char *context)
 {
     const char *promiser = JsonObjectGetAsString(json_promise, "promiser");
 
-    Promise *promise = PromiseTypeAppendPromise(subtype, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
+    Promise *promise = PromiseTypeAppendPromise(promise_type, promiser, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
 
     JsonElement *json_attributes = JsonObjectGetAsArray(json_promise, "attributes");
     for (size_t i = 0; i < JsonElementLength(json_attributes); i++)
@@ -2038,13 +2038,13 @@ static Promise *PromiseTypeAppendPromiseJson(PromiseType *subtype, JsonElement *
     return promise;
 }
 
-static PromiseType *BundleAppendPromiseTypeJson(Bundle *bundle, JsonElement *json_subtype)
+static PromiseType *BundleAppendPromiseTypeJson(Bundle *bundle, JsonElement *json_promise_type)
 {
-    const char *name = JsonObjectGetAsString(json_subtype, "name");
+    const char *name = JsonObjectGetAsString(json_promise_type, "name");
 
-    PromiseType *subtype = BundleAppendPromiseType(bundle, name);
+    PromiseType *promise_type = BundleAppendPromiseType(bundle, name);
 
-    JsonElement *json_contexts = JsonObjectGetAsArray(json_subtype, "contexts");
+    JsonElement *json_contexts = JsonObjectGetAsArray(json_promise_type, "contexts");
     for (size_t i = 0; i < JsonElementLength(json_contexts); i++)
     {
         JsonElement *json_context = JsonArrayGetAsObject(json_contexts, i);
@@ -2055,11 +2055,11 @@ static PromiseType *BundleAppendPromiseTypeJson(Bundle *bundle, JsonElement *jso
         for (size_t j = 0; j < JsonElementLength(json_context_promises); j++)
         {
             JsonElement *json_promise = JsonArrayGetAsObject(json_context_promises, j);
-            PromiseTypeAppendPromiseJson(subtype, json_promise, context);
+            PromiseTypeAppendPromiseJson(promise_type, json_promise, context);
         }
     }
 
-    return subtype;
+    return promise_type;
 }
 
 static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
@@ -2081,11 +2081,11 @@ static Bundle *PolicyAppendBundleJson(Policy *policy, JsonElement *json_bundle)
     Bundle *bundle = PolicyAppendBundle(policy, ns, name, type, args, source_path);
 
     {
-        JsonElement *json_subtypes = JsonObjectGetAsArray(json_bundle, "promiseTypes");
-        for (size_t i = 0; i < JsonElementLength(json_subtypes); i++)
+        JsonElement *json_promise_types = JsonObjectGetAsArray(json_bundle, "promiseTypes");
+        for (size_t i = 0; i < JsonElementLength(json_promise_types); i++)
         {
-            JsonElement *json_subtype = JsonArrayGetAsObject(json_subtypes, i);
-            BundleAppendPromiseTypeJson(bundle, json_subtype);
+            JsonElement *json_promise_type = JsonArrayGetAsObject(json_promise_types, i);
+            BundleAppendPromiseTypeJson(bundle, json_promise_type);
         }
     }
 
@@ -2400,12 +2400,12 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
 
 const char *PromiseGetNamespace(const Promise *pp)
 {
-    return pp->parent_subtype->parent_bundle->ns;
+    return pp->parent_promise_type->parent_bundle->ns;
 }
 
 const Bundle *PromiseGetBundle(const Promise *pp)
 {
-    return pp->parent_subtype->parent_bundle;
+    return pp->parent_promise_type->parent_bundle;
 }
 
 int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)
@@ -2714,7 +2714,7 @@ static int VerifyConstraintName(const char *lval)
         {
             ss = ssp[j];
 
-            if (ss.subtype != NULL)
+            if (ss.promise_type != NULL)
             {
                 bs = ss.bs;
 
@@ -2834,10 +2834,10 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        ConstraintPostCheck(pp->parent_subtype->name, cp->lval, cp->rval);
+        ConstraintPostCheck(pp->parent_promise_type->name, cp->lval, cp->rval);
     }
 
-    if (strcmp(pp->parent_subtype->name, "insert_lines") == 0)
+    if (strcmp(pp->parent_promise_type->name, "insert_lines") == 0)
     {
         /* Multiple additions with same criterion will not be convergent -- but ignore for empty file baseline */
 
@@ -2865,14 +2865,14 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rval rval)
+static void ConstraintPostCheck(const char *bundle_promise_type, const char *lval, Rval rval)
 {
     PromiseTypeSyntax ss;
     int i, j, l, m;
     const BodySyntax *bs, *bs2;
     const PromiseTypeSyntax *ssp;
 
-    CfDebug("  Post Check Constraint %s: %s =>", bundle_subtype, lval);
+    CfDebug("  Post Check Constraint %s: %s =>", bundle_promise_type, lval);
 
     if (DEBUG)
     {
@@ -2905,9 +2905,9 @@ static void ConstraintPostCheck(const char *bundle_subtype, const char *lval, Rv
         {
             ss = ssp[j];
 
-            if (ss.subtype != NULL)
+            if (ss.promise_type != NULL)
             {
-                if (strcmp(ss.subtype, bundle_subtype) == 0)
+                if (strcmp(ss.promise_type, bundle_promise_type) == 0)
                 {
                     bs = ss.bs;
 

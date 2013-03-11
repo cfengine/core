@@ -62,7 +62,7 @@ void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp)
 
     if (mid)
     {
-        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_subtype->name, pp->promiser);
+        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_promise_type->name, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");

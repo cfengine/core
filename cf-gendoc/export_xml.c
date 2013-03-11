@@ -261,8 +261,8 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
     for (i = 0; st[i].bundle_type != NULL; i++)
     {
         /* START XML ELEMENT -- PROMISE TYPE */
-        XmlAttribute promise_name_attr = { "name", st[i].subtype };
-        if (strcmp(st[i].subtype, "*") != 0)
+        XmlAttribute promise_name_attr = { "name", st[i].promise_type };
+        if (strcmp(st[i].promise_type, "*") != 0)
         {
             XmlAttribute promise_agenttype_attr = { "agent-type", NULL };
             if (strcmp(st[i].bundle_type, "*") == 0)
@@ -287,7 +287,7 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
         }
         else
         {
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_intro.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_intro.texinfo", st[i].promise_type);
         }
         XmlTag(writer, XMLTAG_INTRO, filebuffer, 0);
         free(filebuffer);
@@ -295,12 +295,12 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
         if (strcmp("*", st[i].bundle_type) != 0)
         {
             /* XML ELEMENT -- LONG DESCRIPTION */
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_notes.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_notes.texinfo", st[i].promise_type);
             XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
             free(filebuffer);
 
             /* XML ELEMENT -- EXAMPLE */
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_example.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_example.texinfo", st[i].promise_type);
             XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
             free(filebuffer);
         }

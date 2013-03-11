@@ -331,7 +331,7 @@ category:              CATEGORY                  /* BUNDLE ONLY */
                                {
                                    P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
                                    P.currentstype->offset.line = P.line_no;
-                                   P.currentstype->offset.start = P.offsets.last_subtype_id;
+                                   P.currentstype->offset.start = P.offsets.last_promise_type_id;
                                }
                                else
                                {
@@ -516,7 +516,7 @@ rval:                  IDSYNTAX
 
                            if (P.currentpromise)
                            {
-                               if (LvalWantsBody(P.currentpromise->parent_subtype->name, P.lval))
+                               if (LvalWantsBody(P.currentpromise->parent_promise_type->name, P.lval))
                                {
                                    yyerror("An rvalue is quoted, but we expect an unquoted body identifier");
                                }
@@ -771,14 +771,14 @@ static bool LvalWantsBody(char *stype, char *lval)
             continue;
         }
 
-        for (j = 0; ss[j].subtype != NULL; j++)
+        for (j = 0; ss[j].promise_type != NULL; j++)
         {
             if ((bs = ss[j].bs) == NULL)
             {
                 continue;
             }
 
-            if (strcmp(ss[j].subtype, stype) != 0)
+            if (strcmp(ss[j].promise_type, stype) != 0)
             {
                 continue;
             }
@@ -822,9 +822,9 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
 /* Check internal control bodies etc */
 
-    for (i = 0; CF_ALL_BODIES[i].subtype != NULL; i++)
+    for (i = 0; CF_ALL_BODIES[i].promise_type != NULL; i++)
     {
-        if (strcmp(CF_ALL_BODIES[i].subtype, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
+        if (strcmp(CF_ALL_BODIES[i].promise_type, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
@@ -867,14 +867,14 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
             continue;
         }
 
-        for (j = 0; ss[j].subtype != NULL; j++)
+        for (j = 0; ss[j].promise_type != NULL; j++)
         {
             if ((bs = ss[j].bs) == NULL)
             {
                 continue;
             }
 
-            CfDebug("\nExamining subtype %s\n", ss[j].subtype);
+            CfDebug("\nExamining promise_type %s\n", ss[j].promise_type);
 
             for (l = 0; bs[l].range != NULL; l++)
             {
@@ -891,10 +891,10 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                     {
                         /* Either module defined or common */
 
-                        if (strcmp(ss[j].subtype, type) == 0 && strcmp(ss[j].subtype, "*") != 0)
+                        if (strcmp(ss[j].promise_type, type) == 0 && strcmp(ss[j].promise_type, "*") != 0)
                         {
                             snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
-                                     lval, ss[j].subtype, type);
+                                     lval, ss[j].promise_type, type);
                             yyerror(output);
                             return SYNTAX_TYPE_MATCH_OK;
                         }
@@ -933,9 +933,9 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
 
     CfDebug(")\n");
 
-    if (ss.subtype != NULL)     /* In a bundle */
+    if (ss.promise_type != NULL)     /* In a bundle */
     {
-        if (strcmp(ss.subtype, type) == 0)
+        if (strcmp(ss.promise_type, type) == 0)
         {
             CfDebug("Found type %s's body syntax\n", type);
 
@@ -948,7 +948,7 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
                 if (strcmp(lval, bs[l].lval) == 0)
                 {
                     /* If we get here we have found the lval and it is valid
-                       for this subtype */
+                       for this promise_type */
                     CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n", lval);
 
                     /* For bodies and bundles definitions can be elsewhere, so

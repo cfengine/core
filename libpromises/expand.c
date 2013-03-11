@@ -748,12 +748,12 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
             break;
         }
 
-        if (strcmp(pp->parent_subtype->name, "vars") == 0)
+        if (strcmp(pp->parent_promise_type->name, "vars") == 0)
         {
             ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pexp, true);
         }
 
-        if (strcmp(pp->parent_subtype->name, "meta") == 0)
+        if (strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
             char ns[CF_BUFSIZE];
             snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
@@ -1091,7 +1091,7 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
 /* Some defaults have to be set here, if they involve body-name
    constraints as names need to be expanded before CopyDeRefPromise */
 {
-    if (strcmp(pp->parent_subtype->name, "packages") == 0)
+    if (strcmp(pp->parent_promise_type->name, "packages") == 0)
     {
         if (PromiseGetConstraint(ctx, pp, "package_method") == NULL)
         {
@@ -1616,7 +1616,7 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
 
     // Check for recursion of bundles so that knowledge map will reflect these cases
 
-    if (strcmp("services", pp->parent_subtype->name) == 0)
+    if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
         ParseServices(ctx, report_context, pp);
     }
@@ -1664,9 +1664,9 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
 
         if (bp)
         {
-           for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+           for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
            {
-               PromiseType *sbp = SeqAt(bp->subtypes, j);
+               PromiseType *sbp = SeqAt(bp->promise_types, j);
 
                for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                {
@@ -1762,9 +1762,9 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
     {
         ScopeMapBodyArgs(ctx, bp->name, args, bp->args);
 
-        for (size_t i = 0; i < SeqLength(bp->subtypes); i++)
+        for (size_t i = 0; i < SeqLength(bp->promise_types); i++)
         {
-            PromiseType *sbp = SeqAt(bp->subtypes, i);
+            PromiseType *sbp = SeqAt(bp->promise_types, i);
 
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {

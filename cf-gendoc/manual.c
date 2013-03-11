@@ -161,13 +161,13 @@ void TexinfoManual(const char *source_dir, const char *output_file)
                 for (int j = 0; CF_ALL_SUBTYPES[k][j].bundle_type != NULL; ++j)
                 {
                     const char *constraint_type_name;
-                    if (strcmp(CF_ALL_SUBTYPES[k][j].subtype, "*") == 0)
+                    if (strcmp(CF_ALL_SUBTYPES[k][j].promise_type, "*") == 0)
                     {
                         constraint_type_name = "Miscellaneous";
                     }
                     else
                     {
-                        constraint_type_name = CF_ALL_SUBTYPES[k][j].subtype;
+                        constraint_type_name = CF_ALL_SUBTYPES[k][j].promise_type;
                     }
 
                     const char *bundle_type_name;
@@ -180,7 +180,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
                         bundle_type_name = CF_ALL_SUBTYPES[k][j].bundle_type;
                     }
 
-                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_SUBTYPES[k][j].subtype,
+                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_SUBTYPES[k][j].promise_type,
                             bundle_type_name,
                             constraint_type_name,
                             bundle_type_name);
@@ -401,15 +401,15 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
 
     for (j = 0; st[j].bundle_type != NULL; j++)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Dealing with promise type %s\n", st[j].subtype);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Dealing with promise type %s\n", st[j].promise_type);
 
-        if ((strcmp("*", st[j].subtype) == 0) && (strcmp("*", st[j].bundle_type) == 0))
+        if ((strcmp("*", st[j].promise_type) == 0) && (strcmp("*", st[j].bundle_type) == 0))
         {
             fprintf(fout, "\n\n@node Miscellaneous in common promises\n@section @code{%s} promises\n\n", 
-                    st[j].subtype);
+                    st[j].promise_type);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
-        else if ((strcmp("*", st[j].subtype) == 0) && ((strcmp("edit_line", st[j].bundle_type) == 0) || (strcmp("edit_xml", st[j].bundle_type) == 0)))
+        else if ((strcmp("*", st[j].promise_type) == 0) && ((strcmp("edit_line", st[j].bundle_type) == 0) || (strcmp("edit_xml", st[j].bundle_type) == 0)))
         {
             fprintf(fout, "\n\n@node Miscellaneous in %s promises\n@section Miscelleneous in @code{%s} promises\n\n", st[j].bundle_type, st[j].bundle_type);
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].bundle_type);
@@ -419,33 +419,33 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
         {
             if (strcmp("*", st[j].bundle_type) == 0)
             {
-                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
-                    st[j].subtype, st[j].bundle_type);            
+                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].promise_type,
+                    st[j].promise_type, st[j].bundle_type);            
             }
             else
             {
-                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
-                    st[j].bundle_type, st[j].subtype, st[j].bundle_type);
+                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].promise_type,
+                    st[j].bundle_type, st[j].promise_type, st[j].bundle_type);
             }
 
-            char subtype_filename[CF_BUFSIZE];
-            if (strcmp("*", st[j].subtype))
+            char promise_type_filename[CF_BUFSIZE];
+            if (strcmp("*", st[j].promise_type))
             {
-                strcpy(subtype_filename, "common");
+                strcpy(promise_type_filename, "common");
             }
             else
             {
-                strlcpy(subtype_filename, st[j].subtype, CF_BUFSIZE);
+                strlcpy(promise_type_filename, st[j].promise_type, CF_BUFSIZE);
             }
 
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", promise_type_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", promise_type_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", promise_type_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
-        TexinfoBodyParts(source_dir, fout, st[j].bs, st[j].subtype);
+        TexinfoBodyParts(source_dir, fout, st[j].bs, st[j].promise_type);
     }
 }
 

@@ -201,7 +201,7 @@ category   [a-zA-Z_]+:
 {category}            {
                           size_t token_size = strlen(yytext);
                           P.line_pos += token_size;
-                          P.offsets.last_subtype_id = P.offsets.current - token_size;
+                          P.offsets.last_promise_type_id = P.offsets.current - token_size;
                           yytext[token_size - 1] = '\0';
                           strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
 

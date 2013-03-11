@@ -281,13 +281,13 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
 
     PromiseBanner(ctx, pp);
 
-    if (strcmp("classes", pp->parent_subtype->name) == 0)
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
         KeepClassContextPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("build_xpath", pp->parent_subtype->name) == 0)
+    if (strcmp("build_xpath", pp->parent_promise_type->name) == 0)
     {
         a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -300,7 +300,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("delete_tree", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_tree", pp->parent_promise_type->name) == 0)
     {
         a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -313,7 +313,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("insert_tree", pp->parent_subtype->name) == 0)
+    if (strcmp("insert_tree", pp->parent_promise_type->name) == 0)
     {
         a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -326,7 +326,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("delete_attribute", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_attribute", pp->parent_promise_type->name) == 0)
     {
         a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -339,7 +339,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("set_attribute", pp->parent_subtype->name) == 0)
+    if (strcmp("set_attribute", pp->parent_promise_type->name) == 0)
     {
         a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -352,7 +352,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("delete_text", pp->parent_subtype->name) == 0)
+    if (strcmp("delete_text", pp->parent_promise_type->name) == 0)
     {
         a = GetDeletionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -365,7 +365,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("set_text", pp->parent_subtype->name) == 0)
+    if (strcmp("set_text", pp->parent_promise_type->name) == 0)
     {
         a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -378,7 +378,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("insert_text", pp->parent_subtype->name) == 0)
+    if (strcmp("insert_text", pp->parent_promise_type->name) == 0)
     {
         a = GetInsertionAttributes(ctx, pp);
 #ifdef HAVE_LIBXML2
@@ -391,7 +391,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("reports", pp->parent_subtype->name) == 0)
+    if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {
         VerifyReportPromise(ctx, pp);
         return;
@@ -1582,7 +1582,7 @@ static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, Promise *pp)
         strcpy(rawxpath, pp->promiser);
     }
 
-    if ((strcmp("build_xpath", pp->parent_subtype->name) == 0) && (a.xml.havebuildxpath))
+    if ((strcmp("build_xpath", pp->parent_promise_type->name) == 0) && (a.xml.havebuildxpath))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
         return false;

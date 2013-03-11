@@ -1295,9 +1295,9 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
         const char *scope = bp->name;
         THIS_BUNDLE = bp->name;
 
-        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+        for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
-            PromiseType *sp = SeqAt(bp->subtypes, j);
+            PromiseType *sp = SeqAt(bp->promise_types, j);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -1682,9 +1682,9 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
 
-        for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+        for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
-            PromiseType *sp = SeqAt(bp->subtypes, j);
+            PromiseType *sp = SeqAt(bp->promise_types, j);
 
             if (strcmp(sp->name, "vars") == 0)
             {

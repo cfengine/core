@@ -699,6 +699,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
     }
 }
 
+#ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
 # ifdef HAVE_GETZONEID
@@ -727,6 +728,7 @@ static const char *GetProcessOptions(void)
 
     return VPSOPTS[VSYSTEMHARDCLASS];
 }
+#endif
 
 static int ExtractPid(char *psentry, char **names, int *start, int *end)
 {

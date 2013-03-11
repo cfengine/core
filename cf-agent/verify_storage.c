@@ -40,6 +40,10 @@
 #include "rlist.h"
 #include "policy.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
 

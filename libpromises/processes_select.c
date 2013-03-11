@@ -775,6 +775,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end)
     return pid;
 }
 
+#ifndef __MINGW32__
 static int ForeignZone(char *s)
 {
 // We want to keep the banner
@@ -812,6 +813,7 @@ static int ForeignZone(char *s)
 # endif
     return false;
 }
+#endif
 
 #ifndef __MINGW32__
 int LoadProcessTable(Item **procdata)

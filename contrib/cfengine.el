@@ -5,7 +5,7 @@
 ;; Author: Dave Love <fx@gnu.org>
 ;; Maintainer: Ted Zlatanov <tzz@lifelogs.com>
 ;; Keywords: languages
-;; Version: 1.1
+;; Version: 1.2
 
 ;; This file is part of GNU Emacs, but has trivial compatibility
 ;; modifications for Emacs versions before 24.  Emacs 24 and newer
@@ -167,7 +167,7 @@ This includes those for cfservd as well as cfagent.")
     (regexp-opt cfengine3-defuns t)
     "Regex to match the CFEngine 3.x defuns.")
 
-  (defconst cfengine3-class-selector-regex "\\([[:alnum:]_().&|!]+\\)::")
+  (defconst cfengine3-class-selector-regex "\\([[:alnum:]_().&|!:]+\\)::")
 
   (defconst cfengine3-category-regex "\\([[:alnum:]_]+\\):")
 
@@ -205,8 +205,8 @@ This includes those for cfservd as well as cfagent.")
     ;; Defuns.  This happens early so they don't get caught by looser
     ;; patterns.
     (,(concat "\\<" cfengine3-defuns-regex "\\>"
-              "[ \t]+\\<\\([[:alnum:]_]+\\)\\>"
-              "[ \t]+\\<\\([[:alnum:]_]+\\)"
+              "[ \t]+\\<\\([[:alnum:]_.:]+\\)\\>"
+              "[ \t]+\\<\\([[:alnum:]_.:]+\\)"
               ;; Optional parentheses with variable names inside.
               "\\(?:(\\([^)]*\\))\\)?")
      (1 font-lock-builtin-face)
@@ -396,6 +396,8 @@ Intended as the value of `indent-line-function'."
             (indent-line-to (save-excursion
                               (forward-char)
                               (backward-sexp)
+                              (move-beginning-of-line nil)
+                              (skip-chars-forward " \t")
                               (current-column)))
           (error nil)))
        ;; Inside a string and it starts before this line.
@@ -537,6 +539,7 @@ Intended as the value of `indent-line-function'."
   (modify-syntax-entry ?# "<" table)
   (modify-syntax-entry ?\n ">#" table)
   (modify-syntax-entry ?\" "\"" table)
+  (modify-syntax-entry ?\' "\"" table)
   ;; Variable substitution.
   (modify-syntax-entry ?$ "." table)
   ;; Doze path separators.
@@ -605,7 +608,7 @@ on the buffer contents"
         (forward-line)))
     (if v3 (cfengine3-mode) (cfengine2-mode))))
 
-(defalias 'cfengine-mode 'cfengine-auto-mode)
+(defalias 'cfengine-mode 'cfengine3-mode)
 
 (provide 'cfengine3)
 (provide 'cfengine)

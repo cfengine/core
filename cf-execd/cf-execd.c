@@ -62,7 +62,7 @@ static pthread_attr_t threads_attrs;
 /*******************************************************************/
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
-static void ThisAgentInit(void);
+void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
 static void Apoptosis(EvalContext *ctx);
 
@@ -317,7 +317,7 @@ static void LoadDefaultSchedule(void)
     AppendItem(&SCHEDULE, "Min55", NULL);
 }
 
-static void ThisAgentInit(void)
+void ThisAgentInit(void)
 {
     umask(077);
 

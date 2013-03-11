@@ -50,6 +50,9 @@
 #include "misc_lib.h"
 #include "fncall.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);

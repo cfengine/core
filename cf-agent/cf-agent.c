@@ -351,14 +351,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, "promises.cf");
             IGNORELOCK = true;
-            break;
 
-        case 's':
-            
-            if(IsLoopbackAddress(optarg))
-            {
-                FatalError("Use a non-loopback address when bootstrapping");
-            }
             EvalContextHeapAddHard(ctx, "bootstrap_mode");
 
             // temporary assure that network functions are working

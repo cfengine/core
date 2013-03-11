@@ -447,7 +447,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
         return this;
     }
 
-    if (CF_STCKFRAME == 1)
+    if (RlistLen(CF_STCK) == 1)
     {
         *(pp->donep) = true;
         /* Must not set pp->done = true for editfiles etc */

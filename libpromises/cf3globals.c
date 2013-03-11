@@ -80,7 +80,6 @@ Scope *VSCOPE = NULL;
 
 Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
-int CF_STCKFRAME = 0;
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
 char POLICY_SERVER[CF_BUFSIZE] = { 0 };

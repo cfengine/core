@@ -359,9 +359,9 @@ void ScopePushThis()
         return;
     }
 
-    CF_STCKFRAME++;
+    int frame_index = RlistLen(CF_STCK) - 1;
     RlistPushStack(&CF_STCK, (void *) op);
-    snprintf(name, CF_MAXVARSIZE, "this_%d", CF_STCKFRAME);
+    snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index);
     free(op->scope);
     op->scope = xstrdup(name);
 }
@@ -372,7 +372,7 @@ void ScopePopThis()
 {
     Scope *op = NULL;
 
-    if (CF_STCKFRAME > 0)
+    if (RlistLen(CF_STCK) > 0)
     {
         ScopeDelete("this");
         RlistPopStack(&CF_STCK, (void *) &op, sizeof(op));
@@ -381,7 +381,6 @@ void ScopePopThis()
             return;
         }
 
-        CF_STCKFRAME--;
         free(op->scope);
         op->scope = xstrdup("this");
     }

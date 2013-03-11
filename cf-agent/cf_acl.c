@@ -72,7 +72,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 #if defined(__linux__)
         CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
 #elif defined(__MINGW32__)
-        Nova_CheckNtACL(file, a.acl, a, pp);
+        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
 #else
         CfOut(OUTPUT_LEVEL_INFORM, "", "!! ACLs are not yet supported on this system.");
 #endif
@@ -90,7 +90,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
     case ACL_TYPE_NTFS_:
 
 #if defined(__MINGW32__)
-        Nova_CheckNtACL(file, a.acl, a, pp);
+        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
 #else
         CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are not supported on this system");
 #endif

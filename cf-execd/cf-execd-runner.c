@@ -39,6 +39,7 @@
 # if defined(__MINGW32__)
 #  include "win_execd_pipe.h"
 # endif
+# include "mail-subject.h"
 #endif
 
 /*******************************************************************/

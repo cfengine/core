@@ -1090,7 +1090,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
 #ifdef __MINGW32__
 
-static void CheckAgentAccess(Rlist *list)
+static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 {
 }
 
@@ -1518,16 +1518,16 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
 #ifdef __MINGW32__
 
-static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
-    int background = GetBooleanConstraint("background", pp);
+    int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
 
     if (background)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(pp, report_context);
+    FindAndVerifyFilesPromises(ctx, pp, report_context);
 }
 
 #else /* !__MINGW32__ */

@@ -617,7 +617,7 @@ static int UnixRootDirLength(const char *f)
 }
 
 #ifdef _WIN32
-static int NTRootDirLength(char *f)
+static int NTRootDirLength(const char *f)
 {
     int len;
 

@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "files_names.h"
 #include "logging.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

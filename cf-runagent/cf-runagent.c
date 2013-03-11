@@ -44,11 +44,6 @@
 #include "scope.h"
 #include "policy.h"
 
-#ifdef HAVE_NOVA
-#include "runagent.h"
-#endif
-
-
 typedef enum
 {
     RUNAGENT_CONTROL_HOSTS,
@@ -105,7 +100,6 @@ static const struct option OPTIONS[17] =
     {"diagnostic", no_argument, 0, 'x'},
     {"hail", required_argument, 0, 'H'},
     {"interactive", no_argument, 0, 'i'},
-    {"query", optional_argument, 0, 'q'},
     {"timeout", required_argument, 0, 't'},
     {NULL, 0, 0, '\0'}
 };
@@ -126,7 +120,6 @@ static const char *HINTS[17] =
     "Activate internal diagnostics (developers only)",
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
-    "Query a server for a knowledge menu",
     "Connection timeout, seconds",
     NULL
 };
@@ -144,7 +137,6 @@ Attributes RUNATTR = { {0} };
 Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];
-char MENU[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
@@ -289,19 +281,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'd':
             config->debug_mode = true;
-            break;
-
-        case 'q':
-
-            if (optarg == NULL)
-            {
-                strcpy(MENU, "delta");
-            }
-            else
-            {
-                strncpy(MENU, optarg, CF_MAXVARSIZE);
-            }
-
             break;
 
         case 'K':
@@ -512,21 +491,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
     pp->cache = NULL;
 
-    if (strlen(MENU) > 0)
-    {
-#if defined(HAVE_NOVA)
-        if (!ExecuteRunagent(conn, MENU))
-        {
-            DisconnectServer(conn);
-            RlistDestroy(a.copy.servers);
-            return false;
-        }
-#endif
-    }
-    else
-    {
-        HailExec(conn, peer, recvbuffer, sendbuffer);
-    }
+    HailExec(conn, peer, recvbuffer, sendbuffer);
 
     RlistDestroy(a.copy.servers);
 

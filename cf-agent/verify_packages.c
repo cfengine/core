@@ -449,14 +449,6 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
     return cf_pclose(fin) == 0;
 }
 
-/* Buffer should be at least CF_MAXVARSIZE large */
-static const char *GetSoftwareCacheFilename(char *buffer)
-{
-    snprintf(buffer, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, SOFTWARE_PACKAGES_CACHE);
-    MapName(buffer);
-    return buffer;
-}
-
 static void ReportSoftware(PackageManager *list)
 {
     FILE *fout;

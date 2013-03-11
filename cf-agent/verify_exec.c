@@ -367,7 +367,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
             }
             else
             {
-                cf_pclose_def(pfp, a, pp);
+                cf_pclose_def(ctx, pfp, a, pp);
             }
 #else /* !__MINGW32__ */
             cf_pclose_def(ctx, pfp, a, pp);

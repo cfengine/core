@@ -152,7 +152,7 @@ part of the CFEngine suite.
 
 @table @samp
 @item --bootstrap
-(-B)       - Bootstrap/repair a CFEngine configuration from failsafe file in the current directory
+(-B)       - Bootstrap CFEngine to the given policy server IP or hostname
 @item --bundlsequence      
 (-b)       - Set or override bundlesequence from command line
 @item --debug      
@@ -173,8 +173,6 @@ part of the CFEngine suite.
 (-N @var{value}) - Define a list of comma separated classes to be undefined at the start of execution
 @item --no-lock    
 (-K)       - Ignore locking constraints during execution (ifelapsed/expireafter) if "too soon" to run
-@item --policy-server
-(-B)       - Define the server name or IP address of the a policy server (for use with bootstrap).
 @item --verbose    
 (-v)       - Output verbose information about the behaviour of the agent
 @item --version    

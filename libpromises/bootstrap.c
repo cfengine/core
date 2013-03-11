@@ -82,7 +82,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
-    int repaired = false, have_policy = false, am_appliance = false;
+    int have_policy = false, am_appliance = false;
 
     CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
@@ -103,11 +103,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
-    {
-        CreateFailSafe(name);
-        repaired = true;
-    }
+    CreateFailSafe(name);
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
@@ -134,7 +130,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
-        else if (repaired)
+        else
         {
             CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }
@@ -158,9 +154,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     {
         EvalContextHeapAddHard(ctx, "am_policy_hub");
         printf
-            (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
-        printf
-            (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
+            (" ** This host recognizes itself as a CFEngine policy server, with policy distribution from %s/masterfiles.\n", WORKDIR);
         creat(name, 0600);
     }
     else
@@ -300,7 +294,7 @@ static void CreateFailSafe(char *name)
             "         copy_from => u_scp(\"%s/masterfiles\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
-            "           classes => success(\"got_policy\");\n"
+            "           classes => repaired(\"got_policy\");\n"
             "\n"
             "  windows::\n"
             "   \"$(sys.workdir)\\inputs\" \n"
@@ -311,7 +305,7 @@ static void CreateFailSafe(char *name)
             "         copy_from => u_scp(\"%s/masterfiles\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
-            "           classes => success(\"got_policy\");\n\n"
+            "           classes => repaired(\"got_policy\");\n\n"
             "   \"$(sys.workdir)\\bin-twin\\.\"\n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows\",\n"
             "           comment => \"Make sure we maintain a clone of the binaries and libraries for updating\",\n"
@@ -330,12 +324,12 @@ static void CreateFailSafe(char *name)
             "  start_exec.!windows::\n"
             "   \"$(sys.cf_execd)\"\n"
             "       handle => \"cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start\",\n"
-            "      classes => outcome(\"executor\");\n"
+            "      classes => repaired(\"executor_started\");\n"
             "  start_server::\n"
             "   \"$(sys.cf_serverd)\"\n"
             "       handle => \"cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start\",\n"
             "       action => ifwin_bg,\n"
-            "      classes => outcome(\"server\");\n"
+            "      classes => repaired(\"server_started\");\n"
             "\n#\n\n"
             " services:\n\n"
             "  windows.got_policy::\n"
@@ -343,7 +337,7 @@ static void CreateFailSafe(char *name)
             "              handle => \"cfe_internal_bootstrap_update_services_windows_executor\",\n"
             "      service_policy => \"start\",\n"
             "      service_method => bootstart,\n"
-            "             classes => outcome(\"executor\");\n"
+            "             classes => repaired(\"executor_started\");\n"
             "\n#\n\n"
             " reports:\n\n"
             "  bootstrap_mode.am_policy_hub::\n"
@@ -356,33 +350,28 @@ static void CreateFailSafe(char *name)
             "   \" -> Updated local policy from policy server\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to pull policy from policy server\",\n"
+            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
-            "  server_ok::\n"
+            "  server_started::\n"
             "   \" -> Started the server\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
-            "  am_policy_hub.!server_ok.!have_promises_cf::\n"
+            "  am_policy_hub.!server_started.!have_promises_cf::\n"
             "   \" !! Failed to start the server\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
-            "  executor_ok::\n"
+            "  executor_started::\n"
             "   \" -> Started the scheduler\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
-            "  !executor_ok.!have_promises_cf::\n"
+            "  !executor_started.!have_promises_cf::\n"
             "   \" !! Did not start the scheduler\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
-            "  !executor_ok.have_promises_cf::\n"
+            "  !executor_started.have_promises_cf::\n"
             "   \" -> You are running a hard-coded failsafe. Please use the following command instead.\n"
             "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
             "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\",\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"
-            "body classes outcome(x)\n"
-            "{\n"
-            "promise_repaired => {\"$(x)_ok\"};\n"
-            "}\n"
-            "############################################\n"
-            "body classes success(x)\n"
+            "body classes repaired(x)\n"
             "{\n"
             "promise_repaired => {\"$(x)\"};\n"
             "}\n"

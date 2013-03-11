@@ -158,7 +158,7 @@ started document). If we assume the policy server's IP address is
 the Windows host.
 
 @verbatim
-   C:\Program Files\Cfengine\bin\cf-agent.exe --bootstrap --policy-server 123.456.789.123
+   C:\Program Files\Cfengine\bin\cf-agent.exe --bootstrap 123.456.789.123
 @end verbatim
 
 

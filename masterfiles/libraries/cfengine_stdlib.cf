@@ -1571,6 +1571,20 @@ update_hashes  => "yes";
 
 ##
 
+body changes detect_all_change_using(hash)
+
+# Detect all changes using a configurable hashing algorithm
+# hash - supported hashing algorithm (md5, sha1, sha224, sha256, sha384,
+#   sha512, best)
+
+{
+hash           => "$(hash)";
+report_changes => "all";
+update_hashes  => "yes";
+}
+
+##
+
 body changes detect_content
 
 # This is a cheaper alternative

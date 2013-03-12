@@ -32,7 +32,7 @@ bool ValidateRegEx(const char *regex); /* Pure */
 int FullTextMatch(const char *regptr, const char *cmpptr); /* Sets variables */
 char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
 int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
-int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
+int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
 int IsPathRegex(char *str); /* Pure */
 int IsRegex(char *str); /* Pure */
 int MatchRlistItem(Rlist *listofregex, const char *teststring); /* Sets variables */

@@ -393,7 +393,7 @@ int IsPathRegex(char *str)
 
 /* Checks whether item matches a list of wildcards */
 
-int IsRegexItemIn(EvalContext *ctx, Item *list, char *regex)
+int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex)
 {
     Item *ptr;
 

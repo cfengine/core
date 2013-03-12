@@ -92,6 +92,7 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static Auth *GetAuthPath(const char *path, Auth *list);
 
 extern const BodySyntax CFS_CONTROLBODY[];
 extern const BodySyntax CF_REMROLE_BODIES[];
@@ -1023,7 +1024,7 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
 /* Level                                                               */
 /***********************************************************************/
 
-Auth *GetAuthPath(char *path, Auth *list)
+static Auth *GetAuthPath(const char *path, Auth *list)
 {
     Auth *ap;
 

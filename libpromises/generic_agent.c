@@ -141,7 +141,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
 
 // need scope sys to set vars in expiry function
-    ScopeSetNew("sys");
+    ScopeNew("sys");
+    ScopeSetCurrent("sys");
 
     if (EnterpriseExpiry(ctx))
     {
@@ -174,7 +175,8 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
-    ScopeSetNew(vbuff);
+    ScopeNew(vbuff);
+    ScopeSetCurrent(vbuff);
     ScopeNew("this");
     ScopeNew("match");
 
@@ -1674,7 +1676,9 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
             continue;
         }
 
-        ScopeSetNew(bp->name);
+        ScopeNew(bp->name);
+        ScopeSetCurrent(bp->name);
+
         char scope[CF_BUFSIZE];
         snprintf(scope,CF_BUFSIZE,"%s_meta", bp->name);
         ScopeNew(scope);
@@ -1720,7 +1724,8 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
             CfDebug("Initiate control variable convergence...%s\n", buf);
             ScopeSetCurrent("this");
             ScopeDelete(buf);
-            ScopeSetNew(buf);
+            ScopeNew(buf);
+            ScopeSetCurrent(buf);
             CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);
         }
     }

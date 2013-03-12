@@ -89,14 +89,6 @@ Scope *ScopeGetCurrent(void)
 
 /*******************************************************************/
 
-void ScopeSetNew(char *id)
-{
-    ScopeNew(id);
-    ScopeSetCurrent(id);
-}
-
-/*******************************************************************/
-
 void ScopeNew(const char *name)
 /*
  * Thread safe

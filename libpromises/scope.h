@@ -34,12 +34,6 @@ void ScopeSetCurrent(const char *name);
 Scope *ScopeGetCurrent(void);
 
 /**
- * @brief NewScope; SetScope;
- * @param id
- */
-void ScopeSetNew(char *id);
-
-/**
  * @brief alloc a Scope, idempotent prepend to VSCOPE
  * @param name
  */

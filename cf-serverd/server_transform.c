@@ -511,7 +511,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
         EvalContextStackPushFrame(ctx, false);
 
         scope = bp->name;
-        ScopeSetNew(bp->name);
+        ScopeNew(bp->name);
+        ScopeSetCurrent(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -560,7 +561,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
         EvalContextStackPushFrame(ctx, false);
 
         scope = bp->name;
-        ScopeSetNew(bp->name);
+        ScopeNew(bp->name);
+        ScopeSetCurrent(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {

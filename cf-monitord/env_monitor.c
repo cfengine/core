@@ -1135,7 +1135,8 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
         const Bundle *bp = SeqAt(policy->bundles, i);
 
         scope = bp->name;
-        ScopeSetNew(bp->name);
+        ScopeNew(bp->name);
+        ScopeSetCurrent(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {

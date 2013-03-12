@@ -30,7 +30,6 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
-#include "unix.h"
 #include "mutex.h"
 #include "logging.h"
 #include "exec_tools.h"
@@ -243,7 +242,7 @@ void LocalExec(const ExecConfig *config)
 
             if(PipeToPid(&pid_agent, pp))
             {
-                ProcessSignalTerminate(pid_agent);
+                GracefulTerminate(pid_agent);
             }
             else
             {

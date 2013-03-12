@@ -2814,10 +2814,13 @@ Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
 
         if (strcmp(cp->lval, lval) == 0)
         {
-            if (cp->classes != NULL)
-            {
-                ProgrammingError("PromiseGetImmediateConstraint was called on a constraint which has contexts attached to it.");
-            }
+            /* It would be nice to check whether the constraint we have asked
+               for is defined in promise (not in referenced body), but there
+               seem to be no way to do it easily.
+
+               Checking for absence of classes does not work, as constrains
+               obtain classes defined on promise itself.
+            */
 
             return cp;
         }

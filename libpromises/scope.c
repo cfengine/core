@@ -125,7 +125,7 @@ void ScopeNew(const char *name)
 
 /*******************************************************************/
 
-void ScopeAugment(EvalContext *ctx, char *scope, const char *ns, Rlist *lvals, Rlist *rvals)
+void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lvals, Rlist *rvals)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;

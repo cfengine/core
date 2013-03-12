@@ -118,7 +118,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp);
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 
 /****************************************************************/
 
@@ -1170,7 +1170,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     char *sp = NULL;
 
@@ -1196,7 +1196,7 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, report_context);
         return;
     }
 

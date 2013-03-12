@@ -87,7 +87,7 @@ typedef enum
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
@@ -600,7 +600,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
     char *sp = NULL;
 
@@ -622,7 +622,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, report_context);
         return;
     }
 

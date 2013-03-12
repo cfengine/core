@@ -107,7 +107,7 @@ void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
 
 /* - Rest - */
 int Abort(void);
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 void SaveClassEnvironment(EvalContext *ctx, Writer *writer);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);

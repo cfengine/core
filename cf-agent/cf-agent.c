@@ -1274,7 +1274,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, report_context);
         return;
     }
 

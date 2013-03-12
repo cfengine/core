@@ -55,8 +55,10 @@
 #include "cf.nova.h"
 #endif
 
+#include <assert.h>
+
 static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
-                               void (*fnptr) (), const ReportContext *report_context);
+                               PromiseActuator *ActOnPromise, const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
 static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
@@ -124,7 +126,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, void *fnptr,
+void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, PromiseActuator *ActOnPromise,
                    const ReportContext *report_context)
 {
     Rlist *listvars = NULL;
@@ -162,7 +164,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, listvars, fnptr, report_context);
+    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, listvars, ActOnPromise, report_context);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -638,7 +640,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 /*********************************************************************/
 
 static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
-                               void (*fnptr) (), const ReportContext *report_context)
+                               PromiseActuator *ActOnPromise, const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -733,10 +735,10 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
             break;
 
         default:
-
-            if (fnptr != NULL)
+            assert(ActOnPromise);
+            if (ActOnPromise)
             {
-                (*fnptr) (ctx, pexp);
+                ActOnPromise(ctx, pexp, report_context);
             }
             break;
         }

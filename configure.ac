@@ -832,6 +832,14 @@ if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
           [AC_MSG_RESULT(yes)],
           [AC_MSG_RESULT(no)
            CFLAGS="$save_CFLAGS"])
+
+        save_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS -Wunused-parameter"
+        AC_MSG_CHECKING(for -Wunused-parameter")
+        AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+          [AC_MSG_RESULT(yes)],
+          [AC_MSG_RESULT(no)
+           CFLAGS="$save_CFLAGS"])
 else 
 	AC_MSG_RESULT(no)
 fi

@@ -72,7 +72,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
 static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
-static void TouchFile(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
+static void TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp);
 static int PushDirState(char *name, struct stat *sb);
 static void PopDirState(int goback, char *name, struct stat *sb, Recursion r);
@@ -98,11 +98,12 @@ static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes att
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, char *file, struct stat *statbuf, Attributes a, Promise *pp);
 #endif
-static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Attributes attr, Promise *pp);
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
 
 #ifndef HAVE_NOVA
-static void LogFileChange(EvalContext *ctx, char *file, int change, Attributes a, Promise *pp)
+static void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
+                          ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
 }
@@ -151,7 +152,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 
         if (attr.touch)
         {
-            TouchFile(ctx, path, sb, attr, pp);      // intrinsically non-convergent op
+            TouchFile(ctx, path, attr, pp);      // intrinsically non-convergent op
         }
     }
 
@@ -882,7 +883,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
     if (found == -1)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Can't stat %s in verify copy\n", source);
-        DeleteClientCache(attr, pp);
+        DeleteClientCache(pp);
         return;
     }
 
@@ -901,7 +902,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         if ((dirh = OpenDirForPromise(ctx, sourcedir, attr, pp)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
-            DeleteClientCache(attr, pp);
+            DeleteClientCache(pp);
             return;
         }
 
@@ -942,7 +943,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
                 if (cf_stat(ctx, sourcefile, &ssb, attr, pp) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "stat", pp, attr, "Can't stat source file (notlinked) %s\n", sourcefile);
-                    DeleteClientCache(attr, pp);
+                    DeleteClientCache(pp);
                     return;
                 }
             }
@@ -951,7 +952,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
                 if (cf_lstat(ctx, sourcefile, &ssb, attr, pp) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "lstat", pp, attr, "Can't stat source file %s\n", sourcefile);
-                    DeleteClientCache(attr, pp);
+                    DeleteClientCache(pp);
                     return;
                 }
             }
@@ -960,7 +961,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         }
 
         CloseDir(dirh);
-        DeleteClientCache(attr, pp);
+        DeleteClientCache(pp);
         return;
     }
 
@@ -968,7 +969,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
     strcpy(destfile, destination);
 
     CfCopyFile(ctx, sourcefile, destfile, ssb, attr, pp);
-    DeleteClientCache(attr, pp);
+    DeleteClientCache(pp);
 }
 
 static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp)
@@ -1846,7 +1847,7 @@ static void VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attribut
     }
 }
 
-static void TouchFile(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp)
+static void TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 {
     if (!DONTDO)
     {
@@ -1941,7 +1942,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
     if (attr.havechange)
     {
-        VerifyFileChanges(ctx, file, dstat, attr, pp);
+        VerifyFileChanges(file, dstat, attr, pp);
     }
 
 #ifndef __MINGW32__
@@ -3233,7 +3234,7 @@ static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes att
 
 #endif /* !__MINGW32__ */
 
-static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Attributes attr, Promise *pp)
+static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp)
 {
     struct stat cmpsb;
     CF_DB *dbp;

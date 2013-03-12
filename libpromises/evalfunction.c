@@ -64,6 +64,23 @@
 #include <libgen.h>
 #include <assert.h>
 
+/*
+ * This module contains numeruous functions which don't use all their parameters
+ * (e.g. language-function calls which don't use EvalContext or
+ * language-function calls which don't use arguments as language-function does
+ * not accept any).
+ *
+ * Temporarily, in order to avoid cluttering output with thousands of warnings,
+ * this module is excempted from producing warnings about unused function
+ * parameters.
+ *
+ * Please remove this #pragma ASAP and provide ARG_UNUSED declarations for
+ * unused parameters.
+ */
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 typedef enum
 {
     DATE_TEMPLATE_YEAR,

@@ -725,18 +725,7 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
 int Month2Int(const char *string)
-{
-    return MonthLen2Int(string, MAX_MONTH_NAME);
-}
-
-/*************************************************************/
-
-int MonthLen2Int(const char *string, int len)
 {
     int i;
 

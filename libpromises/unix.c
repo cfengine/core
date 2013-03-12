@@ -332,7 +332,13 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
 
 /******************************************************************/
 
-static bool IgnoreJailInterface(int ifaceidx, struct sockaddr_in *inaddr)
+static bool IgnoreJailInterface(
+#if !defined(HAVE_JAIL_GET)
+    ARG_UNUSED int ifaceidx, ARG_UNUSED struct sockaddr_in *inaddr
+#else
+    int ifaceidx, struct sockaddr_in *inaddr
+#endif
+    )
 {
 /* FreeBSD jails */
 # ifdef HAVE_JAIL_GET

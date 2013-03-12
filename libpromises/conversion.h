@@ -56,7 +56,6 @@ long Months2Seconds(int m);
 int Day2Number(const char *datestring);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
 int Month2Int(const char *string);
-int MonthLen2Int(const char *string, int len);
 long TimeAbs2Int(const char *s);
 
 

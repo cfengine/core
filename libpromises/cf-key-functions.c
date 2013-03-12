@@ -298,7 +298,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
 
 #ifndef HAVE_NOVA
-bool LicenseInstall(char *path_source)
+bool LicenseInstall(ARG_UNUSED char *path_source)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! License installation only applies to CFEngine Enterprise");
 

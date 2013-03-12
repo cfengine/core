@@ -810,7 +810,7 @@ bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bo
     return success;
 }
 
-bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors)
+bool PolicyCheckPartial(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
@@ -1729,7 +1729,7 @@ static void RvalToString(Writer *writer, Rval rval, bool symbolic_reference)
 }
 
 
-static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference, int indent_level)
+static void AttributeToString(Writer *writer, Constraint *attribute, bool symbolic_reference)
 {
     WriterWriteF(writer, "%s => ", attribute->lval);
     RvalToString(writer, attribute->rval, symbolic_reference);
@@ -1782,7 +1782,7 @@ void BodyToString(Writer *writer, Body *body)
 
         WriterWriteChar(writer, '\n');
         IndentPrint(writer, 1);
-        AttributeToString(writer, cp, false, 2);
+        AttributeToString(writer, cp, false);
     }
 
     WriterWrite(writer, "\n}\n");
@@ -1834,7 +1834,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
 
                 WriterWriteChar(writer, '\n');
                 IndentPrint(writer, 4);
-                AttributeToString(writer, cp, cp->references_body, 3);
+                AttributeToString(writer, cp, cp->references_body);
             }
         }
 

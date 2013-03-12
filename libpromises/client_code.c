@@ -69,7 +69,7 @@ static void MarkServerOffline(const char *server);
 static AgentConnection *GetIdleConnectionToServer(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd, int toget);
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Attributes attr, Promise *pp);
+static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Promise *pp);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
@@ -81,8 +81,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
 /*********************************************************************/
 
-static int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
-                   Promise *pp)
+static int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Promise *pp)
 {
     int *intp;
     char *cp;
@@ -360,7 +359,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
         return -1;
     }
 
-    ret = CacheStat(file, buf, stattype, attr, pp);
+    ret = CacheStat(file, buf, stattype, pp);
 
     if (ret != 0)
     {
@@ -695,7 +694,7 @@ static void NewClientCache(Stat *data, Promise *pp)
 
 /*********************************************************************/
 
-void DeleteClientCache(Attributes attr, Promise *pp)
+void DeleteClientCache(Promise *pp)
 {
     Stat *sp, *sps;
 
@@ -857,7 +856,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
         /* Stage C1 - receive */
 
-        if ((n_read = RecvSocketStream(conn->sd, buf, toget, 0)) == -1)
+        if ((n_read = RecvSocketStream(conn->sd, buf, toget)) == -1)
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
@@ -901,7 +900,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
             return false;
         }
 
-        if (!FSWrite(new, dd, buf, towrite, &last_write_made_hole, n_read, attr, pp))
+        if (!FSWrite(new, dd, buf, towrite, &last_write_made_hole, n_read, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Local disk write failed copying %s:%s to %s\n", pp->this_server,
                  source, new);
@@ -1056,7 +1055,7 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
         n_read_total += n_read;
 
-        if (!FSWrite(new, dd, workbuf, towrite, &last_write_made_hole, n_read, attr, pp))
+        if (!FSWrite(new, dd, workbuf, towrite, &last_write_made_hole, n_read, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Local disk write failed copying %s:%s to %s\n", pp->this_server,
                  source, new);
@@ -1439,7 +1438,7 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
 
 /*********************************************************************/
 
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Attributes attr, Promise *pp)
+static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Promise *pp)
 {
     Stat *sp;
 

@@ -81,7 +81,7 @@ static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const Repo
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context) /* FIXME: unused param */
+void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, ARG_UNUSED const ReportContext *report_context) /* FIXME: unused param */
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -317,7 +317,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
 /*******************************************************************/
 
-static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
+static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Scan arrival sequence . not yet implemented\n");
 }

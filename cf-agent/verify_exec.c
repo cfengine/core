@@ -159,7 +159,7 @@ static bool SyntaxCheckExec(Attributes a, Promise *pp)
     return true;
 }
 
-static bool PromiseKeptExec(Attributes a, Promise *pp)
+static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     return false;
 }

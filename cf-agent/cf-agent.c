@@ -201,7 +201,7 @@ static const char *HINTS[15] =
 };
 
 #ifndef HAVE_NOVA
-void NoteEfficiency(double e)
+void NoteEfficiency(ARG_UNUSED double e)
 {
 }
 #endif

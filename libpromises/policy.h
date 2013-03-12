@@ -207,7 +207,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error);
  * @param errors Sequence of PolicyError to append errors to
  * @return True if no new errors are found
  */
-bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors);
+bool PolicyCheckPartial(const Policy *policy, Seq *errors);
 
 /**
  * @brief Check a runnable policy DOM for errors

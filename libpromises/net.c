@@ -94,7 +94,7 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     memset(proto, 0, CF_INBAND_OFFSET + 1);
 
-    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET, 0) == -1) /* Get control channel */
+    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET) == -1) /* Get control channel */
     {
         return -1;
     }
@@ -127,12 +127,12 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
         }
     }
 
-    return RecvSocketStream(sd, buffer, len, 0);
+    return RecvSocketStream(sd, buffer, len);
 }
 
 /*************************************************************************/
 
-int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget, int nothing)
+int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
 

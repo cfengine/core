@@ -35,7 +35,7 @@ void DetermineCfenginePort(void);
 AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise *pp, int *err);
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp);
-void DeleteClientCache(Attributes attr, Promise *pp);
+void DeleteClientCache(Promise *pp);
 int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, Promise *pp);
 int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
 int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);

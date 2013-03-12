@@ -39,7 +39,7 @@
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
-static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, Promise *pp);
+static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a);
 
 static int ValidateSQLTableName(char *table_path, char *db, char *table);
 static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path, Rlist *columns, Attributes a, Promise *pp);
@@ -49,12 +49,12 @@ static int NewSQLColumns(char *table, Rlist *columns, char ***name_table, char *
                          int **done);
 static void DeleteSQLColumns(char **name_table, char **type_table, int *size_table, int *done, int len);
 static void CreateDBQuery(DatabaseType type, char *query);
-static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns, Attributes a, Promise *pp);
+static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns);
 static int CheckSQLDataType(char *type, char *ref_type, Promise *pp);
 static int TableExists(CfdbConn *cfdb, char *name);
 static Rlist *GetSQLTables(CfdbConn *cfdb);
 static void ListTables(int type, char *query);
-static int ValidateRegistryPromiser(char *s, Attributes a, Promise *pp);
+static int ValidateRegistryPromiser(char *s, Promise *pp);
 static int CheckRegistrySanity(Attributes a, Promise *pp);
 
 /*****************************************************************************/
@@ -198,7 +198,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if ((strlen(table) == 0) || ((strlen(table) > 0) && (strcmp(a.database.operation, "drop") != 0)))
         {
-            VerifyDatabasePromise(&cfdb, database, a, pp);
+            VerifyDatabasePromise(&cfdb, database, a);
         }
 
         /* Close the database here to commit the change - might have to reopen */
@@ -248,7 +248,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
     YieldCurrentLock(thislock);
 }
 
-static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a, Promise *pp)
+static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 {
     char query[CF_BUFSIZE], name[CF_MAXVARSIZE];
     int found = false;
@@ -411,7 +411,7 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
 {
     bool retval = true;
 
-    ValidateRegistryPromiser(pp->promiser, a, pp);
+    ValidateRegistryPromiser(pp->promiser, pp);
 
     if ((a.database.operation) && (strcmp(a.database.operation, "create") == 0))
     {
@@ -463,7 +463,7 @@ static int CheckRegistrySanity(Attributes a, Promise *pp)
     return retval;
 }
 
-static int ValidateRegistryPromiser(char *key, Attributes a, Promise *pp)
+static int ValidateRegistryPromiser(char *key, Promise *pp)
 {
     static char *valid[] = { "HKEY_CLASSES_ROOT", "HKEY_CURRENT_CONFIG",
         "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_USERS", NULL
@@ -526,7 +526,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
             {
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_CHG, "", pp, a, " -> Database.table %s doesn't seem to exist, creating\n",
                      table_path);
-                return CreateTableColumns(cfdb, table, columns, a, pp);
+                return CreateTableColumns(cfdb, table, columns);
             }
             else
             {
@@ -716,7 +716,7 @@ static int TableExists(CfdbConn *cfdb, char *name)
 
 /*****************************************************************************/
 
-static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns, Attributes a, Promise *pp)
+static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 {
     char entry[CF_MAXVARSIZE], query[CF_BUFSIZE];
     int i, *size_table, *done;

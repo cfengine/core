@@ -443,8 +443,9 @@ static void MakeLog(Item *mess, OutputLevel level)
     ThreadUnlock(cft_output);
 }
 
-static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
-                             Item *mess)
+static void LogPromiseResult(ARG_UNUSED char *promiser, ARG_UNUSED char peeType,
+                             ARG_UNUSED void *promisee, ARG_UNUSED char status,
+                             ARG_UNUSED OutputLevel log_level, ARG_UNUSED Item *mess)
 {
 }
 

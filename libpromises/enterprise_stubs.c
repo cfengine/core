@@ -31,6 +31,20 @@
 #include "cfstream.h"
 #include "logging.h"
 
+/*
+ * This module contains numeruous functions which don't use all their parameters
+ *
+ * Temporarily, in order to avoid cluttering output with thousands of warnings,
+ * this module is excempted from producing warnings about unused function
+ * parameters.
+ *
+ * Please remove this #pragma ASAP and provide ARG_UNUSED declarations for
+ * unused parameters.
+ */
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #if !defined(HAVE_NOVA)
 
 extern int PR_KEPT;
@@ -53,11 +67,11 @@ int IsEnterprise(void)
 
 /* all agents: sysinfo.c */
 
-void EnterpriseContext(EvalContext *ctx)
+void EnterpriseContext(ARG_UNUSED EvalContext *ctx)
 {
 }
 
-void LoadSlowlyVaryingObservations()
+void LoadSlowlyVaryingObservations(void)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in version Nova and above\n");
 }
@@ -66,7 +80,7 @@ void LoadSlowlyVaryingObservations()
 /* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
 
 
-int EnterpriseExpiry(EvalContext *ctx)
+int EnterpriseExpiry(ARG_UNUSED EvalContext *ctx)
 {
     return false;
 }
@@ -75,7 +89,7 @@ int EnterpriseExpiry(EvalContext *ctx)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(const Promise *pp)
+const char *PromiseID(ARG_UNUSED const Promise *pp)
 {
     return "";
 }
@@ -84,7 +98,7 @@ const char *PromiseID(const Promise *pp)
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(const Promise *pp, PromiseState state, char *reason)
+void NotePromiseCompliance(ARG_UNUSED const Promise *pp, ARG_UNUSED PromiseState state, ARG_UNUSED char *reason)
 {
 }
 

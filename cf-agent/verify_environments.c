@@ -76,11 +76,11 @@ static int EnvironmentsSanityChecks(Attributes a, Promise *pp);
 static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp);
 static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
 static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
-static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
+static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
 static void ShowDormant(virConnectPtr vc);
@@ -136,7 +136,7 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
 
         CF_OCCUR++;
 
-        PromiseBanner(ctx, pp);
+        PromiseBanner(pp);
         ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
         pexp = ExpandDeRefPromise(ctx, "this", pp);
@@ -346,19 +346,19 @@ static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors env
     switch (a.env.state)
     {
     case ENVIRONMENT_STATE_CREATE:
-        CreateVirtDom(ctx, CFVC[envtype], uri, a, pp);
+        CreateVirtDom(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_DELETE:
-        DeleteVirt(ctx, CFVC[envtype], uri, a, pp);
+        DeleteVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_RUNNING:
-        RunningVirt(ctx, CFVC[envtype], uri, a, pp);
+        RunningVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_SUSPENDED:
-        SuspendedVirt(ctx, CFVC[envtype], uri, a, pp);
+        SuspendedVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_DOWN:
-        DownVirt(ctx, CFVC[envtype], uri, a, pp);
+        DownVirt(ctx, CFVC[envtype], a, pp);
         break;
     default:
         CfOut(OUTPUT_LEVEL_INFORM, "", " !! No state specified for this environment");
@@ -411,7 +411,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     int alloc_file = false;
     char *xml_file;
@@ -551,7 +551,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
 /*****************************************************************************/
 
-static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     int ret = true;
@@ -582,7 +582,7 @@ static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes 
 
 /*****************************************************************************/
 
-static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -700,7 +700,7 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
     else
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Virtual domain \"%s\" cannot be located, attempting to recreate", pp->promiser);
-        CreateVirtDom(ctx, vc, uri, a, pp);
+        CreateVirtDom(ctx, vc, a, pp);
     }
 
     return true;
@@ -708,7 +708,7 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
 
 /*****************************************************************************/
 
-static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -788,7 +788,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
 /*****************************************************************************/
 
-static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;

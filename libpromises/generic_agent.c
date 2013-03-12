@@ -70,7 +70,7 @@ static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void CheckWorkingDirectories(void);
-static Policy *Cf3ParseFile(EvalContext *ctx, const GenericAgentConfig *config, const char *filename, Seq *errors);
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
@@ -363,7 +363,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
     PROMISETIME = time(NULL);
 
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
-    Policy *main_policy = Cf3ParseFile(ctx, config, config->input_file, errors);
+    Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
 
     if( main_policy )
     {
@@ -637,7 +637,7 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             switch (returnval.type)
             {
             case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(ctx, config, returnval.item, errors);
+                aux_policy = Cf3ParseFile(config, returnval.item, errors);
                 break;
 
             case RVAL_TYPE_LIST:
@@ -919,7 +919,7 @@ void CloseReports(const char *agents, ReportContext *report_context)
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(EvalContext *ctx, const GenericAgentConfig *config, const char *filename, Seq *errors)
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -984,7 +984,7 @@ static Policy *Cf3ParseFile(EvalContext *ctx, const GenericAgentConfig *config, 
 
     assert(policy);
 
-    return PolicyCheckPartial(ctx, policy, errors) ? policy : NULL;
+    return PolicyCheckPartial(policy, errors) ? policy : NULL;
 }
 
 /*******************************************************************/

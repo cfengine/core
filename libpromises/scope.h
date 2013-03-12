@@ -31,7 +31,7 @@
 bool ScopeExists(const char *name);
 
 void ScopeSetCurrent(const char *name);
-const char *ScopeGetCurrent(void);
+Scope *ScopeGetCurrent(void);
 
 /**
  * @brief NewScope; SetScope;

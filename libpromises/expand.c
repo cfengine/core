@@ -350,7 +350,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
 {
-    return ExpandPrivateScalar(ScopeGetCurrent(), string, buffer);
+    return ExpandPrivateScalar(ScopeGetCurrent()->scope, string, buffer);
 }
 
 /*********************************************************************/
@@ -1478,8 +1478,8 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandPrivateScalar(ScopeGetCurrent(), rval.item, exp);
-            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, ScopeGetCurrent(), var, (const char *) rval.item,
+            ExpandPrivateScalar(ScopeGetCurrent()->scope, rval.item, exp);
+            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, ScopeGetCurrent()->scope, var, (const char *) rval.item,
                     exp);
 
             if (level > 3)

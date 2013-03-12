@@ -40,7 +40,7 @@
 
 #include <assert.h>
 
-char *SCOPE_CURRENT_NAME = NULL;
+Scope *SCOPE_CURRENT = NULL;
 
 /*******************************************************************/
 
@@ -79,13 +79,12 @@ bool ScopeExists(const char *name)
 
 void ScopeSetCurrent(const char *name)
 {
-    free(SCOPE_CURRENT_NAME);
-    SCOPE_CURRENT_NAME = xstrdup(name);
+    SCOPE_CURRENT = ScopeGet(name);
 }
 
-const char *ScopeGetCurrent()
+Scope *ScopeGetCurrent(void)
 {
-    return SCOPE_CURRENT_NAME;
+    return SCOPE_CURRENT;
 }
 
 /*******************************************************************/
@@ -306,7 +305,7 @@ void ScopeDelete(char *name)
         return;
     }
 
-    if (ScopeGetCurrent() && strcmp(ptr->scope, ScopeGetCurrent()) == 0)
+    if (ScopeGetCurrent() && strcmp(ptr->scope, ScopeGetCurrent()->scope) == 0)
     {
         ProgrammingError("Attempted to delete current active scope");
     }
@@ -747,14 +746,14 @@ int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTyp
     {
         Rlist *listvars = NULL, *scalarvars = NULL;
 
-        if (strcmp(ScopeGetCurrent(), "this") != 0)
+        if (strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ScopeGetCurrent(), &scalarvars, &listvars, rval, NULL);
+            MapIteratorsFromRval(ScopeGetCurrent()->scope, &scalarvars, &listvars, rval, NULL);
 
             if (listvars != NULL)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
-                      lval, ScopeGetCurrent());
+                      lval, ScopeGetCurrent()->scope);
             }
 
             RlistDestroy(scalarvars);

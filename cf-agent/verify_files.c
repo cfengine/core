@@ -214,7 +214,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                     /* If there were back references there could still be match.x vars to expand */
 
-                    pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent(), pp);
+                    pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent()->scope, pp);
                     (*fnptr) (ctx, nextbufferOrig, pcopy, report_context);
                     PromiseDestroy(pcopy);
                 }

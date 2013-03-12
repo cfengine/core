@@ -2795,6 +2795,45 @@ Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *pp, const char
     return retval;
 }
 
+Constraint *PromiseGetImmediateConstraint(const Promise *pp, const char *lval)
+{
+    if (pp == NULL)
+    {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); ++i)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        if (strcmp(cp->lval, lval) == 0)
+        {
+            if (cp->classes != NULL)
+            {
+                ProgrammingError("PromiseGetImmediateConstraint was called on a constraint which has contexts attached to it.");
+            }
+
+            return cp;
+        }
+    }
+
+    return NULL;
+}
+
+void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType rtype)
+{
+    const Constraint *constraint = PromiseGetImmediateConstraint(pp, lval);
+
+    if (constraint && constraint->rval.type == rtype)
+    {
+        return constraint->rval.item;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
 /*****************************************************************************/
 
 void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)

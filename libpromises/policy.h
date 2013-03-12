@@ -337,6 +337,18 @@ int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Prom
  */
 Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *promise, const char *lval);
 
+/**
+ * @brief Get the first constraint from the promise. Checks that constraint does
+ * not have any classes attached to it.
+ *
+ * Kill this function with fire once we have separated promise constraints and body constraints.
+ *
+ * @param promise
+ * @param lval
+ * @return Constraint if found, otherwise NULL
+ */
+Constraint *PromiseGetImmediateConstraint(const Promise *promise, const char *lval);
+
 
 void ConstraintDestroy(Constraint *cp);
 
@@ -372,6 +384,20 @@ void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
  * @return Rval value if found, NULL otherwise
  */
 void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *promise, RvalType type);
+
+/**
+ * @brief Get the Rval value of the first constraint that matches the given
+ * type. Checks that this constraint does not have any contexts attached.
+ *
+ * Kill this function with fire once we have separated body constraints and bundle constraints.
+ *
+ * @param lval
+ * @param promise
+ * @param type
+ * @return Rval value if found, NULL otherwise
+ */
+void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType rtype);
+
 
 /**
  * @brief Get the trinary boolean value of the first effective constraint found matching

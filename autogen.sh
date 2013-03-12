@@ -45,6 +45,11 @@ else
   rm -f ${srcdir}/nova
 fi
 
+# Dirty hack to list all acceptance tests in tests/acceptance/Makefile.am
+cd tests/acceptance
+echo [0-9]*/[0-9]*/*.cf | sed '{s/ / \\\n\t/g;   s/^/TESTS = \\\n\t/}' > TESTS.am
+cd -
+
 autoreconf -Wno-portability --force --install -I m4 || exit 1
 cd $ORIGDIR || exit $?
 

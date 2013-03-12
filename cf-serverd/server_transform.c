@@ -1037,19 +1037,23 @@ static Auth *GetAuthPath(const char *path, Auth *list)
     }
 #endif /* __MINGW32__ */
 
-    if (strlen(path) != 1)
+    char *unslashed_path = xstrdup(path);
+
+    if (strlen(unslashed_path) != 1)
     {
-        DeleteSlash(path);
+        DeleteSlash(unslashed_path);
     }
 
     for (ap = list; ap != NULL; ap = ap->next)
     {
-        if (strcmp(ap->path, path) == 0)
+        if (strcmp(ap->path, unslashed_path) == 0)
         {
+            free(unslashed_path);
             return ap;
         }
     }
 
+    free(unslashed_path);
     return NULL;
 }
 

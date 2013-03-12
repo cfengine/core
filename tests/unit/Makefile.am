@@ -61,7 +61,8 @@ check_PROGRAMS = \
 	list_test \
 	buffer_test \
 	cf_key_functions_test \
-	connection_management_test
+	connection_management_test \
+	expand_test
 
 #	ipaddress_test
 

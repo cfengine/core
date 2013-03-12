@@ -1007,7 +1007,7 @@ void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Pr
         return;
     }
 
-    const char *handle = PromiseID(ctx, pp);
+    const char *handle = PromiseID(pp);
 
     fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(ctx, status), msg);
     fclose(fp);

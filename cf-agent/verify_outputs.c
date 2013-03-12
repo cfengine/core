@@ -96,7 +96,7 @@ void VerifyOutputsPromise(EvalContext *ctx, Promise *pp)
 
 void SetPromiseOutputs(EvalContext *ctx, Promise *pp)
 {
-    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
+    const char *handle = PromiseGetHandle(pp);
     char *setting = ConstraintGetRvalValue(ctx, "report_level", pp, RVAL_TYPE_SCALAR);
     OutputLevel report_level = OutputLevelFromString(setting);
     int verbose = false, inform = false;

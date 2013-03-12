@@ -651,7 +651,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
     Rlist *lol = NULL;
     Promise *pexp;
     const int cf_null_cutoff = 5;
-    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR), v[CF_MAXVARSIZE];
+    const char *handle = PromiseGetHandle(pp);
+    char v[CF_MAXVARSIZE];
     int cutoff = 0;
 
     lol = NewIterationContext(ctx, scopeid, listvars);
@@ -699,7 +700,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
         }
         else
         {
-            ScopeNewScalar("this", "handle", PromiseID(ctx, pp), DATA_TYPE_STRING);
+            ScopeNewScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         if (pp->audit && pp->audit->filename)

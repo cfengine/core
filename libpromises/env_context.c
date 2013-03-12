@@ -1188,19 +1188,14 @@ void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context,
 
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp)
 {
-    if (pp == NULL)
-    {
-        return;
-    }
-
     char name[CF_BUFSIZE];
-    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
+    const char *handle = PromiseGetHandle(pp);
 
     if (handle == NULL)
     {
        return;
     }
-    
+
     snprintf(name, CF_BUFSIZE, "%s:%s", PromiseGetNamespace(pp), handle);
     StringSetAdd(ctx->dependency_handles, xstrdup(name));
 }

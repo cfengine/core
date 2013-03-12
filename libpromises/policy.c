@@ -757,7 +757,8 @@ bool PolicyCheckDuplicateHandles(EvalContext *ctx, const Policy *policy, Seq *er
             for (size_t ppi = 0; ppi < SeqLength(promise_type->promises); ppi++)
             {
                 Promise *promise = SeqAt(promise_type->promises, ppi);
-                char *handle = ConstraintGetRvalValue(ctx, "handle", promise, RVAL_TYPE_SCALAR);
+
+                const char *handle = PromiseGetHandle(promise);
 
                 if (handle)
                 {
@@ -769,7 +770,7 @@ bool PolicyCheckDuplicateHandles(EvalContext *ctx, const Policy *policy, Seq *er
                     }
                     else
                     {
-                        SetAdd(used_handles, handle);
+                        SetAdd(used_handles, (void *)handle); /* This Set does not free values */
                     }
                 }
             }
@@ -2406,6 +2407,11 @@ const char *PromiseGetNamespace(const Promise *pp)
 const Bundle *PromiseGetBundle(const Promise *pp)
 {
     return pp->parent_promise_type->parent_bundle;
+}
+
+const char *PromiseGetHandle(const Promise *pp)
+{
+    return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 }
 
 int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)

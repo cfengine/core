@@ -443,7 +443,7 @@ void PromiseBanner(EvalContext *ctx, Promise *pp)
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
-    if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
+    if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
     {
         strncpy(handle, sp, CF_MAXVARSIZE - 1);
     }

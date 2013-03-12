@@ -746,7 +746,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
+    const char *handle = PromiseGetHandle(pp);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {

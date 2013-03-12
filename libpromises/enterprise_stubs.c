@@ -75,7 +75,7 @@ int EnterpriseExpiry(EvalContext *ctx)
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 
-const char *PromiseID(EvalContext *ctx, const Promise *pp)
+const char *PromiseID(const Promise *pp)
 {
     return "";
 }

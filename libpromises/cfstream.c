@@ -214,7 +214,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
             v = "not specified";
         }
 
-        if ((sp = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR)) || (sp = PromiseID(ctx, pp)))
+        if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
         {
             strncpy(handle, sp, CF_MAXVARSIZE - 1);
         }

@@ -88,7 +88,7 @@ typedef enum
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
 static void KeepServerPromise(EvalContext *ctx, Promise *pp);
-static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
@@ -992,7 +992,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
 /* Level                                                               */
 /***********************************************************************/
 
-static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
 {
     Auth *ptr;
 

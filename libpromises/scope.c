@@ -604,23 +604,6 @@ void ScopeDeleteVariable(const char *scope, const char *id)
     }
 }
 
-bool ScopeVariableExistsInThis(const char *name)
-{
-    Rval rval;
-
-    if (name == NULL)
-    {
-        return false;
-    }
-
-    if (ScopeGetVariable("this", name, &rval) == DATA_TYPE_NONE)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 /*******************************************************************/
 
 static int CompareVariableValue(Rval rval, CfAssoc *ap)

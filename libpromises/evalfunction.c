@@ -2127,7 +2127,27 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (ScopeVariableExistsInThis(RlistScalarValue(finalargs)))
+    const char *lval = RlistScalarValue(finalargs);
+    Rval rval = { 0 };
+    bool found = false;
+
+    if (lval == NULL)
+    {
+        found = false;
+    }
+    else
+    {
+        if (ScopeGetVariable("this", lval, &rval) == DATA_TYPE_NONE)
+        {
+            found = false;
+        }
+        else
+        {
+            found = true;
+        }
+    }
+
+    if (found)
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }

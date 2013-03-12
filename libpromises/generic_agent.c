@@ -1255,7 +1255,7 @@ void CompilationReport(EvalContext *ctx, Policy *policy, char *fname)
     ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
 #endif
 
-    ShowPromises(ctx, compilation_report_context, policy->bundles, policy->bodies);
+    ShowPromises(ctx, policy->bundles, policy->bodies);
 
     ReportContextDestroy(compilation_report_context);
 }

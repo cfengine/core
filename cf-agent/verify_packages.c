@@ -112,7 +112,7 @@ void VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
 // Now verify the package itself
 

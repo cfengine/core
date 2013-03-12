@@ -23,21 +23,12 @@
 
 */
 
+#include "platform.h"
+#include "compiler.h"
+
 #include <time.h>
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#ifndef HAVE_CLOCKID_T
-typedef int clockid_t;
-#endif
-
-#if !HAVE_DECL_CLOCK_GETTIME
-int clock_gettime(clockid_t clock_id, struct timespec *tp);
-#endif
-
-int clock_gettime(clockid_t clock_id, struct timespec *tp)
+int clock_gettime(ARG_UNUSED clockid_t clock_id, struct timespec *tp)
 {
     tp->tv_sec = time(NULL);
     tp->tv_nsec = 0;

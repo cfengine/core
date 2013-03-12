@@ -852,7 +852,7 @@ static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *clas
 
 /**********************************************************************/
 
-static char *EvalVarRef(const char *varname, void *param)
+static char *EvalVarRef(ARG_UNUSED const char *varname, ARG_UNUSED void *param)
 {
 /*
  * There should be no unexpanded variables when we evaluate any kind of
@@ -900,7 +900,8 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenFromList(const EvalContext *ctx, const char *token, void *param)
+static ExpressionValue EvalTokenFromList(ARG_UNUSED const EvalContext *ctx,
+                                         const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);

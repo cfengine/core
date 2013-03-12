@@ -51,7 +51,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }
@@ -61,7 +61,7 @@ static bool IdentityEqualFn(const void *p1, const void *p2)
     return p1 == p2;
 }
 
-static void NopDestroyFn(void *p1)
+static void NopDestroyFn(ARG_UNUSED void *p1)
 {
 }
 

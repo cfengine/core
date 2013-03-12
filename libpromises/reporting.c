@@ -184,17 +184,17 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 
 /*******************************************************************/
 
-void ShowPromises(EvalContext *ctx, const ReportContext *context, const Seq *bundles, const Seq *bodies)
+void ShowPromises(EvalContext *ctx, const Seq *bundles, const Seq *bodies)
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromises(ctx, context, bundles, bodies);
+    Nova_ShowPromises(ctx, bundles, bodies);
 #endif
 }
 
-void ShowPromise(EvalContext *ctx, const ReportContext *context, const Promise *pp, int indent)
+void ShowPromise(const Promise *pp)
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromise(ctx, context, NULL, pp, indent);
+    Nova_ShowPromise(pp);
 #endif
 }
 

@@ -91,7 +91,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     switch (RepairExec(ctx, a, pp))
     {

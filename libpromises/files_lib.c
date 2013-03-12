@@ -948,7 +948,7 @@ void CreateEmptyFile(char *name)
 
 #endif
 
-static char FileStateToChar(EvalContext *ctx, FileState status)
+static char FileStateToChar(FileState status)
 {
     switch(status)
     {
@@ -969,7 +969,7 @@ static char FileStateToChar(EvalContext *ctx, FileState status)
     }
 }
 
-void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp)
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 {
     FILE *fp;
     char fname[CF_BUFSIZE];
@@ -1009,7 +1009,7 @@ void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Pr
 
     const char *handle = PromiseID(pp);
 
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(ctx, status), msg);
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
     cf_chmod(fname, perm);

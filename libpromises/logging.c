@@ -272,7 +272,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_REPAIRED, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_repaired);
         }
         break;
@@ -291,7 +291,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
         }
         break;
 
@@ -312,7 +312,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -334,7 +334,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -356,7 +356,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -378,7 +378,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -391,7 +391,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
+            NotePromiseCompliance(pp, PROMISE_STATE_ANY, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_kept);
         }
 
@@ -438,7 +438,7 @@ void PromiseLog(char *s)
 
 /************************************************************************/
 
-void PromiseBanner(EvalContext *ctx, Promise *pp)
+void PromiseBanner(Promise *pp)
 {
     char handle[CF_MAXVARSIZE];
     const char *sp;

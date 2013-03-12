@@ -735,7 +735,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
         switch (agent)
         {
         case AGENT_TYPE_COMMON:
-            ShowPromise(ctx, report_context, pexp, 6);
+            ShowPromise(pexp);
             CheckRecursion(ctx, report_context, pexp);
             PromiseRecheckAllConstraints(ctx, pexp);
             break;

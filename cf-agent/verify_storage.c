@@ -64,7 +64,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *file, Attributes a, Promis
 
 void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
     FindStoragePromiserObjects(ctx, pp, report_context);
 
     return (void *) NULL;

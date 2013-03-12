@@ -175,7 +175,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
     }
 
     ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
     {

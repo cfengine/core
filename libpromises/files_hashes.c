@@ -139,7 +139,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
 
-        LogHashChange(ctx, filename, FILE_STATE_NEW, "New file found", pp);
+        LogHashChange(filename, FILE_STATE_NEW, "New file found", pp);
 
         CloseDB(dbp);
         return false;
@@ -470,7 +470,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
-            LogHashChange(ctx, obj, FILE_STATE_REMOVED, "File removed", pp);
+            LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);
         }
 
         memset(&key, 0, sizeof(key));

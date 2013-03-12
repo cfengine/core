@@ -2625,7 +2625,7 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
     if (changed)
     {
         EvalContextHeapPersistentSave(PromiseGetNamespace(pp), "checksum_alerts", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
-        LogHashChange(ctx, file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
+        LogHashChange(file, FILE_STATE_CONTENT_CHANGED, "Content changed", pp);
     }
 
     if (attr.change.report_diffs)
@@ -3306,7 +3306,7 @@ static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Att
         snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
-        LogHashChange(ctx, file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_uid != sb->st_uid)
@@ -3319,7 +3319,7 @@ static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Att
         snprintf(msg_temp, sizeof(msg_temp), "Owner: %jd -> %jd",
                  (uintmax_t)cmpsb.st_uid, (uintmax_t)sb->st_uid);
 
-        LogHashChange(ctx, file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_gid != sb->st_gid)
@@ -3332,7 +3332,7 @@ static void VerifyFileChanges(EvalContext *ctx, char *file, struct stat *sb, Att
         snprintf(msg_temp, sizeof(msg_temp), "Group: %jd -> %jd",
                  (uintmax_t)cmpsb.st_gid, (uintmax_t)sb->st_gid);
 
-        LogHashChange(ctx, file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
+        LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
     }
 
     if (cmpsb.st_dev != sb->st_dev)

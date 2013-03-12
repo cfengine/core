@@ -68,7 +68,7 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     a = GetDatabaseAttributes(ctx, pp);
 

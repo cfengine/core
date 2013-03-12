@@ -62,7 +62,7 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     a = GetMeasurementAttributes(ctx, pp);
 

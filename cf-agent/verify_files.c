@@ -651,7 +651,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
 void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
 {
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
     FindFilePromiserObjects(ctx, pp, report_context);
 
     if (AM_BACKGROUND_PROCESS && (!pp->done))

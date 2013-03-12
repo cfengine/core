@@ -43,7 +43,7 @@ int FileSanityChecks(char *path, Attributes a, Promise *pp);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp);
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
 
 /* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
    Return LEN upon success, write's (negative) error code otherwise.  */

@@ -96,7 +96,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         return false;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     if (strncmp(method_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
     {

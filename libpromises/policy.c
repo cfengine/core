@@ -740,7 +740,7 @@ static bool PolicyCheckRequiredComments(EvalContext *ctx, const Policy *policy, 
     }
 }
 
-bool PolicyCheckDuplicateHandles(EvalContext *ctx, const Policy *policy, Seq *errors)
+bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
@@ -805,7 +805,7 @@ bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bo
         success &= PolicyCheckUndefinedBundles(policy, errors);
     }
 
-    success &= PolicyCheckDuplicateHandles(ctx, policy, errors);
+    success &= PolicyCheckDuplicateHandles(policy, errors);
 
     return success;
 }
@@ -866,7 +866,7 @@ bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors)
         }
     }
 
-    success &= PolicyCheckDuplicateHandles(ctx, policy, errors);
+    success &= PolicyCheckDuplicateHandles(policy, errors);
 
     return success;
 }

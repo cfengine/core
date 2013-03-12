@@ -279,7 +279,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {

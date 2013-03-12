@@ -83,7 +83,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
 

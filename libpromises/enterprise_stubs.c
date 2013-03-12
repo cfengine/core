@@ -84,7 +84,7 @@ const char *PromiseID(const Promise *pp)
 /* all agents: logging.c */
 
 
-void NotePromiseCompliance(const Promise *pp, double val, PromiseState state, char *reason)
+void NotePromiseCompliance(const Promise *pp, PromiseState state, char *reason)
 {
 }
 

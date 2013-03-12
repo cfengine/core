@@ -32,7 +32,7 @@ void BeginAudit(void);
 void EndAudit(int background_tasks);
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason);
 void PromiseLog(char *s);
-void PromiseBanner(EvalContext *ctx, Promise *pp);
+void PromiseBanner(Promise *pp);
 void BannerSubBundle(Bundle *bp, Rlist *params);
 void FatalError(char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(1, 2);
 

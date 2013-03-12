@@ -18,12 +18,9 @@ static Policy *LoadPolicy(const char *filename)
 static Seq *LoadAndCheck(const char *filename)
 {
     Policy *p = LoadPolicy(filename);
-    EvalContext *ctx = EvalContextNew();
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
-    PolicyCheckPartial(ctx, p, errs);
-
-    EvalContextDestroy(ctx);
+    PolicyCheckPartial(p, errs);
 
     return errs;
 }

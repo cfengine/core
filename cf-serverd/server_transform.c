@@ -998,15 +998,6 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
 {
     Auth *ptr;
 
-#ifdef __MINGW32__
-    int i;
-
-    for (i = 0; path[i] != '\0'; i++)
-    {
-        path[i] = ToLower(path[i]);
-    }
-#endif /* __MINGW32__ */
-
     ptr = xcalloc(1, sizeof(Auth));
 
     if (*listtop == NULL)       /* First element in the list */
@@ -1018,7 +1009,18 @@ static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
         (*listtop)->next = ptr;
     }
 
-    ptr->path = xstrdup(path);
+    char *path_dup = xstrdup(path);
+
+#ifdef __MINGW32__
+    int i;
+
+    for (i = 0; path_dup[i] != '\0'; i++)
+    {
+        path_dup[i] = ToLower(path_dup[i]);
+    }
+#endif /* __MINGW32__ */
+
+    ptr->path = path_dup;
     *listtop = ptr;
 }
 
@@ -1030,16 +1032,16 @@ static Auth *GetAuthPath(const char *path, Auth *list)
 {
     Auth *ap;
 
+    char *unslashed_path = xstrdup(path);
+
 #ifdef __MINGW32__
     int i;
 
-    for (i = 0; path[i] != '\0'; i++)
+    for (i = 0; unslashed_path[i] != '\0'; i++)
     {
-        path[i] = ToLower(path[i]);
+        unslashed_path[i] = ToLower(unslashed_path[i]);
     }
-#endif /* __MINGW32__ */
-
-    char *unslashed_path = xstrdup(path);
+#endif /* __MINGW32__ */    
 
     if (strlen(unslashed_path) != 1)
     {

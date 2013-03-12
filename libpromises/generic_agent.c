@@ -1718,6 +1718,7 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         {
             snprintf(buf, CF_BUFSIZE, "%s_%s", bdp->name, bdp->type);
             CfDebug("Initiate control variable convergence...%s\n", buf);
+            ScopeSetCurrent("this");
             ScopeDelete(buf);
             ScopeSetNew(buf);
             CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);

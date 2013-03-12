@@ -838,6 +838,8 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
     if ((a.packages.package_name_convention) || (a.packages.package_delete_convention))
     {
+        const char *current_scope = ScopeGetCurrent();
+
         ScopeSetNew("cf_pack_context");
         ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
         ScopeNewScalar("cf_pack_context", "version", version, DATA_TYPE_STRING);
@@ -858,6 +860,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             strlcpy(id, name, CF_EXPANDSIZE);
         }
 
+        ScopeSetCurrent(current_scope);
         ScopeDelete("cf_pack_context");
     }
     else
@@ -903,12 +906,18 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             if ((a.packages.package_file_repositories != NULL) &&
                 ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
             {
-                ScopeSetNew("cf_pack_context_anyver");
-                ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
-                ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
-                ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
-                ExpandScalar(a.packages.package_name_convention, refAnyVer);
-                ScopeDelete("cf_pack_context_anyver");
+                {
+                    const char *current_scope = ScopeGetCurrent();
+
+                    ScopeSetNew("cf_pack_context_anyver");
+                    ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
+                    ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
+                    ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
+                    ExpandScalar(a.packages.package_name_convention, refAnyVer);
+
+                    ScopeSetCurrent(current_scope);
+                    ScopeDelete("cf_pack_context_anyver");
+                }
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1034,12 +1043,18 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if ((a.packages.package_file_repositories != NULL) &&
             ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GT) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE)))
         {
-            ScopeSetNew("cf_pack_context_anyver");
-            ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
-            ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
-            ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
-            ExpandScalar(a.packages.package_name_convention, refAnyVer);
-            ScopeDelete("cf_pack_context_anyver");
+            {
+                const char *current_scope = ScopeGetCurrent();
+
+                ScopeSetNew("cf_pack_context_anyver");
+                ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
+                ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
+                ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
+                ExpandScalar(a.packages.package_name_convention, refAnyVer);
+
+                ScopeSetCurrent(current_scope);
+                ScopeDelete("cf_pack_context_anyver");
+            }
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
 
@@ -1097,13 +1112,19 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         instArch[1] = '\0';
                     }
 
-                    ScopeSetNew("cf_pack_context");
-                    ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
-                    ScopeNewScalar("cf_pack_context", "version", instVer, DATA_TYPE_STRING);
-                    ScopeNewScalar("cf_pack_context", "arch", instArch, DATA_TYPE_STRING);
-                    ExpandScalar(a.packages.package_delete_convention, reference2);
-                    id_del = reference2;
-                    ScopeDelete("cf_pack_context");
+                    {
+                        const char *current_scope = ScopeGetCurrent();
+
+                        ScopeSetNew("cf_pack_context");
+                        ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
+                        ScopeNewScalar("cf_pack_context", "version", instVer, DATA_TYPE_STRING);
+                        ScopeNewScalar("cf_pack_context", "arch", instArch, DATA_TYPE_STRING);
+                        ExpandScalar(a.packages.package_delete_convention, reference2);
+                        id_del = reference2;
+
+                        ScopeSetCurrent(current_scope);
+                        ScopeDelete("cf_pack_context");
+                    }
                 }
                 else
                 {

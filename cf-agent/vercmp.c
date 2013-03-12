@@ -63,11 +63,17 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 {
     char expanded_command[CF_EXPANDSIZE];
 
-    ScopeSetNew("cf_pack_context");
-    ScopeNewScalar("cf_pack_context", "v1", v1, DATA_TYPE_STRING);
-    ScopeNewScalar("cf_pack_context", "v2", v2, DATA_TYPE_STRING);
-    ExpandScalar(command, expanded_command);
-    ScopeDelete("cf_pack_context");
+    {
+        const char *current_scope = ScopeGetCurrent();
+
+        ScopeSetNew("cf_pack_context");
+        ScopeNewScalar("cf_pack_context", "v1", v1, DATA_TYPE_STRING);
+        ScopeNewScalar("cf_pack_context", "v2", v2, DATA_TYPE_STRING);
+        ExpandScalar(command, expanded_command);
+
+        ScopeSetCurrent(current_scope);
+        ScopeDelete("cf_pack_context");
+    }
 
     FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w");
 

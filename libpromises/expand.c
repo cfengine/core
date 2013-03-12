@@ -767,6 +767,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
     }
     while (IncrementIterationContext(lol));
 
+    ScopeSetCurrent(scopeid);
     DeleteIterationContext(lol);
 }
 

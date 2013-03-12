@@ -40,7 +40,7 @@
 
 #include <assert.h>
 
-char SCOPE_CURRENT_NAME[CF_MAXVARSIZE] = { 0 };
+char *SCOPE_CURRENT_NAME = NULL;
 
 /*******************************************************************/
 
@@ -79,7 +79,8 @@ bool ScopeExists(const char *name)
 
 void ScopeSetCurrent(const char *name)
 {
-    strlcpy(SCOPE_CURRENT_NAME, name, CF_MAXVARSIZE);
+    free(SCOPE_CURRENT_NAME);
+    SCOPE_CURRENT_NAME = xstrdup(name);
 }
 
 const char *ScopeGetCurrent()
@@ -303,6 +304,11 @@ void ScopeDelete(char *name)
         CfDebug("No such scope to delete\n");
         ThreadUnlock(cft_vscope);
         return;
+    }
+
+    if (ScopeGetCurrent() && strcmp(ptr->scope, ScopeGetCurrent()) == 0)
+    {
+        ProgrammingError("Attempted to delete current active scope");
     }
 
     if (ptr == VSCOPE)

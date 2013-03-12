@@ -2551,7 +2551,7 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
 
 #ifdef __MINGW32__
 
-uid_t GetUidConstraint(const char *lval, const Promise *pp)
+uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp)
 {                               // we use sids on windows instead
     return CF_SAME_OWNER;
 }
@@ -2604,7 +2604,7 @@ uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promis
 
 #ifdef __MINGW32__
 
-gid_t GetGidConstraint(char *lval, const Promise *pp)
+gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
 {                               // not applicable on windows: processes have no group
     return CF_SAME_GROUP;
 }

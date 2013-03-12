@@ -719,11 +719,11 @@ int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTyp
 
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-        Rlist *listvars = NULL, *scalarvars = NULL;
+        Rlist *listvars = NULL;
 
         if (strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ScopeGetCurrent()->scope, &scalarvars, &listvars, rval);
+            MapIteratorsFromRval(ScopeGetCurrent()->scope, &listvars, rval);
 
             if (listvars != NULL)
             {
@@ -731,7 +731,6 @@ int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTyp
                       lval, ScopeGetCurrent()->scope);
             }
 
-            RlistDestroy(scalarvars);
             RlistDestroy(listvars);
         }
     }

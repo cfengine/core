@@ -57,7 +57,7 @@
 
 static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
                                void (*fnptr) (), const ReportContext *report_context);
-static void MapIteratorsFromScalar(const char *scope, Rlist **los, Rlist **lol, char *string, int level);
+static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
 static int Epimenides(const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
@@ -127,7 +127,7 @@ since these cannot be mapped into "this" without some magic.
 void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, void *fnptr,
                    const ReportContext *report_context)
 {
-    Rlist *listvars = NULL, *scalarvars = NULL;
+    Rlist *listvars = NULL;
     Promise *pcopy;
 
     CfDebug("****************************************************\n");
@@ -146,17 +146,17 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     pcopy = DeRefCopyPromise(ctx, pp);
 
-    MapIteratorsFromRval(scopeid, &scalarvars, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(scopeid, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
     if (pcopy->promisee.item != NULL)
     {
-        MapIteratorsFromRval(scopeid, &scalarvars, &listvars, pp->promisee);
+        MapIteratorsFromRval(scopeid, &listvars, pp->promisee);
     }
 
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(scopeid, &scalarvars, &listvars, cp->rval);
+        MapIteratorsFromRval(scopeid, &listvars, cp->rval);
     }
 
     CopyLocalizedIteratorsToThisScope(scopeid, listvars);
@@ -166,7 +166,6 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
     ScopePopThis();
 
     PromiseDestroy(pcopy);
-    RlistDestroy(scalarvars);
     RlistDestroy(listvars);
 }
 
@@ -202,7 +201,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *scopeid, Rval rval, const Prom
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listvars, Rval rval)
+void MapIteratorsFromRval(const char *scopeid, Rlist **listvars, Rval rval)
 {
     Rlist *rp;
     FnCall *fp;
@@ -215,13 +214,13 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listv
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        MapIteratorsFromScalar(scopeid, scalarvars, listvars, (char *) rval.item, 0);
+        MapIteratorsFromScalar(scopeid, listvars, (char *) rval.item, 0);
         break;
 
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(scopeid, listvars, (Rval) {rp->item, rp->type});
         }
         break;
 
@@ -231,7 +230,7 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listv
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
         {
             CfDebug("Looking at arg for function-like object %s()\n", fp->name);
-            MapIteratorsFromRval(scopeid, scalarvars, listvars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(scopeid, listvars, (Rval) {rp->item, rp->type});
         }
         break;
 
@@ -243,7 +242,7 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **scalarvars, Rlist **listv
 
 /*********************************************************************/
 
-static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **its, char *string, int level)
+static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, char *string, int level)
 {
     char *sp;
     Rval rval;
@@ -308,17 +307,12 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
                         if (level > 0)
                         {
-                            RlistPrependScalarIdemp(its, exp);
+                            RlistPrependScalarIdemp(list_vars_out, exp);
                         }
                         else
                         {
-                            RlistAppendScalarIdemp(its, exp);
+                            RlistAppendScalarIdemp(list_vars_out, exp);
                         }
-                    }
-                    else if (rval.type == RVAL_TYPE_SCALAR)
-                    {
-                        CfDebug("Scalar variable $(%s) found\n", var);
-                        RlistAppendScalarIdemp(scal, var);
                     }
                 }
                 else
@@ -327,7 +321,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
                     if (IsExpandable(var))
                     {
-                        MapIteratorsFromScalar(scopeid, scal, its, var, level + 1);
+                        MapIteratorsFromScalar(scopeid, list_vars_out, var, level + 1);
 
                         // Need to rewrite list references to nested variables in this level
 

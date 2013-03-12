@@ -6,11 +6,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#define true 1
-
+#include "platform.h"
 #include <stdio.h>
 #include <string.h>
-#include "platform.h"
 
 struct Item
    {

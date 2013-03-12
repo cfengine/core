@@ -88,10 +88,6 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
-rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c
-rlist_test_LDADD = libtest.la libstr.la
-
 set_domainname_test_SOURCES = set_domainname_test.c \
 	../../libpromises/sysinfo.c
 set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la

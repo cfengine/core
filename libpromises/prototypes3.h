@@ -73,7 +73,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
 void LoadSlowlyVaryingObservations(void);
 void MonOtherInit(void);
 void MonOtherGatherData(double *cf_this);
-void RegisterLiteralServerData(char *handle, Promise *pp);
+void RegisterLiteralServerData(const char *handle, Promise *pp);
 int ReturnLiteralData(char *handle, char *ret);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */

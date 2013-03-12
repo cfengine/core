@@ -46,7 +46,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 #ifdef __MINGW32__
 
-char VerifyLink(char *destination, const char *source, Attributes attr, Promise *pp)
+char VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
     return CF_FAIL;

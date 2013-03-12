@@ -138,7 +138,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, P
     }
 
 #ifdef __MINGW32__
-    StringSetAdd(leaf_attr, xstrdup("group");
+    StringSetAdd(leaf_attr, xstrdup("group"));
 
 #else /* !__MINGW32__ */
     if ((attr.select.groups) && (SelectGroupMatch(ctx, sb, attr.select.groups)))

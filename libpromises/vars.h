@@ -33,7 +33,7 @@ void LoadSystemConstants(void);
 const char *ExtractInnerCf3VarString(const char *str, char *substr);
 const char *ExtractOuterCf3VarString(const char *str, char *substr);
 int UnresolvedArgs(Rlist *args);
-int UnresolvedVariables(CfAssoc *ap, char rtype);
+int UnresolvedVariables(CfAssoc *ap, RvalType rtype);
 int IsQualifiedVariable(char *var);
 
 bool StringContainsVar(const char *s, const char *v);

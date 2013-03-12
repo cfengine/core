@@ -53,7 +53,7 @@ void LoadSystemConstants()
 
 /*******************************************************************/
 
-int UnresolvedVariables(CfAssoc *ap, char rtype)
+int UnresolvedVariables(CfAssoc *ap, RvalType rtype)
 {
     Rlist *list, *rp;
 

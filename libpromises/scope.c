@@ -723,7 +723,7 @@ int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTyp
 
         if (strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ScopeGetCurrent()->scope, &scalarvars, &listvars, rval, NULL);
+            MapIteratorsFromRval(ScopeGetCurrent()->scope, &scalarvars, &listvars, rval);
 
             if (listvars != NULL)
             {

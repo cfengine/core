@@ -33,7 +33,7 @@
 void ExpandPromise(EvalContext *ctx, AgentType ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
+void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval);
 
 int IsExpandable(const char *str);
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);

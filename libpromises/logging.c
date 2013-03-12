@@ -261,7 +261,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
                 VAL_REPAIRED += attr.transaction.value_repaired;
 
 #ifdef HAVE_NOVA
-                EnterpriseTrackTotalCompliance(ctx, pp, 'r');
+                EnterpriseTrackTotalCompliance(pp, 'r');
 #endif
             }
         }
@@ -272,7 +272,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 0.5, PROMISE_STATE_REPAIRED, reason);
+            NotePromiseCompliance(pp, 0.5, PROMISE_STATE_REPAIRED, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_repaired);
         }
         break;
@@ -285,13 +285,13 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
+            EnterpriseTrackTotalCompliance(pp, 'n');
 #endif
         }
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_NOTKEPT, reason);
         }
         break;
 
@@ -303,7 +303,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
+            EnterpriseTrackTotalCompliance(pp, 'n');
 #endif
         }
 
@@ -312,7 +312,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -325,7 +325,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
+            EnterpriseTrackTotalCompliance(pp, 'n');
 #endif
         }
 
@@ -334,7 +334,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -347,7 +347,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
+            EnterpriseTrackTotalCompliance(pp, 'n');
 #endif
         }
 
@@ -356,7 +356,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -369,7 +369,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_NOTKEPT += attr.transaction.value_notkept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'n');
+            EnterpriseTrackTotalCompliance(pp, 'n');
 #endif
         }
 
@@ -378,7 +378,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
+            NotePromiseCompliance(pp, 0.0, PROMISE_STATE_NOTKEPT, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
         }
         break;
@@ -391,7 +391,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 
         if (IsPromiseValuableForLogging(pp))
         {
-            NotePromiseCompliance(ctx, pp, 1.0, PROMISE_STATE_ANY, reason);
+            NotePromiseCompliance(pp, 1.0, PROMISE_STATE_ANY, reason);
             SummarizeTransaction(ctx, attr, pp, attr.transaction.log_kept);
         }
 
@@ -401,7 +401,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
             VAL_KEPT += attr.transaction.value_kept;
 
 #ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(ctx, pp, 'c');
+            EnterpriseTrackTotalCompliance(pp, 'c');
 #endif
         }
 

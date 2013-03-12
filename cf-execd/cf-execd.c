@@ -717,7 +717,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         CfOut(OUTPUT_LEVEL_INFORM, "", "Re-reading promise file %s..\n", config->input_file);
 
         EvalContextHeapClear(ctx);
-        EvalContextStackFrameClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
@@ -764,11 +763,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         /* Environment reload */
 
         EvalContextHeapClear(ctx);
-        EvalContextStackFrameClear(ctx);
 
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
-
 
         ScopeDelete("this");
         ScopeDelete("mon");

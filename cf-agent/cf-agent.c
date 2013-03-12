@@ -1030,7 +1030,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
             }
 
             BannerPromiseType(bp->name, sp->name, pass);
-            ScopeSet(bp->name);
+            ScopeSetCurrent(bp->name);
 
             if (!NewTypeContext(type))
             {

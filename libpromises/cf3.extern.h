@@ -35,7 +35,6 @@ extern char BINDINTERFACE[CF_BUFSIZE];
 extern Audit *AUDITPTR;
 extern Audit *VAUDIT;
 
-extern char CONTEXTID[];
 extern Item *IPADDRESSES;
 
 extern char STR_CFENGINEPORT[16];

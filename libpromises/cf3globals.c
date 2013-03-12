@@ -104,7 +104,6 @@ char VSHIFT[12] = { 0 };
 int ERRORCOUNT = 0;
 char VPREFIX[CF_MAXVARSIZE] = { 0 };
 
-char CONTEXTID[CF_MAXVARSIZE] = { 0 };
 char CFWORKDIR[CF_BUFSIZE] = { 0 };
 
 char *DEFAULT_COPYTYPE = NULL;

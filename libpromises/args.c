@@ -35,6 +35,7 @@
 #include "logging.h"
 #include "evalfunction.h"
 #include "misc_lib.h"
+#include "scope.h"
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -88,11 +89,11 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(CONTEXTID, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ScopeGetCurrent(), (Rval) {rp->item, rp->type});
             break;
         }
 
-        CfDebug("EXPARG: %s.%s\n", CONTEXTID, (char *) rval.item);
+        CfDebug("EXPARG: %s.%s\n", ScopeGetCurrent(), (char *) rval.item);
         RlistAppend(&newargs, rval.item, rval.type);
         RvalDestroy(rval);
     }

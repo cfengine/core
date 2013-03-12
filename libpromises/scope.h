@@ -30,11 +30,8 @@
 
 bool ScopeExists(const char *name);
 
-/**
- * @brief Sets CONTEXTID = id
- * @param id
- */
-void ScopeSet(char *id);
+void ScopeSetCurrent(const char *name);
+const char *ScopeGetCurrent(void);
 
 /**
  * @brief NewScope; SetScope;

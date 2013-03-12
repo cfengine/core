@@ -153,7 +153,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
 
             BannerSubPromiseType(ctx, bp->name, sp->name);
             THIS_BUNDLE = bp->name;
-            ScopeSet(bp->name);
+            ScopeSetCurrent(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
@@ -179,7 +179,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
     }
 
     ScopeDelete("edit");
-    ScopeSet(PromiseGetBundle(parentp)->name);
+    ScopeSetCurrent(PromiseGetBundle(parentp)->name);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;

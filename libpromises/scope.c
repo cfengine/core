@@ -40,6 +40,8 @@
 
 #include <assert.h>
 
+char SCOPE_CURRENT_NAME[CF_MAXVARSIZE] = { 0 };
+
 /*******************************************************************/
 
 Scope *ScopeGet(const char *scope)
@@ -75,9 +77,14 @@ bool ScopeExists(const char *name)
     return ScopeGet(name) != NULL;
 }
 
-void ScopeSet(char *id)
+void ScopeSetCurrent(const char *name)
 {
-    strlcpy(CONTEXTID, id, CF_MAXVARSIZE);
+    strlcpy(SCOPE_CURRENT_NAME, name, CF_MAXVARSIZE);
+}
+
+const char *ScopeGetCurrent()
+{
+    return SCOPE_CURRENT_NAME;
 }
 
 /*******************************************************************/
@@ -85,7 +92,7 @@ void ScopeSet(char *id)
 void ScopeSetNew(char *id)
 {
     ScopeNew(id);
-    ScopeSet(id);
+    ScopeSetCurrent(id);
 }
 
 /*******************************************************************/
@@ -707,14 +714,14 @@ int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTyp
     {
         Rlist *listvars = NULL, *scalarvars = NULL;
 
-        if (strcmp(CONTEXTID, "this") != 0)
+        if (strcmp(ScopeGetCurrent(), "this") != 0)
         {
-            MapIteratorsFromRval(CONTEXTID, &scalarvars, &listvars, rval, NULL);
+            MapIteratorsFromRval(ScopeGetCurrent(), &scalarvars, &listvars, rval, NULL);
 
             if (listvars != NULL)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
-                      lval, CONTEXTID);
+                      lval, ScopeGetCurrent());
             }
 
             RlistDestroy(scalarvars);

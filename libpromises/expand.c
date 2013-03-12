@@ -350,7 +350,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **scal, Rlist **it
 
 int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
 {
-    return ExpandPrivateScalar(CONTEXTID, string, buffer);
+    return ExpandPrivateScalar(ScopeGetCurrent(), string, buffer);
 }
 
 /*********************************************************************/
@@ -684,7 +684,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
         char number[CF_SMALLBUF];
 
         /* Set scope "this" first to ensure list expansion ! */
-        ScopeSet("this");
+        ScopeSetCurrent("this");
         ScopeDeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */
@@ -1476,8 +1476,8 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandPrivateScalar(CONTEXTID, rval.item, exp);
-            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, CONTEXTID, var, (const char *) rval.item,
+            ExpandPrivateScalar(ScopeGetCurrent(), rval.item, exp);
+            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, ScopeGetCurrent(), var, (const char *) rval.item,
                     exp);
 
             if (level > 3)

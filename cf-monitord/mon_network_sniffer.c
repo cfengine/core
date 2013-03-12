@@ -36,6 +36,10 @@
 #include "string_lib.h"
 #include "misc_lib.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 typedef enum
 {
     IP_TYPES_ICMP,

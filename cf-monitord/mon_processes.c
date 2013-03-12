@@ -31,6 +31,10 @@
 #include "pipes.h"
 #include "logging.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 /* Prototypes */
 
 #ifndef __MINGW32__

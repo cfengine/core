@@ -1,6 +1,6 @@
 ;;; cfengine.el --- mode for editing Cfengine files
 
-;; Copyright (C) 2001-2011  Free Software Foundation, Inc.
+;; Copyright (C) 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Maintainer: Ted Zlatanov <tzz@lifelogs.com>
@@ -63,7 +63,7 @@
   :group 'languages)
 
 (defcustom cfengine-indent 2
-  "*Size of a CFEngine indentation step in columns."
+  "Size of a CFEngine indentation step in columns."
   :group 'cfengine
   :type 'integer)
 
@@ -223,8 +223,8 @@ This includes those for cfservd as well as cfagent.")
      1 font-lock-builtin-face)
 
     ;; Variables, including scope, e.g. module.var
-    ("[@$](\\([[:alnum:]_.]+\\))" 1 font-lock-variable-name-face)
-    ("[@$]{\\([[:alnum:]_.]+\\)}" 1 font-lock-variable-name-face)
+    ("[@$](\\([[:alnum:]_.:]+\\))" 1 font-lock-variable-name-face)
+    ("[@$]{\\([[:alnum:]_.:]+\\)}" 1 font-lock-variable-name-face)
 
     ;; Variable definitions.
     ("\\<\\([[:alnum:]_]+\\)[ \t]*=[ \t]*(" 1 font-lock-variable-name-face)
@@ -407,6 +407,10 @@ Intended as the value of `indent-line-function'."
 
        ;; Inside a defun, but not a nested list (depth is 1).  This is
        ;; a promise, usually.
+
+       ;; Indent to cfengine-indent times the nested depth
+       ;; plus 2.  That way, promises indent deeper than class
+       ;; selectors, which in turn are one deeper than categories.
        ((= 1 (nth 0 parse))
         (let ((p-anchor (nth 0 cfengine-parameters-indent))
               (p-what (nth 1 cfengine-parameters-indent))
@@ -538,8 +542,8 @@ Intended as the value of `indent-line-function'."
   ;; The syntax defaults seem OK to give reasonable word movement.
   (modify-syntax-entry ?# "<" table)
   (modify-syntax-entry ?\n ">#" table)
-  (modify-syntax-entry ?\" "\"" table)
-  (modify-syntax-entry ?\' "\"" table)
+  (modify-syntax-entry ?\" "\"" table)  ; "string"
+  (modify-syntax-entry ?\' "\"" table)  ; 'string'
   ;; Variable substitution.
   (modify-syntax-entry ?$ "." table)
   ;; Doze path separators.
@@ -578,7 +582,6 @@ to the action header."
   ;; Shell commands can be quoted by single, double or back quotes.
   ;; It's debatable whether we should define string syntax, but it
   ;; should avoid potential confusion in some cases.
-  (modify-syntax-entry ?\' "\"" cfengine2-mode-syntax-table)
   (modify-syntax-entry ?\` "\"" cfengine2-mode-syntax-table)
 
   (set (make-local-variable 'indent-line-function) #'cfengine2-indent-line)

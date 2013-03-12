@@ -195,7 +195,7 @@ else
 
 struct Item *SortItemListNames(struct Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -208,7 +208,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    

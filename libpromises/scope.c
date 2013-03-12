@@ -367,7 +367,14 @@ void ScopePushThis()
     }
 
     int frame_index = RlistLen(CF_STCK) - 1;
-    RlistPushStack(&CF_STCK, (void *) op);
+    {
+        Rlist *rp = xmalloc(sizeof(Rlist));
+
+        rp->next = CF_STCK;
+        rp->item = op;
+        rp->type = CF_STACK;
+        CF_STCK = rp;
+    }
     snprintf(name, CF_MAXVARSIZE, "this_%d", frame_index);
     free(op->scope);
     op->scope = xstrdup(name);
@@ -382,7 +389,27 @@ void ScopePopThis()
     if (RlistLen(CF_STCK) > 0)
     {
         ScopeDelete("this");
-        RlistPopStack(&CF_STCK, (void *) &op, sizeof(op));
+        {
+            Rlist *rp = CF_STCK;
+
+            if (CF_STCK == NULL)
+            {
+                ProgrammingError("Attempt to pop from empty stack");
+            }
+
+            op = rp->item;
+
+            if (rp->next == NULL)       /* only one left */
+            {
+                CF_STCK = (void *) NULL;
+            }
+            else
+            {
+                CF_STCK = rp->next;
+            }
+
+            free((char *) rp);
+        }
         if (op == NULL)
         {
             return;

@@ -784,58 +784,6 @@ Rlist *RlistPrependAlien(Rlist **start, void *item)
 }
 
 /*******************************************************************/
-/* Stack                                                           */
-/*******************************************************************/
-
-/*
-char *sp1 = xstrdup("String 1\n");
-char *sp2 = xstrdup("String 2\n");
-char *sp3 = xstrdup("String 3\n");
-
-PushStack(&stack,(void *)sp1);
-PopStack(&stack,(void *)&sp,sizeof(sp));
-*/
-
-void RlistPushStack(Rlist **liststart, void *item)
-{
-    Rlist *rp;
-
-/* Have to keep track of types personally */
-
-    rp = xmalloc(sizeof(Rlist));
-
-    rp->next = *liststart;
-    rp->item = item;
-    rp->type = CF_STACK;
-    *liststart = rp;
-}
-
-/*******************************************************************/
-
-void RlistPopStack(Rlist **liststart, void **item, size_t size)
-{
-    Rlist *rp = *liststart;
-
-    if (*liststart == NULL)
-    {
-        ProgrammingError("Attempt to pop from empty stack");
-    }
-
-    *item = rp->item;
-
-    if (rp->next == NULL)       /* only one left */
-    {
-        *liststart = (void *) NULL;
-    }
-    else
-    {
-        *liststart = rp->next;
-    }
-
-    free((char *) rp);
-}
-
-/*******************************************************************/
 
 /*
  * Copies from <from> to <to>, reading up to <len> characters from <from>,

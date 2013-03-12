@@ -77,66 +77,36 @@ static void InitIgnoreInterfaces(void);
 
 static Rlist *IGNORE_INTERFACES = NULL;
 
-
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
+/*************************************************************/
 
 int GracefulTerminate(pid_t pid)
 {
-    int res;
-
-    if ((res = kill(pid, SIGINT)) == -1)
+    if (IsProcessRunning(pid))
     {
+        kill(pid, SIGINT);
         sleep(1);
-        res = 0;
 
-        if ((res = kill(pid, SIGTERM)) == -1)
+        if (IsProcessRunning(pid))
         {
+            kill(pid, SIGTERM);
             sleep(5);
-            res = 0;
 
-            if ((res = kill(pid, SIGKILL)) == -1)
+            if (IsProcessRunning(pid))
             {
+                kill(pid, SIGKILL);
                 sleep(1);
+
+                if (IsProcessRunning(pid))
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                          "!! Could not kill pid %" PRIuMAX,
+                          (uintmax_t) pid);
+                    return false;
+                }
             }
         }
     }
-
-    return (res == 0);
-}
-
-/*************************************************************/
-
-void ProcessSignalTerminate(pid_t pid)
-{
-    if(!IsProcessRunning(pid))
-    {
-        return;
-    }
-
-
-    if(kill(pid, SIGINT) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(1);
-
-
-    if(kill(pid, SIGTERM) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(5);
-
-
-    if(kill(pid, SIGKILL) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(1);
+    return true;
 }
 
 /*************************************************************/
@@ -155,7 +125,9 @@ static bool IsProcessRunning(pid_t pid)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Failed checking for process existence");
+    CfOut(OUTPUT_LEVEL_ERROR, "kill",
+          "!! Failed checking for process existence %" PRIuMAX,
+          (uintmax_t) pid);
 
     return false;
 }

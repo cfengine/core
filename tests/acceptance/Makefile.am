@@ -6,7 +6,7 @@ mock_package_manager_SOURCES = mock-package-manager.c
 mock_package_manager_LDADD = ../../libpromises/libpromises.la
 
 
-EXTRA_DIST = default.cf.sub testall
+EXTRA_DIST = default.cf.sub testall TESTS.am
 
 TESTS_ENVIRONMENT = AGENT=`pwd`/../../cf-agent/cf-agent \
 	CF_PROMISES=`pwd`/../../cf-promises/cf-promises \

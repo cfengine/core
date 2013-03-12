@@ -44,6 +44,10 @@
 #include "rlist.h"
 #include "misc_lib.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 typedef enum
 {
     PROTOCOL_COMMAND_EXEC,

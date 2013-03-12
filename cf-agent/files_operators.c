@@ -50,6 +50,10 @@
 #include "files_repository.h"
 #include "files_lib.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #include <assert.h>
 
 extern AgentConnection *COMS;

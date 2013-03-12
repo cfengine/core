@@ -38,6 +38,10 @@
 #include "exec_tools.h"
 #include "chflags.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit);
 static int SelectModeMatch(struct stat *lstatptr, Rlist *ls);

@@ -34,6 +34,9 @@
 #include "signals.h"
 #include "scope.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 typedef enum
 {

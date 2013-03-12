@@ -45,6 +45,10 @@
 #include "exec_tools.h"
 #include "rlist.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 #include <assert.h>
 
 #define CF_EXEC_IFELAPSED 0

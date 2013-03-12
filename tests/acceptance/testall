@@ -208,9 +208,17 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 
     OUT=$($GAINROOT $WORKDIR/runtest)
     RETVAL=$?
-    echo "$OUT" >> $LOG
-    echo >> $LOG
-    echo "Return code is $RETVAL." >> $LOG
+
+    if [ -z "$SINGLE" ]
+    then
+      echo "$OUT" >> $LOG
+      echo >> $LOG
+      echo "Return code is $RETVAL." >> $LOG
+    else			# Just output to stdout if running single test
+      echo "$OUT"
+      echo
+      echo "Return code is $RETVAL."
+    fi
 
     TEST_END_TIME=$(unix_seconds)
     echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> $XMLTMP
@@ -352,7 +360,8 @@ else
 fi
 
 #
-# fd 7 is a /dev/null for quiet execution and stdout for default one
+# fd 7 is a /dev/null for quiet or single-test execution and stdout for default one.
+# These are the Intro / Outro header messages.
 #
 if [ -z "$QUIET" -a -z "$SINGLE" ]; then
   exec 7>&1
@@ -384,20 +393,19 @@ START_TIME=$(unix_seconds)
 
   echo -n "" > $XMLTMP
 
-if [ -z $SINGLE ]
-then
-for test in $TESTS; do
-  echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
-  echo "              "classname=\"$test\" >> $XMLTMP
-  if [ -n "$USE_VALGRIND" ]; then
-    runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
-  else
-    runtest $AGENT "$test"
-  fi
-  echo "    "\<\/testcase\> >> $XMLTMP
-done
-else
-  # Run only a single test and exit
+if [ -z $SINGLE ]				  # if asked to run many tests
+  then
+  for test in $TESTS; do
+    echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
+    echo "              "classname=\"$test\" >> $XMLTMP
+    if [ -n "$USE_VALGRIND" ]; then
+      runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
+    else
+      runtest $AGENT "$test"
+    fi
+    echo "    "\<\/testcase\> >> $XMLTMP
+  done
+else					     # if called with -s and one test
   runtest $AGENT $TESTS
 fi
 

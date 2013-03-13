@@ -1098,25 +1098,36 @@ static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp)
 /* General                                                           */
 /*********************************************************************/
 
-void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int allow_redefine)
+typedef struct
 {
-    Constraint *cp, *cp_save = NULL;
-    Attributes a = { {0} };
-    int num_values = 0, ok_redefine = false, drop_undefined = false;
-    Rlist *rp;
-    Rval retval;
-    Rval rval = { NULL, 'x' };  /* FIXME: why this needs to be initialized? */
+    bool should_converge;
+    bool ok_redefine;
+    bool drop_undefined;
+    Constraint *cp_save; // e.g. string => "foo"
+} ConvergeVariableOptions;
+
+/**
+ * @brief Collects variable constraints controlling how the promise should be converged
+ */
+static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, const Promise *pp, bool allow_redefine)
+{
+    ConvergeVariableOptions opts = { 0 };
+    opts.should_converge = false;
+    opts.drop_undefined = false;
+    opts.ok_redefine = allow_redefine;
+    opts.cp_save = NULL;
 
     if (pp->done)
     {
-        return;
+        return opts;
     }
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        return;
+        return opts;
     }
 
+    int num_values = 0;
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
@@ -1141,35 +1152,35 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
 
                 if (!IsDefinedClass(ctx, cp->rval.item, PromiseGetNamespace(pp)))
                 {
-                    return;
+                    return opts;
                 }
 
                 break;
 
             case RVAL_TYPE_FNCALL:
-            {
-                bool excluded = false;
-
-                /* eval it: e.g. ifvarclass => not("a_class") */
-
-                res = FnCallEvaluate(ctx, cp->rval.item, NULL).rval;
-
-                /* Don't continue unless function was evaluated properly */
-                if (res.type != RVAL_TYPE_SCALAR)
                 {
+                    bool excluded = false;
+
+                    /* eval it: e.g. ifvarclass => not("a_class") */
+
+                    res = FnCallEvaluate(ctx, cp->rval.item, NULL).rval;
+
+                    /* Don't continue unless function was evaluated properly */
+                    if (res.type != RVAL_TYPE_SCALAR)
+                    {
+                        RvalDestroy(res);
+                        return opts;
+                    }
+
+                    excluded = !IsDefinedClass(ctx, res.item, PromiseGetNamespace(pp));
+
                     RvalDestroy(res);
-                    return;
+
+                    if (excluded)
+                    {
+                        return opts;
+                    }
                 }
-
-                excluded = !IsDefinedClass(ctx, res.item, PromiseGetNamespace(pp));
-
-                RvalDestroy(res);
-
-                if (excluded)
-                {
-                    return;
-                }
-            }
                 break;
 
             default:
@@ -1184,47 +1195,58 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         {
             if (strcmp(cp->rval.item, "ifdefined") == 0)
             {
-                drop_undefined = true;
-                ok_redefine = false;
+                opts.drop_undefined = true;
+                opts.ok_redefine = false;
             }
             else if (strcmp(cp->rval.item, "constant") == 0)
             {
-                ok_redefine = false;
+                opts.ok_redefine = false;
             }
             else
             {
-                ok_redefine = true;
+                opts.ok_redefine |= true;
             }
         }
         else if (IsDataType(cp->lval))
         {
             num_values++;
-            rval.item = cp->rval.item;
-            cp_save = cp;
+            opts.cp_save = cp;
         }
     }
 
-    cp = cp_save;
-
-    if (cp == NULL)
+    if (opts.cp_save == NULL)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "Warning: Variable body for \"%s\" seems incomplete", pp->promiser);
         PromiseRef(OUTPUT_LEVEL_INFORM, pp);
-        return;
+        return opts;
     }
 
     if (num_values > 2)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" breaks its own promise with multiple values (code %d)", pp->promiser, num_values);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return opts;
+    }
+
+    opts.should_converge = true;
+    return opts;
+}
+
+void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int allow_redefine)
+{
+    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_redefine);
+    if (!opts.should_converge)
+    {
         return;
     }
 
-//More consideration needs to be given to using these
-//a.transaction = GetTransactionConstraints(pp);
+    //More consideration needs to be given to using these
+    //a.transaction = GetTransactionConstraints(pp);
+    Attributes a = { {0} };
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
-    DataType existing_var = ScopeGetVariable(scope, pp->promiser, &retval);
+    Rval existing_var_rval;
+    DataType existing_var_type = ScopeGetVariable(scope, pp->promiser, &existing_var_rval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(PromiseGetNamespace(pp), "default") == 0)
@@ -1273,13 +1295,15 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         }
     }
 
+    Rval rval = opts.cp_save->rval;
+
     if (rval.item != NULL)
     {
         FnCall *fp = (FnCall *) rval.item;
 
-        if (cp->rval.type == RVAL_TYPE_FNCALL)
+        if (opts.cp_save->rval.type == RVAL_TYPE_FNCALL)
         {
-            if (existing_var != DATA_TYPE_NONE)
+            if (existing_var_type != DATA_TYPE_NONE)
             {
                 // Already did this
                 BufferDestroy(&qualified_scope);
@@ -1304,9 +1328,9 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         {
             Buffer *conv = BufferNew();
 
-            if (strcmp(cp->lval, "int") == 0)
+            if (strcmp(opts.cp_save->lval, "int") == 0)
             {
-                result = BufferPrintf(conv, "%ld", IntFromString(cp->rval.item));
+                result = BufferPrintf(conv, "%ld", IntFromString(opts.cp_save->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -1318,11 +1342,11 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     BufferDestroy(&conv);
                     return;
                 }
-                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
             }
-            else if (strcmp(cp->lval, "real") == 0)
+            else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
-                result = BufferPrintf(conv, "%lf", DoubleFromString(cp->rval.item));
+                result = BufferPrintf(conv, "%lf", DoubleFromString(opts.cp_save->rval.item));
                 if (result < 0)
                 {
                     /*
@@ -1334,11 +1358,11 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     BufferDestroy(&qualified_scope);
                     return;
                 }
-                rval = RvalCopy((Rval) {(char *)BufferData(conv), cp->rval.type});
+                rval = RvalCopy((Rval) {(char *)BufferData(conv), opts.cp_save->rval.type});
             }
             else
             {
-                rval = RvalCopy(cp->rval);
+                rval = RvalCopy(opts.cp_save->rval);
             }
             BufferDestroy(&conv);
         }
@@ -1360,19 +1384,19 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             rval = returnval;
         }
 
-        if (existing_var != DATA_TYPE_NONE)
+        if (existing_var_type != DATA_TYPE_NONE)
         {
-            if (ok_redefine)    /* only on second iteration, else we ignore broken promises */
+            if (opts.ok_redefine)    /* only on second iteration, else we ignore broken promises */
             {
                 ScopeDeleteVariable(BufferData(qualified_scope), pp->promiser);
             }
-            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(retval, rval) == false))
+            else if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (CompareRval(existing_var_rval, rval) == false))
             {
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
-                          pp->promiser, RvalScalarValue(retval), RvalScalarValue(rval));
+                          pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
                     PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
                     break;
 
@@ -1380,7 +1404,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                     {
                         CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Redefinition of a constant list \"%s\".", pp->promiser);
                         Writer *w = StringWriter();
-                        RlistWrite(w, retval.item);
+                        RlistWrite(w, existing_var_rval.item);
                         char *oldstr = StringWriterClose(w);
                         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Old value: %s", oldstr);
                         free(oldstr);
@@ -1417,9 +1441,9 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             return;
         }
 
-        if (drop_undefined && rval.type == RVAL_TYPE_LIST)
+        if (opts.drop_undefined && rval.type == RVAL_TYPE_LIST)
         {
-            for (rp = rval.item; rp != NULL; rp = rp->next)
+            for (Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
                 if (IsNakedVar(rp->item, '@'))
                 {
@@ -1429,8 +1453,8 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             }
         }
 
-        if (!ScopeAddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(cp->lval),
-                             cp->audit->filename, cp->offset.line))
+        if (!ScopeAddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(opts.cp_save->lval),
+                             opts.cp_save->audit->filename, opts.cp_save->offset.line))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
             PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
@@ -1444,7 +1468,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", opts.cp_save->audit->filename, opts.cp_save->offset.line);
         cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
     BufferDestroy(&qualified_scope);

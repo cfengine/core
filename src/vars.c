@@ -690,7 +690,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             else
             {
                 CfDebug("Illegal character found: '%c'\n", *sp);
-                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion", str);
+                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
             }
         }
 

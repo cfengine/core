@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
     if (SHOWREPORTS)
     {
-        CompilationReport(ctx, policy, config->input_file);
+        ShowPromises(ctx, policy->bundles, policy->bodies);
     }
 
     CheckLicenses(ctx);

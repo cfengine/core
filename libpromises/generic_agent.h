@@ -76,7 +76,6 @@ void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
-void CompilationReport(EvalContext *ctx, Policy *policy, char *fname);
 void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context);
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
@@ -95,7 +94,6 @@ void CheckBundleParameters(char *scope, Rlist *args);
 void BannerBundle(Bundle *bp, Rlist *args);
 void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
-ReportContext *OpenCompilationReportFiles(const char *fname);
 void CheckLicenses(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 

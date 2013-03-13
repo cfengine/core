@@ -1247,44 +1247,6 @@ const char *GenericAgentResolveInputPath(const char *filename, const char *base_
     return MapName(wfilename);
 }
 
-/*******************************************************************/
-
-void CompilationReport(EvalContext *ctx, Policy *policy, char *fname)
-{
-#if defined(HAVE_NOVA)
-    ReportContext *compilation_report_context = Nova_OpenCompilationReportFiles(fname);
-#else
-    ReportContext *compilation_report_context = OpenCompilationReportFiles(fname);
-#endif
-
-    ShowPromises(ctx, policy->bundles, policy->bodies);
-
-    ReportContextDestroy(compilation_report_context);
-}
-
-/****************************************************************************/
-
-ReportContext *OpenCompilationReportFiles(const char *fname)
-{
-    char filename[CF_BUFSIZE];
-    FILE *freport_text = NULL;
-
-    snprintf(filename, CF_BUFSIZE - 1, "%s.txt", fname);
-    CfOut(OUTPUT_LEVEL_INFORM, "", "Summarizing promises as text to %s\n", filename);
-
-    if ((freport_text = fopen(filename, "w")) == NULL)
-    {
-        FatalError("Could not write output log to %s", filename);
-    }
-
-    ReportContext *context = ReportContextNew();
-    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
-
-    return context;
-}
-
-/*******************************************************************/
-
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
 

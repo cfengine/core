@@ -147,7 +147,7 @@ int main()
 
 /* stubs */
 
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer)
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
 {
     return false;
 }

@@ -101,7 +101,7 @@ int SetServerListenState(EvalContext *ctx, size_t queue_size);
 
 struct ServerConnectionState;
 
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn, char *sendbuffer);
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
 
 /* files_editxml.c */
 

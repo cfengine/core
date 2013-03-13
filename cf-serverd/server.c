@@ -994,7 +994,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
         
-        if (ReceiveCollectCall(ctx, conn, sendbuffer))
+        if (ReceiveCollectCall(ctx, conn))
         {
             return true;
         }

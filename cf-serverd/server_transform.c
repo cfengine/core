@@ -500,8 +500,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
-    char *scope;
-
 /* Dial up the generic promise expansion with a callback */
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -510,7 +508,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         EvalContextStackPushFrame(ctx, false);
 
-        scope = bp->name;
         ScopeNew(bp->name);
         ScopeSetCurrent(bp->name);
 
@@ -519,7 +516,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
             EvalContextStackFrameClear(ctx);        // Each time we change bundle
 
             BannerBundle(bp, NULL);
-            scope = bp->name;
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
@@ -530,14 +526,13 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                     continue;
                 }
 
-                BannerPromiseType(scope, sp->name, 0);
-                ScopeSetCurrent(scope);
-                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
+                BannerPromiseType(bp->name, sp->name, 0);
+                ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, bp->name, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -550,8 +545,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
-    char *scope;
-
 /* Dial up the generic promise expansion with a callback */
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
@@ -560,7 +553,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         EvalContextStackPushFrame(ctx, false);
 
-        scope = bp->name;
         ScopeNew(bp->name);
         ScopeSetCurrent(bp->name);
 
@@ -569,7 +561,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
             EvalContextStackFrameClear(ctx);        // Each time we change bundle
 
             BannerBundle(bp, NULL);
-            scope = bp->name;
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
@@ -580,14 +571,13 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                     continue;
                 }
 
-                BannerPromiseType(scope, sp->name, 0);
-                ScopeSetCurrent(scope);
-                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
+                BannerPromiseType(bp->name, sp->name, 0);
+                ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, bp->name, pp, KeepServerPromise, report_context);
                 }
             }
         }

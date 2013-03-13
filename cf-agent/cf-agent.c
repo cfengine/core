@@ -303,7 +303,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     POLICY_SERVER[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "rdvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -428,10 +428,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired");
             exit(0);
-
-        case 'r':
-            SHOWREPORTS = true;
-            break;
 
         default:
             Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);

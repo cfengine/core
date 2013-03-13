@@ -34,9 +34,6 @@
 #include "rlist.h"
 #include "parser.h"
 
-/*******************************************************************/
-
-static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 /*******************************************************************/
@@ -134,8 +131,6 @@ int main(int argc, char *argv[])
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_NONE:
         break;
     }
-
-    ThisAgentInit();
 
     GenericAgentConfigDestroy(config);
     CloseReports("commmon", report_context);
@@ -280,12 +275,3 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     return config;
 }
-
-/*******************************************************************/
-
-static void ThisAgentInit(void)
-{
-    SHOWREPORTS = false;
-}
-
-/* EOF */

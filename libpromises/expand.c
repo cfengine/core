@@ -329,7 +329,16 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
 
                         if (strchr(var, CF_MAPPEDLIST))
                         {
-                            RewriteInnerVarStringAsLocalCopyName(sp);
+                            // Qualified outer var will eat the rewrite
+                            if (qualified)
+                            {
+                                // Skip parent scope and '$(.'
+                                RewriteInnerVarStringAsLocalCopyName(sp + strlen(absscope) + 3);
+                            }
+                            else
+                            {
+                                RewriteInnerVarStringAsLocalCopyName(sp);
+                            }
                         }
                     }
                 }

@@ -639,7 +639,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
 /*******************************************************************/
 
-void Get3Environment(EvalContext *ctx)
+void Get3Environment(EvalContext *ctx, AgentType agent_type)
 {
     char env[CF_BUFSIZE], context[CF_BUFSIZE], name[CF_MAXVARSIZE], value[CF_BUFSIZE];
     FILE *fp;
@@ -717,7 +717,10 @@ void Get3Environment(EvalContext *ctx)
         {
             sscanf(context, "%255[^=]=%255[^\n]", name, value);
 
-            if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR)
+
+/*****************************************************************************/
+
+            if (agent_type != AGENT_TYPE_EXECUTOR)
             {
                 ScopeDeleteVariable("mon", name);
                 ScopeNewScalar("mon", name, value, DATA_TYPE_STRING);

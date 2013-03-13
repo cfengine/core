@@ -745,7 +745,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
-        Get3Environment(ctx);
+        Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
         BuiltinClasses(ctx);
         OSClasses(ctx);
 
@@ -775,7 +775,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         ScopeNew("sys");
 
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
-        Get3Environment(ctx);
+        Get3Environment(ctx, AGENT_TYPE_EXECUTOR);
         BuiltinClasses(ctx);
         OSClasses(ctx);
         SetReferenceTime(ctx, true);

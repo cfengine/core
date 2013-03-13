@@ -167,7 +167,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);
 
-    Get3Environment(ctx);
+    Get3Environment(ctx, config->agent_type);
     BuiltinClasses(ctx);
     OSClasses(ctx);
 

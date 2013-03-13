@@ -658,7 +658,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             ScopeNew("remote_access");
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
-            Get3Environment(ctx);
+            Get3Environment(ctx, AGENT_TYPE_SERVER);
             BuiltinClasses(ctx);
             OSClasses(ctx);
             KeepHardClasses(ctx);

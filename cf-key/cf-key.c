@@ -101,8 +101,6 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    THIS_AGENT_TYPE = config->agent_type;
-
     ReportContext *report_context = OpenReports(config->agent_type);
     GenericAgentDiscoverContext(ctx, config, report_context);
 

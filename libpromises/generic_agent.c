@@ -138,13 +138,13 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     SanitizeEnvironment();
 
     THIS_AGENT_TYPE = config->agent_type;
-    EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
 // need scope sys to set vars in expiry function
     ScopeNew("sys");
     ScopeSetCurrent("sys");
 
-    if (EnterpriseExpiry(ctx))
+    if (EnterpriseExpiry(ctx, config->agent_type))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
@@ -164,7 +164,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     ScopeNew("const");
     ScopeNew("match");
     ScopeNew("mon");
-    GetNameInfo3(ctx);
+    GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);
 
     Get3Environment(ctx);
@@ -174,7 +174,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants();
 
-    snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[THIS_AGENT_TYPE]);
+    snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[config->agent_type]);
     ScopeNew(vbuff);
     ScopeSetCurrent(vbuff);
     ScopeNew("this");
@@ -1316,9 +1316,9 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     if (!config->bundlesequence && config->check_runnable)
     {
         // only verify policy-defined bundlesequence for cf-agent, cf-promises, cf-gendoc
-        if ((THIS_AGENT_TYPE == AGENT_TYPE_AGENT) ||
-            (THIS_AGENT_TYPE == AGENT_TYPE_COMMON) ||
-            (THIS_AGENT_TYPE == AGENT_TYPE_GENDOC))
+        if ((config->agent_type == AGENT_TYPE_AGENT) ||
+            (config->agent_type == AGENT_TYPE_COMMON) ||
+            (config->agent_type == AGENT_TYPE_GENDOC))
         {
             if (!VerifyBundleSequence(policy, config))
             {

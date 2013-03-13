@@ -569,7 +569,7 @@ int OpenReceiverChannel(void)
 
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    if (EnterpriseExpiry(ctx))
+    if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
     }
@@ -644,7 +644,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             SetPolicyServer(POLICY_SERVER);
             ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
-            if (EnterpriseExpiry(ctx))
+            if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
@@ -656,14 +656,14 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             ScopeNew("control_common");
             ScopeNew("mon");
             ScopeNew("remote_access");
-            GetNameInfo3(ctx);
+            GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
             Get3Environment(ctx);
             BuiltinClasses(ctx);
             OSClasses(ctx);
             KeepHardClasses(ctx);
 
-            EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
             SetReferenceTime(ctx, true);
             *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);

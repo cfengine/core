@@ -80,7 +80,7 @@ void LoadSlowlyVaryingObservations(void)
 /* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
 
 
-int EnterpriseExpiry(ARG_UNUSED EvalContext *ctx)
+int EnterpriseExpiry(ARG_UNUSED EvalContext *ctx, ARG_UNUSED AgentType agent_type)
 {
     return false;
 }

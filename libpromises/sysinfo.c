@@ -268,7 +268,7 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
 
 /*******************************************************************/
 
-void GetNameInfo3(EvalContext *ctx)
+void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 {
     int i, found = false;
     char *sp, workbuf[CF_BUFSIZE];
@@ -512,7 +512,7 @@ void GetNameInfo3(EvalContext *ctx)
 
 #endif /* !__MINGW32__ */
 
-    if (THIS_AGENT_TYPE != AGENT_TYPE_EXECUTOR && !LOOKUP)
+    if (agent_type != AGENT_TYPE_EXECUTOR && !LOOKUP)
     {
         LoadSlowlyVaryingObservations();
     }

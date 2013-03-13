@@ -63,7 +63,7 @@ const EVP_CIPHER *CfengineCipher(char type);
 void Aggregate(char *stylesheet, char *banner, char *footer, char *webdriver);
 int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
-int EnterpriseExpiry(EvalContext *ctx);
+int EnterpriseExpiry(EvalContext *ctx, AgentType agent_type);
 const char *GetConsolePrefix(void);
 const char *MailSubject(void);
 void PreSanitizePromise(EvalContext *ctx, Promise *pp);

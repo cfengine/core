@@ -700,7 +700,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
 // recheck license (in case of license updates or expiry)
 
-    if (EnterpriseExpiry(ctx))
+    if (EnterpriseExpiry(ctx, AGENT_TYPE_EXECUTOR))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
         exit(1);
@@ -743,13 +743,13 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         ScopeNew("control_common");
         ScopeNew("remote_access");
 
-        GetNameInfo3(ctx);
+        GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
         Get3Environment(ctx);
         BuiltinClasses(ctx);
         OSClasses(ctx);
 
-        EvalContextHeapAddHard(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+        EvalContextHeapAddHard(ctx, CF_AGENTTYPES[AGENT_TYPE_EXECUTOR]);
 
         SetReferenceTime(ctx, true);
 

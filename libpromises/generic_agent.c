@@ -74,7 +74,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
-static void CheckVariablePromises(EvalContext *ctx, char *scope, Seq *var_promises);
+static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
 static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
 
@@ -1314,7 +1314,7 @@ static void PrependAuditFile(char *file)
 /* Level 3                                                         */
 /*******************************************************************/
 
-static void CheckVariablePromises(EvalContext *ctx, char *scope, Seq *var_promises)
+static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 {
     int allow_redefine = false;
 
@@ -1323,7 +1323,7 @@ static void CheckVariablePromises(EvalContext *ctx, char *scope, Seq *var_promis
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        ConvergeVarHashPromise(ctx, scope, pp, allow_redefine);
+        ConvergeVarHashPromise(ctx, pp, allow_redefine);
     }
 }
 
@@ -1633,9 +1633,6 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
 
         ScopeSetCurrent(bp->name);
 
-        char scope[CF_BUFSIZE];
-        snprintf(scope,CF_BUFSIZE,"%s_meta", bp->name);
-
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
 
@@ -1645,7 +1642,7 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
 
             if (strcmp(sp->name, "vars") == 0)
             {
-                CheckVariablePromises(ctx, bp->name, sp->promises);
+                CheckVariablePromises(ctx, sp->promises);
             }
 
             // We must also set global classes here?

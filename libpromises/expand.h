@@ -61,7 +61,7 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int checkdup);
+void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 #endif

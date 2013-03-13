@@ -50,6 +50,7 @@
 #include "logging.h"
 #include "iteration.h"
 #include "buffer.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -752,16 +753,9 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
             break;
         }
 
-        if (strcmp(pp->parent_promise_type->name, "vars") == 0)
+        if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
-            ConvergeVarHashPromise(ctx, PromiseGetBundle(pp)->name, pexp, true);
-        }
-
-        if (strcmp(pp->parent_promise_type->name, "meta") == 0)
-        {
-            char ns[CF_BUFSIZE];
-            snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
-            ConvergeVarHashPromise(ctx, ns, pp, true);
+            ConvergeVarHashPromise(ctx, pexp, true);
         }
         
         PromiseDestroy(pexp);
@@ -1241,12 +1235,22 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
     return opts;
 }
 
-void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int allow_redefine)
+void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates)
 {
-    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_redefine);
+    ConvergeVariableOptions opts = CollectConvergeVariableOptions(ctx, pp, allow_duplicates);
     if (!opts.should_converge)
     {
         return;
+    }
+
+    char *scope = NULL;
+    if (strcmp("meta", pp->parent_promise_type->name) == 0)
+    {
+        scope = StringConcatenate(2, PromiseGetBundle(pp)->name, "_meta");
+    }
+    else
+    {
+        scope = xstrdup(PromiseGetBundle(pp)->name);
     }
 
     //More consideration needs to be given to using these
@@ -1268,6 +1272,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
              * might be other problems.
              */
             UnexpectedError("Problems writing to buffer");
+            free(scope);
             BufferDestroy(&qualified_scope);
             return;
         }
@@ -1284,6 +1289,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                  * might be other problems.
                  */
                 UnexpectedError("Problems writing to buffer");
+                free(scope);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1298,6 +1304,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                  * might be other problems.
                  */
                 UnexpectedError("Problems writing to buffer");
+                free(scope);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1315,6 +1322,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             if (existing_var_type != DATA_TYPE_NONE)
             {
                 // Already did this
+                free(scope);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1325,6 +1333,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             {
                 /* We do not assign variables to failed fn calls */
                 RvalDestroy(res.rval);
+                free(scope);
                 BufferDestroy(&qualified_scope);
                 return;
             }
@@ -1347,6 +1356,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
+                    free(scope);
                     BufferDestroy(&qualified_scope);
                     BufferDestroy(&conv);
                     return;
@@ -1363,6 +1373,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
                      * might be other problems.
                      */
                     UnexpectedError("Problems writing to buffer");
+                    free(scope);
                     BufferDestroy(&conv);
                     BufferDestroy(&qualified_scope);
                     return;
@@ -1437,6 +1448,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         {
             // Unexpanded variables, we don't do anything with
             RvalDestroy(rval);
+            free(scope);
             BufferDestroy(&qualified_scope);
             return;
         }
@@ -1446,6 +1458,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable identifier contains illegal characters");
             PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             RvalDestroy(rval);
+            free(scope);
             BufferDestroy(&qualified_scope);
             return;
         }
@@ -1480,6 +1493,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, in
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", opts.cp_save->audit->filename, opts.cp_save->offset.line);
         cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
+    free(scope);
     BufferDestroy(&qualified_scope);
     RvalDestroy(rval);
 }

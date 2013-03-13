@@ -568,7 +568,7 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name)
 /**
  * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar" -> "bar"
  */
-char *QualifiedNameSymbolComponent(const char *qualified_name)
+char *QualifiedNameScopeComponent(const char *qualified_name)
 {
     char *sep = strchr(qualified_name, CF_NS);
     if (sep)
@@ -605,7 +605,7 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                     if (syntax->dtype == DATA_TYPE_BODY)
                     {
                         char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
-                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameScopeComponent(RvalFullSymbol(&constraint->rval));
 
                         Body *referenced_body = PolicyGetBody(policy, ns, constraint->lval, symbol);
                         if (!referenced_body)
@@ -651,7 +651,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                         !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
                         char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
-                        char *symbol = QualifiedNameSymbolComponent(RvalFullSymbol(&constraint->rval));
+                        char *symbol = QualifiedNameScopeComponent(RvalFullSymbol(&constraint->rval));
 
                         const Bundle *referenced_bundle = NULL;
                         if (strcmp(constraint->lval, "usebundle") == 0)

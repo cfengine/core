@@ -217,7 +217,7 @@ static void test_util_qualified_name_components(void **state)
         assert_string_equal("", ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent(":");
+        char *sym = QualifiedNameScopeComponent(":");
         assert_string_equal("", sym);
         free(sym);
     }
@@ -227,7 +227,7 @@ static void test_util_qualified_name_components(void **state)
         assert_false(ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent("");
+        char *sym = QualifiedNameScopeComponent("");
         assert_string_equal("", sym);
         free(sym);
     }
@@ -237,7 +237,7 @@ static void test_util_qualified_name_components(void **state)
         assert_false(ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent("foo");
+        char *sym = QualifiedNameScopeComponent("foo");
         assert_string_equal("foo", sym);
         free(sym);
     }
@@ -247,7 +247,7 @@ static void test_util_qualified_name_components(void **state)
         assert_string_equal("", ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent(":foo");
+        char *sym = QualifiedNameScopeComponent(":foo");
         assert_string_equal("foo", sym);
         free(sym);
     }
@@ -257,7 +257,7 @@ static void test_util_qualified_name_components(void **state)
         assert_string_equal("foo", ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent("foo:");
+        char *sym = QualifiedNameScopeComponent("foo:");
         assert_string_equal("", sym);
         free(sym);
     }
@@ -267,7 +267,7 @@ static void test_util_qualified_name_components(void **state)
         assert_string_equal("foo", ns);
         free(ns);
 
-        char *sym = QualifiedNameSymbolComponent("foo:bar");
+        char *sym = QualifiedNameScopeComponent("foo:bar");
         assert_string_equal("bar", sym);
         free(sym);
     }

@@ -423,6 +423,6 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name);
 /**
  * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
  */
-char *QualifiedNameSymbolComponent(const char *qualified_name);
+char *QualifiedNameScopeComponent(const char *qualified_name);
 
 #endif

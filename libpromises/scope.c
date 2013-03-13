@@ -640,8 +640,36 @@ static int CompareVariableValue(Rval rval, CfAssoc *ap)
     return strcmp(ap->rval.item, rval.item);
 }
 
-int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname,
-                    int lineno)
+static bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype)
+{
+    if (ap == NULL)
+    {
+        return false;
+    }
+
+    switch (rtype)
+    {
+    case RVAL_TYPE_SCALAR:
+        return IsCf3VarString(ap->rval.item);
+
+    case RVAL_TYPE_LIST:
+        {
+            for (const Rlist *rp = ap->rval.item; rp != NULL; rp = rp->next)
+            {
+                if (IsCf3VarString(rp->item))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+    default:
+        return false;
+    }
+}
+
+bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int lineno)
 {
     Scope *ptr;
     const Rlist *rp;

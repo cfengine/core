@@ -93,7 +93,7 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
 void ScopeDeleteVariable(const char *scope, const char *id);
 
-int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
+bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);

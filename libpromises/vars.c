@@ -53,40 +53,6 @@ void LoadSystemConstants()
 
 /*******************************************************************/
 
-int UnresolvedVariables(CfAssoc *ap, RvalType rtype)
-{
-    Rlist *list, *rp;
-
-    if (ap == NULL)
-    {
-        return false;
-    }
-
-    switch (rtype)
-    {
-    case RVAL_TYPE_SCALAR:
-        return IsCf3VarString(ap->rval.item);
-
-    case RVAL_TYPE_LIST:
-        list = (Rlist *) ap->rval.item;
-
-        for (rp = list; rp != NULL; rp = rp->next)
-        {
-            if (IsCf3VarString(rp->item))
-            {
-                return true;
-            }
-        }
-
-        return false;
-
-    default:
-        return false;
-    }
-}
-
-/*******************************************************************/
-
 int UnresolvedArgs(Rlist *args)
 {
     Rlist *rp;

@@ -141,7 +141,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
 // need scope sys to set vars in expiry function
-    ScopeNew("sys");
     ScopeSetCurrent("sys");
 
     if (EnterpriseExpiry(ctx, config->agent_type))
@@ -161,9 +160,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
         WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }
 
-    ScopeNew("const");
-    ScopeNew("match");
-    ScopeNew("mon");
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);
 
@@ -175,10 +171,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     LoadSystemConstants();
 
     snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[config->agent_type]);
-    ScopeNew(vbuff);
     ScopeSetCurrent(vbuff);
-    ScopeNew("this");
-    ScopeNew("match");
 
     if (BOOTSTRAP)
     {
@@ -1638,12 +1631,10 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
             continue;
         }
 
-        ScopeNew(bp->name);
         ScopeSetCurrent(bp->name);
 
         char scope[CF_BUFSIZE];
         snprintf(scope,CF_BUFSIZE,"%s_meta", bp->name);
-        ScopeNew(scope);
 
         // TODO: seems sketchy, investigate purpose.
         THIS_BUNDLE = bp->name;
@@ -1684,9 +1675,7 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
         {
             snprintf(buf, CF_BUFSIZE, "%s_%s", bdp->name, bdp->type);
             CfDebug("Initiate control variable convergence...%s\n", buf);
-            ScopeSetCurrent("this");
-            ScopeDelete(buf);
-            ScopeNew(buf);
+            ScopeClear(buf);
             ScopeSetCurrent(buf);
             CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);
         }

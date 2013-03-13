@@ -73,7 +73,7 @@ static void CheckWorkingDirectories(void);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
-static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist);
+static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body);
 static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
 static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context);
 static void PrependAuditFile(char *file);
@@ -1342,31 +1342,38 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, cons
 
 /*******************************************************************/
 
-static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, char *scope, char *agent, Seq *controllist)
+static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body)
 {
-    const BodySyntax *bp = NULL;
+    const BodySyntax *body_syntax = NULL;
     Rval returnval;
 
-    CfDebug("CheckControlPromises(%s)\n", agent);
+    CfDebug("CheckControlPromises(%s)\n", control_body->type);
+    assert(strcmp(control_body->name, "control") == 0);
 
     for (int i = 0; CF_ALL_BODIES[i].bs != NULL; i++)
     {
-        bp = CF_ALL_BODIES[i].bs;
+        body_syntax = CF_ALL_BODIES[i].bs;
 
-        if (strcmp(agent, CF_ALL_BODIES[i].bundle_type) == 0)
+        if (strcmp(control_body->type, CF_ALL_BODIES[i].bundle_type) == 0)
         {
             break;
         }
     }
 
-    if (bp == NULL)
+    if (body_syntax == NULL)
     {
         FatalError("Unknown agent");
     }
 
-    for (size_t i = 0; i < SeqLength(controllist); i++)
+    char scope[CF_BUFSIZE];
+    snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
+    CfDebug("Initiate control variable convergence...%s\n", scope);
+    ScopeClear(scope);
+    ScopeSetCurrent(scope);
+
+    for (size_t i = 0; i < SeqLength(control_body->conlist); i++)
     {
-        Constraint *cp = SeqAt(controllist, i);
+        Constraint *cp = SeqAt(control_body->conlist, i);
 
         if (!IsDefinedClass(ctx, cp->classes, NULL))
         {
@@ -1385,7 +1392,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         ScopeDeleteVariable(scope, cp->lval);
 
         if (!ScopeAddVariableHash(scope, cp->lval, returnval,
-                             BodySyntaxGetDataType(bp, cp->lval), cp->audit->filename, cp->offset.line))
+                             BodySyntaxGetDataType(body_syntax, cp->lval), cp->audit->filename, cp->offset.line))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
         }
@@ -1660,8 +1667,6 @@ void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const Rep
 
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config)
 {
-    char buf[CF_BUFSIZE];
-
 /* Only control bodies need to be hashed like variables */
 
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
@@ -1670,11 +1675,7 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 
         if (strcmp(bdp->name, "control") == 0)
         {
-            snprintf(buf, CF_BUFSIZE, "%s_%s", bdp->name, bdp->type);
-            CfDebug("Initiate control variable convergence...%s\n", buf);
-            ScopeClear(buf);
-            ScopeSetCurrent(buf);
-            CheckControlPromises(ctx, config, buf, bdp->type, bdp->conlist);
+            CheckControlPromises(ctx, config, bdp);
         }
     }
 }

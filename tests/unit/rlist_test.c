@@ -176,6 +176,7 @@ static void test_filter_everything(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_prepend_scalar),

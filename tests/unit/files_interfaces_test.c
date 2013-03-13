@@ -98,6 +98,7 @@ int main()
         unit_test(test_cfreadline_corrupted),
     };
 
+    PRINT_TEST_BANNER();
     int ret = run_tests(tests);
 
     tests_teardown();

@@ -158,7 +158,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeDelete("this");
+    ScopeClear("this");
 
     if (deref != NULL)
     {

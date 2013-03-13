@@ -236,8 +236,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                           bodyname, pp->offset.line, (pp->audit)->filename);
                 }
 
-                ScopeNew("body");
-
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
                     ERRORCOUNT++;
@@ -255,7 +253,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
-                ScopeDelete("body");
+                ScopeClear("body");
             }
             else
             {

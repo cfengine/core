@@ -142,7 +142,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     SetAnyMissingDefaults(ctx, pp);
 
-    ScopeDelete("match");       /* in case we expand something expired accidentially */
+    ScopeClear("match");       /* in case we expand something expired accidentially */
 
     THIS_BUNDLE = scopeid;
 

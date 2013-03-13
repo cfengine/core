@@ -731,17 +731,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         ERRORCOUNT = 0;
 
-        ScopeNew("sys");
-
         SetPolicyServer(POLICY_SERVER);
         ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
-
-        ScopeNew("const");
-        ScopeNew("this");
-        ScopeNew("mon");
-        ScopeNew("control_server");
-        ScopeNew("control_common");
-        ScopeNew("remote_access");
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
@@ -767,12 +758,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         DeleteItemList(IPADDRESSES);
         IPADDRESSES = NULL;
 
-        ScopeDelete("this");
-        ScopeDelete("mon");
-        ScopeDelete("sys");
-        ScopeNew("this");
-        ScopeNew("mon");
-        ScopeNew("sys");
+        ScopeClear("this");
+        ScopeClear("mon");
+        ScopeClear("sys");
 
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);
         Get3Environment(ctx, AGENT_TYPE_EXECUTOR);

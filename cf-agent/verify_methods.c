@@ -124,13 +124,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         BannerSubBundle(bp, params);
 
-        ScopeDelete(bp->name);
-        ScopeNew(bp->name);
+        ScopeClear(bp->name);
         HashVariables(ctx, PolicyFromPromise(pp), bp->name, report_context);
 
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
-        ScopeNew(ns);
         SetBundleOutputs(bp->name);
 
         ScopeAugment(ctx, method_deref, PromiseGetNamespace(pp), bp->args, params);

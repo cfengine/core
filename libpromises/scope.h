@@ -34,16 +34,10 @@ void ScopeSetCurrent(const char *name);
 Scope *ScopeGetCurrent(void);
 
 /**
- * @brief alloc a Scope, idempotent prepend to VSCOPE
+ * @brief Clears all variables from a scope
  * @param name
  */
-void ScopeNew(const char *name);
-
-/**
- * @brief remove a Scope from VSCOPE, and dealloc it. removes only the first it finds in the list.
- * @param name
- */
-void ScopeDelete(char *name);
+void ScopeClear(const char *name);
 
 /**
  * @brief find a Scope in VSCOPE
@@ -93,7 +87,7 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
 void ScopeDeleteVariable(const char *scope, const char *id);
 
-int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
+bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);

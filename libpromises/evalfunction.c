@@ -1640,6 +1640,126 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
+    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
+    Scope *ptr;
+    Rlist *rp, *returnlist = NULL;
+    AssocHashTableIterator i;
+    CfAssoc *assoc;
+
+/* begin fn specific content */
+
+    char *map = RlistScalarValue(finalargs);
+    char *arrayname = RlistScalarValue(finalargs->next);
+
+/* Locate the array */
+
+    if (strstr(arrayname, "."))
+    {
+        scopeid[0] = '\0';
+        sscanf(arrayname, "%127[^.].%127s", scopeid, lval);
+    }
+    else
+    {
+        strcpy(lval, arrayname);
+        strcpy(scopeid, ScopeGetCurrent()->scope);
+    }
+
+    if ((ptr = ScopeGet(scopeid)) == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Function maparray was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
+              scopeid);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    }
+
+    i = HashIteratorInit(ptr->hashtable);
+
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", lval);
+
+        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        {
+            char *sp;
+
+            index[0] = '\0';
+            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+            if ((sp = strchr(index, ']')))
+            {
+                *sp = '\0';
+            }
+            else
+            {
+                index[strlen(index) - 1] = '\0';
+            }
+
+            if (strlen(index) > 0)
+            {
+                ScopeNewScalar("this", "k", index, DATA_TYPE_STRING);
+
+                switch (assoc->rval.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    ScopeNewScalar("this", "v", assoc->rval.item, DATA_TYPE_STRING);
+                    ExpandScalar(map, expbuf);
+
+                    if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                        strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                    {
+                        RlistDestroy(returnlist);
+                        ScopeDeleteScalar("this", "k");
+                        ScopeDeleteScalar("this", "v");
+                        return (FnCallResult) { FNCALL_FAILURE };
+                    }
+
+                    RlistAppendScalar(&returnlist, expbuf);
+                    ScopeDeleteScalar("this", "v");
+                    break;
+
+                case RVAL_TYPE_LIST:
+                    for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
+                    {
+                        ScopeNewScalar("this", "v", rp->item, DATA_TYPE_STRING);
+                        ExpandScalar(map, expbuf);
+
+                        if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                            strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                        {
+                            RlistDestroy(returnlist);
+                            ScopeDeleteScalar("this", "k");
+                            ScopeDeleteScalar("this", "v");
+                            return (FnCallResult) { FNCALL_FAILURE };
+                        }
+
+                        RlistAppendScalarIdemp(&returnlist, expbuf);
+                        ScopeDeleteScalar("this", "v");
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+                ScopeDeleteScalar("this", "k");
+            }
+        }
+    }
+
+    if (returnlist == NULL)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+/*********************************************************************/
+
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
@@ -4516,6 +4636,13 @@ FnCallArg MAPLIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg MAPARRAY_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "The name of the array variable to map"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg NOT_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Class value"},
@@ -4889,6 +5016,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap"},
     {"lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir,
      "Return a list of files in a directory matching a regular expression"},
+    {"maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray,
+     "Return a list with each element modified by a pattern based $(this.k) and $(this.v)"},
     {"maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList,
      "Return a list with each element modified by a pattern based $(this)"},
     {"not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false"},

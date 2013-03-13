@@ -34,10 +34,10 @@ void ScopeSetCurrent(const char *name);
 Scope *ScopeGetCurrent(void);
 
 /**
- * @brief remove a Scope from VSCOPE, and dealloc it. removes only the first it finds in the list.
+ * @brief Clears all variables from a scope
  * @param name
  */
-void ScopeDelete(const char *name);
+void ScopeClear(const char *name);
 
 /**
  * @brief find a Scope in VSCOPE

@@ -266,7 +266,7 @@ void ScopeDeleteAll()
 
 /*******************************************************************/
 
-void ScopeDelete(const char *name)
+void ScopeClear(const char *name)
 {
     CfDebug("Clearing scope %s\n", name);
 
@@ -356,7 +356,7 @@ void ScopePopThis()
 
     if (RlistLen(CF_STCK) > 0)
     {
-        ScopeDelete("this");
+        ScopeClear("this");
         {
             Rlist *rp = CF_STCK;
 

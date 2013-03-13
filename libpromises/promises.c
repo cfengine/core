@@ -253,7 +253,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
-                ScopeDelete("body");
+                ScopeClear("body");
             }
             else
             {

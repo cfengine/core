@@ -124,7 +124,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         BannerSubBundle(bp, params);
 
-        ScopeDelete(bp->name);
+        ScopeClear(bp->name);
         HashVariables(ctx, PolicyFromPromise(pp), bp->name, report_context);
 
         char ns[CF_BUFSIZE];

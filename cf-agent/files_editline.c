@@ -169,7 +169,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
                 if (Abort())
                 {
                     THIS_BUNDLE = bp_stack;
-                    ScopeDelete("edit");
+                    ScopeClear("edit");
                     YieldCurrentLock(thislock);
                     return false;
                 }
@@ -177,7 +177,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
         }
     }
 
-    ScopeDelete("edit");
+    ScopeClear("edit");
     ScopeSetCurrent(PromiseGetBundle(parentp)->name);
     THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
@@ -595,7 +595,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp)
         (pp->edcontext->num_edits)++;
     }
 
-    ScopeDelete("match");       // because this might pollute the parent promise in next iteration
+    ScopeClear("match");       // because this might pollute the parent promise in next iteration
 
     YieldCurrentLock(thislock);
 }

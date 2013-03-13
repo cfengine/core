@@ -861,7 +861,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         }
 
         ScopeSetCurrent(current_scope->scope);
-        ScopeDelete("cf_pack_context");
+        ScopeClear("cf_pack_context");
     }
     else
     {
@@ -916,7 +916,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     ExpandScalar(a.packages.package_name_convention, refAnyVer);
 
                     ScopeSetCurrent(current_scope->scope);
-                    ScopeDelete("cf_pack_context_anyver");
+                    ScopeClear("cf_pack_context_anyver");
                 }
 
                 EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
@@ -1053,7 +1053,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 ExpandScalar(a.packages.package_name_convention, refAnyVer);
 
                 ScopeSetCurrent(current_scope->scope);
-                ScopeDelete("cf_pack_context_anyver");
+                ScopeClear("cf_pack_context_anyver");
             }
 
             EscapeSpecialChars(refAnyVer, refAnyVerEsc, sizeof(refAnyVerEsc), "(.*)","");
@@ -1123,7 +1123,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         id_del = reference2;
 
                         ScopeSetCurrent(current_scope->scope);
-                        ScopeDelete("cf_pack_context");
+                        ScopeClear("cf_pack_context");
                     }
                 }
                 else

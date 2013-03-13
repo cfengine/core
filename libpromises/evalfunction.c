@@ -4073,7 +4073,6 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
     strcpy(context, filename);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Module context: %s\n", context);
 
-    ScopeNew(context);
     name[0] = '\0';
     content[0] = '\0';
 

@@ -236,7 +236,6 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 void ThisAgentInit(void)
 {
-    ScopeNew("remote_access");
     umask(077);
 }
 
@@ -639,8 +638,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             ERRORCOUNT = 0;
 
-            ScopeNew("sys");
-
             SetPolicyServer(POLICY_SERVER);
             ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
@@ -650,12 +647,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
                       "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
             }
 
-            ScopeNew("const");
-            ScopeNew("this");
-            ScopeNew("control_server");
-            ScopeNew("control_common");
-            ScopeNew("mon");
-            ScopeNew("remote_access");
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
             Get3Environment(ctx, AGENT_TYPE_SERVER);

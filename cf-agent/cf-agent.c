@@ -979,7 +979,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         {
             char ns[CF_BUFSIZE];
             snprintf(ns,CF_BUFSIZE,"%s_meta", name);
-            ScopeNew(ns);
 
             SetBundleOutputs(bp->name);
             ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
@@ -1250,7 +1249,6 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     {
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",PromiseGetBundle(pp)->name);
-        ScopeNew(ns);
         ConvergeVarHashPromise(ctx, ns, pp, true);
         return;
     }

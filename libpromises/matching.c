@@ -79,7 +79,6 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
         *end = ovector[1];
 
         ScopeDelete("match");
-        ScopeNew("match");
 
         for (i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
         {

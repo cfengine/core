@@ -840,7 +840,6 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
     {
         const Scope *current_scope = ScopeGetCurrent();
 
-        ScopeNew("cf_pack_context");
         ScopeSetCurrent("cf_pack_context");
         ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
         ScopeNewScalar("cf_pack_context", "version", version, DATA_TYPE_STRING);
@@ -910,7 +909,6 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 {
                     const Scope *current_scope = ScopeGetCurrent();
 
-                    ScopeNew("cf_pack_context_anyver");
                     ScopeSetCurrent("cf_pack_context_anyver");
                     ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
                     ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
@@ -1048,7 +1046,6 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             {
                 const Scope *current_scope = ScopeGetCurrent();
 
-                ScopeNew("cf_pack_context_anyver");
                 ScopeSetCurrent("cf_pack_context_anyver");
                 ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
                 ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
@@ -1118,7 +1115,6 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     {
                         const Scope *current_scope = ScopeGetCurrent();
 
-                        ScopeNew("cf_pack_context");
                         ScopeSetCurrent("cf_pack_context");
                         ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
                         ScopeNewScalar("cf_pack_context", "version", instVer, DATA_TYPE_STRING);

@@ -165,7 +165,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
         return false;
     }
 
-    ScopeNew("edit");
     ScopeNewScalar("edit", "filename", filename, DATA_TYPE_STRING);
 
 /* Reset the done state for every call here, since bundle is reusable */

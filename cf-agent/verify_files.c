@@ -543,7 +543,6 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, params);
 
             ScopeDelete(bp->name);
-            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
             ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
@@ -600,7 +599,6 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp, params);
 
             ScopeDelete(bp->name);
-            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
             ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
@@ -627,7 +625,6 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             a.haveeditline = true;
 
             ScopeDelete(bp->name);
-            ScopeNew(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
             EvalContextStackPushFrame(ctx, a.edits.inherit);

@@ -34,16 +34,10 @@ void ScopeSetCurrent(const char *name);
 Scope *ScopeGetCurrent(void);
 
 /**
- * @brief alloc a Scope, idempotent prepend to VSCOPE
- * @param name
- */
-void ScopeNew(const char *name);
-
-/**
  * @brief remove a Scope from VSCOPE, and dealloc it. removes only the first it finds in the list.
  * @param name
  */
-void ScopeDelete(char *name);
+void ScopeDelete(const char *name);
 
 /**
  * @brief find a Scope in VSCOPE

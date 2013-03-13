@@ -72,27 +72,7 @@ Scope *ScopeGet(const char *scope)
 
 /*******************************************************************/
 
-bool ScopeExists(const char *name)
-{
-    return ScopeGet(name) != NULL;
-}
-
-void ScopeSetCurrent(const char *name)
-{
-    SCOPE_CURRENT = ScopeGet(name);
-}
-
-Scope *ScopeGetCurrent(void)
-{
-    return SCOPE_CURRENT;
-}
-
-/*******************************************************************/
-
-void ScopeNew(const char *name)
-/*
- * Thread safe
- */
+static Scope *ScopeNew(const char *name)
 {
     Scope *ptr;
 
@@ -101,7 +81,7 @@ void ScopeNew(const char *name)
     if (!ThreadLock(cft_vscope))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not lock VSCOPE");
-        return;
+        return NULL;
     }
 
     for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
@@ -110,7 +90,7 @@ void ScopeNew(const char *name)
         {
             ThreadUnlock(cft_vscope);
             CfDebug("SCOPE Object %s already exists\n", name);
-            return;
+            return NULL;
         }
     }
 
@@ -121,9 +101,35 @@ void ScopeNew(const char *name)
     ptr->hashtable = HashInit();
     VSCOPE = ptr;
     ThreadUnlock(cft_vscope);
+
+    return ptr;
 }
 
-/*******************************************************************/
+bool ScopeExists(const char *name)
+{
+    return ScopeGet(name) != NULL;
+}
+
+void ScopeSetCurrent(const char *name)
+{
+    Scope *scope = ScopeGet(name);
+    if (!scope)
+    {
+        scope = ScopeNew(name);
+        if (!scope)
+        {
+            FatalError("Could not create new scope");
+            return;
+        }
+    }
+
+    SCOPE_CURRENT = scope;
+}
+
+Scope *ScopeGetCurrent(void)
+{
+    return SCOPE_CURRENT;
+}
 
 void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lvals, Rlist *rvals)
 {
@@ -260,15 +266,9 @@ void ScopeDeleteAll()
 
 /*******************************************************************/
 
-void ScopeDelete(char *name)
-/*
- * Thread safe
- */
+void ScopeDelete(const char *name)
 {
-    Scope *ptr, *prev = NULL;
-    int found = false;
-
-    CfDebug("Deleting scope %s\n", name);
+    CfDebug("Clearing scope %s\n", name);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -276,45 +276,16 @@ void ScopeDelete(char *name)
         return;
     }
 
-    for (ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
+    Scope *scope = ScopeGet(name);
+    if (!scope)
     {
-        if (strcmp(ptr->scope, name) == 0)
-        {
-            CfDebug("Object %s exists\n", name);
-            found = true;
-            break;
-        }
-        else
-        {
-            prev = ptr;
-        }
-    }
-
-    if (!found)
-    {
-        CfDebug("No such scope to delete\n");
+        CfDebug("No such scope to clear\n");
         ThreadUnlock(cft_vscope);
         return;
     }
 
-    if (ScopeGetCurrent() && strcmp(ptr->scope, ScopeGetCurrent()->scope) == 0)
-    {
-        ProgrammingError("Attempted to delete current active scope");
-    }
-
-    if (ptr == VSCOPE)
-    {
-        VSCOPE = ptr->next;
-    }
-    else
-    {
-        prev->next = ptr->next;
-    }
-
-    HashFree(ptr->hashtable);
-
-    free(ptr->scope);
-    free((char *) ptr);
+    HashFree(scope->hashtable);
+    scope->hashtable = HashInit();
 
     ThreadUnlock(cft_vscope);
 }
@@ -435,21 +406,9 @@ void ScopeToList(Scope *sp, Rlist **list)
 
 void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
 {
-    Rval rvald;
-    Scope *ptr;
-
     CfDebug("NewScalar(%s,%s,%s)\n", scope, lval, rval);
 
-    ptr = ScopeGet(scope);
-
-    if (ptr == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Attempt to add variable \"%s\" to non-existant scope \"%s\" - ignored", lval, scope);
-        return;
-    }
-
-// Newscalar allocates memory through NewAssoc
-
+    Rval rvald;
     if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
     {
         ScopeDeleteScalar(scope, lval);
@@ -737,10 +696,13 @@ bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataTy
     }
 
     ptr = ScopeGet(scope);
-
-    if (ptr == NULL)
+    if (!ptr)
     {
-        return false;
+        ptr = ScopeNew(scope);
+        if (!ptr)
+        {
+            return false;
+        }
     }
 
 // Look for outstanding lists in variable rvals

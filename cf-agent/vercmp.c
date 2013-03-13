@@ -66,7 +66,6 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
     {
         const Scope *current_scope = ScopeGetCurrent();
 
-        ScopeNew("cf_pack_context");
         ScopeSetCurrent("cf_pack_context");
         ScopeNewScalar("cf_pack_context", "v1", v1, DATA_TYPE_STRING);
         ScopeNewScalar("cf_pack_context", "v2", v2, DATA_TYPE_STRING);

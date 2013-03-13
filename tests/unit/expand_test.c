@@ -23,7 +23,6 @@ void test_map_iterators_from_rval_literal(void **state)
 void test_map_iterators_from_rval_naked_list_var(void **state)
 {
     ScopeDeleteAll();
-    ScopeNew("scope");
     ScopeSetCurrent("scope");
 
     Rlist *list = NULL;

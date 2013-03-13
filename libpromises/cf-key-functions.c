@@ -207,8 +207,6 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
     const EVP_CIPHER *cipher;
     char vbuff[CF_BUFSIZE];
 
-    ScopeNew("common");
-
     cipher = EVP_des_ede3_cbc();
 
     if (cfstat(public_key_file, &statbuf) != -1)

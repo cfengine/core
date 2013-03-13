@@ -717,7 +717,7 @@ void PurgeLocks(void)
         return;
     }
 
-    while (NextDB(dbp, dbcp, &key, &ksize, (void *) &entry, &vsize))
+    while (NextDB(dbcp, &key, &ksize, (void *) &entry, &vsize))
     {
         if (strncmp(key, "last.internal_bundle.track_license.handle",
                     strlen("last.internal_bundle.track_license.handle")) == 0)
@@ -733,7 +733,7 @@ void PurgeLocks(void)
     }
 
     entry.time = now;
-    DeleteDBCursor(dbp, dbcp);
+    DeleteDBCursor(dbcp);
 
     WriteDB(dbp, "lock_horizon", &entry, sizeof(entry));
     CloseLock(dbp);

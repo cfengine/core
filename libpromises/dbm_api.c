@@ -304,7 +304,7 @@ bool NewDBCursor(DBHandle *handle, DBCursor **cursor)
     return true;
 }
 
-bool NextDB(DBHandle *handle, DBCursor *cursor, char **key, int *ksize,
+bool NextDB(DBCursor *cursor, char **key, int *ksize,
             void **value, int *vsize)
 {
     return DBPrivAdvanceCursor(cursor->cursor, (void **)key, ksize, value, vsize);
@@ -320,7 +320,7 @@ bool DBCursorWriteEntry(DBCursor *cursor, const void *value, int value_size)
     return DBPrivWriteCursorEntry(cursor->cursor, value, value_size);
 }
 
-bool DeleteDBCursor(DBHandle *handle, DBCursor *cursor)
+bool DeleteDBCursor(DBCursor *cursor)
 {
     DBPrivCloseCursor(cursor->cursor);
     free(cursor);

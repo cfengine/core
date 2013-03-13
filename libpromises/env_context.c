@@ -1043,7 +1043,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         return;
     }
 
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
@@ -1073,7 +1073,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
         }
     }
 
-    DeleteDBCursor(dbp, dbcp);
+    DeleteDBCursor(dbcp);
     CloseDB(dbp);
 
     Banner("Loaded persistent memory");

@@ -37,14 +37,14 @@ void test_iter_modify_entry(void **state)
     void *value;
     int vsize;
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
     assert_int_equal(DBCursorWriteEntry(cursor, "eee", 3), true);
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }
@@ -69,14 +69,14 @@ void test_iter_delete_entry(void **state)
     void *value;
     int vsize;
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
     assert_int_equal(DBCursorDeleteEntry(cursor), true);
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }

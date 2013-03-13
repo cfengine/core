@@ -142,7 +142,7 @@ static void TestCursorIteration(CF_DB *db)
     int key_sz, value_sz;
 
     int count = 0;
-    while(NextDB(db, dbc, &key, &key_sz, &value, &value_sz))
+    while(NextDB(dbc, &key, &key_sz, &value, &value_sz))
     {
         int key_num = *(int *)key;
         int value_num = *(int *)value;
@@ -177,7 +177,7 @@ static void TestCursorIteration(CF_DB *db)
         printf("Error: During iteration count was %d (expected %d)\n", count, RECORD_COUNT_TOTAL);
     }
 
-    if(!DeleteDBCursor(db, dbc))
+    if(!DeleteDBCursor(dbc))
     {
         FatalError("Test: could not delete cursor");
     }

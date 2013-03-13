@@ -53,12 +53,12 @@ static DBHandle *setup(bool clean)
         void *value;
         int ksize, vsize;
 
-        while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+        while (NextDB(cursor, &key, &ksize, &value, &vsize))
         {
             DBCursorDeleteEntry(cursor);
         }
 
-        if (!DeleteDBCursor(db, cursor))
+        if (!DeleteDBCursor(cursor))
         {
             return NULL;
         }
@@ -83,7 +83,7 @@ static void test_no_migration(void **context)
     void *value;
     int ksize, vsize;
 
-    while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+    while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         assert_int_equal(ksize, strlen("version") + 1);
         assert_string_equal(key, "version");
@@ -91,7 +91,7 @@ static void test_no_migration(void **context)
         assert_string_equal(value, "1");
     }
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }

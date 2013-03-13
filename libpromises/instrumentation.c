@@ -276,7 +276,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         memset(&entry, 0, sizeof(entry));
 
-        while (NextDB(dbp, dbcp, &key, &ksize, &stored, &vsize))
+        while (NextDB(dbcp, &key, &ksize, &stored, &vsize))
         {
             time_t then;
             char eventname[CF_BUFSIZE];
@@ -316,7 +316,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
             }
         }
 
-        DeleteDBCursor(dbp, dbcp);
+        DeleteDBCursor(dbcp);
     }
 
     CloseDB(dbp);

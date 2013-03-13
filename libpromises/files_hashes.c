@@ -455,7 +455,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     /* Walk through the database and print out the key/data pairs. */
 
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
         char *obj = (char *) key + CF_INDEX_OFFSET;
 
@@ -477,7 +477,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
         memset(&value, 0, sizeof(value));
     }
 
-    DeleteDBCursor(dbp, dbcp);
+    DeleteDBCursor(dbcp);
     CloseDB(dbp);
 }
 

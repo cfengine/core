@@ -1847,7 +1847,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         return NULL;
     }
 
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
@@ -1866,7 +1866,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         }
     }
 
-    DeleteDBCursor(dbp, dbcp);
+    DeleteDBCursor(dbcp);
     CloseDB(dbp);
 
     for (ip = candidates; ip != NULL; ip = ip->next)

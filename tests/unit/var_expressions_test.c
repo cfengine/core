@@ -8,6 +8,8 @@ static void test_plain_variable_with_no_stuff_in_it(void **state)
     assert_false(ref.ns);
     assert_false(ref.scope);
     assert_string_equal("foo", ref.lval);
+    assert_int_equal(0, ref.num_indices);
+    assert_false(ref.indices);
     VarRefDestroy(ref);
 }
 
@@ -17,6 +19,8 @@ static void test_namespaced(void **state)
     assert_string_equal("ns", ref.ns);
     assert_false(ref.scope);
     assert_string_equal("lval", ref.lval);
+    assert_int_equal(0, ref.num_indices);
+    assert_false(ref.indices);
     VarRefDestroy(ref);
 }
 
@@ -26,6 +30,8 @@ static void test_scoped(void **state)
     assert_false(ref.ns);
     assert_string_equal("scope", ref.scope);
     assert_string_equal("lval", ref.lval);
+    assert_int_equal(0, ref.num_indices);
+    assert_false(ref.indices);
     VarRefDestroy(ref);
 }
 
@@ -35,6 +41,8 @@ static void test_full(void **state)
     assert_string_equal("ns", ref.ns);
     assert_string_equal("scope", ref.scope);
     assert_string_equal("lval", ref.lval);
+    assert_int_equal(0, ref.num_indices);
+    assert_false(ref.indices);
     VarRefDestroy(ref);
 }
 
@@ -62,6 +70,28 @@ static void test_levels(void **state)
     VarRefDestroy(ref);
 }
 
+static void test_unqualified_array(void **state)
+{
+    VarRef ref = VarRefParse("lval[x]");
+    assert_false(ref.ns);
+    assert_false(ref.scope);
+    assert_string_equal("lval", ref.lval);
+    assert_int_equal(1, ref.num_indices);
+    assert_string_equal("x", ref.indices[0]);
+    VarRefDestroy(ref);
+}
+
+static void test_qualified_array(void **state)
+{
+    VarRef ref = VarRefParse("scope.lval[x]");
+    assert_false(ref.ns);
+    assert_string_equal("scope", ref.scope);
+    assert_string_equal("lval", ref.lval);
+    assert_int_equal(1, ref.num_indices);
+    assert_string_equal("x", ref.indices[0]);
+    VarRefDestroy(ref);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -73,6 +103,8 @@ int main()
         unit_test(test_full),
         unit_test(test_dotted_array),
         unit_test(test_levels),
+        unit_test(test_unqualified_array),
+        unit_test(test_qualified_array)
     };
 
     return run_tests(tests);

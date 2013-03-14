@@ -91,6 +91,8 @@ libutils/config.h.in
 
 # acceptance tests
 
+tests/acceptance/TESTS.am
+
 tests/acceptance/*.log
 tests/acceptance/.succeeded
 tests/acceptance/workdir

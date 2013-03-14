@@ -63,6 +63,7 @@ SUMMARY=summary.log
 XML=test.xml
 XMLTMP=xml.tmp
 BASE_WORKDIR=$(pwd)/workdir
+SINGLE=
 QUIET=
 STAGING_TESTS=${STAGING_TESTS:-0}
 NETWORK_TESTS=${NETWORK_TESTS:-1}
@@ -142,6 +143,9 @@ usage() {
   echo
   echo "If arguments are given, those are executed as tests"
   echo
+  echo " -s runs only a single test (the next argument) without any output, "
+  echo "    indicating success or failure in the exit code."
+  echo
   echo " -q makes script much quieter"
   echo
   echo " --gainroot=<command> forces use of command to gain root privileges,"
@@ -154,7 +158,7 @@ usage() {
 runtest() {
   AGENT="$1"
   TEST="$2"
-  if [ -z "$QUIET" ]; then
+  if [ -z "$QUIET" -a -z "$SINGLE" ]; then
     printf "$TEST "
   fi
 
@@ -204,9 +208,17 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 
     OUT=$($GAINROOT $WORKDIR/runtest)
     RETVAL=$?
-    echo "$OUT" >> $LOG
-    echo >> $LOG
-    echo "Return code is $RETVAL." >> $LOG
+
+    if [ -z "$SINGLE" ]
+    then
+      echo "$OUT" >> $LOG
+      echo >> $LOG
+      echo "Return code is $RETVAL." >> $LOG
+    else			# Just output to stdout if running single test
+      echo "$OUT"
+      echo
+      echo "Return code is $RETVAL."
+    fi
 
     TEST_END_TIME=$(unix_seconds)
     echo "              "time=\"$(($TEST_END_TIME - $TEST_START_TIME)) seconds\"\> >> $XMLTMP
@@ -250,13 +262,13 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       fi
     fi
 
-    if [ -z "$QUIET" ]; then
+    if [ -z "$QUIET" -a -z "$SINGLE" ]; then
       if [ "$RESULT" != Pass ] && [ -e .succeeded/"$FLATNAME" ]; then
         echo $RESULT '(UNEXPECTED FAILURE)'
       else
         echo $RESULT
       fi
-    else
+    elif [ -z "$SINGLE" ]; then
       if [ "$RESULT" = Pass ]; then
         printf '.'
       else
@@ -304,6 +316,8 @@ while true; do
     --help)
       usage
       exit;;
+    -s)
+      SINGLE=1;;
     -q)
       QUIET=1;;
     --gainroot=*)
@@ -346,9 +360,10 @@ else
 fi
 
 #
-# fd 7 is a /dev/null for quiet execution and stdout for default one
+# fd 7 is a /dev/null for quiet or single-test execution and stdout for default one.
+# These are the Intro / Outro header messages.
 #
-if [ -z "$QUIET" ]; then
+if [ -z "$QUIET" -a -z "$SINGLE" ]; then
   exec 7>&1
 else
   exec 7>/dev/null
@@ -378,16 +393,21 @@ START_TIME=$(unix_seconds)
 
   echo -n "" > $XMLTMP
 
-for test in $TESTS; do
-  echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
-  echo "              "classname=\"$test\" >> $XMLTMP
-  if [ -n "$USE_VALGRIND" ]; then
-    runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
-  else
-    runtest $AGENT "$test"
-  fi
-  echo "    "\<\/testcase\> >> $XMLTMP
-done
+if [ -z $SINGLE ]				  # if asked to run many tests
+  then
+  for test in $TESTS; do
+    echo "    "\<testcase name=\"$(basename $test)\" >> $XMLTMP
+    echo "              "classname=\"$test\" >> $XMLTMP
+    if [ -n "$USE_VALGRIND" ]; then
+      runtest "valgrind --leak-check=full --show-reachable=yes $AGENT" "$test"
+    else
+      runtest $AGENT "$test"
+    fi
+    echo "    "\<\/testcase\> >> $XMLTMP
+  done
+else					     # if called with -s and one test
+  runtest $AGENT $TESTS
+fi
 
 END_TIME=$(unix_seconds)
 
@@ -401,7 +421,7 @@ END_TIME=$(unix_seconds)
   echo Failed tests: $FAILED_TESTS
   echo Failed to crash tests: $FAILED_TO_CRASH_TESTS
   echo Skipped tests: $SKIPPED_TESTS
-) | tee -a $LOG | tee -a $SUMMARY
+) | tee -a $LOG | tee -a $SUMMARY >&7
 
 (  echo "           "failures=\"$FAILED_TESTS\"
    echo "           "skipped=\"$SKIPPED_TESTS\"

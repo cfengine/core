@@ -2034,6 +2034,25 @@ body package_method smartos
   package_update_command =>  "/opt/local/bin/pkgin upgrade";
 }
 
+# OpenCSW (Solaris software packages)
+
+body package_method opencsw
+{
+  package_changes => "bulk";
+  package_list_command => "/opt/csw/bin/pkgutil -c";
+  package_list_name_regex    => "CSW(.*?)\s.*";
+  package_list_version_regex => ".*?\s+(.*),.*";
+
+  package_installed_regex => ".*"; # all reported are installed
+
+  package_list_update_command => "/opt/csw/bin/pkgutil -U";
+  package_list_update_ifelapsed => "240";
+
+  package_add_command => "/opt/csw/bin/pkgutil -yi";
+
+  package_delete_command => "/opt/csw/bin/pkgutil -yr";
+  package_update_command =>  "/opt/csw/bin/pkgutil -yu";
+}
 
 # The older solaris package system is poorly designed, with too many different
 # names to track. See the example in tests/units/unit_package_solaris.cf

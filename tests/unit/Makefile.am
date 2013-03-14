@@ -63,7 +63,8 @@ check_PROGRAMS = \
 	cf_key_functions_test \
 	connection_management_test \
 	expand_test \
-	string_expressions_test
+	string_expressions_test \
+	var_expressions_test
 
 #	ipaddress_test
 

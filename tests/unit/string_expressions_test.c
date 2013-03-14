@@ -67,12 +67,6 @@ static void test_different_var_types(void **state)
     CheckParse("@{a$(b@(c)${d})@(e)}", "ugly{acozy(bugly{c}cozy(d))ugly{e}}", DiscriminateVarTypesVarRefEval, NULL);
 }
 
-static void test_(void **state)
-{
-    VarRef *r = Parse("foo:bar.quux", VAR_REF_TYPE_SCALAR);
-
-}
-
 int main()
 {
     PRINT_TEST_BANNER();

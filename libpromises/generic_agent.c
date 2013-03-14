@@ -76,7 +76,6 @@ static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body);
 static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
 static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context);
-static void PrependAuditFile(char *file);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -395,23 +394,6 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
     }
 
     SeqDestroy(errors);
-
-/* Now import some web variables that are set in cf-know/control for the report options */
-
-    {
-        Rval rval = { 0 };
-
-        switch (ScopeGetVariable("control_common", "cfinputs_version", &rval))
-        {
-        case DATA_TYPE_STRING:
-            AUDITPTR->version = xstrdup((char *) rval.item);
-            break;
-
-        default:
-            AUDITPTR->version = xstrdup("no specified version");
-            break;
-        }
-    }
 
     WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n",
                  AgentTypeToString(agent_type));
@@ -944,8 +926,6 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  > Parsing file %s\n", wfilename);
     CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
-    PrependAuditFile(wfilename);
-
     if (!FileCanOpen(wfilename, "r"))
     {
         printf("Can't open file %s for parsing\n", wfilename);
@@ -1281,33 +1261,6 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
             }
         }
     }
-}
-
-/********************************************************************/
-
-static void PrependAuditFile(char *file)
-{
-    struct stat statbuf;
-
-    AUDITPTR = xmalloc(sizeof(Audit));
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        /* shouldn't happen */
-        return;
-    }
-
-    HashFile(file, AUDITPTR->digest, CF_DEFAULT_DIGEST);
-
-    AUDITPTR->next = VAUDIT;
-    AUDITPTR->filename = xstrdup(file);
-    AUDITPTR->date = xstrdup(cf_ctime(&statbuf.st_mtime));
-    if (Chop(AUDITPTR->date, CF_EXPANDSIZE) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-    }
-    AUDITPTR->version = NULL;
-    VAUDIT = AUDITPTR;
 }
 
 /*******************************************************************/

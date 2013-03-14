@@ -32,9 +32,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 
-extern Audit *AUDITPTR;
-extern Audit *VAUDIT;
-
 extern Item *IPADDRESSES;
 
 extern char STR_CFENGINEPORT[16];
@@ -101,8 +98,6 @@ extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern Scope *VSCOPE;
-extern Audit *AUDITPTR;
-extern Audit *VAUDIT;
 extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;

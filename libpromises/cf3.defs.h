@@ -395,19 +395,6 @@ typedef struct CompressedArray_ CompressedArray;
 
 /*******************************************************************/
 
-typedef struct Audit_ Audit;
-
-struct Audit_
-{
-    char *version;
-    char *filename;
-    char *date;
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    Audit *next;
-};
-
-/*******************************************************************/
-
 typedef struct UidList_ UidList;
 
 struct UidList_

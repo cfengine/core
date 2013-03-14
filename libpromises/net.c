@@ -210,24 +210,29 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
     return already;
 }
 
-/*************************************************************************/
+/*
+  NB: recv() timeout interpretation differs under Windows: setting tv_sec to
+  50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
+  50 seconds on Linux.
+*/
+
+#ifdef __linux__
 
 int SetReceiveTimeout(int fd, const struct timeval *tv)
 {
-    /*
-      NB: recv() timeout interpretation differs under Windows: setting tv_sec to
-      50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
-      50 seconds on Linux.
-    */
-
-# ifdef __linux__
-
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)tv, sizeof(struct timeval)))
     {
         return -1;
     }
 
-#endif
-
     return 0;
 }
+
+#else
+
+int SetReceiveTimeout(ARG_UNUSED int fd, ARG_UNUSED const struct timeval *tv)
+{
+    return 0;
+}
+
+#endif

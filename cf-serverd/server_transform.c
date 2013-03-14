@@ -531,7 +531,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, bp->name, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
                 }
             }
         }
@@ -575,7 +575,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, bp->name, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
                 }
             }
         }

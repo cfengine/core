@@ -58,7 +58,7 @@
 
 #include <assert.h>
 
-static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
 static int Epimenides(const char *var, Rval rval, int level);
@@ -127,14 +127,13 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promise *pp, PromiseActuator *ActOnPromise,
-                   const ReportContext *report_context)
+void ExpandPromise(EvalContext *ctx, AgentType agent, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context)
 {
     Rlist *listvars = NULL;
     Promise *pcopy;
 
     CfDebug("****************************************************\n");
-    CfDebug("* ExpandPromises (scope = %s )\n", scopeid);
+    CfDebug("* ExpandPromises (scope = %s )\n", PromiseGetBundle(pp)->name);
     CfDebug("****************************************************\n\n");
 
 // Set a default for packages here...general defaults that need to come before
@@ -145,27 +144,27 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, const char *scopeid, Promi
 
     ScopeClear("match");       /* in case we expand something expired accidentially */
 
-    THIS_BUNDLE = scopeid;
+    THIS_BUNDLE = PromiseGetBundle(pp)->name;
 
     pcopy = DeRefCopyPromise(ctx, pp);
 
-    MapIteratorsFromRval(scopeid, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
     if (pcopy->promisee.item != NULL)
     {
-        MapIteratorsFromRval(scopeid, &listvars, pp->promisee);
+        MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, pp->promisee);
     }
 
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(scopeid, &listvars, cp->rval);
+        MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, cp->rval);
     }
 
-    CopyLocalizedIteratorsToThisScope(scopeid, listvars);
+    CopyLocalizedIteratorsToThisScope(PromiseGetBundle(pp)->name, listvars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, agent, scopeid, pcopy, listvars, ActOnPromise, report_context);
+    ExpandPromiseAndDo(ctx, agent, pcopy, listvars, ActOnPromise, report_context);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -649,8 +648,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *scopeid, const Promise *pp, Rlist *listvars,
-                               PromiseActuator *ActOnPromise, const ReportContext *report_context)
+static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -659,7 +657,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
     char v[CF_MAXVARSIZE];
     int cutoff = 0;
 
-    lol = NewIterationContext(ctx, scopeid, listvars);
+    lol = NewIterationContext(ctx, PromiseGetBundle(pp)->name, listvars);
 
     if (lol && EndOfIteration(lol))
     {
@@ -764,7 +762,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
     }
     while (IncrementIterationContext(lol));
 
-    ScopeSetCurrent(scopeid);
+    ScopeSetCurrent(PromiseGetBundle(pp)->name);
     DeleteIterationContext(lol);
 }
 
@@ -1712,7 +1710,7 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
                for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                {
                    Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                   ExpandPromise(ctx, AGENT_TYPE_COMMON, scope, ppsub, NULL, report_context);
+                   ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
                }
            }
         }
@@ -1810,7 +1808,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {
                 Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                ExpandPromise(ctx, AGENT_TYPE_COMMON, bp->name, ppsub, NULL, report_context);
+                ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
             }
         }
     }

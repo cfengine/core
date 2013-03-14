@@ -1032,7 +1032,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-void VerifyEnvironmentsPromise(Promise *pp)
+void VerifyEnvironmentsPromise(ARG_UNUSED Promise *pp)
 {
 }
 

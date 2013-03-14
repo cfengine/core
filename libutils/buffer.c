@@ -766,6 +766,7 @@ void BufferZero(Buffer *buffer)
         RefCountAttach(buffer->ref_count, buffer);
     }
     buffer->used = 0;
+	buffer->buffer[0] = '\0';
 }
 
 unsigned int BufferSize(Buffer *buffer)

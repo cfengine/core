@@ -49,7 +49,7 @@ typedef enum
 
 static void ThisAgentInit(EvalContext *ctx);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
-static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepPromises(EvalContext *ctx, Policy *policy);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     CheckLicenses(ctx);
 
     ThisAgentInit(ctx);
-    KeepPromises(ctx, policy, report_context);
+    KeepPromises(ctx, policy);
 
     MonitorStartServer(ctx, policy, report_context);
 
@@ -205,7 +205,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy)
 {
     Rval retval;
 

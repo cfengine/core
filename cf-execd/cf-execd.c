@@ -667,7 +667,7 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const Rlist *input_files, const ReportContext *report_context)
+static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const Rlist *input_files)
 {
     if (NewPromiseProposals(ctx, input_file, input_files))
     {
@@ -710,7 +710,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(ctx, config->input_file, InputFiles(ctx, *policy), report_context) == RELOAD_FULL)
+    if (CheckNewPromises(ctx, config->input_file, InputFiles(ctx, *policy)) == RELOAD_FULL)
     {
         /* Full reload */
 

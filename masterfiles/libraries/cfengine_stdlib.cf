@@ -1896,25 +1896,20 @@ package_verify_command => "/bin/rpm -V";
 body package_method yum_rpm
 
 # Contributed by Trond Hasle Amundsen
-
-# More efficient package method for RedHat - uses rpm to list instead of yum
-# Notes:
-# - using $(name).$(arch) instead of $(name) for package_name_convention
-#   causes uninstallation to fail.
-# - using allmatches to remove for all architectures
-#
+# More efficient package method for RPM-based systems - uses rpm
+# instead of yum to list installed packages
 
 {
   package_changes => "bulk";
-  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
   package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
-  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
-  package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
+  package_list_name_regex    => "([^.]+).*";
+  package_list_version_regex => "[^\s]\s+([^\s]+).*";
+  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
 
   package_installed_regex => ".*";
-  package_name_convention => "$(name)";
+  package_name_convention => "$(name)-$(version).$(arch)";
 
   # set it to "0" to avoid caching of list during upgrade
   package_list_update_command => "/usr/bin/yum --quiet check-update";
@@ -1927,8 +1922,8 @@ body package_method yum_rpm
 
   package_add_command    => "/usr/bin/yum -y install";
   package_update_command => "/usr/bin/yum -y update";
-  package_patch_command => "/usr/bin/yum -y update";
-  package_delete_command => "/bin/rpm -e --nodeps --allmatches";
+  package_patch_command  => "/usr/bin/yum -y update";
+  package_delete_command => "/bin/rpm -e --nodeps";
   package_verify_command => "/bin/rpm -V";
 }
 

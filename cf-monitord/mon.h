@@ -58,7 +58,7 @@ void MonNetworkSnifferInit(void);
 void MonNetworkSnifferOpen(void);
 void MonNetworkSnifferEnable(bool enable);
 void MonNetworkSnifferSniff(long iteration, double *cf_this);
-void MonNetworkSnifferGatherData(double *cf_this);
+void MonNetworkSnifferGatherData(void);
 
 /* mon_processes.c */
 

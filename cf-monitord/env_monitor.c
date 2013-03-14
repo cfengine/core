@@ -355,7 +355,7 @@ static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *re
     MonLoadGatherData(CF_THIS);
     MonDiskGatherData(CF_THIS);
     MonNetworkGatherData(CF_THIS);
-    MonNetworkSnifferGatherData(CF_THIS);
+    MonNetworkSnifferGatherData();
     MonTempGatherData(ctx, CF_THIS);
 #endif /* !__MINGW32__ */
     MonOtherGatherData(CF_THIS);

@@ -451,7 +451,7 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
 /******************************************************************************/
 
-void MonNetworkSnifferGatherData(double *cf_this)
+void MonNetworkSnifferGatherData(void)
 {
     int i;
     char vbuff[CF_BUFSIZE];

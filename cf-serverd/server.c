@@ -128,7 +128,7 @@ static int AllowedUser(char *user);
 static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args);
 static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
 static void AbortTransfer(int sd, char *sendbuffer, char *filename);
-static void FailedTransfer(int sd, char *sendbuffer, char *filename);
+static void FailedTransfer(int sd);
 static void ReplyNothing(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, int sd);
 static void DeleteConn(ServerConnectionState *conn);
@@ -2698,7 +2698,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     if (!TransferRights(filename, sd, args, sendbuffer, &sb))
     {
         RefuseAccess(args->connect, sendbuffer, args->buf_size, "");
-        FailedTransfer(sd, sendbuffer, filename);
+        FailedTransfer(sd);
     }
 
     EVP_CIPHER_CTX_init(&ctx);
@@ -2706,7 +2706,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
     if ((fd = open(filename, O_RDONLY)) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "open", "Open error of file [%s]\n", filename);
-        FailedTransfer(sd, sendbuffer, filename);
+        FailedTransfer(sd);
     }
     else
     {
@@ -2754,7 +2754,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
                 if (!EVP_EncryptUpdate(&ctx, out, &cipherlen, sendbuffer, n_read))
                 {
-                    FailedTransfer(sd, sendbuffer, filename);
+                    FailedTransfer(sd);
                     EVP_CIPHER_CTX_cleanup(&ctx);
                     close(fd);
                     return;
@@ -2762,7 +2762,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
                 if (!EVP_EncryptFinal_ex(&ctx, out + cipherlen, &finlen))
                 {
-                    FailedTransfer(sd, sendbuffer, filename);
+                    FailedTransfer(sd);
                     EVP_CIPHER_CTX_cleanup(&ctx);
                     close(fd);
                     return;
@@ -3261,9 +3261,11 @@ static void AbortTransfer(int sd, char *sendbuffer, char *filename)
 
 /***************************************************************/
 
-static void FailedTransfer(int sd, char *sendbuffer, char *filename)
+static void FailedTransfer(int sd)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Transfer failure\n");
+
+    char sendbuffer[CF_BUFSIZE];
 
     snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
 

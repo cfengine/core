@@ -143,7 +143,6 @@ struct Constraint_
 
     char *classes;              /* only used within bodies */
     bool references_body;
-    Audit *audit;
 
     SourceOffset offset;
 };

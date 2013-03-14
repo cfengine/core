@@ -1296,7 +1296,6 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     cp->lval = SafeStringDuplicate(lval);
     cp->rval = rval;
 
-    cp->audit = AUDITPTR;
     cp->classes = SafeStringDuplicate(classes);
     cp->references_body = references_body;
 

@@ -1392,9 +1392,9 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         ScopeDeleteVariable(scope, cp->lval);
 
         if (!ScopeAddVariableHash(scope, cp->lval, returnval,
-                             BodySyntaxGetDataType(body_syntax, cp->lval), cp->audit->filename, cp->offset.line))
+                             BodySyntaxGetDataType(body_syntax, cp->lval), control_body->source_path, cp->offset.line))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", cp->audit->filename, cp->offset.line);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)

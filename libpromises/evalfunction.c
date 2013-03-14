@@ -1673,7 +1673,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
               "Function maparray was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
               scopeid);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
-        return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+        return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
     }
 
     i = HashIteratorInit(ptr->hashtable);
@@ -1755,8 +1755,6 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
-
-/*********************************************************************/
 
 /*********************************************************************/
 

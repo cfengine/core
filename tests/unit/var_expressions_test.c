@@ -92,6 +92,25 @@ static void test_qualified_array(void **state)
     VarRefDestroy(ref);
 }
 
+static void CheckToString(const char *str)
+{
+    VarRef ref = VarRefParse(str);
+    char *out = VarRefToString(ref);
+    assert_string_equal(str, out);
+    free(out);
+    VarRefDestroy(ref);
+}
+
+static void test_to_string(void **state)
+{
+    CheckToString("ns:scope.lval[x][y]");
+    CheckToString("ns:scope.lval[x]");
+    CheckToString("ns:scope.lval");
+    CheckToString("ns:lval");
+    CheckToString("scope.lval");
+    CheckToString("lval");
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -104,7 +123,8 @@ int main()
         unit_test(test_dotted_array),
         unit_test(test_levels),
         unit_test(test_unqualified_array),
-        unit_test(test_qualified_array)
+        unit_test(test_qualified_array),
+        unit_test(test_to_string)
     };
 
     return run_tests(tests);

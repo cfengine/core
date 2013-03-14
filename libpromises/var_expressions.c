@@ -105,6 +105,8 @@ VarRef VarRefParse(const char *qualified_name)
         lval = xstrdup(lval_start);
     }
 
+    assert(lval);
+
     return (VarRef) {
         .ns = ns,
         .scope = scope,
@@ -119,4 +121,34 @@ void VarRefDestroy(VarRef ref)
     free(ref.ns);
     free(ref.scope);
     free(ref.lval);
+}
+
+char *VarRefToString(VarRef ref)
+{
+    assert(ref.lval);
+
+    Buffer *buf = BufferNew();
+    if (ref.ns)
+    {
+        BufferAppend(buf, ref.ns, strlen(ref.ns));
+        BufferAppend(buf, ":", sizeof(char));
+    }
+    if (ref.scope)
+    {
+        BufferAppend(buf, ref.scope, strlen(ref.scope));
+        BufferAppend(buf, ".", sizeof(char));
+    }
+
+    BufferAppend(buf, ref.lval, strlen(ref.lval));
+
+    for (size_t i = 0; i < ref.num_indices; i++)
+    {
+        BufferAppend(buf, "[", sizeof(char));
+        BufferAppend(buf, ref.indices[i], strlen(ref.indices[i]));
+        BufferAppend(buf, "]", sizeof(char));
+    }
+
+    char *var_string = xstrdup(BufferData(buf));
+    BufferDestroy(&buf);
+    return var_string;
 }

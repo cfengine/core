@@ -17,4 +17,6 @@ typedef struct
 VarRef VarRefParse(const char *var_ref_string);
 void VarRefDestroy(VarRef ref);
 
+char *VarRefToString(VarRef ref);
+
 #endif

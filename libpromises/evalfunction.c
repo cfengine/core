@@ -646,6 +646,35 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
 
 /*********************************************************************/
 
+static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *string = RlistScalarValue(finalargs);
+    StringSet* base = StringSetNew();
+
+    EvalContextHeapAddMatchingSoft(ctx, base, string);
+    EvalContextHeapAddMatchingHard(ctx, base, string);
+    EvalContextStackFrameAddMatchingSoft(ctx, base, string);
+
+    Rlist *returnlist = NULL;
+    StringSetIterator it = StringSetIteratorInit(base);
+    char *element = NULL;
+    while ((element = StringSetIteratorNext(&it)))
+    {
+        RlistPrependScalar(&returnlist, element);
+    }
+
+    if (returnlist == NULL)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    StringSetDestroy(base);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallCanonify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(CanonifyName(RlistScalarValue(finalargs))), RVAL_TYPE_SCALAR } };
@@ -4820,6 +4849,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "True if the canonicalization of the argument is a currently defined class"},
     {"classmatch", DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch,
      "True if the regular expression matches any currently defined class"},
+    {"classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching,
+     "List the defined classes matching regex arg1"},
     {"countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching,
      "Count the number of defined classes matching regex arg1"},
     {"countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching,

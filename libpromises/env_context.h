@@ -115,6 +115,10 @@ size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 
+StringSet* EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
+
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);

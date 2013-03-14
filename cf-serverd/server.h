@@ -140,7 +140,6 @@ extern int ACTIVE_THREADS;
 extern int CFD_MAXPROCESSES;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;

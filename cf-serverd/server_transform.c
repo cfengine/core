@@ -108,7 +108,6 @@ extern int CFD_MAXPROCESSES;
 extern int NO_FORK;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern Item *CONNECTIONLIST;
 
@@ -302,7 +301,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
                 SV.logconns = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGCONNS = %d\n", LOGCONNS);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET logconns = %d\n", SV.logconns);
                 continue;
             }
 

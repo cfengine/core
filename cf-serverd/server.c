@@ -84,7 +84,6 @@ int CFD_MAXPROCESSES = 0;
 int DENYBADCLOCKS = true;
 
 int MAXTRIES = 5;
-int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
@@ -3168,7 +3167,7 @@ static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 
     if (strlen(errmesg) > 0)
     {
-        if (LOGCONNS)
+        if (SV.logconns)
         {
             CfOut(OUTPUT_LEVEL_LOG, "", "REFUSAL of request from connecting host: (%s)", errmesg);
         }

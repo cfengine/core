@@ -48,7 +48,7 @@ typedef enum
 } MonitorControl;
 
 static void ThisAgentInit(EvalContext *ctx);
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
 static void KeepPromises(EvalContext *ctx, Policy *policy);
 
 /*****************************************************************************/
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
 
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
     ReportContext *report_context = OpenReports(config->agent_type);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;

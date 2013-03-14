@@ -30,6 +30,12 @@ int main(int argc, char *argv[])
   struct Item *ip,*contents = NULL;
   char buffer[1024],type[1024],control[1024],data[1024],name[1024];
 
+  if (argc != 2)
+  {
+      fprintf(stderr, "Usage: build-stdlib <cfengine-stdlib.cf>\n");
+      return 1;
+  }
+
 if ((fin = fopen(argv[1],"r")) == NULL)
    {
    printf("Could not open the %s file\n", argv[1]);

@@ -167,7 +167,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
         if (pp)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
-                  fp->name, pp->audit->filename, pp->offset.line);
+                  fp->name, PromiseGetBundle(pp)->source_path, pp->offset.line);
         }
         else
         {

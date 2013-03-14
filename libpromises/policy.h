@@ -111,7 +111,6 @@ struct Promise_
     char ref_alloc;
     char *promiser;
     Rval promisee;
-    Audit *audit;
     Seq *conlist;
 
     /* Runtime bus for private flags and work space */

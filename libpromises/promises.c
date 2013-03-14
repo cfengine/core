@@ -156,7 +156,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     }
 
     pcopy->parent_promise_type = pp->parent_promise_type;
-    pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
@@ -216,7 +215,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
-                      bodyname, pp->offset.line, (pp->audit)->filename, bp->type, cp->lval);
+                      bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
                 ERRORCOUNT++;
             }
 
@@ -233,7 +232,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 if (fp == NULL || fp->args == NULL)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
-                          bodyname, pp->offset.line, (pp->audit)->filename);
+                          bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
@@ -241,7 +240,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     ERRORCOUNT++;
                     CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
-                          bodyname, pp->offset.line, (pp->audit)->filename);
+                          bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 
                 for (size_t k = 0; k < SeqLength(bp->conlist); k++)
@@ -263,7 +262,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "",
                           "An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %zu of %s (possible unquoted literal value)",
-                          bodyname, pp->offset.line, (pp->audit)->filename);
+                          bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
                 else
                 {
@@ -287,7 +286,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",
-                      bodyname, pp->offset.line, (pp->audit)->filename);
+                      bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
             }
 
             Rval newrv = RvalCopy(cp->rval);
@@ -339,7 +338,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
-    pcopy->audit = pp->audit;
     pcopy->offset.line = pp->offset.line;
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
@@ -416,10 +414,10 @@ void PromiseRef(OutputLevel level, const Promise *pp)
         v = "not specified";
     }
 
-    if (pp->audit)
+    if (PromiseGetBundle(pp)->source_path)
     {
         CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %zu\n", v, PromiseGetBundle(pp)->name,
-              pp->audit->filename, pp->offset.line);
+             PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
     else
     {

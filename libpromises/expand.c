@@ -707,9 +707,9 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const char *sc
             ScopeNewScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
-        if (pp->audit && pp->audit->filename)
+        if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewScalar("this", "promise_filename", pp->audit->filename, DATA_TYPE_STRING);
+            ScopeNewScalar("this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
             ScopeNewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
         }

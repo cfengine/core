@@ -229,10 +229,10 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
             AppendItem(&mess, output, NULL);
         }
 
-        if (pp && (pp->audit))
+        if (pp && PromiseGetBundle(pp)->source_path)
         {
             snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
-                     v, pp->audit->filename, pp->offset.line);
+                     v, PromiseGetBundle(pp)->source_path, pp->offset.line);
         }
         else
         {

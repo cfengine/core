@@ -1200,10 +1200,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
     pp->parent_promise_type = type;
 
-    ThreadLock(cft_policy);
-    pp->audit = AUDITPTR; // TODO: need to get rid of this, whatever it is.
-    ThreadUnlock(cft_policy);
-
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;

@@ -96,7 +96,7 @@ static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mo
 static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
 #ifdef __APPLE__
-static int VerifyFinderType(EvalContext *ctx, char *file, struct stat *statbuf, Attributes a, Promise *pp);
+static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
@@ -1919,7 +1919,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
     VerifySetUidGid(ctx, file, dstat, newperm, pp, attr);
 
 # ifdef __APPLE__
-    if (VerifyFinderType(ctx, file, dstat, attr, pp))
+    if (VerifyFinderType(ctx, file, attr, pp))
     {
         /* nop */
     }
@@ -2818,7 +2818,7 @@ static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mo
 
 #ifdef __APPLE__
 
-static int VerifyFinderType(EvalContext *ctx, char *file, struct stat *statbuf, Attributes a, Promise *pp)
+static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {                               /* Code modeled after hfstar's extract.c */
     typedef struct
     {

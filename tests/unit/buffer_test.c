@@ -147,6 +147,8 @@ static void test_zeroBuffer(void **state)
     assert_int_equal(DEFAULT_BUFFER_SIZE, buffer->capacity);
     assert_int_equal(0, buffer->used);
     assert_int_equal(0, BufferSize(buffer));
+	const char *data = BufferData(buffer);
+	assert_string_equal(data, "");
     assert_true(element0pointer == buffer->buffer);
     BufferZero(NULL);
     assert_int_equal(0, BufferDestroy(&buffer));

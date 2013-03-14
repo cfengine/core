@@ -5,19 +5,31 @@
 #include "string_expressions.h"
 #include "string_lib.h"
 
-static char *ForbiddenVarRefEval(const char *varname, void *param)
+static char *ForbiddenVarRefEval(const char *varname, VarRefType type, void *param)
 {
     fail();
 }
 
-static char *IdentityVarRefEval(const char *varname, void *param)
+static char *IdentityVarRefEval(const char *varname, VarRefType type, void *param)
 {
     return xstrdup(varname);
 }
 
-static char *AppendAVarRefEval(const char *varname, void *param)
+static char *AppendAVarRefEval(const char *varname, VarRefType type, void *param)
 {
     return StringConcatenate(2, "a", varname);
+}
+
+static char *DiscriminateVarTypesVarRefEval(const char *varname, VarRefType type, void *param)
+{
+    if (type == VAR_REF_TYPE_SCALAR)
+    {
+        return StringConcatenate(3, "cozy(", varname, ")");
+    }
+    else
+    {
+        return StringConcatenate(3, "ugly{", varname, "}");
+    }
 }
 
 static void CheckParse(const char *string_expression, const char *expected_output, VarRefEvaluator evaluator, void *param)
@@ -50,6 +62,17 @@ static void test_var_one_level(void **state)
     CheckParse("$(foo)x$(bar)y$(baz)", "fooxbarybaz", IdentityVarRefEval, NULL);
 }
 
+static void test_different_var_types(void **state)
+{
+    CheckParse("@{a$(b@(c)${d})@(e)}", "ugly{acozy(bugly{c}cozy(d))ugly{e}}", DiscriminateVarTypesVarRefEval, NULL);
+}
+
+static void test_(void **state)
+{
+    VarRef *r = Parse("foo:bar.quux", VAR_REF_TYPE_SCALAR);
+
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -59,6 +82,7 @@ int main()
         unit_test(test_var_naked),
         unit_test(test_var_naked_two_level),
         unit_test(test_var_one_level),
+        unit_test(test_different_var_types),
     };
 
     return run_tests(tests);

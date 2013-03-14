@@ -852,7 +852,7 @@ static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *clas
 
 /**********************************************************************/
 
-static char *EvalVarRef(ARG_UNUSED const char *varname, ARG_UNUSED void *param)
+static char *EvalVarRef(ARG_UNUSED const char *varname, ARG_UNUSED VarRefType type, ARG_UNUSED void *param)
 {
 /*
  * There should be no unexpanded variables when we evaluate any kind of

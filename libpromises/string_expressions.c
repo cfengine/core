@@ -81,7 +81,7 @@ static StringParseResult ParseQname(const char *expr, int start, int end)
 
 static StringParseResult ParseVarRef(const char *expr, int start, int end)
 {
-    if (start + 1 < end && expr[start] == '$')
+    if (start + 1 < end && (expr[start] == '$' || expr[start] == '@'))
     {
         if (expr[start + 1] == '(' || expr[start + 1] == '{')
         {
@@ -96,6 +96,19 @@ static StringParseResult ParseVarRef(const char *expr, int start, int end)
 
                     ret->op = VARREF;
                     ret->val.varref.name = res.result;
+
+                    if (expr[start] == '$')
+                    {
+                        ret->val.varref.type = VAR_REF_TYPE_SCALAR;
+                    }
+                    else if (expr[start] == '@')
+                    {
+                        ret->val.varref.type = VAR_REF_TYPE_LIST;
+                    }
+                    else
+                    {
+                        ProgrammingError("Unrecognized var ref type");
+                    }
 
                     return (StringParseResult) {ret, res.position + 1};
                 }
@@ -254,7 +267,7 @@ static char *EvalVarRef(const StringExpression *expr, VarRefEvaluator evalfn, vo
         return NULL;
     }
 
-    eval = (*evalfn) (name, param);
+    eval = (*evalfn) (name, expr->val.varref.type, param);
     free(name);
     return eval;
 }

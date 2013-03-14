@@ -1735,10 +1735,11 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL;
+        Rlist *scalars = NULL; // TODO what do we do with scalars?
 
         if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, rval);
+            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, &scalars, rval);
 
             if (listvars != NULL)
             {
@@ -1747,6 +1748,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             }
 
             RlistDestroy(listvars);
+            RlistDestroy(scalars);
         }
     }
 
@@ -1880,7 +1882,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 
     if (assoc == NULL)
     {
-        CfDebug("No such variable found %s.%s\n\n", scopeid, lval.lval);
+        CfDebug("No such variable found %s.%s\n\n", scopeid, vlval);
         /* C type system does not allow us to express the fact that returned
            value may contain immutable string. */
 

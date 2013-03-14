@@ -444,7 +444,7 @@ void ScopeToList(Scope *sp, Rlist **list)
     }
 }
 
-static bool ScopeIsReserved(const char *scope)
+bool ScopeIsReserved(const char *scope)
 {
     return strcmp("const", scope) == 0
             || strcmp("edit", scope) == 0

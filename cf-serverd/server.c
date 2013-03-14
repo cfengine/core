@@ -127,7 +127,7 @@ static void Terminate(int sd);
 static int AllowedUser(char *user);
 static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args);
 static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
-static void AbortTransfer(int sd, char *sendbuffer, char *filename);
+static void AbortTransfer(int sd, char *filename);
 static void FailedTransfer(int sd);
 static void ReplyNothing(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, int sd);
@@ -2742,7 +2742,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             if (sb.st_size != savedlen)
             {
-                AbortTransfer(sd, sendbuffer, filename);
+                AbortTransfer(sd, filename);
                 break;
             }
 
@@ -3248,10 +3248,11 @@ static int TransferRights(char *filename, int sd, ServerFileGetState *args, char
 
 /***************************************************************/
 
-static void AbortTransfer(int sd, char *sendbuffer, char *filename)
+static void AbortTransfer(int sd, char *filename)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Aborting transfer of file due to source changes\n");
 
+    char sendbuffer[CF_BUFSIZE];
     snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
 
     if (SendTransaction(sd, sendbuffer, 0, CF_DONE) == -1)

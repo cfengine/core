@@ -125,7 +125,7 @@ static int GenerateAvahiConfig(const char *path);
 #endif
 #endif
 
-GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     char ld_library_path[CF_BUFSIZE];

@@ -45,7 +45,7 @@
 #include "pipes.h"
 
 void ThisAgentInit(void);
-GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+GenericAgentConfig *CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context);
 int InitServer(size_t queue_size);

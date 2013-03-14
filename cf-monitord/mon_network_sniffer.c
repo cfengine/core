@@ -143,7 +143,7 @@ void MonNetworkSnifferEnable(bool enable)
 
 /******************************************************************************/
 
-static void CfenvTimeOut(int signum)
+static void CfenvTimeOut(ARG_UNUSED int signum)
 {
     alarm(0);
     TCPPAUSE = true;

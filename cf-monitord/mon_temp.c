@@ -53,11 +53,12 @@ static bool GetLMSensors(double *cf_this);
  * temperature is generally available. Several temperatures exist too ...
  ******************************************************************************/
 
+#if defined(__linux__)
+
 void MonTempGatherData(EvalContext *ctx, double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
-#if defined(__linux__)
     if (ACPI && GetAcpi(ctx, cf_this))
     {
         return;
@@ -67,8 +68,15 @@ void MonTempGatherData(EvalContext *ctx, double *cf_this)
     {
         return;
     }
-#endif
 }
+
+#else
+
+void MonTempGatherData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED double *cf_this)
+{
+}
+
+#endif
 
 /******************************************************************************/
 

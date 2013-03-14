@@ -45,7 +45,7 @@ check_PROGRAMS = \
 	misc_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
-        thread_test \
+	thread_test \
 	package_versions_compare_test \
 	files_lib_test \
 	map_test \
@@ -62,7 +62,8 @@ check_PROGRAMS = \
 	buffer_test \
 	cf_key_functions_test \
 	connection_management_test \
-	expand_test
+	expand_test \
+	string_expressions_test
 
 #	ipaddress_test
 

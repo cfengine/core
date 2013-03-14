@@ -120,7 +120,7 @@ static void CfGetFile(ServerFileGetState *args);
 static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
 static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
-static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 static void Terminate(int sd);
@@ -952,7 +952,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        if (GetServerQuery(conn, sendbuffer, recvbuffer))
+        if (GetServerQuery(conn, recvbuffer))
         {
             return true;
         }
@@ -2870,7 +2870,7 @@ static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char
 
 /********************************************************************/
 
-static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
+static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
 {
     char query[CF_BUFSIZE];
 

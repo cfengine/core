@@ -126,7 +126,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
 static void Terminate(int sd);
 static int AllowedUser(char *user);
 static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args);
-static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
+static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb);
 static void AbortTransfer(int sd, char *filename);
 static void FailedTransfer(int sd);
 static void ReplyNothing(ServerConnectionState *conn);
@@ -2572,7 +2572,7 @@ static void CfGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, sd, args, sendbuffer, &sb))
+    if (!TransferRights(filename, args, &sb))
     {
         RefuseAccess(args->connect, args->buf_size, "");
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
@@ -2695,7 +2695,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, sd, args, sendbuffer, &sb))
+    if (!TransferRights(filename, args, &sb))
     {
         RefuseAccess(args->connect, args->buf_size, "");
         FailedTransfer(sd);
@@ -3175,7 +3175,7 @@ static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 
 /***************************************************************/
 
-static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb)
+static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
 {
 #ifdef __MINGW32__
     SECURITY_DESCRIPTOR *secDesc;

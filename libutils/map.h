@@ -61,6 +61,8 @@ void *MapGet(Map *map, const void *key);
  */
 bool MapRemove(Map *map, const void *key);
 
+size_t MapSize(const Map *map);
+
 /*
  * MapIterator i = MapIteratorInit(map);
  * MapKeyValue *item;
@@ -108,7 +110,8 @@ void MapDestroy(Map *map);
     ValueType Prefix##MapGet(const Prefix##Map *map, const KeyType key); \
     bool Prefix##MapRemove(const Prefix##Map *map, const KeyType key);  \
     void Prefix##MapClear(Prefix##Map *map);                            \
-    void Prefix##MapDestroy(Prefix##Map *map);                   \
+    size_t Prefix##MapSet(Prefix##Map *map);                            \
+    void Prefix##MapDestroy(Prefix##Map *map);                          \
 
 #define TYPED_MAP_DEFINE(Prefix, KeyType, ValueType, hash_fn, equal_fn, \
                          destroy_key_fn, destroy_value_fn)              \
@@ -144,6 +147,11 @@ void MapDestroy(Map *map);
     void Prefix##MapClear(Prefix##Map *map)                             \
     {                                                                   \
         MapClear(map->impl);                                            \
+    }                                                                   \
+                                                                        \
+    size_t Prefix##MapSize(const Prefix##Map *map)                      \
+    {                                                                   \
+        return MapSize(map->impl);                                      \
     }                                                                   \
                                                                         \
     void Prefix##MapDestroy(Prefix##Map *map)                           \

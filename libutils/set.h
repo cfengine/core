@@ -39,6 +39,7 @@ void SetAdd(Set *set, void *element);
 bool SetContains(const Set *set, const void *element);
 bool SetRemove(Set *set, const void *element);
 void SetClear(Set *set);
+size_t SetSize(const Set *set);
 
 void SetUnion(Set *set, const Set *other);
 
@@ -58,6 +59,7 @@ void *SetIteratorNext(SetIterator *i);
     bool Prefix##SetContains(const Prefix##Set *Set, const ElementType element);  \
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
+    size_t Prefix##SetSize(const Prefix##Set *set);                     \
     void Prefix##SetDestroy(Prefix##Set *set);                          \
     Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set);      \
     ElementType Prefix##SetIteratorNext(Prefix##SetIterator *iter);     \
@@ -89,6 +91,11 @@ void *SetIteratorNext(SetIterator *i);
     void Prefix##SetClear(Prefix##Set *set)                             \
     {                                                                   \
         return SetClear(set->impl);                                     \
+    }                                                                   \
+                                                                        \
+    size_t Prefix##SetSize(const Prefix##Set *set)                      \
+    {                                                                   \
+        return SetSize(set->impl);                                      \
     }                                                                   \
                                                                         \
     void Prefix##SetDestroy(Prefix##Set *set)                           \

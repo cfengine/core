@@ -62,6 +62,11 @@ void SetClear(Set *set)
     MapClear(set);
 }
 
+size_t SetSize(const Set *set)
+{
+    return MapSize(set);
+}
+
 SetIterator SetIteratorInit(Set *set)
 {
     return MapIteratorInit(set);

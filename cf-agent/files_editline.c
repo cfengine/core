@@ -92,7 +92,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp);
 static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, Promise *pp);
-static int SelectLine(char *line, Attributes a, Promise *pp);
+static int SelectLine(char *line, Attributes a);
 static int NotAnchored(char *s);
 static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence type);
 static int SelectRegion(EvalContext *ctx, Item *start, Item **begin_ptr, Item **end_ptr, Attributes a, Promise *pp);
@@ -884,7 +884,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
             CfDebug(" -> Multi-line region didn't match text in the file");
         }
 
-        if (!SelectLine(ip->name, a, pp))       // Start search from location
+        if (!SelectLine(ip->name, a))       // Start search from location
         {
             np = ip->next;
             continue;
@@ -1300,7 +1300,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             strcpy(exp, buf);
         }
         
-        if (!SelectLine(exp, a, pp))
+        if (!SelectLine(exp, a))
         {
             continue;
         }
@@ -1370,7 +1370,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         sscanf(sp, "%2048[^\n]", buf);
         sp += strlen(buf);
         
-        if (!SelectLine(buf, a, pp))
+        if (!SelectLine(buf, a))
         {
             continue;
         }
@@ -1670,7 +1670,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 
 /***************************************************************************/
 
-static int SelectLine(char *line, Attributes a, Promise *pp)
+static int SelectLine(char *line, Attributes a)
 {
     Rlist *rp, *c;
     int s, e;

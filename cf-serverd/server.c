@@ -113,7 +113,7 @@ static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size
 static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);
 static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
 static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
-static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted, Item *classes);
+static void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes);
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key);
 static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
 static void CfGetFile(ServerFileGetState *args);
@@ -914,7 +914,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        ReplyServerContext(conn, sendbuffer, recvbuffer, encrypted, classes);
+        ReplyServerContext(conn, encrypted, classes);
         return true;
 
     case PROTOCOL_COMMAND_QUERY_SECURE:
@@ -2891,13 +2891,13 @@ static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
 
 /**************************************************************/
 
-static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted,
-                               Item *classes)
+static void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes)
 {
     char out[CF_BUFSIZE];
     int cipherlen;
     Item *ip;
 
+    char sendbuffer[CF_BUFSIZE];
     memset(sendbuffer, 0, CF_BUFSIZE);
 
     for (ip = classes; ip != NULL; ip = ip->next)

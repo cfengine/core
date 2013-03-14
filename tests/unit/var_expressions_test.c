@@ -43,7 +43,22 @@ static void test_dotted_array(void **state)
     VarRef ref = VarRefParse("ns:scope.lval[la.la]");
     assert_string_equal("ns", ref.ns);
     assert_string_equal("scope", ref.scope);
-    assert_string_equal("lval[la.la]", ref.lval);
+    assert_string_equal("lval", ref.lval);
+    assert_int_equal(1, ref.num_indices);
+    assert_string_equal("la.la", ref.indices[0]);
+    VarRefDestroy(ref);
+}
+
+static void test_levels(void **state)
+{
+    VarRef ref = VarRefParse("ns:scope.lval[x][y][z]");
+    assert_string_equal("ns", ref.ns);
+    assert_string_equal("scope", ref.scope);
+    assert_string_equal("lval", ref.lval);
+    assert_int_equal(3, ref.num_indices);
+    assert_string_equal("x", ref.indices[0]);
+    assert_string_equal("y", ref.indices[1]);
+    assert_string_equal("z", ref.indices[2]);
     VarRefDestroy(ref);
 }
 
@@ -57,6 +72,7 @@ int main()
         unit_test(test_scoped),
         unit_test(test_full),
         unit_test(test_dotted_array),
+        unit_test(test_levels),
     };
 
     return run_tests(tests);

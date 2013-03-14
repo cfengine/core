@@ -3,11 +3,15 @@
 
 #include "string_expressions.h"
 
+#include "platform.h"
+
 typedef struct
 {
     char *ns;
     char *scope;
     char *lval;
+    char **indices;
+    size_t num_indices;
 } VarRef;
 
 VarRef VarRefParse(const char *var_ref_string);

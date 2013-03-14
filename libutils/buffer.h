@@ -142,7 +142,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length);
   @param length The length of the data.
   @return The number of bytes used or -1 in case of error.
   */
-int BufferAppend(Buffer *buffer, char *bytes, unsigned int length);
+int BufferAppend(Buffer *buffer, const char *bytes, unsigned int length);
 /**
   @brief Stores complex data on the buffer.
 

@@ -362,7 +362,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
             }
 
             Rval retval;
-            if (ScopeGetVariable("control_executor", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable((VarRef) { NULL, "control_executor", cp->lval }, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
                 continue;

@@ -59,7 +59,7 @@ static void ForceScalar(char *lval, char *rval)
 {
     Rval retval;
 
-    if (ScopeGetVariable("match", lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "match", lval }, &retval) != DATA_TYPE_NONE)
     {
         ScopeDeleteVariable("match", lval);
     }

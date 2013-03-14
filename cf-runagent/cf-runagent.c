@@ -525,7 +525,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable("control_runagent", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable((VarRef) { NULL, "control_runagent", cp->lval }, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in runagent control body", cp->lval);
                 continue;
@@ -617,7 +617,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval }, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

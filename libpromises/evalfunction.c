@@ -958,7 +958,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(ScopeGetCurrent()->scope, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function REGLIST was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1226,7 +1226,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1284,7 +1284,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"sum\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1348,7 +1348,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"product\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1414,7 +1414,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(scopeid, lval, &rval2) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found\n",
               scopeid, name);
@@ -1683,7 +1683,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    retype = ScopeGetVariable(scopeid, lval, &rval);
+    retype = ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval);
 
     if (retype != DATA_TYPE_STRING_LIST && retype != DATA_TYPE_INT_LIST && retype != DATA_TYPE_REAL_LIST)
     {
@@ -1742,7 +1742,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(ScopeGetCurrent()->scope, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",
@@ -2137,7 +2137,7 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        if (ScopeGetVariable("this", lval, &rval) == DATA_TYPE_NONE)
+        if (ScopeGetVariable((VarRef) { NULL, "this", lval }, &rval) == DATA_TYPE_NONE)
         {
             found = false;
         }
@@ -3511,7 +3511,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable(ScopeGetCurrent()->scope, naked, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function filesexist was promised a list called \"%s\" but this was not found\n",
               listvar);

@@ -276,7 +276,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (ScopeGetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (ScopeGetVariable((VarRef) { NULL, "control_server", cp->lval }, &retval) == DATA_TYPE_NONE)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
@@ -474,23 +474,23 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval }, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval }, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval }, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval }, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

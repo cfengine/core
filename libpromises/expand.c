@@ -292,7 +292,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
-                if (ScopeGetVariable(absscope, var, &rval) != DATA_TYPE_NONE)
+                if (ScopeGetVariable((VarRef) { NULL, absscope, var }, &rval) != DATA_TYPE_NONE)
                 {
                     if (rval.type == RVAL_TYPE_LIST)
                     {
@@ -375,7 +375,7 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
         {
             GetNaked(naked, rp->item);
 
-            if (ScopeGetVariable(scopeid, naked, &returnval) != DATA_TYPE_NONE)
+            if (ScopeGetVariable((VarRef) { NULL, scopeid, naked }, &returnval) != DATA_TYPE_NONE)
             {
                 returnval = ExpandPrivateRval(scopeid, returnval);
             }
@@ -589,7 +589,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         increment = strlen(var) - 1;
 
-        switch (ScopeGetVariable(scopeid, currentitem, &rval))
+        switch (ScopeGetVariable((VarRef) { NULL, scopeid, currentitem }, &rval))
         {
         case DATA_TYPE_STRING:
         case DATA_TYPE_INT:
@@ -781,7 +781,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
     {
         GetNaked(naked, rval.item);
 
-        if (ScopeGetVariable(scopeid, naked, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
+        if (ScopeGetVariable((VarRef) { NULL, scopeid, naked }, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
         {
             returnval = ExpandPrivateRval("this", rval);
         }
@@ -897,7 +897,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             sscanf(rp->item, format, orgscope, orgname);
 
-            ScopeGetVariable(orgscope, orgname, &retval);
+            ScopeGetVariable((VarRef) { NULL, orgscope, orgname }, &retval);
 
             ScopeNewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
@@ -1257,7 +1257,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     Rval existing_var_rval;
-    DataType existing_var_type = ScopeGetVariable(scope, pp->promiser, &existing_var_rval);
+    DataType existing_var_type = ScopeGetVariable((VarRef) { NULL, scope, pp->promiser }, &existing_var_rval);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(PromiseGetNamespace(pp), "default") == 0)

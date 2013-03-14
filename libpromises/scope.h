@@ -28,6 +28,8 @@
 
 #include "cf3.defs.h"
 
+#include "var_expressions.h"
+
 bool ScopeExists(const char *name);
 
 void ScopeSetCurrent(const char *name);
@@ -84,7 +86,7 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.
  */
-DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
+DataType ScopeGetVariable(VarRef lval, Rval *returnv);
 void ScopeDeleteVariable(const char *scope, const char *id);
 
 bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);

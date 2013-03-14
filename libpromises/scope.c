@@ -172,7 +172,7 @@ void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lv
                 snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
             }
             
-            vtype = ScopeGetVariable(scope, qnaked, &retval);
+            vtype = ScopeGetVariable((VarRef) { NULL, scope, qnaked }, &retval);
 
             switch (vtype)
             {
@@ -409,7 +409,7 @@ void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataT
     CfDebug("NewScalar(%s,%s,%s)\n", scope, lval, rval);
 
     Rval rvald;
-    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
     {
         ScopeDeleteScalar(scope, lval);
     }
@@ -444,7 +444,7 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 {
     Rval rvald;
 
-    if (ScopeGetVariable(scope, lval, &rvald) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
     {
         ScopeDeleteVariable(scope, lval);
     }
@@ -454,28 +454,28 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 
 /*******************************************************************/
 
-DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
+DataType ScopeGetVariable(VarRef lval, Rval *returnv)
 {
     Scope *ptr = NULL;
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
     char expbuf[CF_EXPANDSIZE];
     CfAssoc *assoc;
 
-    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", scope, lval);
+    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", lval.scope, lval);
 
-    if (lval == NULL)
+    if (lval.lval == NULL)
     {
         *returnv = (Rval) {NULL, RVAL_TYPE_SCALAR };
         return DATA_TYPE_NONE;
     }
 
-    if (!IsExpandable(lval))
+    if (!IsExpandable(lval.lval))
     {
-        strncpy(sval, lval, CF_MAXVARSIZE - 1);
+        strncpy(sval, lval.lval, CF_MAXVARSIZE - 1);
     }
     else
     {
-        if (ExpandScalar(lval, expbuf))
+        if (ExpandScalar(lval.lval, expbuf))
         {
             strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
         }
@@ -483,8 +483,8 @@ DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
         {
             /* C type system does not allow us to express the fact that returned
                value may contain immutable string. */
-            *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
-            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval);
+            *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval.lval);
             return DATA_TYPE_NONE;
         }
     }
@@ -499,13 +499,13 @@ DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
     else
     {
         strlcpy(vlval, sval, sizeof(vlval));
-        strlcpy(scopeid, scope, sizeof(scopeid));
+        strlcpy(scopeid, lval.scope, sizeof(scopeid));
     }
 
     if (ptr == NULL)
     {
         /* Assume current scope */
-        strcpy(vlval, lval);
+        strcpy(vlval, lval.lval);
         ptr = ScopeGet(scopeid);
     }
 
@@ -514,7 +514,8 @@ DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
         CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
         /* C type system does not allow us to express the fact that returned
            value may contain immutable string. */
-        *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
+        // TODO: returning the same lval as was past in?
+        *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
         return DATA_TYPE_NONE;
     }
 
@@ -529,7 +530,7 @@ DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
            value may contain immutable string. */
 
 
-        *returnv = (Rval) {(char *) lval, RVAL_TYPE_SCALAR };
+        *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
         return DATA_TYPE_NONE;
 
     }

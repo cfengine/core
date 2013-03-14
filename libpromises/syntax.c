@@ -338,7 +338,7 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if ((dtype = ScopeGetVariable(scopeid, var, &rval)) != DATA_TYPE_NONE)
+            if ((dtype = ScopeGetVariable((VarRef) { NULL, scopeid, var }, &rval)) != DATA_TYPE_NONE)
             {
                 if (rval.type == RVAL_TYPE_LIST)
                 {

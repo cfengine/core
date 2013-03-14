@@ -1642,7 +1642,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
     int ok = true;
     FnCall *fp;
 
-    if (ScopeGetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", "bundlesequence" }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !!! No bundlesequence in the common control body");
         return false;

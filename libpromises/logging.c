@@ -94,7 +94,7 @@ void EndAudit(int background_tasks)
     {
         Rval track_value_rval = { 0 };
         bool track_value = false;
-        if (ScopeGetVariable("control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval, &track_value_rval) != DATA_TYPE_NONE)
+        if (ScopeGetVariable((VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval) != DATA_TYPE_NONE)
         {
             track_value = BooleanFromString(retval.item);
         }
@@ -128,7 +128,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (ScopeGetVariable("control_common", "version", &retval) != DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, "control_common", "version" }, &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }

@@ -106,7 +106,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = ScopeGetVariable(scopeid, rp->item, &retval);
+        dtype = ScopeGetVariable((VarRef) { NULL, scopeid, rp->item }, &retval);
 
         if (dtype == DATA_TYPE_NONE)
         {

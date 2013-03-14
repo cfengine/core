@@ -106,7 +106,7 @@ static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn);
 static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
-static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args);
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args);
 static ProtocolCommand GetCommand(char *str);
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
 static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);
@@ -485,7 +485,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        DoExec(ctx, conn, sendbuffer, args);
+        DoExec(ctx, conn, args);
         Terminate(conn->sd_reply);
         return false;
 
@@ -1091,7 +1091,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
 /******************************************************************/
 
-static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args)
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 {
     char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
     int print = false, i;
@@ -1105,7 +1105,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     if (strlen(CFRUNCOMMAND) == 0)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd exec request: no cfruncommand defined\n");
-        sprintf(sendbuffer, "Exec request: no cfruncommand defined\n");
+        char sendbuffer[CF_BUFSIZE];
+        strlcpy(sendbuffer, "Exec request: no cfruncommand defined\n", CF_BUFSIZE);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
     }
@@ -1116,7 +1117,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     {
         if ((*sp == ';') || (*sp == '&') || (*sp == '|'))
         {
-            sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+            char sendbuffer[CF_BUFSIZE];
+            snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
             SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
             return;
         }
@@ -1146,7 +1148,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
             if (!AuthorizeRoles(ctx, conn, sp))
             {
-                sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+                char sendbuffer[CF_BUFSIZE];
+                snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
                 SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
                 return;
             }
@@ -1157,6 +1160,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
     if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
     {
+        char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Command line too long with args: %s\n", ebuff);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
@@ -1165,6 +1169,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     {
         if ((args != NULL) && (strlen(args) > 0))
         {
+            char sendbuffer[CF_BUFSIZE];
             strcat(ebuff, " ");
             strncat(ebuff, args, CF_BUFSIZE - strlen(ebuff));
             snprintf(sendbuffer, CF_BUFSIZE, "cf-serverd Executing %s\n", ebuff);
@@ -1177,6 +1182,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     if ((pp = cf_popen_sh(ebuff, "r")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "pipe", "Couldn't open pipe to command %s\n", ebuff);
+        char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Unable to run %s\n", ebuff);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
@@ -1214,6 +1220,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
         if (print)
         {
+            char sendbuffer[CF_BUFSIZE];
             snprintf(sendbuffer, CF_BUFSIZE, "%s\n", line);
             if (SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE) == -1)
             {

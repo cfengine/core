@@ -138,7 +138,6 @@ extern int CLOCK_DRIFT;
 extern int ACTIVE_THREADS;
 
 extern int CFD_MAXPROCESSES;
-extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
 extern int LOGCONNS;

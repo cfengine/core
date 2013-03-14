@@ -104,10 +104,8 @@ extern bool SERVER_LISTEN;
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-extern int CLOCK_DRIFT;
 extern int CFD_MAXPROCESSES;
 extern int NO_FORK;
-extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
 extern int LOGCONNS;
@@ -251,7 +249,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     CFD_MAXPROCESSES = 30;
     MAXTRIES = 5;
-    CFD_INTERVAL = 0;
     DENYBADCLOCKS = true;
     CFRUNCOMMAND[0] = '\0';
     SetChecksumUpdates(true);

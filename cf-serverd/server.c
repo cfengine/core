@@ -81,7 +81,6 @@ int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS;
 
 int CFD_MAXPROCESSES = 0;
-int CFD_INTERVAL = 0;
 int DENYBADCLOCKS = true;
 
 int MAXTRIES = 5;

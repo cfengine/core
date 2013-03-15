@@ -72,7 +72,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        ScopeNewScalar(PromiseGetBundle(pp)->name, unique_name, pp->promiser, DATA_TYPE_STRING);
+        ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, unique_name }, pp->promiser, DATA_TYPE_STRING);
         return;
     }
        

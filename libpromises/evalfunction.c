@@ -1516,7 +1516,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             for (rp = newlist; rp != NULL; rp = rp->next)
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                ScopeNewScalar(THIS_BUNDLE, name, RlistScalarValue(rp), DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> getfields: defining %s = %s\n", name, RlistScalarValue(rp));
                 vcount++;
             }
@@ -1829,7 +1829,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive and responding correctly\n", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                ScopeNewScalar(ScopeGetCurrent()->scope, buffer, rp->item, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, ScopeGetCurrent()->scope, buffer }, rp->item, DATA_TYPE_STRING);
                 count++;
             }
         }
@@ -1837,7 +1837,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive\n", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            ScopeNewScalar(ScopeGetCurrent()->scope, buffer, rp->item, DATA_TYPE_STRING);
+            ScopeNewScalar((VarRef) { NULL, ScopeGetCurrent()->scope, buffer }, rp->item, DATA_TYPE_STRING);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), fp->ns))
             {
@@ -2670,7 +2670,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             else
             {
                 snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                ScopeNewScalar(THIS_BUNDLE, var, assoc->rval.item, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, var }, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
     }
@@ -3975,7 +3975,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
                 snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
             }
 
-            ScopeNewScalar(THIS_BUNDLE, name, this_rval, type);
+            ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, name }, this_rval, type);
             vcount++;
         }
 
@@ -4114,7 +4114,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         if (CheckID(name))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
-            ScopeNewScalar(context, name, content, DATA_TYPE_STRING);
+            ScopeNewScalar((VarRef) { NULL, context, name }, content, DATA_TYPE_STRING);
         }
         break;
 

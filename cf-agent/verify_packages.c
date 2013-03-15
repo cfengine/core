@@ -841,9 +841,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         const Scope *current_scope = ScopeGetCurrent();
 
         ScopeSetCurrent("cf_pack_context");
-        ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
-        ScopeNewScalar("cf_pack_context", "version", version, DATA_TYPE_STRING);
-        ScopeNewScalar("cf_pack_context", "arch", arch, DATA_TYPE_STRING);
+        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "name" }, name, DATA_TYPE_STRING);
+        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "version" }, version, DATA_TYPE_STRING);
+        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "arch" }, arch, DATA_TYPE_STRING);
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
@@ -910,9 +910,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     const Scope *current_scope = ScopeGetCurrent();
 
                     ScopeSetCurrent("cf_pack_context_anyver");
-                    ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
-                    ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
-                    ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
+                    ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
+                    ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
+                    ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
                     ExpandScalar(a.packages.package_name_convention, refAnyVer);
 
                     ScopeSetCurrent(current_scope->scope);
@@ -1047,9 +1047,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 const Scope *current_scope = ScopeGetCurrent();
 
                 ScopeSetCurrent("cf_pack_context_anyver");
-                ScopeNewScalar("cf_pack_context_anyver", "name", name, DATA_TYPE_STRING);
-                ScopeNewScalar("cf_pack_context_anyver", "version", "(.*)", DATA_TYPE_STRING);
-                ScopeNewScalar("cf_pack_context_anyver", "arch", arch, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
                 ExpandScalar(a.packages.package_name_convention, refAnyVer);
 
                 ScopeSetCurrent(current_scope->scope);
@@ -1116,9 +1116,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         const Scope *current_scope = ScopeGetCurrent();
 
                         ScopeSetCurrent("cf_pack_context");
-                        ScopeNewScalar("cf_pack_context", "name", name, DATA_TYPE_STRING);
-                        ScopeNewScalar("cf_pack_context", "version", instVer, DATA_TYPE_STRING);
-                        ScopeNewScalar("cf_pack_context", "arch", instArch, DATA_TYPE_STRING);
+                        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "name" }, name, DATA_TYPE_STRING);
+                        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "version" }, instVer, DATA_TYPE_STRING);
+                        ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "arch" }, instArch, DATA_TYPE_STRING);
                         ExpandScalar(a.packages.package_delete_convention, reference2);
                         id_del = reference2;
 

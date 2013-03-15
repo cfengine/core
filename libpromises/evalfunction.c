@@ -227,7 +227,7 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (!IsDefinedClass(ctx, RlistScalarValue(arg), fp->ns))
+        if (!IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
         }
@@ -702,7 +702,7 @@ static FnCallResult FnCallDirname(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallClassify(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)), fp->ns);
+    bool is_defined = IsDefinedClass(ctx, CanonifyName(RlistScalarValue(finalargs)), PromiseGetNamespace(fp->caller));
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(is_defined ? "any" : "!any"), RVAL_TYPE_SCALAR } };
 }
@@ -812,7 +812,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
     snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s %s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command, args);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Executing and using module [%s]\n", modulecmd);
 
-    if (!ExecModule(ctx, modulecmd, fp->ns))
+    if (!ExecModule(ctx, modulecmd, PromiseGetNamespace(fp->caller)))
     {
         return (FnCallResult) { FNCALL_FAILURE};
     }
@@ -846,7 +846,7 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d.Hr%02d", slot * 5, ((slot + 1) * 5) % 60, hour);
     }
 
-    if (IsDefinedClass(ctx, class, fp->ns))
+    if (IsDefinedClass(ctx, class, PromiseGetNamespace(fp->caller)))
     {
         strcpy(buffer, "any");
     }
@@ -1839,11 +1839,11 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             ScopeNewScalar((VarRef) { NULL, ScopeGetCurrent()->scope, buffer }, rp->item, DATA_TYPE_STRING);
 
-            if (IsDefinedClass(ctx, CanonifyName(rp->item), fp->ns))
+            if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "This host is in the list and has promised to join the class %s - joined\n",
                       array_lval);
-                EvalContextHeapAddSoft(ctx, array_lval, fp->ns);
+                EvalContextHeapAddSoft(ctx, array_lval, PromiseGetNamespace(fp->caller));
             }
 
             count++;
@@ -2332,7 +2332,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, (char *) rp->item);
-                NewBundleClass(ctx, class, THIS_BUNDLE, fp->ns);
+                NewBundleClass(ctx, class, THIS_BUNDLE, PromiseGetNamespace(fp->caller));
             }
             RlistDestroy(classlist);
         }
@@ -2946,7 +2946,7 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     for (arg = finalargs; arg; arg = arg->next)
     {
-        if (IsDefinedClass(ctx, RlistScalarValue(arg), fp->ns))
+        if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
         {
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
         }
@@ -3102,7 +3102,7 @@ static FnCallResult FnCallAccumulatedDate(EvalContext *ctx, FnCall *fp, Rlist *f
 
 static FnCallResult FnCallNot(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ctx, RlistScalarValue(finalargs), fp->ns) ? "!any" : "any"), RVAL_TYPE_SCALAR } };
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IsDefinedClass(ctx, RlistScalarValue(finalargs), PromiseGetNamespace(fp->caller)) ? "!any" : "any"), RVAL_TYPE_SCALAR } };
 }
 
 /*********************************************************************/

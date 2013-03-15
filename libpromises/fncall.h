@@ -31,7 +31,8 @@ struct FnCall_
 {
     char *name;
     Rlist *args;
-    char *ns;
+
+    const Promise *caller;
 };
 
 bool FnCallIsBuiltIn(Rval rval);
@@ -39,7 +40,7 @@ bool FnCallIsBuiltIn(Rval rval);
 FnCall *FnCallNew(const char *name, Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 void FnCallDestroy(FnCall *fp);
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp);
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller);
 
 const FnCallType *FnCallTypeGet(const char *name);
 

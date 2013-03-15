@@ -148,7 +148,7 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     Rlist *expargs;
     const FnCallType *this = FnCallTypeGet(fp->name);
@@ -164,10 +164,10 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
     }
     else
     {
-        if (pp)
+        if (caller)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
-                  fp->name, PromiseGetBundle(pp)->source_path, pp->offset.line);
+                  fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
@@ -179,12 +179,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
+    if ((caller != NULL) && !IsDefinedClass(ctx, caller->classes, PromiseGetNamespace(caller)))
     {
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    expargs = NewExpArgs(ctx, fp, pp);
+    expargs = NewExpArgs(ctx, fp, caller);
 
     if (UnresolvedArgs(expargs))
     {
@@ -192,15 +192,8 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    if (pp != NULL)
-    {
-        fp->ns = (char *)PromiseGetNamespace(pp);
-    }
-    else
-    {
-        fp->ns = "default";
-    }
-    
+    fp->caller = caller;
+
     FnCallResult result = CallFunction(ctx, this, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)

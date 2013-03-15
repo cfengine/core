@@ -186,7 +186,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
         DoVerifyServices(ctx, a, pp, report_context);
     }
 
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
     YieldCurrentLock(thislock);
 }
 

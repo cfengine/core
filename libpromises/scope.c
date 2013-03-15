@@ -411,7 +411,7 @@ void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataT
     Rval rvald;
     if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
     {
-        ScopeDeleteScalar(scope, lval);
+        ScopeDeleteScalar((VarRef) { NULL, scope, lval });
     }
 
 /*
@@ -423,18 +423,18 @@ void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataT
 
 /*******************************************************************/
 
-void ScopeDeleteScalar(const char *scope_name, const char *lval)
+void ScopeDeleteScalar(VarRef lval)
 {
-    Scope *scope = ScopeGet(scope_name);
+    Scope *scope = ScopeGet(lval.scope);
 
     if (scope == NULL)
     {
         return;
     }
 
-    if (HashDeleteElement(scope->hashtable, lval) == false)
+    if (HashDeleteElement(scope->hashtable, lval.lval) == false)
     {
-        CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope_name);
+        CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval.lval, lval.scope);
     }
 }
 

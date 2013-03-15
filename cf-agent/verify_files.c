@@ -256,7 +256,7 @@ void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportCo
         return;
     }
 
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
     ScopeNewScalar("this", "promiser", path, DATA_TYPE_STRING); 
     
     thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);

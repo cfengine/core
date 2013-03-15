@@ -134,11 +134,11 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
     ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
 
     YieldCurrentLock(thislock);
 }

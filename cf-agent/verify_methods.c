@@ -52,7 +52,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *re
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp, report_context);
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
 }
 
 /*****************************************************************************/
@@ -165,7 +165,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         for (const Rlist *rp = bp->args; rp; rp = rp->next)
         {
             const char *lval = rp->item;
-            ScopeDeleteScalar(bp->name, lval);
+            ScopeDeleteScalar((VarRef) { NULL, bp->name, lval });
         }
     }
     else

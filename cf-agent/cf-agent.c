@@ -1205,7 +1205,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
            break;
        }
 
-    ScopeDeleteScalar(PromiseGetBundle(pp)->name, pp->promiser);
+    ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
     ConvergeVarHashPromise(ctx, pp, true);
 }
 

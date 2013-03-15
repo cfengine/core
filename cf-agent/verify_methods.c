@@ -52,7 +52,7 @@ void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *re
     a = GetMethodAttributes(ctx, pp);
 
     VerifyMethod(ctx, "usebundle", a, pp, report_context);
-    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
+    ScopeDeleteSpecialScalar("this", "promiser");
 }
 
 /*****************************************************************************/

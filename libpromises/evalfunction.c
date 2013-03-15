@@ -1703,7 +1703,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         }
 
         RlistAppendScalar(&newlist, expbuf);
-        ScopeDeleteScalar((VarRef) { NULL, "this", "this" });
+        ScopeDeleteSpecialScalar("this", "this");
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { newlist, RVAL_TYPE_LIST } };

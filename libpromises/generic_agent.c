@@ -1358,8 +1358,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         {
             strcpy(VDOMAIN, cp->rval.item);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET domain = %s\n", VDOMAIN);
-            ScopeDeleteScalar((VarRef) { NULL, "sys", "domain" });
-            ScopeDeleteScalar((VarRef) { NULL, "sys", "fqhost" });
+            ScopeDeleteSpecialScalar("sys", "domain");
+            ScopeDeleteSpecialScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
             ScopeNewSpecialScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
             ScopeNewSpecialScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);

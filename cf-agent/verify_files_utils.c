@@ -128,7 +128,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 
 /* We still need to augment the scope of context "this" for commands */
 
-    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
+    ScopeDeleteSpecialScalar("this", "promiser");
     ScopeNewSpecialScalar("this", "promiser", path, DATA_TYPE_STRING);        // Parameters may only be scalars
 
     if (attr.transformer != NULL)
@@ -169,7 +169,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
         }
     }
 
-    ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
+    ScopeDeleteSpecialScalar("this", "promiser");
     return true;
 }
 

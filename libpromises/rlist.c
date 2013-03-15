@@ -676,7 +676,7 @@ void RvalDestroy(Rval rval)
         {
 
             next = clist->next;
-
+            clist->next = NULL;
             if (clist->item)
             {
                 RvalDestroy((Rval) {clist->item, clist->type});
@@ -870,33 +870,41 @@ Rlist *RlistFromSplitString(const char *string, char sep)
 
 /*******************************************************************/
 
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int blanks)
- /* Splits a string containing a separator like "," 
-    into a linked list of separate items, */
-// NOTE: this has a bad side-effect of creating scope match and variables,
-//       see RegExMatchSubString in matching.c - could leak memory
+/*
+    Splits a string containing a separator like "," into a linked list of
+    separate items. NOTE: this has a bad side-effect of creating scope match
+    and variables, see RegExMatchSubString() in matching.c - could leak memory.
+
+    @param maxent	Maximum entities in returned list.
+    @param flags	If RLIST_SPLIT_BLANKS bit is set then include empty
+    			strings too.
+    			If RLIST_SPLIT_APPENDREST bit is set then append an
+    			extra field to the list that contains the rest of
+                        the string, if any.
+*/
+Rlist *RlistFromSplitRegex(const char *string, const char *regex,
+                           int maxent, int flags)
 {
     Rlist *liststart = NULL;
     char node[CF_MAXVARSIZE];
     int start, end;
     int count = 0;
+    bool blanks = flags & RLIST_SPLIT_BLANKS;
+    bool append_rest = flags & RLIST_SPLIT_APPENDREST;
 
     if (string == NULL)
     {
-        return NULL;
+        ProgrammingError("RlistFromSplitRegex got NULL string!");
     }
-
-    CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
+    CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n",
+            string, regex, maxent);
 
     const char *sp = string;
-
-    while ((count < max) && BlockTextMatch(regex, sp, &start, &end))
+    /* FIX: we compile the regex on every iteration, see BlockTextMatch()... */
+    while ((count < maxent) &&
+           BlockTextMatch(regex, sp, &start, &end))
     {
-        if (end == 0)
-        {
-            break;
-        }
-
+        assert(end > 0);
         memset(node, 0, CF_MAXVARSIZE);
         strncpy(node, sp, start);
 
@@ -909,12 +917,13 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
         sp += end;
     }
 
-    if (count < max)
+    /* If there is more string left and user wants it, just append it to the end. */
+    if (count < maxent || append_rest)
     {
-        memset(node, 0, CF_MAXVARSIZE);
-        strncpy(node, sp, CF_MAXVARSIZE - 1);
+        strncpy(node, sp, CF_MAXVARSIZE);
+        node[CF_MAXVARSIZE - 1] = '\0';              /* FIX err on overflow */
 
-        if ((blanks && sp != string) || strlen(node) > 0)
+        if (blanks || strlen(node) > 0)
         {
             RlistAppendScalar(&liststart, node);
         }

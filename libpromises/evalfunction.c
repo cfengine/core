@@ -662,7 +662,7 @@ static FnCallResult FnCallLastNode(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     char *name = RlistScalarValue(finalargs);
     char *split = RlistScalarValue(finalargs->next);
 
-    newlist = RlistFromSplitRegex(name, split, 100, true);
+    newlist = RlistFromSplitRegex(name, split, 100, RLIST_SPLIT_BLANKS);
 
     for (rp = newlist; rp != NULL; rp = rp->next)
     {
@@ -1466,7 +1466,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 {
     Rlist *rp, *newlist;
     char name[CF_MAXVARSIZE], line[CF_BUFSIZE], retval[CF_SMALLBUF];
-    int lcount = 0, vcount = 0, nopurge = true;
+    int lcount = 0, vcount = 0;
     FILE *fin;
 
 /* begin fn specific content */
@@ -1509,8 +1509,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
         if (lcount == 0)
         {
-            newlist = RlistFromSplitRegex(line, split, 31, nopurge);
-
+            newlist = RlistFromSplitRegex(line, split, 31, RLIST_SPLIT_BLANKS);
             vcount = 1;
 
             for (rp = newlist; rp != NULL; rp = rp->next)
@@ -2371,7 +2370,8 @@ static FnCallResult FnCallPeers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     }
     else
     {
-        newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+        newlist = RlistFromSplitRegex(file_buffer, split, maxent,
+                                      RLIST_SPLIT_BLANKS);
     }
 
 /* Slice up the list and discard everything except our slice */
@@ -2461,7 +2461,8 @@ static FnCallResult FnCallPeerLeader(EvalContext *ctx, FnCall *fp, Rlist *finala
         }
         else
         {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent,
+                                          RLIST_SPLIT_BLANKS);
         }
     }
 
@@ -2550,7 +2551,8 @@ static FnCallResult FnCallPeerLeaders(EvalContext *ctx, FnCall *fp, Rlist *final
         return (FnCallResult) { FNCALL_SUCCESS, { NULL, RVAL_TYPE_LIST } };
     }
 
-    newlist = RlistFromSplitRegex(file_buffer, split, maxent, true);
+    newlist = RlistFromSplitRegex(file_buffer, split, maxent,
+                                  RLIST_SPLIT_BLANKS);
 
 /* Slice up the list and discard everything except our slice */
 
@@ -3160,7 +3162,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 {
     Rlist *rp, *newlist = NULL;
     char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
-    int noerrors = true, blanks = false;
+    int noerrors = true;
 
 /* begin fn specific content */
 
@@ -3193,7 +3195,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         }
         else
         {
-            newlist = RlistFromSplitRegex(file_buffer, split, maxent, blanks);
+            newlist = RlistFromSplitRegex(file_buffer, split, maxent, 0);
         }
     }
 
@@ -3476,7 +3478,7 @@ static FnCallResult FnCallSplitString(EvalContext *ctx, FnCall *fp, Rlist *final
 
 // Read once to validate structure of file in itemlist
 
-    newlist = RlistFromSplitRegex(string, split, max, true);
+    newlist = RlistFromSplitRegex(string, split, max, RLIST_SPLIT_BLANKS);
 
     if (newlist == NULL)
     {
@@ -3897,7 +3899,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
 {
     char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
     Rlist *rp, *newlist = NULL;
-    int allowblanks = true, vcount, hcount, lcount = 0;
+    int vcount, hcount, lcount = 0;
     int lineLen;
 
     memset(linebuf, 0, CF_BUFSIZE);
@@ -3930,8 +3932,8 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
             break;
         }
 
-        newlist = RlistFromSplitRegex(linebuf, split, maxent, allowblanks);
-
+        newlist = RlistFromSplitRegex(linebuf, split, maxent,
+                                      RLIST_SPLIT_BLANKS);
         vcount = 0;
         first_one[0] = '\0';
 

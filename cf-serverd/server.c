@@ -1993,7 +1993,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
         sp++;
     }
 
-    defines = RlistFromSplitRegex(sp, "[,:;]", 99, false);
+    defines = RlistFromSplitRegex(sp, "[,:;]", 99, 0);
 
 /* For each user-defined class attempt, check RBAC */
 

@@ -50,15 +50,33 @@ vars:
 
   # Empty string
   "test6" slist => splitstring("", "X", "100");
-  
+
   "test6_result" string => join(":", "test6");
   "test6_expected" string => "$(const.dollar)(test.test6_result)";
 
   # Limit
   "test7" slist => splitstring("abcXdefXghiXjklXmno", "X", 3);
-  
+
   "test7_result" string => join(":", "test7");
   "test7_expected" string => "abc:def:ghi";
+
+  # Empty first and last
+  "test8" slist => splitstring(":blah:", ":", 3);
+
+  "test8_result" string => join(":", "test8");
+  "test8_expected" string=> ":blah:";
+
+  # Consecutive empties
+  "test9" slist => splitstring("a:::b", ":", 4);
+
+  "test9_result" string => join(":", "test9");
+  "test9_expected" string=> "a:::b";
+
+  # Consecutive empties only
+  "test10" slist => splitstring(":", ":", 2);
+
+  "test10_result" string => join(":", "test10");
+  "test10_expected" string=> ":";
 }
 
 bundle agent check
@@ -71,8 +89,11 @@ classes:
   "ok5" expression => strcmp("$(test.test5_result)", "$(test.test5_expected)");
   "ok6" expression => strcmp("$(test.test6_result)", "$(test.test6_expected)");
   "ok7" expression => strcmp("$(test.test7_result)", "$(test.test7_expected)");
+  "ok8" expression => strcmp("$(test.test8_result)", "$(test.test8_expected)");
+  "ok9" expression => strcmp("$(test.test9_result)", "$(test.test9_expected)");
+  "ok10" expression => strcmp("$(test.test10_result)", "$(test.test10_expected)");
 
-  "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7" };
+  "ok" and => { "ok1", "ok2", "ok3", "ok4", "ok5", "ok6", "ok7", "ok8", "ok9", "ok10" };
 
 reports:
   DEBUG.!ok1::
@@ -89,6 +110,12 @@ reports:
     "$(test.test6_result) != $(test.test6_expected)";
   DEBUG.!ok7::
     "$(test.test7_result) != $(test.test7_expected)";
+  DEBUG.!ok8::
+    "$(test.test8_result) != $(test.test8_expected)";
+  DEBUG.!ok9::
+    "$(test.test9_result) != $(test.test9_expected)";
+  DEBUG.!ok10::
+    "$(test.test10_result) != $(test.test10_expected)";
 
     ok::
         "$(this.promise_filename) Pass";

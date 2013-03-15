@@ -508,8 +508,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            EvalContextStackFrameClear(ctx);        // Each time we change bundle
-
             BannerBundle(bp, NULL);
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
@@ -552,8 +550,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            EvalContextStackFrameClear(ctx);        // Each time we change bundle
-
             BannerBundle(bp, NULL);
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)

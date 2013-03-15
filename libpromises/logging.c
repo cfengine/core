@@ -65,7 +65,7 @@ static uint16_t SYSLOG_PORT = 514;
 
 int FACILITY;
 
-static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promise *pp, const char *logname);
+static void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
 
 /*****************************************************************************/
 
@@ -273,7 +273,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_REPAIRED, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_repaired);
+            SummarizeTransaction(attr, pp, attr.transaction.log_repaired);
         }
         break;
 
@@ -313,7 +313,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -335,7 +335,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -357,7 +357,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -379,7 +379,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_failed);
+            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
         }
         break;
 
@@ -392,7 +392,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
         if (IsPromiseValuableForLogging(pp))
         {
             NotePromiseCompliance(pp, PROMISE_STATE_ANY, reason);
-            SummarizeTransaction(ctx, attr, pp, attr.transaction.log_kept);
+            SummarizeTransaction(attr, pp, attr.transaction.log_kept);
         }
 
         if (IsPromiseValuableForStatus(pp))
@@ -531,7 +531,7 @@ void FatalError(char *s, ...)
     exit(1);
 }
 
-static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promise *pp, const char *logname)
+static void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
 {
     if (logname && (attr.transaction.log_string))
     {
@@ -564,13 +564,6 @@ static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const Promis
         }
 
         attr.transaction.log_string = NULL;     /* To avoid repetition */
-    }
-    else if (attr.transaction.log_failed)
-    {
-        if (logname && (strcmp(logname, attr.transaction.log_failed) == 0))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_LOG, CF_NOP, "", pp, attr, "%s", attr.transaction.log_string);
-        }
     }
 }
 

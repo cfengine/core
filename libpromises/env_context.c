@@ -55,6 +55,7 @@
 
 static bool ValidClassName(const char *str);
 
+static StackFrame *EvalContextStackFrame(const EvalContext *ctx);
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
 static bool ABORTBUNDLE = false;
@@ -266,7 +267,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
                 }
                 else
                 {
-                    NewBundleClass(ctx, buffer, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
+                    EvalContextStackFrameAddSoft(ctx, buffer);
                 }
 
                 CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
@@ -382,7 +383,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const Rep
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    NewBundleClass(ctx, pp->promiser, PromiseGetBundle(pp)->name, PromiseGetNamespace(pp));
+                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
                 }
             }
         }
@@ -554,17 +555,22 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     }
 }
 
-void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, const char *ns)
+void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 {
+    assert(SeqLength(ctx->stack) > 0);
+    assert(strcmp(THIS_BUNDLE, EvalContextStackFrame(ctx)->owner->name) == 0);
+
     char copy[CF_BUFSIZE];
 
-    if (ns && strcmp(ns, "default") != 0)
+    StackFrame *frame = EvalContextStackFrame(ctx);
+
+    if (strcmp(frame->owner->ns, "default") != 0)
     {
-        snprintf(copy, CF_MAXVARSIZE, "%s:%s", ns, context);
+         snprintf(copy, CF_MAXVARSIZE, "%s:%s", frame->owner->ns, context);
     }
     else
     {
-        strncpy(copy, context, CF_MAXVARSIZE);
+         strncpy(copy, context, CF_MAXVARSIZE);
     }
 
     if (Chop(copy, CF_EXPANDSIZE) == -1)
@@ -581,19 +587,20 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", bundle, copy);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", frame->owner->name, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame->owner->name);
         exit(1);
     }
 
     if (EvalContextHeapContainsSoft(ctx, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts", copy, bundle);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
+              copy, frame->owner->name);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -601,13 +608,13 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
         return;
     }
 
-    EvalContextStackFrameAddSoft(ctx, copy);
+    StringSetAdd(EvalContextStackFrame(ctx)->contexts, xstrdup(copy));
 
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ctx, ip->name, ns))
+        if (IsDefinedClass(ctx, ip->name, frame->owner->ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, bundle);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame->owner->name);
             exit(1);
         }
     }
@@ -616,7 +623,7 @@ void NewBundleClass(EvalContext *ctx, const char *context, const char *bundle, c
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ctx, ip->name, ns))
+            if (IsDefinedClass(ctx, ip->name, frame->owner->ns))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
@@ -1292,11 +1299,6 @@ static StackFrame *EvalContextStackFrame(const EvalContext *ctx)
     return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1);
 }
 
-void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
-{
-    StringSetAdd(EvalContextStackFrame(ctx)->contexts, xstrdup(context));
-}
-
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
 {
     StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
@@ -1423,10 +1425,11 @@ StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
     return StringSetIteratorInit(ctx->heap_negated);
 }
 
-static StackFrame *StackFrameNew(bool inherit_previous)
+static StackFrame *StackFrameNew(const Bundle *owner, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));
 
+    frame->owner = owner;
     frame->contexts = StringSetNew();
     frame->contexts_negated = StringSetNew();
 
@@ -1440,9 +1443,9 @@ void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
     StringSetRemove(EvalContextStackFrame(ctx)->contexts, context);
 }
 
-void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous)
+void EvalContextStackPushFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
 {
-    StackFrame *frame = StackFrameNew(inherits_previous);
+    StackFrame *frame = StackFrameNew(owner, inherits_previous);
     SeqAppend(ctx->stack, frame);
 }
 

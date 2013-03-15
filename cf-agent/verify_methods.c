@@ -135,7 +135,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         THIS_BUNDLE = bp->name;
 
-        EvalContextStackPushFrame(ctx, a.inherit);
+        EvalContextStackPushFrame(ctx, bp, a.inherit);
 
         retval = ScheduleAgentOperations(ctx, bp, report_context);
 

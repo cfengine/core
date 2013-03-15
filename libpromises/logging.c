@@ -209,7 +209,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
             switch (context_scope)
             {
             case CONTEXT_SCOPE_BUNDLE:
-                NewBundleClass(ctx, classname, THIS_BUNDLE, ns);
+                EvalContextStackFrameAddSoft(ctx, classname);
                 break;
 
             default:

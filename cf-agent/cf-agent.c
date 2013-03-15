@@ -1000,7 +1000,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
-    EvalContextStackPushFrame(ctx, false);
+    EvalContextStackPushFrame(ctx, bp, false);
 
     PromiseType *sp;
     TypeSequence type;

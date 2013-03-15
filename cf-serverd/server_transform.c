@@ -502,7 +502,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        EvalContextStackPushFrame(ctx, false);
+        EvalContextStackPushFrame(ctx, bp, false);
 
         ScopeSetCurrent(bp->name);
 
@@ -546,7 +546,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        EvalContextStackPushFrame(ctx, false);
+        EvalContextStackPushFrame(ctx, bp, false);
 
         ScopeSetCurrent(bp->name);
 

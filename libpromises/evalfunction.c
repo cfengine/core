@@ -2332,7 +2332,7 @@ static FnCallResult FnCallRemoteClassesMatching(EvalContext *ctx, FnCall *fp, Rl
             for (rp = classlist; rp != NULL; rp = rp->next)
             {
                 snprintf(class, CF_MAXVARSIZE - 1, "%s_%s", prefix, (char *) rp->item);
-                NewBundleClass(ctx, class, THIS_BUNDLE, PromiseGetNamespace(fp->caller));
+                EvalContextStackFrameAddSoft(ctx, class);
             }
             RlistDestroy(classlist);
         }

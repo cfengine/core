@@ -33,6 +33,8 @@
 
 typedef struct
 {
+    const Bundle *owner;
+
     StringSet *contexts;
     StringSet *contexts_negated;
 
@@ -88,7 +90,7 @@ StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
-void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous);
+void EvalContextStackPushFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 /* - Parsing/evaluating expressions - */
@@ -97,10 +99,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
-
-
-// Add new contexts
-void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
 
 // Remove contexts
 void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);

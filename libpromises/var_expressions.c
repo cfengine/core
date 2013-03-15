@@ -78,7 +78,7 @@ VarRef VarRefParse(const char *qualified_name)
         assert("Index brackets in variable expression did not balance" && IndexBracketsBalance(indices_start - 1));
 
         num_indices = IndexCount(indices_start - 1);
-        indices = xmalloc(num_indices);
+        indices = xmalloc(num_indices * sizeof(char *));
 
         Buffer *buf = BufferNew();
         size_t cur_index = 0;

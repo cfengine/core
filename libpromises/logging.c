@@ -37,6 +37,7 @@
 #include "conversion.h"
 #include "syntax.h"
 #include "expand.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -65,7 +66,7 @@ static uint16_t SYSLOG_PORT = 514;
 
 int FACILITY;
 
-static void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname);
+static void SummarizeTransaction(Attributes attr, const char *logname);
 
 /*****************************************************************************/
 
@@ -247,167 +248,219 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
     }
 }
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
+#ifdef HAVE_NOVA
+static void TrackTotalCompliance(char status, const Promise *pp)
 {
+    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
+    {
+        return;
+    }
+
+    char nova_status;
+
     switch (status)
     {
     case CF_CHG:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            if (!EDIT_MODEL)
-            {
-                PR_REPAIRED++;
-                VAL_REPAIRED += attr.transaction.value_repaired;
-
-#ifdef HAVE_NOVA
-                EnterpriseTrackTotalCompliance(pp, 'r');
-#endif
-            }
-        }
-
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.change, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        MarkPromiseHandleDone(ctx, pp);
-        DeleteAllClasses(ctx, attr.classes.del_change);
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_REPAIRED, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_repaired);
-        }
+        nova_status = 'r';
         break;
 
     case CF_WARN:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_NOTKEPT++;
-            VAL_NOTKEPT += attr.transaction.value_notkept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
-#endif
-        }
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-        }
-        break;
-
     case CF_TIMEX:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_NOTKEPT++;
-            VAL_NOTKEPT += attr.transaction.value_notkept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
-#endif
-        }
-
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.timeout, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(ctx, attr.classes.del_notkept);
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
-        }
-        break;
-
     case CF_FAIL:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_NOTKEPT++;
-            VAL_NOTKEPT += attr.transaction.value_notkept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
-#endif
-        }
-
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.failure, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(ctx, attr.classes.del_notkept);
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
-        }
-        break;
-
     case CF_DENIED:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_NOTKEPT++;
-            VAL_NOTKEPT += attr.transaction.value_notkept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
-#endif
-        }
-
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.denied, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(ctx, attr.classes.del_notkept);
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
-        }
-        break;
-
     case CF_INTERPT:
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_NOTKEPT++;
-            VAL_NOTKEPT += attr.transaction.value_notkept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'n');
-#endif
-        }
-
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.interrupt, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(ctx, attr.classes.del_notkept);
-
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_NOTKEPT, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_failed);
-        }
+        nova_status = 'n';
         break;
 
     case CF_UNKNOWN:
     case CF_NOP:
+        nova_status = 'c';
+        break;
 
-        AddAllClasses(ctx, PromiseGetNamespace(pp), attr.classes.kept, attr.classes.persist, attr.classes.timer, attr.classes.scope);
-        DeleteAllClasses(ctx, attr.classes.del_kept);
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to TrackTotalCompliance", status);
+    }
 
-        if (IsPromiseValuableForLogging(pp))
-        {
-            NotePromiseCompliance(pp, PROMISE_STATE_ANY, reason);
-            SummarizeTransaction(attr, pp, attr.transaction.log_kept);
-        }
-
-        if (IsPromiseValuableForStatus(pp))
-        {
-            PR_KEPT++;
-            VAL_KEPT += attr.transaction.value_kept;
-
-#ifdef HAVE_NOVA
-            EnterpriseTrackTotalCompliance(pp, 'c');
+    EnterpriseTrackTotalCompliance(pp, nova_status);
+}
 #endif
-        }
 
+static void UpdatePromiseCounters(char status, const Promise *pp, Attributes attr)
+{
+    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
+    {
+        return;
+    }
+
+    switch (status)
+    {
+    case CF_CHG:
+    case CF_UNKNOWN:
+    case CF_NOP:
+        PR_REPAIRED++;
+        VAL_REPAIRED += attr.transaction.value_repaired;
+        break;
+
+    case CF_WARN:
+    case CF_TIMEX:
+    case CF_FAIL:
+    case CF_DENIED:
+    case CF_INTERPT:
+        PR_NOTKEPT++;
+        VAL_NOTKEPT += attr.transaction.value_notkept;
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to UpdatePromiseCounters", status);
+    }
+}
+
+static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promise *pp, Attributes attr)
+{
+    Rlist *add_classes;
+    Rlist *del_classes;
+
+    switch (status)
+    {
+    case CF_CHG:
+        add_classes = attr.classes.change;
+        del_classes = attr.classes.del_change;
+        break;
+
+    case CF_WARN:
+        /* FIXME: nothing? */
+        return;
+
+    case CF_TIMEX:
+        add_classes = attr.classes.timeout;
+        del_classes = attr.classes.del_notkept;
+        break;
+
+    case CF_FAIL:
+        add_classes = attr.classes.failure;
+        del_classes = attr.classes.del_notkept;
+        break;
+
+    case CF_DENIED:
+        add_classes = attr.classes.denied;
+        del_classes = attr.classes.del_notkept;
+        break;
+
+    case CF_INTERPT:
+        add_classes = attr.classes.interrupt;
+        del_classes = attr.classes.del_notkept;
+        break;
+
+    case CF_UNKNOWN:
+    case CF_NOP:
+        add_classes = attr.classes.kept;
+        del_classes = attr.classes.del_kept;
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
+    }
+
+    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+    DeleteAllClasses(ctx, del_classes);
+}
+
+static void NotifyDependantPromises(char status, EvalContext *ctx, const Promise *pp)
+{
+    switch (status)
+    {
+    case CF_CHG:
+    case CF_UNKNOWN:
+    case CF_NOP:
         MarkPromiseHandleDone(ctx, pp);
         break;
+
+    default:
+        /* This promise is not yet done, don't mark it is as such */
+        break;
     }
+}
+
+static void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char compliance_status;
+
+    switch (status)
+    {
+    case CF_CHG:
+        compliance_status = PROMISE_STATE_REPAIRED;
+        break;
+
+    case CF_WARN:
+    case CF_TIMEX:
+    case CF_FAIL:
+    case CF_DENIED:
+    case CF_INTERPT:
+        compliance_status = PROMISE_STATE_NOTKEPT;
+        break;
+
+    case CF_UNKNOWN:
+    case CF_NOP:
+        compliance_status = PROMISE_STATE_ANY;
+        break;
+
+    default:
+        ProgrammingError("Unknown status '%c' has been passed to UpdatePromiseComplianceStatus", status);
+    }
+
+    NotePromiseCompliance(pp, compliance_status, reason);
+}
+
+static void DoSummarizeTransaction(char status, const Promise *pp, Attributes attr)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char *log_name;
+
+    switch (status)
+    {
+    case CF_CHG:
+        log_name = attr.transaction.log_repaired;
+        break;
+
+    case CF_WARN:
+        /* FIXME: nothing? */
+        return;
+
+    case CF_TIMEX:
+    case CF_FAIL:
+    case CF_DENIED:
+    case CF_INTERPT:
+        log_name = attr.transaction.log_failed;
+        break;
+
+    case CF_UNKNOWN:
+    case CF_NOP:
+        log_name = attr.transaction.log_kept;
+        break;
+    }
+
+    SummarizeTransaction(attr, log_name);
+}
+
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
+{
+#ifdef HAVE_NOVA
+    TrackTotalCompliance(status, pp);
+#endif
+    UpdatePromiseCounters(status, pp, attr);
+    SetPromiseOutcomeClasses(status, ctx, pp, attr);
+    NotifyDependantPromises(status, ctx, pp);
+    UpdatePromiseComplianceStatus(status, pp, reason);
+    DoSummarizeTransaction(status, pp, attr);
 }
 
 /************************************************************************/
@@ -531,7 +584,7 @@ void FatalError(char *s, ...)
     exit(1);
 }
 
-static void SummarizeTransaction(Attributes attr, const Promise *pp, const char *logname)
+static void SummarizeTransaction(Attributes attr, const char *logname)
 {
     if (logname && (attr.transaction.log_string))
     {

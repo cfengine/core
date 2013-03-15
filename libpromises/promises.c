@@ -405,7 +405,7 @@ void PromiseRef(OutputLevel level, const Promise *pp)
         return;
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", "version" }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }

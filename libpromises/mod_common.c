@@ -24,7 +24,7 @@
 
 /* This is a root node in the syntax tree */
 
-#include "cf3.defs.h"
+#include "mod_common.h"
 
 #include "mod_environ.h"
 #include "mod_outputs.h"
@@ -392,3 +392,18 @@ const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[] =
 };
 
 const int CF3_MODULES = (sizeof(CF_ALL_PROMISE_TYPES) / sizeof(CF_ALL_PROMISE_TYPES[0]));
+
+
+CommonControl CommonControlFromString(const char *lval)
+{
+    int i = 0;
+    for (const BodySyntax *s = CFG_CONTROLBODY; s->lval; s++, i++)
+    {
+        if (strcmp(lval, s->lval) == 0)
+        {
+            return (CommonControl)i;
+        }
+    }
+
+    return COMMON_CONTROL_NONE;
+}

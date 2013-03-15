@@ -128,7 +128,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", "version" }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }

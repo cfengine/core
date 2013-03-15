@@ -89,6 +89,8 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
 DataType ScopeGetVariable(VarRef lval, Rval *returnv);
 void ScopeDeleteVariable(const char *scope, const char *id);
 
+DataType ScopeControlCommonGet(CommonControl lval, Rval *rval_out);
+
 bool ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 

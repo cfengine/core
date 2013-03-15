@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -453,6 +453,12 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 }
 
 /*******************************************************************/
+
+DataType ScopeControlCommonGet(CommonControl lval, Rval *rval_out)
+{
+    const char *lval_str = CFG_CONTROLBODY[lval].lval;
+    return ScopeGetVariable((VarRef) { NULL, "control_common", lval_str }, rval_out);
+}
 
 DataType ScopeGetVariable(VarRef lval, Rval *returnv)
 {

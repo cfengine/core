@@ -62,6 +62,8 @@
 #include "fncall.h"
 #include "rlist.h"
 
+#include "mod_common.h"
+
 typedef enum
 {
     TYPE_SEQUENCE_META,
@@ -526,7 +528,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable((VarRef) { NULL, "control_common", cp->lval }, &retval) != DATA_TYPE_NONE)
+            if (ScopeControlCommonGet(CommonControlFromString(cp->lval), &retval) != DATA_TYPE_NONE)
             {
                 /* Already handled in generic_agent */
                 continue;
@@ -853,24 +855,24 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, "control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval }, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
@@ -897,7 +899,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (ScopeGetVariable((VarRef) { NULL, "control_common", "bundlesequence" }, &retval) == DATA_TYPE_NONE)
+    else if (ScopeControlCommonGet(COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
     {
         // TODO: somewhat frenzied way of telling user about an error
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");

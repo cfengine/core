@@ -100,8 +100,8 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
 
-// Remove contexts
-void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
+
+
 
 /* - Rest - */
 int Abort(void);

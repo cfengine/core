@@ -467,32 +467,6 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     }
 }
 
-/*********************************************************************/
-
-void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns)
-{
-    char context[CF_MAXVARSIZE];
- 
-    if (strchr(oclass, ':'))
-    {
-        strncpy(context, oclass, CF_MAXVARSIZE);
-    }
-    else
-    {
-        if (ns && strcmp(ns, "default") != 0)
-        {
-            snprintf(context, CF_MAXVARSIZE, "%s:%s", ns, oclass);
-        }
-        else
-        {
-            strncpy(context, oclass, CF_MAXVARSIZE);
-        }
-    }
-
-    EvalContextHeapRemoveSoft(ctx, context);
-    EvalContextStackFrameRemoveSoft(ctx, context);
-}
-
 /*******************************************************************/
 
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context)

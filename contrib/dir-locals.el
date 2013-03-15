@@ -13,6 +13,7 @@
                 (cperl-extra-newline-before-brace . t)
                 (cperl-merge-trailing-else . nil)))
  (c-mode . ((c-file-style . "cfengine")))
+ (c++-mode . ((c-file-style . "cfengine"))) ; some weirdos like c++-mode better
  (cfengine-mode . ((indent-tabs-mode . nil)
                    (tab-width . 4)
                    (fill-column . 80))))

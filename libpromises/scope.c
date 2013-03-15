@@ -404,9 +404,24 @@ void ScopeToList(Scope *sp, Rlist **list)
     }
 }
 
+static bool ScopeIsReserved(const char *scope)
+{
+    return strcmp("const", scope) == 0
+            || strcmp("edit", scope) == 0
+            || strcmp("match", scope) == 0
+            || strcmp("mon", scope) == 0
+            || strcmp("sys", scope) == 0
+            || strcmp("this", scope) == 0;
+}
+
 void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt)
 {
     CfDebug("NewScalar(%s,%s,%s)\n", scope, lval, rval);
+    assert(!ScopeIsReserved(scope));
+    if (ScopeIsReserved(scope))
+    {
+        ScopeNewSpecialScalar(scope, lval, rval, dt);
+    }
 
     Rval rvald;
     if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
@@ -418,6 +433,19 @@ void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataT
  * We know AddVariableHash does not change passed Rval structure or its
  * contents, but we have no easy way to express it in C type system, hence cast.
  */
+    ScopeAddVariableHash((VarRef) { NULL, scope, lval }, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt, NULL, 0);
+}
+
+void ScopeNewSpecialScalar(const char *scope, const char *lval, const char *rval, DataType dt)
+{
+    assert(ScopeIsReserved(scope));
+
+    Rval rvald;
+    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
+    {
+        ScopeDeleteScalar((VarRef) { NULL, scope, lval });
+    }
+
     ScopeAddVariableHash((VarRef) { NULL, scope, lval }, (Rval) {(char *) rval, RVAL_TYPE_SCALAR }, dt, NULL, 0);
 }
 

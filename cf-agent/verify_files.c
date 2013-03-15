@@ -257,7 +257,7 @@ void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportCo
     }
 
     ScopeDeleteScalar((VarRef) { NULL, "this", "promiser" });
-    ScopeNewScalar("this", "promiser", path, DATA_TYPE_STRING); 
+    ScopeNewSpecialScalar("this", "promiser", path, DATA_TYPE_STRING); 
     
     thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
 
@@ -673,7 +673,7 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportC
     if (literal)
     {
         // Prime the promiser temporarily, may override later
-        ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         VerifyFilePromise(ctx, pp->promiser, pp, report_context);
     }
     else                        // Default is to expand regex paths

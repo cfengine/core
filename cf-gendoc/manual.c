@@ -250,9 +250,9 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 // scopes const and sys
 
-    ScopeNewScalar("edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("edit", "filename", "x", DATA_TYPE_STRING);
 
-    ScopeNewScalar("match", "0", "x", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("match", "0", "x", DATA_TYPE_STRING);
 
     for (const char **s = scopes; *s != NULL; ++s)
     {

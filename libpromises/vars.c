@@ -42,11 +42,11 @@ static int IsCf3Scalar(char *str);
 
 void LoadSystemConstants()
 {
-    ScopeNewScalar("const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("const", "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("const", "n", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("const", "r", "\r", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("const", "t", "\t", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("const", "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
 }

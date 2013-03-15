@@ -1361,8 +1361,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             ScopeDeleteScalar((VarRef) { NULL, "sys", "domain" });
             ScopeDeleteScalar((VarRef) { NULL, "sys", "fqhost" });
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-            ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             DeleteClass(ctx, "undefined_domain", NULL);
             EvalContextHeapAddHard(ctx, VDOMAIN);
         }

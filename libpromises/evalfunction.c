@@ -1692,7 +1692,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
-        ScopeNewScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(map, expbuf);
 

@@ -121,7 +121,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
         return false;
     }
 
-    ScopeNewScalar("edit", "filename", filename, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("edit", "filename", filename, DATA_TYPE_STRING);
 
 /* Reset the done state for every call here, since bundle is reusable */
 

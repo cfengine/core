@@ -95,6 +95,11 @@ void ScopeNewScalar(const char *ns, const char *varname, const char *value, Data
     fail();                     /* LCOV_EXCL_LINE */
 }
 
+void ScopeNewSpecialScalar(const char *ns, const char *varname, const char *value, DataType type)
+{
+    ScopeNewScalar(ns, varname, value, type);
+}
+
 static void test_set_names(void **state)
 {
     int i = 0;

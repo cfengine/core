@@ -64,7 +64,7 @@ static void ForceScalar(char *lval, char *rval)
         ScopeDeleteVariable("match", lval);
     }
 
-    ScopeNewScalar("match", lval, rval, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("match", lval, rval, DATA_TYPE_STRING);
     CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
 }
 

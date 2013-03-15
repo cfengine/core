@@ -698,27 +698,27 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
             // This ordering is necessary to get automated canonification
             ExpandScalar(handle,tmp);
             CanonifyNameInPlace(tmp);
-            ScopeNewScalar("this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            ScopeNewScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewScalar("this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewScalar("this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewSpecialScalar("this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewScalar("this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewSpecialScalar("this", "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewScalar("this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -727,7 +727,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
 
         if (pp->has_subbundles)
         {
-            ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -1768,21 +1768,21 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

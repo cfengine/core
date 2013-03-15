@@ -639,7 +639,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             ERRORCOUNT = 0;
 
             SetPolicyServer(POLICY_SERVER);
-            ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
             if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
             {

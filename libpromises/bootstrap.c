@@ -210,11 +210,11 @@ void SetPolicyServer(char *name)
     {
         // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
         // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
-        ScopeNewScalar("sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
     else
     {
-        ScopeNewScalar("sys", "policy_hub", name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "policy_hub", name, DATA_TYPE_STRING);
     }
 
 // Get the timestamp on policy update
@@ -232,7 +232,7 @@ void SetPolicyServer(char *name)
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
     
-    ScopeNewScalar("sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
 /********************************************************************/

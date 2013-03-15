@@ -260,10 +260,10 @@ void DetectDomainName(EvalContext *ctx, const char *orig_nodename)
     EvalContextHeapAddHard(ctx, VUQNAME);
     EvalContextHeapAddHard(ctx, VDOMAIN);
 
-    ScopeNewScalar("sys", "host", nodename, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "host", nodename, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "uqhost", VUQNAME, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
 }
 
 /*******************************************************************/
@@ -339,7 +339,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
                     found = true;
 
                     VSYSTEMHARDCLASS = (PlatformContext) i;
-                    ScopeNewScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
+                    ScopeNewSpecialScalar("sys", "class", CLASSTEXT[i], DATA_TYPE_STRING);
                     break;
                 }
             }
@@ -393,27 +393,27 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
-    ScopeNewScalar("sys", "date", workbuf, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "expires", EXPIRY, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "date", workbuf, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "cdate", CanonifyName(workbuf), DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "os", VSYSNAME.sysname, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "release", VSYSNAME.release, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "version", VSYSNAME.version, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "arch", VSYSNAME.machine, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "workdir", CFWORKDIR, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "fstab", VFSTAB[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "expires", EXPIRY, DATA_TYPE_STRING);
 /* FIXME: type conversion */
-    ScopeNewScalar("sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 
     if (PUBKEY)
     {
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
         HashPrintSafe(CF_DEFAULT_DIGEST, digest, PUBKEY_DIGEST);
 
-        ScopeNewScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
 
         snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", PUBKEY_DIGEST);
         CanonifyNameInPlace(workbuf);
@@ -445,7 +445,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            ScopeNewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
             have_component[i] = true;
         }
     }
@@ -466,7 +466,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         if (cfstat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
-            ScopeNewScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar("sys", shortname, quoteName, DATA_TYPE_STRING);
         }
     }
 
@@ -475,29 +475,29 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewScalar("sys", "windir", workbuf, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "windir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewScalar("sys", "winsysdir", workbuf, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "winsysdir", workbuf, DATA_TYPE_STRING);
     }
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
     {
-        ScopeNewScalar("sys", "winprogdir", workbuf, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "winprogdir", workbuf, DATA_TYPE_STRING);
     }
 
 # ifdef _WIN64
 // only available on 64 bit windows systems
     if (NovaWin_GetEnv("PROGRAMFILES(x86)", workbuf, sizeof(workbuf)))
     {
-        ScopeNewScalar("sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "winprogdir86", workbuf, DATA_TYPE_STRING);
     }
 
 # else/* NOT _WIN64 */
 
-    ScopeNewScalar("sys", "winprogdir86", "", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "winprogdir86", "", DATA_TYPE_STRING);
 
 # endif
 
@@ -505,10 +505,10 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
 // defs on Unix for manual-building purposes
 
-    ScopeNewScalar("sys", "windir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "windir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "winsysdir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "winprogdir", "/dev/null", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "winprogdir86", "/dev/null", DATA_TYPE_STRING);
 
 #endif /* !__MINGW32__ */
 
@@ -573,13 +573,13 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     }
 
     sp = xstrdup(CanonifyName(workbuf));
-    ScopeNewScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "long_arch", sp, DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, sp);
     free(sp);
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     sp = xstrdup(CanonifyName(workbuf));
-    ScopeNewScalar("sys", "ostype", sp, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "ostype", sp, DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, sp);
     free(sp);
 
@@ -622,7 +622,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     zid = getzoneid();
     getzonenamebyid(zid, zone, ZONENAME_MAX);
 
-    ScopeNewScalar("sys", "zone", zone, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "zone", zone, DATA_TYPE_STRING);
     snprintf(vbuff, CF_BUFSIZE - 1, "zone_%s", zone);
     EvalContextHeapAddHard(ctx, vbuff);
 
@@ -671,7 +671,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     }
 
     ScopeDeleteVariable("mon", "env_time");
-    ScopeNewScalar("mon", "env_time", value, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("mon", "env_time", value, DATA_TYPE_STRING);
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Loading environment...\n");
 
@@ -723,7 +723,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             if (agent_type != AGENT_TYPE_EXECUTOR)
             {
                 ScopeDeleteVariable("mon", name);
-                ScopeNewScalar("mon", name, value, DATA_TYPE_STRING);
+                ScopeNewSpecialScalar("mon", name, value, DATA_TYPE_STRING);
                 CfDebug(" -> Setting new monitoring scalar %s => %s", name, value);
             }
         }
@@ -792,8 +792,8 @@ void CreateHardClassesFromCanonification(EvalContext *ctx, const char *canonifie
 static void SetFlavour(EvalContext *ctx, const char *flavour)
 {
     EvalContextHeapAddHard(ctx, flavour);
-    ScopeNewScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
-    ScopeNewScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "flavour", flavour, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "flavor", flavour, DATA_TYPE_STRING);
 }
 
 void OSClasses(EvalContext *ctx)
@@ -985,7 +985,7 @@ void OSClasses(EvalContext *ctx)
         }
     }
 
-    ScopeNewScalar("sys", "crontab", "", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar("sys", "crontab", "", DATA_TYPE_STRING);
 
 #endif /* __CYGWIN__ */
 
@@ -1034,7 +1034,7 @@ void OSClasses(EvalContext *ctx)
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);
         }
 
-        ScopeNewScalar("sys", "crontab", vbuff, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "crontab", vbuff, DATA_TYPE_STRING);
     }
 
 #endif
@@ -1056,17 +1056,17 @@ void OSClasses(EvalContext *ctx)
 
     if (IsDefinedClass(ctx, "redhat", NULL))
     {
-        ScopeNewScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "doc_root", "/var/www/html", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "SuSE", NULL))
     {
-        ScopeNewScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "doc_root", "/srv/www/htdocs", DATA_TYPE_STRING);
     }
 
     if (IsDefinedClass(ctx, "debian", NULL))
     {
-        ScopeNewScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "doc_root", "/var/www", DATA_TYPE_STRING);
     }
 }
 
@@ -2296,11 +2296,11 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count == 1) {
         EvalContextHeapAddHard(ctx, buf);  // "1_cpu" from init - change if buf is ever used above
-        ScopeNewScalar("sys", "cpus", "1", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "cpus", "1", DATA_TYPE_STRING);
     } else {
         snprintf(buf, CF_SMALLBUF, "%d_cpus", count);
         EvalContextHeapAddHard(ctx, buf);
         snprintf(buf, CF_SMALLBUF, "%d", count);
-        ScopeNewScalar("sys", "cpus", buf, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar("sys", "cpus", buf, DATA_TYPE_STRING);
     }
 }

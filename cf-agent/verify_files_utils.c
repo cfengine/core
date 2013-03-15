@@ -739,7 +739,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             continue;
         }
 
-        if (attr.copy.purge)    /* Do not purge this file */
+        if (attr.copy.purge)    /* Purge this file */
         {
             AppendItem(&namecache, dirp->d_name, NULL);
         }

@@ -85,7 +85,7 @@ void EndAudit(int background_tasks)
     }
 
     char *sp, string[CF_BUFSIZE];
-    Rval retval;
+    Rval retval = { 0 };
     Promise dummyp = { 0 };
     Attributes dummyattr = { {0} };
 
@@ -97,7 +97,7 @@ void EndAudit(int background_tasks)
         bool track_value = false;
         if (ScopeGetVariable((VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval) != DATA_TYPE_NONE)
         {
-            track_value = BooleanFromString(retval.item);
+            track_value = BooleanFromString(track_value_rval.item);
         }
 
         if (track_value)

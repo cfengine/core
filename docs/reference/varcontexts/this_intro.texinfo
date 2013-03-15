@@ -27,6 +27,7 @@ variable by qualifying it with the bundle name in which it is declared).
 
 @menu
 * Variable this.handle::
+* Variable this.namespace::
 * Variable this.promise_filename::
 * Variable this.promise_linenumber::
 * Variable this.promiser::
@@ -39,6 +40,11 @@ variable by qualifying it with the bundle name in which it is declared).
 
 This variable points to the promise handle of the currently handled promise;
  it is useful for referring to the intention in log messages.
+
+@node Variable this.namespace
+@subsection Variable this.namespace
+
+This variable contains the current namespace.
 
 @node Variable this.promise_filename
 @subsection Variable this.promise_filename

@@ -3149,6 +3149,7 @@ bundle common paths
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/bin/sort";
       "path[sysctl]"        string => "/sbin/sysctl";
+      "path[test]"          string => "/usr/bin/test";
       "path[tr]"            string => "/usr/bin/tr";
 
       #
@@ -3194,6 +3195,7 @@ bundle common paths
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/usr/bin/sort";
       "path[sysctl]"        string => "/sbin/sysctl";
+      "path[test]"          string => "/usr/bin/test";
       "path[tr]"            string => "/usr/bin/tr";
 
       #

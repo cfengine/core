@@ -1429,13 +1429,6 @@ void EvalContextStackPopFrame(EvalContext *ctx)
     SeqRemove(ctx->stack, SeqLength(ctx->stack) - 1);
 }
 
-void EvalContextStackFrameClear(EvalContext *ctx)
-{
-    StackFrame *frame = EvalContextStackFrame(ctx);
-    StringSetClear(frame->contexts);
-    StringSetClear(frame->contexts_negated);
-}
-
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
 {
     StackFrame *frame = EvalContextStackFrame(ctx);

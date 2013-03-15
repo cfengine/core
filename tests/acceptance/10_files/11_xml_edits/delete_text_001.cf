@@ -1,6 +1,6 @@
 ######################################################################
 #
-# File editing edit_xml - example for building an XPath in a node in a non-empty file
+# File editing edit_xml
 #
 ######################################################################
 
@@ -21,12 +21,24 @@ vars:
         "states" slist => { "actual", "expected" };
 
         "actual" string =>
-"<?xml version=\"1.0\"?>
-<Server><Service><Engine></Engine></Service></Server>";
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">Hot Potatoes!!!</Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
 
         "expected" string =>
-"<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish><TwoFish><RedFish><BlueFish><Host name=\"cfe_host\"><Alias>cfe_alias</Alias></Host></BlueFish></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\"></Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
 
 files:
         "$(G.testfile).$(states)"
@@ -50,19 +62,19 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "xpath" string =>
-"/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish/Host[ Alias = cfe_alias | @name=\"cfe_host\" ]";
+      "text" string => "Hot Potatoes!!!";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_build("$(test.xpath)");
+            edit_xml => test_delete("$(test.text)");
 }
 
-bundle edit_xml test_build(str)
+bundle edit_xml test_delete(str)
 {
-build_xpath:
-        "$(str)";
+delete_text:
+        "$(str)"
+        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
 }
 
 #######################################################
@@ -70,7 +82,8 @@ build_xpath:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
+

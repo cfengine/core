@@ -28,13 +28,17 @@ void test_map_iterators_from_rval_naked_list_var(void **state)
     Rlist *list = NULL;
     RlistAppend(&list, "jersey", RVAL_TYPE_SCALAR);
 
-    ScopeAddVariableHash("scope", "jwow", (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST, NULL, 0);
+    VarRef lval = VarRefParse("scope.jwow");
+
+    ScopeAddVariableHash(lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST, NULL, 0);
 
     Rlist *lists = NULL;
     MapIteratorsFromRval("scope", &lists, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
 
     assert_int_equal(1, RlistLen(lists));
     assert_string_equal("jwow", lists->item);
+
+    VarRefDestroy(lval);
 }
 
 int main()

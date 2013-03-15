@@ -1473,7 +1473,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             }
         }
 
-        if (!ScopeAddVariableHash(BufferData(qualified_scope), pp->promiser, rval, DataTypeFromString(opts.cp_save->lval),
+        if (!ScopeAddVariableHash((VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval),
                              PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);

@@ -997,6 +997,45 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 /* Level 3                                                           */
 /*********************************************************************/
 
+static void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
+{
+    {
+        SetIterator it = EvalContextHeapIteratorHard(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
+
+    {
+        SetIterator it = EvalContextHeapIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
+
+    {
+        SetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                WriterWriteF(writer, "%s\n", context);
+            }
+        }
+    }
+}
+
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {

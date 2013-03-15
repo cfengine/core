@@ -1107,49 +1107,6 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
     }
 }
 
-/*******************************************************************/
-
-void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
-{
-    {
-        SetIterator it = EvalContextHeapIteratorHard(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
-        }
-    }
-
-    {
-        SetIterator it = EvalContextHeapIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
-        }
-    }
-
-    {
-        SetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
-        }
-    }
-}
-
-/*****************************************************************************/
-
 void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context)
 {
     if (!IsItemIn(ctx->heap_abort, context))

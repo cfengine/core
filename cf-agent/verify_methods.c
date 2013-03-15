@@ -153,7 +153,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
             break;
 
         case CF_CHG:
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
             break;
 
         default:

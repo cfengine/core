@@ -663,9 +663,10 @@ bundle edit_line replace_or_add(pattern,line)
 {
 vars:
   "cline" string => canonify("$(line)");
+  "eline" string => escape("$(line)");
 
 replace_patterns:
-  "^(?!$(line)$)$(pattern)$"
+  "^(?!$(eline)$)$(pattern)$"
           comment => "Replace a pattern here",
      replace_with => value("$(line)"),
           classes => always("replace_done_$(cline)");

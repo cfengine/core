@@ -22,16 +22,11 @@ vars:
 
         "actual" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\" unpackWARs=\"true\" autoDeploy=\"true\" xmlValidation=\"false\" xmlNamespaceAware=\"false\">
-
-<Logger className=\"org.apache.catalina.logger.FileLogger\" directory=\"logs\" prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
-
-<Alias>cfe_alias</Alias>
-</Host></Engine></Service></Server>";
+<Server><Service><Engine><OneFish type=\"clownfish\">Nemo</OneFish></Engine></Service></Server>";
 
         "expected" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+<Server><Service><Engine><OneFish>Nemo<TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
 files:
         "$(G.testfile).$(states)"
@@ -55,29 +50,20 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "tree" string =>
-"<Host name=\"cfe_host\" debug=\"0\" appBase=\"webapps/cfe_host\"
-        unpackWARs=\"true\" autoDeploy=\"true\"
-    xmlValidation=\"false\" xmlNamespaceAware=\"false\">
-
-<Logger className=\"org.apache.catalina.logger.FileLogger\"
-directory=\"logs\"  prefix=\"cfe_host\_log.\" suffix=\".txt\" timestamp=\"true\"/>
-
-<Alias>cfe_alias</Alias>
-</Host>";
+      "attribute_name" string => "type";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_delete("$(test.tree)");
+            edit_xml => test_delete("$(test.attribute_name)");
 }
 
 bundle edit_xml test_delete(str)
 {
-delete_tree:
+delete_attribute:
         "$(str)"
         build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
-        select_xpath => "/Server/Service/Engine";
+        select_xpath => "/Server/Service/Engine/OneFish";
 }
 
 #######################################################
@@ -85,7 +71,8 @@ delete_tree:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
+

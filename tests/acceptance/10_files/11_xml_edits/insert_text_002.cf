@@ -21,25 +21,12 @@ vars:
         "states" slist => { "actual", "expected" };
 
         "actual" string =>
-"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
-<Potatoes>
-  <Potato name=\"OnePotato\">
-  </Potato>
-  <Potato name=\"TwoPotato\">
-  </Potato>
-  <Potato name=\"ThreePotato\">
-  </Potato>
-</Potatoes>";
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><OneFish><TwoFish type=\"clownfish\">Marlin</TwoFish></OneFish></Engine></Service></Server>";
 
         "expected" string =>
-"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
-<Potatoes>
-  <Potato name=\"OnePotato\">Hot Potatoes!!!</Potato>
-  <Potato name=\"TwoPotato\">
-  </Potato>
-  <Potato name=\"ThreePotato\">
-  </Potato>
-</Potatoes>";
+"<?xml version=\"1.0\"?>
+<Server><Service><Engine><OneFish><TwoFish type=\"clownfish\">MarlinNemo<RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
 files:
         "$(G.testfile).$(states)"
@@ -63,7 +50,7 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "text" string => "Hot Potatoes!!!";
+      "text" string => "Nemo";
 
 files:
         "$(G.testfile).actual"
@@ -73,9 +60,10 @@ files:
 
 bundle edit_xml test_insert(str)
 {
-set_text:
+insert_text:
         "$(str)"
-        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
+        build_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']/RedFish/BlueFish",
+        select_xpath => "/Server/Service/Engine/OneFish/TwoFish[@type=\'clownfish\']";
 }
 
 #######################################################
@@ -83,8 +71,8 @@ set_text:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
 

@@ -6,7 +6,7 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
 	$(LIBACL_CPPFLAGS) \
-	$(LIBXML_CPPFLAGS)
+	$(LIBXML2_CPPFLAGS)
 
 if HAVE_NOVA
 AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent

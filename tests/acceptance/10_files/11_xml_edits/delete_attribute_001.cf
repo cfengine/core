@@ -23,15 +23,7 @@ vars:
         "actual" string =>
 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
-  <Potato name=\"OnePotato\">
-    <BabyPotato name=\"FivePotato\">
-    </BabyPotato>
-    <BabyPotato name=\"SixPotato\">
-    </BabyPotato>
-    <BabyPotato name=\"SevenPotato\">
-    </BabyPotato>
-    <BabyPotato name=\"More\">
-    </BabyPotato>
+  <Potato name=\"OnePotato\" topping=\"brocolli\">
   </Potato>
   <Potato name=\"TwoPotato\">
   </Potato>
@@ -43,16 +35,7 @@ vars:
 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
   <Potato name=\"OnePotato\">
-    <BabyPotato name=\"FivePotato\">
-    </BabyPotato>
-    <BabyPotato name=\"SixPotato\">
-    </BabyPotato>
-    <BabyPotato name=\"SevenPotato\">
-    </BabyPotato>
-    <BabyPotato name=\"More\">
-    </BabyPotato>
-  <BabyPotato name=\"Four\">
-</BabyPotato></Potato>
+  </Potato>
   <Potato name=\"TwoPotato\">
   </Potato>
   <Potato name=\"ThreePotato\">
@@ -81,21 +64,19 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "tree" string =>
-"<BabyPotato name=\"Four\">
-</BabyPotato>";
+      "attribute_name" string => "topping";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_insert("$(test.tree)");
+            edit_xml => test_delete_attribute("$(test.attribute_name)");
 }
 
-bundle edit_xml test_insert(str)
+bundle edit_xml test_delete_attribute(str)
 {
-insert_tree:
+delete_attribute:
         "$(str)"
-        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
+        select_xpath => "/Potatoes/Potato[@topping=\'brocolli\']";
 }
 
 #######################################################
@@ -103,8 +84,8 @@ insert_tree:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
 

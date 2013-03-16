@@ -24,7 +24,16 @@ vars:
 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
   <Potato name=\"OnePotato\">
-  </Potato>
+    <BabyPotato name=\"FivePotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SixPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SevenPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"More\">
+    </BabyPotato>
+  <BabyPotato name=\"Four\">
+</BabyPotato></Potato>
   <Potato name=\"TwoPotato\">
   </Potato>
   <Potato name=\"ThreePotato\">
@@ -35,7 +44,15 @@ vars:
 "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
 <Potatoes>
   <Potato name=\"OnePotato\">
-  Hot Potatoes!!!</Potato>
+    <BabyPotato name=\"FivePotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SixPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"SevenPotato\">
+    </BabyPotato>
+    <BabyPotato name=\"More\">
+    </BabyPotato>
+  </Potato>
   <Potato name=\"TwoPotato\">
   </Potato>
   <Potato name=\"ThreePotato\">
@@ -64,19 +81,21 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "text" string => "Hot Potatoes!!!";
+      "tree" string =>
+"<BabyPotato name=\"Four\">
+</BabyPotato>";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_insert("$(test.text)");
+            edit_xml => test_delete("$(test.tree)");
 }
 
-bundle edit_xml test_insert(str)
+bundle edit_xml test_delete(str)
 {
-insert_text:
+delete_tree:
         "$(str)"
-        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
+        select_xpath => "/Potatoes/Potato[@name='OnePotato']";
 }
 
 #######################################################
@@ -84,8 +103,7 @@ insert_text:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
-

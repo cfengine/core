@@ -983,7 +983,6 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
 {
     char linkbuf[CF_BUFSIZE];
     const char *lastnode;
-    int status = CF_UNKNOWN;
     struct stat dsb;
 
     linkbuf[0] = '\0';
@@ -1027,6 +1026,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
         return;
     }
 
+    int status;
     switch (attr.copy.link_type)
     {
     case FILE_LINK_TYPE_SYMLINK:

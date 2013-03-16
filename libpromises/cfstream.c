@@ -289,24 +289,6 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
         }
         break;
 
-    case OUTPUT_LEVEL_REPORTING:
-    case OUTPUT_LEVEL_CMDOUT:
-
-        if (attr.report.to_file)
-        {
-            FileReport(mess, verbose, attr.report.to_file);
-        }
-        else
-        {
-            LogList(stdout, mess, verbose);
-        }
-
-        if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
-        {
-            MakeLog(mess, level);
-        }
-        break;
-
     case OUTPUT_LEVEL_VERBOSE:
 
         if (verbose || DEBUG)
@@ -338,13 +320,11 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
         }
         break;
 
-    case OUTPUT_LEVEL_LOG:
-
-        MakeLog(mess, level);
+    case OUTPUT_LEVEL_NONE:
         break;
 
     default:
-        break;
+        ProgrammingError("Unexpected output level (%d) passed to cfPS", level);
     }
 
     if (pp != NULL)

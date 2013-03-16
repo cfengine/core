@@ -30,7 +30,8 @@
 
 void BeginAudit(void);
 void EndAudit(int background_tasks);
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason);
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status);
+void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason);
 void PromiseLog(char *s);
 void PromiseBanner(Promise *pp);
 void BannerSubBundle(Bundle *bp, Rlist *params);

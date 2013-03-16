@@ -377,7 +377,7 @@ static void NotifyDependantPromises(char status, EvalContext *ctx, const Promise
     }
 }
 
-static void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
+void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -445,7 +445,7 @@ static void DoSummarizeTransaction(char status, const Promise *pp, Attributes at
     SummarizeTransaction(attr, log_name);
 }
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status, char *reason)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status)
 {
 #ifdef HAVE_NOVA
     TrackTotalCompliance(status, pp);
@@ -453,7 +453,6 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
     UpdatePromiseCounters(status, pp, attr);
     SetPromiseOutcomeClasses(status, ctx, pp, attr);
     NotifyDependantPromises(status, ctx, pp);
-    UpdatePromiseComplianceStatus(status, pp, reason);
     DoSummarizeTransaction(status, pp, attr);
 }
 

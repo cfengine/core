@@ -356,7 +356,8 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
     if (pp != NULL)
     {
-        ClassAuditLog(ctx, pp, attr, status, buffer);
+        ClassAuditLog(ctx, pp, attr, status);
+        UpdatePromiseComplianceStatus(status, pp, buffer);
     }
 
     DeleteItemList(mess);

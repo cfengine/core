@@ -1,6 +1,6 @@
 ######################################################################
 #
-# File editing edit_xml - example for building an XPath in a node in a non-empty file
+# File editing edit_xml
 #
 ######################################################################
 
@@ -26,7 +26,7 @@ vars:
 
         "expected" string =>
 "<?xml version=\"1.0\"?>
-<Server><Service><Engine><Host name=\"cfe_host\"><Alias>cfe_alias</Alias></Host></Engine></Service></Server>";
+<Server><Service><Engine><OneFish type=\"clownfish\"><TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
 
 files:
         "$(G.testfile).$(states)"
@@ -50,19 +50,21 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "xpath" string =>
-"/Server/Service/Engine/Host[ Alias = cfe_alias | @name=\"cfe_host\" ]";
+      "attribute_name" string => "type";
 
 files:
         "$(G.testfile).actual"
             create => "true",
-            edit_xml => test_build("$(test.xpath)");
+            edit_xml => test_insert("$(test.attribute_name)");
 }
 
-bundle edit_xml test_build(str)
+bundle edit_xml test_insert(str)
 {
-build_xpath:
-        "$(str)";
+set_attribute:
+        "$(str)"
+        build_xpath => "/Server/Service/Engine/OneFish/TwoFish/RedFish/BlueFish",
+        select_xpath => "/Server/Service/Engine/OneFish",
+        attribute_value => "clownfish";
 }
 
 #######################################################
@@ -70,7 +72,8 @@ build_xpath:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
+

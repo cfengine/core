@@ -96,6 +96,8 @@ tests/acceptance/.succeeded
 tests/acceptance/workdir
 tests/acceptance/mock-package-manager
 tests/acceptance/mock-package-manager.exe
+tests/acceptance/xml-c14nize
+tests/acceptance//xml-c14nize.exe
 tests/acceptance/dnswrapper.so
 tests/*/*.xml
 tests/*/xml.tmp

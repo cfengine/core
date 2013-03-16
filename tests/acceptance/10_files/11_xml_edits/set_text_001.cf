@@ -21,12 +21,25 @@ vars:
         "states" slist => { "actual", "expected" };
 
         "actual" string =>
-"<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish type=\"clownfish\">Marlin</OneFish></Engine></Service></Server>";
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">
+  </Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
 
         "expected" string =>
-"<?xml version=\"1.0\"?>
-<Server><Service><Engine><OneFish type=\"clownfish\">Nemo<TwoFish><RedFish><BlueFish/></RedFish></TwoFish></OneFish></Engine></Service></Server>";
+"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>
+<Potatoes>
+  <Potato name=\"OnePotato\">Hot Potatoes!!!</Potato>
+  <Potato name=\"TwoPotato\">
+  </Potato>
+  <Potato name=\"ThreePotato\">
+  </Potato>
+</Potatoes>";
 
 files:
         "$(G.testfile).$(states)"
@@ -50,7 +63,7 @@ body edit_defaults init_empty
 bundle agent test
 {
 vars:
-      "text" string => "Nemo";
+      "text" string => "Hot Potatoes!!!";
 
 files:
         "$(G.testfile).actual"
@@ -62,8 +75,7 @@ bundle edit_xml test_insert(str)
 {
 set_text:
         "$(str)"
-        build_xpath => "/Server/Service/Engine/OneFish[@type=\'clownfish\']/TwoFish/RedFish/BlueFish",
-        select_xpath => "/Server/Service/Engine/OneFish[@type=\'clownfish\']";
+        select_xpath => "/Potatoes/Potato[@name=\'OnePotato\']";
 }
 
 #######################################################
@@ -71,8 +83,8 @@ set_text:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }
 

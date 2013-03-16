@@ -57,7 +57,10 @@ vars:
 
         "expected" string =>
 "<?xml version=\"1.0\"?>
-<Server port=\"8005\" shutdown=\"SHUTDOWN\" debug=\"0\">
+<Server
+    port=\"8005\"
+    shutdown=\"SHUTDOWN\"
+    debug=\"0\">
 
   <!-- Define the Tomcat Stand-Alone Service -->
   <Service name=\"Catalina\">
@@ -139,8 +142,8 @@ insert_tree:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
+        "any" usebundle => xml_check_diff("$(G.testfile).actual",
                                               "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+                                              "$(this.promise_filename)", "no");
 }
 

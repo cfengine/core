@@ -149,7 +149,6 @@
 #define CF_INTERPT  'i'
 #define CF_REGULAR  'r'
 #define CF_REPORT   'R'
-#define CF_UNKNOWN  'u'
 
 /*****************************************************************************/
 

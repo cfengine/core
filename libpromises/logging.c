@@ -272,7 +272,6 @@ static void TrackTotalCompliance(char status, const Promise *pp)
         nova_status = 'n';
         break;
 
-    case CF_UNKNOWN:
     case CF_NOP:
         nova_status = 'c';
         break;
@@ -295,7 +294,6 @@ static void UpdatePromiseCounters(char status, const Promise *pp, Attributes att
     switch (status)
     {
     case CF_CHG:
-    case CF_UNKNOWN:
     case CF_NOP:
         PR_REPAIRED++;
         VAL_REPAIRED += attr.transaction.value_repaired;
@@ -351,7 +349,6 @@ static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promis
         del_classes = attr.classes.del_notkept;
         break;
 
-    case CF_UNKNOWN:
     case CF_NOP:
         add_classes = attr.classes.kept;
         del_classes = attr.classes.del_kept;
@@ -370,7 +367,6 @@ static void NotifyDependantPromises(char status, EvalContext *ctx, const Promise
     switch (status)
     {
     case CF_CHG:
-    case CF_UNKNOWN:
     case CF_NOP:
         MarkPromiseHandleDone(ctx, pp);
         break;
@@ -404,7 +400,6 @@ static void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *
         compliance_status = PROMISE_STATE_NOTKEPT;
         break;
 
-    case CF_UNKNOWN:
     case CF_NOP:
         compliance_status = PROMISE_STATE_ANY;
         break;
@@ -442,7 +437,6 @@ static void DoSummarizeTransaction(char status, const Promise *pp, Attributes at
         log_name = attr.transaction.log_failed;
         break;
 
-    case CF_UNKNOWN:
     case CF_NOP:
         log_name = attr.transaction.log_kept;
         break;

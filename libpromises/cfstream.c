@@ -163,21 +163,88 @@ static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_li
 
 /*****************************************************************************/
 
+static void AmendErrorMessageWithPromiseInformation(Item **error_message, const Promise *pp)
+{
+    Rval retval;
+    char *v;
+    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
+
+    const char *sp;
+    char handle[CF_MAXVARSIZE];
+    if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
+    {
+        strncpy(handle, sp, CF_MAXVARSIZE - 1);
+    }
+    else
+    {
+        strcpy(handle, "(unknown)");
+    }
+
+    char output[CF_BUFSIZE];
+    if (INFORM || VERBOSE || DEBUG)
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Report relates to a promise with handle \"%s\"", handle);
+        AppendItem(error_message, output, NULL);
+    }
+
+    if (pp && PromiseGetBundle(pp)->source_path)
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
+                 v, PromiseGetBundle(pp)->source_path, pp->offset.line);
+    }
+    else
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Promise is made internally by cfengine");
+    }
+
+    AppendItem(error_message, output, NULL);
+
+    if (pp != NULL)
+    {
+        switch (pp->promisee.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+            AppendItem(error_message, output, NULL);
+            break;
+
+        case RVAL_TYPE_LIST:
+        {
+            Writer *w = StringWriter();
+            WriterWriteF(w, "I: The promise was made to (stakeholders): ");
+            RlistWrite(w, pp->promisee.item);
+            AppendItem(error_message, StringWriterClose(w), NULL);
+            break;
+        }
+        default:
+            break;
+        }
+
+        if (pp->ref)
+        {
+            snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->ref);
+            AppendItem(error_message, output, NULL);
+        }
+    }
+}
+
 void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
 {
-    va_list ap;
-    char buffer[CF_BUFSIZE], output[CF_BUFSIZE], *v, handle[CF_MAXVARSIZE];
-    const char *sp;
-    Item *mess = NULL;
-    int verbose;
-    Rval retval;
-
     if ((fmt == NULL) || (strlen(fmt) == 0))
     {
         return;
     }
 
+    va_list ap;
     va_start(ap, fmt);
+    char buffer[CF_BUFSIZE];
     vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
 
@@ -186,84 +253,22 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
     }
 
+    Item *mess = NULL;
     AppendItem(&mess, buffer, NULL);
 
     if ((errstr == NULL) || (strlen(errstr) > 0))
     {
+        char output[CF_BUFSIZE];
         snprintf(output, CF_BUFSIZE - 1, " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
         AppendItem(&mess, output, NULL);
     }
 
     if (level == OUTPUT_LEVEL_ERROR)
     {
-        if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
-        {
-            v = (char *) retval.item;
-        }
-        else
-        {
-            v = "not specified";
-        }
-
-        if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
-        {
-            strncpy(handle, sp, CF_MAXVARSIZE - 1);
-        }
-        else
-        {
-            strcpy(handle, "(unknown)");
-        }
-
-        if (INFORM || VERBOSE || DEBUG)
-        {
-            snprintf(output, CF_BUFSIZE - 1, "I: Report relates to a promise with handle \"%s\"", handle);
-            AppendItem(&mess, output, NULL);
-        }
-
-        if (pp && PromiseGetBundle(pp)->source_path)
-        {
-            snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
-                     v, PromiseGetBundle(pp)->source_path, pp->offset.line);
-        }
-        else
-        {
-            snprintf(output, CF_BUFSIZE - 1, "I: Promise is made internally by cfengine");
-        }
-
-        AppendItem(&mess, output, NULL);
-
-        if (pp != NULL)
-        {
-            switch (pp->promisee.type)
-            {
-            case RVAL_TYPE_SCALAR:
-                snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
-                AppendItem(&mess, output, NULL);
-                break;
-
-            case RVAL_TYPE_LIST:
-            {
-                Writer *w = StringWriter();
-                WriterWriteF(w, "I: The promise was made to (stakeholders): ");
-                RlistWrite(w, pp->promisee.item);
-                AppendItem(&mess, StringWriterClose(w), NULL);
-                break;
-            }
-            default:
-                break;
-            }
-            
-
-
-            if (pp->ref)
-            {
-                snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->ref);
-                AppendItem(&mess, output, NULL);
-            }
-        }
+        AmendErrorMessageWithPromiseInformation(&mess, pp);
     }
 
-    verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;
+    int verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;
 
     switch (level)
     {

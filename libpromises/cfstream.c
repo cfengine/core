@@ -41,12 +41,7 @@
 
 #include <stdarg.h>
 
-static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
-
-/*
- * Log a list of strings into provided FILE
- */
-static void LogList(FILE *fh, const Item *messages, bool has_prefix);
+static void LogListStdout(const Item *messages, bool has_prefix);
 
 #if !defined(__MINGW32__)
 static void MakeLog(Item *mess, OutputLevel level);
@@ -75,10 +70,7 @@ void ReportToFile(const char *logfile, const char *message)
     }
 }
 
-/*
- * Common functionality of CfFOut and CfOut.
- */
-static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fmt, va_list args)
+static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list args)
 {
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE];
     Item *mess = NULL;
@@ -110,7 +102,7 @@ static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fm
 
         if (INFORM || VERBOSE || DEBUG)
         {
-            LogList(fh, mess, VERBOSE);
+            LogListStdout(mess, VERBOSE);
         }
         break;
 
@@ -118,7 +110,7 @@ static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fm
 
         if (VERBOSE || DEBUG)
         {
-            LogList(fh, mess, VERBOSE);
+            LogListStdout(mess, VERBOSE);
         }
         break;
 
@@ -126,7 +118,7 @@ static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fm
     case OUTPUT_LEVEL_REPORTING:
     case OUTPUT_LEVEL_CMDOUT:
 
-        LogList(fh, mess, VERBOSE);
+        LogListStdout(mess, VERBOSE);
         MakeLog(mess, level);
         break;
 
@@ -134,7 +126,7 @@ static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fm
 
         if (VERBOSE || DEBUG)
         {
-            LogList(fh, mess, VERBOSE);
+            LogListStdout(mess, VERBOSE);
         }
         MakeLog(mess, OUTPUT_LEVEL_VERBOSE);
         break;
@@ -152,16 +144,9 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    CfVOut(level, errstr, fmt, ap);
+    VLog(level, errstr, fmt, ap);
     va_end(ap);
 }
-
-static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
-{
-    VLog(stdout, level, errstr, fmt, ap);
-}
-
-/*****************************************************************************/
 
 static void AmendErrorMessageWithPromiseInformation(Item **error_message, const Promise *pp)
 {
@@ -276,7 +261,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
         if (INFORM || verbose || DEBUG || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM))
         {
-            LogList(stdout, mess, verbose);
+            LogListStdout(mess, verbose);
         }
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
@@ -289,7 +274,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
         if (verbose || DEBUG)
         {
-            LogList(stdout, mess, verbose);
+            LogListStdout(mess, verbose);
         }
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
@@ -301,7 +286,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
     case OUTPUT_LEVEL_ERROR:
 
-        LogList(stdout, mess, verbose);
+        LogListStdout(mess, verbose);
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
         {
@@ -334,17 +319,17 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
 /*********************************************************************************/
 
-static void LogList(FILE *fh, const Item *mess, bool has_prefix)
+static void LogListStdout(const Item *mess, bool has_prefix)
 {
     for (const Item *ip = mess; ip != NULL; ip = ip->next)
     {
         if (has_prefix)
         {
-            fprintf(fh, "%s> %s\n", VPREFIX, ip->name);
+            printf("%s> %s\n", VPREFIX, ip->name);
         }
         else
         {
-            fprintf(fh, "%s\n", ip->name);
+            printf("%s\n", ip->name);
         }
     }
 }

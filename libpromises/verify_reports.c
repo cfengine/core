@@ -89,7 +89,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     if (a.report.to_file)
     {
-        CfFOut(a.report.to_file, OUTPUT_LEVEL_ERROR, "", "%s", pp->promiser);
+        ReportToFile(a.report.to_file, pp->promiser);
     }
     else
     {

@@ -28,8 +28,10 @@
 
 #include "cf3.defs.h"
 
-void CfFOut(char *filename, OutputLevel level, char *errstr, char *fmt, ...) FUNC_ATTR_PRINTF(4, 5);
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
+
+/* reports.report_to_file */
+void ReportToFile(const char *logfile, const char *report);
 
 #endif

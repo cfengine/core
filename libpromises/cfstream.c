@@ -48,8 +48,6 @@ static void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_li
  */
 static void LogList(FILE *fh, const Item *messages, bool has_prefix);
 
-static void FileReport(const Item *mess, bool has_prefix, const char *filename);
-
 #if !defined(__MINGW32__)
 static void MakeLog(Item *mess, OutputLevel level);
 static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
@@ -61,6 +59,21 @@ static const char *GetErrorStr(void);
 #endif
 
 /*****************************************************************************/
+
+void ReportToFile(const char *logfile, const char *message)
+{
+    FILE *fp = fopen(logfile, "a");
+    if (fp == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
+        printf("%s\n", message);
+    }
+    else
+    {
+        fprintf(fp, "%s\n", message);
+        fclose(fp);
+    }
+}
 
 /*
  * Common functionality of CfFOut and CfOut.
@@ -133,28 +146,6 @@ static void VLog(FILE *fh, OutputLevel level, const char *errstr, const char *fm
     }
 
     DeleteItemList(mess);
-}
-
-void CfFOut(char *filename, OutputLevel level, char *errstr, char *fmt, ...)
-{
-    FILE *fp = fopen(filename, "a");
-    if (fp == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", filename);
-        fp = stdout;
-    }
-
-    va_list ap;
-    va_start(ap, fmt);
-
-    VLog(fp, level, errstr, fmt, ap);
-
-    va_end(ap);
-
-    if (fp != stdout)
-    {
-        fclose(fp);
-    }
 }
 
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
@@ -305,14 +296,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
     case OUTPUT_LEVEL_ERROR:
 
-        if (attr.report.to_file)
-        {
-            FileReport(mess, verbose, attr.report.to_file);
-        }
-        else
-        {
-            LogList(stdout, mess, verbose);
-        }
+        LogList(stdout, mess, verbose);
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
         {
@@ -359,26 +343,6 @@ static void LogList(FILE *fh, const Item *mess, bool has_prefix)
         }
     }
 }
-
-static void FileReport(const Item *mess, bool has_prefix, const char *filename)
-{
-    FILE *fp;
-
-    if ((fp = fopen(filename, "a")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", filename);
-        fp = stdout;
-    }
-
-    LogList(fp, mess, has_prefix);
-
-    if (fp != stdout)
-    {
-        fclose(fp);
-    }
-}
-
-/*********************************************************************************/
 
 #if !defined(__MINGW32__)
 

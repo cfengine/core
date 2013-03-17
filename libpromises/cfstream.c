@@ -44,7 +44,7 @@
 static void LogListStdout(const Item *messages, bool has_prefix);
 
 #if !defined(__MINGW32__)
-static void MakeLog(Item *mess, OutputLevel level);
+static void SystemLog(Item *mess, OutputLevel level);
 static void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
                              Item *mess);
 #endif
@@ -119,7 +119,7 @@ static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list
     case OUTPUT_LEVEL_CMDOUT:
 
         LogListStdout(mess, VERBOSE);
-        MakeLog(mess, level);
+        SystemLog(mess, level);
         break;
 
     case OUTPUT_LEVEL_LOG:
@@ -128,7 +128,7 @@ static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list
         {
             LogListStdout(mess, VERBOSE);
         }
-        MakeLog(mess, OUTPUT_LEVEL_VERBOSE);
+        SystemLog(mess, OUTPUT_LEVEL_VERBOSE);
         break;
 
     default:
@@ -266,7 +266,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
         {
-            MakeLog(mess, level);
+            SystemLog(mess, level);
         }
         break;
 
@@ -279,7 +279,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
         {
-            MakeLog(mess, level);
+            SystemLog(mess, level);
         }
 
         break;
@@ -290,7 +290,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
         if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
         {
-            MakeLog(mess, level);
+            SystemLog(mess, level);
         }
         break;
 
@@ -336,7 +336,7 @@ static void LogListStdout(const Item *mess, bool has_prefix)
 
 #if !defined(__MINGW32__)
 
-static void MakeLog(Item *mess, OutputLevel level)
+static void SystemLog(Item *mess, OutputLevel level)
 {
     Item *ip;
 

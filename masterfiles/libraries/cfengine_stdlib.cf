@@ -1128,7 +1128,7 @@ repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
-body classes generic(x)
+body classes classes_generic(x)
 # Define x prefixed/suffixed with promise outcome
 {
   promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok" };

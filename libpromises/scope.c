@@ -289,14 +289,12 @@ void ScopeClear(const char *name)
 
 /*******************************************************************/
 
-void ScopeCopy(const char *new_scopename, const char *old_scopename)
+void ScopeCopy(const char *new_scopename, const Scope *old_scope)
 /*
  * Thread safe
  */
 {
-    Scope *op, *np;
-
-    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scopename, new_scopename);
+    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scope->scope, new_scopename);
 
     ScopeNew(new_scopename);
 
@@ -306,10 +304,10 @@ void ScopeCopy(const char *new_scopename, const char *old_scopename)
         return;
     }
 
-    if ((op = ScopeGet(old_scopename)))
+    if (old_scope)
     {
-        np = ScopeGet(new_scopename);
-        HashCopy(np->hashtable, op->hashtable);
+        Scope *np = ScopeGet(new_scopename);
+        HashCopy(np->hashtable, old_scope->hashtable);
     }
 
     ThreadUnlock(cft_vscope);

@@ -53,7 +53,7 @@ Scope *ScopeGet(const char *scope);
  * @param new_scopename
  * @param old_scopename
  */
-void ScopeCopy(const char *new_scopename, const char *old_scopename);
+void ScopeCopy(const char *new_scopename, const Scope *old_scope);
 
 /**
  * @brief clear VSCOPE

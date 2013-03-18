@@ -94,7 +94,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     CfDebug("\n*\nNewIterationContext(from %s)\n*\n", scopeid);
 
-    ScopeCopy("this", scopeid);
+    ScopeCopy("this", ScopeGet(scopeid));
 
     ScopeGet("this");
 

@@ -259,7 +259,9 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
     {
     case OUTPUT_LEVEL_INFORM:
 
-        if (INFORM || verbose || DEBUG || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM))
+        if (INFORM || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM)
+            || VERBOSE || (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE)
+            || DEBUG)
         {
             LogListStdout(mess, verbose);
         }
@@ -272,7 +274,8 @@ void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const 
 
     case OUTPUT_LEVEL_VERBOSE:
 
-        if (verbose || DEBUG)
+        if (VERBOSE || (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
+            || DEBUG)
         {
             LogListStdout(mess, verbose);
         }

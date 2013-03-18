@@ -13,6 +13,7 @@
 
        Changes:
 
+       - implicit execution of server and common bundles taking arguments is skipped in cf-serverd.
        - WARNING: option --policy-server removed, require option to --bootstrap instead
        - process promises don't log if processes are out of range unless you 
          run in verbose mode

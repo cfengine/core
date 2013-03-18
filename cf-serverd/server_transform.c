@@ -504,6 +504,12 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
+            if (RlistLen(bp->args) > 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                continue;
+            }
+
             BannerBundle(bp, NULL);
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
@@ -545,6 +551,12 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
+            if (RlistLen(bp->args) > 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                continue;
+            }
+
             BannerBundle(bp, NULL);
 
             for (size_t j = 0; j < SeqLength(bp->promise_types); j++)

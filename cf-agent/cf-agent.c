@@ -141,6 +141,9 @@ static const char *AGENT_TYPESEQUENCE[] =
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
+static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
+static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
@@ -305,7 +308,18 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     POLICY_SERVER[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
+/* DEPRECATED:
+   --policy-server (-s) is deprecated in community version 3.5.0.
+   Support rewrite from some common old bootstrap options (until community version 3.6.0?).
+ */
+
+    // TODO: WARN ON OLD METHOD!!
+    int argc_bootstrap_options_new = argc;
+    char **argv_bootstrap_options_tmp = TranslateOldBootstrapOptionsSeparate(&argc_bootstrap_options_new, argv);
+    char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
+    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
+
+    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -437,7 +451,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         }
     }
 
-    if (argv[optind] != NULL)
+    if (argv_bootstrap_options_new[optind] != NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
         FatalError("Aborted");
@@ -445,7 +459,137 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     CfDebug("Set debugging\n");
 
+    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
+
     return config;
+}
+
+
+static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv)
+{
+    int i;
+    int policy_server_argnum = 0;
+    int server_address_argnum = 0;
+    int bootstrap_argnum = 0;
+    int argc = *argc_new;
+
+    for(i = 0; i < argc; i++)
+    {
+        CfDebug("Argument %d:\"%s\"\n", i, argv[i]);
+
+        if(strcmp(argv[i], "--policy-server") == 0 || strcmp(argv[i], "-s") == 0)
+        {
+            policy_server_argnum = i;
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server option found at argument %d (%s)\n", 
+                   policy_server_argnum, argv[policy_server_argnum]);
+        }
+
+        if(strcmp(argv[i], "--bootstrap") == 0 || strcmp(argv[i], "-B") == 0)
+        {
+            bootstrap_argnum = i;
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Bootstrap option found at argument %d (%s)\n", 
+                   bootstrap_argnum, argv[bootstrap_argnum]);
+        }
+    }
+
+    if(policy_server_argnum > 0)
+    {
+        if(policy_server_argnum + 1 < argc)
+        {
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server address assumed to be at argument %d (%s)\n", 
+                   server_address_argnum, argv[server_address_argnum]);
+
+            server_address_argnum = policy_server_argnum + 1;
+        }
+    }
+
+    char **argv_new;
+
+    if(bootstrap_argnum > 0 && server_address_argnum > 0)
+    {
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("!! DEPRECATED BOOTSTRAP OPTIONS DETECTED\n");
+        printf("!! The --policy-server (-s) option is deprecated from CFEngine community version 3.5.0.\n");
+        printf("!! Please provide the address argument to --bootstrap (-B) instead.\n");
+        printf("!! Rewriting your arguments now, but you need to adjust them as this support will be removed soon.\n");
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+        *argc_new = argc - 1;  // --policy-server deprecated
+        argv_new = xcalloc(1, sizeof(char *) * (*argc_new + 1));
+
+        int new_i = 0;
+
+        for(i = 0; i < argc; i++)
+        {
+            if(i == bootstrap_argnum)
+            {
+                argv_new[new_i++] = xstrdup(argv[bootstrap_argnum]);
+                argv_new[new_i++] = xstrdup(argv[server_address_argnum]);
+            }
+            else if(i == server_address_argnum)
+            {
+                // skip: handled above
+            }
+            else if(i == policy_server_argnum)
+            {
+                // skip: deprecated
+            }
+            else
+            {
+                argv_new[new_i++] = xstrdup(argv[i]);
+            }
+        }
+    }
+    else
+    {
+        argv_new = xcalloc(1, sizeof(char *) * (*argc_new + 1));
+
+        for(i = 0; i < argc; i++)
+        {
+            argv_new[i] = xstrdup(argv[i]);
+        }
+    }
+
+    return argv_new;
+}
+
+
+static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv)
+{
+    char **argv_new = xcalloc(1, sizeof(char *) * (argc + 1));
+
+    for(int i = 0; i < argc; i++)
+    {
+        if(strcmp(argv[i], "-Bs") == 0)
+        {
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            printf("!! DEPRECATED BOOTSTRAP OPTIONS DETECTED\n");
+            printf("!! The --policy-server (-s) option is deprecated from CFEngine community version 3.5.0.\n");
+            printf("!! Please provide the address argument to --bootstrap (-B) instead.\n");
+            printf("!! Rewriting your arguments now, but you need to adjust them as this support will be removed soon.\n");
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+            CfDebug("TranslateOldBootstrapOptionsConcatenated: Detected old bootstrap option '-Bs', replacing with '-B'\n");
+            argv_new[i] = xstrdup("-B");
+        }
+        else
+        {
+            argv_new[i] = xstrdup(argv[i]);
+        }
+    }
+
+    return argv_new;
+}
+
+
+static void FreeStringArray(int size, char **array)
+{
+    for(int i = 0; i < size; i++)
+    {
+        free(array[i]);
+    }
+
+    free(array);
 }
 
 /*******************************************************************/

@@ -899,7 +899,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             ScopeGetVariable((VarRef) { NULL, orgscope, orgname }, &retval);
 
-            ScopeNewList(scope, rp->item, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+            ScopeNewList((VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }

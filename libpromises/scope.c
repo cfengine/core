@@ -175,7 +175,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                ScopeNewList(bp->name, lval, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                ScopeNewList((VarRef) { NULL, bp->name, lval }, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, bp->name);
@@ -486,21 +486,21 @@ void ScopeDeleteSpecialScalar(const char *scope, const char *lval)
 
 /*******************************************************************/
 
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(VarRef lval, void *rval, DataType dt)
 {
-    assert(!ScopeIsReserved(scope));
-    if (ScopeIsReserved(scope))
+    assert(!ScopeIsReserved(lval.scope));
+    if (ScopeIsReserved(lval.scope))
     {
-        ScopeNewSpecialScalar(scope, lval, rval, dt);
+        ScopeNewSpecialScalar(lval.scope, lval.lval, rval, dt);
     }
     Rval rvald;
 
-    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
+    if (ScopeGetVariable(lval, &rvald) != DATA_TYPE_NONE)
     {
-        ScopeDeleteVariable(scope, lval);
+        ScopeDeleteVariable(lval.scope, lval.lval);
     }
 
-    ScopeAddVariableHash((VarRef) { NULL, scope, lval }, (Rval) {rval, RVAL_TYPE_LIST }, dt, NULL, 0);
+    ScopeAddVariableHash(lval, (Rval) {rval, RVAL_TYPE_LIST }, dt, NULL, 0);
 }
 
 void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt)

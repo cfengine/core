@@ -4128,7 +4128,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
             list = RlistParseShown(content);
-            ScopeNewList(context, name, list, DATA_TYPE_STRING_LIST);
+            ScopeNewList((VarRef) { NULL, context, name }, list, DATA_TYPE_STRING_LIST);
         }
         break;
 

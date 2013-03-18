@@ -83,7 +83,7 @@ void ScopeNewScalar(VarRef lval, const char *rval, DataType dt);
 void ScopeNewSpecialScalar(const char *scope, const char *lval, const char *rval, DataType dt);
 void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
+void ScopeNewList(VarRef lval, void *rval, DataType dt);
 void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt);
 
 /*

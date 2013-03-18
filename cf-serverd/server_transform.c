@@ -121,6 +121,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
+
 void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
 {
     KeepContextBundles(ctx, policy, report_context);
@@ -525,7 +526,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 ScopeSetCurrent(bp->name);
 
                 EvalContextStackPushFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
+                ScopeAugment(ctx, bp, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -573,7 +574,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 ScopeSetCurrent(bp->name);
 
                 EvalContextStackPushFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
+                ScopeAugment(ctx, bp, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

@@ -132,7 +132,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         SetBundleOutputs(bp->name);
 
         EvalContextStackPushFrame(ctx, bp, a.inherit);
-        ScopeAugment(ctx, method_deref, PromiseGetNamespace(pp), bp->args, params);
+        ScopeAugment(ctx, bp, params);
 
         THIS_BUNDLE = bp->name;
 

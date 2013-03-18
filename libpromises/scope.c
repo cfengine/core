@@ -37,6 +37,7 @@
 #include "rlist.h"
 #include "conversion.h"
 #include "syntax.h"
+#include "policy.h"
 
 #include <assert.h>
 
@@ -131,31 +132,31 @@ Scope *ScopeGetCurrent(void)
     return SCOPE_CURRENT;
 }
 
-void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lvals, Rlist *rvals)
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
 {
     Scope *ptr;
     Rlist *rpl, *rpr;
     Rval retval;
-    char *lval, naked[CF_BUFSIZE];
+    char naked[CF_BUFSIZE];
     AssocHashTableIterator i;
     CfAssoc *assoc;
 
-    if (RlistLen(lvals) != RlistLen(rvals))
+    if (RlistLen(bp->args) != RlistLen(arguments))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "While constructing scope \"%s\"\n", scope);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "While constructing scope \"%s\"\n", bp->name);
         fprintf(stderr, "Formal = ");
-        RlistShow(stderr, lvals);
+        RlistShow(stderr, bp->args);
         fprintf(stderr, ", Actual = ");
-        RlistShow(stderr, rvals);
+        RlistShow(stderr, arguments);
         fprintf(stderr, "\n");
         FatalError("Augment scope, formal and actual parameter mismatch is fatal");
     }
 
-    for (rpl = lvals, rpr = rvals; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
+    for (rpl = bp->args, rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
     {
-        lval = (char *) rpl->item;
+        const char *lval = (char *) rpl->item;
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ? Augment scope %s with %s (%c)\n", scope, lval, rpr->type);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ? Augment scope %s with %s (%c)\n", bp->name, lval, rpr->type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
@@ -169,21 +170,21 @@ void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lv
 
             if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
             {
-                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", ns, CF_NS, naked);
+                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", bp->ns, CF_NS, naked);
             }
             
-            vtype = ScopeGetVariable((VarRef) { NULL, scope, qnaked }, &retval);
+            vtype = ScopeGetVariable((VarRef) { NULL, bp->name, qnaked }, &retval);
 
             switch (vtype)
             {
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                ScopeNewList(scope, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                ScopeNewList(bp->name, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, scope);
-                ScopeNewScalar((VarRef) { NULL, scope, lval }, rpr->item, DATA_TYPE_STRING);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, bp->name);
+                ScopeNewScalar((VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
                 break;
             }
         }
@@ -195,7 +196,7 @@ void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lv
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
-                ScopeNewScalar((VarRef) { NULL, scope, lval }, rpr->item, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
                 break;
 
             case RVAL_TYPE_FNCALL:
@@ -203,7 +204,7 @@ void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lv
                 Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                 if (rval.type == RVAL_TYPE_SCALAR)
                 {
-                    ScopeNewScalar((VarRef) { NULL, scope, lval }, rval.item, DATA_TYPE_STRING);
+                    ScopeNewScalar((VarRef) { NULL, bp->name, lval }, rval.item, DATA_TYPE_STRING);
                 }
                 else
                 {
@@ -218,13 +219,13 @@ void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lv
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 
-    ptr = ScopeGet(scope);
+    ptr = ScopeGet(bp->name);
 
     i = HashIteratorInit(ptr->hashtable);
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        retval = ExpandPrivateRval(scope, assoc->rval);
+        retval = ExpandPrivateRval(bp->name, assoc->rval);
         // Retain the assoc, just replace rval
         RvalDestroy(assoc->rval);
         assoc->rval = retval;
@@ -776,7 +777,7 @@ bool ScopeAddVariableHash(VarRef lval, Rval rval, DataType dtype, const char *fn
             if (listvars != NULL)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
-                      lval, ScopeGetCurrent()->scope);
+                      lval.lval, ScopeGetCurrent()->scope);
             }
 
             RlistDestroy(listvars);

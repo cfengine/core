@@ -65,7 +65,7 @@ void ScopeDeleteAll(void);
  *        in addition to copying them in, also attempts to do one-pass resolution of variables,
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
-void ScopeAugment(EvalContext *ctx, const char *scope, const char *ns, Rlist *lvals, Rlist *rvals);
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments);
 
 /**
  * @brief prepend GetScope("this") to CF_STCK

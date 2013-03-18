@@ -190,7 +190,8 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
             continue;
         }
 
-        pp->this_server = rp->item;
+        char *server_ptr = RlistScalarValue(rp);
+        pp->this_server = server_ptr ? (xstrdup(server_ptr)) : NULL;
 
         if (attr.transaction.background)
         {

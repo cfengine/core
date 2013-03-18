@@ -77,6 +77,7 @@
 #define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
 #define SECONDS_PER_WEEK (7 * SECONDS_PER_DAY)
+#define SECONDS_PER_YEAR (365 * SECONDS_PER_DAY)
 
 /* Long-term monitoring constants */
 

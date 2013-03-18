@@ -502,10 +502,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        EvalContextStackPushFrame(ctx, bp, false);
-
-        ScopeSetCurrent(bp->name);
-
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
             BannerBundle(bp, NULL);
@@ -520,6 +516,9 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerPromiseType(bp->name, sp->name, 0);
+                ScopeSetCurrent(bp->name);
+
+                EvalContextStackPushFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -527,10 +526,10 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                     Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
                 }
+
+                EvalContextStackPopFrame(ctx);
             }
         }
-
-        EvalContextStackPopFrame(ctx);
     }
 }
 
@@ -543,10 +542,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
-
-        EvalContextStackPushFrame(ctx, bp, false);
-
-        ScopeSetCurrent(bp->name);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -562,6 +557,10 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerPromiseType(bp->name, sp->name, 0);
+
+                ScopeSetCurrent(bp->name);
+
+                EvalContextStackPushFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp->name, bp->ns, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -569,10 +568,10 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                     Promise *pp = SeqAt(sp->promises, ppi);
                     ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
                 }
+
+                EvalContextStackPopFrame(ctx);
             }
         }
-
-        EvalContextStackPopFrame(ctx);
     }
 }
 

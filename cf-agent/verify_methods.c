@@ -131,11 +131,10 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
         SetBundleOutputs(bp->name);
 
+        EvalContextStackPushFrame(ctx, bp, a.inherit);
         ScopeAugment(ctx, method_deref, PromiseGetNamespace(pp), bp->args, params);
 
         THIS_BUNDLE = bp->name;
-
-        EvalContextStackPushFrame(ctx, bp, a.inherit);
 
         retval = ScheduleAgentOperations(ctx, bp, report_context);
 

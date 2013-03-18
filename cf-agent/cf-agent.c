@@ -983,12 +983,17 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             snprintf(ns,CF_BUFSIZE,"%s_meta", name);
 
             SetBundleOutputs(bp->name);
-            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
+
+            EvalContextStackPushFrame(ctx, bp, false);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
+
             THIS_BUNDLE = bp->name;
 
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
+
+            EvalContextStackPopFrame(ctx);
         }
     }
 }
@@ -1039,8 +1044,6 @@ static void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
 // NB - this function can be called recursively through "methods"
 {
-    EvalContextStackPushFrame(ctx, bp, false);
-
     PromiseType *sp;
     TypeSequence type;
     int pass;
@@ -1116,8 +1119,6 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
     }
 
     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
-
-    EvalContextStackPopFrame(ctx);
 
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }

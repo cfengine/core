@@ -545,9 +545,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeClear(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
-
             EvalContextStackPushFrame(ctx, bp, a.edits.inherit);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
 
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
 
@@ -601,9 +600,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeClear(bp->name);
             HashVariables(ctx, policy, bp->name, report_context);
 
-            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
-
             EvalContextStackPushFrame(ctx, bp, a.edits.inherit);
+            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
 
             retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
 

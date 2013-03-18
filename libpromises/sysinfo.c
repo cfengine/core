@@ -708,7 +708,6 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
            
             CfDebug(" -> Setting new monitoring list %s => %s", name, value);
             list = RlistParseShown(value);
-            ScopeDeleteVariable("mon", name);
             ScopeNewList("mon", name, list, DATA_TYPE_STRING_LIST);
 
             RlistDestroy(list);

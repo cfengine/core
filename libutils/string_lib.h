@@ -96,4 +96,15 @@ int Chop(char *str, size_t max_length);
  */
 bool StringEndsWith(const char *str, const char *suffix);
 
+/**
+ * @brief Format string like sprintf and return formatted string allocated on
+ * heap as a return value.
+ *
+ * @param format Formatting string
+
+ * @return formatted string (on heap) or NULL in case of error. errno is set in
+ * the latter case (see errno codes for sprintf).
+ */
+char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
+
 #endif

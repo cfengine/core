@@ -768,3 +768,26 @@ bool StringEndsWith(const char *str, const char *suffix)
 
     return true;
 }
+
+static char *StringVFormat(const char *fmt, va_list ap)
+{
+    char *value;
+    int ret = xasprintf(&value, fmt, ap);
+    if (ret < 0)
+    {
+        return NULL;
+    }
+    else
+    {
+        return value;
+    }
+}
+
+char *StringFormat(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *res = StringVFormat(fmt, ap);
+    va_end(ap);
+    return res;
+}

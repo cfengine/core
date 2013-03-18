@@ -132,15 +132,8 @@ Scope *ScopeGetCurrent(void)
     return SCOPE_CURRENT;
 }
 
-void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
 {
-    Scope *ptr;
-    Rlist *rpl, *rpr;
-    Rval retval;
-    char naked[CF_BUFSIZE];
-    AssocHashTableIterator i;
-    CfAssoc *assoc;
-
     if (RlistLen(bp->args) != RlistLen(arguments))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "While constructing scope \"%s\"\n", bp->name);
@@ -152,9 +145,9 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
         FatalError("Augment scope, formal and actual parameter mismatch is fatal");
     }
 
-    for (rpl = bp->args, rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
+    for (const Rlist *rpl = bp->args, *rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
     {
-        const char *lval = (char *) rpl->item;
+        const char *lval = rpl->item;
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "    ? Augment scope %s with %s (%c)\n", bp->name, lval, rpr->type);
 
@@ -165,6 +158,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
         {
             DataType vtype;
             char qnaked[CF_MAXVARSIZE];
+            char naked[CF_BUFSIZE];
             
             GetNaked(naked, rpr->item);
 
@@ -173,6 +167,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
                 snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", bp->ns, CF_NS, naked);
             }
             
+            Rval retval;
             vtype = ScopeGetVariable((VarRef) { NULL, bp->name, qnaked }, &retval);
 
             switch (vtype)
@@ -180,7 +175,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
             case DATA_TYPE_STRING_LIST:
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
-                ScopeNewList(bp->name, lval, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+                ScopeNewList(bp->name, lval, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, bp->name);
@@ -190,9 +185,6 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
         }
         else
         {
-            FnCall *subfp;
-            Promise *pp = NULL; // This argument should really get passed down.
-
             switch(rpr->type)
             {
             case RVAL_TYPE_SCALAR:
@@ -200,15 +192,18 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
                 break;
 
             case RVAL_TYPE_FNCALL:
-                subfp = (FnCall *) rpr->item;
-                Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
-                if (rval.type == RVAL_TYPE_SCALAR)
                 {
-                    ScopeNewScalar((VarRef) { NULL, bp->name, lval }, rval.item, DATA_TYPE_STRING);
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
+                    FnCall *subfp = rpr->item;
+                    Promise *pp = NULL; // This argument should really get passed down.
+                    Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
+                    if (rval.type == RVAL_TYPE_SCALAR)
+                    {
+                        ScopeNewScalar((VarRef) { NULL, bp->name, lval }, rval.item, DATA_TYPE_STRING);
+                    }
+                    else
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "", "Only functions returning scalars can be used as arguments");
+                    }
                 }
                 break;
             default:
@@ -219,16 +214,17 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, Rlist *arguments)
 
 /* Check that there are no danglers left to evaluate in the hash table itself */
 
-    ptr = ScopeGet(bp->name);
-
-    i = HashIteratorInit(ptr->hashtable);
-
-    while ((assoc = HashIteratorNext(&i)))
     {
-        retval = ExpandPrivateRval(bp->name, assoc->rval);
-        // Retain the assoc, just replace rval
-        RvalDestroy(assoc->rval);
-        assoc->rval = retval;
+        Scope *ptr = ScopeGet(bp->name);
+        AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
+        CfAssoc *assoc = NULL;
+        while ((assoc = HashIteratorNext(&i)))
+        {
+            Rval retval = ExpandPrivateRval(bp->name, assoc->rval);
+            // Retain the assoc, just replace rval
+            RvalDestroy(assoc->rval);
+            assoc->rval = retval;
+        }
     }
 
     return;

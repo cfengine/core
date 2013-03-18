@@ -996,7 +996,6 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
     char match[CF_MAXVARSIZE], buffer[CF_BUFSIZE];
     Scope *ptr;
     AssocHashTableIterator i;
@@ -1009,21 +1008,13 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 /* Locate the array */
 
-    if (strstr(arrayname, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(arrayname, "%[^.].%s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, arrayname);
-        strcpy(scopeid, ScopeGetCurrent()->scope);
-    }
+    VarRef var = VarRefParse(arrayname);
 
-    if ((ptr = ScopeGet(scopeid)) == NULL)
+    if ((ptr = ScopeGet(var.scope)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function regarray was promised an array called \"%s\" but this was not found\n",
               arrayname);
+        VarRefDestroy(var);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1033,7 +1024,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     while ((assoc = HashIteratorNext(&i)))
     {
-        snprintf(match, CF_MAXVARSIZE, "%s[", lval);
+        snprintf(match, CF_MAXVARSIZE, "%s[", var.lval);
         if (strncmp(match, assoc->lval, strlen(match)) == 0)
         {
             if (FullTextMatch(regex, assoc->rval.item))
@@ -1043,6 +1034,8 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
             }
         }
     }
+
+    VarRefDestroy(var);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }

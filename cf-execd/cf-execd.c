@@ -723,7 +723,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         ScopeDeleteAll();
 
-        strcpy(VDOMAIN, "undefinded.domain");
+        strcpy(VDOMAIN, "undefined.domain");
         POLICY_SERVER[0] = '\0';
 
         PolicyDestroy(*policy);

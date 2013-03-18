@@ -23,10 +23,10 @@ reports:
   "split2: $(split2)";	# will list "one" and "two"
   "split3: $(split3)";	# will list "alpha:" and ":beta"
   "split4: $(split4)";	# will list "a", "b" and ""
-  "split5: $(split5)";	# will list "" and ""
+  "split5: $(split5)";	# will list ""
   "nomatch1: $(nomatch1)";	# will list "nomatchanywhere"
   "nomatch2: $(nomatch2)";	# will list ""
-  "consecutive: $(consecutive)";# will list "a", "", "", "b"
+  "consecutive: $(consecutive)";# will list "a", "", "b"
 }
 
 @end verbatim

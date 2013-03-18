@@ -185,24 +185,25 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
     for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
     {
-        if (ServerOffline(rp->item))
+        if (ServerOffline(RlistScalarValue(rp)))
         {
             continue;
         }
 
-        pp->this_server = rp->item;
+        char *server_ptr = RlistScalarValue(rp);
+        pp->this_server = server_ptr ? (xstrdup(server_ptr)) : NULL;
 
         if (attr.transaction.background)
         {
             if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
             {
-                conn = ServerConnection(ctx, rp->item, attr, pp, err);
+                conn = ServerConnection(ctx, RlistScalarValue(rp), attr, pp, err);
                 return conn;
             }
         }
         else
         {
-            if ((conn = GetIdleConnectionToServer(rp->item)))
+            if ((conn = GetIdleConnectionToServer(RlistScalarValue(rp))))
             {
                 *err = 0;
                 return conn;
@@ -210,16 +211,16 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
             /* This is first usage, need to open */
 
-            conn = ServerConnection(ctx, rp->item, attr, pp, err);
+            conn = ServerConnection(ctx, RlistScalarValue(rp), attr, pp, err);
 
             if (conn == NULL)
             {
                 cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Unable to establish connection with %s\n", RlistScalarValue(rp));
-                MarkServerOffline(rp->item);
+                MarkServerOffline(RlistScalarValue(rp));
             }
             else
             {
-                CacheServerConnection(conn, rp->item);
+                CacheServerConnection(conn, RlistScalarValue(rp));
                 return conn;
             }
         }

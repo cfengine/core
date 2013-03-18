@@ -325,6 +325,11 @@ void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
     fail();
 }
 
+void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt)
+{
+    ScopeNewList(scope, lval, rval, dt);
+}
+
 void RlistDestroy(Rlist *list)
 {
     fail();

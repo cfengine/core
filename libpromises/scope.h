@@ -84,6 +84,8 @@ void ScopeNewSpecialScalar(const char *scope, const char *lval, const char *rval
 void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
 void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
+void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt);
+
 /*
  * Do not modify returned Rval, its contents may be constant and statically
  * allocated.

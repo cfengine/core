@@ -663,9 +663,9 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
     close(fd);
 
-    ScopeNewList("sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
-    ScopeNewList("sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
-    ScopeNewList("sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecialList("sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecialList("sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecialList("sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);

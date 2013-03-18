@@ -488,6 +488,25 @@ void ScopeDeleteSpecialScalar(const char *scope, const char *lval)
 
 void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
 {
+    assert(!ScopeIsReserved(scope));
+    if (ScopeIsReserved(scope))
+    {
+        ScopeNewSpecialScalar(scope, lval, rval, dt);
+    }
+    Rval rvald;
+
+    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
+    {
+        ScopeDeleteVariable(scope, lval);
+    }
+
+    ScopeAddVariableHash((VarRef) { NULL, scope, lval }, (Rval) {rval, RVAL_TYPE_LIST }, dt, NULL, 0);
+}
+
+void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt)
+{
+    assert(ScopeIsReserved(scope));
+
     Rval rvald;
 
     if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)

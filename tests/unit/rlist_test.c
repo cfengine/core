@@ -212,6 +212,11 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
+Scope *ScopeGetCurrent(void)
+{
+    fail();
+}
+
 pthread_mutex_t *cft_lock;
 int ThreadLock(pthread_mutex_t *name)
 {

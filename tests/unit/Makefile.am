@@ -164,3 +164,7 @@ sort_test_LDADD = libtest.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+rlist_test_SOURCES = rlist_test.c \
+       ../../libpromises/rlist.c
+rlist_test_LDADD = libtest.la libstr.la

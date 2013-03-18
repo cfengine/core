@@ -116,6 +116,20 @@ VarRef VarRefParse(const char *qualified_name)
     };
 }
 
+VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
+{
+    VarRef var = VarRefParse(var_ref_string);
+    if (!var.scope)
+    {
+        var.scope = xstrdup(bundle->name);
+
+        assert("A variable missing a scope should not have a namespace" && !var.ns);
+        var.ns = xstrdup(bundle->ns);
+    }
+
+    return var;
+}
+
 void VarRefDestroy(VarRef ref)
 {
     free(ref.ns);

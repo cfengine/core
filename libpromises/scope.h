@@ -32,7 +32,14 @@
 
 bool ScopeExists(const char *name);
 
+/**
+ * @deprecated
+ */
 void ScopeSetCurrent(const char *name);
+
+/**
+ * @deprecated
+ */
 Scope *ScopeGetCurrent(void);
 
 /**

@@ -151,9 +151,9 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     Rlist *expargs;
-    const FnCallType *this = FnCallTypeGet(fp->name);
+    const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
-    if (this)
+    if (fp_type)
     {
         if (DEBUG)
         {
@@ -194,7 +194,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 
     fp->caller = caller;
 
-    FnCallResult result = CallFunction(ctx, this, fp, expargs);
+    FnCallResult result = CallFunction(ctx, fp_type, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

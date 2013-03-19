@@ -1129,7 +1129,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             SetBundleOutputs(bp->name);
             BannerBundle(bp, params);
 
-            EvalContextStackPushFrame(ctx, bp, false);
+            EvalContextStackPushBundleFrame(ctx, bp, false);
             ScopeAugment(ctx, bp, params);
 
             ScheduleAgentOperations(ctx, bp, report_context);

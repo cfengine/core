@@ -31,14 +31,28 @@
 #include "set.h"
 #include "sequence.h"
 
+typedef enum
+{
+    STACK_FRAME_TYPE_BUNDLE
+} StackFrameType;
+
 typedef struct
 {
     const Bundle *owner;
 
     StringSet *contexts;
     StringSet *contexts_negated;
+} StackFrameBundle;
 
+typedef struct
+{
+    StackFrameType type;
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
+
+    union
+    {
+        StackFrameBundle bundle;
+    } data;
 } StackFrame;
 
 struct EvalContext_
@@ -89,7 +103,7 @@ StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
-void EvalContextStackPushFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 /* - Parsing/evaluating expressions - */

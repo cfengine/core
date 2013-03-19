@@ -44,6 +44,7 @@
 #include "string_lib.h"
 #include "logging.h"
 #include "rlist.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -55,7 +56,6 @@
 
 static bool ValidClassName(const char *str);
 
-static StackFrame *EvalContextStackFrame(const EvalContext *ctx);
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
 static bool ABORTBUNDLE = false;
@@ -63,6 +63,38 @@ static bool ABORTBUNDLE = false;
 /*****************************************************************************/
 /* Level                                                                     */
 /*****************************************************************************/
+
+static const char *StackFrameOwnerName(const StackFrame *frame)
+{
+    switch (frame->type)
+    {
+    case STACK_FRAME_TYPE_BUNDLE:
+        return frame->data.bundle.owner->name;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
+    }
+}
+
+static StackFrame *LastStackFrame(const EvalContext *ctx)
+{
+    assert(SeqLength(ctx->stack) > 0);
+    return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1);
+}
+
+static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
+{
+    StackFrame *last_frame = LastStackFrame(ctx);
+
+    switch (last_frame->type)
+    {
+    case STACK_FRAME_TYPE_BUNDLE:
+        return last_frame;
+
+    default:
+        ProgrammingError("Unhandled stack frame type");
+    }
+}
 
 static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 {
@@ -448,7 +480,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, EvalContextStackFrame(ctx)->owner->name);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx)));
             exit(1);
         }
     }
@@ -510,7 +542,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, EvalContextStackFrame(ctx)->owner->name);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx)));
             exit(1);
         }
     }
@@ -533,13 +565,20 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
 
-    char copy[CF_BUFSIZE];
-
-    StackFrame *frame = EvalContextStackFrame(ctx);
-
-    if (strcmp(frame->owner->ns, "default") != 0)
+    StackFrameBundle frame;
     {
-         snprintf(copy, CF_MAXVARSIZE, "%s:%s", frame->owner->ns, context);
+        StackFrame *last_frame = LastStackFrameBundle(ctx);
+        if (!last_frame)
+        {
+            ProgrammingError("Attempted to add a soft class on the stack, but stack had no bundle frame");
+        }
+        frame = last_frame->data.bundle;
+    }
+
+    char copy[CF_BUFSIZE];
+    if (strcmp(frame.owner->ns, "default") != 0)
+    {
+         snprintf(copy, CF_MAXVARSIZE, "%s:%s", frame.owner->ns, context);
     }
     else
     {
@@ -560,20 +599,20 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", frame->owner->name, copy);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", frame.owner->name, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame->owner->name);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
         exit(1);
     }
 
     if (EvalContextHeapContainsSoft(ctx, copy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
-              copy, frame->owner->name);
+              copy, frame.owner->name);
     }
 
     if (EvalContextStackFrameContainsSoft(ctx, copy))
@@ -581,13 +620,13 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    StringSetAdd(EvalContextStackFrame(ctx)->contexts, xstrdup(copy));
+    StringSetAdd(frame.contexts, xstrdup(copy));
 
     for (const Item *ip = ctx->heap_abort; ip != NULL; ip = ip->next)
     {
-        if (IsDefinedClass(ctx, ip->name, frame->owner->ns))
+        if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame->owner->name);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
             exit(1);
         }
     }
@@ -596,7 +635,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         for (const Item *ip = ctx->heap_abort_current_bundle; ip != NULL; ip = ip->next)
         {
-            if (IsDefinedClass(ctx, ip->name, frame->owner->ns))
+            if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
@@ -1176,12 +1215,27 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
     return false;
 }
 
+static void StackFrameBundleDestroy(StackFrameBundle frame)
+{
+    StringSetDestroy(frame.contexts);
+    StringSetDestroy(frame.contexts_negated);
+}
+
 static void StackFrameDestroy(StackFrame *frame)
 {
     if (frame)
     {
-        StringSetDestroy(frame->contexts);
-        StringSetDestroy(frame->contexts_negated);
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BUNDLE:
+            StackFrameBundleDestroy(frame->data.bundle);
+            break;
+
+        default:
+            ProgrammingError("Unhandled stack frame type");
+        }
+
+
     }
 }
 
@@ -1223,15 +1277,12 @@ void EvalContextHeapAddNegated(EvalContext *ctx, const char *context)
     StringSetAdd(ctx->heap_negated, xstrdup(context));
 }
 
-static StackFrame *EvalContextStackFrame(const EvalContext *ctx)
-{
-    assert(SeqLength(ctx->stack) > 0);
-    return SeqAt(ctx->stack, SeqLength(ctx->stack) - 1);
-}
-
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context)
 {
-    StringSetAdd(EvalContextStackFrame(ctx)->contexts_negated, xstrdup(context));
+    StackFrame *frame = LastStackFrameBundle(ctx);
+    assert(frame);
+
+    StringSetAdd(frame->data.bundle.contexts_negated, xstrdup(context));
 }
 
 bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context)
@@ -1252,7 +1303,7 @@ bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context)
 bool StackFrameContainsSoftRecursive(const EvalContext *ctx, const char *context, size_t stack_index)
 {
     StackFrame *frame = SeqAt(ctx->stack, stack_index);
-    if (StringSetContains(frame->contexts, context))
+    if (frame->type == STACK_FRAME_TYPE_BUNDLE && StringSetContains(frame->data.bundle.contexts, context))
     {
         return true;
     }
@@ -1284,7 +1335,10 @@ static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const c
         return false;
     }
 
-    return StringSetContains(EvalContextStackFrame(ctx)->contexts_negated, context);
+    StackFrame *frame = LastStackFrameBundle(ctx);
+    assert(frame);
+
+    return StringSetContains(frame->data.bundle.contexts_negated, context);
 }
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context)
@@ -1337,7 +1391,10 @@ size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *c
         return 0;
     }
 
-    return StringSetMatchCount(EvalContextStackFrame(ctx)->contexts, context_regex);
+    const StackFrame *frame = LastStackFrameBundle(ctx);
+    assert(frame);
+
+    return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
 }
 
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
@@ -1355,27 +1412,38 @@ StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx)
     return StringSetIteratorInit(ctx->heap_negated);
 }
 
-static StackFrame *StackFrameNew(const Bundle *owner, bool inherit_previous)
+static StackFrame *StackFrameNew(StackFrameType type, bool inherit_previous)
 {
     StackFrame *frame = xmalloc(sizeof(StackFrame));
 
-    frame->owner = owner;
-    frame->contexts = StringSetNew();
-    frame->contexts_negated = StringSetNew();
-
+    frame->type = type;
     frame->inherits_previous = inherit_previous;
+
+    return frame;
+}
+
+static StackFrame *StackFrameNewBundle(const Bundle *owner, bool inherit_previous)
+{
+    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_BUNDLE, inherit_previous);
+
+    frame->data.bundle.owner = owner;
+    frame->data.bundle.contexts = StringSetNew();
+    frame->data.bundle.contexts_negated = StringSetNew();
 
     return frame;
 }
 
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 {
-    StringSetRemove(EvalContextStackFrame(ctx)->contexts, context);
+    StackFrame *frame = LastStackFrameBundle(ctx);
+    assert(frame);
+
+    StringSetRemove(frame->data.bundle.contexts, context);
 }
 
-void EvalContextStackPushFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
 {
-    StackFrame *frame = StackFrameNew(owner, inherits_previous);
+    StackFrame *frame = StackFrameNewBundle(owner, inherits_previous);
     SeqAppend(ctx->stack, frame);
 }
 
@@ -1387,6 +1455,8 @@ void EvalContextStackPopFrame(EvalContext *ctx)
 
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
 {
-    StackFrame *frame = EvalContextStackFrame(ctx);
-    return StringSetIteratorInit(frame->contexts);
+    StackFrame *frame = LastStackFrameBundle(ctx);
+    assert(frame);
+
+    return StringSetIteratorInit(frame->data.bundle.contexts);
 }

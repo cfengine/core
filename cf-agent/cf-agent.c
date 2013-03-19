@@ -145,7 +145,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static int NewTypeContext(TypeSequence type);
-static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context);
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static bool VerifyBootstrap(void);
@@ -1108,13 +1108,13 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
                 if (Abort())
                 {
                     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
-                    DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
+                    DeleteTypeContext(ctx, bp, type, report_context);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
+            DeleteTypeContext(ctx, bp, type, report_context);
         }
     }
 
@@ -1441,12 +1441,12 @@ static int NewTypeContext(TypeSequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context)
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context)
 {
     switch (type)
     {
     case TYPE_SEQUENCE_CONTEXTS:
-        HashVariables(ctx, policy, THIS_BUNDLE, report_context);
+        BundleHashVariables(ctx, bp, report_context);
         break;
 
     case TYPE_SEQUENCE_ENVIRONMENTS:

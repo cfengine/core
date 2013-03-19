@@ -76,7 +76,10 @@ void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
-void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context);
+
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context);
+void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);

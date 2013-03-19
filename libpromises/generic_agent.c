@@ -361,7 +361,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
 
     if( main_policy )
     {
-        HashVariables(ctx, main_policy, NULL, report_context);
+        PolicyHashVariables(ctx, main_policy, report_context);
         HashControls(ctx, main_policy, config);
 
         if (PolicyIsRunnable(main_policy))
@@ -634,11 +634,11 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             RvalDestroy(returnval);
         }
 
-        HashVariables(ctx, policy, NULL, report_context);
+        PolicyHashVariables(ctx, policy, report_context);
         HashControls(ctx, policy, config);
     }
 
-    HashVariables(ctx, policy, NULL, report_context);
+    PolicyHashVariables(ctx, policy, report_context);
 
     return policy;
 }
@@ -1243,7 +1243,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
         }
     }
 
-    HashVariables(ctx, policy, NULL, report_context);
+    PolicyHashVariables(ctx, policy, report_context);
     HashControls(ctx, policy, config);
 
     // TODO: need to move this inside PolicyCheckRunnable eventually.
@@ -1576,41 +1576,40 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context)
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context)
+{
+    ScopeSetCurrent(bundle->name);
+
+    // TODO: seems sketchy, investigate purpose.
+    THIS_BUNDLE = bundle->name;
+
+    for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
+    {
+        PromiseType *sp = SeqAt(bundle->promise_types, j);
+
+        if (strcmp(sp->name, "vars") == 0)
+        {
+            CheckVariablePromises(ctx, sp->promises);
+        }
+
+        // We must also set global classes here?
+
+        if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
+        {
+            CheckCommonClassPromises(ctx, sp->promises, report_context);
+        }
+    }
+}
+
+void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Initiate variable convergence...\n");
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
-        Bundle *bp = SeqAt(policy->bundles, i);
+        Bundle *bundle = SeqAt(policy->bundles, i);
 
-        if (name && strcmp(name, bp->name) != 0)
-        {
-            continue;
-        }
-
-        ScopeSetCurrent(bp->name);
-
-        // TODO: seems sketchy, investigate purpose.
-        THIS_BUNDLE = bp->name;
-
-        for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-        {
-            PromiseType *sp = SeqAt(bp->promise_types, j);
-
-            if (strcmp(sp->name, "vars") == 0)
-            {
-                CheckVariablePromises(ctx, sp->promises);
-            }
-
-            // We must also set global classes here?
-
-            if (strcmp(bp->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
-            {
-                CheckCommonClassPromises(ctx, sp->promises, report_context);
-            }
-
-        }
+        BundleHashVariables(ctx, bundle, report_context);
     }
 }
 

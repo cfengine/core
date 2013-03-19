@@ -1735,11 +1735,11 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",
-              listvar, ScopeGetCurrent()->scope, naked);
+              listvar, PromiseGetBundle(fp->caller)->name, naked);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1822,7 +1822,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive and responding correctly\n", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                ScopeNewScalar((VarRef) { NULL, ScopeGetCurrent()->scope, buffer }, rp->item, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
                 count++;
             }
         }
@@ -1830,7 +1830,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive\n", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            ScopeNewScalar((VarRef) { NULL, ScopeGetCurrent()->scope, buffer }, rp->item, DATA_TYPE_STRING);
+            ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
             {

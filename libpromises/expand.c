@@ -296,7 +296,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
                 {
                     if (rval.type == RVAL_TYPE_LIST)
                     {
-                        ExpandScalar(finalname, exp);
+                        ExpandScalar(scopeid, finalname, exp);
 
                         if (qualified)
                         {
@@ -351,9 +351,9 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
 
 /*********************************************************************/
 
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE])
+int ExpandScalar(const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    return ExpandPrivateScalar(ScopeGetCurrent()->scope, string, buffer);
+    return ExpandPrivateScalar(scope, string, buffer);
 }
 
 /*********************************************************************/
@@ -696,7 +696,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
         {
             char tmp[CF_EXPANDSIZE];
             // This ordering is necessary to get automated canonification
-            ExpandScalar(handle,tmp);
+            ExpandScalar("this", handle, tmp);
             CanonifyNameInPlace(tmp);
             ScopeNewSpecialScalar("this", "handle", tmp, DATA_TYPE_STRING);
         }

@@ -1491,7 +1491,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
         return false;
     }
 
-    ExpandScalar(attr.transformer, comm);
+    ExpandScalar(PromiseGetBundle(pp)->name, attr.transformer, comm);
     CfOut(OUTPUT_LEVEL_INFORM, "", "I: Transforming: %s ", comm);
 
     if (!IsExecutable(CommandArg0(comm)))

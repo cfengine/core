@@ -1687,7 +1687,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         ScopeNewSpecialScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
-        ExpandScalar(map, expbuf);
+        ExpandScalar(PromiseGetBundle(fp->caller)->name, map, expbuf);
 
         if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
         {

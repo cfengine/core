@@ -847,12 +847,12 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
-            ExpandScalar(a.packages.package_delete_convention, reference);
+            ExpandScalar("cf_pack_context", a.packages.package_delete_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else if (a.packages.package_name_convention)
         {
-            ExpandScalar(a.packages.package_name_convention, reference);
+            ExpandScalar("cf_pack_context", a.packages.package_name_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else
@@ -913,7 +913,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
                     ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
                     ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
-                    ExpandScalar(a.packages.package_name_convention, refAnyVer);
+                    ExpandScalar("cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                     ScopeSetCurrent(current_scope->scope);
                     ScopeClear("cf_pack_context_anyver");
@@ -1050,7 +1050,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
                 ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
                 ScopeNewScalar((VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
-                ExpandScalar(a.packages.package_name_convention, refAnyVer);
+                ExpandScalar("cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                 ScopeSetCurrent(current_scope->scope);
                 ScopeClear("cf_pack_context_anyver");
@@ -1119,7 +1119,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "name" }, name, DATA_TYPE_STRING);
                         ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "version" }, instVer, DATA_TYPE_STRING);
                         ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "arch" }, instArch, DATA_TYPE_STRING);
-                        ExpandScalar(a.packages.package_delete_convention, reference2);
+                        ExpandScalar("cf_pack_context", a.packages.package_delete_convention, reference2);
                         id_del = reference2;
 
                         ScopeSetCurrent(current_scope->scope);

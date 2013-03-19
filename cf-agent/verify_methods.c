@@ -73,12 +73,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            ExpandScalar(fp->name, method_name);
+            ExpandScalar(PromiseGetBundle(pp)->name, fp->name, method_name);
             params = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
-            ExpandScalar((char *) vp, method_name);
+            ExpandScalar(PromiseGetBundle(pp)->name, (char *) vp, method_name);
             params = NULL;
         }
         else

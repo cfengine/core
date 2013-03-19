@@ -546,7 +546,7 @@ DataType ScopeGetVariable(VarRef lval, Rval *returnv)
     }
     else
     {
-        if (ExpandScalar(lval.lval, expbuf))
+        if (ExpandScalar(lval.scope, lval.lval, expbuf))
         {
             strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
         }

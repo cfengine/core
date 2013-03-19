@@ -38,7 +38,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promis
 void MapIteratorsFromRval(const char *scope, Rlist **lol, Rval rval);
 
 int IsExpandable(const char *str);
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
+int ExpandScalar(const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
 Rval ExpandBundleReference(const char *scopeid, Rval rval);
 FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
 Rval ExpandPrivateRval(const char *contextid, Rval rval);

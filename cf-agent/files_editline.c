@@ -1006,7 +1006,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
 
             match_len = end_off - start_off;
-            ExpandScalar(a.replace.replace_value, replace);
+            ExpandScalar(PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
                   cutoff);
@@ -1293,7 +1293,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         
         if (a.expandvars)
         {
-            ExpandScalar(buf, exp);
+            ExpandScalar(PromiseGetBundle(pp)->name, buf, exp);
         }
         else
         {

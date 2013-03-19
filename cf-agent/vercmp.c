@@ -69,7 +69,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         ScopeSetCurrent("cf_pack_context");
         ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "v1" }, v1, DATA_TYPE_STRING);
         ScopeNewScalar((VarRef) { NULL, "cf_pack_context", "v2" }, v2, DATA_TYPE_STRING);
-        ExpandScalar(command, expanded_command);
+        ExpandScalar("cf_pack_context", command, expanded_command);
 
         ScopeSetCurrent(current_scope->scope);
         ScopeClear("cf_pack_context");

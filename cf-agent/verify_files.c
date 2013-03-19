@@ -23,7 +23,7 @@
 
 */
 
-#include "cf3.defs.h"
+#include "verify_files.h"
 
 #include "promises.h"
 #include "vars.h"
@@ -57,6 +57,7 @@
 static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
 static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
 
 /*****************************************************************************/
 
@@ -242,7 +243,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     DeleteItemList(path);
 }
 
-void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context)
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context)
 {
     struct stat osb, oslb, dsb;
     Attributes a = { {0} };

@@ -39,6 +39,7 @@
 #include "logging.h"
 #include "rlist.h"
 #include "policy.h"
+#include "verify_files.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

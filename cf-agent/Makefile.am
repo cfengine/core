@@ -44,7 +44,7 @@ cf_agent_SOURCES = \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
-        verify_files.c \
+        verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
         verify_storage.c verify_storage.h \
         verify_exec.c verify_exec.h \

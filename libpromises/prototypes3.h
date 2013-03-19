@@ -169,15 +169,6 @@ void TimeOut(void);
 void SetReferenceTime(EvalContext *ctx, int setclasses);
 void SetStartTime(void);
 
-/* verify_files.c */
-
-void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
-
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
-                             void (*fnptr)(EvalContext *, char *, Promise *, const ReportContext *),
-                             const ReportContext *report_context); /* FIXME */
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-
 /* verify_reports.c */
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp);

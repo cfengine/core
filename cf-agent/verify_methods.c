@@ -120,8 +120,6 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
     if (bp)
     {
-        const char *bp_stack = THIS_BUNDLE;
-
         BannerSubBundle(bp, params);
 
         ScopeClear(bp->name);
@@ -134,16 +132,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         EvalContextStackPushFrame(ctx, bp, a.inherit);
         ScopeAugment(ctx, bp, params);
 
-        THIS_BUNDLE = bp->name;
-
         retval = ScheduleAgentOperations(ctx, bp, report_context);
 
         GetReturnValue(ctx, bp->name, pp);
         ResetBundleOutputs(bp->name);
 
         EvalContextStackPopFrame(ctx);
-
-        THIS_BUNDLE = bp_stack;
 
         switch (retval)
         {

@@ -988,8 +988,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             EvalContextStackPushFrame(ctx, bp, false);
             ScopeAugment(ctx, bp, params);
 
-            THIS_BUNDLE = bp->name;
-
             ScheduleAgentOperations(ctx, bp, report_context);
             ResetBundleOutputs(bp->name);
 

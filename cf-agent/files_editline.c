@@ -109,7 +109,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
     enum editlinetypesequence type;
     PromiseType *sp;
     char lockname[CF_BUFSIZE];
-    const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
     int pass;
 
@@ -151,7 +150,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
             }
 
             BannerSubPromiseType(ctx, bp->name, sp->name);
-            THIS_BUNDLE = bp->name;
             ScopeSetCurrent(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -168,7 +166,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
 
                 if (Abort())
                 {
-                    THIS_BUNDLE = bp_stack;
                     ScopeClear("edit");
                     YieldCurrentLock(thislock);
                     return false;
@@ -179,7 +176,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
 
     ScopeClear("edit");
     ScopeSetCurrent(PromiseGetBundle(parentp)->name);
-    THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;
 }

@@ -1229,8 +1229,6 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        THIS_BUNDLE = bp->name;
-
         for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
             PromiseType *sp = SeqAt(bp->promise_types, j);
@@ -1579,9 +1577,6 @@ void WritePID(char *filename)
 void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context)
 {
     ScopeSetCurrent(bundle->name);
-
-    // TODO: seems sketchy, investigate purpose.
-    THIS_BUNDLE = bundle->name;
 
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {

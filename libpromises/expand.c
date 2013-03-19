@@ -144,8 +144,6 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, Promise *pp, PromiseActuat
 
     ScopeClear("match");       /* in case we expand something expired accidentially */
 
-    THIS_BUNDLE = PromiseGetBundle(pp)->name;
-
     pcopy = DeRefCopyPromise(ctx, pp);
 
     MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });

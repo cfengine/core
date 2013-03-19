@@ -47,8 +47,6 @@ int CFA_MAXTHREADS = 10;
 int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
-const char *THIS_BUNDLE = NULL;
-
 AgentType THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
 

@@ -153,7 +153,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
     enum editxmltypesequence type;
     PromiseType *sp;
     char lockname[CF_BUFSIZE];
-    const char *bp_stack = THIS_BUNDLE;
     CfLock thislock;
     int pass;
 
@@ -195,7 +194,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
             }
 
             BannerSubPromiseType(ctx, bp->name, sp->name);
-            THIS_BUNDLE = bp->name;
             ScopeSetCurrent(bp->name);
 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
@@ -210,7 +208,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
 
                 if (Abort())
                 {
-                    THIS_BUNDLE = bp_stack;
                     ScopeClear("edit");
                     YieldCurrentLock(thislock);
                     return false;
@@ -221,7 +218,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
 
     ScopeClear("edit");
     ScopeSetCurrent(PromiseGetBundle(parentp)->name);
-    THIS_BUNDLE = bp_stack;
     YieldCurrentLock(thislock);
     return true;
 }

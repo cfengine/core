@@ -113,7 +113,6 @@ extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;
-extern const char *THIS_BUNDLE;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern time_t PROMISETIME;

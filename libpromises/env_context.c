@@ -532,7 +532,6 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 {
     assert(SeqLength(ctx->stack) > 0);
-    assert(strcmp(THIS_BUNDLE, EvalContextStackFrame(ctx)->owner->name) == 0);
 
     char copy[CF_BUFSIZE];
 

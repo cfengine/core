@@ -1331,7 +1331,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     else
     {
         strcpy(lval, name);
-        strcpy(scopeid, ScopeGetCurrent()->scope);
+        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
     }
 
     if (!ScopeExists(scopeid))

@@ -1138,7 +1138,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
     else
     {
         strcpy(lval, arrayname);
-        strcpy(scopeid, ScopeGetCurrent()->scope);
+        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
     }
 
     if ((ptr = ScopeGet(scopeid)) == NULL)

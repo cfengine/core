@@ -93,7 +93,7 @@ typedef enum
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
-static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
+static int BuildLineArray(const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
 static int CheckID(char *id);
 
@@ -3303,7 +3303,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
         }
         else
         {
-            entries = BuildLineArray(array_lval, file_buffer, split, maxent, type, intIndex);
+            entries = BuildLineArray(PromiseGetBundle(fp->caller), array_lval, file_buffer, split, maxent, type, intIndex);
         }
     }
 
@@ -3402,7 +3402,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
         }
         else
         {
-            entries = BuildLineArray(array_lval, instring, split, maxent, type, intIndex);
+            entries = BuildLineArray(PromiseGetBundle(fp->caller), array_lval, instring, split, maxent, type, intIndex);
         }
     }
 
@@ -3885,7 +3885,7 @@ static void CloseStringHole(char *s, int start, int end)
 
 /*********************************************************************/
 
-static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int maxent, DataType type,
+static int BuildLineArray(const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type,
                           int intIndex)
 {
     char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
@@ -3968,7 +3968,7 @@ static int BuildLineArray(char *array_lval, char *file_buffer, char *split, int 
                 snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
             }
 
-            ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, name }, this_rval, type);
+            ScopeNewScalar((VarRef) { NULL, bundle->name, name }, this_rval, type);
             vcount++;
         }
 

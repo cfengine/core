@@ -685,7 +685,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
         char number[CF_SMALLBUF];
 
         /* Set scope "this" first to ensure list expansion ! */
-        ScopeSetCurrent("this");
+        EvalContextStackPushPromiseFrame(ctx, pp);
         ScopeDeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */
@@ -756,6 +756,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
         
         PromiseDestroy(pexp);
 
+        EvalContextStackPopFrame(ctx);
         /* End thread monitor */
     }
     while (IncrementIterationContext(lol));
@@ -1701,16 +1702,18 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
 
         if (bp)
         {
-           for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
-           {
-               PromiseType *sbp = SeqAt(bp->promise_types, j);
+            EvalContextStackPushBundleFrame(ctx, bp, false);
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
+            {
+                PromiseType *sbp = SeqAt(bp->promise_types, j);
 
-               for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
-               {
-                   Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                   ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
-               }
-           }
+                for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
+                {
+                    Promise *ppsub = SeqAt(sbp->promises, ppsubi);
+                    ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
+                }
+            }
+            EvalContextStackPopFrame(ctx);
         }
     }
 }

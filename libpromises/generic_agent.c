@@ -1228,6 +1228,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
+        EvalContextStackPushBundleFrame(ctx, bp, false);
 
         for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
         {
@@ -1239,6 +1240,8 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
                 ExpandPromise(ctx, AGENT_TYPE_COMMON, pp, NULL, report_context);
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 
     PolicyHashVariables(ctx, policy, report_context);

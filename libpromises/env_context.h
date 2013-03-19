@@ -33,7 +33,8 @@
 
 typedef enum
 {
-    STACK_FRAME_TYPE_BUNDLE
+    STACK_FRAME_TYPE_BUNDLE,
+    STACK_FRAME_TYPE_PROMISE
 } StackFrameType;
 
 typedef struct
@@ -46,12 +47,20 @@ typedef struct
 
 typedef struct
 {
+    const Promise *owner;
+
+    AssocHashTable *variables; // TODO: change to map
+} StackFramePromise;
+
+typedef struct
+{
     StackFrameType type;
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
 
     union
     {
         StackFrameBundle bundle;
+        StackFramePromise promise;
     } data;
 } StackFrame;
 
@@ -104,6 +113,7 @@ StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 /* - Parsing/evaluating expressions - */
@@ -112,9 +122,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
-
-
-
 
 /* - Rest - */
 int Abort(void);

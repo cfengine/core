@@ -2663,7 +2663,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             else
             {
                 snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, var }, assoc->rval.item, DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, var }, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
     }

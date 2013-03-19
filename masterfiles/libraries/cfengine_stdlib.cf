@@ -3170,6 +3170,7 @@ bundle common paths
       "path[awk]"           string => "/usr/bin/awk";
       "path[bc]"            string => "/usr/bin/bc";
       "path[cat]"           string => "/bin/cat";
+      "path[chkconfig]"     string => "/sbin/chkconfig";
       "path[cksum]"         string => "/usr/bin/cksum";
       "path[createrepo]"    string => "/usr/bin/createrepo";
       "path[crontab]"       string => "/usr/bin/crontab";

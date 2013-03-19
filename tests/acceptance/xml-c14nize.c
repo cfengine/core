@@ -6,6 +6,7 @@
 
 static bool xmlC14nizeFile(const char *filename)
 {
+#ifdef HAVE_LIBXML2
     xmlDocPtr doc = xmlParseFile(filename);
 
     if (doc == NULL)
@@ -36,6 +37,10 @@ static bool xmlC14nizeFile(const char *filename)
 
     xmlFreeDoc(doc);
     return true;
+#else
+    fprintf(stderr, " !! Cannot use xml_check_diff (xml-c14nize) on XML files without LIBXML2\n");
+    return false;
+#endif
 }
 
 int main(int argc, char **argv)

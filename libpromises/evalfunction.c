@@ -3591,7 +3591,7 @@ static FnCallResult FnCallLDAPArray(EvalContext *ctx, FnCall *fp, Rlist *finalar
     char *scope = RlistScalarValue(finalargs->next->next->next->next);
     char *sec = RlistScalarValue(finalargs->next->next->next->next->next);
 
-    if ((newval = CfLDAPArray(array, uri, dn, filter, scope, sec)))
+    if ((newval = CfLDAPArray(PromiseGetBundle(fp), array, uri, dn, filter, scope, sec)))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { newval, RVAL_TYPE_SCALAR } };
     }

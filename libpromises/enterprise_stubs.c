@@ -216,7 +216,7 @@ void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, cha
     return NULL;
 }
 
-void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
+void *CfLDAPArray(const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
     return NULL;

@@ -86,7 +86,7 @@ void NoteVarUsage(void);
 void NoteVarUsageDB(void);
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
-void *CfLDAPArray(char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
+void *CfLDAPArray(const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec);
 void CacheUnreliableValue(char *caller, char *handle, char *buffer);
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);

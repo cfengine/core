@@ -1065,7 +1065,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     else
     {
         strcpy(lval, arrayname);
-        strcpy(scopeid, ScopeGetCurrent()->scope);
+        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
     }
 
     if ((ptr = ScopeGet(scopeid)) == NULL)

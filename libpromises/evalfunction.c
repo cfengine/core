@@ -1666,7 +1666,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             *(lval + strlen(lval) - 1) = '\0';
         }
 
-        strcpy(scopeid, ScopeGetCurrent()->scope);
+        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
     }
 
     if (!ScopeExists(scopeid))

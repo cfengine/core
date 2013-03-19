@@ -1334,11 +1334,11 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
-            returnval = ExpandPrivateRval(ScopeGetCurrent()->scope, cp->rval);
+            returnval = ExpandPrivateRval(scope, cp->rval);
         }
         else
         {
-            returnval = EvaluateFinalRval(ctx, ScopeGetCurrent()->scope, cp->rval, true, NULL);
+            returnval = EvaluateFinalRval(ctx, scope, cp->rval, true, NULL);
         }
 
         ScopeDeleteVariable(scope, cp->lval);

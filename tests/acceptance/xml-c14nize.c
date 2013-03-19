@@ -1,10 +1,8 @@
 #include "platform.h"
 
-#ifdef HAVE_LIBXML2
 #include <libxml/parser.h>
 #include <libxml/xpathInternals.h>
 #include <libxml/c14n.h>
-#endif
 
 static bool xmlC14nizeFile(const char *filename)
 {

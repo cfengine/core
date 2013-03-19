@@ -365,11 +365,9 @@ if test "x$with_libxml2" != xno; then
       AC_CHECK_LIB(xml2, xmlFirstElementChild, [], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
       AC_CHECK_HEADERS([libxml/xmlwriter.h], [break], [if test "x$with_libxml2" != xcheck; then AC_MSG_ERROR(Cannot find libxml2); fi])
     ])
-else
-    AM_CONDITIONAL(HAVE_LIBXML2, false)
 fi
 
-AM_CONDITIONAL([HAVE_LIBXML2], [test "x$with_mysql" != "xno" && test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes])
+AM_CONDITIONAL([HAVE_LIBXML2], [test "x$with_libxml2" != "xno" && test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes])
 
 dnl avahi
 

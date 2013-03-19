@@ -28,9 +28,9 @@
 #include "platform.h"
 #include "env_context.h"
 
-bool AcquireLockByID(char *lock_id, int acquire_after_minutes);
+bool AcquireLockByID(const char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(char *name);
-bool InvalidateLockTime(char *lock_id);
+bool InvalidateLockTime(const char *lock_id);
 
 
 CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);

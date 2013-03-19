@@ -45,7 +45,7 @@
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
-static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data)
+static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 {
     if(WriteDB(dbp, lock_id, lock_data, sizeof(LockData)))
     {
@@ -57,7 +57,7 @@ static bool WriteLockData(CF_DB *dbp, char *lock_id, LockData *lock_data)
     }
 }
 
-static bool WriteLockDataCurrent(CF_DB *dbp, char *lock_id)
+static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 {
     LockData lock_data;
 
@@ -77,7 +77,7 @@ static bool WriteLockDataCurrent(CF_DB *dbp, char *lock_id)
  *          process level.
  */
 
-bool AcquireLockByID(char *lock_id, int acquire_after_minutes)
+bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
 {
     CF_DB *dbp = OpenLock();
 
@@ -134,7 +134,7 @@ time_t FindLockTime(char *name)
     }
 }
 
-bool InvalidateLockTime(char *lock_id)
+bool InvalidateLockTime(const char *lock_id)
 {
     time_t epoch = 0;
 

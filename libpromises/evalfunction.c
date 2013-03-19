@@ -958,7 +958,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &retval) == DATA_TYPE_NONE)
+    if (ScopeGetVariable((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function REGLIST was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };

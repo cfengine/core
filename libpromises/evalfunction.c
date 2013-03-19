@@ -1509,7 +1509,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             for (rp = newlist; rp != NULL; rp = rp->next)
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                ScopeNewScalar((VarRef) { NULL, THIS_BUNDLE, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
+                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> getfields: defining %s = %s\n", name, RlistScalarValue(rp));
                 vcount++;
             }

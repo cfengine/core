@@ -61,7 +61,7 @@
 static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
-static int Epimenides(const char *var, Rval rval, int level);
+static bool Epimenides(const char *scope, const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
@@ -1385,7 +1385,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             BufferDestroy(&conv);
         }
 
-        if (Epimenides(pp->promiser, rval, 0))
+        if (Epimenides(PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
@@ -1500,7 +1500,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
 /* Levels                                                            */
 /*********************************************************************/
 
-static int Epimenides(const char *var, Rval rval, int level)
+static bool Epimenides(const char *scope, const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -1517,8 +1517,8 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandPrivateScalar(ScopeGetCurrent()->scope, rval.item, exp);
-            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, ScopeGetCurrent()->scope, var, (const char *) rval.item,
+            ExpandPrivateScalar(scope, rval.item, exp);
+            CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
                     exp);
 
             if (level > 3)
@@ -1526,7 +1526,7 @@ static int Epimenides(const char *var, Rval rval, int level)
                 return false;
             }
 
-            if (Epimenides(var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -1539,7 +1539,7 @@ static int Epimenides(const char *var, Rval rval, int level)
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(scope, var, (Rval) {rp->item, rp->type}, level))
             {
                 return true;
             }

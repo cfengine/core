@@ -448,7 +448,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, EvalContextStackFrame(ctx)->owner->name);
             exit(1);
         }
     }
@@ -510,7 +510,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, THIS_BUNDLE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, EvalContextStackFrame(ctx)->owner->name);
             exit(1);
         }
     }

@@ -122,6 +122,8 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
     {
         BannerSubBundle(bp, params);
 
+        EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
+
         ScopeClear(bp->name);
         BundleHashVariables(ctx, bp, report_context);
 
@@ -129,7 +131,6 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
         SetBundleOutputs(bp->name);
 
-        EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
         ScopeAugment(ctx, bp, params);
 
         retval = ScheduleAgentOperations(ctx, bp, report_context);

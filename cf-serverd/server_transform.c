@@ -523,7 +523,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerPromiseType(bp->name, sp->name, 0);
-                ScopeSetCurrent(bp->name);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL);
@@ -570,8 +569,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 }
 
                 BannerPromiseType(bp->name, sp->name, 0);
-
-                ScopeSetCurrent(bp->name);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL);

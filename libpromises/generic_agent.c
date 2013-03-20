@@ -1579,8 +1579,6 @@ void WritePID(char *filename)
 
 void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context)
 {
-    ScopeSetCurrent(bundle->name);
-
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {
         PromiseType *sp = SeqAt(bundle->promise_types, j);
@@ -1606,8 +1604,11 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bundle = SeqAt(policy->bundles, i);
+        EvalContextStackPushBundleFrame(ctx, bundle, false);
 
         BundleHashVariables(ctx, bundle, report_context);
+
+        EvalContextStackPopFrame(ctx);
     }
 }
 

@@ -761,7 +761,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
     }
     while (IncrementIterationContext(lol));
 
-    ScopeSetCurrent(PromiseGetBundle(pp)->name);
     DeleteIterationContext(lol);
 }
 
@@ -1800,6 +1799,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
 
     if (bp)
     {
+        EvalContextStackPushBundleFrame(ctx, bp, false);
         ScopeMapBodyArgs(ctx, bp->name, args, bp->args);
 
         for (size_t i = 0; i < SeqLength(bp->promise_types); i++)
@@ -1812,5 +1812,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
                 ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 }

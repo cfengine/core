@@ -1498,11 +1498,16 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
 {
+    assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
+    ScopeSetCurrent(owner->name);
 }
 
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
 {
+    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
+
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
     ScopeSetCurrent("this");
 }

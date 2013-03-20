@@ -543,10 +543,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             BannerSubBundle(bp, params);
 
+            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp, report_context);
-
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeAugment(ctx, bp, params);
 
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
@@ -598,10 +597,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         {
             BannerSubBundle(bp, params);
 
+            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp, report_context);
-
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeAugment(ctx, bp, params);
 
             retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
@@ -623,10 +621,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BannerSubBundle(bp,params);
             a.haveeditline = true;
 
+            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp, report_context);
-
-            EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
 
             retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
 

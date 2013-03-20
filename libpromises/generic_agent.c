@@ -120,8 +120,6 @@ void CheckLicenses(EvalContext *ctx)
 
 void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context)
 {
-    char vbuff[CF_BUFSIZE];
-
 #ifdef HAVE_NOVA
     CF_DEFAULT_DIGEST = HASH_METHOD_SHA256;
     CF_DEFAULT_DIGEST_LEN = CF_SHA256_LEN;
@@ -165,9 +163,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
 
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants();
-
-    snprintf(vbuff, CF_BUFSIZE, "control_%s", CF_AGENTTYPES[config->agent_type]);
-    ScopeSetCurrent(vbuff);
 
     if (BOOTSTRAP)
     {

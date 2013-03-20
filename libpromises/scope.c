@@ -783,7 +783,7 @@ bool ScopeAddVariableHash(VarRef lval, Rval rval, DataType dtype, const char *fn
     {
         Rlist *listvars = NULL;
 
-        if (strcmp(ScopeGetCurrent()->scope, "this") != 0)
+        if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
             MapIteratorsFromRval(ScopeGetCurrent()->scope, &listvars, rval);
 

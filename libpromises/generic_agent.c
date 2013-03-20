@@ -139,9 +139,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-// need scope sys to set vars in expiry function
-    ScopeSetCurrent("sys");
-
     if (EnterpriseExpiry(ctx, config->agent_type))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");

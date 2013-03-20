@@ -252,7 +252,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
     ScopeNewSpecialScalar("edit", "filename", "x", DATA_TYPE_STRING);
 
-    ScopeNewSpecialScalar("match", "0", "x", DATA_TYPE_STRING);
+    ScopePutMatch(0, "x");
 
     for (const char **s = scopes; *s != NULL; ++s)
     {

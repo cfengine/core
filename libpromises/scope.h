@@ -30,6 +30,8 @@
 
 #include "var_expressions.h"
 
+void ScopePutMatch(int index, const char *value);
+
 bool ScopeExists(const char *name);
 
 /**

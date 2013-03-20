@@ -55,20 +55,6 @@ static pcre *CompileRegExp(const char *regexp)
 }
 
 /* Sets variables */
-static void ForceScalar(char *lval, char *rval)
-{
-    Rval retval;
-
-    if (ScopeGetVariable((VarRef) { NULL, "match", lval }, &retval) != DATA_TYPE_NONE)
-    {
-        ScopeDeleteSpecialScalar("match", lval);
-    }
-
-    ScopeNewSpecialScalar("match", lval, rval, DATA_TYPE_STRING);
-    CfDebug("Setting local variable \"match.%s\" context; $(%s) = %s\n", lval, lval, rval);
-}
-
-/* Sets variables */
 static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int *end)
 {
     int ovector[OVECCOUNT], i, rc;
@@ -82,7 +68,6 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
 
         for (i = 0; i < rc; i++)        /* make backref vars $(1),$(2) etc */
         {
-            char lval[4];
             const char *backref_start = teststring + ovector[i * 2];
             int backref_len = ovector[i * 2 + 1] - ovector[i * 2];
 
@@ -91,10 +76,9 @@ static int RegExMatchSubString(pcre *rx, const char *teststring, int *start, int
                 char substring[CF_MAXVARSIZE];
 
                 strlcpy(substring, backref_start, MIN(CF_MAXVARSIZE, backref_len + 1));
-                snprintf(lval, 3, "%d", i);
                 if (THIS_AGENT_TYPE == AGENT_TYPE_AGENT)
                 {
-                    ForceScalar(lval, substring);
+                    ScopePutMatch(i, substring);
                 }
             }
         }

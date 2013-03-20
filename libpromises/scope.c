@@ -43,35 +43,12 @@
 
 Scope *SCOPE_CURRENT = NULL;
 
-/*******************************************************************/
-
-Scope *ScopeGet(const char *scope)
-/* 
- * Not thread safe - returns pointer to global memory
- */
-{
-    const char *name = scope;
-
-    if (strncmp(scope, "default:", strlen("default:")) == 0)  // CF_NS == ':'
-       {
-       name = scope + strlen("default:");
-       }
-    
-    CfDebug("Searching for scope context %s\n", scope);
-
-    for (Scope *cp = VSCOPE; cp != NULL; cp = cp->next)
-    {
-        if (strcmp(cp->scope, name) == 0)
-        {
-            CfDebug("Found scope reference %s\n", scope);
-            return cp;
-        }
-    }
-
-    return NULL;
-}
+Scope *SCOPE_MATCH = NULL;
 
 /*******************************************************************/
+
+static int CompareVariableValue(Rval rval, CfAssoc *ap);
+static bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype);
 
 static Scope *ScopeNew(const char *name)
 {
@@ -104,6 +81,80 @@ static Scope *ScopeNew(const char *name)
     ThreadUnlock(cft_vscope);
 
     return ptr;
+}
+
+void ScopePutMatch(int index, const char *value)
+{
+    if (!SCOPE_MATCH)
+    {
+        SCOPE_MATCH = ScopeNew("match");
+    }
+    Scope *ptr = SCOPE_MATCH;
+
+    char lval[4] = { 0 };
+    snprintf(lval, 3, "%d", index);
+
+    Rval rval = (Rval) { value, RVAL_TYPE_SCALAR };
+
+    CfAssoc *assoc = HashLookupElement(ptr->hashtable, lval);
+
+    if (assoc)
+    {
+        if (CompareVariableValue(rval, assoc) == 0)
+        {
+            /* Identical value, keep as is */
+        }
+        else
+        {
+            /* Different value, bark and replace */
+            if (!UnresolvedVariables(assoc, RVAL_TYPE_SCALAR))
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
+            }
+            RvalDestroy(assoc->rval);
+            assoc->rval = RvalCopy(rval);
+            assoc->dtype = DATA_TYPE_STRING;
+            CfDebug("Stored \"%s\" in context %s\n", lval, "match");
+        }
+    }
+    else
+    {
+        if (!HashInsertElement(ptr->hashtable, lval, rval, DATA_TYPE_STRING))
+        {
+            ProgrammingError("Hash table is full");
+        }
+    }
+}
+
+Scope *ScopeGet(const char *scope)
+/* 
+ * Not thread safe - returns pointer to global memory
+ */
+{
+    const char *name = scope;
+
+    if (strncmp(scope, "default:", strlen("default:")) == 0)  // CF_NS == ':'
+       {
+       name = scope + strlen("default:");
+       }
+    
+    CfDebug("Searching for scope context %s\n", scope);
+
+    if (strcmp("match", name) == 0)
+    {
+        return SCOPE_MATCH;
+    }
+
+    for (Scope *cp = VSCOPE; cp != NULL; cp = cp->next)
+    {
+        if (strcmp(cp->scope, name) == 0)
+        {
+            CfDebug("Found scope reference %s\n", scope);
+            return cp;
+        }
+    }
+
+    return NULL;
 }
 
 bool ScopeExists(const char *name)

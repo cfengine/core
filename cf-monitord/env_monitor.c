@@ -1131,8 +1131,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-
-        ScopeSetCurrent(bp->name);
+        EvalContextStackPushBundleFrame(ctx, bp, false);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
@@ -1147,6 +1146,8 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 
     ScopeDeleteAll();

@@ -209,8 +209,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
         /* First case is: we have a body template to expand lval = body(args), .. */
 
-        if (bp != NULL)
+        if (bp)
         {
+            EvalContextStackPushBodyFrame(ctx, bp);
+
             if (strcmp(bp->type, cp->lval) != 0)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
@@ -277,6 +279,8 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     }
                 }
             }
+
+            EvalContextStackPopFrame(ctx);
         }
         else
         {

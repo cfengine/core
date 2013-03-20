@@ -34,7 +34,8 @@
 typedef enum
 {
     STACK_FRAME_TYPE_BUNDLE,
-    STACK_FRAME_TYPE_PROMISE
+    STACK_FRAME_TYPE_PROMISE,
+    STACK_FRAME_TYPE_BODY
 } StackFrameType;
 
 typedef struct
@@ -44,6 +45,11 @@ typedef struct
     StringSet *contexts;
     StringSet *contexts_negated;
 } StackFrameBundle;
+
+typedef struct
+{
+    const Body *owner;
+} StackFrameBody;
 
 typedef struct
 {
@@ -60,6 +66,7 @@ typedef struct
     union
     {
         StackFrameBundle bundle;
+        StackFrameBody body;
         StackFramePromise promise;
     } data;
 } StackFrame;
@@ -113,6 +120,7 @@ StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 

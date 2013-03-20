@@ -162,7 +162,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     OSClasses(ctx);
 
     EvalContextHeapPersistentLoadAll(ctx);
-    LoadSystemConstants();
+    LoadSystemConstants(ctx);
 
     if (BOOTSTRAP)
     {
@@ -180,7 +180,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
         }
     }
 
-    SetPolicyServer(POLICY_SERVER);
+    SetPolicyServer(ctx, POLICY_SERVER);
 }
 
 static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
@@ -1336,8 +1336,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         ScopeDeleteVariable(scope, cp->lval);
 
-        if (!ScopeAddVariableHash((VarRef) { NULL, scope, cp->lval }, returnval,
-                             BodySyntaxGetDataType(body_syntax, cp->lval), control_body->source_path, cp->offset.line))
+        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, BodySyntaxGetDataType(body_syntax, cp->lval)))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
         }
@@ -1354,8 +1353,8 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
             ScopeDeleteSpecialScalar("sys", "domain");
             ScopeDeleteSpecialScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
-            ScopeNewSpecialScalar("sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
-            ScopeNewSpecialScalar("sys", "domain", VDOMAIN, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "sys", "fqhost", VFQNAME, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "sys", "domain", VDOMAIN, DATA_TYPE_STRING);
             EvalContextHeapAddHard(ctx, VDOMAIN);
         }
 

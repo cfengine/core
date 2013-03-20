@@ -637,8 +637,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             ERRORCOUNT = 0;
 
-            SetPolicyServer(POLICY_SERVER);
-            ScopeNewSpecialScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+            SetPolicyServer(ctx, POLICY_SERVER);
+            ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
             if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
             {

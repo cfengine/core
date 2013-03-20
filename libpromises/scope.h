@@ -29,6 +29,12 @@
 #include "cf3.defs.h"
 
 #include "var_expressions.h"
+#include "assoc.h"
+
+/**
+ * @deprecated
+ */
+Scope *ScopeNew(const char *name);
 
 void ScopePutMatch(int index, const char *value);
 
@@ -88,12 +94,12 @@ void ScopePopThis(void);
 
 
 void ScopeToList(Scope *sp, Rlist **list);
-void ScopeNewScalar(VarRef lval, const char *rval, DataType dt);
-void ScopeNewSpecialScalar(const char *scope, const char *lval, const char *rval, DataType dt);
+void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt);
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt);
 void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
-void ScopeNewList(VarRef lval, void *rval, DataType dt);
-void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt);
+void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt);
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt);
 
 /*
  * Do not modify returned Rval, its contents may be constant and statically
@@ -104,10 +110,12 @@ void ScopeDeleteVariable(const char *scope, const char *id);
 
 DataType ScopeControlCommonGet(CommonControl lval, Rval *rval_out);
 
-bool ScopeAddVariableHash(VarRef lval, Rval rval, DataType dtype, const char *fname, int no);
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);
+
+int CompareVariableValue(Rval rval, CfAssoc *ap);
+bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype);
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table

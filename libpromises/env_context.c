@@ -47,6 +47,7 @@
 #include "misc_lib.h"
 #include "assoc.h"
 #include "scope.h"
+#include "vars.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -1574,4 +1575,135 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
     assert(frame);
 
     return StringSetIteratorInit(frame->data.bundle.contexts);
+}
+
+
+bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
+{
+    Scope *ptr;
+    const Rlist *rp;
+    CfAssoc *assoc;
+
+    if (rval.type == RVAL_TYPE_SCALAR)
+    {
+        CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n", lval.scope, lval.lval, (const char *) rval.item, CF_DATATYPES[type],
+                rval.type);
+    }
+    else
+    {
+        CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n", lval.scope, lval.lval, CF_DATATYPES[type], rval.type);
+    }
+
+    if (lval.lval == NULL || lval.scope == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "scope.value = %s.%s", lval.scope, lval.lval);
+        ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
+    }
+
+    if (rval.item == NULL)
+    {
+        CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
+        return false;
+    }
+
+    if (strlen(lval.lval) > CF_MAXVARSIZE)
+    {
+        ReportError("variable lval too long");
+        return false;
+    }
+
+/* If we are not expanding a body template, check for recursive singularities */
+
+    if (strcmp(lval.scope, "body") != 0)
+    {
+        switch (rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+
+            if (StringContainsVar((char *) rval.item, lval.lval))
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
+                      (char *) rval.item);
+                return false;
+            }
+            break;
+
+        case RVAL_TYPE_LIST:
+
+            for (rp = rval.item; rp != NULL; rp = rp->next)
+            {
+                if (StringContainsVar((char *) rp->item, lval.lval))
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval.lval);
+                    return false;
+                }
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    ptr = ScopeGet(lval.scope);
+    if (!ptr)
+    {
+        ptr = ScopeNew(lval.scope);
+        if (!ptr)
+        {
+            return false;
+        }
+    }
+
+// Look for outstanding lists in variable rvals
+
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+    {
+        Rlist *listvars = NULL;
+
+        if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
+        {
+            MapIteratorsFromRval(ScopeGetCurrent()->scope, &listvars, rval);
+
+            if (listvars != NULL)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                      lval.lval, ScopeGetCurrent()->scope);
+            }
+
+            RlistDestroy(listvars);
+        }
+    }
+
+    assoc = HashLookupElement(ptr->hashtable, lval.lval);
+
+    if (assoc)
+    {
+        if (CompareVariableValue(rval, assoc) == 0)
+        {
+            /* Identical value, keep as is */
+        }
+        else
+        {
+            /* Different value, bark and replace */
+            if (!UnresolvedVariables(assoc, rval.type))
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval.lval, ptr->scope);
+            }
+            RvalDestroy(assoc->rval);
+            assoc->rval = RvalCopy(rval);
+            assoc->dtype = type;
+            CfDebug("Stored \"%s\" in context %s\n", lval.lval, lval.scope);
+        }
+    }
+    else
+    {
+        if (!HashInsertElement(ptr->hashtable, lval.lval, rval, type))
+        {
+            ProgrammingError("Hash table is full");
+        }
+    }
+
+    CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);
+    return true;
 }

@@ -37,7 +37,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 
-static void GenerateManual(void);
+static void GenerateManual(EvalContext *ctx);
 static void GenerateXml(void);
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        GenerateManual();
+        GenerateManual(ctx);
     }
 
     ReportContextDestroy(report_context);
@@ -140,9 +140,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     return config;
 }
 
-static void GenerateManual(void)
+static void GenerateManual(EvalContext *ctx)
 {
-    TexinfoManual(SOURCE_DIR, OUTPUT_FILE);
+    TexinfoManual(ctx, SOURCE_DIR, OUTPUT_FILE);
 }
 
 static void GenerateXml(void)

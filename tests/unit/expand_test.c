@@ -3,6 +3,7 @@
 #include "expand.h"
 #include "rlist.h"
 #include "scope.h"
+#include "env_context.h"
 
 void test_map_iterators_from_rval_empty(void **state)
 {
@@ -22,6 +23,7 @@ void test_map_iterators_from_rval_literal(void **state)
 
 void test_map_iterators_from_rval_naked_list_var(void **state)
 {
+    EvalContext *ctx = EvalContextNew();
     ScopeDeleteAll();
     ScopeSetCurrent("scope");
 
@@ -30,7 +32,7 @@ void test_map_iterators_from_rval_naked_list_var(void **state)
 
     VarRef lval = VarRefParse("scope.jwow");
 
-    ScopeAddVariableHash(lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST, NULL, 0);
+    EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
 
     Rlist *lists = NULL;
     MapIteratorsFromRval("scope", &lists, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
@@ -39,6 +41,7 @@ void test_map_iterators_from_rval_naked_list_var(void **state)
     assert_string_equal("jwow", lists->item);
 
     VarRefDestroy(lval);
+    EvalContextDestroy(ctx);
 }
 
 int main()

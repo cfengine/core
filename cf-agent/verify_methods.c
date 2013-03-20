@@ -235,7 +235,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval.item, DATA_TYPE_STRING);
+                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
         

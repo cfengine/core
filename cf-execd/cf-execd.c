@@ -731,8 +731,8 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         ERRORCOUNT = 0;
 
-        SetPolicyServer(POLICY_SERVER);
-        ScopeNewSpecialScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+        SetPolicyServer(ctx, POLICY_SERVER);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);
         GetInterfacesInfo(ctx, AGENT_TYPE_EXECUTOR);

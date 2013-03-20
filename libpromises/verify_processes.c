@@ -135,7 +135,7 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     ScopeDeleteSpecialScalar("this", "promiser");
-    ScopeNewSpecialScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
     PromiseBanner(pp);
     VerifyProcessOp(ctx, PROCESSTABLE, a, pp);
     ScopeDeleteSpecialScalar("this", "promiser");

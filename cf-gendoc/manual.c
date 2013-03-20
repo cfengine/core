@@ -60,7 +60,7 @@ static void PrintPattern(FILE *fout, const char *pattern);
 
 /*****************************************************************************/
 
-void TexinfoManual(const char *source_dir, const char *output_file)
+void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file)
 {
     char filename[CF_BUFSIZE];
     const PromiseTypeSyntax *st;
@@ -250,7 +250,7 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 // scopes const and sys
 
-    ScopeNewSpecialScalar("edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
 
     ScopePutMatch(0, "x");
 

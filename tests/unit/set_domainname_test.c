@@ -75,7 +75,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewScalar(const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
@@ -95,9 +95,9 @@ void ScopeNewScalar(const char *ns, const char *varname, const char *value, Data
     fail();                     /* LCOV_EXCL_LINE */
 }
 
-void ScopeNewSpecialScalar(const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
-    ScopeNewScalar(ns, varname, value, type);
+    ScopeNewScalar(ctx, ns, varname, value, type);
 }
 
 static void test_set_names(void **state)
@@ -320,14 +320,14 @@ Rlist *RlistParseShown(char *string)
     fail();
 }
 
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }
 
-void ScopeNewSpecialList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
-    ScopeNewList(scope, lval, rval, dt);
+    fail();
 }
 
 void RlistDestroy(Rlist *list)

@@ -117,7 +117,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, P
 
 /* manual.c */
 
-void TexinfoManual(const char *source_dir, const char *output_file);
+void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);
 
 /* modes.c */
 

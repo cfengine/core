@@ -66,7 +66,7 @@ static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
 static void SetAnyMissingDefaults(EvalContext *ctx, Promise *pp);
-static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars);
+static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scope, const Rlist *listvars);
 static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context, Promise *pp);
 static void ParseServices(EvalContext *ctx, const ReportContext *report_context, Promise *pp);
 /*
@@ -163,7 +163,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, Promise *pp, PromiseActuat
         MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, cp->rval);
     }
 
-    CopyLocalizedIteratorsToThisScope(PromiseGetBundle(pp)->name, listvars);
+    CopyLocalizedIteratorsToThisScope(ctx, PromiseGetBundle(pp)->name, listvars);
 
     ScopePushThis();
     ExpandPromiseAndDo(ctx, agent, pcopy, listvars, ActOnPromise, report_context);
@@ -700,27 +700,27 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
             // This ordering is necessary to get automated canonification
             ExpandScalar("this", handle, tmp);
             CanonifyNameInPlace(tmp);
-            ScopeNewSpecialScalar("this", "handle", tmp, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
         {
-            ScopeNewSpecialScalar("this", "handle", PromiseID(pp), DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         if (PromiseGetBundle(pp)->source_path)
         {
-            ScopeNewSpecialScalar("this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
             snprintf(number, CF_SMALLBUF, "%zu", pp->offset.line);
-            ScopeNewSpecialScalar("this", "promise_linenumber", number, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "this", "promise_linenumber", number, DATA_TYPE_STRING);
         }
 
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getuid());
-        ScopeNewSpecialScalar("this", "promiser_uid", v, DATA_TYPE_INT);
+        ScopeNewSpecialScalar(ctx, "this", "promiser_uid", v, DATA_TYPE_INT);
         snprintf(v, CF_MAXVARSIZE, "%d", (int) getgid());
-        ScopeNewSpecialScalar("this", "promiser_gid", v, DATA_TYPE_INT);
+        ScopeNewSpecialScalar(ctx, "this", "promiser_gid", v, DATA_TYPE_INT);
 
-        ScopeNewSpecialScalar("this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
-        ScopeNewSpecialScalar("this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "bundle", PromiseGetBundle(pp)->name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "namespace", PromiseGetNamespace(pp), DATA_TYPE_STRING);
 
         /* Must expand $(this.promiser) here for arg dereferencing in things
            like edit_line and methods, but we might have to
@@ -729,7 +729,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
 
         if (pp->has_subbundles)
         {
-            ScopeNewSpecialScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+            ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
         }
 
         /* End special variables */
@@ -882,7 +882,7 @@ static void RewriteInnerVarStringAsLocalCopyName(char *string)
 
 /*********************************************************************/
 
-static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *listvars)
+static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scope, const Rlist *listvars)
 {
     Rval retval;
     char format[CF_SMALLBUF];
@@ -901,7 +901,7 @@ static void CopyLocalizedIteratorsToThisScope(const char *scope, const Rlist *li
 
             ScopeGetVariable((VarRef) { NULL, orgscope, orgname }, &retval);
 
-            ScopeNewList((VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+            ScopeNewList(ctx, (VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1475,8 +1475,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             }
         }
 
-        if (!ScopeAddVariableHash((VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval),
-                             PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line))
+        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
             PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
@@ -1772,21 +1771,21 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewSpecialScalar("this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewSpecialScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewSpecialScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewSpecialScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 

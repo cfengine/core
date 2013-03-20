@@ -93,7 +93,7 @@ typedef enum
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
-static int BuildLineArray(const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
+static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
 static int CheckID(char *id);
 
@@ -1509,7 +1509,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             for (rp = newlist; rp != NULL; rp = rp->next)
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
-                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
+                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> getfields: defining %s = %s\n", name, RlistScalarValue(rp));
                 vcount++;
             }
@@ -1685,7 +1685,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
-        ScopeNewSpecialScalar("this", "this", (char *) rp->item, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
         ExpandScalar(PromiseGetBundle(fp->caller)->name, map, expbuf);
 
@@ -1822,7 +1822,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive and responding correctly\n", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
+                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
                 count++;
             }
         }
@@ -1830,7 +1830,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host %s is alive\n", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
-            ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
+            ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
             {
@@ -2663,7 +2663,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             else
             {
                 snprintf(var, CF_MAXVARSIZE - 1, "%s[%s]", arrayname, assoc->lval);
-                ScopeNewScalar((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, var }, assoc->rval.item, DATA_TYPE_STRING);
+                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, var }, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
     }
@@ -3303,7 +3303,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
         }
         else
         {
-            entries = BuildLineArray(PromiseGetBundle(fp->caller), array_lval, file_buffer, split, maxent, type, intIndex);
+            entries = BuildLineArray(ctx, PromiseGetBundle(fp->caller), array_lval, file_buffer, split, maxent, type, intIndex);
         }
     }
 
@@ -3402,7 +3402,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
         }
         else
         {
-            entries = BuildLineArray(PromiseGetBundle(fp->caller), array_lval, instring, split, maxent, type, intIndex);
+            entries = BuildLineArray(ctx, PromiseGetBundle(fp->caller), array_lval, instring, split, maxent, type, intIndex);
         }
     }
 
@@ -3885,7 +3885,7 @@ static void CloseStringHole(char *s, int start, int end)
 
 /*********************************************************************/
 
-static int BuildLineArray(const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type,
+static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type,
                           int intIndex)
 {
     char *sp, linebuf[CF_BUFSIZE], name[CF_MAXVARSIZE], first_one[CF_MAXVARSIZE];
@@ -3968,7 +3968,7 @@ static int BuildLineArray(const Bundle *bundle, char *array_lval, char *file_buf
                 snprintf(name, CF_MAXVARSIZE, "%s[%s][%d]", array_lval, first_one, vcount);
             }
 
-            ScopeNewScalar((VarRef) { NULL, bundle->name, name }, this_rval, type);
+            ScopeNewScalar(ctx, (VarRef) { NULL, bundle->name, name }, this_rval, type);
             vcount++;
         }
 
@@ -4107,7 +4107,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         if (CheckID(name))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
-            ScopeNewScalar((VarRef) { NULL, context, name }, content, DATA_TYPE_STRING);
+            ScopeNewScalar(ctx, (VarRef) { NULL, context, name }, content, DATA_TYPE_STRING);
         }
         break;
 
@@ -4121,7 +4121,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Defined variable: %s in context %s with value: %s\n", name, context, content);
             list = RlistParseShown(content);
-            ScopeNewList((VarRef) { NULL, context, name }, list, DATA_TYPE_STRING_LIST);
+            ScopeNewList(ctx, (VarRef) { NULL, context, name }, list, DATA_TYPE_STRING_LIST);
         }
         break;
 

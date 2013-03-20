@@ -166,7 +166,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
 /********************************************************************/
 
-void SetPolicyServer(char *name)
+void SetPolicyServer(EvalContext *ctx, char *name)
 /* 
  * If name contains a string, it's written to file,
  * if not, name is filled with the contents of file.
@@ -210,11 +210,11 @@ void SetPolicyServer(char *name)
     {
         // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
         // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
-        ScopeNewSpecialScalar("sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
     else
     {
-        ScopeNewSpecialScalar("sys", "policy_hub", name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", name, DATA_TYPE_STRING);
     }
 
 // Get the timestamp on policy update
@@ -232,7 +232,7 @@ void SetPolicyServer(char *name)
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
     
-    ScopeNewSpecialScalar("sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
 /********************************************************************/

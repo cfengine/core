@@ -30,6 +30,7 @@
 #include "writer.h"
 #include "set.h"
 #include "sequence.h"
+#include "var_expressions.h"
 
 typedef enum
 {
@@ -123,6 +124,8 @@ void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
+
+bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

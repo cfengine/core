@@ -19,6 +19,8 @@ my %extra = (
                          ],
             );
 
+my $homedir = dirname($0);
+
 foreach my $f (@ARGV)
 {
     next unless -f $f;
@@ -27,11 +29,11 @@ foreach my $f (@ARGV)
     if (exists $handlers{$suffix})
     {
         my @extra = exists $extra{$handlers{$suffix}} ? @{$extra{$handlers{$suffix}}} : ();
-        my $locals = dirname($0) . "/dir-locals.el";
+        my $locals = "$homedir/dir-locals.el";
         print "Reindenting $f\n";
         system('emacs', '-q',
                '--batch',
-               '-chdir' => dirname($0), # ensure we're in the right directory
+               '--eval' => "(cd \"$homedir\")",
                '-l' => 'cfengine-code-style.el',
                '-l' => 'cfengine.el',
                '--visit' => $f,

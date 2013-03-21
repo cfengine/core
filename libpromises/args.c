@@ -139,7 +139,6 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
     if (argnum != RlistLen(realargs) && !fn->varargs)
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
-        ReportError(output);
         RlistShow(stderr, realargs);
         fprintf(stderr, ")\n");
 

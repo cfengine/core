@@ -67,8 +67,6 @@ extern char VUQNAME[];
 
 extern int DEBUG;
 
-extern int PARSING;
-
 extern int VERBOSE;
 extern int INFORM;
 

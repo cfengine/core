@@ -37,7 +37,6 @@ int SHOWREPORTS = false;
 
 int VERBOSE = false;
 int INFORM = false;
-int PARSING = false;
 int LOOKUP = false;
 int FIPS_MODE = false;
 

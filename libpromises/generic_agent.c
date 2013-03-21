@@ -343,9 +343,6 @@ int CheckPromises(const char *input_file)
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
 {
-    // TODO: remove PARSING
-    PARSING = true;
-
     PROMISETIME = time(NULL);
 
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
@@ -371,8 +368,6 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
             }
         }
     }
-
-    PARSING = false;
 
     if (SeqLength(errors) > 0)
     {

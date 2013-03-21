@@ -1608,7 +1608,9 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
     if (strlen(lval.lval) > CF_MAXVARSIZE)
     {
-        ReportError("variable lval too long");
+        char *lval_str = VarRefToString(lval);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable %s cannot be added because its length exceeds the maximum length allowed: %d", lval_str, CF_MAXVARSIZE);
+        free(lval_str);
         return false;
     }
 

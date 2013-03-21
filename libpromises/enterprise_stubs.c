@@ -249,7 +249,7 @@ void TranslatePath(char *new, const char *old)
     strncpy(new, old, CF_BUFSIZE - 1);
 }
 
-void RegisterLiteralServerData(const char *handle, Promise *pp)
+void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
 }

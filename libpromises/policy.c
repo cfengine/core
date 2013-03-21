@@ -2449,9 +2449,9 @@ int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise 
 
 /*****************************************************************************/
 
-double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *pp)
+bool PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *pp, double *value_out)
 {
-    double retval = CF_NODOUBLE;
+    bool found_constraint = false;
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
@@ -2461,7 +2461,7 @@ double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Prom
         {
             if (IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
             {
-                if (retval != CF_NODOUBLE)
+                if (found_constraint)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple \"%s\" (real) constraints break this promise\n", lval);
                 }
@@ -2478,11 +2478,12 @@ double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Prom
                 FatalError("Aborted");
             }
 
-            retval = DoubleFromString((char *) cp->rval.item);
+            *value_out = DoubleFromString((char *) cp->rval.item, value_out);
+            found_constraint = true;
         }
     }
 
-    return retval;
+    return found_constraint;
 }
 
 /*****************************************************************************/

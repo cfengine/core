@@ -1293,7 +1293,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         double x;
 
-        if ((x = DoubleFromString(rp->item)) == CF_NODOUBLE)
+        if (!DoubleFromString(rp->item, &x))
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -1356,8 +1356,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
-
-        if ((x = DoubleFromString(rp->item)) == CF_NODOUBLE)
+        if (!DoubleFromString(rp->item, &x))
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -2738,10 +2737,13 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
-        double a = DoubleFromString(argv0);
-        double b = DoubleFromString(argv1);
-
-        if (a == CF_NODOUBLE || b == CF_NODOUBLE)
+        double a = 0;
+        if (!DoubleFromString(argv0, &a))
+        {
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+        double b = 0;
+        if (!DoubleFromString(argv1, &b))
         {
             return (FnCallResult) { FNCALL_FAILURE };
         }
@@ -2848,13 +2850,17 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /* begin fn specific content */
 
-    double from = DoubleFromString(RlistScalarValue(finalargs));
-    double to = DoubleFromString(RlistScalarValue(finalargs->next));
-
-    if (from == CF_NODOUBLE || to == CF_NODOUBLE)
+    double from = 0;
+    if (!DoubleFromString(RlistScalarValue(finalargs), &from))
     {
-        snprintf(buffer, CF_BUFSIZE, "Error reading assumed real values %s=>%lf,%s=>%lf\n", (char *) (finalargs->item),
-                 from, (char *) (finalargs->next->item), to);
+        snprintf(buffer, CF_BUFSIZE, "Error reading assumed real value %s => %lf\n", (char *) (finalargs->item), from);
+        ReportError(buffer);
+    }
+
+    double to = 0;
+    if (!DoubleFromString(RlistScalarValue(finalargs), &to))
+    {
+        snprintf(buffer, CF_BUFSIZE, "Error reading assumed real value %s => %lf\n", (char *) (finalargs->next->item), from);
         ReportError(buffer);
     }
 
@@ -3210,7 +3216,8 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     case DATA_TYPE_REAL:
         for (rp = newlist; rp != NULL; rp = rp->next)
         {
-            if (DoubleFromString(RlistScalarValue(rp)) == CF_NODOUBLE)
+            double real_value = 0;
+            if (!DoubleFromString(RlistScalarValue(rp), &real_value))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Presumed real value \"%s\" read from file %s has no recognizable value",
                       RlistScalarValue(rp), filename);
@@ -3945,7 +3952,13 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
                 break;
 
             case DATA_TYPE_REAL:
-                DoubleFromString(rp->item);   /* Verify syntax */
+                {
+                    double real_value = 0;
+                    if (!DoubleFromString(rp->item, &real_value))
+                    {
+                        FatalError("Could not convert rval to double");
+                    }
+                }
                 sscanf(rp->item, "%255s", this_rval);
                 break;
 

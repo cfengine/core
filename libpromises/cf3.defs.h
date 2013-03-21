@@ -453,7 +453,6 @@ typedef struct
 #define CF_MAPPEDLIST '#'
 
 #define CF_UNDEFINED -1
-#define CF_NODOUBLE -123.45
 #define CF_NOINT    -678L
 #define CF_UNDEFINED_ITEM (void *)0x1234
 #define CF_VARARGS 99

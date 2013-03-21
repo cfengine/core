@@ -62,9 +62,9 @@ long TimeAbs2Int(const char *s);
 // Evalaution conversion
 bool BooleanFromString(const char *val);
 long IntFromString(const char *s);
-double DoubleFromString(const char *s);
+bool DoubleFromString(const char *s, double *value_out);
 void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
-int IsRealNumber(const char *s);
+bool IsRealNumber(const char *s);
 
 
 // Misc.

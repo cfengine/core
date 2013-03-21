@@ -640,17 +640,17 @@ TransactionContext GetTransactionConstraints(EvalContext *ctx, const Promise *pp
     t.log_repaired = ConstraintGetRvalValue(ctx, "log_repaired", pp, RVAL_TYPE_SCALAR);
     t.log_failed = ConstraintGetRvalValue(ctx, "log_failed", pp, RVAL_TYPE_SCALAR);
 
-    if ((t.value_kept = PromiseGetConstraintAsReal(ctx, "value_kept", pp)) == CF_NODOUBLE)
+    if (!PromiseGetConstraintAsReal(ctx, "value_kept", pp, &t.value_kept))
     {
         t.value_kept = 1.0;
     }
 
-    if ((t.value_repaired = PromiseGetConstraintAsReal(ctx, "value_repaired", pp)) == CF_NODOUBLE)
+    if (!PromiseGetConstraintAsReal(ctx, "value_repaired", pp, &t.value_repaired))
     {
         t.value_repaired = 0.5;
     }
 
-    if ((t.value_notkept = PromiseGetConstraintAsReal(ctx, "value_notkept", pp)) == CF_NODOUBLE)
+    if (!PromiseGetConstraintAsReal(ctx, "value_notkept", pp, &t.value_notkept))
     {
         t.value_notkept = -1.0;
     }
@@ -1532,9 +1532,7 @@ Report GetReportConstraints(EvalContext *ctx, const Promise *pp)
         r.lastseen = 0;
     }
 
-    r.intermittency = PromiseGetConstraintAsReal(ctx, "intermittency", pp);
-
-    if (r.intermittency == CF_NODOUBLE)
+    if (!PromiseGetConstraintAsReal(ctx, "intermittency", pp, &r.intermittency))
     {
         r.intermittency = 0;
     }

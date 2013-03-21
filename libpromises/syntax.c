@@ -602,7 +602,10 @@ static SyntaxTypeMatch CheckParseReal(const char *lval, const char *s, const cha
         ProgrammingError("Could not parse format specifier for int rvalues for lval %s", lval);
     }
 
-    val = DoubleFromString(s);
+    if (!DoubleFromString(s, &val))
+    {
+        return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
+    }
 
     if (val > max || val < min)
     {
@@ -664,7 +667,10 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
 
     for (ip = rangep; ip != NULL; ip = ip->next)
     {
-        val = DoubleFromString(ip->name);
+        if (!DoubleFromString(ip->name, &val))
+        {
+            return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
+        }
 
         if (val > max || val < min)
         {

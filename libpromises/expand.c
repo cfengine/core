@@ -1365,7 +1365,16 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             }
             else if (strcmp(opts.cp_save->lval, "real") == 0)
             {
-                result = BufferPrintf(conv, "%lf", DoubleFromString(opts.cp_save->rval.item));
+                double real_value = 0.0;
+                if (DoubleFromString(opts.cp_save->rval.item, &real_value))
+                {
+                    result = BufferPrintf(conv, "%lf", real_value);
+                }
+                else
+                {
+                    result = BufferPrintf(conv, "(double conversion error)");
+                }
+
                 if (result < 0)
                 {
                     /*

@@ -516,26 +516,27 @@ int Day2Number(const char *datestring)
 
 /****************************************************************************/
 
-double DoubleFromString(const char *s)
+bool DoubleFromString(const char *s, double *value_out)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+
+    double a = NO_DOUBLE;
     char remainder[CF_BUFSIZE];
-    char output[CF_BUFSIZE];
     char c = 'X';
 
     if (s == NULL)
     {
-        return CF_NODOUBLE;
+        return false;
     }
 
     remainder[0] = '\0';
 
     sscanf(s, "%lf%c%s", &a, &c, remainder);
 
-    if ((a == CF_NODOUBLE) || (!IsSpace(remainder)))
+    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {
-        snprintf(output, CF_BUFSIZE, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
-        ReportError(output);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
+        return false;
     }
     else
     {
@@ -563,7 +564,7 @@ double DoubleFromString(const char *s)
             if ((a < 0) || (a > 100))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
-                return CF_NOINT;
+                return false;
             }
             else
             {
@@ -580,7 +581,8 @@ double DoubleFromString(const char *s)
         }
     }
 
-    return a;
+    *value_out = a;
+    return true;
 }
 
 /****************************************************************************/
@@ -836,13 +838,14 @@ static int IsSpace(char *remainder)
 
 /*******************************************************************/
 
-int IsRealNumber(const char *s)
+bool IsRealNumber(const char *s)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+    double a = NO_DOUBLE;
 
     sscanf(s, "%lf", &a);
 
-    if (a == CF_NODOUBLE)
+    if (a == NO_DOUBLE)
     {
         return false;
     }

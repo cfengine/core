@@ -284,11 +284,9 @@ int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise 
 
 /**
  * @brief Get the real value of the first effective constraint found matching, from a promise
- * @param lval
- * @param list
- * @return Double value, or CF_NODOUBLE
+ * @return true if value could be extracted
  */
-double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *list);
+bool PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *list, double *value_out);
 
 /**
  * @brief Get the octal value of the first effective constraint found matching, from a promise

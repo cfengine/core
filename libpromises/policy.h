@@ -267,7 +267,7 @@ Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rva
 const char *PromiseGetNamespace(const Promise *pp);
 const Bundle *PromiseGetBundle(const Promise *pp);
 
-/*
+/**
  * @brief Return handle of the promise.
  * @param pp
  * @return Promise handle or NULL if no handle is provided

@@ -49,7 +49,13 @@
 //************************************************************************
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
+
 static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
+static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";
+static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
+
+static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
+
 static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
 static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
@@ -67,6 +73,7 @@ static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attr
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
 static void ConstraintPostCheck(const char *bundle_promise_type, const char *lval, Rval rval);
+static bool PromiseCheck(const Promise *pp, Seq *errors);
 
 
 const char *NamespaceDefault(void)
@@ -249,76 +256,6 @@ char *BundleQualifiedName(const Bundle *bundle)
 
 /*************************************************************************/
 
-static bool PolicyCheckPromiseVars(const Promise *pp, Seq *errors)
-{
-    bool success = true;
-
-    // ensure variables are declared with only one type.
-    {
-        char *data_type = NULL;
-
-        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-        {
-            Constraint *cp = SeqAt(pp->conlist, i);
-
-            if (IsDataType(cp->lval))
-            {
-                if (data_type != NULL)
-                {
-                    SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                          POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE,
-                                                          data_type, cp->lval));
-                    success = false;
-                }
-                data_type = cp->lval;
-            }
-        }
-    }
-
-    return success;
-}
-
-/*************************************************************************/
-
-static bool PolicyCheckPromiseMethods(const Promise *pp, Seq *errors)
-{
-    bool success = true;
-
-    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-    {
-        const Constraint *cp = SeqAt(pp->conlist, i);
-
-        // ensure: if call and callee are resolved, then they have matching arity
-        if (StringSafeEqual(cp->lval, "usebundle"))
-        {
-            if (cp->rval.type == RVAL_TYPE_FNCALL)
-            {
-                const FnCall *call = (const FnCall *)cp->rval.item;
-                const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
-                if (!callee)
-                {
-                    callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", call->name);
-                }
-
-                if (callee)
-                {
-                    if (RlistLen(call->args) != RlistLen(callee->args))
-                    {
-                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                              POLICY_ERROR_METHODS_BUNDLE_ARITY,
-                                                              call->name, RlistLen(callee->args), RlistLen(call->args)));
-                        success = false;
-                    }
-                }
-            }
-        }
-    }
-
-    return success;
-}
-
-/*************************************************************************/
-
 /* Check if a constraint's syntax is correct according to its promise_type and
    lvalue.
 */
@@ -379,30 +316,6 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     return false;
 }
 
-bool PolicyCheckPromise(const Promise *promise, Seq *errors)
-{
-    bool success = true;
-    size_t i;
-
-    if (StringSafeCompare(promise->parent_promise_type->name, "vars") == 0)
-    {
-        success &= PolicyCheckPromiseVars(promise, errors);
-    }
-    else if (StringSafeCompare(promise->parent_promise_type->name, "methods") == 0)
-    {
-        success &= PolicyCheckPromiseMethods(promise, errors);
-    }
-
-    /* Check if promise's constraints are valid. */
-    for (i = 0; i < SeqLength(promise->conlist); i++)
-    {
-        Constraint *constraint = SeqAt(promise->conlist, i);
-        success &= ConstraintCheckSyntax(constraint, errors);
-    }
-
-    return success;
-}
-
 /*************************************************************************/
 
 static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
@@ -435,7 +348,7 @@ static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
     for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
     {
         const Promise *pp = SeqAt(promise_type->promises, i);
-        success &= PolicyCheckPromise(pp, errors);
+        success &= PromiseCheck(pp, errors);
     }
 
     return success;
@@ -1155,7 +1068,6 @@ PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes)
 {
     char *sp = NULL, *spe = NULL;
-    char output[CF_BUFSIZE];
 
     if (!type)
     {
@@ -1177,23 +1089,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     else
     {
         spe = xstrdup("any");
-    }
-
-    if ((strcmp(type->name, "classes") == 0) || (strcmp(type->name, "vars") == 0))
-    {
-        if ((isdigit((int)*promiser)) && (IntFromString(promiser) != CF_NOINT))
-        {
-            ReportError("Variable or class identifier is purely numerical, which is not allowed");
-        }
-    }
-
-    if (strcmp(type->name, "vars") == 0)
-    {
-        if (!CheckParseVariableName(promiser))
-        {
-            snprintf(output, CF_BUFSIZE, "Use of a reserved or illegal variable name \"%s\" ", promiser);
-            ReportError(output);
-        }
     }
 
     SeqAppend(type->promises, pp);
@@ -2392,6 +2287,105 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
     }
 
     return false;
+}
+
+static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
+{
+    return !((isdigit((int)*identifier)) && (IntFromString(identifier) != CF_NOINT));
+}
+
+static bool PromiseCheck(const Promise *pp, Seq *errors)
+{
+    bool success = true;
+
+    // check if promise's constraints are valid
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *constraint = SeqAt(pp->conlist, i);
+        success &= ConstraintCheckSyntax(constraint, errors);
+    }
+
+    if (strcmp("vars", pp->parent_promise_type->name) == 0)
+    {
+        if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                             POLICY_ERROR_VARS_PROMISER_NUMERICAL));
+            success = false;
+        }
+
+        if (!CheckParseVariableName(pp->promiser))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                             POLICY_ERROR_VARS_PROMISER_RESERVED));
+            success = false;
+        }
+
+        // ensure variables are declared with only one type.
+        {
+            char *data_type = NULL;
+
+            for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+            {
+                Constraint *cp = SeqAt(pp->conlist, i);
+
+                if (IsDataType(cp->lval))
+                {
+                    if (data_type != NULL)
+                    {
+                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                                         POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE,
+                                                         data_type, cp->lval));
+                        success = false;
+                    }
+                    data_type = cp->lval;
+                }
+            }
+        }
+    }
+    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
+    {
+        if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                             POLICY_ERROR_CLASSES_PROMISER_NUMERICAL));
+            success = false;
+        }
+    }
+    else if (strcmp("methods", pp->parent_promise_type->name) == 0)
+    {
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+        {
+            const Constraint *cp = SeqAt(pp->conlist, i);
+
+            // ensure: if call and callee are resolved, then they have matching arity
+            if (StringSafeEqual(cp->lval, "usebundle"))
+            {
+                if (cp->rval.type == RVAL_TYPE_FNCALL)
+                {
+                    const FnCall *call = (const FnCall *)cp->rval.item;
+                    const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
+                    if (!callee)
+                    {
+                        callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", call->name);
+                    }
+
+                    if (callee)
+                    {
+                        if (RlistLen(call->args) != RlistLen(callee->args))
+                        {
+                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                                             POLICY_ERROR_METHODS_BUNDLE_ARITY,
+                                                             call->name, RlistLen(callee->args), RlistLen(call->args)));
+                            success = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return success;
 }
 
 const char *PromiseGetNamespace(const Promise *pp)

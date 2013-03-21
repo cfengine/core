@@ -2820,13 +2820,6 @@ static FnCallResult FnCallIRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (from == CF_NOINT || to == CF_NOINT)
-    {
-        snprintf(buffer, CF_BUFSIZE, "Error reading assumed int values %s=>%ld,%s=>%ld\n", (char *) (finalargs->item),
-                 from, (char *) (finalargs->next->item), to);
-        ReportError(buffer);
-    }
-
     if (from > to)
     {
         tmp = to;

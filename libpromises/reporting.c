@@ -306,19 +306,3 @@ void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
-
-void ReportError(char *s)
-{
-    if (PARSING)
-    {
-        yyerror(s);
-    }
-    else
-    {
-        if (Chop(s, CF_EXPANDSIZE) == -1)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-        }
-        FatalError("Validation: %s\n", s);
-    }
-}

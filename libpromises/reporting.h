@@ -45,7 +45,6 @@ void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
 void ShowContext(EvalContext *ctx, const ReportContext *report_context);
 
 // stdout only
-void ReportError(char *s);
 void BannerPromiseType(const char *bundlename, const char *type, int p);
 void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);

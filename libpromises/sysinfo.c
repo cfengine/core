@@ -514,7 +514,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (agent_type != AGENT_TYPE_EXECUTOR && !LOOKUP)
     {
-        LoadSlowlyVaryingObservations();
+        LoadSlowlyVaryingObservations(ctx);
     }
 
     EnterpriseContext(ctx);

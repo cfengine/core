@@ -760,7 +760,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
             InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytop);
         }
 
-        RegisterLiteralServerData(handle, pp);
+        RegisterLiteralServerData(ctx, handle, pp);
         ap = GetAuthPath(handle, SV.varadmit);
         dp = GetAuthPath(handle, SV.vardeny);
         ap->literal = true;
@@ -858,7 +858,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
         InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
     }
 
-    RegisterLiteralServerData(pp->promiser, pp);
+    RegisterLiteralServerData(ctx, pp->promiser, pp);
 
     if (!GetAuthPath(pp->promiser, SV.vardeny))
     {

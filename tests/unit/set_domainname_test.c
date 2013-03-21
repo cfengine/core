@@ -259,7 +259,7 @@ char *Constellation_Version(void)
     fail();
 }
 
-void LoadSlowlyVaryingObservations(void)
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     fail();
 }

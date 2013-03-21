@@ -71,7 +71,7 @@ void EnterpriseContext(ARG_UNUSED EvalContext *ctx)
 {
 }
 
-void LoadSlowlyVaryingObservations(void)
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in version Nova and above\n");
 }
@@ -216,7 +216,7 @@ void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, cha
     return NULL;
 }
 
-void *CfLDAPArray(const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
+void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
     return NULL;

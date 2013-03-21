@@ -350,9 +350,14 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
+                               if (!P.currentstype)
+                               {
+                                   yyerror("Missing promise type declaration");
+                               }
+
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
-                                                                       P.rval,
-                                                                       P.currentclasses ? P.currentclasses : "any");
+                                                                           P.rval,
+                                                                           P.currentclasses ? P.currentclasses : "any");
                                P.currentpromise->offset.line = P.line_no;
                                P.currentpromise->offset.start = P.offsets.last_string;
                                P.currentpromise->offset.context = P.offsets.last_class_id;
@@ -386,6 +391,11 @@ promise:               promiser                    /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
+                               if (!P.currentstype)
+                               {
+                                   yyerror("Missing promise type declaration");
+                               }
+
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
                                                                 (Rval) { NULL, RVAL_TYPE_NOPROMISEE },
                                                                 P.currentclasses ? P.currentclasses : "any");

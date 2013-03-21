@@ -1157,9 +1157,9 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     char *sp = NULL, *spe = NULL;
     char output[CF_BUFSIZE];
 
-    if (type == NULL)
+    if (!type)
     {
-        ReportError("Software error. Attempt to add a promise without a type\n");
+        ProgrammingError("Attempt to add a promise without a type\n");
     }
 
 /* Check here for broken promises - or later with more info? */

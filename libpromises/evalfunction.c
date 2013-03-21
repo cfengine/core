@@ -2846,15 +2846,15 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     double from = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &from))
     {
-        snprintf(buffer, CF_BUFSIZE, "Error reading assumed real value %s => %lf\n", (char *) (finalargs->item), from);
-        ReportError(buffer);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading assumed real value %s => %lf\n", (char *) (finalargs->item), from);
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     double to = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &to))
     {
-        snprintf(buffer, CF_BUFSIZE, "Error reading assumed real value %s => %lf\n", (char *) (finalargs->next->item), from);
-        ReportError(buffer);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading assumed real value %s => %lf\n", (char *) (finalargs->next->item), from);
+        return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (from > to)

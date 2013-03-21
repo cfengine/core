@@ -38,7 +38,7 @@ static void SourceSearchAndCopy(...)
 * vertically align opening and closing curly braces unless on same line
 * promise type = 1 indent
 * context class expression = 2 indents
-* promisee = 3 indents
+* promiser = 3 indents
 * promise attributes = 4 indents
 
 #### Whitespace and Line Length
@@ -68,7 +68,8 @@ bundle agent example
 
 #### Promise types
 
-Promise types should be have 1 indent and each promise type after the first listed should have a blank line before the next promise type.
+Promise types should have 1 indent and each promise type after the first listed
+should have a blank line before the next promise type.
 
 This example illustrates the blank line before the "classes" type.
 
@@ -88,9 +89,10 @@ bundle agent example
 
 Context class expressions should have 2 indents and each context class
 expression after the first listed within a given promise type should have a
-blank line preceeding it.
+blank line preceding it.
 
-This example illustrates the blank line before the second context class expression (solaris) in the files type promise section:
+This example illustrates the blank line before the second context class
+expression (solaris) in the files type promise section:
 ```
 bundle agent example
 {
@@ -110,7 +112,7 @@ bundle agent example
 
 #### Policy Comments
 
-Inline policy comments are useful for debugging and explaining why something is
+In-line policy comments are useful for debugging and explaining why something is
 done a specific way. We encourage you to document your policy throughly.
 
 Comments about general body and bundle behavior and parameters should be placed
@@ -132,12 +134,12 @@ bundle agent example(param1)
                         "Luke Skywalker",
                         "Yoda",
                         "Darth Vader", # He used to be a Jedi, and since he
-                                       # tossed the emporer into the Death
+                                       # tossed the emperor into the Death
                                        # Star's reactor shaft we are including
                                        # him.
                       };
   classes:
-      # Most of the time we don't need differentation of redhat and centos
+      # Most of the time we don't need differentiation of redhat and centos
       "EL5" or => { "centos_5", "redhat_5" };
       "EL6" or => { "centos_6", "redhat_6" };
 }

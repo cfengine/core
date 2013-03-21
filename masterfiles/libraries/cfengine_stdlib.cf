@@ -714,6 +714,27 @@ changed_crontab::
 }
 
 
+bundle agent delete_logs(log_path, age_in_days) 
+{
+
+# Contributed by Aleksey Tsalolikhin of www.verticalsysadmin.com
+# Purpose: provide a re-usable sysadmin pattern native to CFEngine for cleaning up log files
+# How to use it: specify path to logs, and how many days of logs you want to keep
+# Example:
+# 
+#     methods: "any"  usebundle => delete_logs("/var/log/postgres", "60");
+#     methods: "any"  usebundle => delete_logs("/var/log/httpd", "30");
+
+files:
+
+    "$(log_path)/.*"
+
+        file_select   => days_old("$(age_in_days)"),
+        delete        => tidy,
+        comment       => "Removing files in $(log_path) over $(age_in_days) days old";
+}
+
+
 
 ##-------------------------------------------------------
 ## editing bodies

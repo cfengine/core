@@ -1,0 +1,416 @@
+; TextPad (http://www.textpad.com/) syntax definitions for CFEngine
+; (http://cfengine.com/)
+;
+; Copyright (c) 2013 Johan Stuyts (j.stuyts@javathinker.com)
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to
+; deal in the Software without restriction, including without limitation the
+; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+; sell copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in
+; all copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+; IN THE SOFTWARE.
+
+C=1
+
+[Syntax]
+Namespace1 = 6
+IgnoreCase = No
+KeyWordLength =
+BracketChars = {[()]}
+OperatorChars = -+*/<>!~%^&|=
+PreprocStart = 
+SyntaxStart =
+SyntaxEnd =
+HexPrefix = 
+CommentStart = 
+CommentEnd = 
+CommentStartAlt =
+CommentEndAlt =
+SingleComment = #
+SingleCommentCol =
+SingleCommentAlt =
+SingleCommentColAlt =
+SingleCommentEsc =
+StringsSpanLines = Yes
+StringStart = "
+StringEnd = "
+StringAlt =
+StringEsc = \
+CharStart = 
+CharEnd = 
+CharEsc = 
+
+; Containers
+[Keywords 1]
+body
+bundle
+
+; Bundle and body types. These have been put together because they overlap
+; (e.g. "agent")
+[Keywords 2]
+acl
+action
+agent
+changes
+classes
+common
+contain
+copy_from
+database_server
+delete
+depth_search
+edit_defaults
+edit_field
+edit_line
+edit_line
+environment_resources
+executor
+file
+file_select
+hub
+knowledge
+link_from
+location
+match_value
+monitor
+mount
+package_method
+perms
+process_count
+process_select
+rename
+replace_with
+reporter
+runagent
+select_region
+server
+service_method
+volume
+
+; Bundle elements. Luckily TextPad allows colons in keywords, so it is
+; possible to distinguish between bundle elements and attributes/functions
+[Keywords 3]
+access:
+classes:
+commands:
+databases:
+defaults:
+delete_lines:
+field_edits:
+files:
+inferences:
+insert_lines:
+interfaces:
+measurements:
+meta:
+methods:
+occurrences:
+outputs:
+packages:
+processes:
+replace_patterns:
+reports:
+roles:
+services:
+storage:
+things:
+topics:
+vars:
+
+; Attributes. Attributes that refer to a body must be added under "Keywords 2"
+; Some attributes have the same name as functions. These will be considered to
+; be functions even though they have been added here
+[Keywords 4]
+aces
+acl_method
+acl_type
+action_policy
+admit
+allow_blank_fields
+allowallconnects
+allowconnects
+allowusers
+args
+authorize
+background
+before_after
+build_directory
+bundlesequence
+cancel_repaired
+cancel_kept
+cfruncommand
+chdir
+check_foreign
+chroot
+command
+comment
+compare
+copy_backup
+create
+db_server_connection_db
+db_server_host
+db_server_owner
+db_server_password
+db_server_type
+denybadclocks
+depends_on
+depth
+dirlinks
+disable
+edit_backup
+edit_fstab
+empty_file_before_editing
+encrypt
+env_spec
+environment
+exclude_dirs
+exec_command
+exec_group
+exec_owner
+expand_scalars
+expireafter
+expression
+extend_fields
+extraction_regex
+field_operation
+field_separator
+field_value
+file_result
+file_types
+forgetrate
+freespace
+groups
+handle
+hash
+histograms
+hosts
+ifelapsed
+ifvarclass
+include_basedir
+inputs
+insert_type
+leaf_name
+link_children
+link_type
+log_level
+log_repaired
+log_string
+mailfrom
+mailto
+match_range
+maxconnections
+measurement_class
+meta
+mode
+move_obstructions
+mount_options
+mount_server
+mount_source
+mount_type
+mtime
+newname
+no_output
+not
+occurrences
+or
+out_of_range_define
+owners
+package_add_command
+package_arch_regex
+package_changes
+package_delete_command
+package_delete_convention
+package_file_repositories
+package_installed_regex
+package_list_arch_regex
+package_list_command
+package_list_name_regex
+package_list_update_command
+package_list_update_ifelapsed
+package_list_version_regex
+package_multiline_start
+package_name_convention
+package_name_regex
+package_noverify_regex
+package_noverify_returncode
+package_patch_arch_regex
+package_patch_command
+package_patch_name_regex
+package_patch_installed_regex
+package_patch_list_command
+package_patch_version_regex
+package_policy
+package_update_command
+package_verify_command
+package_version_regex
+persist_time
+preserve
+process_result
+process_stop
+promise_kept
+promise_repaired
+purge
+repair_denied
+repair_failed
+repair_timeout
+repaired_returncodes
+replace_value
+report_changes
+report_diffs
+report_output
+reports
+restart_class
+rmdirs
+rotate
+schedule
+search_size
+select_end
+select_field
+select_line_matching
+select_start
+sensible_count
+sensible_size
+servers
+service_autostart_policy
+service_dependence_chain
+service_type
+signals
+skipidentify
+skipverify
+smtpserver
+source
+splaytime
+stime_range
+style_sheet
+track_growing_file
+trustkey
+trustkeysfrom
+type_check
+unmount
+update_hashes
+usebundle
+useshell
+value_separator
+verify
+version
+when_linking_children
+when_no_source
+xdev
+
+; Variable types
+[Keywords 5]
+ilist
+int
+real
+rlist
+slist
+string
+
+; Functions
+[Keywords 6]
+accessedbefore 
+accumulated 
+ago 
+and 
+canonify 
+concat 
+changedbefore 
+classify 
+classmatch 
+countclassesmatching 
+countlinesmatching 
+dirname 
+diskfree 
+escape 
+execresult 
+fileexists 
+filesexist 
+filesize 
+getenv 
+getfields 
+getgid 
+getindices 
+getuid 
+getusers 
+getvalues 
+grep 
+groupexists 
+hash 
+hashmatch 
+host2ip 
+ip2host 
+hostinnetgroup 
+hostrange 
+hostsseen 
+hostswithclass 
+hubknowledge 
+iprange 
+irange 
+isdir 
+isexecutable 
+isgreaterthan 
+islessthan 
+islink 
+isnewerthan 
+isplain 
+isvariable 
+join 
+lastnode 
+laterthan 
+ldaparray 
+ldaplist 
+ldapvalue 
+lsdir 
+maplist 
+not 
+now 
+on 
+or 
+parseintarray 
+parserealarray 
+parsestringarray 
+parsestringarrayidx 
+peers 
+peerleader 
+peerleaders 
+product 
+randomint 
+readfile 
+readintarray 
+readintlist 
+readrealarray 
+readreallist 
+readstringarray 
+readstringarrayidx 
+readstringlist 
+readtcp 
+regarray 
+regcmp 
+regextract 
+registryvalue 
+regline 
+reglist 
+regldap 
+remotescalar 
+remoteclassesmatching 
+returnszero 
+rrange 
+selectservers 
+splayclass 
+splitstring 
+strcmp 
+sum 
+translatepath 
+usemodule 
+userexists

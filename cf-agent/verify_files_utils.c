@@ -76,7 +76,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 static void TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp);
 static int PushDirState(char *name, struct stat *sb);
-static void PopDirState(int goback, char *name, struct stat *sb, Recursion r);
+static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r);
 static bool CheckLinkSecurity(struct stat *sb, char *name);
 static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr, Promise *pp);
 static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
@@ -2194,7 +2194,10 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s (%d)\n", path, rlevel);
                 goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp);
-                PopDirState(goback, name, sb, attr.recursion);
+                if (!PopDirState(goback, name, sb, attr.recursion))
+                {
+                    FatalError("Not safe to continue");
+                }
                 VerifyFileLeaf(ctx, path, &lsb, attr, pp);
             }
             else
@@ -2231,19 +2234,22 @@ static int PushDirState(char *name, struct stat *sb)
     return true;
 }
 
-static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
+/**
+ * @return true if safe for agent to continue
+ */
+static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r)
 {
     if (goback && (r.travlinks))
     {
         if (chdir(name) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Error in backing out of recursive travlink descent securely to %s", name);
-            FatalError("Terminating");
+            return false;
         }
 
         if (!CheckLinkSecurity(sb, name))
         {
-            FatalError("Not safe to continue");
+            return false;
         }
     }
     else if (goback)
@@ -2251,9 +2257,11 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
         if (chdir("..") == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Error in backing out of recursive descent securely to %s", name);
-            FatalError("Terminating");
+            return false;
         }
     }
+
+    return true;
 }
 
 /**

@@ -242,20 +242,15 @@ int IsExecutable(const char *file)
     return false;
 }
 
-int ShellCommandReturnsZero(const char *comm, int useshell)
+bool ShellCommandReturnsZero(const char *command, bool useshell)
 {
     int status;
     pid_t pid;
 
-    if (!useshell)
-    {
-        /* Build argument array */
-
-    }
-
     if ((pid = fork()) < 0)
     {
-        FatalError("Failed to fork new process");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to fork new process: %s", command);
+        return false;
     }
     else if (pid == 0)          /* child */
     {
@@ -263,15 +258,15 @@ int ShellCommandReturnsZero(const char *comm, int useshell)
 
         if (useshell)
         {
-            if (execl(SHELL_PATH, "sh", "-c", comm, NULL) == -1)
+            if (execl(SHELL_PATH, "sh", "-c", command, NULL) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "execl", "Command %s failed", comm);
+                CfOut(OUTPUT_LEVEL_ERROR, "execl", "Command %s failed", command);
                 exit(1);
             }
         }
         else
         {
-            char **argv = ArgSplitCommand(comm);
+            char **argv = ArgSplitCommand(command);
 
             if (execv(argv[0], argv) == -1)
             {

@@ -115,7 +115,7 @@ static const char *VMOUNTOPTS[PLATFORM_CONTEXT_MAX] =
     "defaults",                 /* vmstate */
 };
 
-int LoadMountInfo(Rlist **list)
+bool LoadMountInfo(Rlist **list)
 /* This is, in fact, the most portable way to read the mount info! */
 /* Depressing, isn't it? */
 {
@@ -151,7 +151,8 @@ int LoadMountInfo(Rlist **list)
 
         if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
         {
-            FatalError("Error in CfReadLine");
+            cf_pclose(pp);
+            return false;
         }
 
         if (ferror(pp))         /* abortable */

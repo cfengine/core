@@ -31,7 +31,7 @@ extern int FSTAB_EDITS;
 extern Item *FSTABLIST;
 
 #ifndef __MINGW32__
-int LoadMountInfo(Rlist **list);
+bool LoadMountInfo(Rlist **list);
 void DeleteMountInfo(Rlist *list);
 int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);

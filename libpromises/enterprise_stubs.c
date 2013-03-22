@@ -267,8 +267,6 @@ void TryCollectCall(void)
 
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
     return false;
 }

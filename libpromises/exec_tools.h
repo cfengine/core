@@ -30,7 +30,7 @@
 
 int IsExecutable(const char *file);
 bool ShellCommandReturnsZero(const char *command, bool useshell);
-int GetExecOutput(const char *command, char *buffer, int useshell);
+bool GetExecOutput(const char *command, char *buffer, bool useshell);
 void ActAsDaemon(int preserve);
 char **ArgSplitCommand(const char *comm);
 void ArgFree(char **args);

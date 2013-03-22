@@ -36,7 +36,7 @@
 
 /********************************************************************/
 
-int GetExecOutput(const char *command, char *buffer, int useshell)
+bool GetExecOutput(const char *command, char *buffer, bool useshell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
@@ -71,11 +71,6 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
         }
 
         if (CfReadLine(line, CF_EXPANDSIZE, pp) == -1)
-        {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
         {
             fflush(pp);
             break;

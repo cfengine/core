@@ -34,6 +34,7 @@
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
+#include "misc_lib.h"
 
 #define CF_MAXLINKLEVEL 4
 
@@ -666,7 +667,7 @@ static char *AbsLinkPath(const char *from, const char *relto)
 
     if (IsAbsoluteFileName(relto))
     {
-        FatalError("Cfengine internal error: call to AbsLInkPath with absolute pathname\n");
+        ProgrammingError("Call to AbsLInkPath with absolute pathname\n");
     }
 
     strcpy(destination, from);  /* reuse to save stack space */

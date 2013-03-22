@@ -3220,7 +3220,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         break;
 
     default:
-        FatalError("Software error readstringlist - abused type");
+        ProgrammingError("Unhandled type in switch: %d", type);
     }
 
     free(file_buffer);
@@ -3315,7 +3315,7 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
         break;
 
     default:
-        FatalError("Software error readstringarray - abused type");
+        ProgrammingError("Unhandled type in switch: %d", type);
     }
 
     free(file_buffer);
@@ -3414,7 +3414,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
         break;
 
     default:
-        FatalError("Software error parsestringarray - abused type");
+        ProgrammingError("Unhandled type in switch: %d", type);
     }
 
     free(instring);
@@ -3956,8 +3956,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
                 break;
 
             default:
-
-                FatalError("Software error readstringarray - abused type");
+                ProgrammingError("Unhandled type in switch: %d", type);
             }
 
             if (strlen(first_one) == 0)

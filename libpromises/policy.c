@@ -1336,7 +1336,7 @@ static JsonElement *AttributeValueToJson(Rval rval, bool symbolic_reference)
         }
 
     default:
-        FatalError("Attempted to export attribute of type: %c", rval.type);
+        ProgrammingError("Attempted to export attribute of type: %c", rval.type);
         return NULL;
     }
 }

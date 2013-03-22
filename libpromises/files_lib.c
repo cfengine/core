@@ -965,7 +965,7 @@ static char FileStateToChar(FileState status)
         return 'S';
 
     default:
-        FatalError("Invalid Filechange status supplied");
+        ProgrammingError("Unhandled file status in switch: %d", status);
     }
 }
 

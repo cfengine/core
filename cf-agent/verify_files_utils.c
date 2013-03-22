@@ -54,6 +54,7 @@
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
+#include "misc_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -1842,7 +1843,7 @@ static void VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attribut
             break;
 
         default:
-            FatalError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
         }
     }
 }
@@ -1995,7 +1996,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
             break;
 
         default:
-            FatalError("cfengine: internal error VerifyFileAttributes(): illegal file action\n");
+            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
         }
     }
 
@@ -2048,7 +2049,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
             break;
 
         default:
-            FatalError("cfengine: internal error VerifyFileAttributes() illegal file action\n");
+            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
         }
     }
 # endif

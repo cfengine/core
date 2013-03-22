@@ -26,6 +26,7 @@
 
 #include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 /*************************************************************************/
 
@@ -67,7 +68,7 @@ int SendTransaction(int sd, char *buffer, int len, char status)
     if (wlen > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
-        FatalError("SendTransaction software failure");
+        ProgrammingError("SendTransaction software failure");
     }
 
     snprintf(work, CF_INBAND_OFFSET, "%c %d", status, wlen);

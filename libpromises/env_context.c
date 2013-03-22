@@ -760,8 +760,7 @@ static void EmitStringExpression(StringExpression *e, int level)
         EmitStringExpression(e->val.varref.name, -IncIndent(level, 3));
         break;
     default:
-        FatalError("Unknown type of string expression: %d\n", e->op);
-        break;
+        ProgrammingError("Unknown type of string expression: %d\n", e->op);
     }
 }
 
@@ -797,7 +796,7 @@ static void EmitExpression(Expression *e, int level)
         fputs(")", stderr);
         break;
     default:
-        FatalError("Unknown logic expression type: %d\n", e->op);
+        ProgrammingError("Unknown logic expression type: %d\n", e->op);
     }
 }
 

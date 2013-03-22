@@ -34,6 +34,7 @@
 #include "cfstream.h"
 #include "pipes.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 static VersionCmpResult InvertResult(VersionCmpResult result)
 {
@@ -129,12 +130,19 @@ VersionCmpResult CompareVersions(EvalContext *ctx, const char *v1, const char *v
     switch (a.packages.package_select)
     {
     case PACKAGE_VERSION_COMPARATOR_EQ:
-    case PACKAGE_VERSION_COMPARATOR_NONE: return CompareVersionsEqual(ctx, v1, v2, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_NEQ: return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp));
-    case PACKAGE_VERSION_COMPARATOR_LT: return CompareVersionsLess(ctx, v1, v2, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_GT: return CompareVersionsLess(ctx, v2, v1, a, pp);
-    case PACKAGE_VERSION_COMPARATOR_GE: return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp));
-    case PACKAGE_VERSION_COMPARATOR_LE: return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp));
-    default: FatalError("Unexpected comparison value: %d", a.packages.package_select);
+    case PACKAGE_VERSION_COMPARATOR_NONE:
+        return CompareVersionsEqual(ctx, v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_NEQ:
+        return InvertResult(CompareVersionsEqual(ctx, v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LT:
+        return CompareVersionsLess(ctx, v1, v2, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GT:
+        return CompareVersionsLess(ctx, v2, v1, a, pp);
+    case PACKAGE_VERSION_COMPARATOR_GE:
+        return InvertResult(CompareVersionsLess(ctx, v1, v2, a, pp));
+    case PACKAGE_VERSION_COMPARATOR_LE:
+        return InvertResult(CompareVersionsLess(ctx, v2, v1, a, pp));
+    default:
+        ProgrammingError("Unexpected comparison value: %d", a.packages.package_select);
     }
 }

@@ -284,14 +284,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     }
     assert(pp);
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
-
-    if (thislock.lock == NULL)
-    {
-        PolicyDestroy(server_cfengine_policy);
-        return;
-    }
-
     CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
 
     if (sd != -1)
@@ -319,6 +311,14 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     }
 
 #endif /* !__MINGW32__ */
+
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+
+    if (thislock.lock == NULL)
+    {
+        PolicyDestroy(server_cfengine_policy);
+        return;
+    }
 
     WritePID("cf-serverd.pid");
 

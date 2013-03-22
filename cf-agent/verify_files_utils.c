@@ -1055,7 +1055,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
         break;
 
     default:
-        FatalError("LinkCopy software error");
+        ProgrammingError("Unhandled link type in switch: %d", attr.copy.link_type);
         return;
     }
 

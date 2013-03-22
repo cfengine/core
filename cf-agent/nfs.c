@@ -674,12 +674,7 @@ void MountAll()
 
         if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error mounting filesystems\n");
+            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error reading line from file: %s\n", VMOUNTCOMM[VSYSTEMHARDCLASS]);
             break;
         }
 

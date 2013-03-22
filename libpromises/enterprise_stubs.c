@@ -73,7 +73,7 @@ void EnterpriseContext(ARG_UNUSED EvalContext *ctx)
 
 void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in CFEngine Enterprise");
 }
 
 
@@ -182,18 +182,18 @@ void LastSawBundle(const Bundle *bundle, double comp)
 
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise");
     return "";
 }
 
 void CacheUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in CFEngine Enterprise");
 }
 
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in CFEngine Enterprise");
     return false;
 }
 
@@ -206,31 +206,31 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support is available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support is available CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in Nova and above");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
     return NULL;
 }
 
 bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Nova");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Enterprise");
     return false;
 }
 
@@ -239,7 +239,7 @@ bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *clas
 
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Nova");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
 }
 
 /* cf-serverd: server_transform.c, cf-serverd.c */
@@ -251,12 +251,12 @@ void TranslatePath(char *new, const char *old)
 
 void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
 }
 
 int ReturnLiteralData(char *handle, char *ret)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in version Nova and above\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
     return 0;
 }
 
@@ -268,8 +268,8 @@ void TryCollectCall(void)
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call are only supported in the Enterprise ");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"); 
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
     return false;
 }
 

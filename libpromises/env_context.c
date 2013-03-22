@@ -380,13 +380,13 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const Rep
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
         return;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
         return;
     }
 
@@ -400,7 +400,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const Rep
 
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else
@@ -434,7 +434,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const Rep
         {
             if (!ValidClassName(pp->promiser))
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
                      " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
             }
             else

@@ -266,7 +266,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const 
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)

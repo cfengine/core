@@ -85,7 +85,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     PromiseBanner(pp);
 
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
@@ -132,7 +132,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
         return;
     }
 

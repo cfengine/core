@@ -142,16 +142,16 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         switch (retval)
         {
-        case CF_FAIL:
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+        case PROMISE_RESULT_FAIL:
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
             break;
 
-        case CF_CHG:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+        case PROMISE_RESULT_CHANGE:
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " !! Method invoked repairs\n");
             break;
 
         default:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Method verified\n");
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Method verified\n");
             break;
 
         }
@@ -171,11 +171,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
                  " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }

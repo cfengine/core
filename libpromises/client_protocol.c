@@ -261,7 +261,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
             free(out);
             RSA_free(server_pubkey);
             return false;
@@ -306,7 +306,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (1)");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "recv", pp, attr, "Protocol transaction broken off (1)");
         RSA_free(server_pubkey);
         return false;
     }
@@ -325,7 +325,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (2)");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "recv", pp, attr, "Protocol transaction broken off (2)");
         RSA_free(server_pubkey);
         return false;
     }
@@ -356,7 +356,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
              conn->remoteip);
         RSA_free(server_pubkey);
         return false;
@@ -382,7 +382,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
              ERR_reason_error_string(err));
         RSA_free(server_pubkey);
         return false;
@@ -429,7 +429,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -438,7 +438,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
                  pp->this_server);
             RSA_free(newkey);
             return false;
@@ -447,7 +447,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -476,7 +476,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
         free(out);
         RSA_free(server_pubkey);
         return false;

@@ -293,14 +293,14 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> File \"%s\" exists as promised", path);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> File \"%s\" exists as promised", path);
         }
         exists = true;
     }
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
     }
 
     if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */
@@ -417,7 +417,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
             /* unless child nodes were repaired, set a promise kept class */
             if (!IsDefinedClass(ctx, "repaired" , PromiseGetNamespace(pp)))
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
+                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
         }
 
@@ -493,7 +493,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
     if (pp->edcontext == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
         FinishEditContext(ctx, pp->edcontext, a, pp);
         YieldCurrentLock(thislock);
         return false;

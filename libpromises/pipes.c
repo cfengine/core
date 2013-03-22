@@ -48,7 +48,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -57,7 +57,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -66,7 +66,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
                  "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
                  retcode);
             result = false;
@@ -85,13 +85,13 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
     {
         if (retcode == 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
                  pp->promiser);
             result = true;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
                  " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
                  retcode);
             result = false;
@@ -753,7 +753,7 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 
     if (!WIFEXITED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 
@@ -774,13 +774,13 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 
     if (WIFSIGNALED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
         return -1;
     }
 
     if (!WIFEXITED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 

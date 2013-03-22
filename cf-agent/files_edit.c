@@ -70,7 +70,7 @@ EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, cons
             return NULL;
         }
 #else
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -99,7 +99,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
     {
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
@@ -111,7 +111,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             {
                 if (ec)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
                 }
             }
             else
@@ -127,7 +127,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             {
                 if (ec)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
                 }
             }
             else
@@ -136,7 +136,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
 #endif
         }
     }
@@ -144,7 +144,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
     {
         if (ec)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
         }
     }
 
@@ -173,7 +173,7 @@ int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attribu
 
     if (cfstat(file, &statbuf) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
     }
 
@@ -186,7 +186,7 @@ int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attribu
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, "%s is not a plain file\n", file);
         return false;
     }
 
@@ -194,13 +194,13 @@ int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attribu
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
         return false;
     }
 
@@ -219,11 +219,11 @@ bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *or
     //saving xml to file
     if (xmlSaveFile(dest_filename, doc) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Edited xml file %s \n", orig_filename);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s \n", orig_filename);
     return true;
 }
 #endif

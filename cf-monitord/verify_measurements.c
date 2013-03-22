@@ -82,7 +82,7 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (!IsAbsPath(pp->promiser))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "The promiser \"%s\" of a measurement was not an absolute path",
              pp->promiser);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
@@ -90,7 +90,7 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (a.measure.data_type == DATA_TYPE_NONE)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
     }
@@ -107,7 +107,7 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
                 break;
 
             default:
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
                      "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
                 retval = false;
@@ -118,7 +118,7 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
 
     if ((a.measure.select_line_matching) && (a.measure.select_line_number != CF_NOINT))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
              "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         retval = false;
@@ -132,7 +132,7 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
     {
         if ((!strchr(a.measure.extraction_regex, '(')) && (!strchr(a.measure.extraction_regex, ')')))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
                  "The extraction_regex must contain a single backreference for the extraction\n");
             retval = false;
         }

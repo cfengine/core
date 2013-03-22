@@ -220,7 +220,7 @@ static void AmendErrorMessageWithPromiseInformation(Item **error_message, const 
     }
 }
 
-void cfPS(EvalContext *ctx, OutputLevel level, char status, char *errstr, const Promise *pp, Attributes attr, char *fmt, ...)
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
 {
     if ((fmt == NULL) || (strlen(fmt) == 0))
     {

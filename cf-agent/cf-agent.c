@@ -1796,7 +1796,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
        {
        CfOut(OUTPUT_LEVEL_VERBOSE, "", " ==> Zero promises executed for bundle \"%s\"", bundle->name);
-       return CF_NOP;
+       return PROMISE_RESULT_NOOP;
        }
 
     CfOut(OUTPUT_LEVEL_VERBOSE,""," ==> == Bundle Accounting Summary for \"%s\" ==", bundle->name);
@@ -1814,15 +1814,15 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     
     if (delta_pr_notkept > 0)
     {
-        return CF_FAIL;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (delta_pr_repaired > 0)
     {
-        return CF_CHG;
+        return PROMISE_RESULT_CHANGE;
     }
 
-    return CF_NOP;
+    return PROMISE_RESULT_NOOP;
 }
 
 #if !defined(HAVE_AVAHI_CLIENT_CLIENT_H) || !defined(HAVE_AVAHI_COMMON_ADDRESS_H)

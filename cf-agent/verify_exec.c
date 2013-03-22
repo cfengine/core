@@ -68,14 +68,14 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     if (!SyntaxCheckExec(a, pp))
     {
-        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "");
         ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "");
         ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
@@ -86,7 +86,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     if (thislock.lock == NULL)
     {
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, "");
         ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
@@ -96,15 +96,15 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     switch (RepairExec(ctx, a, pp))
     {
     case ACTION_RESULT_OK:
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "");
         break;
 
     case ACTION_RESULT_TIMEOUT:
-        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_TIMEX, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_TIMEOUT, "", pp, a, "");
         break;
 
     case ACTION_RESULT_FAILED:
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, "");
         break;
 
     default:

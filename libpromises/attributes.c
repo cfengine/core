@@ -121,7 +121,7 @@ Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, " !! files promise makes no intention about system state");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! files promise makes no intention about system state");
         }
     }
 

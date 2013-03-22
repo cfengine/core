@@ -90,7 +90,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Unable to open the hash database!");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "Unable to open the hash database!");
         return false;
     }
 
@@ -111,7 +111,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, warnlevel, CF_CHG, "", pp, attr, " -> Updating hash for %s to %s", filename,
+                    cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -119,7 +119,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 }
                 else
                 {
-                    cfPS(ctx, warnlevel, CF_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
+                    cfPS(ctx, warnlevel, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
                 }
 
                 CloseDB(dbp);
@@ -127,14 +127,14 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             }
         }
 
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, attr, " -> File hash for %s is correct", filename);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, attr, " -> File hash for %s is correct", filename);
         CloseDB(dbp);
         return false;
     }
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, warnlevel, CF_CHG, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
+        cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
              FileHashName(type));
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
@@ -467,7 +467,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
             }
             else
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);

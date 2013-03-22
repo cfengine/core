@@ -188,20 +188,20 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
                          " ! File content wants to change from from/to full/empty but only a warning promised");
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
                     }
                 }
             }
@@ -231,8 +231,8 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
                 retval = false;
             }
         }
@@ -596,13 +596,13 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, "%s is not a plain file\n", file);
         return false;
     }
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
         return false;
     }
 

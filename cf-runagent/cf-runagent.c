@@ -473,7 +473,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
     if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "No hosts are registered to connect to");
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "No hosts are registered to connect to");
         return false;
     }
     else

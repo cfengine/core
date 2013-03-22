@@ -141,15 +141,17 @@
 
 /* Auditing key */
 
-#define CF_NOP      'n'
-#define CF_CHG      'c'
-#define CF_WARN     'w'         /* something wrong but nothing done */
-#define CF_FAIL     'f'
-#define CF_DENIED   'd'
-#define CF_TIMEX    't'
-#define CF_INTERPT  'i'
-#define CF_REGULAR  'r'
-#define CF_REPORT   'R'
+typedef enum
+{
+    PROMISE_RESULT_NOOP = 'n',
+    PROMISE_RESULT_CHANGE = 'c',
+    PROMISE_RESULT_WARN = 'w', // something wrong but nothing done
+    PROMISE_RESULT_FAIL = 'f',
+    PROMISE_RESULT_DENIED = 'd',
+    PROMISE_RESULT_TIMEOUT = 't',
+    PROMISE_RESULT_INTERRUPTED = 'i',
+    PROMISE_RESULT_REGULAR = 'r' // TODO: in use?
+} PromiseResult;
 
 /*****************************************************************************/
 

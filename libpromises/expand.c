@@ -1488,18 +1488,18 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
             PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
-            cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_NONE, CF_CHG, "", pp, a, " -> Added variable %s", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Added variable %s", pp->promiser);
         }
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
-        cfPS(ctx, OUTPUT_LEVEL_NONE, CF_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
     }
     free(scope);
     BufferDestroy(&qualified_scope);

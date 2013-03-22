@@ -158,7 +158,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 if (!EvalContextHeapContainsSoft(ctx, rp->item))
@@ -177,7 +177,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                     EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
                 }
             }
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -208,7 +208,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         {
             if (DONTDO)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
                      " -- Need to keep process-stop promise for %s, but only a warning is promised", pp->promiser);
             }
             else
@@ -219,7 +219,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, a,
                          "Process promise to stop %s could not be kept because %s the stop operator failed",
                          pp->promiser, a.process_stop);
                     DeleteItemList(killlist);
@@ -239,19 +239,19 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     if (!need_to_restart)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No restart promised for %s\n", pp->promiser);
         return;
     }
     else
     {
         if (a.transaction.action == cfa_warn)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
                  " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
             EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
         }
     }
@@ -295,13 +295,13 @@ static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *
 
                 if (kill((pid_t) pid, signal) < 0)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "kill", pp, a,
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "kill", pp, a,
                          " !! Couldn't send promised signal \'%s\' (%d) to pid %jd (might be dead)\n", RlistScalarValue(rp),
                          signal, (intmax_t)pid);
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }

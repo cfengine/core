@@ -71,7 +71,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, attr, " !! Object %s exists and is obstructing our promise\n", from);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Object %s exists and is obstructing our promise\n", from);
             return false;
         }
 
@@ -93,11 +93,11 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
             strcat(saved, CF_SAVED);
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, attr, " -> Moving file object %s to %s\n", from, saved);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving file object %s to %s\n", from, saved);
 
             if (cf_rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
                 return false;
             }
 
@@ -111,7 +111,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, attr, " -> Moving directory %s to %s%s\n", from, from, CF_SAVED);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving directory %s to %s%s\n", from, from, CF_SAVED);
 
             if (DONTDO)
             {
@@ -128,7 +128,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
             if (cfstat(saved, &sb) != -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Couldn't save directory %s, since %s exists already\n", from,
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Couldn't save directory %s, since %s exists already\n", from,
                      saved);
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to force link to existing directory %s\n", from);
                 return false;
@@ -136,7 +136,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
             if (cf_rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, attr, "Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, "Can't rename %s to %s\n", from, saved);
                 return false;
             }
         }
@@ -172,7 +172,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (cfstat(file, &statbuf) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
         return false;
     }
 
@@ -197,7 +197,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (cf_rename(file, backup) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
         return false;
     }
@@ -223,7 +223,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (cf_rename(new, file) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "cf_rename", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
         return false;
     }
@@ -257,7 +257,7 @@ static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, co
     //saving list to file
     if ((fp = fopen(dest_filename, "w")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
         return false;
     }
 
@@ -268,11 +268,11 @@ static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, co
 
     if (fclose(fp) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fclose", pp, a, "Unable to close file while writing");
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Edited file %s \n", orig_filename);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited file %s \n", orig_filename);
     return true;
 }
 

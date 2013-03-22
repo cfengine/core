@@ -260,19 +260,19 @@ static void TrackTotalCompliance(char status, const Promise *pp)
 
     switch (status)
     {
-    case CF_CHG:
+    case PROMISE_RESULT_CHANGE:
         nova_status = 'r';
         break;
 
-    case CF_WARN:
-    case CF_TIMEX:
-    case CF_FAIL:
-    case CF_DENIED:
-    case CF_INTERPT:
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
         nova_status = 'n';
         break;
 
-    case CF_NOP:
+    case PROMISE_RESULT_NOOP:
         nova_status = 'c';
         break;
 
@@ -293,17 +293,17 @@ static void UpdatePromiseCounters(char status, const Promise *pp, Attributes att
 
     switch (status)
     {
-    case CF_CHG:
-    case CF_NOP:
+    case PROMISE_RESULT_CHANGE:
+    case PROMISE_RESULT_NOOP:
         PR_REPAIRED++;
         VAL_REPAIRED += attr.transaction.value_repaired;
         break;
 
-    case CF_WARN:
-    case CF_TIMEX:
-    case CF_FAIL:
-    case CF_DENIED:
-    case CF_INTERPT:
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
         PR_NOTKEPT++;
         VAL_NOTKEPT += attr.transaction.value_notkept;
         break;
@@ -320,36 +320,36 @@ static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promis
 
     switch (status)
     {
-    case CF_CHG:
+    case PROMISE_RESULT_CHANGE:
         add_classes = attr.classes.change;
         del_classes = attr.classes.del_change;
         break;
 
-    case CF_WARN:
+    case PROMISE_RESULT_WARN:
         /* FIXME: nothing? */
         return;
 
-    case CF_TIMEX:
+    case PROMISE_RESULT_TIMEOUT:
         add_classes = attr.classes.timeout;
         del_classes = attr.classes.del_notkept;
         break;
 
-    case CF_FAIL:
+    case PROMISE_RESULT_FAIL:
         add_classes = attr.classes.failure;
         del_classes = attr.classes.del_notkept;
         break;
 
-    case CF_DENIED:
+    case PROMISE_RESULT_DENIED:
         add_classes = attr.classes.denied;
         del_classes = attr.classes.del_notkept;
         break;
 
-    case CF_INTERPT:
+    case PROMISE_RESULT_INTERRUPTED:
         add_classes = attr.classes.interrupt;
         del_classes = attr.classes.del_notkept;
         break;
 
-    case CF_NOP:
+    case PROMISE_RESULT_NOOP:
         add_classes = attr.classes.kept;
         del_classes = attr.classes.del_kept;
         break;
@@ -366,8 +366,8 @@ static void NotifyDependantPromises(char status, EvalContext *ctx, const Promise
 {
     switch (status)
     {
-    case CF_CHG:
-    case CF_NOP:
+    case PROMISE_RESULT_CHANGE:
+    case PROMISE_RESULT_NOOP:
         MarkPromiseHandleDone(ctx, pp);
         break;
 
@@ -388,19 +388,19 @@ void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
 
     switch (status)
     {
-    case CF_CHG:
+    case PROMISE_RESULT_CHANGE:
         compliance_status = PROMISE_STATE_REPAIRED;
         break;
 
-    case CF_WARN:
-    case CF_TIMEX:
-    case CF_FAIL:
-    case CF_DENIED:
-    case CF_INTERPT:
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
         compliance_status = PROMISE_STATE_NOTKEPT;
         break;
 
-    case CF_NOP:
+    case PROMISE_RESULT_NOOP:
         compliance_status = PROMISE_STATE_ANY;
         break;
 
@@ -422,22 +422,22 @@ static void DoSummarizeTransaction(char status, const Promise *pp, Attributes at
 
     switch (status)
     {
-    case CF_CHG:
+    case PROMISE_RESULT_CHANGE:
         log_name = attr.transaction.log_repaired;
         break;
 
-    case CF_WARN:
+    case PROMISE_RESULT_WARN:
         /* FIXME: nothing? */
         return;
 
-    case CF_TIMEX:
-    case CF_FAIL:
-    case CF_DENIED:
-    case CF_INTERPT:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
         log_name = attr.transaction.log_failed;
         break;
 
-    case CF_NOP:
+    case PROMISE_RESULT_NOOP:
         log_name = attr.transaction.log_kept;
         break;
     }

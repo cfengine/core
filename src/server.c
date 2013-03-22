@@ -334,15 +334,6 @@ if (listen(sd,queuesize) == -1)
 dummyattr.transaction.ifelapsed = 0;
 dummyattr.transaction.expireafter = 1;
 
-thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
-
-if (thislock.lock == NULL)
-   {
-   return;
-   }
-
-CfOut(cf_verbose,"","Listening for connections ...\n");
-
 #ifdef MINGW
 
 if(!NO_FORK)
@@ -365,6 +356,15 @@ if (!NO_FORK)
    }
    
 #endif  /* NOT MINGW */
+
+thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
+
+if (thislock.lock == NULL)
+   {
+   return;
+   }
+
+CfOut(cf_verbose,"","Listening for connections ...\n");
 
 WritePID("cf-serverd.pid");
 

@@ -171,7 +171,8 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
             GenericAgentConfigSetInputFile(config, optarg);

@@ -292,7 +292,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -301,7 +302,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 

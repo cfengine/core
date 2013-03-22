@@ -141,7 +141,8 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
             GenericAgentConfigSetInputFile(config, optarg);
@@ -224,7 +225,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     if (argv[optind] != NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
-        FatalError("Aborted");
+        exit(EXIT_FAILURE);
     }
 
     CfDebug("Set debugging\n");

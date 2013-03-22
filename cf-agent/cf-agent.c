@@ -248,7 +248,8 @@ int main(int argc, char *argv[])
     }
     else if (config->tty_interactive)
     {
-        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+        exit(EXIT_FAILURE);
     }
     else
     {
@@ -326,7 +327,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'f':
             if (optarg && strlen(optarg) < 5)
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "-f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
             GenericAgentConfigSetInputFile(config, optarg);
@@ -351,7 +353,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             {
                 if(!HasAvahiSupport())
                 {
-                    FatalError("Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                    exit(EXIT_FAILURE);
                 }
 
                 BOOTSTRAP_AVAHI = true;
@@ -360,7 +363,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if(IsLoopbackAddress(optarg))
             {
-                FatalError("Use a non-loopback address when bootstrapping");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Use a non-loopback address when bootstrapping");
+                exit(EXIT_FAILURE);
             }
 
             BOOTSTRAP = true;
@@ -397,8 +401,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (alpha && !v6)
             {
-                FatalError
-                    ("Error specifying policy server to --boostrap (-B). The policy server's address could not be looked up. Please use the IP address instead if there is no error. Note that the --policy-server (-s) option is deprecated, the argument is taken in --bootstrap (-B) instead.");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Error specifying policy server to --boostrap (-B). The policy server's address could not be looked up. Please use the IP address instead if there is no error. Note that the --policy-server (-s) option is deprecated, the argument is taken in --bootstrap (-B) instead.");
+                exit(EXIT_FAILURE);
             }
 
             break;
@@ -454,7 +458,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     if (argv_bootstrap_options_new[optind] != NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
-        FatalError("Aborted");
+        exit(EXIT_FAILURE);
     }
 
     CfDebug("Set debugging\n");

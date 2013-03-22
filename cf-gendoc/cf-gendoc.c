@@ -150,7 +150,8 @@ static void GenerateXml(void)
     if (OUTPUT_FILE == NULL)
     {
         /* Reconsider this once agents do not output any error messages to stdout */
-        FatalError("Please specify output file");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Please specify output file");
+        exit(EXIT_FAILURE);
     }
     else
     {
@@ -158,7 +159,8 @@ static void GenerateXml(void)
 
         if (out == NULL)
         {
-            FatalError("Unable to open %s for writing\n", OUTPUT_FILE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open %s for writing\n", OUTPUT_FILE);
+            exit(EXIT_FAILURE);
         }
         XmlManual(SOURCE_DIR, out);
     }

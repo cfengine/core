@@ -77,7 +77,7 @@ static void TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp
 static void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp);
 static int PushDirState(char *name, struct stat *sb);
 static void PopDirState(int goback, char *name, struct stat *sb, Recursion r);
-static void CheckLinkSecurity(struct stat *sb, char *name);
+static bool CheckLinkSecurity(struct stat *sb, char *name);
 static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr, Promise *pp);
 static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
@@ -2224,7 +2224,10 @@ static int PushDirState(char *name, struct stat *sb)
         CfDebug("Changed directory to %s\n", name);
     }
 
-    CheckLinkSecurity(sb, name);
+    if (!CheckLinkSecurity(sb, name))
+    {
+        FatalError("Not safe to continue");
+    }
     return true;
 }
 
@@ -2238,7 +2241,10 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
             FatalError("Terminating");
         }
 
-        CheckLinkSecurity(sb, name);
+        if (!CheckLinkSecurity(sb, name))
+        {
+            FatalError("Not safe to continue");
+        }
     }
     else if (goback)
     {
@@ -2250,7 +2256,10 @@ static void PopDirState(int goback, char *name, struct stat *sb, Recursion r)
     }
 }
 
-static void CheckLinkSecurity(struct stat *sb, char *name)
+/**
+ * @return true if it is safe for the agent to continue execution
+ */
+static bool CheckLinkSecurity(struct stat *sb, char *name)
 {
     struct stat security;
 
@@ -2259,7 +2268,7 @@ static void CheckLinkSecurity(struct stat *sb, char *name)
     if (cfstat(".", &security) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Could not stat directory %s after entering!", name);
-        return;
+        return true; // continue anyway
     }
 
     if ((sb->st_dev != security.st_dev) || (sb->st_ino != security.st_ino))
@@ -2267,8 +2276,10 @@ static void CheckLinkSecurity(struct stat *sb, char *name)
         CfOut(OUTPUT_LEVEL_ERROR, "",
               "SERIOUS SECURITY ALERT: path race exploited in recursion to/from %s. Not safe for agent to continue - aborting",
               name);
-        FatalError("Terminating");
+        return false; // too dangerous
     }
+
+    return true;
 }
 
 static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr,

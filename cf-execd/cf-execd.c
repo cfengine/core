@@ -466,6 +466,28 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     }
     assert(pp);
 
+#ifdef __MINGW32__
+
+    if (!NO_FORK)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
+    }
+
+#else /* !__MINGW32__ */
+
+    if ((!NO_FORK) && (fork() != 0))
+    {
+        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", cf_ctime(&now));
+        _exit(0);
+    }
+
+    if (!NO_FORK)
+    {
+        ActAsDaemon(0);
+    }
+
+#endif /* !__MINGW32__ */
+
     Attributes dummyattr;
     CfLock thislock;
 
@@ -507,28 +529,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         strcpy(CFLAST, thislock.last ? thislock.last : "");
         strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
-
-#ifdef __MINGW32__
-
-    if (!NO_FORK)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
-    }
-
-#else /* !__MINGW32__ */
-
-    if ((!NO_FORK) && (fork() != 0))
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", cf_ctime(&now));
-        _exit(0);
-    }
-
-    if (!NO_FORK)
-    {
-        ActAsDaemon(0);
-    }
-
-#endif /* !__MINGW32__ */
 
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignalsForDaemon);

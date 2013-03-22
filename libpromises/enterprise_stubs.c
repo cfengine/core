@@ -188,12 +188,12 @@ char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server,
 
 void CacheUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance only available in CFEngine Enterprise");
 }
 
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance only available in CFEngine Enterprise");
     return false;
 }
 
@@ -206,25 +206,25 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support is available CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support available in CFEngine Enterprise");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 

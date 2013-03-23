@@ -150,8 +150,8 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED] = "Cannot check unexpanded value",
         [SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED] = "Real range specification should not be enclosed in brackets - just \"a,b\"",
         [SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS] = "Range format specifier should be of form \"a,b\" but got multiple items",
-        [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attampted to give a scalar to a non-scalar type",
-        [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attampted to give a list to a non-list type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attempted to give a scalar to a non-scalar type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attempted to give a list to a non-list type",
 
         [SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION] = "Error parsing Unix permission string",
 

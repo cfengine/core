@@ -38,7 +38,7 @@
 /* Prototypes */
 
 #ifndef __MINGW32__
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
 #endif
 
 /* Implementation */
@@ -72,7 +72,7 @@ void MonProcessesGatherData(double *cf_this)
 
 #ifndef __MINGW32__
 
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
     FILE *pp;
     char pscomm[CF_BUFSIZE];
@@ -88,14 +88,18 @@ static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProc
 
     if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
     {
-        FatalError("Error in CfReadLine");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, pscomm);
+        cf_pclose(pp);
+        return false;
     }
 
     while (!feof(pp))
     {
         if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, pscomm);
+            cf_pclose(pp);
+            return false;
         }
         sscanf(vbuff, "%s", user);
 

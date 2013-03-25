@@ -58,4 +58,11 @@
 # define ARG_UNUSED
 #endif
 
+#if defined(__GNUC__)
+#  define FUNC_WARN_UNUSED_RESULT \
+    __attribute__((warn_unused_result))
+#else
+#  define FUNC_WARN_UNUSED_RESULT
+#endif
+
 #endif

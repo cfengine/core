@@ -204,14 +204,18 @@ static bool GetLMSensors(double *cf_this)
 
     if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
     {
-        FatalError("Error in CfReadLine");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): /usr/bin/sensors", errno);
+        cf_pclose(pp);
+        return false;
     }
 
     while (!feof(pp))
     {
         if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): /usr/bin/sensors", errno);
+            cf_pclose(pp);
+            return false;
         }
 
         if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))

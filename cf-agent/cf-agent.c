@@ -1248,7 +1248,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(ctx, AGENT_TYPE_AGENT, pp, KeepAgentPromise, report_context);
+                ExpandPromise(ctx, pp, KeepAgentPromise, report_context);
 
                 if (Abort())
                 {

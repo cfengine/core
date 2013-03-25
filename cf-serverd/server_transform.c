@@ -530,7 +530,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise, report_context);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -576,7 +576,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise, report_context);
                 }
 
                 EvalContextStackPopFrame(ctx);

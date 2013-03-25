@@ -162,7 +162,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
                 pp->this_server = xstrdup(filename);
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, AGENT_TYPE_AGENT, pp, KeepEditLinePromise, report_context);
+                ExpandPromise(ctx, pp, KeepEditLinePromise, report_context);
 
                 if (Abort())
                 {

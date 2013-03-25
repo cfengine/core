@@ -1142,7 +1142,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_MONITOR, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepMonitorPromise, report_context);
                 }
             }
         }

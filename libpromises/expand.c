@@ -58,7 +58,7 @@
 
 #include <assert.h>
 
-static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise *pp, Rlist *listvars,
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, const ReportContext *report_context);
 static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
 static bool Epimenides(const char *scope, const char *var, Rval rval, int level);
@@ -127,7 +127,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, AgentType agent, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context)
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context)
 {
     Rlist *listvars = NULL;
     Promise *pcopy;
@@ -166,7 +166,7 @@ void ExpandPromise(EvalContext *ctx, AgentType agent, Promise *pp, PromiseActuat
     CopyLocalizedIteratorsToThisScope(ctx, PromiseGetBundle(pp)->name, listvars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, agent, pcopy, listvars, ActOnPromise, report_context);
+    ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise, report_context);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -650,7 +650,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
 /*********************************************************************/
 
-static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, const ReportContext *report_context)
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, const ReportContext *report_context)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -736,22 +736,8 @@ static void ExpandPromiseAndDo(EvalContext *ctx, AgentType agent, const Promise 
 
         pexp = ExpandDeRefPromise(ctx, "this", pp);
 
-        switch (agent)
-        {
-        case AGENT_TYPE_COMMON:
-            ShowPromise(pexp);
-            CheckRecursion(ctx, report_context, pexp);
-            PromiseRecheckAllConstraints(ctx, pexp);
-            break;
-
-        default:
-            assert(ActOnPromise);
-            if (ActOnPromise)
-            {
-                ActOnPromise(ctx, pexp, report_context);
-            }
-            break;
-        }
+        assert(ActOnPromise);
+        ActOnPromise(ctx, pexp, report_context);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
@@ -1656,6 +1642,13 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
 /*******************************************************************/
 
+void CommonEvalPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+{
+    ShowPromise(pp);
+    CheckRecursion(ctx, report_context, pp);
+    PromiseRecheckAllConstraints(ctx, pp);
+}
+
 static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context, Promise *pp)
 {
     char *type;
@@ -1721,7 +1714,7 @@ static void CheckRecursion(EvalContext *ctx, const ReportContext *report_context
                 for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                 {
                     Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                    ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
+                    ExpandPromise(ctx, ppsub, CommonEvalPromise, report_context);
                 }
             }
             EvalContextStackPopFrame(ctx);
@@ -1821,7 +1814,7 @@ static void ParseServices(EvalContext *ctx, const ReportContext *report_context,
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {
                 Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                ExpandPromise(ctx, AGENT_TYPE_COMMON, ppsub, NULL, report_context);
+                ExpandPromise(ctx, ppsub, CommonEvalPromise, report_context);
             }
         }
 

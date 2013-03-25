@@ -739,18 +739,6 @@ void PurgeLocks(void)
     CloseLock(dbp);
 }
 
-int ShiftChange(EvalContext *ctx)
-{
-    if (IsDefinedClass(ctx, "(Hr00|Hr06|Hr12|Hr18).Min00_05", NULL))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
 int WriteLock(char *name)
 {
     CF_DB *dbp;

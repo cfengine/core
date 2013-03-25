@@ -38,7 +38,6 @@ void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
 
 void PurgeLocks(void);
-int ShiftChange(EvalContext *ctx);
 
 int WriteLock(char *lock);
 CF_DB *OpenLock(void);

@@ -48,7 +48,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *ls);
 static int SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime);
 static int SelectNameRegexMatch(const char *filename, char *crit);
 static int SelectPathRegexMatch(char *filename, char *crit);
-static int SelectExecRegexMatch(char *filename, char *crit, char *prog);
+static bool SelectExecRegexMatch(char *filename, char *crit, char *prog);
 static int SelectIsSymLinkTo(char *filename, Rlist *crit);
 static int SelectExecProgram(char *filename, char *command);
 static int SelectSizeMatch(size_t size, size_t min, size_t max);
@@ -432,7 +432,7 @@ static int SelectPathRegexMatch(char *filename, char *crit)
 
 /*******************************************************************/
 
-static int SelectExecRegexMatch(char *filename, char *crit, char *prog)
+static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
 {
     char line[CF_BUFSIZE];
     FILE *pp;
@@ -454,7 +454,8 @@ static int SelectExecRegexMatch(char *filename, char *crit, char *prog)
         line[0] = '\0';
         if (CfReadLine(line, CF_BUFSIZE, pp) == -1)       /* One buffer only */
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s\n", errno, filename);
+            return false;
         }
 
         if (FullTextMatch(crit, line))

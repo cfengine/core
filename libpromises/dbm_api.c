@@ -31,6 +31,7 @@
 #include "atexit.h"
 #include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 
@@ -105,7 +106,7 @@ static char *DBIdToPath(dbid id)
     if (xasprintf(&filename, "%s/%s.%s",
                   CFWORKDIR, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
     {
-        FatalError("Unable to construct database filename for file %s", DB_PATHS[id]);
+        ProgrammingError("Unable to construct database filename for file %s", DB_PATHS[id]);
     }
 
     char *native_filename = MapNameCopy(filename);
@@ -332,8 +333,7 @@ static int DBPathLock(const char *filename)
     char *filename_lock;
     if (xasprintf(&filename_lock, "%s.lock", filename) == -1)
     {
-        FatalError("Unable to construct lock database filename for file %s",
-                   filename);
+        ProgrammingError("Unable to construct lock database filename for file %s", filename);
     }
 
     int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
@@ -369,7 +369,7 @@ static void DBPathMoveBroken(const char *filename)
     char *filename_broken;
     if (xasprintf(&filename_broken, "%s.broken", filename) == -1)
     {
-        FatalError("Unable to construct broken database filename for file %s", filename);
+        ProgrammingError("Unable to construct broken database filename for file %s", filename);
     }
 
     if(cf_rename(filename, filename_broken) != 0)

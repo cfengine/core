@@ -209,7 +209,9 @@ void MonNetworkGatherData(double *cf_this)
 
         if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, comm);
+            fflush(pp);
+            break;
         }
 
         if (strstr(vbuff, "UNIX"))

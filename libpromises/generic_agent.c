@@ -918,7 +918,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
 
     if (!FileCanOpen(wfilename, "r"))
     {
-        printf("Can't open file %s for parsing\n", wfilename);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Can't open file for parsing: %s\n", wfilename);
         exit(1);
     }
 
@@ -928,13 +928,16 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         char *contents = NULL;
         if (FileReadMax(&contents, wfilename, SIZE_MAX) == -1)
         {
-            FatalError("Error reading JSON input file");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading JSON input file: %s", wfilename);
+            return NULL;
         }
         JsonElement *json_policy = NULL;
         const char *data = contents; // TODO: need to fix JSON parser signature, just silly
         if (JsonParse(&data, &json_policy) != JSON_PARSE_OK)
         {
-            FatalError("Error parsing JSON input file");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error parsing JSON input file: %s", wfilename);
+            free(contents);
+            return NULL;
         }
 
         policy = PolicyFromJson(json_policy);

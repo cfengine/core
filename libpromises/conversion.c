@@ -587,7 +587,10 @@ bool DoubleFromString(const char *s, double *value_out)
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
+/**
+ * @return true if successful
+ */
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
 {
     Item *split;
     long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
@@ -596,9 +599,9 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if (intrange == NULL)
     {
-        *min = CF_NOINT;
-        *max = CF_NOINT;
-        return;
+        *min_out = CF_NOINT;
+        *max_out = CF_NOINT;
+        return true;
     }
 
     split = SplitString(intrange, ',');
@@ -618,12 +621,12 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", intrange);
+        return false;
     }
 
-    *min = lmin;
-    *max = lmax;
+    *min_out = lmin;
+    *max_out = lmax;
+    return true;
 }
 
 AclMethod AclMethodFromString(const char *string)

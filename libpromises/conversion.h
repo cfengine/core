@@ -63,7 +63,7 @@ long TimeAbs2Int(const char *s);
 bool BooleanFromString(const char *val);
 long IntFromString(const char *s);
 bool DoubleFromString(const char *s, double *value_out);
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out);
 bool IsRealNumber(const char *s);
 
 

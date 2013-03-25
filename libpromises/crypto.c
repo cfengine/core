@@ -271,7 +271,9 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
     if ((BN_num_bits(newkey->e) < 2) || (!BN_is_odd(newkey->e)))
     {
-        FatalError("RSA Exponent too small or not odd");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        RSA_free(newkey);
+        return NULL;
     }
 
     return newkey;

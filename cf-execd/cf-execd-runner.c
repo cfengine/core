@@ -257,7 +257,9 @@ void LocalExec(const ExecConfig *config)
             ssize_t num_read = CfReadLine(line, CF_BUFSIZE, pp);
             if (num_read == -1)
             {
-                FatalError("Cannot continue on CfReadLine error");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, esc_command);
+                fflush(pp);
+                break;
             }
             else if (num_read == 0)
             {

@@ -36,7 +36,7 @@
 #include "logging.h"
 #include "policy.h"
 
-static void SetSessionKey(AgentConnection *conn);
+static bool SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
 
@@ -458,7 +458,10 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
 /* proposition C5 */
 
-    SetSessionKey(conn);
+    if (!SetSessionKey(conn))
+    {
+        FatalError("Terminating");
+    }
 
     if (conn->session_key == NULL)
     {
@@ -504,7 +507,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 /* Level                                                             */
 /*********************************************************************/
 
-static void SetSessionKey(AgentConnection *conn)
+static bool SetSessionKey(AgentConnection *conn)
 {
     BIGNUM *bp;
     int session_size = CfSessionKeySize(conn->encryption_type);
@@ -513,13 +516,16 @@ static void SetSessionKey(AgentConnection *conn)
 
     if (bp == NULL)
     {
-        FatalError("Could not allocate session key");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Could not allocate session key");
+        return false;
     }
 
-// session_size is in bytes
+    // session_size is in bytes
     if (!BN_rand(bp, session_size * 8, -1, 0))
     {
-        FatalError("Can't generate cryptographic key");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Can't generate cryptographic key");
+        BN_clear_free(bp);
+        return false;
     }
 
     conn->session_key = (unsigned char *) bp->d;

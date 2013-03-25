@@ -2482,25 +2482,28 @@ bool PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promis
 
 /*****************************************************************************/
 
-static mode_t Str2Mode(const char *s)
+/**
+ * @return true if successful
+ */
+static bool Str2Mode(const char *s, mode_t *mode_out)
 {
     int a = CF_UNDEFINED;
-    char output[CF_BUFSIZE];
 
     if (s == NULL)
     {
-        return 0;
+        *mode_out = (mode_t)0;
+        return true;
     }
 
     sscanf(s, "%o", &a);
 
     if (a == CF_UNDEFINED)
     {
-        snprintf(output, CF_BUFSIZE, "Error reading assumed octal value %s\n", s);
-        FatalError("%s", output);
+        return false;
     }
 
-    return (mode_t) a;
+    *mode_out = (mode_t)a;
+    return true;
 }
 
 mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Promise *pp)
@@ -2536,7 +2539,11 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
                 FatalError("Aborted");
             }
 
-            retval = Str2Mode((char *) cp->rval.item);
+            if (!Str2Mode(cp->rval.item, &retval))
+            {
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+                FatalError("Error reading assumed octal value %s\n", (const char *)cp->rval.item);
+            }
         }
     }
 

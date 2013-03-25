@@ -51,7 +51,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 int InitServer(size_t queue_size);
 
 #if !defined(HAVE_GETADDRINFO)
-in_addr_t GetInetAddr(char *host);
+bool GetInetAddr(char *host, in_addr_t *address_out);
 #endif
 
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);

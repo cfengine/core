@@ -524,7 +524,10 @@ int OpenReceiverChannel(void)
 
     if (BINDINTERFACE[0] != '\0')
     {
-        sin.sin_addr.s_addr = GetInetAddr(BINDINTERFACE);
+         if (GetInetAddr(BINDINTERFACE, &sin.sin_addr.s_addr))
+         {
+             exit(EXIT_FAILURE); // TODO: should we return -1 here?
+         }
     }
     else
     {
@@ -675,7 +678,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 }
 
 #if !defined(HAVE_GETADDRINFO)
-in_addr_t GetInetAddr(char *host)
+bool GetInetAddr(char *host, in_addr_t *address_out)
 {
     struct in_addr addr;
     struct hostent *hp;
@@ -686,23 +689,27 @@ in_addr_t GetInetAddr(char *host)
     {
         if ((hp = gethostbyname(host)) == 0)
         {
-            FatalError("host not found: %s", host);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "host not found: %s", host);
+            return false;
         }
 
         if (hp->h_addrtype != AF_INET)
         {
-            FatalError("unexpected address family: %d\n", hp->h_addrtype);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address family: %d\n", hp->h_addrtype);
+            return false;
         }
 
         if (hp->h_length != sizeof(addr))
         {
-            FatalError("unexpected address length %d\n", hp->h_length);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address length %d\n", hp->h_length);
+            return false;
         }
 
         memcpy((char *) &addr, hp->h_addr, hp->h_length);
     }
 
-    return (addr.s_addr);
+    *address_out = addr.s_addr;
+    return true;
 }
 #endif
 

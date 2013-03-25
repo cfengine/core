@@ -516,12 +516,6 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
         cfst.cf_filename = xstrdup(file);
         cfst.cf_server = xstrdup(pp->this_server);
-
-        if ((cfst.cf_filename == NULL) || (cfst.cf_server == NULL))
-        {
-            FatalError("Memory allocation in cf_rstat");
-        }
-
         cfst.cf_failed = false;
 
         if (cfst.cf_lmode != 0)

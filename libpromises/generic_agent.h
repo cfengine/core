@@ -72,6 +72,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
+void PrintShortVersionBanner(void);
 void PrintVersionBanner(const char *component);
 int CheckPromises(const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);

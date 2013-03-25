@@ -1511,6 +1511,14 @@ void PrintVersionBanner(const char *component)
 
 /*******************************************************************/
 
+void PrintShortVersionBanner()
+{
+    printf(Version());
+    printf("\n");
+}
+
+/*******************************************************************/
+
 const char *Version(void)
 {
     return VERSION;

@@ -90,7 +90,10 @@ static void RandomSeed(void)
 
 /*********************************************************************/
 
-void LoadSecretKeys()
+/**
+ * @return true if successful
+ */
+bool LoadSecretKeys(void)
 {
     FILE *fp;
     static char *passphrase = "Cfengine passphrase", name[CF_BUFSIZE], source[CF_BUFSIZE];
@@ -102,7 +105,7 @@ void LoadSecretKeys()
     if ((fp = fopen(PrivateKeyFile(), "r")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile());
-        return;
+        return true; // TODO: return true?
     }
 
     if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
@@ -111,7 +114,7 @@ void LoadSecretKeys()
         CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
         PRIVKEY = NULL;
         fclose(fp);
-        return;
+        return true; // TODO: return true?
     }
 
     fclose(fp);
@@ -121,7 +124,7 @@ void LoadSecretKeys()
     if ((fp = fopen(PublicKeyFile(), "r")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile());
-        return;
+        return true; // TODO: return true?
     }
 
     if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
@@ -130,7 +133,7 @@ void LoadSecretKeys()
         CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
         PUBKEY = NULL;
         fclose(fp);
-        return;
+        return true; // TODO: return true?
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile());
@@ -138,7 +141,8 @@ void LoadSecretKeys()
 
     if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
     {
-        FatalError("RSA Exponent too small or not odd");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        return false;
     }
 
     if (NULL_OR_EMPTY(POLICY_SERVER))
@@ -184,6 +188,7 @@ void LoadSecretKeys()
         }
     }
 
+    return true;
 }
 
 /*********************************************************************/

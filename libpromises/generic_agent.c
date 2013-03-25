@@ -543,7 +543,10 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         CheckWorkingDirectories();
     }
 
-    LoadSecretKeys();
+    if (!LoadSecretKeys())
+    {
+        FatalError("Could not load secret keys");
+    }
 
     if (!MINUSF)
     {

@@ -529,6 +529,7 @@ static bool SetSessionKey(AgentConnection *conn)
     }
 
     conn->session_key = (unsigned char *) bp->d;
+    return true;
 }
 
 /*********************************************************************/

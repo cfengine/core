@@ -23,10 +23,7 @@ CFEngine work directory @file{WORKDIR}.
 @node Embedded Databases
 @section Embedded Databases
 
-The embedded databases can be viewed and printed using the reporting
-tool @code{cf-report}. 
-
-Their file extensions will vary based on which library is used to
+Embedded datbases' file extensions will vary based on which library is used to
 implement them; either Tokyo Cabinet (@code{.tcdb}), Quick Database
 Manager (@code{.qdbm}), or Berkeley DB (@code{.db}). Converting one
 database format to another is not handled by CFEngine, but there exist

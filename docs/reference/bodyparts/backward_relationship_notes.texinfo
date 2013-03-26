@@ -1,3 +1,0 @@
-
-Denotes the inverse name which is used to `moralizing' the association graph.
-

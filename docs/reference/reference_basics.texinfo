@@ -68,12 +68,10 @@ starred components are new to CFEngine 3:
 @menu
 * cf-agent::
 * cf-execd::
-* cf-know::
 * cf-monitord::
 * cf-promises::
 * cf-runagent::
 * cf-serverd::
-* cf-report::
 * cf-key::
 * cf-hub::
 @end menu
@@ -103,16 +101,6 @@ EXECUTOR
 @code{cf-execd} keeps the promises made in @ref{Bundles for common, ,common}
 bundles, and is affected by
 @ref{control common, , common} and @ref{control executor, ,executor}
-control bodies.
-
-@node cf-know
-@subsection cf-know*
-Knowledge modelling agent -- responsible for building and analysing a
-       semantic knowledge network.
-
-@code{cf-know} keeps the promises made in @ref{Bundles for common, ,common}
-and @ref{Bundles for knowledge, ,knowledge} bundles, and is affected by
-@ref{control common, , common} and @ref{control knowledge, ,knowledge}
 control bodies.
 
 @node cf-monitord
@@ -152,16 +140,6 @@ Server -- used to distribute policy and/or data files to clients requesting
 @code{cf-serverd} keeps the promises made in @ref{Bundles for common, ,common}
 and @ref{Bundles for server, ,server} bundles, and is affected by
 @ref{control common, , common} and @ref{control server, ,server}
-control bodies.
-
-@node cf-report
-@subsection cf-report
-Self-knowledge extractor -- takes data stored in CFEngine's embedded
-    databases and converts them to human readable form
-
-@code{cf-report} keeps the promises made in @ref{Bundles for common, ,common}
-bundles, and is affected by
-@ref{control common, , common} and @ref{control reporter, ,reporter}
 control bodies.
 
 @node cf-key
@@ -2082,7 +2060,6 @@ promise.
 * Agent normal ordering::       
 * Server normal ordering::      
 * Monitor normal ordering::     
-* Knowledge normal ordering::   
 @end menu
 
 @node Agent normal ordering
@@ -2194,26 +2171,6 @@ Within a monitor bundle, the normal ordering is:
    measurements
    reports
 @end verbatim
-
-@node Knowledge normal ordering
-@subsection Knowledge normal ordering
-
-As with the agent, common bundles are executed before any knowledge bundles;
-following this @i{all} knowledge bundles are executed (the @code{bundlesequence}
-is only used for @code{cf-agent}).
-Variables and classes are resolved in the same way as the agent.
-
-Within a knowledge bundle, the normal ordering is:
-
-@verbatim
-   vars
-   classes
-   topics
-   occurrences
-   inferences
-   reports
-@end verbatim
-
 
 @c -----------------------------------------------------------------------
 @node Loops and lists in CFEngine 3

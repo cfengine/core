@@ -1,1 +1,0 @@
-@i{History}: Was introduced in version 3.2, Nova 2.1 (2011)

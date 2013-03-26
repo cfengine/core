@@ -1,6 +1,0 @@
-
-
-Knowledge bundles describe topic maps, i.e. Topics, Associations and
-Occurrences (of topics in documents). This is for knowledge modelling
-and has no functional effect on a system.
-

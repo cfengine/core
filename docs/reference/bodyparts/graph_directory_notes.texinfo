@@ -1,5 +1,0 @@
-
-A separate location where the potentially large number of @file{.png}
-visualizations of a knowledge representation are pre-compiled.
-This feature only works if the necessary graphics libraries are
-present.

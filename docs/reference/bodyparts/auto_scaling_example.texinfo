@@ -1,9 +1,0 @@
-
-@verbatim
-
-body reporter control
-{
-auto_scaling => "true";
-}
-
-@end verbatim

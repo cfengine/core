@@ -1,9 +1,0 @@
-
-@verbatim
-body association example
-{
-# ..
-backward_relationship => "is less than";
-}
-
-@end verbatim

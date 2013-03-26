@@ -211,12 +211,12 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
     return result;
 }
 
-int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, Promise *pp)
+int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser)
 {
     int matches = 0;
     pid_t cfengine_pid = getpid();
 
-    Item *matched = SelectProcesses(ctx, procdata, pp->promiser, a.process_select, a.haveselect);
+    Item *matched = SelectProcesses(ctx, procdata, promiser, a.process_select, a.haveselect);
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {
@@ -248,7 +248,7 @@ int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes
         if ((pid < 4) && (a.signals))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
-                  pp->promiser);
+                  promiser);
             continue;
         }
 

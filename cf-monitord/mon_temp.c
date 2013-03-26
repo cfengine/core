@@ -118,13 +118,13 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
 
     CfDebug("ACPI temperature\n");
 
-    if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
+    if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
         return false;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
         {
@@ -176,7 +176,7 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
         fclose(fp);
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return true;
 }
 

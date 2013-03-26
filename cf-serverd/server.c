@@ -2948,7 +2948,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
         return -1;
     }
 
-    if ((dirh = OpenDirLocal(dirname)) == NULL)
+    if ((dirh = DirOpen(dirname)) == NULL)
     {
         CfDebug("cfengine, couldn't open dir %s\n", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
@@ -2962,7 +2962,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     offset = 0;
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
@@ -2978,7 +2978,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
     SendTransaction(conn->sd_reply, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
     CfDebug("END CfOpenDirectory(%s)\n", dirname);
-    CloseDir(dirh);
+    DirClose(dirh);
     return 0;
 }
 
@@ -3001,7 +3001,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
         return -1;
     }
 
-    if ((dirh = OpenDirLocal(dirname)) == NULL)
+    if ((dirh = DirOpen(dirname)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Couldn't open dir %s\n", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
@@ -3016,7 +3016,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
 
     offset = 0;
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
@@ -3038,7 +3038,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
         EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, offset + 2 + strlen(CFD_TERMINATOR));
     SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
     CfDebug("END CfSecOpenDirectory(%s)\n", dirname);
-    CloseDir(dirh);
+    DirClose(dirh);
     return 0;
 }
 

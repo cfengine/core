@@ -1594,7 +1594,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char *regex = RlistScalarValue(finalargs->next);
     int includepath = BooleanFromString(RlistScalarValue(finalargs->next->next));
 
-    dirh = OpenDirLocal(dirname);
+    dirh = DirOpen(dirname);
 
     if (dirh == NULL)
     {
@@ -1603,7 +1603,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (strlen(regex) == 0 || FullTextMatch(regex, dirp->d_name))
         {
@@ -1620,7 +1620,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
 
     if (newlist == NULL)
     {

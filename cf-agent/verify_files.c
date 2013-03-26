@@ -145,7 +145,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
         strncpy(regex, ip->name, CF_BUFSIZE - 1);
 
-        if ((dirh = OpenDirLocal(pbuffer)) == NULL)
+        if ((dirh = DirOpen(pbuffer)) == NULL)
         {
             // Could be a dummy directory to be created so this is not an error.
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
@@ -157,7 +157,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         {
             count = 0;
 
-            for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+            for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
             {
                 if (!ConsiderFile(ctx, dirp->d_name, pbuffer, dummyattr, pp))
                 {
@@ -221,7 +221,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                 }
             }
 
-            CloseDir(dirh);
+            DirClose(dirh);
         }
     }
     else

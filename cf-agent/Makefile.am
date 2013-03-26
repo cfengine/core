@@ -38,6 +38,7 @@ LDADD += ../nova/libcfagent/libcfagent.la
 endif
 
 cf_agent_SOURCES = \
+	abstract_dir.c abstract_dir.h \
         cf-agent.c \
         cf_acl.c cf_acl.h \
         comparray.c comparray.h \

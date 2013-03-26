@@ -554,7 +554,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
 /*********************************************************************/
 
-Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp)
+Item *RemoteDirList(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp)
 {
     AgentConnection *conn = pp->conn;
     char sendbuffer[CF_BUFSIZE];
@@ -562,9 +562,9 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
     char in[CF_BUFSIZE];
     char out[CF_BUFSIZE];
     int n, cipherlen = 0, tosend;
-    Dir *cfdirh;
     char *sp;
     Item *files = NULL;
+    Item *ret = NULL;
 
     CfDebug("CfOpenDir(%s:%s)\n", pp->this_server, dirname);
 
@@ -574,15 +574,12 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
         return NULL;
     }
 
-    cfdirh = xcalloc(1, sizeof(Dir));
-
     if (attr.copy.encrypt)
     {
         if (conn->session_key == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Cannot do encrypted copy without keys (use cf-key)");
             return NULL;
-            free(cfdirh);
         }
 
         snprintf(in, CF_BUFSIZE, "OPENDIR %s", dirname);
@@ -599,7 +596,6 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
     if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
     {
-        free((char *) cfdirh);
         return NULL;
     }
 
@@ -607,7 +603,6 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
     {
         if ((n = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
-            free((char *) cfdirh);
             return NULL;
         }
 
@@ -625,14 +620,12 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
         if (FailedProtoReply(recvbuffer))
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, dirname);
-            free((char *) cfdirh);
             return NULL;
         }
 
         if (BadProtoReply(recvbuffer))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "%s\n", recvbuffer + 4);
-            free((char *) cfdirh);
             return NULL;
         }
 
@@ -642,8 +635,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
             if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
             {
-                cfdirh->listpos = cfdirh->list;
-                return cfdirh;
+                return ret;
             }
 
             ip = xcalloc(1, sizeof(Item));
@@ -651,7 +643,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
             if (files == NULL)  /* First element */
             {
-                cfdirh->list = ip;
+                ret = ip;
                 files = ip;
             }
             else
@@ -667,8 +659,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
         }
     }
 
-    cfdirh->listpos = cfdirh->list;
-    return cfdirh;
+    return ret;
 }
 
 /*********************************************************************/

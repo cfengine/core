@@ -782,7 +782,7 @@ int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp)
 
 static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 {
-    Dir *dirh = OpenDirLocal(path);
+    Dir *dirh = DirOpen(path);
     const struct dirent *dirp;
     bool failed = false;
 
@@ -794,7 +794,7 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
         return false;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {
@@ -831,7 +831,7 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return failed;
 }
 

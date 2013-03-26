@@ -191,13 +191,13 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
     if (S_ISDIR(statbuf.st_mode))
     {
-        if ((dirh = OpenDirLocal(name)) == NULL)
+        if ((dirh = DirOpen(name)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Can't open directory %s which checking required/disk\n", name);
             return false;
         }
 
-        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+        for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, name, a, pp))
             {
@@ -230,7 +230,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
             sizeinbytes += localstat.st_size;
         }
 
-        CloseDir(dirh);
+        DirClose(dirh);
 
         if (sizeinbytes < 0)
         {

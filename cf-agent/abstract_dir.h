@@ -22,11 +22,17 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_DIR_IMPL_H
-#define CFENGINE_DIR_IMPL_H
+#ifndef CFENGINE_ABSTRACT_DIR_H
+#define CFENGINE_ABSTRACT_DIR_H
 
-#include "cf3.defs.h"
+/*
+ * Opening and reading directory from either local host or CFEngine server
+ */
 
-struct dirent *AllocateDirentForFilename(const char *filename);
+typedef struct AbstractDir_ AbstractDir;
+
+AbstractDir *AbstractDirOpen(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
+const struct dirent *AbstractDirRead(AbstractDir *dir);
+void AbstractDirClose(AbstractDir *dir);
 
 #endif

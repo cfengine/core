@@ -745,13 +745,13 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
     for (rp = repositories; rp != NULL; rp = rp->next)
     {
 
-        if ((dirh = OpenDirLocal(RlistScalarValue(rp))) == NULL)
+        if ((dirh = DirOpen(RlistScalarValue(rp))) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "opendir", "!! Can't open local directory \"%s\"\n", RlistScalarValue(rp));
             continue;
         }
 
-        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+        for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
             if (FullTextMatch(refAnyVer, dirp->d_name))
             {
@@ -772,7 +772,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
 
         }
 
-        CloseDir(dirh);
+        DirClose(dirh);
     }
 
     CfDebug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);

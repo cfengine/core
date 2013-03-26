@@ -69,14 +69,14 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
         }
     }
 
-    if ((dirh = OpenDirLocal(dir)) == NULL)
+    if ((dirh = DirOpen(dir)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "opendir", " !! Unable to open directory '%s' in IsNewerFileTree", dir);
         return false;
     }
     else
     {
-        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+        for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
             {
@@ -89,14 +89,14 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
                       path);
-                CloseDir(dirh);
+                DirClose(dirh);
                 return false;
             }
 
             if (lstat(path, &sb) == -1)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Unable to stat directory %s in IsNewerFileTree", path);
-                CloseDir(dirh);
+                DirClose(dirh);
                 // return true to provoke update
                 return true;
             }
@@ -106,14 +106,14 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
                 if (sb.st_mtime > reftime)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " >> Detected change in %s", path);
-                    CloseDir(dirh);
+                    DirClose(dirh);
                     return true;
                 }
                 else
                 {
                     if (IsNewerFileTree(ctx, path, reftime))
                     {
-                        CloseDir(dirh);
+                        DirClose(dirh);
                         return true;
                     }
                 }
@@ -121,7 +121,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return false;
 }
 

@@ -41,4 +41,6 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
 int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp);
 
+Item *RemoteDirList(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
+
 #endif

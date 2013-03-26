@@ -55,6 +55,7 @@
 #include "policy.h"
 #include "scope.h"
 #include "misc_lib.h"
+#include "abstract_dir.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -564,13 +565,13 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
         return;
     }
 
-    if ((dirh = OpenDirLocal(".")) == NULL)
+    if ((dirh = DirOpen(".")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open local directory %s\n", localdir);
         return;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, localdir, attr, pp))
         {
@@ -642,7 +643,7 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
 }
 
 static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxrecurse, Attributes attr, Promise *pp)
@@ -652,7 +653,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
     char newto[CF_BUFSIZE];
     Item *namecache = NULL;
     const struct dirent *dirp;
-    Dir *dirh;
+    AbstractDir *dirh;
 
     if (maxrecurse == 0)        /* reached depth limit */
     {
@@ -727,13 +728,13 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         }
     }
 
-    if ((dirh = OpenDirForPromise(ctx, from, attr, pp)) == NULL)
+    if ((dirh = AbstractDirOpen(ctx, from, attr, pp)) == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "copy can't open directory [%s]\n", from);
         return;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, from, attr, pp))
         {
@@ -750,7 +751,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
         if (!JoinPath(newfrom, dirp->d_name))
         {
-            CloseDir(dirh);
+            AbstractDirClose(dirh);
             return;
         }
 
@@ -780,7 +781,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         {
             if ((!S_ISDIR(sb.st_mode)) && (!JoinPath(newto, dirp->d_name)))
             {
-                CloseDir(dirh);
+                AbstractDirClose(dirh);
                 return;
             }
         }
@@ -788,7 +789,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         {
             if (!JoinPath(newto, dirp->d_name))
             {
-                CloseDir(dirh);
+                AbstractDirClose(dirh);
                 return;
             }
         }
@@ -855,12 +856,12 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
     DeleteCompressedArray(pp->inode_cache);
     pp->inode_cache = NULL;
-    CloseDir(dirh);
+    AbstractDirClose(dirh);
 }
 
 static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp)
 {
-    Dir *dirh;
+    AbstractDir *dirh;
     char sourcefile[CF_BUFSIZE];
     char sourcedir[CF_BUFSIZE];
     char destdir[CF_BUFSIZE];
@@ -900,7 +901,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         strcpy(destdir, destination);
         AddSlash(destdir);
 
-        if ((dirh = OpenDirForPromise(ctx, sourcedir, attr, pp)) == NULL)
+        if ((dirh = AbstractDirOpen(ctx, sourcedir, attr, pp)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
             DeleteClientCache(pp);
@@ -918,7 +919,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
             VerifyCopiedFileAttributes(ctx, destdir, &dsb, &ssb, attr, pp);
         }
 
-        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+        for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, sourcedir, attr, pp))
             {
@@ -961,7 +962,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
             CfCopyFile(ctx, sourcefile, destfile, ssb, attr, pp);
         }
 
-        CloseDir(dirh);
+        AbstractDirClose(dirh);
         DeleteClientCache(pp);
         return;
     }
@@ -2127,13 +2128,13 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         return false;
     }
 
-    if ((dirh = OpenDirLocal(".")) == NULL)
+    if ((dirh = DirOpen(".")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "opendir", "Could not open existing directory %s\n", name);
         return false;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, name, attr, pp))
         {
@@ -2145,7 +2146,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
         if (!JoinPath(path, dirp->d_name))
         {
-            CloseDir(dirh);
+            DirClose(dirh);
             return true;
         }
 
@@ -2221,7 +2222,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return true;
 }
 
@@ -2548,13 +2549,13 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
         return false;
     }
 
-    if ((dirh = OpenDirLocal(source)) == NULL)
+    if ((dirh = DirOpen(source)) == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "opendir", pp, attr, "Can't open source of children to link %s\n", attr.link.source);
         return false;
     }
 
-    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, source, attr, pp))
         {
@@ -2569,7 +2570,7 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
         if (!JoinPath(promiserpath, dirp->d_name))
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Can't construct filename which verifying child links\n");
-            CloseDir(dirh);
+            DirClose(dirh);
             return false;
         }
 
@@ -2579,7 +2580,7 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
         if (!JoinPath(sourcepath, dirp->d_name))
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "Can't construct filename while verifying child links\n");
-            CloseDir(dirh);
+            DirClose(dirh);
             return false;
         }
 
@@ -2606,7 +2607,7 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return true;
 }
 

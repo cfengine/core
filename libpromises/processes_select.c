@@ -30,7 +30,6 @@
 #include "reporting.h"
 #include "matching.h"
 #include "cfstream.h"
-#include "verify_processes.h"
 #include "string_lib.h"
 #include "item_lib.h"
 #include "pipes.h"

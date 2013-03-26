@@ -38,7 +38,6 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
-#include "verify_processes.h"
 #include "signals.h"
 #include "locks.h"
 #include "logging.h"

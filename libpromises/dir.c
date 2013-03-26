@@ -29,6 +29,7 @@
 #include "item_lib.h"
 #include "logging.h"
 #include "rlist.h"
+#include "misc_lib.h"
 
 /*********************************************************************/
 
@@ -85,7 +86,7 @@ const struct dirent *ReadDir(Dir *dir)
     }
     else
     {
-        FatalError("Dir passed has no list nor directory handle open");
+        ProgrammingError("Dir passed has no list nor directory handle open");
     }
 }
 

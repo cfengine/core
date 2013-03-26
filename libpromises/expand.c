@@ -195,6 +195,15 @@ Rval ExpandDanglers(EvalContext *ctx, const char *scopeid, Rval rval, const Prom
         }
         break;
 
+    case RVAL_TYPE_LIST:
+        final = RvalCopy(rval);
+        {
+            Rlist *final_list = RvalRlistValue(final);
+            RlistFlatten(&final_list);
+            final.item = final_list;
+        }
+        break;
+
     default:
         final = RvalCopy(rval);
         break;
@@ -887,7 +896,9 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
 
             ScopeGetVariable((VarRef) { NULL, orgscope, orgname }, &retval);
 
-            ScopeNewList(ctx, (VarRef) { NULL, scope, rp->item }, RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
+            Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
+            RlistFlatten(&list);
+            ScopeNewList(ctx, (VarRef) { NULL, scope, rp->item }, list, DATA_TYPE_STRING_LIST);
         }
     }
 }
@@ -1379,6 +1390,14 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             {
                 rval = RvalCopy(opts.cp_save->rval);
             }
+
+            if (rval.type == RVAL_TYPE_LIST)
+            {
+                Rlist *rval_list = RvalRlistValue(rval);
+                RlistFlatten(&rval_list);
+                rval.item = rval_list;
+            }
+
             BufferDestroy(&conv);
         }
 

@@ -83,4 +83,9 @@ void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
 
+/**
+ * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.
+ */
+void RlistFlatten(Rlist **list);
+
 #endif

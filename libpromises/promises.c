@@ -142,6 +142,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     if (pp->promisee.item)
     {
         pcopy->promisee = RvalCopy(pp->promisee);
+        Rlist *rval_list = RvalRlistValue(pcopy->promisee);
+        RlistFlatten(&rval_list);
+        pcopy->promisee.item = rval_list;
     }
 
     if (pp->classes)
@@ -274,6 +277,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
                         Rval newrv = RvalCopy(scp->rval);
+                        if (newrv.type == RVAL_TYPE_LIST)
+                        {
+                            Rlist *new_list = RvalRlistValue(newrv);
+                            RlistFlatten(&new_list);
+                            newrv.item = new_list;
+                        }
 
                         PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
                     }
@@ -294,6 +303,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             }
 
             Rval newrv = RvalCopy(cp->rval);
+            if (newrv.type == RVAL_TYPE_LIST)
+            {
+                Rlist *new_list = RvalRlistValue(newrv);
+                RlistFlatten(&new_list);
+                newrv.item = new_list;
+            }
 
             PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
         }

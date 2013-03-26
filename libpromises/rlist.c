@@ -241,38 +241,7 @@ static Rval RvalCopyList(Rval rval)
     Rlist *start = NULL;
     for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
     {
-        char naked[CF_BUFSIZE] = "";
-
-        if (IsNakedVar(rp->item, '@'))
-        {
-            GetNaked(naked, rp->item);
-
-            Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
-            if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv) != DATA_TYPE_NONE)
-            {
-                switch (rv.type)
-                {
-                case RVAL_TYPE_LIST:
-                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
-                    {
-                        RlistAppend(&start, srp->item, srp->type);
-                    }
-                    break;
-
-                default:
-                    RlistAppend(&start, rp->item, rp->type);
-                    break;
-                }
-            }
-            else
-            {
-                RlistAppend(&start, rp->item, rp->type);
-            }
-        }
-        else
-        {
-            RlistAppend(&start, rp->item, rp->type);
-        }
+        RlistAppend(&start, rp->item, rp->type);
     }
 
     return (Rval) {start, RVAL_TYPE_LIST};
@@ -1166,5 +1135,42 @@ JsonElement *RvalToJson(Rval rval)
     default:
         assert(false && "Invalid rval type");
         return JsonStringCreate("");
+    }
+}
+
+void RlistFlatten(Rlist **list)
+{
+    for (Rlist *rp = *list; rp != NULL; rp = rp->next)
+    {
+        if (rp->type != RVAL_TYPE_SCALAR)
+        {
+            continue;
+        }
+
+        char naked[CF_BUFSIZE] = "";
+        if (IsNakedVar(rp->item, '@'))
+        {
+            GetNaked(naked, rp->item);
+
+            Rval rv;
+            if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv) != DATA_TYPE_NONE)
+            {
+                switch (rv.type)
+                {
+                case RVAL_TYPE_LIST:
+                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
+                    {
+                        RlistAppend(list, srp->item, srp->type);
+                    }
+                    RlistDestroyEntry(list, rp);
+                    break;
+
+                default:
+                    ProgrammingError("List variable does not resolve to a list");
+                    RlistAppend(list, rp->item, rp->type);
+                    break;
+                }
+            }
+        }
     }
 }

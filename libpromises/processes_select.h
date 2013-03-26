@@ -27,8 +27,10 @@
 
 #include "cf3.defs.h"
 
+int LoadProcessTable(Item **procdata);
+
 Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect);
 bool IsProcessNameRunning(char *procNameRegex);
-int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, Promise *pp);
+int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
 #endif

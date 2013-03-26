@@ -38,12 +38,12 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
-#include "verify_processes.h"
 #include "signals.h"
 #include "locks.h"
 #include "logging.h"
 #include "exec_tools.h"
 #include "rlist.h"
+#include "processes_select.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -68,7 +68,9 @@ static pthread_attr_t threads_attrs;
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
+#ifndef __MINGW32__
 static void Apoptosis(EvalContext *ctx);
+#endif
 
 static bool LocalExecInThread(const ExecConfig *config);
 
@@ -456,57 +458,19 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     time_t now = time(NULL);
 #endif
 
-    Policy *exec_cfengine_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(exec_cfengine_policy, NamespaceDefault(), "exec_cfengine_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "exec_cfengine");
-
-        pp = PromiseTypeAppendPromise(tp, "the executor agent", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
-    }
-    assert(pp);
-
-    Attributes dummyattr;
-    CfLock thislock;
-
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
     pthread_attr_setstacksize(&threads_attrs, (size_t)2048*1024);
 
     Banner("Starting executor");
-    memset(&dummyattr, 0, sizeof(dummyattr));
 
-    dummyattr.restart_class = "nonce";
-    dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
-    dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
-
+#ifndef __MINGW32__
     if (!ONCE)
     {
-        thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
-
-        if (thislock.lock == NULL)
-        {
-            PolicyDestroy(exec_cfengine_policy);
-            return;
-        }
-
         /* Kill previous instances of cf-execd if those are still running */
         Apoptosis(ctx);
-
-        /* FIXME: kludge. This code re-sets "last" lock to the one we have
-           acquired a few lines before. If the cf-execd is terminated, this lock
-           will be removed, and subsequent restart of cf-execd won't fail.
-
-           The culprit is Apoptosis(), which creates a promise and executes it,
-           taking locks during it, so CFLOCK/CFLAST/CFLOG get reset.
-
-           Proper fix is to keep all the taken locks in the memory, and release
-           all of them during process termination.
-         */
-        strcpy(CFLOCK, thislock.lock);
-        strcpy(CFLAST, thislock.last ? thislock.last : "");
-        strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
+#endif
 
 #ifdef __MINGW32__
 
@@ -561,11 +525,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
                 }
             }
         }
-
-        YieldCurrentLock(thislock);
     }
-
-    PolicyDestroy(exec_cfengine_policy);
 }
 
 /*****************************************************************************/
@@ -603,65 +563,57 @@ static bool LocalExecInThread(const ExecConfig *config)
     }
 }
 
-/*****************************************************************************/
-/* Level                                                                     */
-/*****************************************************************************/
+#ifndef __MINGW32__
 
 static void Apoptosis(EvalContext *ctx)
 {
-    Rlist *signals = NULL, *owners = NULL;
-    char mypid[32];
     static char promiser_buf[CF_SMALLBUF];
-
-#if defined(_WIN32)
-    return;
-#endif
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Programmed pruning of the scheduler cluster");
-
-#ifdef __MINGW32__
-    snprintf(promiser_buf, sizeof(promiser_buf), "cf-execd");     // using '\' causes regexp problems
-#else
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
-#endif
-
-    Policy *aptosis_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(aptosis_policy, NamespaceDefault(), "exec_apoptosis", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "processes");
-
-        pp = PromiseTypeAppendPromise(tp, promiser_buf, (Rval) {xstrdup("cfengine"), RVAL_TYPE_SCALAR}, "any");
-    }
-
-    GetCurrentUserName(mypid, 31);
-
-    RlistPrependScalar(&signals, "term");
-    RlistPrependScalar(&owners, mypid);
-
-    PromiseAppendConstraint(pp, "signals", (Rval) {signals, RVAL_TYPE_LIST }, "any", false);
-    PromiseAppendConstraint(pp, "process_select", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(pp, "process_owner", (Rval) {owners, RVAL_TYPE_LIST }, "any", false);
-    PromiseAppendConstraint(pp, "ifelapsed", (Rval) {xstrdup("0"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(pp, "process_count", (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(pp, "match_range", (Rval) {xstrdup("0,2"), RVAL_TYPE_SCALAR}, "any", false);
-    PromiseAppendConstraint(pp, "process_result", (Rval) {xstrdup("process_owner.process_count"), RVAL_TYPE_SCALAR}, "any", false);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
-        VerifyProcessesPromise(ctx, pp);
+        char mypid[32];
+        snprintf(mypid, 32, "%d", (int)getuid());
+
+        Rlist *owners = NULL;
+        RlistPrependScalar(&owners, mypid);
+
+        Attributes a = {{0}};
+
+        a.haveselect = true;
+        a.process_select.owner = owners;
+        a.process_select.process_result = "process_owner";
+
+        Item *killlist = NULL;
+        int matches = FindPidMatches(ctx, PROCESSTABLE, &killlist, a, promiser_buf);
+
+        if (matches > 2)
+        {
+            for (Item *ip = killlist; ip != NULL; ip = ip->next)
+            {
+                pid_t pid = ip->counter;
+
+                if (pid != getpid() && kill(pid, SIGTERM) < 0)
+                {
+                    if (errno == ESRCH)
+                    {
+                        /* That's ok, process exited voluntarily */
+                    }
+                    else
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "kill", "Unable to kill stale cf-execd process (pid=%d)", (int)pid);
+                    }
+                }
+            }
+        }
     }
 
     DeleteItemList(PROCESSTABLE);
 
-    PolicyDestroy(aptosis_policy);
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Pruning complete");
 }
 
-/*****************************************************************************/
+#endif
 
 typedef enum
 {

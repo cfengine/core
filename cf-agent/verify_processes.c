@@ -150,7 +150,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     CfDebug("VerifyProcessOp\n");
 
-    matches = FindPidMatches(ctx, procdata, &killlist, a, pp);
+    matches = FindPidMatches(ctx, procdata, &killlist, a, pp->promiser);
 
 /* promise based on number of matches */
 

@@ -68,11 +68,13 @@ static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comm
 static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
 static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
 
+static const char *POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH = "Type mismatch in constraint: %s";
+
 //************************************************************************
 
 static void BundleDestroy(Bundle *bundle);
 static void BodyDestroy(Body *body);
-static void ConstraintPostCheck(const char *bundle_promise_type, const char *lval, Rval rval);
+static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp);
 static bool PromiseCheck(const Promise *pp, Seq *errors);
 
 
@@ -308,11 +310,14 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
 
     /* lval is unknown for this promise type */
     if (errors != NULL)
+    {
         SeqAppend(errors,
                   PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
                                  POLICY_ERROR_LVAL_INVALID,
                                  constraint->parent.promise->parent_promise_type->name,
                                  constraint->lval));
+    }
+
     return false;
 }
 
@@ -771,10 +776,28 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
                 if (strcmp(bp->type,"file") != 0)
                 {
                     SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, bp,
-                                                      POLICY_ERROR_BODY_REDEFINITION,
-                                                      bp->name, bp->type));
+                                                     POLICY_ERROR_BODY_REDEFINITION,
+                                                     bp->name, bp->type));
                     success = false;
                 }
+            }
+        }
+    }
+
+    for (size_t i = 0; i < SeqLength(policy->bodies); i++)
+    {
+        const Body *bp = SeqAt(policy->bodies, i);
+
+        for (size_t j = 0; j < SeqLength(bp->conlist); j++)
+        {
+            Constraint *cp = SeqAt(bp->conlist, j);
+            SyntaxTypeMatch err = ConstraintCheckType(cp);
+            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+            {
+                SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                                 POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH,
+                                                 cp->lval));
+                success = false;
             }
         }
     }
@@ -1174,12 +1197,6 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
         break;
     default:
         break;
-    }
-
-    // Check class
-    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-    {
-        ConstraintPostCheck("none", lval, rval);
     }
 
     Constraint *cp = xcalloc(1, sizeof(Constraint));
@@ -2879,7 +2896,11 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
-        ConstraintPostCheck(pp->parent_promise_type->name, cp->lval, cp->rval);
+        SyntaxTypeMatch err = ConstraintCheckType(cp);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError("%s: %s", cp->lval, SyntaxTypeMatchToString(err));
+        }
     }
 
     if (strcmp(pp->parent_promise_type->name, "insert_lines") == 0)
@@ -2910,83 +2931,74 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
 /*****************************************************************************/
 
-static void ConstraintPostCheck(const char *bundle_promise_type, const char *lval, Rval rval)
+static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 {
-    PromiseTypeSyntax ss;
-    int i, j, l, m;
-    const BodySyntax *bs, *bs2;
-    const PromiseTypeSyntax *ssp;
-
-    CfDebug("  Post Check Constraint %s: %s =>", bundle_promise_type, lval);
+    CfDebug("  Post Check Constraint: %s =>", cp->lval);
 
     if (DEBUG)
     {
-        RvalShow(stdout, rval);
+        RvalShow(stdout, cp->rval);
         printf("\n");
     }
 
 // Check class
 
-    for (i = 0; CF_CLASSBODY[i].lval != NULL; i++)
+    for (size_t i = 0; CF_CLASSBODY[i].lval != NULL; i++)
     {
-        if (strcmp(lval, CF_CLASSBODY[i].lval) == 0)
+        if (strcmp(cp->lval, CF_CLASSBODY[i].lval) == 0)
         {
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(cp->lval, cp->rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
-                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+                return err;
             }
         }
     }
 
-    for (i = 0; i < CF3_MODULES; i++)
+    if (THIS_AGENT_TYPE != AGENT_TYPE_COMMON && cp->type == POLICY_ELEMENT_TYPE_PROMISE)
     {
-        if ((ssp = CF_ALL_PROMISE_TYPES[i]) == NULL)
-        {
-            continue;
-        }
+        PromiseType *promise_type = cp->parent.promise->parent_promise_type;
 
-        for (j = 0; ssp[j].bundle_type != NULL; j++)
+        for (size_t i = 0; i < CF3_MODULES; i++)
         {
-            ss = ssp[j];
-
-            if (ss.promise_type != NULL)
+            const PromiseTypeSyntax *ssp = CF_ALL_PROMISE_TYPES[i];
+            if (!ssp)
             {
-                if (strcmp(ss.promise_type, bundle_promise_type) == 0)
+                continue;
+            }
+
+            for (size_t j = 0; ssp[j].bundle_type != NULL; j++)
+            {
+                PromiseTypeSyntax ss = ssp[j];
+
+                if (ss.promise_type != NULL)
                 {
-                    bs = ss.bs;
-
-                    for (l = 0; bs[l].lval != NULL; l++)
+                    if (strcmp(ss.promise_type, promise_type->name) == 0)
                     {
-                        if (bs[l].dtype == DATA_TYPE_BUNDLE)
-                        {
-                        }
-                        else if (bs[l].dtype == DATA_TYPE_BODY)
-                        {
-                            bs2 = (BodySyntax *) bs[l].range;
+                        const BodySyntax *bs = ss.bs;
 
-                            for (m = 0; bs2[m].lval != NULL; m++)
+                        for (size_t l = 0; bs[l].lval != NULL; l++)
+                        {
+                            if (bs[l].dtype == DATA_TYPE_BUNDLE)
                             {
-                                if (strcmp(lval, bs2[m].lval) == 0)
+                            }
+                            else if (bs[l].dtype == DATA_TYPE_BODY)
+                            {
+                                const BodySyntax *bs2 = bs[l].range;
+
+                                for (size_t m = 0; bs2[m].lval != NULL; m++)
                                 {
-                                    SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, bs2[m].dtype, (char *) (bs2[m].range), 0);
-                                    if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                    if (strcmp(cp->lval, bs2[m].lval) == 0)
                                     {
-                                        FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+                                        return CheckConstraintTypeMatch(cp->lval, cp->rval, bs2[m].dtype, (char *) (bs2[m].range), 0);
                                     }
-                                    return;
                                 }
                             }
-                        }
 
-                        if (strcmp(lval, bs[l].lval) == 0)
-                        {
-                            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
-                            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                            if (strcmp(cp->lval, bs[l].lval) == 0)
                             {
-                                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
+                                return CheckConstraintTypeMatch(cp->lval, cp->rval, bs[l].dtype, (char *) (bs[l].range), 0);
                             }
-                            return;
                         }
                     }
                 }
@@ -2996,22 +3008,19 @@ static void ConstraintPostCheck(const char *bundle_promise_type, const char *lva
 
 /* Now check the functional modules - extra level of indirection */
 
-    for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
+    for (size_t i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
     {
         if (CF_COMMON_BODIES[i].dtype == DATA_TYPE_BODY)
         {
             continue;
         }
 
-        if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
+        if (strcmp(cp->lval, CF_COMMON_BODIES[i].lval) == 0)
         {
-            CfDebug("Found a match for lval %s in the common constraint attributes\n", lval);
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(lval, rval, CF_COMMON_BODIES[i].dtype, (char *) (CF_COMMON_BODIES[i].range), 0);
-            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-            {
-                FatalError("%s: %s", lval, SyntaxTypeMatchToString(err));
-            }
-            return;
+            CfDebug("Found a match for lval %s in the common constraint attributes\n", cp->lval);
+            return CheckConstraintTypeMatch(cp->lval, cp->rval, CF_COMMON_BODIES[i].dtype, (char *) (CF_COMMON_BODIES[i].range), 0);
         }
     }
+
+    return SYNTAX_TYPE_MATCH_OK;
 }

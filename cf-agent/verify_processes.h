@@ -28,6 +28,5 @@
 #include "cf3.defs.h"
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
-int LoadProcessTable(EvalContext *ctx, Item **procdata);
 
 #endif

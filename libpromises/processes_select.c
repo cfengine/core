@@ -30,7 +30,6 @@
 #include "reporting.h"
 #include "matching.h"
 #include "cfstream.h"
-#include "verify_processes.h"
 #include "string_lib.h"
 #include "item_lib.h"
 #include "pipes.h"
@@ -815,7 +814,7 @@ static int ForeignZone(char *s)
 #endif
 
 #ifndef __MINGW32__
-int LoadProcessTable(EvalContext *ctx, Item **procdata)
+int LoadProcessTable(Item **procdata)
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;

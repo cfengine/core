@@ -1558,7 +1558,7 @@ static int NewTypeContext(EvalContext *ctx, TypeSequence type)
 
     case TYPE_SEQUENCE_PROCESSES:
 
-        if (!LoadProcessTable(ctx, &PROCESSTABLE))
+        if (!LoadProcessTable(&PROCESSTABLE))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to read the process table - cannot keep process promises\n");
             return false;
@@ -1768,7 +1768,7 @@ static bool VerifyBootstrap(EvalContext *ctx)
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
     DeleteItemList(PROCESSTABLE);
     PROCESSTABLE = NULL;
-    LoadProcessTable(ctx, &PROCESSTABLE);
+    LoadProcessTable(&PROCESSTABLE);
 
     if (!IsProcessNameRunning(".*cf-execd.*"))
     {

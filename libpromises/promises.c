@@ -416,31 +416,19 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
 
 void PromiseRef(OutputLevel level, const Promise *pp)
 {
-    char *v;
-    Rval retval;
-
     if (pp == NULL)
     {
         return;
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
-    {
-        v = (char *) retval.item;
-    }
-    else
-    {
-        v = "not specified";
-    }
-
     if (PromiseGetBundle(pp)->source_path)
     {
-        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' in file \'%s\' near line %zu\n", v, PromiseGetBundle(pp)->name,
+        CfOut(level, "", "Promise belongs to bundle \'%s\' in file \'%s\' near line %zu\n", PromiseGetBundle(pp)->name,
              PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
     else
     {
-        CfOut(level, "", "Promise (version %s) belongs to bundle \'%s\' near line %zu\n", v, PromiseGetBundle(pp)->name,
+        CfOut(level, "", "Promise belongs to bundle \'%s\' near line %zu\n", PromiseGetBundle(pp)->name,
               pp->offset.line);
     }
 

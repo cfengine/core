@@ -380,6 +380,28 @@ void StartServer(void)
     Attributes dummyattr;
     CfLock thislock;
 
+#ifdef MINGW
+
+    if (!NO_FORK)
+    {
+        CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
+    }
+
+#else /* NOT MINGW */
+
+    if ((!NO_FORK) && (fork() != 0))
+    {
+        CfOut(cf_inform, "", "cf-execd starting %.24s\n", cf_ctime(&now));
+        exit(0);
+    }
+
+    if (!NO_FORK)
+    {
+        ActAsDaemon(0);
+    }
+
+#endif /* NOT MINGW */
+
 #if defined(HAVE_PTHREAD)
     pthread_attr_init(&threads_attrs);
     pthread_attr_setdetachstate(&threads_attrs, PTHREAD_CREATE_DETACHED);
@@ -423,28 +445,6 @@ void StartServer(void)
         strcpy(CFLAST, thislock.last ? thislock.last : "");
         strcpy(CFLOG, thislock.log ? thislock.log : "");
     }
-
-#ifdef MINGW
-
-    if (!NO_FORK)
-    {
-        CfOut(cf_verbose, "", "Windows does not support starting processes in the background - starting in foreground");
-    }
-
-#else /* NOT MINGW */
-
-    if ((!NO_FORK) && (fork() != 0))
-    {
-        CfOut(cf_inform, "", "cf-execd starting %.24s\n", cf_ctime(&now));
-        exit(0);
-    }
-
-    if (!NO_FORK)
-    {
-        ActAsDaemon(0);
-    }
-
-#endif /* NOT MINGW */
 
     WritePID("cf-execd.pid");
     signal(SIGINT, HandleSignals);

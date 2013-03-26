@@ -366,13 +366,6 @@ static void StartServer(GenericAgentConfig config)
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 1;
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
-
-    if (thislock.lock == NULL)
-    {
-        return;
-    }
-
     CfOut(cf_inform, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
     CfOut(cf_verbose, "", "Listening for connections ...\n");
 
@@ -397,6 +390,13 @@ static void StartServer(GenericAgentConfig config)
     }
 
 #endif /* NOT MINGW */
+
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+
+    if (thislock.lock == NULL)
+    {
+        return;
+    }
 
     WritePID("cf-serverd.pid");
 

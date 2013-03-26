@@ -81,7 +81,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     }
 
     char *lock_name = GetLockNameExec(a, pp);
-    CfLock thislock = AcquireLock(lock_name, VUQNAME, CFSTARTTIME, a, pp, false);
+    CfLock thislock = AcquireLock(ctx, lock_name, VUQNAME, CFSTARTTIME, a, pp, false);
     free(lock_name);
 
     if (thislock.lock == NULL)

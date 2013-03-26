@@ -6,6 +6,7 @@
 #include "rlist.h"
 
 #include "assoc.h"
+#include "env_context.h"
 
 /* Stubs */
 
@@ -208,6 +209,11 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 }
 
 int FullTextMatch(const char *regptr, const char *cmpptr)
+{
+    fail();
+}
+
+bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
     fail();
 }

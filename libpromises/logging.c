@@ -66,7 +66,7 @@ static uint16_t SYSLOG_PORT = 514;
 
 int FACILITY;
 
-static void SummarizeTransaction(Attributes attr, const char *logname);
+static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *logname);
 
 /*****************************************************************************/
 
@@ -77,7 +77,7 @@ void BeginAudit()
 
 /*****************************************************************************/
 
-void EndAudit(int background_tasks)
+void EndAudit(EvalContext *ctx, int background_tasks)
 {
     if (!END_AUDIT_REQUIRED)
     {
@@ -95,7 +95,7 @@ void EndAudit(int background_tasks)
     {
         Rval track_value_rval = { 0 };
         bool track_value = false;
-        if (ScopeGetVariable((VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval) != DATA_TYPE_NONE)
+        if (EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval, NULL))
         {
             track_value = BooleanFromString(track_value_rval.item);
         }
@@ -129,7 +129,7 @@ void EndAudit(int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
     {
         sp = (char *) retval.item;
     }
@@ -411,7 +411,7 @@ void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
     NotePromiseCompliance(pp, compliance_status, reason);
 }
 
-static void DoSummarizeTransaction(char status, const Promise *pp, Attributes attr)
+static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise *pp, Attributes attr)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -442,7 +442,7 @@ static void DoSummarizeTransaction(char status, const Promise *pp, Attributes at
         break;
     }
 
-    SummarizeTransaction(attr, log_name);
+    SummarizeTransaction(ctx, attr, log_name);
 }
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status)
@@ -453,7 +453,7 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
     UpdatePromiseCounters(status, pp, attr);
     SetPromiseOutcomeClasses(status, ctx, pp, attr);
     NotifyDependantPromises(status, ctx, pp);
-    DoSummarizeTransaction(status, pp, attr);
+    DoSummarizeTransaction(ctx, status, pp, attr);
 }
 
 /************************************************************************/
@@ -560,7 +560,7 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
 
 /************************************************************************/
 
-void FatalError(char *s, ...)
+void FatalError(EvalContext *ctx, char *s, ...)
 {
     if (s)
     {
@@ -573,17 +573,17 @@ void FatalError(char *s, ...)
         CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
     }
 
-    EndAudit(0);
+    EndAudit(ctx, 0);
     exit(1);
 }
 
-static void SummarizeTransaction(Attributes attr, const char *logname)
+static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *logname)
 {
     if (logname && (attr.transaction.log_string))
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandPrivateScalar(ScopeGetCurrent()->scope, attr.transaction.log_string, buffer);
+        ExpandPrivateScalar(ctx, ScopeGetCurrent()->scope, attr.transaction.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {

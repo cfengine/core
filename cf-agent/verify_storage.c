@@ -120,7 +120,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, ARG_UNUSED 
         }
     }
 
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -197,7 +197,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
             return false;
         }
 
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, name, a, pp))
             {

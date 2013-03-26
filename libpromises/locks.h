@@ -25,15 +25,14 @@
 #ifndef CFENGINE_LOCKS_H
 #define CFENGINE_LOCKS_H
 
-#include "platform.h"
-#include "env_context.h"
+#include "cf3.defs.h"
 
 bool AcquireLockByID(const char *lock_id, int acquire_after_minutes);
 time_t FindLockTime(char *name);
 bool InvalidateLockTime(const char *lock_id);
 
 
-CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
 

@@ -410,7 +410,7 @@ static char *BodyName(const Promise *pp)
     return name;
 }
 
-CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
 {
     unsigned int pid;
     int i, err, sum = 0;
@@ -575,7 +575,7 @@ CfLock AcquireLock(char *operand, char *host, time_t now, Attributes attr, Promi
                     else
                     {
                         ReleaseCriticalSection();
-                        FatalError("Unable to kill expired cfagent process %d from lock %s, exiting this time..\n", pid,
+                        FatalError(ctx, "Unable to kill expired cfagent process %d from lock %s, exiting this time..\n", pid,
                                    cflock);
                     }
                 }

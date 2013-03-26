@@ -124,7 +124,7 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
         {

@@ -221,7 +221,7 @@ static FnCallResult FnCallAnd(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
         }
     }
 
@@ -595,7 +595,7 @@ static FnCallResult FnCallConcat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
         }
     }
 
@@ -958,7 +958,7 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function REGLIST was promised a list called \"%s\" but this was not found\n", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1219,7 +1219,7 @@ static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1277,7 +1277,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"sum\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1341,7 +1341,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"product\" was promised a list called \"%s\" but this was not found\n", name);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1406,7 +1406,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval2) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found\n",
               scopeid, name);
@@ -1603,7 +1603,7 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (strlen(regex) == 0 || FullTextMatch(regex, dirp->d_name))
         {
@@ -1675,7 +1675,11 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    retype = ScopeGetVariable((VarRef) { NULL, scopeid, lval }, &rval);
+    retype = DATA_TYPE_NONE;
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval, &retype))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
 
     if (retype != DATA_TYPE_STRING_LIST && retype != DATA_TYPE_INT_LIST && retype != DATA_TYPE_REAL_LIST)
     {
@@ -1686,7 +1690,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         ScopeNewSpecialScalar(ctx, "this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
-        ExpandScalar(PromiseGetBundle(fp->caller)->name, map, expbuf);
+        ExpandScalar(ctx, PromiseGetBundle(fp->caller)->name, map, expbuf);
 
         if (strstr(expbuf, "$(this)") || strstr(expbuf, "${this}"))
         {
@@ -1734,7 +1738,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",
@@ -2129,14 +2133,7 @@ static FnCallResult FnCallIsVariable(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        if (ScopeGetVariable((VarRef) { NULL, "this", lval }, &rval) == DATA_TYPE_NONE)
-        {
-            found = false;
-        }
-        else
-        {
-            found = true;
-        }
+        found = EvalContextVariableGet(ctx, (VarRef) { NULL, "this", lval }, &rval, NULL);
     }
 
     if (found)
@@ -2932,7 +2929,7 @@ static FnCallResult FnCallOr(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
         }
     }
 
@@ -3504,7 +3501,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (ScopeGetVariable((VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval) == DATA_TYPE_NONE)
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function filesexist was promised a list called \"%s\" but this was not found\n",
               listvar);
@@ -3949,7 +3946,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
                     double real_value = 0;
                     if (!DoubleFromString(rp->item, &real_value))
                     {
-                        FatalError("Could not convert rval to double");
+                        FatalError(ctx, "Could not convert rval to double");
                     }
                 }
                 sscanf(rp->item, "%255s", this_rval);
@@ -4093,7 +4090,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                 {
                     if (EvalContextHeapContainsHard(ctx, negated_context))
                     {
-                        FatalError("Cannot negate the reserved class [%s]\n", negated_context);
+                        FatalError(ctx, "Cannot negate the reserved class [%s]\n", negated_context);
                     }
 
                     EvalContextHeapAddNegated(ctx, negated_context);
@@ -4165,7 +4162,7 @@ static int CheckID(char *id)
 
 FnCallResult CallFunction(EvalContext *ctx, const FnCallType *function, FnCall *fp, Rlist *expargs)
 {
-    ArgTemplate(fp, function->args, expargs);
+    ArgTemplate(ctx, fp, function->args, expargs);
     return (*function->impl) (ctx, fp, expargs);
 }
 

@@ -48,10 +48,6 @@ Dir *OpenDirLocal(const char *dirname)
     }
 
     dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
-    if (dirent_buf_size == (size_t) -1)
-    {
-        FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
-    }
 
     ret->entrybuf = xcalloc(1, dirent_buf_size);
 

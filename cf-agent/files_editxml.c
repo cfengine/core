@@ -157,7 +157,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -430,7 +430,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -493,7 +493,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetree-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -547,7 +547,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttree-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -608,7 +608,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteattribute-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -661,7 +661,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "setattribute-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -714,7 +714,7 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -767,7 +767,7 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "settext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -820,7 +820,7 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {

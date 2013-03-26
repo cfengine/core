@@ -7,18 +7,26 @@
 
 void test_map_iterators_from_rval_empty(void **state)
 {
+    EvalContext *ctx = EvalContextNew();
+
     Rlist *lists = NULL;
-    MapIteratorsFromRval("none", &lists, (Rval) { "", RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(ctx, "none", &lists, (Rval) { "", RVAL_TYPE_SCALAR });
 
     assert_int_equal(0, RlistLen(lists));
+
+    EvalContextDestroy(ctx);
 }
 
 void test_map_iterators_from_rval_literal(void **state)
 {
+    EvalContext *ctx = EvalContextNew();
+
     Rlist *lists = NULL;
-    MapIteratorsFromRval("none", &lists, (Rval) { "snookie", RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(ctx, "none", &lists, (Rval) { "snookie", RVAL_TYPE_SCALAR });
 
     assert_int_equal(0, RlistLen(lists));
+
+    EvalContextDestroy(ctx);
 }
 
 void test_map_iterators_from_rval_naked_list_var(void **state)
@@ -35,7 +43,7 @@ void test_map_iterators_from_rval_naked_list_var(void **state)
     EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
 
     Rlist *lists = NULL;
-    MapIteratorsFromRval("scope", &lists, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(ctx, "scope", &lists, (Rval) { "${jwow}", RVAL_TYPE_SCALAR });
 
     assert_int_equal(1, RlistLen(lists));
     assert_string_equal("jwow", lists->item);

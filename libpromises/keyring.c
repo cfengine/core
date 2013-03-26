@@ -75,7 +75,7 @@ int RemovePublicKey(const char *id)
 
     snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
 
-    while ((dirp = ReadDir(dirh)) != NULL)
+    while ((dirp = ReadDir( dirh)) != NULL)
     {
         char *c = strstr(dirp->d_name, suffix);
 

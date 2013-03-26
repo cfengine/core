@@ -69,7 +69,7 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void CheckWorkingDirectories(void);
+static void CheckWorkingDirectories(EvalContext *ctx);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
 static bool MissingInputFile(const char *input_file);
@@ -80,7 +80,7 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, cons
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
 #endif
-static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig *config);
+static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config);
 
 /*****************************************************************************/
 
@@ -217,7 +217,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     {
         if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(config->input_file);
+            bool policy_check_ok = CheckPromises(ctx, config->input_file);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
@@ -240,7 +240,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(const char *input_file)
+int CheckPromises(EvalContext *ctx, const char *input_file)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];
@@ -460,7 +460,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
 /* Define trusted directories */
 
-    strcpy(CFWORKDIR, GetWorkDir());
+    strcpy(CFWORKDIR, GetWorkDir(ctx));
     MapName(CFWORKDIR);
 
     CfDebug("Setting CFWORKDIR=%s\n", CFWORKDIR);
@@ -493,7 +493,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
         if (cfstat(vbuff, &sb) == -1)
         {
-            FatalError(" !!! No access to WORKSPACE/inputs dir");
+            FatalError(ctx, " !!! No access to WORKSPACE/inputs dir");
         }
         else
         {
@@ -504,7 +504,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
         if (cfstat(vbuff, &sb) == -1)
         {
-            FatalError(" !!! No access to WORKSPACE/outputs dir");
+            FatalError(ctx, " !!! No access to WORKSPACE/outputs dir");
         }
         else
         {
@@ -540,12 +540,12 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
     if (!LOOKUP)
     {
-        CheckWorkingDirectories();
+        CheckWorkingDirectories(ctx);
     }
 
     if (!LoadSecretKeys())
     {
-        FatalError("Could not load secret keys");
+        FatalError(ctx, "Could not load secret keys");
     }
 
     if (!MINUSF)
@@ -799,9 +799,9 @@ int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *i
 
 /*******************************************************************/
 
-ReportContext *OpenReports(AgentType agent_type)
+ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type)
 {
-    const char *workdir = GetWorkDir();
+    const char *workdir = GetWorkDir(ctx);
     char name[CF_BUFSIZE];
 
     FILE *freport_text = NULL;
@@ -832,13 +832,13 @@ ReportContext *OpenReports(AgentType agent_type)
         snprintf(name, CF_BUFSIZE, NULLFILE);
         if ((freport_text = fopen(name, "w")) == NULL)
         {
-            FatalError("Cannot open output file %s", name);
+            FatalError(ctx, "Cannot open output file %s", name);
         }
     }
 
     if (!freport_text)
     {
-        FatalError("Unable to continue as the null-file is unwritable");
+        FatalError(ctx, "Unable to continue as the null-file is unwritable");
     }
 
 
@@ -1079,7 +1079,7 @@ void BannerBundle(Bundle *bp, Rlist *params)
 
 /*********************************************************************/
 
-static void CheckWorkingDirectories(void)
+static void CheckWorkingDirectories(EvalContext *ctx)
 /* NOTE: We do not care about permissions (ACLs) in windows */
 {
     struct stat statbuf;
@@ -1181,7 +1181,7 @@ static void CheckWorkingDirectories(void)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 077)
         {
-            FatalError("UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
+            FatalError(ctx, "UNTRUSTED: Private key directory %s%cppkeys (mode %jo) was not private!\n", CFWORKDIR,
                        FILE_SEPARATOR, (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
@@ -1248,9 +1248,9 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
             (config->agent_type == AGENT_TYPE_COMMON) ||
             (config->agent_type == AGENT_TYPE_GENDOC))
         {
-            if (!VerifyBundleSequence(policy, config))
+            if (!VerifyBundleSequence(ctx, policy, config))
             {
-                FatalError("Errors in promise bundles");
+                FatalError(ctx, "Errors in promise bundles");
             }
         }
     }
@@ -1308,7 +1308,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
     if (body_syntax == NULL)
     {
-        FatalError("Unknown agent");
+        FatalError(ctx, "Unknown agent");
     }
 
     char scope[CF_BUFSIZE];
@@ -1328,7 +1328,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_BUNDLESEQUENCE].lval) == 0)
         {
-            returnval = ExpandPrivateRval(scope, cp->rval);
+            returnval = ExpandPrivateRval(ctx, scope, cp->rval);
         }
         else
         {
@@ -1623,7 +1623,7 @@ void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *co
 
 /********************************************************************/
 
-static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig *config)
+static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const GenericAgentConfig *config)
 {
     Rlist *rp;
     char *name;
@@ -1631,7 +1631,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
     int ok = true;
     FnCall *fp;
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !!! No bundlesequence in the common control body");
         return false;
@@ -1639,7 +1639,7 @@ static bool VerifyBundleSequence(const Policy *policy, const GenericAgentConfig 
 
     if (retval.type != RVAL_TYPE_LIST)
     {
-        FatalError("Promised bundlesequence was not a list");
+        FatalError(ctx, "Promised bundlesequence was not a list");
     }
 
     for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
@@ -1735,7 +1735,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         {
             if (EvalContextHeapContainsHard(ctx, context))
             {
-                FatalError("cfengine: You cannot use -D to define a reserved class!");
+                FatalError(ctx, "cfengine: You cannot use -D to define a reserved class!");
             }
 
             EvalContextHeapAddSoft(ctx, context, NULL);
@@ -1750,7 +1750,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         {
             if (EvalContextHeapContainsHard(ctx, context))
             {
-                FatalError("Cannot negate the reserved class [%s]\n", context);
+                FatalError(ctx, "Cannot negate the reserved class [%s]\n", context);
             }
 
             EvalContextHeapAddNegated(ctx, context);

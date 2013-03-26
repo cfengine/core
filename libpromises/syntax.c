@@ -40,6 +40,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "vars.h"
+#include "env_context.h"
 
 #include <assert.h>
 
@@ -311,7 +312,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 /****************************************************************************/
 
-DataType StringDataType(const char *scopeid, const char *string)
+DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string)
 {
     DataType dtype;
     Rval rval;
@@ -338,7 +339,7 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if ((dtype = ScopeGetVariable((VarRef) { NULL, scopeid, var }, &rval)) != DATA_TYPE_NONE)
+            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
             {
                 if (rval.type == RVAL_TYPE_LIST)
                 {

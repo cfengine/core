@@ -101,14 +101,9 @@ void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
 void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt);
 void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt);
 
-/*
- * Do not modify returned Rval, its contents may be constant and statically
- * allocated.
- */
-DataType ScopeGetVariable(VarRef lval, Rval *returnv);
 void ScopeDeleteVariable(const char *scope, const char *id);
 
-DataType ScopeControlCommonGet(CommonControl lval, Rval *rval_out);
+DataType ScopeControlCommonGet(EvalContext *ctx, CommonControl lval, Rval *rval_out);
 
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 

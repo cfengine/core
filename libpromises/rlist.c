@@ -37,6 +37,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "assoc.h"
+#include "env_context.h"
 
 #include <assert.h>
 
@@ -1138,7 +1139,7 @@ JsonElement *RvalToJson(Rval rval)
     }
 }
 
-void RlistFlatten(Rlist **list)
+void RlistFlatten(EvalContext *ctx, Rlist **list)
 {
     for (Rlist *rp = *list; rp != NULL; rp = rp->next)
     {
@@ -1153,7 +1154,7 @@ void RlistFlatten(Rlist **list)
             GetNaked(naked, rp->item);
 
             Rval rv;
-            if (ScopeGetVariable((VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv) != DATA_TYPE_NONE)
+            if (EvalContextVariableGet(ctx, (VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv, NULL))
             {
                 switch (rv.type)
                 {

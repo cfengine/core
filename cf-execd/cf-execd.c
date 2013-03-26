@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    ReportContext *report_context = OpenReports(ctx, config->agent_type);
     GenericAgentDiscoverContext(ctx, config, report_context);
 
     Policy *policy = NULL;
@@ -364,7 +364,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
             }
 
             Rval retval;
-            if (ScopeGetVariable((VarRef) { NULL, "control_executor", cp->lval }, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_executor", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
                 continue;
@@ -482,7 +482,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
     if (!ONCE)
     {
-        thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+        thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
         if (thislock.lock == NULL)
         {
@@ -649,7 +649,7 @@ static void Apoptosis(EvalContext *ctx)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking for cf-execd processes owned by %s", mypid);
 
-    if (LoadProcessTable(&PROCESSTABLE))
+    if (LoadProcessTable(ctx, &PROCESSTABLE))
     {
         VerifyProcessesPromise(ctx, pp);
     }
@@ -675,7 +675,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const R
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(input_file))
+        if (CheckPromises(ctx, input_file))
         {
             return RELOAD_FULL;
         }

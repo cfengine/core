@@ -73,7 +73,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersionBanner(const char *component);
-int CheckPromises(const char *input_file);
+int CheckPromises(EvalContext *ctx, const char *input_file);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
 int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
 
@@ -100,7 +100,7 @@ void WritePID(char *filename);
 void CheckLicenses(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
-ReportContext *OpenReports(AgentType agent_type);
+ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type);
 void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);

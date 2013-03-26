@@ -115,7 +115,7 @@ char VerifyLink(EvalContext *ctx, char *destination, const char *source, Attribu
     if (readlink(destination, linkbuf, CF_BUFSIZE - 1) == -1)
     {
 
-        if (!MakeParentDirectory2(destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
+        if (!MakeParentDirectory2(ctx, destination, attr.move_obstructions, EnforcePromise(attr.transaction.action)))
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to create parent directory of link %s -> %s (enforce=%d)",
                  destination, to, EnforcePromise(attr.transaction.action));

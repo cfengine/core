@@ -166,11 +166,6 @@ void ScopeSetCurrent(const char *name)
     if (!scope)
     {
         scope = ScopeNew(name);
-        if (!scope)
-        {
-            FatalError("Could not create new scope");
-            return;
-        }
     }
 
     SCOPE_CURRENT = scope;
@@ -191,7 +186,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
         fprintf(stderr, ", Actual = ");
         RlistShow(stderr, arguments);
         fprintf(stderr, "\n");
-        FatalError("Augment scope, formal and actual parameter mismatch is fatal");
+        FatalError(ctx, "Augment scope, formal and actual parameter mismatch is fatal");
     }
 
     for (const Rlist *rpl = bp->args, *rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
@@ -217,7 +212,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
             }
             
             Rval retval;
-            vtype = ScopeGetVariable((VarRef) { NULL, bp->name, qnaked }, &retval);
+            EvalContextVariableGet(ctx, (VarRef) { NULL, bp->name, qnaked }, &retval, &vtype);
 
             switch (vtype)
             {
@@ -269,7 +264,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
         CfAssoc *assoc = NULL;
         while ((assoc = HashIteratorNext(&i)))
         {
-            Rval retval = ExpandPrivateRval(bp->name, assoc->rval);
+            Rval retval = ExpandPrivateRval(ctx, bp->name, assoc->rval);
             // Retain the assoc, just replace rval
             RvalDestroy(assoc->rval);
             assoc->rval = retval;
@@ -468,7 +463,7 @@ void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt
     }
 
     Rval rvald;
-    if (ScopeGetVariable(lval, &rvald) != DATA_TYPE_NONE)
+    if (EvalContextVariableGet(ctx, lval, &rvald, NULL))
     {
         ScopeDeleteScalar(lval);
     }
@@ -485,7 +480,7 @@ void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval
     assert(ScopeIsReserved(scope));
 
     Rval rvald;
-    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
+    if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
     {
         ScopeDeleteSpecialScalar(scope, lval);
     }
@@ -544,7 +539,7 @@ void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt)
     }
     Rval rvald;
 
-    if (ScopeGetVariable(lval, &rvald) != DATA_TYPE_NONE)
+    if (EvalContextVariableGet(ctx, lval, &rvald, NULL))
     {
         ScopeDeleteVariable(lval.scope, lval.lval);
     }
@@ -558,7 +553,7 @@ void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, 
 
     Rval rvald;
 
-    if (ScopeGetVariable((VarRef) { NULL, scope, lval }, &rvald) != DATA_TYPE_NONE)
+    if (EvalContextVariableGet(ctx, (VarRef) { NULL, scope, lval }, &rvald, NULL))
     {
         ScopeDeleteVariable(scope, lval);
     }
@@ -568,103 +563,12 @@ void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, 
 
 /*******************************************************************/
 
-DataType ScopeControlCommonGet(CommonControl lval, Rval *rval_out)
+DataType ScopeControlCommonGet(EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
     const char *lval_str = CFG_CONTROLBODY[lval].lval;
-    return ScopeGetVariable((VarRef) { NULL, "control_common", lval_str }, rval_out);
-}
-
-DataType ScopeGetVariable(VarRef lval, Rval *returnv)
-{
-    Scope *ptr = NULL;
-    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
-    char expbuf[CF_EXPANDSIZE];
-    CfAssoc *assoc;
-
-    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", lval.scope, lval.lval);
-
-    if (lval.lval == NULL)
-    {
-        *returnv = (Rval) {NULL, RVAL_TYPE_SCALAR };
-        return DATA_TYPE_NONE;
-    }
-
-    if (!IsExpandable(lval.lval))
-    {
-        strncpy(sval, lval.lval, CF_MAXVARSIZE - 1);
-    }
-    else
-    {
-        if (ExpandScalar(lval.scope, lval.lval, expbuf))
-        {
-            strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
-        }
-        else
-        {
-            /* C type system does not allow us to express the fact that returned
-               value may contain immutable string. */
-            *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval.lval);
-            return DATA_TYPE_NONE;
-        }
-    }
-
-    if (IsQualifiedVariable(sval))
-    {
-        scopeid[0] = '\0';
-        sscanf(sval, "%[^.].%s", scopeid, vlval);
-        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
-        ptr = ScopeGet(scopeid);
-    }
-    else
-    {
-        strlcpy(vlval, sval, sizeof(vlval));
-        strlcpy(scopeid, lval.scope, sizeof(scopeid));
-    }
-
-    if (ptr == NULL)
-    {
-        /* Assume current scope */
-        strcpy(vlval, lval.lval);
-        ptr = ScopeGet(scopeid);
-    }
-
-    if (ptr == NULL)
-    {
-        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-        // TODO: returning the same lval as was past in?
-        *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-        return DATA_TYPE_NONE;
-    }
-
-    CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n", scopeid, vlval, ptr->scope, vlval);
-
-    assoc = HashLookupElement(ptr->hashtable, vlval);
-
-    if (assoc == NULL)
-    {
-        CfDebug("No such variable found %s.%s\n\n", scopeid, lval.lval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-
-
-        *returnv = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
-        return DATA_TYPE_NONE;
-
-    }
-
-    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, assoc->rval);
-    }
-    CfDebug("}\n");
-
-    *returnv = assoc->rval;
-    return assoc->dtype;
+    DataType type = DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", lval_str }, rval_out, &type);
+    return type;
 }
 
 /*******************************************************************/
@@ -854,8 +758,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
     for (rpg = give, rpt = take; rpg != NULL && rpt != NULL; rpg = rpg->next, rpt = rpt->next)
     {
-        dtg = StringDataType(scopeid, (char *) rpg->item);
-        dtt = StringDataType(scopeid, (char *) rpt->item);
+        dtg = StringDataType(ctx, scopeid, (char *) rpg->item);
+        dtt = StringDataType(ctx, scopeid, (char *) rpt->item);
 
         if (dtg != dtt)
         {

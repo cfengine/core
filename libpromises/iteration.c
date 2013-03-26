@@ -29,6 +29,7 @@
 #include "vars.h"
 #include "cfstream.h"
 #include "fncall.h"
+#include "env_context.h"
 
 static void DeleteReferenceRlist(Rlist *list);
 
@@ -106,9 +107,8 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = ScopeGetVariable((VarRef) { NULL, scopeid, rp->item }, &retval);
-
-        if (dtype == DATA_TYPE_NONE)
+        dtype = DATA_TYPE_NONE;
+        if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
             CfOut(OUTPUT_LEVEL_ERROR, "",

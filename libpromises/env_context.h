@@ -126,6 +126,7 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
+bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);

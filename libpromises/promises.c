@@ -37,6 +37,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "fncall.h"
+#include "env_context.h"
 
 static void DereferenceComment(Promise *pp);
 
@@ -143,7 +144,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     {
         pcopy->promisee = RvalCopy(pp->promisee);
         Rlist *rval_list = RvalRlistValue(pcopy->promisee);
-        RlistFlatten(&rval_list);
+        RlistFlatten(ctx, &rval_list);
         pcopy->promisee.item = rval_list;
     }
 
@@ -253,7 +254,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     Constraint *scp = SeqAt(bp->conlist, k);
 
                     CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
-                    returnval = ExpandPrivateRval("body", scp->rval);
+                    returnval = ExpandPrivateRval(ctx, "body", scp->rval);
                     PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
                 }
 
@@ -276,11 +277,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                         Constraint *scp = SeqAt(bp->conlist, k);
 
                         CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
+
                         Rval newrv = RvalCopy(scp->rval);
                         if (newrv.type == RVAL_TYPE_LIST)
                         {
                             Rlist *new_list = RvalRlistValue(newrv);
-                            RlistFlatten(&new_list);
+                            RlistFlatten(ctx, &new_list);
                             newrv.item = new_list;
                         }
 
@@ -306,7 +308,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             if (newrv.type == RVAL_TYPE_LIST)
             {
                 Rlist *new_list = RvalRlistValue(newrv);
-                RlistFlatten(&new_list);
+                RlistFlatten(ctx, &new_list);
                 newrv.item = new_list;
             }
 
@@ -328,7 +330,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
 
     pcopy = xcalloc(1, sizeof(Promise));
 
-    returnval = ExpandPrivateRval("this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
+    returnval = ExpandPrivateRval(ctx, "this", (Rval) {pp->promiser, RVAL_TYPE_SCALAR });
     pcopy->promiser = (char *) returnval.item;
 
     if (pp->promisee.item)
@@ -378,7 +380,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
 
         if (ExpectedDataType(cp->lval) == DATA_TYPE_BUNDLE)
         {
-            final = ExpandBundleReference(scopeid, cp->rval);
+            final = ExpandBundleReference(ctx, scopeid, cp->rval);
         }
         else
         {

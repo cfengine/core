@@ -74,7 +74,7 @@ void LoadSlowlyVaryingObservations(EvalContext *ctx);
 void MonOtherInit(void);
 void MonOtherGatherData(double *cf_this);
 void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(char *handle, char *ret);
+int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
 void NotePromiseCompliance(const Promise *pp, PromiseState state, char *reasoin);
@@ -94,7 +94,7 @@ void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
 void LastSawBundle(const Bundle *bundle, double compliance);
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
-bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
+bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);

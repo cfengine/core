@@ -97,7 +97,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     if (!BootstrapAllowed())
     {
-        FatalError(" !! Not enough privileges to bootstrap CFEngine");
+        FatalError(ctx, " !! Not enough privileges to bootstrap CFEngine");
     }
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);

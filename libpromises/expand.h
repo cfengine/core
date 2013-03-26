@@ -37,14 +37,14 @@ void CommonEvalPromise(EvalContext *ctx, Promise *pp, const ReportContext *repor
 void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **lol, Rval rval);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rval rval);
 
 int IsExpandable(const char *str);
-int ExpandScalar(const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(const char *contextid, Rval rval);
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
+int ExpandScalar(EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
+FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f, int expandnaked);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
+Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
 int IsNakedVar(const char *str, char vtype);
 /**
@@ -64,6 +64,6 @@ void GetNaked(char *s1, const char *s2);
   */
 bool IsVarList(const char *var);
 void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
-int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
+int ExpandPrivateScalar(EvalContext *ctx, const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 #endif

@@ -157,7 +157,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         {
             count = 0;
 
-            for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+            for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
             {
                 if (!ConsiderFile(ctx, dirp->d_name, pbuffer, dummyattr, pp))
                 {
@@ -252,7 +252,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
     a = GetFilesAttributes(ctx, pp);
 
-    if (!FileSanityChecks(path, a, pp))
+    if (!FileSanityChecks(ctx, path, a, pp))
     {
         return;
     }
@@ -260,7 +260,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
     ScopeDeleteSpecialScalar("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", path, DATA_TYPE_STRING);
     
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -482,7 +482,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {

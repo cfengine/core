@@ -67,7 +67,7 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
 int CheckParseVariableName(const char *name);
 SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
-DataType StringDataType(const char *scopeid, const char *string);
+DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);

@@ -561,7 +561,7 @@ FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &s.min_size, (long *) &s.max_size))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     value = (char *) ConstraintGetRvalValue(ctx, "ctime", pp, RVAL_TYPE_SCALAR);
@@ -573,7 +573,7 @@ FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &s.min_ctime, (long *) &s.max_ctime))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     value = (char *) ConstraintGetRvalValue(ctx, "atime", pp, RVAL_TYPE_SCALAR);
@@ -585,7 +585,7 @@ FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &s.min_atime, (long *) &s.max_atime))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "mtime", pp, RVAL_TYPE_SCALAR);
     if (value)
@@ -596,7 +596,7 @@ FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &s.min_mtime, (long *) &s.max_mtime))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     s.exec_regex = (char *) ConstraintGetRvalValue(ctx, "exec_regex", pp, RVAL_TYPE_SCALAR);
@@ -912,7 +912,7 @@ FileCopy GetCopyConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &min, &max))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     f.min_size = (size_t) min;
@@ -1143,7 +1143,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_pid, &p.max_pid))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "ppid", pp, RVAL_TYPE_SCALAR);
 
@@ -1155,7 +1155,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_ppid, &p.max_ppid))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "pgid", pp, RVAL_TYPE_SCALAR);
 
@@ -1167,7 +1167,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_pgid, &p.max_pgid))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "rsize", pp, RVAL_TYPE_SCALAR);
 
@@ -1179,7 +1179,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_rsize, &p.max_rsize))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "vsize", pp, RVAL_TYPE_SCALAR);
     if (value)
@@ -1190,7 +1190,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_vsize, &p.max_vsize))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "ttime_range", pp, RVAL_TYPE_SCALAR);
     if (value)
@@ -1201,7 +1201,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &p.min_ttime, (long *) &p.max_ttime))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "stime_range", pp, RVAL_TYPE_SCALAR);
     if (value)
@@ -1212,7 +1212,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, (long *) &p.min_stime, (long *) &p.max_stime))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     p.status = (char *) ConstraintGetRvalValue(ctx, "status", pp, RVAL_TYPE_SCALAR);
@@ -1228,7 +1228,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_pri, &p.max_pri))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "threads", pp, RVAL_TYPE_SCALAR);
     if (value)
@@ -1239,7 +1239,7 @@ ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_thread, &p.max_thread))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
     if ((p.owner) || (p.status) || (p.command) || (p.tty))
@@ -1269,7 +1269,7 @@ ProcessCount GetMatchesConstraints(EvalContext *ctx, const Promise *pp)
     if (!IntegerRangeFromString(value, &p.min_range, &p.max_range))
     {
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", value);
+        FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     p.in_range_define = PromiseGetConstraintAsList(ctx, "in_range_define", pp);
     p.out_of_range_define = PromiseGetConstraintAsList(ctx, "out_of_range_define", pp);

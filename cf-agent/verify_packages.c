@@ -118,7 +118,7 @@ void VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -751,7 +751,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
             continue;
         }
 
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
         {
             if (FullTextMatch(refAnyVer, dirp->d_name))
             {
@@ -863,12 +863,12 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if ((a.packages.package_delete_convention) && (a.packages.package_policy == PACKAGE_ACTION_DELETE))
         {
-            ExpandScalar("cf_pack_context", a.packages.package_delete_convention, reference);
+            ExpandScalar(ctx, "cf_pack_context", a.packages.package_delete_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else if (a.packages.package_name_convention)
         {
-            ExpandScalar("cf_pack_context", a.packages.package_name_convention, reference);
+            ExpandScalar(ctx, "cf_pack_context", a.packages.package_name_convention, reference);
             strlcpy(id, reference, CF_EXPANDSIZE);
         }
         else
@@ -925,7 +925,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
                     ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
                     ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
-                    ExpandScalar("cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                    ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                     ScopeClear("cf_pack_context_anyver");
                 }
@@ -1058,7 +1058,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "name" }, name, DATA_TYPE_STRING);
                 ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "version" }, "(.*)", DATA_TYPE_STRING);
                 ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context_anyver", "arch" }, arch, DATA_TYPE_STRING);
-                ExpandScalar("cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
+                ExpandScalar(ctx, "cf_pack_context_anyver", a.packages.package_name_convention, refAnyVer);
 
                 ScopeClear("cf_pack_context_anyver");
             }
@@ -1123,7 +1123,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                         ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context", "name" }, name, DATA_TYPE_STRING);
                         ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context", "version" }, instVer, DATA_TYPE_STRING);
                         ScopeNewScalar(ctx, (VarRef) { NULL, "cf_pack_context", "arch" }, instArch, DATA_TYPE_STRING);
-                        ExpandScalar("cf_pack_context", a.packages.package_delete_convention, reference2);
+                        ExpandScalar(ctx, "cf_pack_context", a.packages.package_delete_convention, reference2);
                         id_del = reference2;
 
                         ScopeClear("cf_pack_context");

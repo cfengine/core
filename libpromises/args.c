@@ -89,7 +89,7 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(ScopeGetCurrent()->scope, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ctx, ScopeGetCurrent()->scope, (Rval) {rp->item, rp->type});
             break;
         }
 
@@ -112,7 +112,7 @@ void DeleteExpArgs(Rlist *args)
 
 /******************************************************************/
 
-void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
+void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
 {
     int argnum, i;
     Rlist *rp = fp->args;
@@ -129,7 +129,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
             SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
-                FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+                FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
             }
         }
 
@@ -157,7 +157,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
             printf("\n");
         }
 
-        FatalError("Bad arguments");
+        FatalError(ctx, "Bad arguments");
     }
 
     for (rp = realargs; rp != NULL; rp = rp->next)

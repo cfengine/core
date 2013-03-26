@@ -360,14 +360,14 @@ static Item *NextItem(const Item *ip)
  * in these scenarios.
  **/
 
-int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
+int MakeParentDirectory2(EvalContext *ctx, char *parentandchild, int force, bool enforce_promise)
 {
     if(enforce_promise)
     {
         return MakeParentDirectory(parentandchild, force);
     }
 
-    char *parent_dir = GetParentDirectoryCopy(parentandchild);
+    char *parent_dir = GetParentDirectoryCopy(ctx, parentandchild);
 
     bool parent_exists = IsDir(parent_dir);
 
@@ -658,7 +658,7 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
     return true;
 }
 
-int FileSanityChecks(char *path, Attributes a, Promise *pp)
+int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp)
 {
     if ((a.havelink) && (a.havecopy))
     {
@@ -684,7 +684,7 @@ int FileSanityChecks(char *path, Attributes a, Promise *pp)
         /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Bailing out");
+        FatalError(ctx, "Bailing out");
     }
 
     if ((a.haveeditline) && (a.haveeditxml))
@@ -794,7 +794,7 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {

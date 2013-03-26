@@ -148,11 +148,11 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
     va_end(ap);
 }
 
-static void AmendErrorMessageWithPromiseInformation(Item **error_message, const Promise *pp)
+static void AmendErrorMessageWithPromiseInformation(EvalContext *ctx, Item **error_message, const Promise *pp)
 {
     Rval retval;
     char *v;
-    if (ScopeControlCommonGet(COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
     {
         v = (char *) retval.item;
     }
@@ -250,7 +250,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
 
     if (level == OUTPUT_LEVEL_ERROR)
     {
-        AmendErrorMessageWithPromiseInformation(&mess, pp);
+        AmendErrorMessageWithPromiseInformation(ctx, &mess, pp);
     }
 
     int verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;

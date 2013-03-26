@@ -2209,7 +2209,7 @@ static const char *GetDefaultWorkDir(void)
 
 #elif !defined(__MINGW32__)
 
-static const char *GetDefaultWorkDir(void)
+static const char *GetDefaultWorkDir(EvalContext *ctx)
 {
     if (getuid() > 0)
     {
@@ -2224,7 +2224,7 @@ static const char *GetDefaultWorkDir(void)
 
             if (strlen(workdir) > CF_BUFSIZE / 2)
             {
-                FatalError("Suspicious looking home directory. The path is too long and will lead to problems.");
+                FatalError(ctx, "Suspicious looking home directory. The path is too long and will lead to problems.");
             }
         }
         return workdir;
@@ -2239,11 +2239,11 @@ static const char *GetDefaultWorkDir(void)
 
 /******************************************************************/
 
-const char *GetWorkDir(void)
+const char *GetWorkDir(EvalContext *ctx)
 {
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    return workdir == NULL ? GetDefaultWorkDir() : workdir;
+    return workdir == NULL ? GetDefaultWorkDir(ctx) : workdir;
 }
 
 /******************************************************************/

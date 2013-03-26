@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    ReportContext *report_context = OpenReports(ctx, config->agent_type);
     GenericAgentDiscoverContext(ctx, config, report_context);
     Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
 
@@ -221,7 +221,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable((VarRef) { NULL, "control_monitor", cp->lval }, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in monitor control body", cp->lval);
                 continue;

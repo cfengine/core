@@ -36,9 +36,9 @@ bool FileWriteOver(char *filename, char *contents);
 int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp);
 
 int MakeParentDirectory(char *parentandchild, int force);
-int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
+int MakeParentDirectory2(EvalContext *ctx, char *parentandchild, int force, bool enforce_promise);
 
-int FileSanityChecks(char *path, Attributes a, Promise *pp);
+int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp);
 
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);

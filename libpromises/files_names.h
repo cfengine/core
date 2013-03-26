@@ -34,7 +34,7 @@ char *JoinPath(char *path, const char *leaf);
 char *JoinSuffix(char *path, char *leaf);
 int IsAbsPath(char *path);
 void AddSlash(char *str);
-char *GetParentDirectoryCopy(const char *path);
+char *GetParentDirectoryCopy(EvalContext *ctx, const char *path);
 void DeleteSlash(char *str);
 const char *FirstFileSeparator(const char *str);
 const char *LastFileSeparator(const char *str);

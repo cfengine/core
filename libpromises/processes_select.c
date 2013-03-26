@@ -46,7 +46,7 @@
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
+static int SelectProcTimeCounterRangeMatch(EvalContext *ctx, char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(char *name1, char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
@@ -111,8 +111,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(proc_attr, xstrdup("rsize"));
     }
 
-    if (SelectProcTimeCounterRangeMatch
-        ("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
+    if (SelectProcTimeCounterRangeMatch(ctx, "TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
         StringSetAdd(proc_attr, xstrdup("ttime"));
     }
@@ -319,7 +318,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
 /***************************************************************************/
 
-static long TimeCounter2Int(const char *s)
+static long TimeCounter2Int(EvalContext *ctx, const char *s)
 {
     long d = 0, h = 0, m = 0;
     char output[CF_BUFSIZE];
@@ -334,7 +333,7 @@ static long TimeCounter2Int(const char *s)
         if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
-            FatalError("%s", output);
+            FatalError(ctx, "%s", output);
         }
     }
     else
@@ -342,14 +341,14 @@ static long TimeCounter2Int(const char *s)
         if (sscanf(s, "%ld:%ld", &h, &m) != 2)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
-            FatalError("%s", output);
+            FatalError(ctx, "%s", output);
         }
     }
 
     return 60 * (m + 60 * (h + 24 * d));
 }
 
-static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
+static int SelectProcTimeCounterRangeMatch(EvalContext *ctx, char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
     int i;
     time_t value;
@@ -361,7 +360,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
     if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
     {
-        value = (time_t) TimeCounter2Int(line[i]);
+        value = (time_t) TimeCounter2Int(ctx, line[i]);
 
         if (value == CF_NOINT)
         {
@@ -816,7 +815,7 @@ static int ForeignZone(char *s)
 #endif
 
 #ifndef __MINGW32__
-int LoadProcessTable(Item **procdata)
+int LoadProcessTable(EvalContext *ctx, Item **procdata)
 {
     FILE *prp;
     char pscomm[CF_MAXLINKSIZE], vbuff[CF_BUFSIZE], *sp;

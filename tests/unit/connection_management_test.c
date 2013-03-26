@@ -152,7 +152,7 @@ int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
     return false;
 }
 
-int ReturnLiteralData(char *handle, char *ret)
+int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
 {
     return 0;
 }

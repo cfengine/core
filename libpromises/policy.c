@@ -1885,6 +1885,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
     {
         JsonElement *json_list = JsonObjectGetAsArray(json_rval, "value");
         Rlist *rlist = NULL;
+
         for (size_t i = 0; i < JsonElementLength(json_list); i++)
         {
             Rval list_value = RvalFromJson(JsonArrayGetAsObject(json_list, i));
@@ -1898,6 +1899,7 @@ static Rval RvalFromJson(JsonElement *json_rval)
         const char *name = JsonObjectGetAsString(json_rval, "name");
         JsonElement *json_args = JsonObjectGetAsArray(json_rval, "arguments");
         Rlist *args = NULL;
+
         for (size_t i = 0; i < JsonElementLength(json_args); i++)
         {
             JsonElement *json_arg = JsonArrayGetAsObject(json_args, i);
@@ -2189,7 +2191,7 @@ int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Prom
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",
                       cp->rval.type, lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             if (strcmp(cp->rval.item, "true") == 0 || strcmp(cp->rval.item, "yes") == 0)
@@ -2241,7 +2243,7 @@ int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *const
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",
                       cp->rval.type, lval);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             if (strcmp(cp->rval.item, "true") == 0 || strcmp(cp->rval.item, "yes") == 0)
@@ -2296,7 +2298,7 @@ bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Pro
                       "Anomalous type mismatch - type (%c) for bundle constraint %s did not match internals\n",
                       cp->rval.type, lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             return true;
@@ -2448,7 +2450,7 @@ int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise 
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             retval = (int) IntFromString((char *) cp->rval.item);
@@ -2486,7 +2488,7 @@ bool PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promis
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             *value_out = DoubleFromString((char *) cp->rval.item, value_out);
@@ -2553,13 +2555,13 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Anomalous type mismatch - expected type for int constraint %s did not match internals\n", lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             if (!Str2Mode(cp->rval.item, &retval))
             {
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Error reading assumed octal value %s\n", (const char *)cp->rval.item);
+                FatalError(ctx, "Error reading assumed octal value %s\n", (const char *)cp->rval.item);
             }
         }
     }
@@ -2608,7 +2610,7 @@ uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promis
                       "Anomalous type mismatch - expected type for owner constraint %s did not match internals\n",
                       lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             retval = Str2Uid((char *) cp->rval.item, buffer, pp);
@@ -2661,7 +2663,7 @@ gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
                       "Anomalous type mismatch - expected type for group constraint %s did not match internals\n",
                       lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             retval = Str2Gid((char *) cp->rval.item, buffer, pp);
@@ -2701,7 +2703,7 @@ Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Prom
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Type mismatch on rhs - expected type for list constraint \"%s\" \n", lval);
                 PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                FatalError("Aborted");
+                FatalError(ctx, "Aborted");
             }
 
             retval = (Rlist *) cp->rval.item;
@@ -2899,7 +2901,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
         SyntaxTypeMatch err = ConstraintCheckType(cp);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError("%s: %s", cp->lval, SyntaxTypeMatchToString(err));
+            FatalError(ctx, "%s: %s", cp->lval, SyntaxTypeMatchToString(err));
         }
     }
 
@@ -2932,6 +2934,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 /*****************************************************************************/
 
 static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
+
 {
     CfDebug("  Post Check Constraint: %s =>", cp->lval);
 

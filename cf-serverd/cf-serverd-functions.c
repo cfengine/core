@@ -284,7 +284,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     }
     assert(pp);
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -583,7 +583,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(config->input_file))
+        if (CheckPromises(ctx, config->input_file))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Rereading config files %s..\n", config->input_file);
 

@@ -148,11 +148,11 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static int NewTypeContext(TypeSequence type);
+static int NewTypeContext(EvalContext *ctx, TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static bool VerifyBootstrap(void);
+static bool VerifyBootstrap(EvalContext *ctx);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    ReportContext *report_context = OpenReports(ctx, config->agent_type);
 
     GenericAgentDiscoverContext(ctx, config, report_context);
 
@@ -281,12 +281,12 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap())
+    if (BOOTSTRAP && !VerifyBootstrap(ctx))
     {
         ret = 1;
     }
 
-    EndAudit(CFA_BACKGROUND);
+    EndAudit(ctx, CFA_BACKGROUND);
     EvalContextDestroy(ctx);
     GenericAgentConfigDestroy(config);
 
@@ -676,13 +676,13 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeControlCommonGet(CommonControlFromString(cp->lval), &retval) != DATA_TYPE_NONE)
+            if (ScopeControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval) != DATA_TYPE_NONE)
             {
                 /* Already handled in generic_agent */
                 continue;
             }
 
-            if (ScopeGetVariable((VarRef) { NULL, "control_agent", cp->lval }, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in agent control body", cp->lval);
                 continue;
@@ -1003,31 +1003,31 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
     }
 
 #ifdef HAVE_NOVA
-    Nova_Initialize();
+    Nova_Initialize(ctx);
 #endif
 }
 
@@ -1047,7 +1047,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (ScopeControlCommonGet(COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
+    else if (ScopeControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
     {
         // TODO: somewhat frenzied way of telling user about an error
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -1098,7 +1098,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     if (!ok)
     {
-        FatalError("Errors in agent bundles");
+        FatalError(ctx, "Errors in agent bundles");
     }
 
     if (VERBOSE || DEBUG)
@@ -1216,7 +1216,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(type))
+            if (!NewTypeContext(ctx, type))
             {
                 continue;
             }
@@ -1327,7 +1327,8 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
         }
     }
 
-    FatalError("You are denied access to run this policy");
+    CfOut(OUTPUT_LEVEL_ERROR, "", "You are denied access to run this policy");
+    exit(1);
 }
 #endif /* !__MINGW32__ */
 
@@ -1343,7 +1344,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    dt = ScopeGetVariable((VarRef) { NULL, "this", pp->promiser }, &rval);
+    EvalContextVariableGet(ctx, (VarRef) { NULL, "this", pp->promiser }, &rval, &dt);
 
     switch (dt)
        {
@@ -1540,7 +1541,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(TypeSequence type)
+static int NewTypeContext(EvalContext *ctx, TypeSequence type)
 {
 // get maxconnections
 
@@ -1557,7 +1558,7 @@ static int NewTypeContext(TypeSequence type)
 
     case TYPE_SEQUENCE_PROCESSES:
 
-        if (!LoadProcessTable(&PROCESSTABLE))
+        if (!LoadProcessTable(ctx, &PROCESSTABLE))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to read the process table - cannot keep process promises\n");
             return false;
@@ -1743,7 +1744,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, co
 
 /**************************************************************/
 
-static bool VerifyBootstrap(void)
+static bool VerifyBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char filePath[CF_MAXVARSIZE];
@@ -1767,7 +1768,7 @@ static bool VerifyBootstrap(void)
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
     DeleteItemList(PROCESSTABLE);
     PROCESSTABLE = NULL;
-    LoadProcessTable(&PROCESSTABLE);
+    LoadProcessTable(ctx, &PROCESSTABLE);
 
     if (!IsProcessNameRunning(".*cf-execd.*"))
     {

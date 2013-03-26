@@ -86,6 +86,6 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate
 /**
  * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.
  */
-void RlistFlatten(Rlist **list);
+void RlistFlatten(EvalContext *ctx, Rlist **list);
 
 #endif

@@ -117,7 +117,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 static void CfGetFile(ServerFileGetState *args);
 static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
-static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
+static void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
 static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
@@ -360,7 +360,7 @@ static void *HandleConnection(ServerConnectionState *conn)
         if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
-            FatalError("Terminating");
+            FatalError(conn->ctx, "Terminating");
         }
 
         if (!ThreadUnlock(cft_server_children))
@@ -869,7 +869,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        GetServerLiteral(conn, sendbuffer, recvbuffer, encrypted);
+        GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
         return true;
 
     case PROTOCOL_COMMAND_CONTEXT_SECURE:
@@ -2840,14 +2840,14 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /**************************************************************/
 
-static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
+static void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
 {
     char handle[CF_BUFSIZE], out[CF_BUFSIZE];
     int cipherlen;
 
     sscanf(recvbuffer, "VAR %255[^\n]", handle);
 
-    if (ReturnLiteralData(handle, out))
+    if (ReturnLiteralData(ctx, handle, out))
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
         snprintf(sendbuffer, CF_BUFSIZE - 1, "%s", out);
@@ -2962,7 +2962,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     offset = 0;
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
@@ -3016,7 +3016,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
 
     offset = 0;
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {

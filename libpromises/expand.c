@@ -60,8 +60,8 @@
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
                                PromiseActuator *ActOnPromise, const ReportContext *report_context);
-static void MapIteratorsFromScalar(const char *scope, Rlist **list_vars_out, char *string, int level);
-static bool Epimenides(const char *scope, const char *var, Rval rval, int level);
+static void MapIteratorsFromScalar(EvalContext *ctx, const char *scope, Rlist **list_vars_out, char *string, int level);
+static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level);
 static void RewriteInnerVarStringAsLocalCopyName(char *string);
 static int CompareRlist(Rlist *list1, Rlist *list2);
 static int CompareRval(Rval rval1, Rval rval2);
@@ -150,17 +150,17 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     EvalContextStackPopFrame(ctx);
 
-    MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
+    MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
     if (pcopy->promisee.item != NULL)
     {
-        MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, pp->promisee);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, pp->promisee);
     }
 
     for (size_t i = 0; i < SeqLength(pcopy->conlist); i++)
     {
         Constraint *cp = SeqAt(pcopy->conlist, i);
-        MapIteratorsFromRval(PromiseGetBundle(pp)->name, &listvars, cp->rval);
+        MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, cp->rval);
     }
 
     CopyLocalizedIteratorsToThisScope(ctx, PromiseGetBundle(pp)->name, listvars);
@@ -199,7 +199,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *scopeid, Rval rval, const Prom
         final = RvalCopy(rval);
         {
             Rlist *final_list = RvalRlistValue(final);
-            RlistFlatten(&final_list);
+            RlistFlatten(ctx, &final_list);
             final.item = final_list;
         }
         break;
@@ -214,7 +214,7 @@ Rval ExpandDanglers(EvalContext *ctx, const char *scopeid, Rval rval, const Prom
 
 /*********************************************************************/
 
-void MapIteratorsFromRval(const char *scopeid, Rlist **listvars, Rval rval)
+void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rlist **listvars, Rval rval)
 {
     Rlist *rp;
     FnCall *fp;
@@ -227,13 +227,13 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **listvars, Rval rval)
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        MapIteratorsFromScalar(scopeid, listvars, (char *) rval.item, 0);
+        MapIteratorsFromScalar(ctx, scopeid, listvars, (char *) rval.item, 0);
         break;
 
     case RVAL_TYPE_LIST:
         for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
         {
-            MapIteratorsFromRval(scopeid, listvars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(ctx, scopeid, listvars, (Rval) {rp->item, rp->type});
         }
         break;
 
@@ -243,7 +243,7 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **listvars, Rval rval)
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
         {
             CfDebug("Looking at arg for function-like object %s()\n", fp->name);
-            MapIteratorsFromRval(scopeid, listvars, (Rval) {rp->item, rp->type});
+            MapIteratorsFromRval(ctx, scopeid, listvars, (Rval) {rp->item, rp->type});
         }
         break;
 
@@ -255,7 +255,7 @@ void MapIteratorsFromRval(const char *scopeid, Rlist **listvars, Rval rval)
 
 /*********************************************************************/
 
-static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, char *string, int level)
+static void MapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, Rlist **list_vars_out, char *string, int level)
 {
     char *sp;
     Rval rval;
@@ -288,14 +288,14 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
                     strncpy(temp, v, CF_BUFSIZE - 1);
                     absscope[0] = '\0';
                     sscanf(temp, "%[^.].%s", absscope, v);
-                    ExpandPrivateScalar(absscope, v, var);
+                    ExpandPrivateScalar(ctx, absscope, v, var);
                     snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
                     qualified = true;
                 }
                 else
                 {
                     strncpy(absscope, scopeid, CF_MAXVARSIZE - 1);
-                    ExpandPrivateScalar(absscope, v, var);
+                    ExpandPrivateScalar(ctx, absscope, v, var);
                     strncpy(finalname, var, CF_BUFSIZE - 1);
                     qualified = false;
                 }
@@ -303,11 +303,11 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
                 // var is the expanded name of the variable in its native context
                 // finalname will be the mapped name in the local context "this."
 
-                if (ScopeGetVariable((VarRef) { NULL, absscope, var }, &rval) != DATA_TYPE_NONE)
+                if (EvalContextVariableGet(ctx, (VarRef) { NULL, absscope, var }, &rval, NULL))
                 {
                     if (rval.type == RVAL_TYPE_LIST)
                     {
-                        ExpandScalar(scopeid, finalname, exp);
+                        ExpandScalar(ctx, scopeid, finalname, exp);
 
                         if (qualified)
                         {
@@ -334,7 +334,7 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
 
                     if (IsExpandable(var))
                     {
-                        MapIteratorsFromScalar(scopeid, list_vars_out, var, level + 1);
+                        MapIteratorsFromScalar(ctx, scopeid, list_vars_out, var, level + 1);
 
                         // Need to rewrite list references to nested variables in this level
 
@@ -362,14 +362,14 @@ static void MapIteratorsFromScalar(const char *scopeid, Rlist **list_vars_out, c
 
 /*********************************************************************/
 
-int ExpandScalar(const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
+int ExpandScalar(EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
-    return ExpandPrivateScalar(scope, string, buffer);
+    return ExpandPrivateScalar(ctx, scope, string, buffer);
 }
 
 /*********************************************************************/
 
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
+Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked)
 {
     Rlist *rp, *start = NULL;
     Rval returnval;
@@ -386,18 +386,18 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
         {
             GetNaked(naked, rp->item);
 
-            if (ScopeGetVariable((VarRef) { NULL, scopeid, naked }, &returnval) != DATA_TYPE_NONE)
+            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, naked }, &returnval, NULL))
             {
-                returnval = ExpandPrivateRval(scopeid, returnval);
+                returnval = ExpandPrivateRval(ctx, scopeid, returnval);
             }
             else
             {
-                returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
+                returnval = ExpandPrivateRval(ctx, scopeid, (Rval) {rp->item, rp->type});
             }
         }
         else
         {
-            returnval = ExpandPrivateRval(scopeid, (Rval) {rp->item, rp->type});
+            returnval = ExpandPrivateRval(ctx, scopeid, (Rval) {rp->item, rp->type});
         }
 
         RlistAppend(&start, returnval.item, returnval.type);
@@ -409,7 +409,7 @@ Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked)
 
 /*********************************************************************/
 
-Rval ExpandPrivateRval(const char *scopeid, Rval rval)
+Rval ExpandPrivateRval(EvalContext *ctx, const char *scopeid, Rval rval)
 {
     char buffer[CF_EXPANDSIZE];
     FnCall *fp, *fpe;
@@ -426,14 +426,14 @@ Rval ExpandPrivateRval(const char *scopeid, Rval rval)
     {
     case RVAL_TYPE_SCALAR:
 
-        ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
+        ExpandPrivateScalar(ctx, scopeid, (char *) rval.item, buffer);
         returnval.item = xstrdup(buffer);
         returnval.type = RVAL_TYPE_SCALAR;
         break;
 
     case RVAL_TYPE_LIST:
 
-        returnval.item = ExpandList(scopeid, rval.item, true);
+        returnval.item = ExpandList(ctx, scopeid, rval.item, true);
         returnval.type = RVAL_TYPE_LIST;
         break;
 
@@ -441,7 +441,7 @@ Rval ExpandPrivateRval(const char *scopeid, Rval rval)
 
         /* Note expand function does not mean evaluate function, must preserve type */
         fp = (FnCall *) rval.item;
-        fpe = ExpandFnCall(scopeid, fp, true);
+        fpe = ExpandFnCall(ctx, scopeid, fp, true);
         returnval.item = fpe;
         returnval.type = RVAL_TYPE_FNCALL;
         break;
@@ -455,7 +455,7 @@ Rval ExpandPrivateRval(const char *scopeid, Rval rval)
 
 /*********************************************************************/
 
-Rval ExpandBundleReference(const char *scopeid, Rval rval)
+Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval)
 {
     CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.type);
 
@@ -467,7 +467,7 @@ Rval ExpandBundleReference(const char *scopeid, Rval rval)
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandPrivateScalar(scopeid, (char *) rval.item, buffer);
+        ExpandPrivateScalar(ctx, scopeid, (char *) rval.item, buffer);
         return (Rval) {xstrdup(buffer), RVAL_TYPE_SCALAR};
     }
 
@@ -476,7 +476,7 @@ Rval ExpandBundleReference(const char *scopeid, Rval rval)
         /* Note expand function does not mean evaluate function, must preserve type */
         FnCall *fp = (FnCall *) rval.item;
 
-        return (Rval) {ExpandFnCall(scopeid, fp, false), RVAL_TYPE_FNCALL};
+        return (Rval) {ExpandFnCall(ctx, scopeid, fp, false), RVAL_TYPE_FNCALL};
     }
 
     default:
@@ -503,7 +503,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 /*********************************************************************/
 
-int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
+int ExpandPrivateScalar(EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
 {
     const char *sp;
     Rval rval;
@@ -539,7 +539,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         if (ExpandOverflow(buffer, currentitem))
         {
-            FatalError("Can't expand varstring");
+            FatalError(ctx, "Can't expand varstring");
         }
 
         strlcat(buffer, currentitem, CF_EXPANDSIZE);
@@ -590,7 +590,7 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
         if (IsCf3VarString(temp))
         {
             CfDebug("  Nested variables - %s\n", temp);
-            ExpandPrivateScalar(scopeid, temp, currentitem);
+            ExpandPrivateScalar(ctx, scopeid, temp, currentitem);
         }
         else
         {
@@ -600,24 +600,50 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
         increment = strlen(var) - 1;
 
-        switch (ScopeGetVariable((VarRef) { NULL, scopeid, currentitem }, &rval))
+        DataType type = DATA_TYPE_NONE;
+        if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, currentitem }, &rval, &type))
         {
-        case DATA_TYPE_STRING:
-        case DATA_TYPE_INT:
-        case DATA_TYPE_REAL:
-
-            if (ExpandOverflow(buffer, (char *) rval.item))
+            switch (type)
             {
-                FatalError("Can't expand varstring");
+            case DATA_TYPE_STRING:
+            case DATA_TYPE_INT:
+            case DATA_TYPE_REAL:
+
+                if (ExpandOverflow(buffer, (char *) rval.item))
+                {
+                    FatalError(ctx, "Can't expand varstring");
+                }
+
+                strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
+                break;
+
+            case DATA_TYPE_STRING_LIST:
+            case DATA_TYPE_INT_LIST:
+            case DATA_TYPE_REAL_LIST:
+            case DATA_TYPE_NONE:
+                CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
+
+                if (varstring == '}')
+                {
+                    snprintf(name, CF_MAXVARSIZE, "${%s}", currentitem);
+                }
+                else
+                {
+                    snprintf(name, CF_MAXVARSIZE, "$(%s)", currentitem);
+                }
+
+                strlcat(buffer, name, CF_EXPANDSIZE);
+                returnval = false;
+                break;
+
+            default:
+                CfDebug("Returning Unknown Scalar (%s => %s)\n\n", string, buffer);
+                return false;
+
             }
-
-            strlcat(buffer, (char *) rval.item, CF_EXPANDSIZE);
-            break;
-
-        case DATA_TYPE_STRING_LIST:
-        case DATA_TYPE_INT_LIST:
-        case DATA_TYPE_REAL_LIST:
-        case DATA_TYPE_NONE:
+        }
+        else
+        {
             CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
 
             if (varstring == '}')
@@ -631,12 +657,6 @@ int ExpandPrivateScalar(const char *scopeid, const char *string, char buffer[CF_
 
             strlcat(buffer, name, CF_EXPANDSIZE);
             returnval = false;
-            break;
-
-        default:
-            CfDebug("Returning Unknown Scalar (%s => %s)\n\n", string, buffer);
-            return false;
-
         }
 
         sp += increment;
@@ -707,7 +727,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         {
             char tmp[CF_EXPANDSIZE];
             // This ordering is necessary to get automated canonification
-            ExpandScalar("this", handle, tmp);
+            ExpandScalar(ctx, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
             ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
         }
@@ -778,13 +798,13 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
     {
         GetNaked(naked, rval.item);
 
-        if (ScopeGetVariable((VarRef) { NULL, scopeid, naked }, &returnval) == DATA_TYPE_NONE || returnval.type != RVAL_TYPE_LIST)
+        if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, naked }, &returnval, NULL) || returnval.type != RVAL_TYPE_LIST)
         {
-            returnval = ExpandPrivateRval("this", rval);
+            returnval = ExpandPrivateRval(ctx, "this", rval);
         }
         else
         {
-            returnval.item = ExpandList(scopeid, returnval.item, true);
+            returnval.item = ExpandList(ctx, scopeid, returnval.item, true);
             returnval.type = RVAL_TYPE_LIST;
         }
     }
@@ -792,7 +812,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
     {
         if (forcelist)          /* We are replacing scalar @(name) with list */
         {
-            returnval = ExpandPrivateRval(scopeid, rval);
+            returnval = ExpandPrivateRval(ctx, scopeid, rval);
         }
         else
         {
@@ -802,7 +822,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
             }
             else
             {
-                returnval = ExpandPrivateRval("this", rval);
+                returnval = ExpandPrivateRval(ctx, "this", rval);
             }
         }
     }
@@ -831,7 +851,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
                 {
                     if (IsCf3VarString(rp->item))
                     {
-                        newret = ExpandPrivateRval("this", (Rval) {rp->item, rp->type});
+                        newret = ExpandPrivateRval(ctx, "this", (Rval) {rp->item, rp->type});
                         free(rp->item);
                         rp->item = newret.item;
                     }
@@ -894,10 +914,10 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
 
             sscanf(rp->item, format, orgscope, orgname);
 
-            ScopeGetVariable((VarRef) { NULL, orgscope, orgname }, &retval);
+            EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL);
 
             Rlist *list = RvalCopy((Rval) {retval.item, RVAL_TYPE_LIST}).item;
-            RlistFlatten(&list);
+            RlistFlatten(ctx, &list);
             ScopeNewList(ctx, (VarRef) { NULL, scope, rp->item }, list, DATA_TYPE_STRING_LIST);
         }
     }
@@ -1256,7 +1276,8 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
     a.classes = GetClassDefinitionConstraints(ctx, pp);
 
     Rval existing_var_rval;
-    DataType existing_var_type = ScopeGetVariable((VarRef) { NULL, scope, pp->promiser }, &existing_var_rval);
+    DataType existing_var_type = DATA_TYPE_NONE;
+    EvalContextVariableGet(ctx, (VarRef) { NULL, scope, pp->promiser }, &existing_var_rval, &existing_var_type);
     Buffer *qualified_scope = BufferNew();
     int result = 0;
     if (strcmp(PromiseGetNamespace(pp), "default") == 0)
@@ -1394,14 +1415,14 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
             if (rval.type == RVAL_TYPE_LIST)
             {
                 Rlist *rval_list = RvalRlistValue(rval);
-                RlistFlatten(&rval_list);
+                RlistFlatten(ctx, &rval_list);
                 rval.item = rval_list;
             }
 
             BufferDestroy(&conv);
         }
 
-        if (Epimenides(PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
+        if (Epimenides(ctx, PromiseGetBundle(pp)->name, pp->promiser, rval, 0))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Variable \"%s\" contains itself indirectly - an unkeepable promise", pp->promiser);
             exit(1);
@@ -1515,7 +1536,7 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
 /* Levels                                                            */
 /*********************************************************************/
 
-static bool Epimenides(const char *scope, const char *var, Rval rval, int level)
+static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level)
 {
     Rlist *rp, *list;
     char exp[CF_EXPANDSIZE];
@@ -1532,7 +1553,7 @@ static bool Epimenides(const char *scope, const char *var, Rval rval, int level)
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandPrivateScalar(scope, rval.item, exp);
+            ExpandPrivateScalar(ctx, scope, rval.item, exp);
             CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
                     exp);
 
@@ -1541,7 +1562,7 @@ static bool Epimenides(const char *scope, const char *var, Rval rval, int level)
                 return false;
             }
 
-            if (Epimenides(scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
+            if (Epimenides(ctx, scope, var, (Rval) {exp, RVAL_TYPE_SCALAR}, level + 1))
             {
                 return true;
             }
@@ -1554,7 +1575,7 @@ static bool Epimenides(const char *scope, const char *var, Rval rval, int level)
 
         for (rp = list; rp != NULL; rp = rp->next)
         {
-            if (Epimenides(scope, var, (Rval) {rp->item, rp->type}, level))
+            if (Epimenides(ctx, scope, var, (Rval) {rp->item, rp->type}, level))
             {
                 return true;
             }

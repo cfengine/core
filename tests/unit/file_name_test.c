@@ -32,19 +32,19 @@ static void test_get_parent_directory_copy(void **state)
 
     /* unix, will fail on windows because of IsFileSep */
 
-    out = GetParentDirectoryCopy("/some/path/here");
+    out = GetParentDirectoryCopy(NULL, "/some/path/here");
     assert_string_equal(out, "/some/path");
     free(out);
 
-    out = GetParentDirectoryCopy("/some/path/here/dir/");
+    out = GetParentDirectoryCopy(NULL, "/some/path/here/dir/");
     assert_string_equal(out, "/some/path/here/dir");
     free(out);
 
-    out = GetParentDirectoryCopy("/some/path/here/dir/.");
+    out = GetParentDirectoryCopy(NULL, "/some/path/here/dir/.");
     assert_string_equal(out, "/some/path/here/dir");
     free(out);
 
-    out = GetParentDirectoryCopy("/some");
+    out = GetParentDirectoryCopy(NULL, "/some");
     assert_string_equal(out, "/");
     free(out);
 

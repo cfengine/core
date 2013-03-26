@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    ReportContext *report_context = OpenReports(ctx, config->agent_type);
     GenericAgentDiscoverContext(ctx, config, report_context);
 
     Policy *policy = NULL;

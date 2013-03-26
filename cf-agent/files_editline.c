@@ -113,7 +113,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -454,7 +454,7 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -522,7 +522,7 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp)
 /* locate and split line */
 
     snprintf(lockname, CF_BUFSIZE - 1, "column-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -577,7 +577,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "replace-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -634,7 +634,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -1002,7 +1002,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             }
 
             match_len = end_off - start_off;
-            ExpandScalar(PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
                   cutoff);
@@ -1289,7 +1289,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         
         if (a.expandvars)
         {
-            ExpandScalar(PromiseGetBundle(pp)->name, buf, exp);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, buf, exp);
         }
         else
         {

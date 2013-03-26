@@ -73,12 +73,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            ExpandScalar(PromiseGetBundle(pp)->name, fp->name, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, fp->name, method_name);
             params = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
-            ExpandScalar(PromiseGetBundle(pp)->name, (char *) vp, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, (char *) vp, method_name);
             params = NULL;
         }
         else
@@ -89,7 +89,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
     GetLockName(lockname, "method", pp->promiser, params);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {

@@ -112,10 +112,10 @@ void FnCallDestroy(FnCall *fp)
 
 /*********************************************************************/
 
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked)
+FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f, int expandnaked)
 {
     CfDebug("ExpandFnCall()\n");
-    return FnCallNew(f->name, ExpandList(contextid, f->args, false));
+    return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
 }
 
 

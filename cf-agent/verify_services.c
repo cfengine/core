@@ -167,7 +167,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
 
 #endif
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a, pp, false);
 
     if (thislock.lock == NULL)
     {

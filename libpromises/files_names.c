@@ -76,7 +76,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
     }
     else
     {
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
             {
@@ -266,7 +266,7 @@ void AddSlash(char *str)
 
 /*********************************************************************/
 
-char *GetParentDirectoryCopy(const char *path)
+char *GetParentDirectoryCopy(EvalContext *ctx, const char *path)
 /**
  * WARNING: Remember to free return value.
  **/
@@ -285,7 +285,7 @@ char *GetParentDirectoryCopy(const char *path)
 
     if(!sp)
     {
-        FatalError("Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        FatalError(ctx, "Path %s does not contain file separators (GetParentDirectory())", path_copy);
     }
 
     if(sp == FirstFileSeparator(path_copy))  // don't chop off first path separator

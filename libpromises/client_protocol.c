@@ -460,7 +460,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (!SetSessionKey(conn))
     {
-        FatalError("Terminating");
+        FatalError(ctx, "Terminating");
     }
 
     if (conn->session_key == NULL)

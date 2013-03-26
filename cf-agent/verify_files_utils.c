@@ -75,7 +75,7 @@ static void VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attribut
 static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
 static void TouchFile(EvalContext *ctx, char *path, Attributes attr, Promise *pp);
 static void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attributes attr, Promise *pp);
-static int PushDirState(char *name, struct stat *sb);
+static int PushDirState(EvalContext *ctx, char *name, struct stat *sb);
 static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r);
 static bool CheckLinkSecurity(struct stat *sb, char *name);
 static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr, Promise *pp);
@@ -570,7 +570,7 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
         return;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, localdir, attr, pp))
         {
@@ -733,7 +733,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         return;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, from, attr, pp))
         {
@@ -918,7 +918,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
             VerifyCopiedFileAttributes(ctx, destdir, &dsb, &ssb, attr, pp);
         }
 
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
         {
             if (!ConsiderFile(ctx, dirp->d_name, sourcedir, attr, pp))
             {
@@ -929,14 +929,14 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
             if (!JoinPath(sourcefile, dirp->d_name))
             {
-                FatalError("VerifyCopy");
+                FatalError(ctx, "VerifyCopy");
             }
 
             strcpy(destfile, destdir);
 
             if (!JoinPath(destfile, dirp->d_name))
             {
-                FatalError("VerifyCopy");
+                FatalError(ctx, "VerifyCopy");
             }
 
             if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
@@ -1492,7 +1492,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
         return false;
     }
 
-    ExpandScalar(PromiseGetBundle(pp)->name, attr.transformer, comm);
+    ExpandScalar(ctx, PromiseGetBundle(pp)->name, attr.transformer, comm);
     CfOut(OUTPUT_LEVEL_INFORM, "", "I: Transforming: %s ", comm);
 
     if (!IsExecutable(CommandArg0(comm)))
@@ -1508,7 +1508,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
 
     if (!DONTDO)
     {
-        CfLock thislock = AcquireLock(comm, VUQNAME, CFSTARTTIME, attr, pp, false);
+        CfLock thislock = AcquireLock(ctx, comm, VUQNAME, CFSTARTTIME, attr, pp, false);
 
         if (thislock.lock == NULL)
         {
@@ -2122,7 +2122,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
     CfDebug("To iterate is Human, to recurse is Divine...(%s)\n", name);
 
-    if (!PushDirState(name, sb))
+    if (!PushDirState(ctx, name, sb))
     {
         return false;
     }
@@ -2133,7 +2133,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, name, attr, pp))
         {
@@ -2206,7 +2206,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
                 goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp);
                 if (!PopDirState(goback, name, sb, attr.recursion))
                 {
-                    FatalError("Not safe to continue");
+                    FatalError(ctx, "Not safe to continue");
                 }
                 VerifyFileLeaf(ctx, path, &lsb, attr, pp);
             }
@@ -2225,7 +2225,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
     return true;
 }
 
-static int PushDirState(char *name, struct stat *sb)
+static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
 {
     if (chdir(name) == -1)
     {
@@ -2239,7 +2239,7 @@ static int PushDirState(char *name, struct stat *sb)
 
     if (!CheckLinkSecurity(sb, name))
     {
-        FatalError("Not safe to continue");
+        FatalError(ctx, "Not safe to continue");
     }
     return true;
 }
@@ -2554,7 +2554,7 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = ReadDir( dirh); dirp != NULL; dirp = ReadDir( dirh))
     {
         if (!ConsiderFile(ctx, dirp->d_name, source, attr, pp))
         {

@@ -273,7 +273,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
                 continue;
             }
 
-            if (ScopeGetVariable((VarRef) { NULL, "control_server", cp->lval }, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_server", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
@@ -471,23 +471,23 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         }
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
     {
         SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

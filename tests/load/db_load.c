@@ -133,8 +133,9 @@ static void TestCursorIteration(CF_DB *db)
 
     if(!NewDBCursor(db, &dbc))
     {
-        FatalError("Test: could not create cursor");
+        fprintf(stderr, "Test: could not create cursor");
         pthread_exit((void*)STATUS_ERROR);
+        exit(1);
     }
 
     char *key;
@@ -179,7 +180,8 @@ static void TestCursorIteration(CF_DB *db)
 
     if(!DeleteDBCursor(dbc))
     {
-        FatalError("Test: could not delete cursor");
+        fprintf(stderr, "Test: could not delete cursor");
+        exit(1);
     }
 
 }
@@ -308,7 +310,7 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     printf("CfOut: %s\n", buf);
 }
 
-void FatalError(char *fmt, ...)
+void FatalError(EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {
@@ -337,7 +339,7 @@ int ThreadLock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not lock mutex");
+        fprintf(stderr, "Could not lock mutex");
     }
 
     return true;
@@ -349,7 +351,7 @@ int ThreadUnlock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not unlock mutex");
+        fprintf(stderr, "Could not unlock mutex");
     }
 
     return true;

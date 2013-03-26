@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    ReportContext *report_context = OpenReports(ctx, config->agent_type);
 
     GenericAgentDiscoverContext(ctx, config, report_context);
     Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
@@ -415,7 +415,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
             {
                 if (fgets(reply, 8, stdin) == NULL)
                 {
-                    FatalError("EOF trying to read answer from terminal");
+                    FatalError(ctx, "EOF trying to read answer from terminal");
                 }
 
                 if (Chop(reply, CF_EXPANDSIZE) == -1)
@@ -527,7 +527,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable((VarRef) { NULL, "control_runagent", cp->lval }, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_runagent", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in runagent control body", cp->lval);
                 continue;
@@ -619,7 +619,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeControlCommonGet(COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

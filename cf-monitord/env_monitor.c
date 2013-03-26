@@ -309,7 +309,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
     dummyattr.transaction.ifelapsed = 0;
     dummyattr.transaction.expireafter = 0;
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
 
     if (thislock.lock == NULL)
     {

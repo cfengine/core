@@ -192,7 +192,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     default:
 
-        rval = ExpandPrivateRval("this", cp->rval);
+        rval = ExpandPrivateRval(ctx, "this", cp->rval);
         RvalDestroy(cp->rval);
         cp->rval = rval;
         break;
@@ -1664,7 +1664,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
         if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ScopeGetCurrent()->scope, &listvars, rval);
+            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, rval);
 
             if (listvars != NULL)
             {
@@ -1706,5 +1706,125 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     }
 
     CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);
+    return true;
+}
+
+bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+{
+    Scope *ptr = NULL;
+    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
+    char expbuf[CF_EXPANDSIZE];
+    CfAssoc *assoc;
+
+    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", lval.scope, lval.lval);
+
+    if (lval.lval == NULL)
+    {
+        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
+        return DATA_TYPE_NONE;
+    }
+
+    if (!IsExpandable(lval.lval))
+    {
+        strncpy(sval, lval.lval, CF_MAXVARSIZE - 1);
+    }
+    else
+    {
+        if (ExpandScalar(ctx, lval.scope, lval.lval, expbuf))
+        {
+            strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
+        }
+        else
+        {
+            /* C type system does not allow us to express the fact that returned
+               value may contain immutable string. */
+            if (rval_out)
+            {
+                *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+            }
+            if (type_out)
+            {
+                *type_out = DATA_TYPE_NONE;
+            }
+            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval.lval);
+            return false;
+        }
+    }
+
+    if (IsQualifiedVariable(sval))
+    {
+        scopeid[0] = '\0';
+        sscanf(sval, "%[^.].%s", scopeid, vlval);
+        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
+        ptr = ScopeGet(scopeid);
+    }
+    else
+    {
+        strlcpy(vlval, sval, sizeof(vlval));
+        strlcpy(scopeid, lval.scope, sizeof(scopeid));
+    }
+
+    if (ptr == NULL)
+    {
+        /* Assume current scope */
+        strcpy(vlval, lval.lval);
+        ptr = ScopeGet(scopeid);
+    }
+
+    if (ptr == NULL)
+    {
+        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
+        /* C type system does not allow us to express the fact that returned
+           value may contain immutable string. */
+        // TODO: returning the same lval as was past in?
+        if (rval_out)
+        {
+            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+        }
+        if (type_out)
+        {
+            *type_out = DATA_TYPE_NONE;
+        }
+        return false;
+    }
+
+    CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n", scopeid, vlval, ptr->scope, vlval);
+
+    assoc = HashLookupElement(ptr->hashtable, vlval);
+
+    if (assoc == NULL)
+    {
+        CfDebug("No such variable found %s.%s\n\n", scopeid, lval.lval);
+        /* C type system does not allow us to express the fact that returned
+           value may contain immutable string. */
+
+        if (rval_out)
+        {
+            *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
+        }
+        if (type_out)
+        {
+            *type_out = DATA_TYPE_NONE;
+        }
+        return false;
+    }
+
+    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
+
+    if (DEBUG)
+    {
+        RvalShow(stdout, assoc->rval);
+    }
+    CfDebug("}\n");
+
+    if (rval_out)
+    {
+        *rval_out = assoc->rval;
+    }
+    if (type_out)
+    {
+        *type_out = assoc->dtype;
+    }
+
     return true;
 }

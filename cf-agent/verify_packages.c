@@ -404,14 +404,24 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
 
     const int reset = true, update = false;
     char buf[CF_BUFSIZE];
-    
-    while (!feof(fin))
+
+    for (;;)
     {
-        memset(buf, 0, CF_BUFSIZE);
-        if (CfReadLine(buf, CF_BUFSIZE, fin) == -1)
+        ssize_t res = CfReadLine(buf, CF_BUFSIZE, fin);
+
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
         }
+
+        if (res == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read list of packages from command %s",
+                  a.packages.package_list_command);
+            cf_pclose(fin);
+            return false;
+        }
+
         CF_OCCUR++;
 
         if (a.packages.package_multiline_start)
@@ -655,12 +665,21 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
             return false;
         }
 
-        while (!feof(fin))
+        for (;;)
         {
-            memset(vbuff, 0, CF_BUFSIZE);
-            if (CfReadLine(vbuff, CF_BUFSIZE, fin) == -1)
+            ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, fin);
+
+            if (res == 0)
             {
-                FatalError("Error in CfReadLine");
+                break;
+            }
+
+            if (res == -1)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read list of patches from command %s",
+                      a.packages.package_patch_list_command);
+                cf_pclose(fin);
+                return false;
             }
 
             // assume patch_list_command lists available patches/updates by default
@@ -2151,19 +2170,20 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
         cmd--;
     }
 
-    while (!feof(pfp))
+    for (;;)
     {
-        if (ferror(pfp))        /* abortable */
+        ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, pfp);
+
+        if (res == 0)
         {
-            fflush(pfp);
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "read", pp, a, "Couldn't start command %20s...\n", command);
             break;
         }
 
-        line[0] = '\0';
-        if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fread", pp, a, "Unable to read output from command %20s...", command);
+            cf_pclose(pfp);
+            return false;
         }
 
         ReplaceStr(line, lineSafe, sizeof(lineSafe), "%", "%%");
@@ -2415,7 +2435,8 @@ static char *GetDefaultArch(const char *command)
 
     char arch[CF_BUFSIZE];
 
-    if ((CfReadLine(arch, CF_BUFSIZE, fp) == false) || (strlen(arch) == 0))
+    ssize_t res = CfReadLine(arch, CF_BUFSIZE, fp);
+    if (res == -1 || res == 0)
     {
         cf_pclose(fp);
         return NULL;

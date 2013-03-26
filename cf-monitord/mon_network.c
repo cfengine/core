@@ -199,19 +199,27 @@ void MonNetworkGatherData(double *cf_this)
 
     if ((pp = cf_popen(comm, "r")) == NULL)
     {
+        /* FIXME: no logging */
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
         memset(local, 0, CF_BUFSIZE);
         memset(remote, 0, CF_BUFSIZE);
 
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        size_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, comm);
-            fflush(pp);
             break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
+            cf_pclose(pp);
+            return;
         }
 
         if (strstr(vbuff, "UNIX"))

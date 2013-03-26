@@ -841,12 +841,19 @@ int LoadProcessTable(Item **procdata)
         return false;
     }
 
-    while (!feof(prp))
+    for (;;)
     {
-        memset(vbuff, 0, CF_BUFSIZE);
-        if (CfReadLine(vbuff, CF_BUFSIZE, prp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, prp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read process list with command %s", pscomm);
+            cf_pclose(prp);
+            return false;
         }
 
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)

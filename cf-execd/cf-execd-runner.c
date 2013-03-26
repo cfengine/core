@@ -227,7 +227,7 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is executing...%s\n", esc_command);
 
-    while (!feof(pp))
+    for (;;)
     {
         if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
         {
@@ -253,29 +253,18 @@ void LocalExec(const ExecConfig *config)
             break;
         }
 
-        {
-            ssize_t num_read = CfReadLine(line, CF_BUFSIZE, pp);
-            if (num_read == -1)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, esc_command);
-                fflush(pp);
-                break;
-            }
-            else if (num_read == 0)
-            {
-                break;
-            }
-        }
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
 
-        if(!CfReadLine(line, CF_BUFSIZE, pp))
+        if (res == 0)
         {
             break;
         }
 
-        if (ferror(pp))
+        if (res == -1)
         {
-            fflush(pp);
-            break;
+            CfOut(OUTPUT_LEVEL_ERROR, "cfread", "Unable to read output from command %s", cmd);
+            cf_pclose(pp);
+            return;
         }
 
         print = false;

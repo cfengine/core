@@ -83,24 +83,34 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
 
     if ((pp = cf_popen(pscomm, "r")) == NULL)
     {
+        /* FIXME: no logging */
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    /* Ignore first line -- header */
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, pscomm);
+        /* FIXME: no logging */
         cf_pclose(pp);
         return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s", errno, pscomm);
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
             cf_pclose(pp);
             return false;
         }
+
         sscanf(vbuff, "%s", user);
 
         if (strcmp(user, "USER") == 0)

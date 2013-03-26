@@ -4007,28 +4007,25 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
         return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Shell command pipe %s\n", command);
             break;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output from %s", command);
+            cf_pclose(pp);
+            return false;
         }
 
         if (strlen(line) > CF_BUFSIZE - 80)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Line from module %s is too long to be sensible\n", command);
-            break;
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Shell command pipe %s\n", command);
             break;
         }
 

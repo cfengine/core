@@ -449,12 +449,19 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
         return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        line[0] = '\0';
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)       /* One buffer only */
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+        if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): %s\n", errno, filename);
+            CfOut(OUTPUT_LEVEL_ERROR, "fgets", "Error reading output from command %s", buf);
+            cf_pclose(pp);
+            return false;
+        }
+
+        if (res == 0)
+        {
+            cf_pclose(pp);
             return false;
         }
 

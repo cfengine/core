@@ -62,18 +62,19 @@ bool GetExecOutput(const char *command, char *buffer, bool useshell)
 
     memset(buffer, 0, CF_EXPANDSIZE);
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_EXPANDSIZE, pp);
+        if (res == 0)
         {
-            fflush(pp);
             break;
         }
 
-        if (CfReadLine(line, CF_EXPANDSIZE, pp) == -1)
+        if (res == -1)
         {
-            fflush(pp);
-            break;
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of command %s", command);
+            cf_pclose(pp);
+            return false;
         }
 
         if (strlen(line) + offset > CF_EXPANDSIZE - 10)

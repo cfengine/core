@@ -1522,11 +1522,21 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
             return false;
         }
 
-        while (!feof(pop))
+        for (;;)
         {
-            if (CfReadLine(line, CF_BUFSIZE, pop) == -1)
+            ssize_t res = CfReadLine(line, CF_BUFSIZE, pop);
+
+            if (res == 0)
             {
-                FatalError("Error in CfReadLine");
+                break;
+            }
+
+            if (res == -1)
+            {
+                cf_pclose(pop);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
+                YieldCurrentLock(thislock);
+                return false;
             }
 
             if (print)

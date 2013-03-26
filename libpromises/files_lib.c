@@ -609,11 +609,19 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
     memset(line, 0, CF_BUFSIZE);
     memset(concat, 0, CF_BUFSIZE);
 
-    while (!feof(fp))
+    for (;;)
     {
-        if (CfReadLine(line, CF_BUFSIZE - 1, fp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, fp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fread", pp, a, "Unable to read contents of %s", file);
+            fclose(fp);
+            return false;
         }
 
         if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
@@ -647,7 +655,7 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
     }
 
     fclose(fp);
-    return (true);
+    return true;
 }
 
 int FileSanityChecks(char *path, Attributes a, Promise *pp)

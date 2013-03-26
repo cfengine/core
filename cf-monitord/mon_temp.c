@@ -202,18 +202,26 @@ static bool GetLMSensors(double *cf_this)
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): /usr/bin/sensors", errno);
+        /* FIXME: do we need to log anything here? */
         cf_pclose(pp);
         return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading line from file (%d): /usr/bin/sensors", errno);
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: Do we need to log anything here? */
             cf_pclose(pp);
             return false;
         }

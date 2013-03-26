@@ -2073,9 +2073,21 @@ static int Xen_Domain(EvalContext *ctx)
 
     if ((fp = fopen("/proc/xen/capabilities", "r")) != NULL)
     {
-        while (!feof(fp))
+        for (;;)
         {
-            CfReadLine(buffer, CF_BUFSIZE, fp);
+            ssize_t res = CfReadLine(buffer, CF_BUFSIZE, fp);
+            if (res == 0)
+            {
+                break;
+            }
+
+            if (res == -1)
+            {
+                /* Failure reading Xen capabilites. Do we care? */
+                fclose(fp);
+                return 1;
+            }
+
             if (strstr(buffer, "control_d"))
             {
                 EvalContextHeapAddHard(ctx, "xen_dom0");

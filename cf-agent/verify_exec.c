@@ -303,30 +303,25 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
                 return ACTION_RESULT_FAILED;
             }
 
-            while (!feof(pfp))
+            for (;;)
             {
-                if (ferror(pfp))        /* abortable */
+                ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, pfp);
+
+                if (res == 0)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "ferror", "!! Command pipe %s\n", cmdline);
-                    cf_pclose(pfp);
-                    return ACTION_RESULT_TIMEOUT;
+                    break;
                 }
 
-                if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+                if (res == -1)
                 {
-                    FatalError("Error in CfReadLine");
+                    CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output from command %s", cmdline);
+                    cf_pclose(pfp);
+                    return ACTION_RESULT_FAILED;
                 }
 
                 if (strstr(line, "cfengine-die"))
                 {
                     break;
-                }
-
-                if (ferror(pfp))        /* abortable */
-                {
-                    CfOut(OUTPUT_LEVEL_ERROR, "ferror", "!! Command pipe %s\n", cmdline);
-                    cf_pclose(pfp);
-                    return ACTION_RESULT_TIMEOUT;
                 }
 
                 if (a.contain.preview)

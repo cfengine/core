@@ -139,25 +139,21 @@ bool LoadMountInfo(Rlist **list)
         return false;
     }
 
-    do
+    for (;;)
     {
         vbuff[0] = buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
 
-        if (ferror(pp))         /* abortable */
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error getting mount info\n");
-            break;
-        }
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
 
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read list of mounted filesystems");
             cf_pclose(pp);
             return false;
         }
 
-        if (ferror(pp))         /* abortable */
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error getting mount info\n");
             break;
         }
 
@@ -257,7 +253,6 @@ bool LoadMountInfo(Rlist **list)
             AugmentMountInfo(list, host, source, mounton, NULL);
         }
     }
-    while (!feof(pp));
 
     alarm(0);
     signal(SIGALRM, SIG_DFL);
@@ -454,11 +449,20 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
                 return 0;
             }
 
-            while (!feof(pfp))
+            for (;;)
             {
-                if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+                ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+                if (res == -1)
                 {
-                    FatalError("Error in CfReadLine");
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fread", pp, a, "Unable to read output of /bin/rmnfsmnt");
+                    cf_pclose(pfp);
+                    return 0;
+                }
+
+                if (res == 0)
+                {
+                    break;
                 }
 
                 if (line[0] == '#')
@@ -534,12 +538,16 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
             return 0;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of mount command");
+            cf_pclose(pfp);
+            return 0;
         }
 
-        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
+        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
             cf_pclose(pfp);
@@ -576,12 +584,16 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
             return 0;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of unmount command");
+            cf_pclose(pfp);
+            return 0;
         }
 
-        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
+        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
             cf_pclose(pfp);
@@ -664,17 +676,18 @@ void MountAll()
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error mounting filesystems\n");
             break;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error reading line from file: %s\n", VMOUNTCOMM[VSYSTEMHARDCLASS]);
+            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error reading list of mounted filesystems");
             break;
         }
 

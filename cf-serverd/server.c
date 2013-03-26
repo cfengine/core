@@ -1186,22 +1186,18 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            fflush(pp);
             break;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))
-        {
-            fflush(pp);
+            fflush(pp); /* FIXME: is it necessary? */
             break;
         }
 

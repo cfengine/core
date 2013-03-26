@@ -71,60 +71,58 @@ int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Pr
     }
 }
 
-/*********************************************************************/
-
-
-/*********************************************************************/
-
 ssize_t CfReadLine(char *buff, size_t size, FILE *fp)
 {
-    buff[0] = '\0';
-    buff[size - 1] = '\0';      /* mark end of buffer */
-
-    //error checking
-    if (!fp || ferror(fp))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! NULL or corrupt inputs to CfReadLine");
-        return -1;
-    }
-
     if (fgets(buff, size, fp) == NULL)
     {
-        *buff = '\0';           /* EOF */
-        return 0;
-    }
-    else
-    {
-        char *tmp;
-
-        if ((tmp = strrchr(buff, '\n')) != NULL)
+        if (ferror(fp))
         {
-            /* remove newline */
-            *tmp = '\0';
-            return tmp - buff;
+            return -1;
         }
         else
         {
-            /* The line was too long and truncated so, discard probable remainder */
-            while (true)
+            return 0;
+        }
+    }
+
+    /* We have got a line here */
+
+    size_t line_length = strlen(buff);
+
+    /* Check for \n */
+
+    char *nl = strchr(buff, '\n');
+
+    if (nl != NULL)
+    {
+        /* If we have found a \n, then line was read fully. */
+        *nl = '\0';
+        return line_length;
+    }
+
+    /* Read the remainder of the line */
+
+    for (;;)
+    {
+        int c = fgetc(fp);
+        if (c == EOF)
+        {
+            if (ferror(fp))
             {
-                if (feof(fp))
-                {
-                    break;
-                }
-
-                char ch = fgetc(fp);
-
-                if (ch == '\n')
-                {
-                    break;
-                }
+                return -1;
             }
+            else
+            {
+                /* We have reached EOF, report the length of line read so far */
+                return line_length;
+            }
+        }
 
-            return size - 1;
+        line_length++;
+
+        if (c == '\n')
+        {
+            return line_length;
         }
     }
 }
-
-/*******************************************************************/
-

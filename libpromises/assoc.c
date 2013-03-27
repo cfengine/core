@@ -375,9 +375,7 @@ static void HugeHashClear(AssocHashTable *hashtable)
     memset(hashtable->buckets, 0, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
 }
 
-/*******************************************************************/
-
-void HashClear(AssocHashTable *hashtable)
+void HashFree(AssocHashTable *hashtable)
 {
     if (hashtable->huge)
     {
@@ -388,13 +386,6 @@ void HashClear(AssocHashTable *hashtable)
     {
         TinyHashClear(hashtable);
     }
-}
-
-/*******************************************************************/
-
-void HashFree(AssocHashTable *hashtable)
-{
-    HashClear(hashtable);
     free(hashtable);
 }
 

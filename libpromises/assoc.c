@@ -60,18 +60,6 @@ void DeleteAssoc(CfAssoc *ap)
 
 }
 
-/*******************************************************************/
-
-CfAssoc *CopyAssoc(CfAssoc *old)
-{
-    if (old == NULL)
-    {
-        return NULL;
-    }
-
-    return NewAssoc(old->lval, old->rval, old->dtype);
-}
-
 /*
  * This associative array implementation uses array with linear search up to
  * TINY_LIMIT elements, and then converts into full-fledged hash table with open

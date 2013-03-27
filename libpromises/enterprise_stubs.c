@@ -228,7 +228,7 @@ void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char
     return NULL;
 }
 
-bool CFDB_HostsWithClass(const EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
+bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Enterprise");
     return false;
@@ -254,7 +254,7 @@ void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
 }
 
-int ReturnLiteralData(char *handle, char *ret)
+int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
     return 0;

@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
     if (SHOWREPORTS)
     {
-        ShowPromises(ctx, policy->bundles, policy->bodies);
+        ShowPromises(policy->bundles, policy->bodies);
     }
 
     CheckLicenses(ctx);

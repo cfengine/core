@@ -39,7 +39,7 @@ ReportContext *ReportContextNew(void);
 bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
 void ReportContextDestroy(ReportContext *context);
 
-void ShowPromises(EvalContext *ctx, const Seq *bundles, const Seq *bodies);
+void ShowPromises(const Seq *bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
 void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
 void ShowContext(EvalContext *ctx, const ReportContext *report_context);

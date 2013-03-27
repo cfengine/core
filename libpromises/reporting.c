@@ -186,14 +186,14 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
 
 void ShowPromises(
 #if !defined(HAVE_NOVA)
-    ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies
+    ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies
 #else
-    EvalContext *ctx, const Seq *bundles, const Seq *bodies
+    const Seq *bundles, const Seq *bodies
 #endif
     )
 {
 #if defined(HAVE_NOVA)
-    Nova_ShowPromises(ctx, bundles, bodies);
+    Nova_ShowPromises(bundles, bodies);
 #endif
 }
 

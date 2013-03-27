@@ -189,14 +189,6 @@ static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element
         }
     }
 
-    /* Do not inline NewAssoc into a assignment -- NewAssoc calls CopyRvalItem,
-       which can call GetVariable (OMG), which calls HashLookupElement, so we
-       need to be sure hash table is in consistent state while calling
-       NewAssoc. If NewAssoc is in the right-hand side of the assignment, then
-       compiler is free to choose the order of increment and NewAssoc call, so
-       HashLookupElement might end up reading values by NULL pointer. Long-term
-       solution is to fix CopyRvalItem. */
-
     CfAssoc *a = NewAssoc(element, rval, dtype);
 
     hashtable->array.values[hashtable->array.size++] = a;

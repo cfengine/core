@@ -219,6 +219,8 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
+    ARGV0 = xstrdup(basename(argv[0]));
+
     while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)

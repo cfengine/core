@@ -185,6 +185,8 @@ int main(int argc, char *argv[])
 {
     GenericAgentConfig config = CheckOpts(argc, argv);
 
+    ARGV0 = xstrdup(basename(argv[0]));
+
     GenericInitialize("knowledge", config);
     ThisAgentInit();
 

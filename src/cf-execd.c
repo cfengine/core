@@ -152,6 +152,8 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_executor);
 
+    ARGV0 = xstrdup(basename(argv[0]));
+
     while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFV1gMW", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)

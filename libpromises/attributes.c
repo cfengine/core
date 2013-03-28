@@ -113,41 +113,41 @@ Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp)
         ShowAttributes(attr);
     }
 
-    if ((attr.haverename) || (attr.havedelete) || (attr.haveperms) || (attr.havechange) ||
-        (attr.havecopy) || (attr.havelink) || (attr.haveedit) || (attr.create) || (attr.touch) ||
-        (attr.transformer) || (attr.acl.acl_entries))
+    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
-    }
-    else
-    {
-        if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
+        if ((attr.haverename) || (attr.havedelete) || (attr.haveperms) || (attr.havechange) ||
+            (attr.havecopy) || (attr.havelink) || (attr.haveedit) || (attr.create) || (attr.touch) ||
+            (attr.transformer) || (attr.acl.acl_entries))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! files promise makes no intention about system state");
-        }
-    }
-
-    if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havecopy))
-    {
-        if (((attr.copy.compare) != (FILE_COMPARATOR_CHECKSUM)) && ((attr.copy.compare) != FILE_COMPARATOR_HASH))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "",
-                  " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
-                  pp->promiser);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  " !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",
-                  pp->promiser);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! files promise makes no intention about system state");
         }
-    }
 
-    if ((THIS_AGENT_TYPE == AGENT_TYPE_COMMON) && (attr.create) && (attr.havelink))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
-              pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        if ((attr.create) && (attr.havecopy))
+        {
+            if (((attr.copy.compare) != (FILE_COMPARATOR_CHECKSUM)) && ((attr.copy.compare) != FILE_COMPARATOR_HASH))
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "",
+                      " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
+                      pp->promiser);
+                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            }
+            else
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                      " !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",
+                      pp->promiser);
+            }
+        }
+
+        if ((attr.create) && (attr.havelink))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
+                  pp->promiser);
+            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        }
     }
 
     return attr;

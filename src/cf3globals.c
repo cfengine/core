@@ -73,6 +73,7 @@ int CF_PERSISTENCE = 10;
 char *THIS_BUNDLE = NULL;
 char THIS_AGENT[CF_MAXVARSIZE] = {0};
 enum cfagenttype THIS_AGENT_TYPE;
+char *ARGV0 = NULL;
 char SYSLOGHOST[CF_MAXVARSIZE] = {0};
 unsigned short SYSLOGPORT = 514;
 time_t PROMISETIME = 0;

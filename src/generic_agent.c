@@ -94,6 +94,7 @@ SanitizeEnvironment();
 strcpy(THIS_AGENT,CF_AGENTTYPES[ag]);
 NewClass(THIS_AGENT);
 THIS_AGENT_TYPE = ag;
+ARGV0 = xstrdup(basename(argv[0]));
 
 // need scope sys to set vars in expiry function
 SetNewScope("sys");

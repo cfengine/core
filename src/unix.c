@@ -51,31 +51,193 @@
 # define SIZEOF_IFREQ(x) sizeof(struct ifreq)
 #endif
 
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
 
-int Unix_GracefulTerminate(pid_t pid)
+static bool IsProcessRunning(pid_t pid)
+{
+    int res = kill(pid, 0);
 
-{ int res;
- 
-if ((res = kill(pid,SIGINT)) == -1)
-   {
-   sleep(1);
-   res = 0;
-   
-   if ((res = kill(pid,SIGTERM)) == -1)
-      {   
-      sleep(5);
-      res = 0;
-      
-      if ((res = kill(pid,SIGKILL)) == -1)
-         {
-         sleep(1);
-         }
-      }
-   }
+    if(res == 0)
+    {
+        return true;
+    }
 
-return (res == 0);
+    if(res == -1 && errno == ESRCH)
+    {
+        return false;
+    }
+
+    CfOut(cf_error, "kill",
+          "!! Failed checking for process existence %llu",
+          (uintmax_t) pid);
+
+    return false;
+}
+
+static bool PIDMatchName(pid_t pid, char *procname)
+{
+    char *cmd;
+
+    if (procname == NULL)
+    {
+        CfOut(cf_verbose, "",
+              "NULL procname in PIDMatchName()!");
+        goto err;
+    }
+
+    /* Most ps I've seen truncate the "comm" column. 15 chars we get everywhere? */
+    if (strlen(procname) > 15)
+    {
+        CfOut(cf_error, "",
+              "Tried to match process name %s, longer than 15 chars, WARNING this might not work!",
+              procname);
+    }
+
+    /* We NEED 2-columns only from ps, on all platforms! */
+    switch (VSYSTEMHARDCLASS)
+    {
+    case linuxx:
+    case freebsd:
+    case netbsd:
+    case openbsd:
+        cmd = "/bin/ps ax -o pid,comm";
+        break;
+    case aix:
+    case solaris:
+    case solarisx86:
+        cmd = "/bin/ps -eo pid,comm";
+        break;
+    default:
+        CfOut(cf_verbose, "",
+              "Unrecognized VSYSTEMHARDCLASS \"%s\", defaulting to linux/BSD.",
+              CLASSTEXT[VSYSTEMHARDCLASS]);
+        cmd = "/bin/ps ax -o pid,comm";
+    }
+    /* TODO try ps with various paths, e.g. /bin, /usr/bin, or even $PATH,
+     * some Linux distros are deprecatint all other paths besides /usr/bin... */
+
+    FILE *pipe = NULL;
+    pipe = cf_popen(cmd, "r");
+    if (pipe == NULL)
+        goto err;
+
+    bool matched = false;
+    bool firstline = true;
+    char line[50];
+    char *s;
+    while ((s = fgets(line, sizeof(line), pipe)) != NULL)
+    {
+        if (firstline)                                    /* skip ps header */
+        {
+            firstline = false;
+            continue;
+        }
+        unsigned long field1;
+        char field2[16];
+        /* procname can also have whitespace, thus [^\n] */
+        int ret = sscanf(line, " %lu %15[^\n]", &field1, field2);
+        if (ret != 2)
+            continue;
+
+        if (field1 == pid)                                    /* PID found! */
+        {
+            if (strcmp(field2, procname) == 0)
+            {
+                matched = true;
+            }
+            else
+            {
+                CfOut(cf_verbose, "",
+                      "PID %llu is now used by other process \"%s\", not killing.\n",
+                      (uintmax_t) pid, procname);
+                matched = false;
+            }
+            break;
+        }
+    }
+    if (!matched && s == NULL)
+        CfOut(cf_verbose, "",
+              "PID %llu is not in the process table, not killing.\n",
+              (uintmax_t) pid);
+
+    cf_pclose(pipe);
+    return matched;
+
+  err:
+    CfOut(cf_verbose, "",
+          "Could not match PID with process name, falling back to IsProcessRunning(). Might blindly kill PID %llu",
+          (uintmax_t) pid);
+    return IsProcessRunning(pid);
+}
+
+/* Try to gracefully terminate process with given PID and executable name. */
+int Unix_GracefulTerminate(pid_t pid, char *procname)
+{
+    if (PIDMatchName(pid, procname))
+    {
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (PIDMatchName(pid, procname))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (PIDMatchName(pid, procname))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (PIDMatchName(pid, procname))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (PIDMatchName(pid, procname))
+                    {
+                        CfOut(cf_error, "",
+                              "!! Could not kill pid %llu",
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+int Unix_GracefulTerminatePID(pid_t pid)
+{
+    if (IsProcessRunning(pid))
+    {
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (IsProcessRunning(pid))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (IsProcessRunning(pid))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (IsProcessRunning(pid))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (IsProcessRunning(pid))
+                    {
+                        CfOut(cf_error, "",
+                              "!! Could not kill pid %llu",
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 /*************************************************************/

@@ -1186,7 +1186,8 @@ void SetStartTime(int setclasses);
 /* unix.c */
 
 #ifndef MINGW
-int Unix_GracefulTerminate(pid_t pid);
+int Unix_GracefulTerminatePID(pid_t pid);
+int Unix_GracefulTerminate(pid_t pid, char *procname);
 int Unix_GetCurrentUserName(char *userName, int userNameLen);
 int Unix_ShellCommandReturnsZero(char *comm,int useshell);
 int Unix_DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
@@ -1266,7 +1267,8 @@ void VerifyProcessesPromise(struct Promise *pp);
 void VerifyProcesses(struct Attributes a, struct Promise *pp);
 int LoadProcessTable(struct Item **procdata);
 int DoAllSignals(struct Item *siglist,struct Attributes a,struct Promise *pp);
-int GracefulTerminate(pid_t pid);
+int GracefulTerminate(pid_t pid, char *procname);
+int GracefulTerminatePID(pid_t pid);
 void GetProcessColumnNames(char *proc,char **names,int *start,int *end);
 
 

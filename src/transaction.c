@@ -93,7 +93,7 @@ else if (attr.transaction.log_failed)
 struct CfLock AcquireLock(char *operand,char *host,time_t now,struct Attributes attr,struct Promise *pp, int ignoreProcesses)
 
 { unsigned int pid;
-  int i, err, sum=0;
+  int i, ret, sum=0;
   time_t lastcompleted = 0, elapsedtime;
   char *promise,cc_operator[CF_BUFSIZE],cc_operand[CF_BUFSIZE];
   char cflock[CF_BUFSIZE],cflast[CF_BUFSIZE],cflog[CF_BUFSIZE];
@@ -236,9 +236,9 @@ if (!ignoreProcesses)
             {
             CfOut(cf_verbose,"","Trying to kill expired process, pid %d\n",pid);
             
-            err = GracefulTerminate(pid);
+            ret = GracefulTerminate(pid, ARGV0);
             
-            if (err || errno == ESRCH)
+            if (ret)
                {
                LogLockCompletion(cflog,pid,"Lock expired, process killed",cc_operator,cc_operand);
                unlink(cflock);

@@ -110,6 +110,7 @@ extern int CFA_MAXTHREADS;
 extern char *THIS_BUNDLE;
 extern char THIS_AGENT[CF_MAXVARSIZE];
 extern enum cfagenttype THIS_AGENT_TYPE;
+extern char *ARGV0;
 extern int INSTALL_SKIP;
 extern int SHOWREPORTS;
 extern char SYSLOGHOST[CF_MAXVARSIZE];

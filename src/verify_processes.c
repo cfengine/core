@@ -466,13 +466,24 @@ if (end[col] == -1)
 
 /**********************************************************************************/
 
-int GracefulTerminate(pid_t pid)
+int GracefulTerminate(pid_t pid, char *procname)
+
+{
+#ifdef MINGW
+/* TODO */
+return NovaWin_GracefulTerminate(pid);
+#else
+return Unix_GracefulTerminate(pid, procname);
+#endif
+}
+
+int GracefulTerminatePID(pid_t pid)
 
 {
 #ifdef MINGW
 return NovaWin_GracefulTerminate(pid);
 #else
-return Unix_GracefulTerminate(pid);
+return Unix_GracefulTerminatePID(pid);
 #endif
 }
 

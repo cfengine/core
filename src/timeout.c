@@ -56,7 +56,7 @@ alarm(0);
 if (ALARM_PID != -1)
    {
    CfOut(cf_verbose,"","Time out of process %d\n",ALARM_PID);
-   GracefulTerminate(ALARM_PID);
+   GracefulTerminatePID(ALARM_PID);
    }
 else
    {

@@ -383,26 +383,6 @@ void StartServer(int argc,char **argv)
   struct Attributes dummyattr;
   struct CfLock thislock;
 
-Banner("Starting executor");
-memset(&dummyattr,0,sizeof(dummyattr));
-
-dummyattr.restart_class = "nonce";
-dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
-dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
-
-if (!ONCE)
-   {
-   thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
-
-   if (thislock.lock == NULL)
-      {
-      DeletePromise(pp);
-      return;
-      }
-   }
-
-Apoptosis();
-
 #ifdef MINGW
 
 if (!NO_FORK)
@@ -424,6 +404,26 @@ if (!NO_FORK)
    }
    
 #endif  /* NOT MINGW */
+
+Banner("Starting executor");
+memset(&dummyattr,0,sizeof(dummyattr));
+
+dummyattr.restart_class = "nonce";
+dummyattr.transaction.ifelapsed = CF_EXEC_IFELAPSED;
+dummyattr.transaction.expireafter = CF_EXEC_EXPIREAFTER;
+
+if (!ONCE)
+   {
+   thislock = AcquireLock(pp->promiser,VUQNAME,CFSTARTTIME,dummyattr,pp,false);
+
+   if (thislock.lock == NULL)
+      {
+      DeletePromise(pp);
+      return;
+      }
+   }
+
+Apoptosis();
 
 WritePID("cf-execd.pid");
 signal(SIGINT,HandleSignals);

@@ -77,7 +77,7 @@ void BeginAudit()
 
 /*****************************************************************************/
 
-void EndAudit(EvalContext *ctx, int background_tasks)
+void EndAudit(const EvalContext *ctx, int background_tasks)
 {
     if (!END_AUDIT_REQUIRED)
     {
@@ -560,7 +560,7 @@ void BannerSubBundle(Bundle *bp, Rlist *params)
 
 /************************************************************************/
 
-void FatalError(EvalContext *ctx, char *s, ...)
+void FatalError(const EvalContext *ctx, char *s, ...)
 {
     if (s)
     {

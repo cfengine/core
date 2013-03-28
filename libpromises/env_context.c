@@ -1709,7 +1709,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     return true;
 }
 
-bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
     Scope *ptr = NULL;
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];

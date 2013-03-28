@@ -362,7 +362,7 @@ static void MapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, Rlist 
 
 /*********************************************************************/
 
-int ExpandScalar(EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
+bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
 {
     return ExpandPrivateScalar(ctx, scope, string, buffer);
 }
@@ -503,7 +503,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 /*********************************************************************/
 
-int ExpandPrivateScalar(EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
+bool ExpandPrivateScalar(const EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
 {
     const char *sp;
     Rval rval;

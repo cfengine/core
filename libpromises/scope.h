@@ -103,7 +103,7 @@ void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, 
 
 void ScopeDeleteVariable(const char *scope, const char *id);
 
-DataType ScopeControlCommonGet(EvalContext *ctx, CommonControl lval, Rval *rval_out);
+DataType ScopeControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 

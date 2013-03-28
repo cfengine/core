@@ -563,7 +563,7 @@ void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, 
 
 /*******************************************************************/
 
-DataType ScopeControlCommonGet(EvalContext *ctx, CommonControl lval, Rval *rval_out)
+DataType ScopeControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
     const char *lval_str = CFG_CONTROLBODY[lval].lval;
     DataType type = DATA_TYPE_NONE;

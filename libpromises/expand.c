@@ -148,8 +148,6 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     pcopy = DeRefCopyPromise(ctx, pp);
 
-    EvalContextStackPopFrame(ctx);
-
     MapIteratorsFromRval(ctx, PromiseGetBundle(pp)->name, &listvars, (Rval) { pcopy->promiser, RVAL_TYPE_SCALAR });
 
     if (pcopy->promisee.item != NULL)
@@ -171,6 +169,8 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
 
     PromiseDestroy(pcopy);
     RlistDestroy(listvars);
+
+    EvalContextStackPopFrame(ctx);
 }
 
 /*********************************************************************/
@@ -711,7 +711,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         char number[CF_SMALLBUF];
 
         /* Set scope "this" first to ensure list expansion ! */
-        EvalContextStackPushPromiseFrame(ctx, pp);
+        EvalContextStackPushPromiseIterationFrame(ctx, pp);
         ScopeDeRefListsInHashtable("this", listvars, lol);
 
         /* Allow $(this.handle) etc variables */

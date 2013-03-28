@@ -78,6 +78,7 @@ static const char *StackFrameOwnerName(const StackFrame *frame)
         return frame->data.body.owner->name;
 
     case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
         return "this";
 
     default:
@@ -122,6 +123,14 @@ static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
     case STACK_FRAME_TYPE_PROMISE:
         {
             StackFrame *previous_frame = LastStackFrame(ctx, 1);
+            assert(previous_frame);
+            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
+            return previous_frame;
+        }
+
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        {
+            StackFrame *previous_frame = LastStackFrame(ctx, 2);
             assert(previous_frame);
             assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
             return previous_frame;
@@ -1266,6 +1275,11 @@ static void StackFramePromiseDestroy(StackFramePromise frame)
     HashFree(frame.variables);
 }
 
+static void StackFramePromiseIterationDestroy(StackFramePromiseIteration frame)
+{
+    return;
+}
+
 static void StackFrameDestroy(StackFrame *frame)
 {
     if (frame)
@@ -1282,6 +1296,10 @@ static void StackFrameDestroy(StackFrame *frame)
 
         case STACK_FRAME_TYPE_PROMISE:
             StackFramePromiseDestroy(frame->data.promise);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            StackFramePromiseIterationDestroy(frame->data.promise_iteration);
             break;
 
         default:
@@ -1520,6 +1538,15 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
+static StackFrame *StackFrameNewPromiseIteration(const Promise *owner)
+{
+    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
+
+    frame->data.promise_iteration.owner = owner;
+
+    return frame;
+}
+
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 {
     StackFrame *frame = LastStackFrameBundle(ctx);
@@ -1535,7 +1562,7 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
 {
-    assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
     ScopeSetCurrent(owner->name);
@@ -1553,6 +1580,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
+    ScopeSetCurrent("this");
+}
+
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
+{
+    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
     ScopeSetCurrent("this");
 }
 

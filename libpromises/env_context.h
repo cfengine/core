@@ -36,6 +36,7 @@ typedef enum
 {
     STACK_FRAME_TYPE_BUNDLE,
     STACK_FRAME_TYPE_PROMISE,
+    STACK_FRAME_TYPE_PROMISE_ITERATION,
     STACK_FRAME_TYPE_BODY
 } StackFrameType;
 
@@ -61,6 +62,11 @@ typedef struct
 
 typedef struct
 {
+    const Promise *owner;
+} StackFramePromiseIteration;
+
+typedef struct
+{
     StackFrameType type;
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
 
@@ -69,6 +75,7 @@ typedef struct
         StackFrameBundle bundle;
         StackFrameBody body;
         StackFramePromise promise;
+        StackFramePromiseIteration promise_iteration;
     } data;
 } StackFrame;
 
@@ -123,6 +130,7 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);

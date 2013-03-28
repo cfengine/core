@@ -583,7 +583,7 @@ static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandPrivateScalar(ctx, ScopeGetCurrent()->scope, attr.transaction.log_string, buffer);
+        ExpandScalar(ctx, ScopeGetCurrent()->scope, attr.transaction.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {

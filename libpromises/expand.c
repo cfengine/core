@@ -288,14 +288,14 @@ static void MapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, Rlist 
                     strncpy(temp, v, CF_BUFSIZE - 1);
                     absscope[0] = '\0';
                     sscanf(temp, "%[^.].%s", absscope, v);
-                    ExpandPrivateScalar(ctx, absscope, v, var);
+                    ExpandScalar(ctx, absscope, v, var);
                     snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
                     qualified = true;
                 }
                 else
                 {
                     strncpy(absscope, scopeid, CF_MAXVARSIZE - 1);
-                    ExpandPrivateScalar(ctx, absscope, v, var);
+                    ExpandScalar(ctx, absscope, v, var);
                     strncpy(finalname, var, CF_BUFSIZE - 1);
                     qualified = false;
                 }
@@ -362,13 +362,6 @@ static void MapIteratorsFromScalar(EvalContext *ctx, const char *scopeid, Rlist 
 
 /*********************************************************************/
 
-bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE])
-{
-    return ExpandPrivateScalar(ctx, scope, string, buffer);
-}
-
-/*********************************************************************/
-
 Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked)
 {
     Rlist *rp, *start = NULL;
@@ -426,7 +419,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *scopeid, Rval rval)
     {
     case RVAL_TYPE_SCALAR:
 
-        ExpandPrivateScalar(ctx, scopeid, (char *) rval.item, buffer);
+        ExpandScalar(ctx, scopeid, (char *) rval.item, buffer);
         returnval.item = xstrdup(buffer);
         returnval.type = RVAL_TYPE_SCALAR;
         break;
@@ -467,7 +460,7 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval)
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandPrivateScalar(ctx, scopeid, (char *) rval.item, buffer);
+        ExpandScalar(ctx, scopeid, (char *) rval.item, buffer);
         return (Rval) {xstrdup(buffer), RVAL_TYPE_SCALAR};
     }
 
@@ -503,7 +496,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
 /*********************************************************************/
 
-bool ExpandPrivateScalar(const EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
+bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *string, char buffer[CF_EXPANDSIZE])
 {
     const char *sp;
     Rval rval;
@@ -590,7 +583,7 @@ bool ExpandPrivateScalar(const EvalContext *ctx, const char *scopeid, const char
         if (IsCf3VarString(temp))
         {
             CfDebug("  Nested variables - %s\n", temp);
-            ExpandPrivateScalar(ctx, scopeid, temp, currentitem);
+            ExpandScalar(ctx, scopeid, temp, currentitem);
         }
         else
         {
@@ -1553,7 +1546,7 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
 
         if (IsCf3VarString(rval.item))
         {
-            ExpandPrivateScalar(ctx, scope, rval.item, exp);
+            ExpandScalar(ctx, scope, rval.item, exp);
             CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
                     exp);
 

@@ -64,6 +64,5 @@ void GetNaked(char *s1, const char *s2);
   */
 bool IsVarList(const char *var);
 void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
-bool ExpandPrivateScalar(const EvalContext *ctx, const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 #endif

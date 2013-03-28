@@ -304,6 +304,10 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c, alpha = false, v6 = false;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
+    /* TODO move most of this in a new function CheckGenericOpts(argc, argv),
+     * which should be in generic_agent.c and handle all common options. */
+    ARGV0 = xstrdup(basename(argv[0]));
+
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
 

@@ -48,6 +48,7 @@ int CF_PERSISTENCE = 10;
 
 AgentType THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
+char *ARGV0 = NULL;
 
 int LICENSES = 0;
 int AM_NOVA = false;

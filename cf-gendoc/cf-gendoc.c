@@ -101,6 +101,10 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_GENDOC);
 
+    /* TODO move most of this in a new function CheckGenericOpts(argc, argv),
+     * which should be in generic_agent.c and handle all common options. */
+    ARGV0 = xstrdup(basename(argv[0]));
+
     if (getcwd(SOURCE_DIR, CF_BUFSIZE) == NULL)
     {
         UnexpectedError("Failed to get the pathname to the current directory");

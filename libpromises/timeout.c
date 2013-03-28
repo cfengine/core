@@ -51,7 +51,7 @@ void TimeOut()
     if (ALARM_PID != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
-        GracefulTerminate(ALARM_PID);
+        GracefulTerminatePID(ALARM_PID);
     }
     else
     {

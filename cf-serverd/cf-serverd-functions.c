@@ -133,6 +133,10 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
 
+    /* TODO move most of this in a new function CheckGenericOpts(argc, argv),
+     * which should be in generic_agent.c and handle all common options. */
+    ARGV0 = xstrdup(basename(argv[0]));
+
     while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhA", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)

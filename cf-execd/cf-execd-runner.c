@@ -242,7 +242,7 @@ void LocalExec(const ExecConfig *config)
 
             if(PipeToPid(&pid_agent, pp))
             {
-                GracefulTerminate(pid_agent);
+                GracefulTerminatePID(pid_agent);
             }
             else
             {

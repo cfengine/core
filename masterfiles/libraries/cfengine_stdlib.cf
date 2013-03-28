@@ -701,7 +701,7 @@ files:
     comment => "A user's regular batch jobs are added to this file",
      create => "true",
   edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
-      perms => mo("644","$(user)"),
+      perms => mo("600","$(user)"),
     classes => if_repaired("changed_crontab");
 
 processes:

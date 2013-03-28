@@ -196,7 +196,7 @@ static bool GetLMSensors(double *cf_this)
     cf_this[ob_temp2] = 0.0;
     cf_this[ob_temp3] = 0.0;
 
-    if ((pp = cf_popen("/usr/bin/sensors", "r")) == NULL)
+    if ((pp = cf_popen("/usr/bin/sensors", "r", true)) == NULL)
     {
         LMSENSORS = false;      /* Broken */
         return false;

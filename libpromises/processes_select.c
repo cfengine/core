@@ -833,7 +833,7 @@ int LoadProcessTable(Item **procdata)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Observe process table with %s\n", pscomm);
 
-    if ((prp = cf_popen(pscomm, "r")) == NULL)
+    if ((prp = cf_popen(pscomm, "r", false)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "popen", "Couldn't open the process list with command %s\n", pscomm);
         return false;

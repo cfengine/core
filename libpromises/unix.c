@@ -689,19 +689,19 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
     /* NT cannot do this */
     return;
 #elif defined(__hpux)
-    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #elif defined(_AIX)
-    if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/etc/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #else
-    if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/sbin/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;

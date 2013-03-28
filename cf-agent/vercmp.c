@@ -72,7 +72,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         ScopeClear("cf_pack_context");
     }
 
-    FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w");
+    FILE *pfp = a.packages.package_commands_useshell ? cf_popen_sh(expanded_command, "w") : cf_popen(expanded_command, "w", true);
 
     if (pfp == NULL)
     {

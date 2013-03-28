@@ -133,7 +133,7 @@ bool LoadMountInfo(Rlist **list)
 
     SetTimeOut(RPCTIMEOUT);
 
-    if ((pp = cf_popen(buf1, "r")) == NULL)
+    if ((pp = cf_popen(buf1, "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Can't open %s\n", buf1);
         return false;
@@ -443,7 +443,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
             snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
 
-            if ((pfp = cf_popen(aixcomm, "r")) == NULL)
+            if ((pfp = cf_popen(aixcomm, "r", true)) == NULL)
             {
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
                 return 0;
@@ -532,7 +532,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
 
-        if ((pfp = cf_popen(comm, "r")) == NULL)
+        if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
@@ -578,7 +578,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         snprintf(comm, CF_BUFSIZE, "%s %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS], mountpt);
 
-        if ((pfp = cf_popen(comm, "r")) == NULL)
+        if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
             return 0;
@@ -670,7 +670,7 @@ void MountAll()
 
     SetTimeOut(RPCTIMEOUT);
 
-    if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r")) == NULL)
+    if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Failed to open pipe from %s\n", VMOUNTCOMM[VSYSTEMHARDCLASS]);
         return;

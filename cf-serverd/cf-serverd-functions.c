@@ -207,7 +207,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             {
                 exit(1);
             }
-            cf_popen("/etc/init.d/avahi-daemon restart", "r");
+            cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             printf("Avahi configuration file generated successfuly.\n");
             exit(0);
 #else

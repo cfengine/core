@@ -197,7 +197,7 @@ void MonNetworkGatherData(double *cf_this)
 
     strcat(comm, " -an");
 
-    if ((pp = cf_popen(comm, "r")) == NULL)
+    if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
         /* FIXME: no logging */
         return;

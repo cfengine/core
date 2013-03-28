@@ -443,7 +443,7 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
     ReplaceStr(prog, buf, sizeof(buf), "$(this.promiser)", filename);
     ReplaceStr(prog, buf, sizeof(buf), "${this.promiser}", filename);
 
-    if ((pp = cf_popen(buf, "r")) == NULL)
+    if ((pp = cf_popen(buf, "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe to command %s\n", buf);
         return false;

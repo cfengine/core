@@ -81,7 +81,7 @@ static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootPro
 
     snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
 
-    if ((pp = cf_popen(pscomm, "r")) == NULL)
+    if ((pp = cf_popen(pscomm, "r", true)) == NULL)
     {
         /* FIXME: no logging */
         return false;

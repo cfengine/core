@@ -1516,7 +1516,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
             return false;
         }
 
-        if ((pop = cf_popen(comm, "r")) == NULL)
+        if ((pop = cf_popen(comm, "r", true)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
             YieldCurrentLock(thislock);

@@ -2033,21 +2033,30 @@ body package_method rpm_filebased(path)
 
 # OpenSolaris based systems (Solaris 11, Illumos, etc) use the much better
 # Image Package System.
+#
+# A note about Solaris 11.1 versioning format:
+#
+# $ pkg list -v --no-refresh zsh
+# FMRI                                                                         IFO
+# pkg://solaris/shell/zsh@4.3.17,5.11-0.175.1.0.0.24.0:20120904T174236Z        i--
+# name--------- |<----->| |/________________________\|
+# version---------------- |\                        /|
+#
+# Notice that the publisher and timestamp aren't used.
 
 body package_method ips
 {
   package_changes => "bulk";
   package_list_command => "/usr/bin/pkg list -v --no-refresh";
-  package_list_name_regex    => "pkg://.+?/([^\s]+)@.*$";
-  package_list_version_regex => "[^\s]+@([^\s]+).*";
+  package_list_name_regex    => "pkg://.+?(?<=/)([^\s]+)@.*$";
+  package_list_version_regex => "[^\s]+@([^\s]+):.*";
   package_installed_regex => ".*(i..)"; # all reported are installed
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/bin/true";  # Fixme later
+  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_list_update_ifelapsed => "240";
 
   package_add_command => "/usr/bin/pkg install --accept ";
-  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_delete_command => "/usr/bin/pkg uninstall";
   package_update_command =>  "/usr/bin/pkg install --accept";
   package_patch_command =>  "/usr/bin/pkg install --accept";

@@ -35,6 +35,8 @@
 #include "vars.h"
 #include "files_names.h"
 
+#include <assert.h>
+
 #ifdef HAVE_ZONE_H
 # include <zone.h>
 #endif
@@ -93,97 +95,73 @@ static bool IsProcessRunning(pid_t pid)
 
 static bool PIDMatchName(pid_t pid, char *procname)
 {
-    char *cmd;
-
     if (procname == NULL)
     {
         CfOut(cf_verbose, "",
-              "NULL procname in PIDMatchName()!");
-        goto err;
-    }
-
-    /* Most ps I've seen truncate the "comm" column. 15 chars we get everywhere? */
-    if (strlen(procname) > 15)
-    {
-        CfOut(cf_error, "",
-              "Tried to match process name %s, longer than 15 chars, WARNING this might not work!",
-              procname);
-    }
-
-    /* We NEED 2-columns only from ps, on all platforms! */
-    switch (VSYSTEMHARDCLASS)
-    {
-    case linuxx:
-    case freebsd:
-    case netbsd:
-    case openbsd:
-        cmd = "/bin/ps ax -o pid,comm";
-        break;
-    case aix:
-    case solaris:
-        cmd = "/bin/ps -eo pid,comm";
-        break;
-    default:
-        CfOut(cf_verbose, "",
-              "Unrecognized VSYSTEMHARDCLASS \"%s\", defaulting to linux/BSD.",
-              CLASSTEXT[VSYSTEMHARDCLASS]);
-        cmd = "/bin/ps ax -o pid,comm";
-    }
-    /* TODO try ps with various paths, e.g. /bin, /usr/bin, or even $PATH,
-     * some Linux distros are deprecatint all other paths besides /usr/bin... */
-
-    FILE *pipe = NULL;
-    pipe = cf_popen(cmd, "r");
-    if (pipe == NULL)
-        goto err;
-
-    bool matched = false;
-    bool firstline = true;
-    char line[50];
-    char *s;
-    while ((s = fgets(line, sizeof(line), pipe)) != NULL)
-    {
-        if (firstline)                                    /* skip ps header */
-        {
-            firstline = false;
-            continue;
-        }
-        unsigned long field1;
-        char field2[16];
-        /* procname can also have whitespace, thus [^\n] */
-        int ret = sscanf(line, " %lu %15[^\n]", &field1, field2);
-        if (ret != 2)
-            continue;
-
-        if (field1 == pid)                                    /* PID found! */
-        {
-            if (strcmp(field2, procname) == 0)
-            {
-                matched = true;
-            }
-            else
-            {
-                CfOut(cf_verbose, "",
-                      "PID %lu is now used by other process \"%s\", not killing.\n",
-                      (uintmax_t) pid, field2);
-                matched = false;
-            }
-            break;
-        }
-    }
-    if (!matched && s == NULL)
-        CfOut(cf_verbose, "",
-              "PID %lu is not in the process table, not killing.\n",
+              "NULL procname in PIDMatchName(), might blindly kill pid %lu!",
               (uintmax_t) pid);
+        return true;
+    }
 
-    cf_pclose(pipe);
+    DeleteItemList(PROCESSTABLE);
+    PROCESSTABLE = NULL;
+    LoadProcessTable(&PROCESSTABLE);
+
+    char *name = GetProcNameByPID(pid);
+    bool matched;
+
+    if (name == NULL)
+    {
+        CfOut(cf_verbose, "",
+              "PID %lu is not in the process table.\n",
+              (uintmax_t) pid);
+        matched = false;
+    }
+    else if (strcmp(name, procname) != 0)
+    {
+        CfOut(cf_verbose, "",
+              "PID is now used by other process \"%s\", not killing.\n",
+              name);
+        matched = false;
+    }
+    else
+    {
+        /* PID's name matches procname! */
+        matched = true;
+    }
+
+    free(name);
     return matched;
+}
 
-  err:
-    CfOut(cf_verbose, "",
-          "Could not match PID with process name, falling back to IsProcessRunning(). Might blindly kill PID %lu",
-          (uintmax_t) pid);
-    return IsProcessRunning(pid);
+/* Returns the basename(3) of path
+   @param len The length of path, -1 to indicate whole string */
+char *Unix_xbasename_len(char *path, int len)
+{
+    assert(path != NULL);
+
+    if (len == -1)
+        len = strlen(path);
+    if (len == 0)
+        return xstrdup(".");
+
+    int end = len - 1;
+    while (end >= 0 && path[end] == '/')
+        end--;
+
+    if (end == -1)                                  /* path was all slashes */
+        return xstrdup("/");
+
+    int start = end-1;
+    while (start >= 0 && path[start] != '/')
+        start--;
+    start++;
+
+    char *s = xmalloc(end - start + 2);
+    strncpy(s, &path[start], end - start + 1);
+    s[end - start + 1] = '\0';
+
+    return s;
 }
 
 /* Try to gracefully terminate process with given PID and executable name. */

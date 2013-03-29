@@ -455,6 +455,15 @@ void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
 
 /**********************************************************************************/
 
+char *xbasename_len(char *path, int len)
+{
+#ifdef MINGW
+    /* TODO */
+#else
+    return Unix_xbasename_len(path, len);
+#endif
+}
+
 int GracefulTerminate(pid_t pid, char *procname)
 {
 #ifdef MINGW

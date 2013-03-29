@@ -33,6 +33,8 @@
 
 #include "files_names.h"
 
+#include <assert.h>
+
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
@@ -484,4 +486,69 @@ bool IsProcessNameRunning(char *procNameRegex)
     }
 
     return matched;
+}
+
+char *GetProcNameByPID(pid_t pid)
+{
+    assert(PROCESSTABLE != NULL);
+
+    /* Get ps headers. */
+    char *colHeaders[CF_PROCCOLS];
+    int start[CF_PROCCOLS] = { 0 };
+    int end[CF_PROCCOLS] = { 0 };
+    GetProcessColumnNames(PROCESSTABLE->name, colHeaders, start, end);
+
+    /* Find PID column */
+    int pid_col = GetProcColumnIndex("PID", "PID", colHeaders);
+    if (pid_col == -1)
+        return NULL;
+
+    int args_col = GetProcColumnIndex("CMD", "COMMAND", colHeaders);
+    if (args_col == -1)
+        return NULL;
+
+    /* Iterate over ps lines. */
+    Item *line;
+    for (line = PROCESSTABLE->next; line != NULL; line = line->next)
+    {
+        char *lineSplit[CF_PROCCOLS];
+
+        if (NULL_OR_EMPTY(line->name))
+        {
+            continue;
+        }
+        if (!SplitProcLine(line->name, colHeaders, start, end, lineSplit))
+        {
+            CfOut(cf_error, "",
+                  "!! GetProcNameByPID: Could not split process line \"%s\"",
+                  line->name);
+            continue;
+        }
+
+        /* Check if PID matches */
+        long value = Str2Int(lineSplit[pid_col]);
+        if (value == CF_NOINT)
+        {
+            CfOut(cf_error, "",
+                  "!! GetProcNameByPID: Could not extract pid from \"%s\"",
+                  lineSplit[pid_col]);
+            continue;
+        }
+        if (value != pid)
+            continue;
+
+        /* We have a match, return basename of first argument! */
+        char *args;
+        char *end = strchr(lineSplit[args_col], ' ');
+        int len;
+        if (end == NULL)
+            len = strlen(lineSplit[args_col]);
+        else
+            len = end - lineSplit[args_col];
+
+        args = xbasename_len(lineSplit[args_col], len);
+        return args;
+    }
+
+    return NULL;
 }

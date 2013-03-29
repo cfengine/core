@@ -52,12 +52,10 @@ void CryptoInitialize()
         ERR_load_crypto_strings();
 
         RandomSeed();
-        unsigned char s[16] = { 0 };
-        int seed = 0;
-        RAND_bytes(s, 16);
-        s[15] = '\0';
-        seed = ElfHash(s, CF_HASHTABLESIZE);
-        srand48((long) seed);
+
+        long seed = 0;
+        RAND_bytes(&seed, sizeof(seed));
+        srand48(seed);
 
         crypto_initialized = true;
     }

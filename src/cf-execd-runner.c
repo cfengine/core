@@ -199,7 +199,7 @@ void LocalExec(const ExecConfig *config)
 
             if(PipeToPid(&pid_agent, pp))
             {
-                ProcessSignalTerminate(pid_agent);
+                GracefulTerminatePID(pid_agent);
             }
             else
             {

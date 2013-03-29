@@ -74,6 +74,7 @@ char *THIS_BUNDLE = NULL;
 char THIS_AGENT[CF_MAXVARSIZE] = { 0 };
 
 enum cfagenttype THIS_AGENT_TYPE;
+char *ARGV0 = NULL;
 time_t PROMISETIME = 0;
 time_t CF_LOCKHORIZON = SECONDS_PER_WEEK * 4;
 

@@ -53,6 +53,8 @@
 
 #include <stdio.h>
 #include <math.h>
+/* TODO autoconf test */
+#include <libgen.h>                                         /* for basename */
 
 #ifndef _GETOPT_H
 # include "../pub/getopt.h"

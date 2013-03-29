@@ -74,7 +74,13 @@ static Rlist *IGNORE_INTERFACES = NULL;
 
 static bool IsProcessRunning(pid_t pid)
 {
-    int res = kill(pid, 0);
+    /*
+     * We need to freeze the process before killing it.
+     * Therefore we send a SIGSTOP to the process, if the
+     * pid exists, then we leave it there to avoid having a
+     * runaway process.
+     */
+    int res = kill(pid, SIGSTOP);
 
     if(res == 0)
     {
@@ -167,23 +173,31 @@ char *Unix_xbasename_len(char *path, int len)
 /* Try to gracefully terminate process with given PID and executable name. */
 int Unix_GracefulTerminate(pid_t pid, char *procname)
 {
+    kill(pid, SIGSTOP);
     if (PIDMatchName(pid, procname))
     {
         kill(pid, SIGINT);
+        /* We need to wake up the process so it gets killed. */
+        kill(pid, SIGCONT);
         sleep(1);
 
         if (PIDMatchName(pid, procname))
         {
             /* If still running give it a bit more time to settle... */
             sleep(5);
+            kill(pid, SIGSTOP);
             if (PIDMatchName(pid, procname))
             {
                 kill(pid, SIGTERM);
+                kill(pid, SIGCONT);
                 sleep(5);
 
+                kill(pid, SIGSTOP);
                 if (PIDMatchName(pid, procname))
                 {
                     kill(pid, SIGKILL);
+                    /* Omae wa mo shindeiru - but just to be sure... */
+                    kill(pid, SIGCONT);
                     sleep(1);
 
                     if (PIDMatchName(pid, procname))
@@ -194,9 +208,18 @@ int Unix_GracefulTerminate(pid_t pid, char *procname)
                         return false;
                     }
                 }
+                else
+                    kill(pid, SIGCONT);
             }
+            else
+                kill(pid, SIGCONT);
         }
+        else
+            kill(pid, SIGCONT);
     }
+    else
+        kill(pid, SIGCONT);
+
     return true;
 }
 
@@ -205,24 +228,29 @@ int Unix_GracefulTerminatePID(pid_t pid)
     if (IsProcessRunning(pid))
     {
         kill(pid, SIGINT);
+        kill(pid, SIGCONT);
         sleep(1);
 
         if (IsProcessRunning(pid))
         {
+            kill(pid, SIGCONT);
             /* If still running give it a bit more time to settle... */
             sleep(5);
             if (IsProcessRunning(pid))
             {
                 kill(pid, SIGTERM);
+                kill(pid, SIGCONT);
                 sleep(5);
 
                 if (IsProcessRunning(pid))
                 {
                     kill(pid, SIGKILL);
+                    kill(pid, SIGCONT);
                     sleep(1);
 
                     if (IsProcessRunning(pid))
                     {
+                        kill(pid, SIGCONT);
                         CfOut(cf_error, "",
                               "!! Could not kill pid %lu",
                               (uintmax_t) pid);

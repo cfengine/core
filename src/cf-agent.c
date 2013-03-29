@@ -180,6 +180,8 @@ static GenericAgentConfig CheckOpts(int argc, char **argv)
     int c, alpha = false, v6 = false;
     GenericAgentConfig config = GenericAgentDefaultConfig(cf_agent);
 
+    ARGV0 = xstrdup(basename(argv[0]));
+
 /* Because of the MacOS linker we have to call this from each agent
    individually before Generic Initialize */
 

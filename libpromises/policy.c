@@ -662,7 +662,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
-    Set *used_handles = SetNew((unsigned int (*)(const void*, unsigned int))GetHash, (bool (*)(const void *, const void *))StringSafeEqual, NULL);
+    Set *used_handles = SetNew((unsigned int (*)(const void*, unsigned int))OatHash, (bool (*)(const void *, const void *))StringSafeEqual, NULL);
 
     for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
     {

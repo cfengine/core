@@ -833,13 +833,13 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
-        int slot = GetHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
+        int slot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = GetHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 

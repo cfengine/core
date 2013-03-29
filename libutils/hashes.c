@@ -24,13 +24,6 @@
 
 #include "hashes.h"
 
-int GetHash(const char *key, unsigned int max)
-{
-    return OatHash(key, max);
-}
-
-/*****************************************************************************/
-
 int OatHash(const char *key, unsigned int max)
 {
     unsigned const char *p = key;

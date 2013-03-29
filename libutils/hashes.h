@@ -29,6 +29,5 @@
 #include "platform.h"
 
 int OatHash(const char *key, unsigned int max);
-int GetHash(const char *key, unsigned int max);
 
 #endif

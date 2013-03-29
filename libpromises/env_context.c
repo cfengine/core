@@ -264,7 +264,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) GetHash(splay, CF_HASHTABLESIZE);
+        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
         for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)

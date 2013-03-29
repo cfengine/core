@@ -35,6 +35,8 @@
 #include "vars.h"
 #include "files_names.h"
 
+#include <assert.h>
+
 #ifdef HAVE_ZONE_H
 # include <zone.h>
 #endif
@@ -70,69 +72,6 @@ static bool IsProcessRunning(pid_t pid);
 static Rlist *IGNORE_INTERFACES = NULL;
 
 
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
-
-int Unix_GracefulTerminate(pid_t pid)
-{
-    int res;
-
-    if ((res = kill(pid, SIGINT)) == -1)
-    {
-        sleep(1);
-        res = 0;
-
-        if ((res = kill(pid, SIGTERM)) == -1)
-        {
-            sleep(5);
-            res = 0;
-
-            if ((res = kill(pid, SIGKILL)) == -1)
-            {
-                sleep(1);
-            }
-        }
-    }
-
-    return (res == 0);
-}
-
-/*************************************************************/
-
-void ProcessSignalTerminate(pid_t pid)
-{
-    if(!IsProcessRunning(pid))
-    {
-        return;
-    }
-
-
-    if(kill(pid, SIGINT) == -1)
-    {
-        CfOut(cf_error, "kill", "!! Could not send SIGINT to pid %ld" , (intmax_t)pid);
-    }
-
-    sleep(1);
-
-
-    if(kill(pid, SIGTERM) == -1)
-    {
-        CfOut(cf_error, "kill", "!! Could not send SIGTERM to pid %ld" , (intmax_t)pid);
-    }
-
-    sleep(5);
-
-
-    if(kill(pid, SIGKILL) == -1)
-    {
-        CfOut(cf_error, "kill", "!! Could not send SIGKILL to pid %ld" , (intmax_t)pid);
-    }
-
-    sleep(1);
-}
-
-/*************************************************************/
-
 static bool IsProcessRunning(pid_t pid)
 {
     int res = kill(pid, 0);
@@ -147,9 +86,153 @@ static bool IsProcessRunning(pid_t pid)
         return false;
     }
 
-    CfOut(cf_error, "kill", "!! Failed checking for process existence");
+    CfOut(cf_error, "kill",
+          "!! Failed checking for process existence %lu",
+          (uintmax_t) pid);
 
     return false;
+}
+
+static bool PIDMatchName(pid_t pid, char *procname)
+{
+    if (procname == NULL)
+    {
+        CfOut(cf_verbose, "",
+              "NULL procname in PIDMatchName(), might blindly kill pid %lu!",
+              (uintmax_t) pid);
+        return true;
+    }
+
+    DeleteItemList(PROCESSTABLE);
+    PROCESSTABLE = NULL;
+    LoadProcessTable(&PROCESSTABLE);
+
+    char *name = GetProcNameByPID(pid);
+    bool matched;
+
+    if (name == NULL)
+    {
+        CfOut(cf_verbose, "",
+              "PID %lu is not in the process table.\n",
+              (uintmax_t) pid);
+        matched = false;
+    }
+    else if (strcmp(name, procname) != 0)
+    {
+        CfOut(cf_verbose, "",
+              "PID is now used by other process \"%s\", not killing.\n",
+              name);
+        matched = false;
+    }
+    else
+    {
+        /* PID's name matches procname! */
+        matched = true;
+    }
+
+    free(name);
+    return matched;
+}
+
+/* Returns the basename(3) of path
+   @param len The length of path, -1 to indicate whole string */
+char *Unix_xbasename_len(char *path, int len)
+{
+    assert(path != NULL);
+
+    if (len == -1)
+        len = strlen(path);
+    if (len == 0)
+        return xstrdup(".");
+
+    int end = len - 1;
+    while (end >= 0 && path[end] == '/')
+        end--;
+
+    if (end == -1)                                  /* path was all slashes */
+        return xstrdup("/");
+
+    int start = end-1;
+    while (start >= 0 && path[start] != '/')
+        start--;
+    start++;
+
+    char *s = xmalloc(end - start + 2);
+    strncpy(s, &path[start], end - start + 1);
+    s[end - start + 1] = '\0';
+
+    return s;
+}
+
+/* Try to gracefully terminate process with given PID and executable name. */
+int Unix_GracefulTerminate(pid_t pid, char *procname)
+{
+    if (PIDMatchName(pid, procname))
+    {
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (PIDMatchName(pid, procname))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (PIDMatchName(pid, procname))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (PIDMatchName(pid, procname))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (PIDMatchName(pid, procname))
+                    {
+                        CfOut(cf_error, "",
+                              "!! Could not kill pid %lu",
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+int Unix_GracefulTerminatePID(pid_t pid)
+{
+    if (IsProcessRunning(pid))
+    {
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (IsProcessRunning(pid))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (IsProcessRunning(pid))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (IsProcessRunning(pid))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (IsProcessRunning(pid))
+                    {
+                        CfOut(cf_error, "",
+                              "!! Could not kill pid %lu",
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    return true;
 }
 
 /*************************************************************/

@@ -745,6 +745,7 @@ int cf_pwait(pid_t pid);
 
 int SelectProcess(char *procentry, char **names, int *start, int *end, Attributes a, Promise *pp);
 bool IsProcessNameRunning(char *procNameRegex);
+char *GetProcNameByPID(pid_t pid);
 
 /* promises.c */
 
@@ -857,7 +858,6 @@ void Get3Environment(void);
 void BuiltinClasses(void);
 void OSClasses(void);
 int IsInterfaceAddress(char *adr);
-void ProcessSignalTerminate(pid_t pid);
 int GetCurrentUserName(char *userName, int userNameLen);
 
 #ifndef MINGW
@@ -902,7 +902,9 @@ bool IsReadReady(int fd, int timeout_sec);
 /* unix.c */
 
 #ifndef MINGW
-int Unix_GracefulTerminate(pid_t pid);
+char *Unix_xbasename_len(char *path, int len);
+int Unix_GracefulTerminatePID(pid_t pid);
+int Unix_GracefulTerminate(pid_t pid, char *procname);
 int Unix_GetCurrentUserName(char *userName, int userNameLen);
 int Unix_ShellCommandReturnsZero(char *comm, int useshell);
 int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp);
@@ -969,11 +971,13 @@ void CleanScheduledPackages(void);
 
 /* verify_processes.c */
 
+char *xbasename_len(char *path, int len);
 void VerifyProcessesPromise(Promise *pp);
 void VerifyProcesses(Attributes a, Promise *pp);
 int LoadProcessTable(Item **procdata);
 int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int GracefulTerminate(pid_t pid);
+int GracefulTerminate(pid_t pid, char *procname);
+int GracefulTerminatePID(pid_t pid);
 void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 /* verify_services.c */

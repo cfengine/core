@@ -2042,7 +2042,20 @@ body package_method rpm_filebased(path)
 # name--------- |<----->| |/________________________\|
 # version---------------- |\                        /|
 #
-# Notice that the publisher and timestamp aren't used.
+# Notice that the publisher and timestamp aren't used. And that the package
+# version then must have the commas replaced by underscores.
+#
+# Thus,
+#     4.3.17,5.11-0.175.1.0.0.24.0
+# Becomes:
+#     4.3.17_5.11-0.175.1.0.0.24.0
+#
+# Therefore, a properly formatted package promise looks like this:
+#    "shell/zsh"
+#      package_policy  => "addupdate",
+#      package_method  => ips,
+#      package_select  => ">=",
+#      package_version => "4.3.17_5.11-0.175.1.0.0.24.0";
 
 body package_method ips
 {

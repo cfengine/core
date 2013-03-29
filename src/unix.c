@@ -165,7 +165,7 @@ static bool PIDMatchName(pid_t pid, char *procname)
             {
                 CfOut(cf_verbose, "",
                       "PID %lu is now used by other process \"%s\", not killing.\n",
-                      (uintmax_t) pid, procname);
+                      (uintmax_t) pid, field2);
                 matched = false;
             }
             break;

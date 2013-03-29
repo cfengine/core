@@ -77,66 +77,189 @@ static void InitIgnoreInterfaces(void);
 
 static Rlist *IGNORE_INTERFACES = NULL;
 
+/*************************************************************/
 
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
-
-int GracefulTerminate(pid_t pid)
+/* Check process table to see if given PID exists with given executable name. */
+/*
+ * How to print first column PID, last column EXECUTABLE_NAME
+ *
+ * *BSD:    ps -axc
+ * Linux,
+ * Busybox: ps ax -o pid,comm
+ * Solaris: ps -o pid,fname
+ * Irix, AIX: FEEDBACK NEEDED
+ */
+/*
+ * How to print first column PID, second column argv[0] OR execname, this is easier:
+ * Linux, BSD:  ps ax -o pid,comm
+ * SystemV:     ps -eo pid,comm
+ */
+static bool PIDMatchName(pid_t pid, char *procname)
 {
-    int res;
+    char *cmd;
 
-    if ((res = kill(pid, SIGINT)) == -1)
+    /* Must never happen, this is usually ARGV0 set from GenericAgentCheckOpts() (TODO) */
+    if (procname == NULL)
     {
-        sleep(1);
-        res = 0;
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              "NULL procname in PIDMatchName()!");
+        goto err;
+    }
 
-        if ((res = kill(pid, SIGTERM)) == -1)
+    /* Most ps I've seen truncate the "comm" column. 15 chars we get everywhere? */
+    if (strlen(procname) > 15)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              "Tried to match process name %s, longer than 15 chars, WARNING this might not work!",
+              procname);
+        goto err;
+    }
+
+    /* We NEED 2-columns only from ps, on all platforms! */
+    switch (VSYSTEMHARDCLASS)
+    {
+    case PLATFORM_CONTEXT_LINUX:                         /* busybox included :-) */
+    case PLATFORM_CONTEXT_FREEBSD:
+    case PLATFORM_CONTEXT_OPENBSD:
+    case PLATFORM_CONTEXT_NETBSD:
+        cmd = "/bin/ps ax -o pid,comm";
+        break;
+    case PLATFORM_CONTEXT_AIX:
+    case PLATFORM_CONTEXT_SOLARIS:
+        cmd = "/bin/ps -eo pid,comm";
+        break;
+    default:
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              "Unrecognized VSYSTEMHARDCLASS \"%s\", defaulting to linux/BSD.",
+              CLASSTEXT[VSYSTEMHARDCLASS]);
+        cmd = "/bin/ps ax -o pid,comm";
+    }
+    /* TODO try ps with various paths, e.g. /bin, /usr/bin, or even $PATH,
+     * some Linux distros are deprecating all other paths besides /usr/bin... */
+
+    FILE *pipe = NULL;
+    pipe = cf_popen(cmd, "r");
+    if (pipe == NULL)
+        goto err;
+
+    bool matched = false;
+    bool firstline = true;
+    char line[50];
+    char *s;
+    while ((s = fgets(line, sizeof(line), pipe)) != NULL)
+    {
+        if (firstline)                                    /* skip ps header */
         {
-            sleep(5);
-            res = 0;
+            firstline = false;
+            continue;
+        }
+        unsigned long field1;
+        char field2[16];
+        /* procname can also have whitespace, thus [^\n] */
+        int ret = sscanf(line, " %lu %15[^\n]", &field1, field2);
+        if (ret != 2)
+            continue;
 
-            if ((res = kill(pid, SIGKILL)) == -1)
+        if (field1 == pid)                                    /* PID found! */
+        {
+            if (strcmp(field2, procname) == 0)
             {
-                sleep(1);
+                matched = true;
+            }
+            else
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                      "PID %" PRIuMAX " is now used by other process \"%s\", not killing!\n",
+                      (uintmax_t) pid, procname);
+                matched = false;
+            }
+            break;
+        }
+    }
+    if (!matched && s == NULL)
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "PID %" PRIuMAX " is not in the process table, not killing.\n",
+              (uintmax_t) pid);
+
+    cf_pclose(pipe);
+    return matched;
+
+  err:
+    CfOut(OUTPUT_LEVEL_ERROR, "",
+          "Could not match PID with process name, falling back to IsProcessRunning(). Might blindly kill PID %" PRIuMAX,
+          (uintmax_t) pid);
+    return IsProcessRunning(pid);
+}
+
+/* Try to gracefully terminate process with given PID and executable name. */
+int GracefulTerminate(pid_t pid, char *procname)
+{
+    if (PIDMatchName(pid, procname))
+    {
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (PIDMatchName(pid, procname))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (PIDMatchName(pid, procname))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (PIDMatchName(pid, procname))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (PIDMatchName(pid, procname))
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "",
+                              "!! Could not kill pid %" PRIuMAX,
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
             }
         }
     }
-
-    return (res == 0);
+    return true;
 }
 
-/*************************************************************/
-
-void ProcessSignalTerminate(pid_t pid)
+int GracefulTerminatePID(pid_t pid)
 {
-    if(!IsProcessRunning(pid))
+    if (IsProcessRunning(pid))
     {
-        return;
+        kill(pid, SIGINT);
+        sleep(1);
+
+        if (IsProcessRunning(pid))
+        {
+            /* If still running give it a bit more time to settle... */
+            sleep(5);
+            if (IsProcessRunning(pid))
+            {
+                kill(pid, SIGTERM);
+                sleep(5);
+
+                if (IsProcessRunning(pid))
+                {
+                    kill(pid, SIGKILL);
+                    sleep(1);
+
+                    if (IsProcessRunning(pid))
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "",
+                              "!! Could not kill pid %" PRIuMAX,
+                              (uintmax_t) pid);
+                        return false;
+                    }
+                }
+            }
+        }
     }
-
-
-    if(kill(pid, SIGINT) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGINT to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(1);
-
-
-    if(kill(pid, SIGTERM) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGTERM to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(5);
-
-
-    if(kill(pid, SIGKILL) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Could not send SIGKILL to pid %" PRIdMAX , (intmax_t)pid);
-    }
-
-    sleep(1);
+    return true;
 }
 
 /*************************************************************/
@@ -155,7 +278,9 @@ static bool IsProcessRunning(pid_t pid)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_ERROR, "kill", "!! Failed checking for process existence");
+    CfOut(OUTPUT_LEVEL_ERROR, "kill",
+          "!! Failed checking for process existence %" PRIuMAX,
+          (uintmax_t) pid);
 
     return false;
 }

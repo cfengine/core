@@ -175,6 +175,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp);
 
 /* misc */
 
-int GracefulTerminate(pid_t pid);
+int GracefulTerminate(pid_t pid, char *procname);
+int GracefulTerminatePID(pid_t pid);
 
 #endif

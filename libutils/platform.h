@@ -65,6 +65,8 @@
 
 #include <stdio.h>
 #include <math.h>
+/* TODO autotools test */
+#include <libgen.h>                                             /* basename */
 
 #ifndef _GETOPT_H
 # include "../libcompat/getopt.h"

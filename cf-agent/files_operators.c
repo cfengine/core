@@ -282,3 +282,132 @@ int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attr
 {
     return SaveAsFile(ctx, &SaveItemListCallback, liststart, file, a, pp);
 }
+
+// Some complex logic here to enable warnings of diffs to be given
+
+static Item *NextItem(const Item *ip)
+{
+    if (ip)
+    {
+        return ip->next;
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
+{
+    int retval = true;
+
+    const Item *ip1 = list1;
+    const Item *ip2 = list2;
+
+    while (true)
+    {
+        if ((ip1 == NULL) && (ip2 == NULL))
+        {
+            return retval;
+        }
+
+        if ((ip1 == NULL) || (ip2 == NULL))
+        {
+            if (warnings)
+            {
+                if ((ip1 == list1) || (ip2 == list2))
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+                         " ! File content wants to change from from/to full/empty but only a warning promised");
+                }
+                else
+                {
+                    if (ip1 != NULL)
+                    {
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
+                             ip1->name);
+                    }
+
+                    if (ip2 != NULL)
+                    {
+                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                    }
+                }
+            }
+
+            if (warnings)
+            {
+                if (ip1 || ip2)
+                {
+                    retval = false;
+                    ip1 = NextItem(ip1);
+                    ip2 = NextItem(ip2);
+                    continue;
+                }
+            }
+
+            return false;
+        }
+
+        if (strcmp(ip1->name, ip2->name) != 0)
+        {
+            if (!warnings)
+            {
+                // No need to wait
+                return false;
+            }
+            else
+            {
+                // If we want to see warnings, we need to scan the whole file
+
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
+                retval = false;
+            }
+        }
+
+        ip1 = NextItem(ip1);
+        ip2 = NextItem(ip2);
+    }
+
+    return retval;
+}
+
+/* returns true if file on disk is identical to file in memory */
+
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp)
+{
+    struct stat statbuf;
+    Item *cmplist = NULL;
+
+    CfDebug("CompareToFile(%s)\n", file);
+
+    if (cfstat(file, &statbuf) == -1)
+    {
+        return false;
+    }
+
+    if ((liststart == NULL) && (statbuf.st_size == 0))
+    {
+        return true;
+    }
+
+    if (liststart == NULL)
+    {
+        return false;
+    }
+
+    if (!LoadFileAsItemList(ctx, &cmplist, file, a, pp))
+    {
+        return false;
+    }
+
+    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp))
+    {
+        DeleteItemList(cmplist);
+        return false;
+    }
+
+    DeleteItemList(cmplist);
+    return (true);
+}

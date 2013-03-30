@@ -20,19 +20,15 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_FILES_OPERATORS_H
-#define CFENGINE_FILES_OPERATORS_H
+#ifndef CFENGINE_FILES_EDITXML_H
+#define CFENGINE_FILES_EDITXML_H
 
-#include "cf3.defs.h"
-
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp);
-
-typedef bool (*SaveCallbackFn)(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
-int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp);
-
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
+int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
+                              const ReportContext *report_context);
+#ifdef HAVE_LIBXML2
+int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, Promise *pp);
+#endif
 
 #endif

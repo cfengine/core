@@ -73,7 +73,6 @@ int DeleteItemMatching(Item **list, const char *string);
 int DeleteItemNotMatching(Item **list, const char *string);
 int DeleteItemContaining(Item **list, const char *string);
 int DeleteItemNotContaining(Item **list, const char *string);
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
 int ListLen(const Item *list);
 int ByteSizeList(const Item *list);
 bool IsItemIn(const Item *list, const char *item);

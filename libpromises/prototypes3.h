@@ -103,14 +103,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
 
-/* files_editxml.c */
-
-int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                              const ReportContext *report_context);
-#ifdef HAVE_LIBXML2
-int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, Promise *pp);
-#endif
-
 /* files_select.c */
 
 int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);

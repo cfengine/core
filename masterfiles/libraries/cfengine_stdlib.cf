@@ -690,7 +690,9 @@ vars:
    "crontab" string => "/var/spool/cron/tabs";
   redhat|fedora::
    "crontab" string => "/var/spool/cron";
- !(SuSE|redhat|fedora)::
+  freebsd::
+   "crontab" string => "/var/cron/tabs";
+ !(SuSE|redhat|fedora|freebsd)::
     "crontab" string => "/var/spool/cron/crontabs";
 
 files:

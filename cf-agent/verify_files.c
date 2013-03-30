@@ -46,6 +46,7 @@
 #include "locks.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"
+#include "verify_files_hashes.h"
 #include "logging.h"
 #include "generic_agent.h" // HashVariables
 #include "misc_lib.h"

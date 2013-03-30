@@ -56,6 +56,7 @@
 #include "scope.h"
 #include "misc_lib.h"
 #include "abstract_dir.h"
+#include "verify_files_hashes.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

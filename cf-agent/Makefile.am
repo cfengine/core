@@ -47,6 +47,7 @@ cf_agent_SOURCES = \
         nfs.c nfs.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
+	verify_files_hashes.c verify_files_hashes.h \
         verify_storage.c verify_storage.h \
         verify_exec.c verify_exec.h \
         verify_methods.c verify_methods.h \

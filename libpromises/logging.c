@@ -66,7 +66,7 @@ static uint16_t SYSLOG_PORT = 514;
 
 int FACILITY;
 
-static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *logname);
+static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname);
 
 /*****************************************************************************/
 
@@ -284,7 +284,7 @@ static void TrackTotalCompliance(char status, const Promise *pp)
 }
 #endif
 
-static void UpdatePromiseCounters(char status, const Promise *pp, Attributes attr)
+static void UpdatePromiseCounters(char status, const Promise *pp, TransactionContext tc)
 {
     if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
     {
@@ -296,7 +296,7 @@ static void UpdatePromiseCounters(char status, const Promise *pp, Attributes att
     case PROMISE_RESULT_CHANGE:
     case PROMISE_RESULT_NOOP:
         PR_REPAIRED++;
-        VAL_REPAIRED += attr.transaction.value_repaired;
+        VAL_REPAIRED += tc.value_repaired;
         break;
 
     case PROMISE_RESULT_WARN:
@@ -305,7 +305,7 @@ static void UpdatePromiseCounters(char status, const Promise *pp, Attributes att
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_INTERRUPTED:
         PR_NOTKEPT++;
-        VAL_NOTKEPT += attr.transaction.value_notkept;
+        VAL_NOTKEPT += tc.value_notkept;
         break;
 
     default:
@@ -313,7 +313,7 @@ static void UpdatePromiseCounters(char status, const Promise *pp, Attributes att
     }
 }
 
-static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promise *pp, Attributes attr)
+static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
     Rlist *add_classes;
     Rlist *del_classes;
@@ -321,8 +321,8 @@ static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promis
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
-        add_classes = attr.classes.change;
-        del_classes = attr.classes.del_change;
+        add_classes = dc.change;
+        del_classes = dc.del_change;
         break;
 
     case PROMISE_RESULT_WARN:
@@ -330,35 +330,35 @@ static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promis
         return;
 
     case PROMISE_RESULT_TIMEOUT:
-        add_classes = attr.classes.timeout;
-        del_classes = attr.classes.del_notkept;
+        add_classes = dc.timeout;
+        del_classes = dc.del_notkept;
         break;
 
     case PROMISE_RESULT_FAIL:
-        add_classes = attr.classes.failure;
-        del_classes = attr.classes.del_notkept;
+        add_classes = dc.failure;
+        del_classes = dc.del_notkept;
         break;
 
     case PROMISE_RESULT_DENIED:
-        add_classes = attr.classes.denied;
-        del_classes = attr.classes.del_notkept;
+        add_classes = dc.denied;
+        del_classes = dc.del_notkept;
         break;
 
     case PROMISE_RESULT_INTERRUPTED:
-        add_classes = attr.classes.interrupt;
-        del_classes = attr.classes.del_notkept;
+        add_classes = dc.interrupt;
+        del_classes = dc.del_notkept;
         break;
 
     case PROMISE_RESULT_NOOP:
-        add_classes = attr.classes.kept;
-        del_classes = attr.classes.del_kept;
+        add_classes = dc.kept;
+        del_classes = dc.del_kept;
         break;
 
     default:
         ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
     }
 
-    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, attr.classes.persist, attr.classes.timer, attr.classes.scope);
+    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, dc.persist, dc.timer, dc.scope);
     DeleteAllClasses(ctx, del_classes);
 }
 
@@ -411,7 +411,7 @@ void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
     NotePromiseCompliance(pp, compliance_status, reason);
 }
 
-static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise *pp, Attributes attr)
+static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise *pp, TransactionContext tc)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -423,7 +423,7 @@ static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise 
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
-        log_name = attr.transaction.log_repaired;
+        log_name = tc.log_repaired;
         break;
 
     case PROMISE_RESULT_WARN:
@@ -434,15 +434,15 @@ static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise 
     case PROMISE_RESULT_FAIL:
     case PROMISE_RESULT_DENIED:
     case PROMISE_RESULT_INTERRUPTED:
-        log_name = attr.transaction.log_failed;
+        log_name = tc.log_failed;
         break;
 
     case PROMISE_RESULT_NOOP:
-        log_name = attr.transaction.log_kept;
+        log_name = tc.log_kept;
         break;
     }
 
-    SummarizeTransaction(ctx, attr, log_name);
+    SummarizeTransaction(ctx, tc, log_name);
 }
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status)
@@ -450,10 +450,10 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char st
 #ifdef HAVE_NOVA
     TrackTotalCompliance(status, pp);
 #endif
-    UpdatePromiseCounters(status, pp, attr);
-    SetPromiseOutcomeClasses(status, ctx, pp, attr);
+    UpdatePromiseCounters(status, pp, attr.transaction);
+    SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
     NotifyDependantPromises(status, ctx, pp);
-    DoSummarizeTransaction(ctx, status, pp, attr);
+    DoSummarizeTransaction(ctx, status, pp, attr.transaction);
 }
 
 /************************************************************************/
@@ -577,17 +577,17 @@ void FatalError(const EvalContext *ctx, char *s, ...)
     exit(1);
 }
 
-static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *logname)
+static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
 {
-    if (logname && (attr.transaction.log_string))
+    if (logname && (tc.log_string))
     {
         char buffer[CF_EXPANDSIZE];
 
-        ExpandScalar(ctx, ScopeGetCurrent()->scope, attr.transaction.log_string, buffer);
+        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
 
         if (strcmp(logname, "udp_syslog") == 0)
         {
-            RemoteSysLog(attr.transaction.log_priority, buffer);
+            RemoteSysLog(tc.log_priority, buffer);
         }
         else if (strcmp(logname, "stdout") == 0)
         {
@@ -609,7 +609,7 @@ static void SummarizeTransaction(EvalContext *ctx, Attributes attr, const char *
             fclose(fout);
         }
 
-        attr.transaction.log_string = NULL;     /* To avoid repetition */
+        tc.log_string = NULL;     /* To avoid repetition */
     }
 }
 

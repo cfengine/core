@@ -376,7 +376,10 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
     SeqDestroy(errors);
 
-    ShowContext(ctx);
+    if (VERBOSE || DEBUG)
+    {
+        ShowContext(ctx);
+    }
 
     VerifyPromises(ctx, main_policy, config);
 

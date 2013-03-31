@@ -30,7 +30,6 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "sort.h"
-#include "writer.h"
 #include "hashes.h"
 #include "vars.h"
 #include "cfstream.h"
@@ -50,76 +49,69 @@
 
 void ShowContext(EvalContext *ctx)
 {
-    if (VERBOSE || DEBUG)
     {
-        Writer *writer = FileWriter(stdout);
+        printf("%s>  -> Hard classes = { ", VPREFIX);
 
+        Seq *hard_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorHard(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
         {
-            WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
-
-            Seq *hard_contexts = SeqNew(1000, NULL);
-            SetIterator it = EvalContextHeapIteratorHard(ctx);
-            char *context = NULL;
-            while ((context = SetIteratorNext(&it)))
+            if (!EvalContextHeapContainsNegated(ctx, context))
             {
-                if (!EvalContextHeapContainsNegated(ctx, context))
-                {
-                    SeqAppend(hard_contexts, context);
-                }
+                SeqAppend(hard_contexts, context);
             }
-
-            SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
-
-            for (size_t i = 0; i < SeqLength(hard_contexts); i++)
-            {
-                const char *context = SeqAt(hard_contexts, i);
-                WriterWriteF(writer, "%s ", context);
-            }
-
-            WriterWriteF(writer, "}\n");
-            SeqDestroy(hard_contexts);
         }
 
+        SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
+
+        for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
-            WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
-
-            Seq *soft_contexts = SeqNew(1000, NULL);
-            SetIterator it = EvalContextHeapIteratorSoft(ctx);
-            char *context = NULL;
-            while ((context = SetIteratorNext(&it)))
-            {
-                if (!EvalContextHeapContainsNegated(ctx, context))
-                {
-                    SeqAppend(soft_contexts, context);
-                }
-            }
-
-            SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
-
-            for (size_t i = 0; i < SeqLength(soft_contexts); i++)
-            {
-                const char *context = SeqAt(soft_contexts, i);
-                WriterWriteF(writer, "%s ", context);
-            }
-
-            WriterWriteF(writer, "}\n");
-            SeqDestroy(soft_contexts);
+            const char *context = SeqAt(hard_contexts, i);
+            printf("%s ", context);
         }
 
+        printf("}\n");
+        SeqDestroy(hard_contexts);
+    }
+
+    {
+        printf("%s>  -> Additional classes = { ", VPREFIX);
+
+        Seq *soft_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorSoft(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
         {
-            WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
-
-            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
+            if (!EvalContextHeapContainsNegated(ctx, context))
             {
-                WriterWriteF(writer, "%s ", context);
+                SeqAppend(soft_contexts, context);
             }
-
-            WriterWriteF(writer, "}\n");
         }
 
-        FileWriterDetach(writer);
+        SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
+
+        for (size_t i = 0; i < SeqLength(soft_contexts); i++)
+        {
+            const char *context = SeqAt(soft_contexts, i);
+            printf("%s ", context);
+        }
+
+        printf("}\n");
+        SeqDestroy(soft_contexts);
+    }
+
+    {
+        printf("%s>  -> Negated Classes = { ", VPREFIX);
+
+        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            printf("%s ", context);
+        }
+
+        printf("}\n");
     }
 }
 

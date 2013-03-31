@@ -28,13 +28,12 @@
 #include "cf3.defs.h"
 
 #include "sequence.h"
-#include "writer.h"
 
 void ShowPromises(const Seq *bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
-void ShowContext(EvalContext *ctx);
 
 // stdout only
+void ShowContext(EvalContext *ctx);
 void BannerPromiseType(const char *bundlename, const char *type, int p);
 void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);

@@ -69,7 +69,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
 #ifndef __MINGW32__
-static void Apoptosis(EvalContext *ctx);
+static void Apoptosis(void);
 #endif
 
 static bool LocalExecInThread(const ExecConfig *config);
@@ -468,7 +468,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     if (!ONCE)
     {
         /* Kill previous instances of cf-execd if those are still running */
-        Apoptosis(ctx);
+        Apoptosis();
     }
 #endif
 
@@ -565,7 +565,7 @@ static bool LocalExecInThread(const ExecConfig *config)
 
 #ifndef __MINGW32__
 
-static void Apoptosis(EvalContext *ctx)
+static void Apoptosis(void)
 {
     static char promiser_buf[CF_SMALLBUF];
     snprintf(promiser_buf, sizeof(promiser_buf), "%s/bin/cf-execd", CFWORKDIR);
@@ -585,7 +585,7 @@ static void Apoptosis(EvalContext *ctx)
         a.process_select.process_result = "process_owner";
 
         Item *killlist = NULL;
-        int matches = FindPidMatches(ctx, PROCESSTABLE, &killlist, a, promiser_buf);
+        int matches = FindPidMatches(PROCESSTABLE, &killlist, a, promiser_buf);
 
         if (matches > 2)
         {

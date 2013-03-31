@@ -51,7 +51,6 @@ libpromises_la_SOURCES = \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
         files_names.c files_names.h \
-        files_properties.c files_properties.h \
         fncall.c fncall.h \
         generic_agent.c generic_agent.h \
         granules.c granules.h \

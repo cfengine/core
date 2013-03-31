@@ -248,7 +248,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
 
@@ -260,8 +259,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     struct sockaddr_in cin;
 #endif
 
-    memset(&dummyattr, 0, sizeof(dummyattr));
-
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
@@ -271,8 +268,10 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 
     sd = SetServerListenState(ctx, QUEUESIZE);
 
-    dummyattr.transaction.ifelapsed = 0;
-    dummyattr.transaction.expireafter = 1;
+    TransactionContext tc = {
+        .ifelapsed = 0,
+        .expireafter = 1,
+    };
 
     Policy *server_cfengine_policy = PolicyNew();
     Promise *pp = NULL;
@@ -284,7 +283,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     }
     assert(pp);
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {

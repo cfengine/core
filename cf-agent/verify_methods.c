@@ -89,7 +89,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
     GetLockName(lockname, "method", pp->promiser, params);
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {

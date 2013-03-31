@@ -280,7 +280,6 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
     }
     assert(pp);
 
-    Attributes dummyattr;
     CfLock thislock;
 
 #ifdef __MINGW32__
@@ -305,11 +304,12 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
 #endif /* !__MINGW32__ */
 
-    memset(&dummyattr, 0, sizeof(dummyattr));
-    dummyattr.transaction.ifelapsed = 0;
-    dummyattr.transaction.expireafter = 0;
+    TransactionContext tc = {
+        .ifelapsed = 0,
+        .expireafter = 0,
+    };
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {

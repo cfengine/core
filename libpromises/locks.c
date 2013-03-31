@@ -410,7 +410,7 @@ static char *BodyName(const Promise *pp)
     return name;
 }
 
-CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attributes attr, Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
 {
     unsigned int pid;
     int i, err, sum = 0;
@@ -485,8 +485,8 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attr
 
     free(promise);
 
-    CfDebug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n", cc_operator, cc_operand, attr.transaction.expireafter,
-            attr.transaction.ifelapsed);
+    CfDebug("AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n", cc_operator, cc_operand, tc.expireafter,
+            tc.ifelapsed);
 
     for (i = 0; cc_operator[i] != '\0'; i++)
     {
@@ -523,10 +523,10 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attr
         return this;
     }
 
-    if (elapsedtime < attr.transaction.ifelapsed)
+    if (elapsedtime < tc.ifelapsed)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n", cflast,
-              (intmax_t) elapsedtime, attr.transaction.ifelapsed);
+              (intmax_t) elapsedtime, tc.ifelapsed);
         ReleaseCriticalSection();
         return this;
     }
@@ -540,10 +540,10 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Attr
 
         if (lastcompleted != 0)
         {
-            if (elapsedtime >= attr.transaction.expireafter)
+            if (elapsedtime >= tc.expireafter)
             {
                 CfOut(OUTPUT_LEVEL_INFORM, "", "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
-                      attr.transaction.expireafter);
+                      tc.expireafter);
 
                 pid = FindLockPid(cflock);
 

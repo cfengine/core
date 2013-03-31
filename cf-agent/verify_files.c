@@ -261,7 +261,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     ScopeDeleteSpecialScalar("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", path, DATA_TYPE_STRING);
     
-    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -483,7 +483,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {

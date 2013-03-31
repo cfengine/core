@@ -438,7 +438,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     return (true);
 }
 
-int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp)
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a)
 {
     FILE *fp;
     struct stat statbuf;
@@ -460,13 +460,13 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, "%s is not a plain file\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "%s is not a plain file\n", file);
         return false;
     }
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't read file %s for editing\n", file);
         return false;
     }
 
@@ -483,7 +483,7 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
 
         if (res == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fread", pp, a, "Unable to read contents of %s", file);
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read contents of %s", file);
             fclose(fp);
             return false;
         }

@@ -148,11 +148,11 @@ static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static int NewTypeContext(EvalContext *ctx, TypeSequence type);
+static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
 static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static bool VerifyBootstrap(EvalContext *ctx);
+static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
@@ -281,7 +281,7 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap(ctx))
+    if (BOOTSTRAP && !VerifyBootstrap())
     {
         ret = 1;
     }
@@ -1216,7 +1216,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(ctx, type))
+            if (!NewTypeContext(type))
             {
                 continue;
             }
@@ -1541,7 +1541,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(EvalContext *ctx, TypeSequence type)
+static int NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 
@@ -1744,7 +1744,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, co
 
 /**************************************************************/
 
-static bool VerifyBootstrap(EvalContext *ctx)
+static bool VerifyBootstrap(void)
 {
     struct stat sb;
     char filePath[CF_MAXVARSIZE];

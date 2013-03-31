@@ -217,7 +217,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     {
         if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(ctx, config->input_file);
+            bool policy_check_ok = CheckPromises(config->input_file);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
@@ -240,7 +240,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(EvalContext *ctx, const char *input_file)
+int CheckPromises(const char *input_file)
 {
     char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
     char filename[CF_MAXVARSIZE];

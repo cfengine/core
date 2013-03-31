@@ -627,7 +627,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const R
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(ctx, input_file))
+        if (CheckPromises(input_file))
         {
             return RELOAD_FULL;
         }

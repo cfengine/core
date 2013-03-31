@@ -33,7 +33,7 @@ ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
 ssize_t FileReadMax(char **output, char *filename, size_t size_max);
 bool FileWriteOver(char *filename, char *contents);
 
-int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp);
+int LoadFileAsItemList(Item **liststart, const char *file, Attributes a);
 
 int MakeParentDirectory(char *parentandchild, int force);
 int MakeParentDirectory2(EvalContext *ctx, char *parentandchild, int force, bool enforce_promise);

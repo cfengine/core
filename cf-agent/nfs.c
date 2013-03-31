@@ -335,7 +335,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -410,7 +410,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;

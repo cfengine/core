@@ -38,7 +38,7 @@
 
 /*****************************************************************************/
 
-EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, const Promise *pp)
+EditContext *NewEditContext(char *filename, Attributes a)
 {
     EditContext *ec;
 
@@ -55,7 +55,7 @@ EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, cons
 
     if (a.haveeditline)
     {
-        if (!LoadFileAsItemList(ctx, &(ec->file_start), filename, a, pp))
+        if (!LoadFileAsItemList(&(ec->file_start), filename, a))
         {
         free(ec);
         return NULL;
@@ -65,13 +65,13 @@ EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, cons
     if (a.haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(ctx, &(ec->xmldoc), filename, a, pp))
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a))
         {
             free(ec);
             return NULL;
         }
 #else
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -124,7 +124,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
         if (a.haveeditxml)
         {
 #ifdef HAVE_LIBXML2
-            if (XmlCompareToFile(ctx, ec->xmldoc, ec->filename, a, pp))
+            if (XmlCompareToFile(ec->xmldoc, ec->filename, a))
             {
                 if (ec)
                 {
@@ -168,13 +168,13 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
 /***************************************************************************/
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp)
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a)
 {
     struct stat statbuf;
 
     if (cfstat(file, &statbuf) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, a, " ** Information: the proposed file \"%s\" could not be loaded", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
     }
 
@@ -187,7 +187,7 @@ int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attribu
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, "%s is not a plain file\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "%s is not a plain file\n", file);
         return false;
     }
 
@@ -195,13 +195,13 @@ int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attribu
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+            CfOut(OUTPUT_LEVEL_INFORM, "xmlParseFile", "Document %s not parsed successfully\n", file);
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "xmlParseFile", pp, a, "Document %s not parsed successfully\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "xmlParseFile", "Document %s not parsed successfully\n", file);
         return false;
     }
 

@@ -397,7 +397,7 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
         return false;
     }
 
-    if (!LoadFileAsItemList(ctx, &cmplist, file, a, pp))
+    if (!LoadFileAsItemList(&cmplist, file, a))
     {
         return false;
     }

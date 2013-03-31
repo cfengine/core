@@ -56,7 +56,7 @@
 #include "cf.nova.h"
 #endif
 
-static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp);
+static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
 static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
 static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
@@ -271,7 +271,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
     CF_OCCUR++;
 
-    LoadSetuid(ctx, a, pp);
+    LoadSetuid(a);
 
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
@@ -491,7 +491,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         return false;
     }
 
-    pp->edcontext = NewEditContext(ctx, filename, a, pp);
+    pp->edcontext = NewEditContext(filename, a);
 
     if (pp->edcontext == NULL)
     {
@@ -680,7 +680,7 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportC
     }
 }
 
-static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp)
+static void LoadSetuid(Attributes a)
 {
     Attributes b = { {0} };
     char filename[CF_BUFSIZE];
@@ -692,7 +692,7 @@ static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp)
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
-    if (!LoadFileAsItemList(ctx, &VSETUIDLIST, filename, b, pp))
+    if (!LoadFileAsItemList(&VSETUIDLIST, filename, b))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Did not find any previous setuid log %s, creating a new one", filename);
     }

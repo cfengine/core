@@ -3,12 +3,12 @@
 
 #include "cf3.defs.h"
 
-EditContext *NewEditContext(EvalContext *ctx, char *filename, Attributes a, const Promise *pp);
+EditContext *NewEditContext(char *filename, Attributes a);
 void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise *pp);
 int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attributes a, Promise *pp);
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(EvalContext *ctx, xmlDocPtr *doc, const char *file, Attributes a, const Promise *pp);
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a);
 int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp);
 #endif
 

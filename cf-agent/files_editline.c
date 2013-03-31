@@ -1300,7 +1300,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             continue;
         }
         
-        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
+        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
                  " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
@@ -1370,7 +1370,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             continue;
         }
 
-        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a, pp))
+        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a.insert_match, pp))
            {
            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->this_server);
            continue;
@@ -1468,7 +1468,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {    
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
                  newline);
@@ -1495,7 +1495,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     }
     else
     {
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
                  newline);

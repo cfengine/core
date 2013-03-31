@@ -170,11 +170,11 @@ Item *EndOfList(Item *start)
 
 /*********************************************************************/
 
-int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr, Attributes a, const Promise *pp)
+int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
 {
     for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
-        if (MatchPolicy(item, ip->name, a.insert_match, pp))
+        if (MatchPolicy(item, ip->name, insert_match, pp))
         {
             return true;
         }
@@ -566,7 +566,7 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 
 /*********************************************************************/
 
-int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Attributes a,
+int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
@@ -577,7 +577,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if ((ip->next) && (ip->next == location))
             {
-                if (MatchPolicy(string, ip->name, a.insert_match, pp))
+                if (MatchPolicy(string, ip->name, insert_match, pp))
                 {
                     return true;
                 }
@@ -592,7 +592,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if (ip == location)
             {
-                if ((ip->next) && (MatchPolicy(string, ip->next->name, a.insert_match, pp)))
+                if ((ip->next) && (MatchPolicy(string, ip->next->name, insert_match, pp)))
                 {
                     return true;
                 }

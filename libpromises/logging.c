@@ -86,11 +86,6 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
 
     char *sp, string[CF_BUFSIZE];
     Rval retval = { 0 };
-    Promise dummyp = { 0 };
-    Attributes dummyattr = { {0} };
-
-    memset(&dummyp, 0, sizeof(dummyp));
-    memset(&dummyattr, 0, sizeof(dummyattr));
 
     {
         Rval track_value_rval = { 0 };

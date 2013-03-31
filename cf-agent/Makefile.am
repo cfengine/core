@@ -63,7 +63,7 @@ cf_agent_SOURCES = \
         files_operators.c files_operators.h \
         files_properties.c files_properties.h \
         files_repository.c files_repository.h \
-        files_select.c \
+        files_select.c files_select.h \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h

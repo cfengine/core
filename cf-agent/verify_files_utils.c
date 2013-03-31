@@ -41,6 +41,7 @@
 #include "logging.h"
 #include "files_hashes.h"
 #include "files_repository.h"
+#include "files_select.h"
 #include "expand.h"
 #include "conversion.h"
 #include "pipes.h"

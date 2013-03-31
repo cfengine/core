@@ -106,10 +106,6 @@ struct ServerConnectionState;
 
 int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
 
-/* files_select.c */
-
-int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
-
 /* manual.c */
 
 void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);

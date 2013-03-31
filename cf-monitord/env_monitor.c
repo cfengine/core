@@ -44,6 +44,7 @@
 #include "files_lib.h"
 #include "unix.h"
 #include "verify_measurements.h"
+#include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -52,10 +53,6 @@
 
 #include <math.h>
 #include <assert.h>
-
-#ifndef HAVE_NOVA
-static void HistoryUpdate(EvalContext *ctx, Averages newvals);
-#endif
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -1199,27 +1196,3 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 }
-
-/*****************************************************************************/
-
-void MonOtherInit(void)
-{
-#ifdef HAVE_NOVA
-    Nova_MonOtherInit();
-#endif
-}
-
-/*********************************************************************/
-
-void MonOtherGatherData(double *cf_this)
-{
-#ifdef HAVE_NOVA
-    Nova_MonOtherGatherData(cf_this);
-#endif
-}
-
-#ifndef HAVE_NOVA
-static void HistoryUpdate(EvalContext *ctx, Averages newvals)
-{
-}
-#endif

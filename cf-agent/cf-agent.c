@@ -62,6 +62,7 @@
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "cf-agent-enterprise-stubs.h"
 
 #include "mod_common.h"
 

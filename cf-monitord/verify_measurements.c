@@ -31,13 +31,10 @@
 #include "cfstream.h"
 #include "logging.h"
 #include "policy.h"
+#include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 #include "history.h"
-#endif
-
-#ifndef HAVE_NOVA
-static void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp);
 #endif
 
 static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp);
@@ -140,9 +137,3 @@ static int CheckMeasureSanity(EvalContext *ctx, Attributes a, Promise *pp)
 
     return retval;
 }
-
-#ifndef HAVE_NOVA
-static void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp)
-{
-}
-#endif

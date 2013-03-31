@@ -42,6 +42,7 @@
 #include "communication.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "cf-serverd-enterprise-stubs.h"
 
 #include "generic_agent.h" // HashControls
 

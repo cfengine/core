@@ -132,15 +132,6 @@ void PreSanitizePromise(EvalContext *ctx, Promise *pp)
 {
 }
 
-/* cf-execd: cf-execd-runner.c */
-
-
-const char *MailSubject(void)
-{
-    return "community";
-}
-
-
 /* network communication: cf-serverd.c, client_protocol.c, client_code.c, crypto.c */
 
 
@@ -159,26 +150,7 @@ const EVP_CIPHER *CfengineCipher(char type)
     return EVP_bf_cbc();
 }
 
-
-/* cf-monitord: env_monitor.c, verify_measurement.c */
-
-void GetObservable(int i, char *name, char *desc)
-{
-    strcpy(name, OBS[i][0]);
-}
-
-void SetMeasurementPromises(Item **classlist)
-{
-}
-
-/* cf-agent: cf-agent.c */
-
-void LastSawBundle(const Bundle *bundle, double comp)
-{
-}
-
 /* cf-agent: evalfunction.c */
-
 
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
@@ -234,14 +206,6 @@ bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name
     return false;
 }
 
-/* cf-agent: verify_services.c */
-
-
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
-}
-
 /* cf-serverd: server_transform.c, cf-serverd.c */
 
 void TranslatePath(char *new, const char *old)
@@ -249,27 +213,6 @@ void TranslatePath(char *new, const char *old)
     strncpy(new, old, CF_BUFSIZE - 1);
 }
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
-}
-
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
-    return 0;
-}
-
-void TryCollectCall(void)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
-}
-
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
-    return false;
-}
 
 void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
 {

@@ -68,6 +68,10 @@ cf_agent_SOURCES = \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
 
+if !HAVE_NOVA
+cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
+endif
+
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON
 cf_agent_SOURCES += \

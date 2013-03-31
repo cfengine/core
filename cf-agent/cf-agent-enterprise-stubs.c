@@ -22,12 +22,13 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_SERVICES_H
-#define CFENGINE_VERIFY_SERVICES_H
+#include "cf-agent-enterprise-stubs.h"
 
-#include "cf3.defs.h"
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
+{
+    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
+}
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
-
-#endif
+void LastSawBundle(const Bundle *bundle, double comp)
+{
+}

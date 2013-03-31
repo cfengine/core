@@ -19,6 +19,11 @@ cf_execd_SOURCES = \
         cf-execd.c \
         cf-execd-runner.c cf-execd-runner.h
 
+if !HAVE_NOVA
+cf_execd_SOURCES += \
+	cf-execd-enterprise-stubs.c cf-execd-enterprise-stubs.h
+endif
+
 CLEANFILES = *.gcno *.gcda
 
 #

@@ -22,12 +22,21 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_SERVICES_H
-#define CFENGINE_VERIFY_SERVICES_H
+#ifndef CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
+#define CFENGINE_CF_SERVERD_ENTERPRISE_STUBS_H
 
 #include "cf3.defs.h"
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
+struct ServerConnectionState;
+
+void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
+int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
+
+int SetServerListenState(EvalContext *ctx, size_t queue_size);
+
+void TryCollectCall(void);
+int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
+
+bool ReturnQueryData(ServerConnectionState *conn, char *menu);
 
 #endif

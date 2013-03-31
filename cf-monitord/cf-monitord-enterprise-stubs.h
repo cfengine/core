@@ -22,12 +22,18 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_SERVICES_H
-#define CFENGINE_VERIFY_SERVICES_H
+#ifndef CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
+#define CFENGINE_CF_MONITORD_ENTERPRISE_STUBS_H
 
 #include "cf3.defs.h"
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
+void GetObservable(int i, char *name, char *desc);
+void SetMeasurementPromises(Item **classlist);
+
+void MonOtherInit(void);
+void MonOtherGatherData(double *cf_this);
+
+void HistoryUpdate(EvalContext *ctx, Averages newvals);
+void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp);
 
 #endif

@@ -22,12 +22,17 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_SERVICES_H
-#define CFENGINE_VERIFY_SERVICES_H
+#ifndef CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
+#define CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 
 #include "cf3.defs.h"
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
+#if defined(__MINGW32__)
+void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
+#endif
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
+
+void LastSawBundle(const Bundle *bundle, double compliance);
 
 #endif
+

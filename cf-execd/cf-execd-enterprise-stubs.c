@@ -22,12 +22,10 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_VERIFY_SERVICES_H
-#define CFENGINE_VERIFY_SERVICES_H
+#include "cf-execd-enterprise-stubs.h"
 
-#include "cf3.defs.h"
+const char *MailSubject(void)
+{
+    return "community";
+}
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
-
-#endif

@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) Cfengine AS
 
@@ -21,23 +20,31 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#include "cf-serverd-functions.h"
+#include "cf-monitord-enterprise-stubs.h"
 
-#include "cfstream.h"
-
-#if !defined(HAVE_NOVA)
-
-int SetServerListenState(EvalContext *ctx, size_t queue_size)
+void GetObservable(int i, char *name, char *desc)
 {
-    if (!SERVER_LISTEN)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
-    }
-
-    return InitServer(queue_size);
+    strcpy(name, OBS[i][0]);
 }
 
-#endif
+void SetMeasurementPromises(Item **classlist)
+{
+}
+
+void MonOtherInit(void)
+{
+}
+
+void MonOtherGatherData(double *cf_this)
+{
+}
+
+void HistoryUpdate(EvalContext *ctx, Averages newvals)
+{
+}
+
+void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp)
+{
+}

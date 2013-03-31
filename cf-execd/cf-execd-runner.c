@@ -34,6 +34,7 @@
 #include "mutex.h"
 #include "logging.h"
 #include "exec_tools.h"
+#include "cf-execd-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 # if defined(__MINGW32__)

@@ -29,6 +29,11 @@ cf_monitord_SOURCES = \
         mon_temp.c \
         cf-monitord.c
 
+if !HAVE_NOVA
+cf_monitord_SOURCES += \
+	cf-monitord-enterprise-stubs.c cf-monitord-enterpsise-stubs.h
+endif
+
 CLEANFILES = *.gcno *.gcda
 
 #

@@ -67,6 +67,6 @@ void MonProcessesGatherData(double *cf_this);
 /* mon_temp.c */
 
 void MonTempInit(void);
-void MonTempGatherData(EvalContext *ctx, double *cf_this);
+void MonTempGatherData(double *cf_this);
 
 #endif

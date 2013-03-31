@@ -2458,7 +2458,7 @@ int ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, 
     else
     {
         int err = 0;
-        conn = NewServerConnection(ctx, attr, pp, &err);
+        conn = NewServerConnection(attr.copy, attr.transaction.background, pp, &err);
 
         if (conn == NULL)
         {

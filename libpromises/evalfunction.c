@@ -867,7 +867,6 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char buffer[CF_BUFSIZE];
     int val = 0, n_read = 0;
     short portnum;
-    Attributes attr = { {0} };
 
     memset(buffer, 0, sizeof(buffer));
 
@@ -896,10 +895,12 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     conn = NewAgentConn();
 
-    attr.copy.force_ipv4 = false;
-    attr.copy.portnumber = portnum;
+    FileCopy fc = {
+        .force_ipv4 = false,
+        .portnumber = portnum,
+    };
 
-    if (!ServerConnect(ctx, conn, hostnameip, attr, NULL))
+    if (!ServerConnect(conn, hostnameip, fc))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a tcp socket");
         DeleteAgentConn(conn);
@@ -1715,7 +1716,6 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
     int val = 0, n_read = 0, count = 0;
     short portnum;
-    Attributes attr = { {0} };
     Rval retval;
     buffer[0] = '\0';
 
@@ -1791,10 +1791,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
         conn = NewAgentConn();
 
-        attr.copy.force_ipv4 = false;
-        attr.copy.portnumber = portnum;
+        FileCopy fc = {
+            .force_ipv4 = false,
+            .portnumber = portnum,
+        };
 
-        if (!ServerConnect(ctx, conn, rp->item, attr, pp))
+        if (!ServerConnect(conn, rp->item, fc))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a tcp socket");
             DeleteAgentConn(conn);

@@ -476,7 +476,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
     else
     {
         int err = 0;
-        conn = NewServerConnection(ctx, a, pp, &err);
+        conn = NewServerConnection(a.copy, a.transaction.background, pp, &err);
 
         if (conn == NULL)
         {

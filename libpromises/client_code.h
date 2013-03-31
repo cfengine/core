@@ -32,14 +32,14 @@ void DetermineCfenginePort(void);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise *pp, int *err);
+AgentConnection *NewServerConnection(FileCopy fc, bool background, Promise *pp, int *err);
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, Promise *pp);
 void DeleteClientCache(Promise *pp);
 int CompareHashNet(char *file1, char *file2, bool encrypt, Promise *pp);
 int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
 int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
-int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp);
+int ServerConnect(AgentConnection *conn, char *host, FileCopy fc);
 
 Item *RemoteDirList(const char *dirname, bool encrypt, Promise *pp);
 

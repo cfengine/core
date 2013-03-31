@@ -73,7 +73,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attributes attr, Promise *pp, int *err);
+static AgentConnection *ServerConnection(char *server, FileCopy fc, Promise *pp, int *err);
 
 #if !defined(__MINGW32__)
 static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
@@ -173,7 +173,7 @@ void DetermineCfenginePort()
 
 /*********************************************************************/
 
-AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise *pp, int *err)
+AgentConnection *NewServerConnection(FileCopy fc, bool background, Promise *pp, int *err)
 {
     AgentConnection *conn;
     Rlist *rp;
@@ -183,7 +183,7 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
     // We never close a non-background connection until end
     // mark serial connections as such
 
-    for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
+    for (rp = fc.servers; rp != NULL; rp = rp->next)
     {
         if (ServerOffline(RlistScalarValue(rp)))
         {
@@ -193,11 +193,11 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
         char *server_ptr = RlistScalarValue(rp);
         pp->this_server = server_ptr ? (xstrdup(server_ptr)) : NULL;
 
-        if (attr.transaction.background)
+        if (background)
         {
             if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
             {
-                conn = ServerConnection(ctx, RlistScalarValue(rp), attr, pp, err);
+                conn = ServerConnection(RlistScalarValue(rp), fc, pp, err);
                 return conn;
             }
         }
@@ -211,7 +211,7 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
             /* This is first usage, need to open */
 
-            conn = ServerConnection(ctx, RlistScalarValue(rp), attr, pp, err);
+            conn = ServerConnection(RlistScalarValue(rp), fc, pp, err);
 
             if (conn == NULL)
             {
@@ -232,7 +232,7 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
 /*****************************************************************************/
 
-static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attributes attr, Promise *pp, int *err)
+static AgentConnection *ServerConnection(char *server, FileCopy fc, Promise *pp, int *err)
 {
     AgentConnection *conn;
     *err = 0;
@@ -271,7 +271,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
     {
         CfDebug("Opening server connection to %s\n", server);
 
-        if (!ServerConnect(ctx, conn, server, attr, pp))
+        if (!ServerConnect(conn, server, fc))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", " !! No server is responding on this port");
 
@@ -301,7 +301,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
             return NULL;
         }
 
-        if (!AuthenticateAgent(conn, attr.copy.trustkey, pp->this_server))
+        if (!AuthenticateAgent(conn, fc.trustkey, pp->this_server))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
@@ -1079,33 +1079,33 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
 /* Level 2                                                           */
 /*********************************************************************/
 
-int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp)
+int ServerConnect(AgentConnection *conn, char *host, FileCopy fc)
 {
     short shortport;
     char strport[CF_MAXVARSIZE] = { 0 };
     struct sockaddr_in cin = { 0 };
     struct timeval tv = { 0 };
 
-    if (attr.copy.portnumber == (short) CF_NOINT)
+    if (fc.portnumber == (short) CF_NOINT)
     {
         shortport = SHORT_CFENGINEPORT;
         strncpy(strport, STR_CFENGINEPORT, CF_MAXVARSIZE);
     }
     else
     {
-        shortport = htons(attr.copy.portnumber);
-        snprintf(strport, CF_MAXVARSIZE, "%u", (int) attr.copy.portnumber);
+        shortport = htons(fc.portnumber);
+        snprintf(strport, CF_MAXVARSIZE, "%u", (int) fc.portnumber);
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set cfengine port number to %s = %u\n", strport, (int) ntohs(shortport));
 
-    if ((attr.copy.timeout == (short) CF_NOINT) || (attr.copy.timeout <= 0))
+    if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
     {
         tv.tv_sec = CONNTIMEOUT;
     }
     else
     {
-        tv.tv_sec = attr.copy.timeout;
+        tv.tv_sec = fc.timeout;
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set connection timeout to %jd\n", (intmax_t) tv.tv_sec);
@@ -1114,7 +1114,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
 #if defined(HAVE_GETADDRINFO)
 
-    if (!attr.copy.force_ipv4)
+    if (!fc.force_ipv4)
     {
         struct addrinfo query = { 0 }, *response, *ap;
         struct addrinfo query2 = { 0 }, *response2, *ap2;
@@ -1126,7 +1126,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Unable to find host or service: (%s/%s) %s", host, strport,
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to find host or service: (%s/%s) %s", host, strport,
                  gai_strerror(err));
             return false;
         }
@@ -1149,7 +1149,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
                 if ((err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2)) != 0)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to lookup hostname or cfengine service: %s",
+                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Unable to lookup hostname or cfengine service: %s",
                          gai_strerror(err));
                     cf_closesocket(conn->sd);
                     conn->sd = SOCKET_INVALID;
@@ -1201,11 +1201,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if (!connected)
         {
-            if (pp)
-            {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
-            }
-
+            CfOut(OUTPUT_LEVEL_VERBOSE, "connect", " !! Unable to connect to server %s", host);
             return false;
         }
 
@@ -1235,7 +1231,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if ((conn->sd = socket(AF_INET, SOCK_STREAM, 0)) == SOCKET_INVALID)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "socket", pp, attr, "Couldn't open a socket");
+            CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open a socket");
             return false;
         }
 

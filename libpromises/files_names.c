@@ -43,11 +43,10 @@
 
 /*********************************************************************/
 
-int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
+int IsNewerFileTree(char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     char path[CF_BUFSIZE] = { 0 };
-    Attributes dummyattr = { {0} };
     Dir *dirh;
     struct stat sb;
 
@@ -78,7 +77,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
     {
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
+            if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
             {
                 continue;
             }
@@ -111,7 +110,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
                 }
                 else
                 {
-                    if (IsNewerFileTree(ctx, path, reftime))
+                    if (IsNewerFileTree(path, reftime))
                     {
                         DirClose(dirh);
                         return true;

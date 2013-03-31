@@ -718,7 +718,7 @@ int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *i
     snprintf(filename, CF_MAXVARSIZE, "%s/inputs", CFWORKDIR);
     MapName(filename);
 
-    if (IsNewerFileTree(ctx, filename, PROMISETIME))
+    if (IsNewerFileTree(filename, PROMISETIME))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Quick search detected file changes");
         return true;

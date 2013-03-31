@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     BeginAudit();
     KeepPromises(ctx, policy, config, report_context);
-    CloseReports("agent", report_context);
+    ReportContextDestroy(report_context);
 
     // only note class usage when default policy is run
     if (!config->input_file)

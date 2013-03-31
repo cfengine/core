@@ -101,7 +101,6 @@ void CheckLicenses(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
 ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type);
-void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

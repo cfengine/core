@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     }
 
     GenericAgentConfigDestroy(config);
-    CloseReports("commmon", report_context);
+    ReportContextDestroy(report_context);
     EvalContextDestroy(ctx);
 
     if (ERRORCOUNT > 0)

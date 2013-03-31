@@ -848,35 +848,6 @@ ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type)
     return context;
 }
 
-/*******************************************************************/
-
-void CloseReports(const char *agents, ReportContext *report_context)
-{
-    char name[CF_BUFSIZE];
-
-#ifndef HAVE_NOVA
-    if (SHOWREPORTS)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote compilation report %s%creports%cpromise_output_%s.txt", CFWORKDIR, FILE_SEPARATOR,
-              FILE_SEPARATOR, agents);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote compilation report %s%creports%cpromise_output_%s.html", CFWORKDIR, FILE_SEPARATOR,
-              FILE_SEPARATOR, agents);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Wrote knowledge map %s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
-    }
-#endif
-    
-    ReportContextDestroy(report_context);
-
-// Make the knowledge readable in situ
-
-    snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", CFWORKDIR, FILE_SEPARATOR);
-    chmod(name, 0644);
-}
-
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
-
 /*
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.

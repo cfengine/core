@@ -271,4 +271,12 @@ int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
     return false;
 }
 
+void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
+{
+}
+
+void ShowPromise(ARG_UNUSED const Promise *pp)
+{
+}
+
 #endif

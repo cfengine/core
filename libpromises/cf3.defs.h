@@ -1693,6 +1693,7 @@ typedef struct
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
 #include "dbm_api.h"
+#include "sequence.h"
 #include "prototypes3.h"
 #include "alloc.h"
 #include "cf3.extern.h"

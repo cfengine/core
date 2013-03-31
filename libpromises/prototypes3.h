@@ -96,6 +96,9 @@ void LastSawBundle(const Bundle *bundle, double compliance);
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
+void ShowPromises(const Seq* bundles, const Seq *bodies);
+void ShowPromise(const Promise *pp);
+
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
 

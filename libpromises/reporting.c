@@ -40,6 +40,7 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "policy.h"
+#include "sequence.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
@@ -114,30 +115,6 @@ void ShowContext(EvalContext *ctx)
         printf("}\n");
     }
 }
-
-#ifdef HAVE_NOVA
-
-void ShowPromises(const Seq *bundles, const Seq *bodies)
-{
-    Nova_ShowPromises(bundles, bodies);
-}
-
-void ShowPromise(const Promise *pp)
-{
-    Nova_ShowPromise(pp);
-}
-
-#else
-
-void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
-{
-}
-
-void ShowPromise(const Promise *pp)
-{
-}
-
-#endif
 
 void Banner(const char *s)
 {

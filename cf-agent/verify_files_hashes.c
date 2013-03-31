@@ -193,7 +193,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     }
 }
 
-int CompareFileHashes(EvalContext *ctx, char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp)
+int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -206,7 +206,7 @@ int CompareFileHashes(EvalContext *ctx, char *file1, char *file2, struct stat *s
         return true;
     }
 
-    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         HashFile(file1, digest1, CF_DEFAULT_DIGEST);
         HashFile(file2, digest2, CF_DEFAULT_DIGEST);
@@ -224,11 +224,11 @@ int CompareFileHashes(EvalContext *ctx, char *file1, char *file2, struct stat *s
     }
     else
     {
-        return CompareHashNet(ctx, file1, file2, attr, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
     }
 }
 
-int CompareBinaryFiles(EvalContext *ctx, char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp)
+int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -241,7 +241,7 @@ int CompareBinaryFiles(EvalContext *ctx, char *file1, char *file2, struct stat *
         return true;
     }
 
-    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         fd1 = open(file1, O_RDONLY | O_BINARY, 0400);
         fd2 = open(file2, O_RDONLY | O_BINARY, 0400);
@@ -269,7 +269,7 @@ int CompareBinaryFiles(EvalContext *ctx, char *file1, char *file2, struct stat *
     else
     {
         CfDebug("Using network checksum instead\n");
-        return CompareHashNet(ctx, file1, file2, attr, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
     }
 }
 

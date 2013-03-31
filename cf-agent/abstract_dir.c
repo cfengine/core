@@ -39,16 +39,26 @@ struct AbstractDir_
     Item *listpos;
 };
 
-AbstractDir *AbstractDirOpen(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp)
+AbstractDir *AbstractDirOpen(const char *dirname, FileCopy fc, Promise *pp)
 {
     AbstractDir *d = xcalloc(1, sizeof(AbstractDir));
-    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
     {
         d->local_dir = DirOpen(dirname);
+        if (d->local_dir == NULL)
+        {
+            free(d);
+            return NULL;
+        }
     }
     else
     {
-        d->list = RemoteDirList(ctx, dirname, attr, pp);
+        d->list = RemoteDirList(dirname, fc.encrypt, pp);
+        if (d->list == NULL)
+        {
+            free(d);
+            return NULL;
+        }
         d->listpos = d->list;
     }
     return d;

@@ -36,11 +36,11 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 void DisconnectServer(AgentConnection *conn);
 int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, Promise *pp);
 void DeleteClientCache(Promise *pp);
-int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, Promise *pp);
-int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
-int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp);
+int CompareHashNet(char *file1, char *file2, bool encrypt, Promise *pp);
+int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
+int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
 int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp);
 
-Item *RemoteDirList(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
+Item *RemoteDirList(const char *dirname, bool encrypt, Promise *pp);
 
 #endif

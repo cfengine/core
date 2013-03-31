@@ -81,7 +81,7 @@ static void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dsta
 static int PushDirState(EvalContext *ctx, char *name, struct stat *sb);
 static bool PopDirState(int goback, char *name, struct stat *sb, Recursion r);
 static bool CheckLinkSecurity(struct stat *sb, char *name);
-static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr, Promise *pp);
+static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc, Promise *pp);
 static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
@@ -432,7 +432,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
 
         if (!attr.copy.force_update)
         {
-            ok_to_copy = CompareForFileCopy(ctx, sourcefile, destfile, &ssb, &dsb, attr, pp);
+            ok_to_copy = CompareForFileCopy(sourcefile, destfile, &ssb, &dsb, attr.copy, pp);
         }
         else
         {
@@ -730,7 +730,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         }
     }
 
-    if ((dirh = AbstractDirOpen(ctx, from, attr, pp)) == NULL)
+    if ((dirh = AbstractDirOpen(from, attr.copy, pp)) == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "copy can't open directory [%s]\n", from);
         return;
@@ -903,7 +903,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         strcpy(destdir, destination);
         AddSlash(destdir);
 
-        if ((dirh = AbstractDirOpen(ctx, sourcedir, attr, pp)) == NULL)
+        if ((dirh = AbstractDirOpen(sourcedir, attr.copy, pp)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
             DeleteClientCache(pp);
@@ -1213,14 +1213,14 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
         if (attr.copy.encrypt)
         {
-            if (!EncryptCopyRegularFileNet(ctx, source, new, sstat.st_size, attr, pp))
+            if (!EncryptCopyRegularFileNet(source, new, sstat.st_size, pp))
             {
                 return false;
             }
         }
         else
         {
-            if (!CopyRegularFileNet(ctx, source, new, sstat.st_size, attr, pp))
+            if (!CopyRegularFileNet(source, new, sstat.st_size, pp))
             {
                 return false;
             }
@@ -1331,7 +1331,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?? Final verification of transmission ...\n");
 
-        if (CompareFileHashes(ctx, source, new, &sstat, &dstat, attr, pp))
+        if (CompareFileHashes(source, new, &sstat, &dstat, attr.copy, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr,
                  " !! New file %s seems to have been corrupted in transit, aborting!\n", new);
@@ -2668,19 +2668,19 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
     }
 }
 
-static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, Attributes attr,
+static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc,
                               Promise *pp)
 {
     int ok_to_copy;
 
-    switch (attr.copy.compare)
+    switch (fc.compare)
     {
     case FILE_COMPARATOR_CHECKSUM:
     case FILE_COMPARATOR_HASH:
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
-            ok_to_copy = CompareFileHashes(ctx, sourcefile, destfile, ssb, dsb, attr, pp);
+            ok_to_copy = CompareFileHashes(sourcefile, destfile, ssb, dsb, fc, pp);
         }
         else
         {
@@ -2700,7 +2700,7 @@ static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
-            ok_to_copy = CompareBinaryFiles(ctx, sourcefile, destfile, ssb, dsb, attr, pp);
+            ok_to_copy = CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc, pp);
         }
         else
         {
@@ -2730,7 +2730,7 @@ static int CompareForFileCopy(EvalContext *ctx, char *sourcefile, char *destfile
     case FILE_COMPARATOR_ATIME:
 
         ok_to_copy = (dsb->st_ctime < ssb->st_ctime) ||
-            (dsb->st_mtime < ssb->st_mtime) || (CompareBinaryFiles(ctx, sourcefile, destfile, ssb, dsb, attr, pp));
+            (dsb->st_mtime < ssb->st_mtime) || (CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc, pp));
 
         if (ok_to_copy)
         {

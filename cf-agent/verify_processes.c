@@ -47,6 +47,7 @@
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
+static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
 
 #ifndef __MINGW32__
 static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
@@ -316,3 +317,69 @@ static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *
     return killed;
 }
 #endif
+
+static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser)
+{
+    int matches = 0;
+    pid_t cfengine_pid = getpid();
+
+    Item *matched = SelectProcesses(procdata, promiser, a.process_select, a.haveselect);
+
+    for (Item *ip = matched; ip != NULL; ip = ip->next)
+    {
+        CF_OCCUR++;
+
+        if (a.transaction.action == cfa_warn)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Matched: %s\n", ip->name);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Matched: %s\n", ip->name);
+        }
+
+        pid_t pid = ip->counter;
+
+        if (pid == 1)
+        {
+            if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "(Okay to send only HUP to init)\n");
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        if ((pid < 4) && (a.signals))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
+                  promiser);
+            continue;
+        }
+
+        bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
+
+        if ((a.transaction.action == cfa_warn) && promised_zero)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", procdata->name);     /* legend */
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", ip->name);
+            continue;
+        }
+
+        if ((pid == cfengine_pid) && (a.signals))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! cf-agent will not signal itself!\n");
+            continue;
+        }
+
+        PrependItem(killlist, ip->name, "");
+        (*killlist)->counter = pid;
+        matches++;
+    }
+
+    DeleteItemList(matched);
+
+    return matches;
+}

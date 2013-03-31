@@ -681,17 +681,16 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
 
 static void LoadSetuid(Attributes a)
 {
-    Attributes b = { {0} };
     char filename[CF_BUFSIZE];
 
-    b = a;
-    b.edits.backup = BACKUP_OPTION_NO_BACKUP;
-    b.edits.maxfilesize = 1000000;
+    EditDefaults edits = a.edits;
+    edits.backup = BACKUP_OPTION_NO_BACKUP;
+    edits.maxfilesize = 1000000;
 
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
-    if (!LoadFileAsItemList(&VSETUIDLIST, filename, b))
+    if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Did not find any previous setuid log %s, creating a new one", filename);
     }

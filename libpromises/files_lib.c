@@ -443,7 +443,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     return (true);
 }
 
-int LoadFileAsItemList(Item **liststart, const char *file, Attributes a)
+int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 {
     FILE *fp;
     struct stat statbuf;
@@ -456,10 +456,10 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a)
         return false;
     }
 
-    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
-              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+              (intmax_t) statbuf.st_size, edits.maxfilesize);
         return (false);
     }
 
@@ -493,7 +493,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, Attributes a)
             return false;
         }
 
-        if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
+        if (edits.joinlines && *(line + strlen(line) - 1) == '\\')
         {
             join = true;
         }

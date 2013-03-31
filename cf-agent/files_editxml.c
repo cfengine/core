@@ -1737,7 +1737,7 @@ static bool SanityCheckTextInsertions(Attributes a)
 
 /***************************************************************************/
 
-int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a)
+int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
 /* returns true if XML on disk is identical to XML in memory */
 {
     struct stat statbuf;
@@ -1760,7 +1760,7 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a)
         return false;
     }
 
-    if (!LoadFileAsXmlDoc(&cmpdoc, file, a))
+    if (!LoadFileAsXmlDoc(&cmpdoc, file, edits))
     {
         return false;
     }

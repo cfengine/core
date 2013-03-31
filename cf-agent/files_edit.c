@@ -55,7 +55,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (a.haveeditline)
     {
-        if (!LoadFileAsItemList(&(ec->file_start), filename, a))
+        if (!LoadFileAsItemList(&(ec->file_start), filename, a.edits))
         {
         free(ec);
         return NULL;
@@ -65,7 +65,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
     if (a.haveeditxml)
     {
 #ifdef HAVE_LIBXML2
-        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a))
+        if (!LoadFileAsXmlDoc(&(ec->xmldoc), filename, a.edits))
         {
             free(ec);
             return NULL;
@@ -124,7 +124,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
         if (a.haveeditxml)
         {
 #ifdef HAVE_LIBXML2
-            if (XmlCompareToFile(ec->xmldoc, ec->filename, a))
+            if (XmlCompareToFile(ec->xmldoc, ec->filename, a.edits))
             {
                 if (ec)
                 {
@@ -168,7 +168,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
 /***************************************************************************/
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a)
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 {
     struct stat statbuf;
 
@@ -178,10 +178,10 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a)
         return false;
     }
 
-    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
-              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+              (intmax_t) statbuf.st_size, edits.maxfilesize);
         return false;
     }
 

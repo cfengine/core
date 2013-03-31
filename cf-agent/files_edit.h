@@ -8,7 +8,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
 int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attributes a, Promise *pp);
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, Attributes a);
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits);
 int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp);
 #endif
 

@@ -27,7 +27,7 @@
 
 int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp);
 #ifdef HAVE_LIBXML2
-int XmlCompareToFile(xmlDocPtr doc, char *file, Attributes a);
+int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits);
 #endif
 
 #endif

@@ -570,37 +570,32 @@ static void Apoptosis(void)
 
     if (LoadProcessTable(&PROCESSTABLE))
     {
-        char mypid[32];
-        snprintf(mypid, 32, "%d", (int)getuid());
+        char myuid[32];
+        snprintf(myuid, 32, "%d", (int)getuid());
 
         Rlist *owners = NULL;
-        RlistPrependScalar(&owners, mypid);
+        RlistPrependScalar(&owners, myuid);
 
-        Attributes a = {{0}};
+        ProcessSelect process_select = {
+            .owner = owners,
+            .process_result = "process_owner",
+        };
 
-        a.haveselect = true;
-        a.process_select.owner = owners;
-        a.process_select.process_result = "process_owner";
+        Item *killlist = SelectProcesses(PROCESSTABLE, promiser_buf, process_select, true);
 
-        Item *killlist = NULL;
-        int matches = FindPidMatches(PROCESSTABLE, &killlist, a, promiser_buf);
-
-        if (matches > 2)
+        for (Item *ip = killlist; ip != NULL; ip = ip->next)
         {
-            for (Item *ip = killlist; ip != NULL; ip = ip->next)
-            {
-                pid_t pid = ip->counter;
+            pid_t pid = ip->counter;
 
-                if (pid != getpid() && kill(pid, SIGTERM) < 0)
+            if (pid != getpid() && kill(pid, SIGTERM) < 0)
+            {
+                if (errno == ESRCH)
                 {
-                    if (errno == ESRCH)
-                    {
-                        /* That's ok, process exited voluntarily */
-                    }
-                    else
-                    {
-                        CfOut(OUTPUT_LEVEL_ERROR, "kill", "Unable to kill stale cf-execd process (pid=%d)", (int)pid);
-                    }
+                    /* That's ok, process exited voluntarily */
+                }
+                else
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "kill", "Unable to kill stale cf-execd process (pid=%d)", (int)pid);
                 }
             }
         }

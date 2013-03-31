@@ -54,7 +54,7 @@ void CryptoInitialize()
         RandomSeed();
 
         long seed = 0;
-        RAND_bytes(&seed, sizeof(seed));
+        RAND_bytes((unsigned char *)&seed, sizeof(seed));
         srand48(seed);
 
         crypto_initialized = true;

@@ -182,31 +182,29 @@ void ShowContext(EvalContext *ctx, const ReportContext *report_context)
     }
 }
 
-/*******************************************************************/
+#ifdef HAVE_NOVA
 
-void ShowPromises(
-#if !defined(HAVE_NOVA)
-    ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies
-#else
-    const Seq *bundles, const Seq *bodies
-#endif
-    )
+void ShowPromises(const Seq *bundles, const Seq *bodies)
 {
-#if defined(HAVE_NOVA)
     Nova_ShowPromises(bundles, bodies);
-#endif
 }
 
-void ShowPromise(
-#if !defined(HAVE_NOVA)
-    ARG_UNUSED
-#endif
-    const Promise *pp)
+void ShowPromise(const Promise *pp)
 {
-#if defined(HAVE_NOVA)
     Nova_ShowPromise(pp);
-#endif
 }
+
+#else
+
+void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
+{
+}
+
+void ShowPromise(const Promise *pp)
+{
+}
+
+#endif
 
 void Banner(const char *s)
 {

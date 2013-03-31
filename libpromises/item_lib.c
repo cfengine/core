@@ -174,7 +174,7 @@ int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr,
 {
     for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
-        if (MatchPolicy(item, ip->name, a, pp))
+        if (MatchPolicy(item, ip->name, a.insert_match, pp))
         {
             return true;
         }
@@ -577,7 +577,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if ((ip->next) && (ip->next == location))
             {
-                if (MatchPolicy(string, ip->name, a, pp))
+                if (MatchPolicy(string, ip->name, a.insert_match, pp))
                 {
                     return true;
                 }
@@ -592,7 +592,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if (ip == location)
             {
-                if ((ip->next) && (MatchPolicy(string, ip->next->name, a, pp)))
+                if ((ip->next) && (MatchPolicy(string, ip->next->name, a.insert_match, pp)))
                 {
                     return true;
                 }

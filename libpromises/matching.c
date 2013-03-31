@@ -406,7 +406,7 @@ int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex)
     return (false);
 }
 
-int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Promise *pp)
+int MatchPolicy(const char *camel, const char *haystack, Rlist *insert_match, const Promise *pp)
 {
     Rlist *rp;
     char *sp, *spto, *firstchar, *lastchar;
@@ -422,7 +422,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
         ok = false;
         direct_cmp = (strcmp(camel, haystack) == 0);
 
-        if (a.insert_match == NULL)
+        if (insert_match == NULL)
         {
             // No whitespace policy means exact_match
             ok = ok || direct_cmp;
@@ -432,7 +432,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
         memset(final, 0, CF_BUFSIZE);
         strncpy(final, ip->name, CF_BUFSIZE - 1);
 
-        for (rp = a.insert_match; rp != NULL; rp = rp->next)
+        for (rp = insert_match; rp != NULL; rp = rp->next)
         {
             opt = InsertMatchTypeFromString(rp->item);
 
@@ -440,7 +440,7 @@ int MatchPolicy(const char *camel, const char *haystack, Attributes a, const Pro
 
             if (opt == INSERT_MATCH_TYPE_EXACT)
             {
-                if ((rp->next != NULL) || (rp != a.insert_match))
+                if ((rp->next != NULL) || (rp != insert_match))
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
                     PromiseRef(OUTPUT_LEVEL_ERROR, pp);

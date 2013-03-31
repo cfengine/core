@@ -40,6 +40,6 @@ void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */
 char *EscapeChar(char *str, int strSz, char esc); /* Pure */
 void AnchorRegex(const char *regex, char *out, int outSz); /* Pure */
-int MatchPolicy(const char *needle, const char *haystack, Attributes a, const Promise *pp); /* Sets variables */
+int MatchPolicy(const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
 
 #endif // MATCHING_H

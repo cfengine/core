@@ -58,13 +58,12 @@
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
-static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
+static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp);
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
 
 /*****************************************************************************/
 
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context) /* FIXME */
+void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];
@@ -81,7 +80,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (ctx, wildpath, pp, report_context);
+        (*fnptr) (ctx, wildpath, pp);
         return;
     }
     else
@@ -151,7 +150,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         {
             // Could be a dummy directory to be created so this is not an error.
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (ctx, wildpath, pp, report_context);
+            (*fnptr) (ctx, wildpath, pp);
             DeleteItemList(path);
             return;
         }
@@ -197,7 +196,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                 if ((!lastnode) && (strcmp(nextbuffer, wildpath) != 0))
                 {
-                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr, report_context);
+                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr);
                 }
                 else
                 {
@@ -218,7 +217,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                     /* If there were back references there could still be match.x vars to expand */
 
                     pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent()->scope, pp);
-                    (*fnptr) (ctx, nextbufferOrig, pcopy, report_context);
+                    (*fnptr) (ctx, nextbufferOrig, pcopy);
                     PromiseDestroy(pcopy);
                 }
             }
@@ -229,7 +228,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     else
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (ctx, pbuffer, pp, report_context);
+        (*fnptr) (ctx, pbuffer, pp);
     }
 
     if (count == 0)
@@ -238,14 +237,14 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
         if (create)
         {
-            VerifyFilePromise(ctx, pp->promiser, pp, report_context);
+            VerifyFilePromise(ctx, pp->promiser, pp);
         }
     }
 
     DeleteItemList(path);
 }
 
-static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context)
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     struct stat osb, oslb, dsb;
     Attributes a = { {0} };
@@ -458,7 +457,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
     if (a.haveedit)
     {
-        ScheduleEditOperation(ctx, path, a, pp, report_context);
+        ScheduleEditOperation(ctx, path, a, pp);
     }
 
 // Once more in case a file has been created as a result of editing or copying
@@ -474,7 +473,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
 /*****************************************************************************/
 
-int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp, const ReportContext *report_context)
+int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp)
 {
     void *vp;
     FnCall *fp;
@@ -547,10 +546,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -601,10 +600,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -625,9 +624,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -644,10 +643,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
 /*****************************************************************************/
 
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     PromiseBanner(pp);
-    FindFilePromiserObjects(ctx, pp, report_context);
+    FindFilePromiserObjects(ctx, pp);
 
     if (AM_BACKGROUND_PROCESS && (!pp->done))
     {
@@ -661,7 +660,7 @@ void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportCont
 
 /*****************************************************************************/
 
-static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
 {
     char *val = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
     int literal = (PromiseGetConstraintAsBoolean(ctx, "copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
@@ -672,11 +671,11 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportC
     {
         // Prime the promiser temporarily, may override later
         ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
-        VerifyFilePromise(ctx, pp->promiser, pp, report_context);
+        VerifyFilePromise(ctx, pp->promiser, pp);
     }
     else                        // Default is to expand regex paths
     {
-        LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyFilePromise, report_context);
+        LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyFilePromise);
     }
 }
 

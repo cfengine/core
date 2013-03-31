@@ -38,7 +38,7 @@ void yyerror(const char *s);
 
 /* agent.c */
 
-int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context);
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp);
 
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
@@ -69,7 +69,7 @@ const char *MailSubject(void);
 void PreSanitizePromise(EvalContext *ctx, Promise *pp);
 void GetObservable(int i, char *name, char *desc);
 void SetMeasurementPromises(Item **classlist);
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
 void MonOtherInit(void);
 void MonOtherGatherData(double *cf_this);

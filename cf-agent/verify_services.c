@@ -42,11 +42,11 @@
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -56,7 +56,7 @@ void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *r
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(ctx, a, pp, report_context);
+        VerifyServices(ctx, a, pp);
     }
 }
 
@@ -153,7 +153,7 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
@@ -183,7 +183,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
     }
     else
     {
-        DoVerifyServices(ctx, a, pp, report_context);
+        DoVerifyServices(ctx, a, pp);
     }
 
     ScopeDeleteSpecialScalar("this", "promiser");
@@ -194,7 +194,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
@@ -271,7 +271,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const 
 
     if (!DONTDO)
     {
-        VerifyMethod(ctx, "service_bundle", a, pp, report_context);  // Send list of classes to set privately?
+        VerifyMethod(ctx, "service_bundle", a, pp);  // Send list of classes to set privately?
     }
 }
 

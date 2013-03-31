@@ -154,10 +154,8 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
     CheckLicenses(ctx);
 
@@ -245,7 +243,6 @@ int main(int argc, char *argv[])
     PolicyDestroy(runagent_adhoc_policy);
 
     GenericAgentConfigDestroy(config);
-    ReportContextDestroy(report_context);
 
     return 0;
 }

@@ -375,7 +375,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
 /*******************************************************************/
 
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const ReportContext *report_context)
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a;
 

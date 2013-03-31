@@ -68,14 +68,14 @@ static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
 static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context);
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body);
 static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
-static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context);
+static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises);
 
 #if !defined(__MINGW32__)
 static void OpenLog(int facility);
@@ -118,7 +118,7 @@ void CheckLicenses(EvalContext *ctx)
 
 /*****************************************************************************/
 
-void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context)
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 {
 #ifdef HAVE_NOVA
     CF_DEFAULT_DIGEST = HASH_METHOD_SHA256;
@@ -146,12 +146,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, R
     if (AM_NOVA)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFE Nova\n");
-    }
-
-    if (report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
-    {
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "bundle knowledge CFEngine_nomenclature\n{\n");
-        WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n\nbundle knowledge policy_analysis\n{\n");
     }
 
     GetNameInfo3(ctx, config->agent_type);
@@ -341,7 +335,7 @@ int CheckPromises(const char *input_file)
 
 /*****************************************************************************/
 
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context)
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
     PROMISETIME = time(NULL);
 
@@ -350,12 +344,12 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
 
     if( main_policy )
     {
-        PolicyHashVariables(ctx, main_policy, report_context);
+        PolicyHashVariables(ctx, main_policy);
         HashControls(ctx, main_policy, config);
 
         if (PolicyIsRunnable(main_policy))
         {
-            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors, report_context);
+            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors);
             if (aux_policy)
             {
                 main_policy = PolicyMerge(main_policy, aux_policy);
@@ -382,12 +376,9 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
 
     SeqDestroy(errors);
 
-    WriterWriteF(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], "Expanded promise list for %s component\n\n",
-                 AgentTypeToString(agent_type));
+    ShowContext(ctx);
 
-    ShowContext(ctx, report_context);
-
-    VerifyPromises(ctx, main_policy, config, report_context);
+    VerifyPromises(ctx, main_policy, config);
 
     return main_policy;
 }
@@ -572,7 +563,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors, const ReportContext *report_context)
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors)
 {
     Policy *policy = PolicyNew();
 
@@ -603,7 +594,7 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
                 break;
 
             case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(ctx, config, returnval.item, errors, report_context);
+                aux_policy = Cf3ParseFiles(ctx, config, returnval.item, errors);
                 break;
 
             default:
@@ -619,11 +610,11 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             RvalDestroy(returnval);
         }
 
-        PolicyHashVariables(ctx, policy, report_context);
+        PolicyHashVariables(ctx, policy);
         HashControls(ctx, policy, config);
     }
 
-    PolicyHashVariables(ctx, policy, report_context);
+    PolicyHashVariables(ctx, policy);
 
     return policy;
 }
@@ -790,62 +781,6 @@ int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *i
     }
 
     return result;
-}
-
-/*******************************************************************/
-
-ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type)
-{
-    const char *workdir = GetWorkDir(ctx);
-    char name[CF_BUFSIZE];
-
-    FILE *freport_text = NULL;
-    FILE *freport_knowledge = NULL;
-
-    if (SHOWREPORTS)
-    {
-        snprintf(name, CF_BUFSIZE, "%s%creports%cpromise_output_%s.txt", workdir, FILE_SEPARATOR, FILE_SEPARATOR,
-                 AgentTypeToString(agent_type));
-
-        if ((freport_text = fopen(name, "w")) == NULL)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open output file %s", name);
-            freport_text = fopen(NULLFILE, "w");
-        }
-
-        snprintf(name, CF_BUFSIZE, "%s%cpromise_knowledge.cf", workdir, FILE_SEPARATOR);
-
-        if ((freport_knowledge = fopen(name, "w")) == NULL)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open output file %s", name);
-        }
-
-        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Writing knowledge output to %s", workdir);
-    }
-    else
-    {
-        snprintf(name, CF_BUFSIZE, NULLFILE);
-        if ((freport_text = fopen(name, "w")) == NULL)
-        {
-            FatalError(ctx, "Cannot open output file %s", name);
-        }
-    }
-
-    if (!freport_text)
-    {
-        FatalError(ctx, "Unable to continue as the null-file is unwritable");
-    }
-
-
-    ReportContext *context = ReportContextNew();
-    ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_TEXT, FileWriter(freport_text));
-
-    if (freport_knowledge)
-    {
-        ReportContextAddWriter(context, REPORT_OUTPUT_TYPE_KNOWLEDGE, FileWriter(freport_knowledge));
-    }
-
-    return context;
 }
 
 /*
@@ -1179,7 +1114,7 @@ const char *GenericAgentResolveInputPath(const char *filename, const char *base_
     return MapName(wfilename);
 }
 
-static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
 
 /* Now look once through ALL the bundles themselves */
@@ -1196,14 +1131,14 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-                ExpandPromise(ctx, pp, CommonEvalPromise, report_context);
+                ExpandPromise(ctx, pp, CommonEvalPromise);
             }
         }
 
         EvalContextStackPopFrame(ctx);
     }
 
-    PolicyHashVariables(ctx, policy, report_context);
+    PolicyHashVariables(ctx, policy);
     HashControls(ctx, policy, config);
 
     // TODO: need to move this inside PolicyCheckRunnable eventually.
@@ -1241,14 +1176,14 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 
 /*******************************************************************/
 
-static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises, const ReportContext *report_context)
+static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking common class promises...\n");
 
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
         Promise *pp = SeqAt(class_promises, i);
-        ExpandPromise(ctx, pp, KeepClassContextPromise, report_context);
+        ExpandPromise(ctx, pp, KeepClassContextPromise);
     }
 }
 
@@ -1535,7 +1470,7 @@ void WritePID(char *filename)
 
 /*******************************************************************/
 
-void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context)
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle)
 {
     for (size_t j = 0; j < SeqLength(bundle->promise_types); j++)
     {
@@ -1550,12 +1485,12 @@ void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *
 
         if (strcmp(bundle->type, "common") == 0 && strcmp(sp->name, "classes") == 0)
         {
-            CheckCommonClassPromises(ctx, sp->promises, report_context);
+            CheckCommonClassPromises(ctx, sp->promises);
         }
     }
 }
 
-void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+void PolicyHashVariables(EvalContext *ctx, Policy *policy)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Initiate variable convergence...\n");
 
@@ -1564,7 +1499,7 @@ void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *
         Bundle *bundle = SeqAt(policy->bundles, i);
         EvalContextStackPushBundleFrame(ctx, bundle, false);
 
-        BundleHashVariables(ctx, bundle, report_context);
+        BundleHashVariables(ctx, bundle);
 
         EvalContextStackPopFrame(ctx);
     }
@@ -1740,9 +1675,4 @@ void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist
 {
     RlistDestroy(config->bundlesequence);
     config->bundlesequence = RlistCopy(bundlesequence);
-}
-
-const char *AgentTypeToString(AgentType agent_type)
-{
-    return CF_AGENTTYPES[agent_type];
 }

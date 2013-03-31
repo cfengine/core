@@ -48,69 +48,10 @@
 
 #include <assert.h>
 
-static void ReportBannerText(Writer *writer, const char *s);
-
-/*******************************************************************/
-
-ReportContext *ReportContextNew(void)
-{
-    ReportContext *ctx = xcalloc(1, sizeof(ReportContext));
-    return ctx;
-}
-
-/*******************************************************************/
-
-bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer)
-{
-    bool replaced = false;
-    if (context->report_writers[type])
-    {
-        WriterClose(context->report_writers[type]);
-        replaced = true;
-    }
-
-    context->report_writers[type] = writer;
-
-    return replaced;
-}
-
-/*******************************************************************/
-
-void ReportContextDestroy(ReportContext *context)
-{
-    if (context)
-    {
-        if (context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
-        {
-            WriterWriteF(context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n");
-        }
-
-        for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
-        {
-            if (context->report_writers[i])
-            {
-                WriterClose(context->report_writers[i]);
-            }
-        }
-        free(context);
-    }
-}
-
-/*******************************************************************/
-/* Generic                                                         */
-/*******************************************************************/
-
-void ShowContext(EvalContext *ctx, const ReportContext *report_context)
+void ShowContext(EvalContext *ctx)
 {
     if (VERBOSE || DEBUG)
     {
-        if (report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT])
-        {
-            char vbuff[CF_BUFSIZE];
-            snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
-            ReportBannerText(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], vbuff);
-        }
-
         Writer *writer = FileWriter(stdout);
 
         {
@@ -212,17 +153,6 @@ void Banner(const char *s)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " %s ", s);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
 }
-
-/*******************************************************************/
-
-static void ReportBannerText(Writer *writer, const char *s)
-{
-    WriterWriteF(writer, "***********************************************************\n");
-    WriterWriteF(writer, " %s \n", s);
-    WriterWriteF(writer, "***********************************************************\n");
-}
-
-/**************************************************************/
 
 void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {

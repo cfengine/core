@@ -116,7 +116,7 @@ int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
 
 #endif
 
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);

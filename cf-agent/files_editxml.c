@@ -69,7 +69,7 @@ char *EDITXMLTYPESEQUENCE[] =
 };
 
 static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type);
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp);
 #ifdef HAVE_LIBXML2
 static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp);
 static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp);
@@ -147,8 +147,7 @@ static int XmlAttributeCount(xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                              const ReportContext *report_context)
+int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp)
 {
     enum editxmltypesequence type;
     PromiseType *sp;
@@ -204,7 +203,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
                 pp->this_server = filename;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditXmlPromise, report_context);
+                ExpandPromise(ctx, pp, KeepEditXmlPromise);
 
                 if (Abort())
                 {
@@ -250,7 +249,7 @@ static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence 
 
 /***************************************************************************/
 
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
     Attributes a = { {0} };
@@ -278,7 +277,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContex
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 

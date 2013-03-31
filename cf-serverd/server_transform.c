@@ -86,11 +86,11 @@ typedef enum
     SERVER_CONTROL_NONE
 } ServerControl;
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepContextBundles(EvalContext *ctx, Policy *policy);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
@@ -122,11 +122,11 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 /*******************************************************************/
 
 
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
-    KeepContextBundles(ctx, policy, report_context);
+    KeepContextBundles(ctx, policy);
     KeepControlPromises(ctx, policy, config);
-    KeepPromiseBundles(ctx, policy, report_context);
+    KeepPromiseBundles(ctx, policy);
 }
 
 /*******************************************************************/
@@ -495,7 +495,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
 /*********************************************************************/
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 
@@ -530,7 +530,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -541,7 +541,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 
@@ -576,7 +576,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -589,7 +589,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
@@ -611,7 +611,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp, const ReportContext
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 

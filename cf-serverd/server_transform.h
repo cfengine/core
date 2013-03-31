@@ -5,6 +5,6 @@
 #include "server.h"
 
 void Summarize(void);
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 #endif

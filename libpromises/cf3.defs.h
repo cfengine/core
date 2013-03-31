@@ -707,18 +707,6 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
-typedef enum
-{
-    REPORT_OUTPUT_TYPE_TEXT,
-    REPORT_OUTPUT_TYPE_KNOWLEDGE,
-
-    REPORT_OUTPUT_TYPE_MAX
-} ReportOutputType;
-
-typedef struct ReportContext_ ReportContext;
-
-/*************************************************************************/
-
 typedef struct
 {
     const char *lval;

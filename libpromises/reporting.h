@@ -30,18 +30,9 @@
 #include "sequence.h"
 #include "writer.h"
 
-struct ReportContext_
-{
-    Writer *report_writers[REPORT_OUTPUT_TYPE_MAX];
-};
-
-ReportContext *ReportContextNew(void);
-bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
-void ReportContextDestroy(ReportContext *context);
-
 void ShowPromises(const Seq *bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
-void ShowContext(EvalContext *ctx, const ReportContext *report_context);
+void ShowContext(EvalContext *ctx);
 
 // stdout only
 void BannerPromiseType(const char *bundlename, const char *type, int p);

@@ -30,11 +30,11 @@
 
 #include "reporting.h"
 
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+typedef void PromiseActuator(EvalContext *ctx, Promise *pp);
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+void CommonEvalPromise(EvalContext *ctx, Promise *pp);
 
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context);
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rval rval);

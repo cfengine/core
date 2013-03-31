@@ -103,10 +103,10 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
@@ -118,7 +118,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp);
 
 /****************************************************************/
 
@@ -265,7 +265,7 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
@@ -323,7 +323,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
     while (!IsPendingTermination())
     {
-        GetQ(ctx, policy, report_context);
+        GetQ(ctx, policy);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
@@ -341,7 +341,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
 /*********************************************************************/
 
-static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+static void GetQ(EvalContext *ctx, const Policy *policy)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -359,7 +359,7 @@ static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *re
     MonTempGatherData(CF_THIS);
 #endif /* !__MINGW32__ */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures(ctx, policy, report_context);
+    GatherPromisedMeasures(ctx, policy);
 }
 
 /*********************************************************************/
@@ -1126,7 +1126,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 {
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1142,7 +1142,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepMonitorPromise);
                 }
             }
         }
@@ -1162,7 +1162,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
@@ -1188,7 +1188,7 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, const ReportContex
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 

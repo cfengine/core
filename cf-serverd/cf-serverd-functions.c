@@ -242,7 +242,7 @@ void ThisAgentInit(void)
 
 /*******************************************************************/
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     int sd = -1, sd_reply;
     fd_set rset;
@@ -338,7 +338,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, &policy, config, report_context);
+                CheckFileChanges(ctx, &policy, config);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -570,7 +570,7 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
     if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
     {
@@ -660,8 +660,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
             SetReferenceTime(ctx, true);
-            *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);
-            KeepPromises(ctx, *policy, config, report_context);
+            *policy = GenericAgentLoadPolicy(ctx, config);
+            KeepPromises(ctx, *policy, config);
             Summarize();
 
         }

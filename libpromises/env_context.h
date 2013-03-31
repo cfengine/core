@@ -145,7 +145,7 @@ bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 
 /* - Rest - */
 int Abort(void);
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);

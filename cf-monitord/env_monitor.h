@@ -30,6 +30,6 @@
 extern double FORGETRATE;
 
 void MonitorInitialize(void);
-void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+void MonitorStartServer(EvalContext *ctx, const Policy *policy);
 
 #endif

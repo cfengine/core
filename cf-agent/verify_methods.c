@@ -45,19 +45,19 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     
 /*****************************************************************************/
 
-void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
     a = GetMethodAttributes(ctx, pp);
 
-    VerifyMethod(ctx, "usebundle", a, pp, report_context);
+    VerifyMethod(ctx, "usebundle", a, pp);
     ScopeDeleteSpecialScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
+int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 {
     Bundle *bp;
     void *vp;
@@ -125,7 +125,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
 
         ScopeClear(bp->name);
-        BundleHashVariables(ctx, bp, report_context);
+        BundleHashVariables(ctx, bp);
 
         char ns[CF_BUFSIZE];
         snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
@@ -133,7 +133,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
         ScopeAugment(ctx, bp, params);
 
-        retval = ScheduleAgentOperations(ctx, bp, report_context);
+        retval = ScheduleAgentOperations(ctx, bp);
 
         GetReturnValue(ctx, bp->name, pp);
         ResetBundleOutputs(bp->name);

@@ -73,7 +73,7 @@ char *EDITLINETYPESEQUENCE[] =
     NULL
 };
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp);
 static void VerifyLineDeletions(EvalContext *ctx, Promise *pp);
 static void VerifyColumnEdits(EvalContext *ctx, Promise *pp);
 static void VerifyPatterns(EvalContext *ctx, Promise *pp);
@@ -103,8 +103,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                               const ReportContext *report_context)
+int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *bp, Attributes a, Promise *parentp)
 {
     enum editlinetypesequence type;
     PromiseType *sp;
@@ -162,7 +161,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
                 pp->this_server = xstrdup(filename);
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditLinePromise, report_context);
+                ExpandPromise(ctx, pp, KeepEditLinePromise);
 
                 if (Abort())
                 {
@@ -339,7 +338,7 @@ static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence ty
 
 /***************************************************************************/
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
@@ -371,7 +370,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportConte
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 

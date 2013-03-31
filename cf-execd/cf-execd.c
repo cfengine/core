@@ -67,14 +67,14 @@ static pthread_attr_t threads_attrs;
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 void ThisAgentInit(void);
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config);
 #ifndef __MINGW32__
 static void Apoptosis(void);
 #endif
 
 static bool LocalExecInThread(const ExecConfig *config);
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context);
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config);
 void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config);
 
 static ExecConfig *CopyExecConfig(const ExecConfig *config);
@@ -138,13 +138,12 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
     if (GenericAgentCheckPolicy(ctx, config, false))
     {
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
     else if (config->tty_interactive)
     {
@@ -156,7 +155,7 @@ int main(int argc, char *argv[])
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
 
     CheckLicenses(ctx);
@@ -185,10 +184,9 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(ctx, policy, config, &exec_config, report_context);
+        StartServer(ctx, policy, config, &exec_config);
     }
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
 
     return 0;
@@ -452,7 +450,7 @@ void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
 /*****************************************************************************/
 
 /* Might be called back from NovaWin_StartExecService */
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config)
 {
 #if !defined(__MINGW32__)
     time_t now = time(NULL);
@@ -513,7 +511,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
     {
         while (!IsPendingTermination())
         {
-            if (ScheduleRun(ctx, &policy, config, exec_config, report_context))
+            if (ScheduleRun(ctx, &policy, config, exec_config))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
                 sleep(SPLAYTIME);
@@ -645,7 +643,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const R
     return RELOAD_ENVIRONMENT;
 }
 
-static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config, const ReportContext *report_context)
+static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config)
 {
     Item *ip;
 
@@ -700,7 +698,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         GenericAgentConfigSetBundleSequence(config, NULL);
 
-        *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_EXECUTOR, config, report_context);
+        *policy = GenericAgentLoadPolicy(ctx, config);
         KeepPromises(ctx, *policy, exec_config);
     }
     else

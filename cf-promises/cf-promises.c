@@ -92,10 +92,8 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
     if (SHOWREPORTS)
     {
@@ -133,7 +131,6 @@ int main(int argc, char *argv[])
     }
 
     GenericAgentConfigDestroy(config);
-    ReportContextDestroy(report_context);
     EvalContextDestroy(ctx);
 
     if (ERRORCOUNT > 0)

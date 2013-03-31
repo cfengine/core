@@ -41,7 +41,6 @@ void ReportContextDestroy(ReportContext *context);
 
 void ShowPromises(const Seq *bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
-void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
 void ShowContext(EvalContext *ctx, const ReportContext *report_context);
 
 // stdout only

@@ -208,50 +208,6 @@ void ShowPromise(
 #endif
 }
 
-static void PrintVariablesInScope(Writer *writer, const Scope *scope)
-{
-    AssocHashTableIterator i = HashIteratorInit(scope->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
-    {
-        WriterWriteF(writer, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.type, assoc->lval);
-        RvalWrite(writer, assoc->rval);
-        WriterWriteF(writer, "\n");
-    }
-}
-
-/*******************************************************************/
-
-static void ShowScopedVariablesText(Writer *writer)
-{
-    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
-    {
-        if (strcmp(ptr->scope, "this") == 0)
-        {
-            continue;
-        }
-
-        WriterWriteF(writer, "\nScope %s:\n", ptr->scope);
-
-        PrintVariablesInScope(writer, ptr);
-    }
-}
-
-void ShowScopedVariables(const ReportContext *context, ReportOutputType type)
-/* WARNING: Not thread safe (access to VSCOPE) */
-{
-    switch (type)
-    {
-    default:
-    case REPORT_OUTPUT_TYPE_TEXT:
-        ShowScopedVariablesText(context->report_writers[REPORT_OUTPUT_TYPE_TEXT]);
-        break;
-    }
-}
-
-/*******************************************************************/
-
 void Banner(const char *s)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");

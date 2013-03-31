@@ -389,11 +389,6 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAg
 
     VerifyPromises(ctx, main_policy, config, report_context);
 
-    if (agent_type != AGENT_TYPE_COMMON)
-    {
-        ShowScopedVariables(report_context, REPORT_OUTPUT_TYPE_TEXT);
-    }
-
     return main_policy;
 }
 

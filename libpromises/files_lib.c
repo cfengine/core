@@ -224,20 +224,25 @@ ssize_t FileReadMax(char **output, char *filename, size_t size_max)
  * in these scenarios.
  **/
 
-int MakeParentDirectory2(EvalContext *ctx, char *parentandchild, int force, bool enforce_promise)
+int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
 {
     if(enforce_promise)
     {
         return MakeParentDirectory(parentandchild, force);
     }
 
-    char *parent_dir = GetParentDirectoryCopy(ctx, parentandchild);
+    char *parent_dir = GetParentDirectoryCopy(parentandchild);
 
-    bool parent_exists = IsDir(parent_dir);
-
-    free(parent_dir);
-
-    return parent_exists;
+    if (parent_dir)
+    {
+        bool parent_exists = IsDir(parent_dir);
+        free(parent_dir);
+        return parent_exists;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /**

@@ -50,7 +50,7 @@ void TryCollectCall(void)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
+int ReceiveCollectCall(struct ServerConnectionState *conn)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
     return false;

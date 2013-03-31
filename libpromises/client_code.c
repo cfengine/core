@@ -215,7 +215,7 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
             if (conn == NULL)
             {
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr, "Unable to establish connection with %s\n", RlistScalarValue(rp));
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to establish connection with %s\n", RlistScalarValue(rp));
                 MarkServerOffline(RlistScalarValue(rp));
             }
             else
@@ -301,7 +301,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
             return NULL;
         }
 
-        if (!AuthenticateAgent(ctx, conn, attr, pp))
+        if (!AuthenticateAgent(conn, attr.copy.trustkey, pp->this_server))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
@@ -340,7 +340,7 @@ void DisconnectServer(AgentConnection *conn)
 
 /*********************************************************************/
 
-int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp)
+int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, Promise *pp)
 /* If a link, this reads readlink and sends it back in the same
    package. It then caches the value for each copy command */
 {
@@ -374,11 +374,11 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
     sendbuffer[0] = '\0';
 
-    if (attr.copy.encrypt)
+    if (encrypt)
     {
         if (conn->session_key == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Cannot do encrypted copy without keys (use cf-key)");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Cannot do encrypted copy without keys (use cf-key)");
             return -1;
         }
 
@@ -396,7 +396,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
     if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "send", pp, attr, "Transmission failed/refused talking to %.255s:%.255s in stat",
+        CfOut(OUTPUT_LEVEL_INFORM, "send", "Transmission failed/refused talking to %.255s:%.255s in stat",
              pp->this_server, file);
         return -1;
     }

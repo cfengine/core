@@ -51,7 +51,7 @@ static const char *SKIPFILES[] =
     NULL
 };
 
-int ConsiderFile(EvalContext *ctx, const char *nodename, char *path, Attributes attr, Promise *pp)
+int ConsiderFile(const char *nodename, char *path, FileCopy fc, Promise *pp)
 {
     int i;
     struct stat statbuf;
@@ -121,7 +121,7 @@ int ConsiderFile(EvalContext *ctx, const char *nodename, char *path, Attributes 
         }
     }
 
-    if (cf_lstat(ctx, buf, &statbuf, attr, pp) == -1)
+    if (cf_lstat(buf, &statbuf, fc, pp) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Couldn't stat %s", buf);
         return true;

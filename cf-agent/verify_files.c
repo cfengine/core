@@ -139,9 +139,8 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         char nextbuffer[CF_BUFSIZE], nextbufferOrig[CF_BUFSIZE], regex[CF_BUFSIZE];
         const struct dirent *dirp;
         Dir *dirh;
-        Attributes dummyattr = { {0} };
+        FileCopy dummyfc = { 0 };
 
-        memset(&dummyattr, 0, sizeof(dummyattr));
         memset(regex, 0, CF_BUFSIZE);
 
         strncpy(regex, ip->name, CF_BUFSIZE - 1);
@@ -160,7 +159,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
             for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
             {
-                if (!ConsiderFile(ctx, dirp->d_name, pbuffer, dummyattr, pp))
+                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp))
                 {
                     continue;
                 }

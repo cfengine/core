@@ -993,7 +993,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
         
-        if (ReceiveCollectCall(ctx, conn))
+        if (ReceiveCollectCall(conn))
         {
             return true;
         }

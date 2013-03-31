@@ -35,7 +35,7 @@ int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
 
 void TryCollectCall(void);
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
+int ReceiveCollectCall(struct ServerConnectionState *conn);
 
 bool ReturnQueryData(ServerConnectionState *conn, char *menu);
 

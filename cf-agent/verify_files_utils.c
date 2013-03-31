@@ -86,7 +86,7 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp);
 static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
-static int cf_stat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp);
+static int cf_stat(char *file, struct stat *buf, FileCopy fc, Promise *pp);
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp);
 #endif
@@ -575,7 +575,7 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, localdir, attr, pp))
+        if (!ConsiderFile(dirp->d_name, localdir, attr.copy, pp))
         {
             continue;
         }
@@ -738,7 +738,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
     for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, from, attr, pp))
+        if (!ConsiderFile(dirp->d_name, from, attr.copy, pp))
         {
             continue;
         }
@@ -762,7 +762,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             /* No point in checking if there are untrusted symlinks here,
                since this is from a trusted source, by defintion */
 
-            if (cf_stat(ctx, newfrom, &sb, attr, pp) == -1)
+            if (cf_stat(newfrom, &sb, attr.copy, pp) == -1)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
@@ -770,7 +770,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         }
         else
         {
-            if (cf_lstat(ctx, newfrom, &sb, attr, pp) == -1)
+            if (cf_lstat(newfrom, &sb, attr.copy, pp) == -1)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
@@ -877,11 +877,11 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
     if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
     {
         CfDebug("Treating links as files for %s\n", source);
-        found = cf_stat(ctx, source, &ssb, attr, pp);
+        found = cf_stat(source, &ssb, attr.copy, pp);
     }
     else
     {
-        found = cf_lstat(ctx, source, &ssb, attr, pp);
+        found = cf_lstat(source, &ssb, attr.copy, pp);
     }
 
     if (found == -1)
@@ -923,7 +923,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
         for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, sourcedir, attr, pp))
+            if (!ConsiderFile(dirp->d_name, sourcedir, attr.copy, pp))
             {
                 continue;
             }
@@ -944,7 +944,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
             if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
             {
-                if (cf_stat(ctx, sourcefile, &ssb, attr, pp) == -1)
+                if (cf_stat(sourcefile, &ssb, attr.copy, pp) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "stat", pp, attr, "Can't stat source file (notlinked) %s\n", sourcefile);
                     DeleteClientCache(pp);
@@ -953,7 +953,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
             }
             else
             {
-                if (cf_lstat(ctx, sourcefile, &ssb, attr, pp) == -1)
+                if (cf_lstat(sourcefile, &ssb, attr.copy, pp) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "lstat", pp, attr, "Can't stat source file %s\n", sourcefile);
                     DeleteClientCache(pp);
@@ -2138,7 +2138,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, name, attr, pp))
+        if (!ConsiderFile(dirp->d_name, name, attr.copy, pp))
         {
             continue;
         }
@@ -2386,7 +2386,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
         return NULL;
     }
 
-    if (cf_stat(ctx, attr.copy.source, &ssb, attr, pp) == -1)
+    if (cf_stat(attr.copy.source, &ssb, attr.copy, pp) == -1)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr, "Can't stat %s in files.copyfrom promise\n", source);
         return NULL;
@@ -2559,7 +2559,7 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, source, attr, pp))
+        if (!ConsiderFile(dirp->d_name, source, attr.copy, pp))
         {
             continue;
         }
@@ -3001,11 +3001,11 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp)
     }
 }
 
-static int cf_stat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp)
+static int cf_stat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
 {
     int res;
 
-    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         res = cfstat(file, buf);
         CheckForFileHoles(buf, pp);
@@ -3013,7 +3013,7 @@ static int cf_stat(EvalContext *ctx, char *file, struct stat *buf, Attributes at
     }
     else
     {
-        return cf_remote_stat(ctx, file, buf, "file", attr, pp);
+        return cf_remote_stat(file, buf, "file", fc.encrypt, pp);
     }
 }
 

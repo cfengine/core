@@ -119,7 +119,7 @@ void DeleteAuthList(Auth *ap);
 void PurgeOldConnections(Item **list, time_t now);
 
 
-AgentConnection *ExtractCallBackChannel(EvalContext *ctx, ServerConnectionState *conn);
+AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 
 
 //*******************************************************************

@@ -105,7 +105,7 @@ int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
 
 /* files_select.c */
 
-int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
+int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
 
 /* manual.c */
 

@@ -140,8 +140,8 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
-bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
+bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
+bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 
 /* - Rest - */
 int Abort(void);

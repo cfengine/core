@@ -42,8 +42,8 @@
 #include "cf.nova.h"
 #endif
 
-static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit);
-static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit);
+static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
+static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
 static int SelectModeMatch(struct stat *lstatptr, Rlist *ls);
 static int SelectTimeMatch(time_t stattime, time_t fromtime, time_t totime);
 static int SelectNameRegexMatch(const char *filename, char *crit);
@@ -60,10 +60,10 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
 #endif
 #ifndef __MINGW32__
-static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit);
+static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
-int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp)
+int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
     int result = true;
     Rlist *rp;
@@ -122,12 +122,12 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, P
         }
     }
 
-    if (SelectTypeMatch(ctx, sb, attr.select.filetypes))
+    if (SelectTypeMatch(sb, attr.select.filetypes))
     {
         StringSetAdd(leaf_attr, xstrdup("file_types"));
     }
 
-    if ((attr.select.owners) && (SelectOwnerMatch(ctx, path, sb, attr.select.owners)))
+    if ((attr.select.owners) && (SelectOwnerMatch(path, sb, attr.select.owners)))
     {
         StringSetAdd(leaf_attr, xstrdup("owner"));
     }
@@ -141,7 +141,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, P
     StringSetAdd(leaf_attr, xstrdup("group"));
 
 #else /* !__MINGW32__ */
-    if ((attr.select.groups) && (SelectGroupMatch(ctx, sb, attr.select.groups)))
+    if ((attr.select.groups) && (SelectGroupMatch(sb, attr.select.groups)))
     {
         StringSetAdd(leaf_attr, xstrdup("group"));
     }
@@ -199,7 +199,7 @@ int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, P
         StringSetAdd(leaf_attr, xstrdup("exec_program"));
     }
 
-    result = EvalFileResult(ctx, attr.select.result, leaf_attr);
+    result = EvalFileResult(attr.select.result, leaf_attr);
 
     CfDebug("Select result \"%s\"on %s was %d\n", attr.select.result, path, result);
 
@@ -224,7 +224,7 @@ static int SelectSizeMatch(size_t size, size_t min, size_t max)
 
 /*******************************************************************/
 
-static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
+static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit)
 {
     Rlist *rp;
 
@@ -277,7 +277,7 @@ static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult(ctx, (char *) rp->item, leafattrib))
+        if (EvalFileResult((char *) rp->item, leafattrib))
         {
             StringSetDestroy(leafattrib);
             return true;
@@ -288,7 +288,7 @@ static int SelectTypeMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
     return false;
 }
 
-static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr, Rlist *crit)
+static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 {
     Rlist *rp;
     char ownerName[CF_BUFSIZE];
@@ -315,7 +315,7 @@ static int SelectOwnerMatch(EvalContext *ctx, char *path, struct stat *lstatptr,
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult(ctx, (char *) rp->item, leafattrib))
+        if (EvalFileResult((char *) rp->item, leafattrib))
         {
             CfDebug(" - ? Select owner match\n");
             StringSetDestroy(leafattrib);
@@ -553,7 +553,7 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 
 /*******************************************************************/
 
-static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit)
+static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
 {
     char buffer[CF_SMALLBUF];
     struct group *gr;
@@ -575,7 +575,7 @@ static int SelectGroupMatch(EvalContext *ctx, struct stat *lstatptr, Rlist *crit
 
     for (rp = crit; rp != NULL; rp = rp->next)
     {
-        if (EvalFileResult(ctx, (char *) rp->item, leafattrib))
+        if (EvalFileResult((char *) rp->item, leafattrib))
         {
             CfDebug(" - ? Select group match\n");
             StringSetDestroy(leafattrib);

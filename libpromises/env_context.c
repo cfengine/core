@@ -861,8 +861,17 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *classname, void *ns)
+typedef struct
 {
+    const EvalContext *ctx;
+    const char *ns;
+} EvalTokenAsClassContext;
+
+static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
+{
+    const EvalContext *ctx = ((EvalTokenAsClassContext *)param)->ctx;
+    const char *ns = ((EvalTokenAsClassContext *)param)->ns;
+
     char qualified_class[CF_MAXVARSIZE];
 
     if (strcmp(classname, "any") == 0)
@@ -883,7 +892,7 @@ static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *clas
     }
     else if (ns != NULL && strcmp(ns, "default") != 0)
     {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", (char *)ns, (char *)classname);
+        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", ns, (char *)classname);
     }
     else
     {
@@ -948,9 +957,14 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
     }
     else
     {
-        ExpressionValue r = EvalExpression(ctx, res.result,
+        EvalTokenAsClassContext etacc = {
+            .ctx = ctx,
+            .ns = ns
+        };
+
+        ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenAsClass, &EvalVarRef,
-                                           (void *)ns);
+                                           &etacc);
 
         FreeExpression(res.result);
 
@@ -963,8 +977,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenFromList(ARG_UNUSED const EvalContext *ctx,
-                                         const char *token, void *param)
+static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);
@@ -972,7 +985,7 @@ static ExpressionValue EvalTokenFromList(ARG_UNUSED const EvalContext *ctx,
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet *token_set)
+static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 {
     ParseResult res = ParseExpression(expr, 0, strlen(expr));
 
@@ -986,8 +999,7 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet 
     }
     else
     {
-        ExpressionValue r = EvalExpression(ctx,
-                                           res.result,
+        ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenFromList,
                                            &EvalVarRef,
                                            token_set);
@@ -1003,18 +1015,18 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet 
 
 /* Process result expression */
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr)
+bool EvalProcessResult(const char *process_result, StringSet *proc_attr)
 {
-    return EvalWithTokenFromList(ctx, process_result, proc_attr);
+    return EvalWithTokenFromList(process_result, proc_attr);
 }
 
 /**********************************************************************/
 
 /* File result expressions */
 
-bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr)
+bool EvalFileResult(const char *file_result, StringSet *leaf_attr)
 {
-    return EvalWithTokenFromList(ctx, file_result, leaf_attr);
+    return EvalWithTokenFromList(file_result, leaf_attr);
 }
 
 /*****************************************************************************/

@@ -121,7 +121,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 {
 /* Here we can assume that we are in the parent directory of the leaf */
 
-    if (!SelectLeaf(ctx, path, sb, attr, pp))
+    if (!SelectLeaf(path, sb, attr, pp))
     {
         CfDebug("Skipping non-selected file %s\n", path);
         return false;
@@ -211,7 +211,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
         return;
     }
 
-    if (!SelectLeaf(ctx, sourcefile, &ssb, attr, pp))
+    if (!SelectLeaf(sourcefile, &ssb, attr, pp))
     {
         CfDebug("Skipping non-selected file %s\n", sourcefile);
         return;

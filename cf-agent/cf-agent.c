@@ -51,6 +51,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "instrumentation.h"
+#include "promises.h"
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
@@ -1718,11 +1719,12 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
         if (child == 0)
         {
             ALARM_PID = -1;
-            AM_BACKGROUND_PROCESS = true;
-        }
-        else
-        {
-            AM_BACKGROUND_PROCESS = false;
+
+            FindAndVerifyFilesPromises(ctx, pp);
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
+            PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+            _exit(0);
         }
     }
     else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
@@ -1732,7 +1734,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
         background = 0;
     }
 
-    if (child == 0 || !background)
+    if (!background)
     {
         FindAndVerifyFilesPromises(ctx, pp);
     }

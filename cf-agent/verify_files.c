@@ -646,14 +646,6 @@ void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     PromiseBanner(pp);
     FindFilePromiserObjects(ctx, pp);
-
-    if (AM_BACKGROUND_PROCESS && (!pp->done))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
-        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
-        exit(0);
-    }
-
     return (void *) NULL;
 }
 

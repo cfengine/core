@@ -121,7 +121,6 @@ struct Promise_
     int has_subbundles;
     Stat *cache;
     AgentConnection *conn;
-    CompressedArray *inode_cache;
     EditContext *edcontext;
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 

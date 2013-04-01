@@ -119,7 +119,7 @@ struct Promise_
     int makeholes;
     char *this_server;
     int has_subbundles;
-    Stat *cache;
+    Stat *cache; /* Cache for network connection (READDIR result) */
     AgentConnection *conn;
     EditContext *edcontext;
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */

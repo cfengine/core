@@ -42,10 +42,6 @@
 #include "cf.nova.h"
 #endif
 
-static bool DeleteDirectoryTree(const char *path);
-
-/*********************************************************************/
-
 bool FileCanOpen(const char *path, const char *modes)
 {
     FILE *test = NULL;
@@ -657,6 +653,12 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 
     if (dirh == NULL)
     {
+        if (errno == ENOENT)
+        {
+            /* Directory disappeared on its own */
+            return true;
+        }
+
         CfOut(OUTPUT_LEVEL_INFORM, "opendir",
               "Unable to open directory %s during purge of directory tree %s",
               path, basepath);
@@ -676,6 +678,12 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
         struct stat lsb;
         if (lstat(subpath, &lsb) == -1)
         {
+            if (errno == ENOENT)
+            {
+                /* File disappeared on its own */
+                continue;
+            }
+
             CfOut(OUTPUT_LEVEL_VERBOSE, "lstat",
                   "Unable to stat file %s during purge of directory tree %s", path, basepath);
             failed = true;
@@ -689,22 +697,42 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
                     failed = true;
                 }
             }
-
-            if (unlink(subpath) == 1)
+            else
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "unlink",
-                      "Unable to remove file %s during purge of directory tree %s",
-                      subpath, basepath);
-                failed = true;
+                if (unlink(subpath) == -1)
+                {
+                    if (errno == ENOENT)
+                    {
+                        /* File disappeared on its own */
+                        continue;
+                    }
+
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "unlink",
+                          "Unable to remove file %s during purge of directory tree %s",
+                          subpath, basepath);
+                    failed = true;
+                }
             }
         }
     }
 
     DirClose(dirh);
+
+    if (!failed)
+    {
+        if (rmdir(path) == -1)
+        {
+            if (errno != ENOENT)
+            {
+                failed = true;
+            }
+        }
+    }
+
     return failed;
 }
 
-static bool DeleteDirectoryTree(const char *path)
+bool DeleteDirectoryTree(const char *path)
 {
     return DeleteDirectoryTreeInternal(path, path);
 }

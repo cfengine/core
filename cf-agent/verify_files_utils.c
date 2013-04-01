@@ -605,36 +605,9 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
                 }
                 else if (S_ISDIR(sb.st_mode))
                 {
-                    Attributes purgeattr = { {0} };
-                    memset(&purgeattr, 0, sizeof(purgeattr));
-
-                    /* Deletion is based on a files promise */
-
-                    purgeattr.havedepthsearch = true;
-                    purgeattr.havedelete = true;
-                    purgeattr.delete.dirlinks = cfa_linkdelete;
-                    purgeattr.delete.rmdirs = true;
-                    purgeattr.recursion.depth = CF_INFINITY;
-                    purgeattr.recursion.travlinks = false;
-                    purgeattr.recursion.xdev = false;
-
-                    SetSearchDevice(&sb, pp);
-
-                    if (!DepthSearch(ctx, filename, &sb, 0, purgeattr, pp))
+                    if (!DeleteDirectoryTree(filename))
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "rmdir", pp, attr,
-                             " !! Couldn't empty directory %s while purging\n", filename);
-                    }
-
-                    if (chdir("..") != 0)
-                    {
-                        CfOut(OUTPUT_LEVEL_ERROR, "chdir", "!! Can't step out of directory \"%s\" before deletion", filename);
-                    }
-
-                    if (rmdir(filename) == -1)
-                    {
-                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "rmdir", pp, attr,
-                             " !! Couldn't remove directory %s while purging\n", filename);
+                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to purge directory %s\n", filename);
                     }
                 }
                 else if (unlink(filename) == -1)

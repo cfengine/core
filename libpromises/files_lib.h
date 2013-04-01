@@ -49,4 +49,12 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
    Return LEN upon success, write's (negative) error code otherwise.  */
 int FullWrite(int desc, const char *ptr, size_t len);
 
+/*
+ * Deletes directory #path recursively. Symlinks are not followed.
+ *
+ * @returns true if directory was deleted succesfully, false if one or more files were not deleted.
+ */
+bool DeleteDirectoryTree(const char *path);
+
+
 #endif

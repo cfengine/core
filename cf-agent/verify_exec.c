@@ -418,7 +418,7 @@ void PreviewProtocolLine(char *line, char *comm)
      */
 
     char *prefixes[] =
-{
+    {
         ":silent:",
         ":inform:",
         ":verbose:",

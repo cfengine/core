@@ -1481,14 +1481,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
-        if (PromiseGetConstraintAsBoolean(ctx, "background", pp))
-        {
-            ParallelFindAndVerifyFilesPromises(ctx, pp);
-        }
-        else
-        {
-            FindAndVerifyFilesPromises(ctx, pp);
-        }
+        ParallelFindAndVerifyFilesPromises(ctx, pp);
 
         EndMeasurePromise(ctx, start, pp);
         return;
@@ -1710,28 +1703,31 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
 
-    if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
+    if (background)
     {
-        CFA_BACKGROUND++;
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Spawning new process...\n");
-        child = fork();
-
-        if (child == 0)
+        if (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT)
         {
-            ALARM_PID = -1;
+            CFA_BACKGROUND++;
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Spawning new process...\n");
+            child = fork();
 
-            FindAndVerifyFilesPromises(ctx, pp);
+            if (child == 0)
+            {
+                ALARM_PID = -1;
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
-            PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
-            _exit(0);
+                FindAndVerifyFilesPromises(ctx, pp);
+
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
+                PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                _exit(0);
+            }
         }
-    }
-    else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
-        background = 0;
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                  " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+            background = 0;
+        }
     }
 
     if (!background)

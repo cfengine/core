@@ -110,10 +110,6 @@ static bool GetAcpi(double *cf_this)
     int count = 0;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
-    Attributes attr;
-
-    memset(&attr, 0, sizeof(attr));
-    attr.transaction.audit = false;
 
     CfDebug("ACPI temperature\n");
 

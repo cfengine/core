@@ -34,7 +34,7 @@ extern Rlist *SINGLE_COPY_LIST;
 void SetFileAutoDefineList(Rlist *auto_define_list);
 
 int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
-int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp);
+int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, dev_t rootdevice);
 int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr);
 void SetSearchDevice(struct stat *sb, Promise *pp);
 

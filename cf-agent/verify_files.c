@@ -393,12 +393,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
-        if (a.havedepthsearch)
-        {
-            SetSearchDevice(&oslb, pp);
-        }
-
-        DepthSearch(ctx, path, &oslb, rlevel, a, pp);
+        DepthSearch(ctx, path, &oslb, rlevel, a, pp, oslb.st_dev);
 
         /* normally searches do not include the base directory */
 
@@ -409,7 +404,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             /* Handle this node specially */
 
             a.havedepthsearch = false;
-            DepthSearch(ctx, path, &oslb, rlevel, a, pp);
+            DepthSearch(ctx, path, &oslb, rlevel, a, pp, oslb.st_dev);
             a.havedepthsearch = save_search;
         }
         else

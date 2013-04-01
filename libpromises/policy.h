@@ -123,7 +123,6 @@ struct Promise_
     AgentConnection *conn;
     CompressedArray *inode_cache;
     EditContext *edcontext;
-    dev_t rootdevice;           /* for caching during work */
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 
     SourceOffset offset;

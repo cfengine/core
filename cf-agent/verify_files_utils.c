@@ -92,7 +92,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 #endif
 static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp);
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r);
-static int DeviceBoundary(struct stat *sb, Promise *pp);
+static int DeviceBoundary(struct stat *sb, dev_t rootdevice);
 static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct stat *sb, Attributes attr, Promise *pp);
 
 #ifndef __MINGW32__
@@ -621,7 +621,7 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
     DirClose(dirh);
 }
 
-static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxrecurse, Attributes attr, Promise *pp)
+static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxrecurse, Attributes attr, Promise *pp, dev_t rootdevice)
 {
     struct stat sb, dsb;
     char newfrom[CF_BUFSIZE];
@@ -769,7 +769,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             }
         }
 
-        if ((attr.recursion.xdev) && (DeviceBoundary(&sb, pp)))
+        if ((attr.recursion.xdev) && (DeviceBoundary(&sb, rootdevice)))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Skipping %s on different device\n", newfrom);
             continue;
@@ -815,7 +815,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
                 VerifyCopiedFileAttributes(ctx, newto, &dsb, &sb, attr, pp);
             }
 
-            SourceSearchAndCopy(ctx, newfrom, newto, maxrecurse - 1, attr, pp);
+            SourceSearchAndCopy(ctx, newfrom, newto, maxrecurse - 1, attr, pp, rootdevice);
         }
         else
         {
@@ -2059,7 +2059,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
     CfDebug("VerifyFileAttributes(Done)\n");
 }
 
-int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp)
+int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, dev_t rootdevice)
 {
     Dir *dirh;
     int goback;
@@ -2163,7 +2163,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             }
         }
 
-        if ((attr.recursion.xdev) && (DeviceBoundary(&lsb, pp)))
+        if ((attr.recursion.xdev) && (DeviceBoundary(&lsb, rootdevice)))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping %s on different device - use xdev option to change this\n", path);
             continue;
@@ -2179,7 +2179,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
             if ((attr.recursion.depth > 1) && (rlevel <= attr.recursion.depth))
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s (%d)\n", path, rlevel);
-                goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp);
+                goback = DepthSearch(ctx, path, &lsb, rlevel + 1, attr, pp, rootdevice);
                 if (!PopDirState(goback, name, sb, attr.recursion))
                 {
                     FatalError(ctx, "Not safe to continue");
@@ -2389,8 +2389,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
         }
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ->>  Entering %s\n", source);
-        SetSearchDevice(&ssb, pp);
-        SourceSearchAndCopy(ctx, source, destination, attr.recursion.depth, attr, pp);
+        SourceSearchAndCopy(ctx, source, destination, attr.recursion.depth, attr, pp, ssb.st_dev);
 
         if (cfstat(destination, &dsb) != -1)
         {
@@ -3458,21 +3457,15 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
     return true;
 }
 
-static int DeviceBoundary(struct stat *sb, Promise *pp)
+static int DeviceBoundary(struct stat *sb, dev_t rootdevice)
 {
-    if (sb->st_dev == pp->rootdevice)
+    if (sb->st_dev == rootdevice)
     {
         return false;
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Device change from %jd to %jd\n", (intmax_t) pp->rootdevice, (intmax_t) sb->st_dev);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Device change from %jd to %jd\n", (intmax_t) rootdevice, (intmax_t) sb->st_dev);
         return true;
     }
-}
-
-void SetSearchDevice(struct stat *sb, Promise *pp)
-{
-    CfDebug("Registering root device as %" PRIdMAX "\n", (intmax_t) sb->st_dev);
-    pp->rootdevice = sb->st_dev;
 }

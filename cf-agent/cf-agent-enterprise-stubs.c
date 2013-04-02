@@ -23,6 +23,7 @@
 */
 
 #include "cf-agent-enterprise-stubs.h"
+#include "cfstream.h"
 
 void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
 {

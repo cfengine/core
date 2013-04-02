@@ -136,6 +136,8 @@ void EvalContextStackPopFrame(EvalContext *ctx);
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
 
+bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
+
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);

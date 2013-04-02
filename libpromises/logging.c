@@ -124,7 +124,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
 
     double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
     {
         sp = (char *) retval.item;
     }

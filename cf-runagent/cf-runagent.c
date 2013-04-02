@@ -616,7 +616,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

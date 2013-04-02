@@ -1535,7 +1535,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
     int ok = true;
     FnCall *fp;
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
+    if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !!! No bundlesequence in the common control body");
         return false;

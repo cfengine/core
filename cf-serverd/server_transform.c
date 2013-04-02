@@ -472,23 +472,23 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         }
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
     {
         SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }

@@ -675,7 +675,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval) != DATA_TYPE_NONE)
+            if (EvalContextVariableControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval))
             {
                 /* Already handled in generic_agent */
                 continue;
@@ -1002,24 +1002,24 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
     {
         SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
         SetSyslogHost(Hostname2IPString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
@@ -1046,7 +1046,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (ScopeControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
+    else if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         // TODO: somewhat frenzied way of telling user about an error
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");

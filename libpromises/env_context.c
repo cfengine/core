@@ -1626,6 +1626,8 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
+    assert(type != DATA_TYPE_NONE);
+
     Scope *ptr;
     const Rlist *rp;
     CfAssoc *assoc;
@@ -1767,8 +1769,15 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 
     if (lval.lval == NULL)
     {
-        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-        return DATA_TYPE_NONE;
+        if (rval_out)
+        {
+            *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
+        }
+        if (type_out)
+        {
+            *type_out = DATA_TYPE_NONE;
+        }
+        return false;
     }
 
     if (!IsExpandable(lval.lval))
@@ -1871,7 +1880,13 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     if (type_out)
     {
         *type_out = assoc->dtype;
+        assert(*type_out != DATA_TYPE_NONE);
     }
 
     return true;
+}
+
+bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
+{
+    return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
 }

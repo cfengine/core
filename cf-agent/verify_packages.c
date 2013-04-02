@@ -1801,8 +1801,11 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
         free(command_string);
     }
 
-/* We have performed some operation on packages, our cache is invalid */
-    InvalidateSoftwareCache();
+/* We have performed some modification operation on packages, our cache is invalid */
+    if (!verify)
+    {
+        InvalidateSoftwareCache();
+    }
 
     return retval;
 }

@@ -37,6 +37,6 @@ int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void TryCollectCall(void);
 int ReceiveCollectCall(struct ServerConnectionState *conn);
 
-bool ReturnQueryData(ServerConnectionState *conn, char *menu);
+bool ReturnQueryData(struct ServerConnectionState *conn, char *menu);
 
 #endif

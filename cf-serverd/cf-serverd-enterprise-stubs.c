@@ -24,6 +24,10 @@
 
 #include "cf-serverd-enterprise-stubs.h"
 
+#include "server.h"
+#include "cfstream.h"
+#include "cf-serverd-functions.h"
+
 void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
@@ -56,7 +60,7 @@ int ReceiveCollectCall(struct ServerConnectionState *conn)
     return false;
 }
 
-bool ReturnQueryData(ServerConnectionState *conn, char *menu)
+bool ReturnQueryData(struct ServerConnectionState *conn, char *menu)
 {
     return false;
 }

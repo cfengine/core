@@ -70,34 +70,6 @@ static bool IsProcessRunning(pid_t pid);
 static Rlist *IGNORE_INTERFACES = NULL;
 
 
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
-
-int Unix_GracefulTerminate(pid_t pid)
-{
-    int res;
-
-    if ((res = kill(pid, SIGINT)) == -1)
-    {
-        sleep(1);
-        res = 0;
-
-        if ((res = kill(pid, SIGTERM)) == -1)
-        {
-            sleep(5);
-            res = 0;
-
-            if ((res = kill(pid, SIGKILL)) == -1)
-            {
-                sleep(1);
-            }
-        }
-    }
-
-    return (res == 0);
-}
-
-/*************************************************************/
 
 void ProcessSignalTerminate(pid_t pid)
 {

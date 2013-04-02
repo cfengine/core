@@ -37,7 +37,23 @@ check_PROGRAMS = \
 	crypto_symmetric_test \
         timeout_test \
 	package_versions_compare_test \
-	files_lib_test
+	files_lib_test \
+	process_terminate_unix_test
+
+if LINUX
+
+check_PROGRAMS += linux_process_test
+
+linux_process_test_SOURCES = linux_process_test.c \
+	../../src/process_unix.c \
+	../../src/process_linux.c \
+	../../src/full_write.c
+
+endif
+
+process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+	../../src/process_unix.c
+process_terminate_unix_test_LDADD = libtest.la ../../src/libpromises.la
 
 TESTS = $(check_PROGRAMS)
 

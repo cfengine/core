@@ -490,7 +490,12 @@ int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
 
 /* full_write.c */
 
+/* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
+   Return LEN upon success, write's (negative) error code otherwise.  */
 int FullWrite(int desc, const char *ptr, size_t len);
+/* Read up to LEN bytes (or EOF) to PTR from descriptor DESC, retrying if interrupted.
+   Return amount of bytes read upon success, -1 otherwise */
+int FullRead(int desc, char *ptr, size_t len);
 
 #include "generic_agent.h"
 
@@ -902,7 +907,6 @@ bool IsReadReady(int fd, int timeout_sec);
 /* unix.c */
 
 #ifndef MINGW
-int Unix_GracefulTerminate(pid_t pid);
 int Unix_GetCurrentUserName(char *userName, int userNameLen);
 int Unix_ShellCommandReturnsZero(char *comm, int useshell);
 int Unix_DoAllSignals(Item *siglist, Attributes a, Promise *pp);
@@ -967,13 +971,16 @@ void VerifyPackagesPromise(Promise *pp);
 void ExecuteScheduledPackages(void);
 void CleanScheduledPackages(void);
 
+/* process_linux.c, process_unix.c, process_unix_stub.c */
+#include "process_unix_priv.h"
+#include "process.h"
+
 /* verify_processes.c */
 
 void VerifyProcessesPromise(Promise *pp);
 void VerifyProcesses(Attributes a, Promise *pp);
 int LoadProcessTable(Item **procdata);
 int DoAllSignals(Item *siglist, Attributes a, Promise *pp);
-int GracefulTerminate(pid_t pid);
 void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
 
 /* verify_services.c */

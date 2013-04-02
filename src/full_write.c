@@ -53,3 +53,34 @@ int FullWrite(int desc, const char *ptr, size_t len)
 
     return total_written;
 }
+
+int FullRead(int fd, char *ptr, size_t len)
+{
+    int total_read = 0;
+
+    while (len > 0)
+    {
+        int bytes_read = read(fd, ptr, len);
+
+        if (bytes_read < 0)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+
+            return -1;
+        }
+
+        if (bytes_read == 0)
+        {
+            return total_read;
+        }
+
+        total_read += bytes_read;
+        ptr += bytes_read;
+        len -= bytes_read;
+    }
+
+    return total_read;
+}

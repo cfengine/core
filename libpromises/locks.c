@@ -36,6 +36,7 @@
 #include "files_names.h"
 #include "logging.h"
 #include "rlist.h"
+#include "process.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -59,10 +60,11 @@ static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)
 
 static bool WriteLockDataCurrent(CF_DB *dbp, const char *lock_id)
 {
-    LockData lock_data;
-
-    lock_data.pid = getpid();
-    lock_data.time = time(NULL);
+    LockData lock_data = {
+        .pid = getpid(),
+        .time = time(NULL),
+        .process_start_time = GetProcessStartTime(getpid()),
+    };
 
     return WriteLockData(dbp, lock_id, &lock_data);
 }
@@ -87,7 +89,9 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
     }
 
     bool result;
-    LockData lock_data;
+    LockData lock_data = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
 
     if (ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
     {
@@ -113,7 +117,9 @@ bool AcquireLockByID(const char *lock_id, int acquire_after_minutes)
 time_t FindLockTime(char *name)
 {
     CF_DB *dbp;
-    LockData entry;
+    LockData entry = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
 
     CfDebug("FindLockTime(%s)\n", name);
 
@@ -145,7 +151,9 @@ bool InvalidateLockTime(const char *lock_id)
         return false;
     }
 
-    LockData lock_data;
+    LockData lock_data = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
 
     if(!ReadDB(dbp, lock_id, &lock_data, sizeof(lock_data)))
     {
@@ -290,7 +298,9 @@ static time_t FindLock(char *last)
 static pid_t FindLockPid(char *name)
 {
     CF_DB *dbp;
-    LockData entry;
+    LockData entry = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
 
     if ((dbp = OpenLock()) == NULL)
     {
@@ -410,10 +420,48 @@ static char *BodyName(const Promise *pp)
     return name;
 }
 
+#ifdef __MINGW32__
+
+static bool KillLockHolder(ARG_UNUSED const char *lock)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+          "Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",
+          pid);
+    return true;
+}
+
+#else
+
+static bool KillLockHolder(const char *lock)
+{
+    CF_DB *dbp = OpenLock();
+    if (dbp == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open locks database");
+        return false;
+    }
+
+    LockData lock_data = {
+        .process_start_time = PROCESS_START_TIME_UNKNOWN,
+    };
+
+    if (!ReadDB(dbp, lock, &lock_data, sizeof(lock_data)))
+    {
+        /* No lock found */
+        CloseLock(dbp);
+        return true;
+    }
+
+    CloseLock(dbp);
+
+    return GracefulTerminate(lock_data.pid, lock_data.process_start_time);
+}
+
+#endif
+
 CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
 {
-    unsigned int pid;
-    int i, err, sum = 0;
+    int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;
     char *promise, cc_operator[CF_BUFSIZE], cc_operand[CF_BUFSIZE];
     char cflock[CF_BUFSIZE], cflast[CF_BUFSIZE], cflog[CF_BUFSIZE];
@@ -545,39 +593,16 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
                 CfOut(OUTPUT_LEVEL_INFORM, "", "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
                       tc.expireafter);
 
-                pid = FindLockPid(cflock);
+                pid_t pid = FindLockPid(cflock);
 
-                if (pid == -1)
+                if (KillLockHolder(cflock))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal pid in corrupt lock %s - ignoring lock\n", cflock);
-                }
-#ifdef __MINGW32__                    // killing processes with e.g. task manager does not allow for termination handling
-                else if (!NovaWin_IsProcessRunning(pid))
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                          "Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",
-                          pid);
-                    LogLockCompletion(cflog, pid, "Lock expired, process not running", cc_operator, cc_operand);
+                    LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
                     unlink(cflock);
                 }
-#endif /* __MINGW32__ */
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Trying to kill expired process, pid %d\n", pid);
-
-                    err = GracefulTerminate(pid);
-
-                    if (err || (errno == ESRCH) || (errno == ETIMEDOUT))
-                    {
-                        LogLockCompletion(cflog, pid, "Lock expired, process killed", cc_operator, cc_operand);
-                        unlink(cflock);
-                    }
-                    else
-                    {
-                        ReleaseCriticalSection();
-                        FatalError(ctx, "Unable to kill expired cfagent process %d from lock %s, exiting this time..\n", pid,
-                                   cflock);
-                    }
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to kill expired process %d from lock %s", (int)pid, cflock);
                 }
             }
             else

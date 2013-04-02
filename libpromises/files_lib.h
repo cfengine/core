@@ -45,10 +45,6 @@ void CreateEmptyFile(char *name);
 
 void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
 
-/* Write LEN bytes at PTR to descriptor DESC, retrying if interrupted.
-   Return LEN upon success, write's (negative) error code otherwise.  */
-int FullWrite(int desc, const char *ptr, size_t len);
-
 /*
  * Deletes directory #path recursively. Symlinks are not followed.
  *
@@ -56,5 +52,6 @@ int FullWrite(int desc, const char *ptr, size_t len);
  */
 bool DeleteDirectoryTree(const char *path);
 
+#include "file_lib.h"
 
 #endif

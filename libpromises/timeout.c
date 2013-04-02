@@ -27,6 +27,7 @@
 
 #include "env_context.h"
 #include "cfstream.h"
+#include "process.h"
 
 /* Prototypes */
 
@@ -51,7 +52,7 @@ void TimeOut()
     if (ALARM_PID != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
-        GracefulTerminate(ALARM_PID);
+        GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
     }
     else
     {

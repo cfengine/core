@@ -64,7 +64,8 @@ check_PROGRAMS = \
 	connection_management_test \
 	expand_test \
 	string_expressions_test \
-	var_expressions_test
+	var_expressions_test \
+	process_terminate_unix_test
 
 #	ipaddress_test
 
@@ -168,3 +169,19 @@ connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
 rlist_test_SOURCES = rlist_test.c \
        ../../libpromises/rlist.c
 rlist_test_LDADD = libtest.la libstr.la
+
+if LINUX
+
+check_PROGRAMS += linux_process_test
+
+linux_process_test_SOURCES = linux_process_test.c \
+	../../libpromises/process_unix.c \
+	../../libpromises/process_linux.c \
+	../../libutils/file_lib.c
+linux_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+	../../libpromises/process_unix.c \
+process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la

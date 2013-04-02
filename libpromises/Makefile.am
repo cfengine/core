@@ -86,6 +86,7 @@ libpromises_la_SOURCES = \
         patches.c \
         pipes.c pipes.h \
         processes_select.c processes_select.h \
+        process.h process_unix_priv.h \
         promises.c promises.h \
         prototypes3.h \
         reporting.c reporting.h \
@@ -103,6 +104,23 @@ libpromises_la_SOURCES = \
         var_expressions.c \
         vars.c vars.h \
         verify_reports.c
+
+if !NT
+
+libpromises_la_SOURCES += \
+        process_unix.c
+
+if LINUX
+libpromises_la_SOURCES += \
+        process_linux.c
+endif
+
+if !LINUX
+libpromises_la_SOURCES += \
+        process_unix_stub.c
+endif
+
+endif # !NT
 
 if !NT
 libpromises_la_SOURCES += \

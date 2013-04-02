@@ -141,8 +141,4 @@ void SetStartTime(void);
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp);
 
-/* misc */
-
-int GracefulTerminate(pid_t pid);
-
 #endif

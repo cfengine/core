@@ -295,7 +295,7 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectPostgresqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED fconst char *password, ARG_UNUSED const char *database)
+static void *CfConnectPostgresqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
 {
     CfOut(OUTPUT_LEVEL_INFORM, "", "There is no PostgreSQL support compiled into this version");
     return NULL;

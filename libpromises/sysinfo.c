@@ -2194,14 +2194,14 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
 #if defined(__CYGWIN__)
 
-static const char *GetDefaultWorkDir(void)
+static const char *GetDefaultWorkDir(EvalContext *ctx)
 {
     return WORKDIR;
 }
 
 #elif defined(__ANDROID__)
 
-static const char *GetDefaultWorkDir(void)
+static const char *GetDefaultWorkDir(EvalContext *ctx)
 {
     /* getpwuid() on Android returns /data, so use compile-time default instead */
     return WORKDIR;

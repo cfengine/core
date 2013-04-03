@@ -458,7 +458,7 @@ static bool KillLockHolder(const char *lock)
 
 #endif
 
-CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;

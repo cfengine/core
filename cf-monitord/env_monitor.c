@@ -306,7 +306,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         .expireafter = 0,
     };
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {

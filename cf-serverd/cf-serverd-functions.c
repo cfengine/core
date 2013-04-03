@@ -284,7 +284,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     }
     assert(pp);
 
-    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {

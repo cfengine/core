@@ -61,7 +61,6 @@ int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
 int EnterpriseExpiry(EvalContext *ctx, AgentType agent_type);
 const char *GetConsolePrefix(void);
-void PreSanitizePromise(EvalContext *ctx, Promise *pp);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */

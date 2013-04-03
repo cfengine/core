@@ -35,10 +35,6 @@
 #include "cf.nova.h"
 #endif
 
-static void ShowAttributes(Attributes a);
-
-/*******************************************************************/
-
 static int CHECKSUMUPDATES;
 
 /*******************************************************************/
@@ -50,7 +46,7 @@ void SetChecksumUpdates(bool enabled)
 
 /*******************************************************************/
 
-Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp)
+Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp)
 {
     Attributes attr = { {0} };
 
@@ -107,48 +103,6 @@ Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp)
     attr.transaction = GetTransactionConstraints(ctx, pp);
     attr.haveclasses = PromiseGetConstraintAsBoolean(ctx, CF_DEFINECLASSES, pp);
     attr.classes = GetClassDefinitionConstraints(ctx, pp);
-
-    if (DEBUG)
-    {
-        ShowAttributes(attr);
-    }
-
-    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-    {
-        if ((attr.haverename) || (attr.havedelete) || (attr.haveperms) || (attr.havechange) ||
-            (attr.havecopy) || (attr.havelink) || (attr.haveedit) || (attr.create) || (attr.touch) ||
-            (attr.transformer) || (attr.acl.acl_entries))
-        {
-        }
-        else
-        {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! files promise makes no intention about system state");
-        }
-
-        if ((attr.create) && (attr.havecopy))
-        {
-            if (((attr.copy.compare) != (FILE_COMPARATOR_CHECKSUM)) && ((attr.copy.compare) != FILE_COMPARATOR_HASH))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
-                      " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
-                      pp->promiser);
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-            }
-            else
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                      " !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",
-                      pp->promiser);
-            }
-        }
-
-        if ((attr.create) && (attr.havelink))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
-                  pp->promiser);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        }
-    }
 
     return attr;
 }
@@ -1276,50 +1230,6 @@ ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp)
 
     return p;
 }
-
-/*******************************************************************/
-
-static void ShowAttributes(Attributes a)
-{
-    printf(".....................................................\n");
-    printf("File Attribute Set =\n\n");
-
-    if (a.havedepthsearch)
-        printf(" * havedepthsearch\n");
-    if (a.haveselect)
-        printf(" * haveselect\n");
-    if (a.haverename)
-        printf(" * haverename\n");
-    if (a.havedelete)
-        printf(" * havedelete\n");
-    if (a.haveperms)
-        printf(" * haveperms\n");
-    if (a.havechange)
-        printf(" * havechange\n");
-    if (a.havecopy)
-        printf(" * havecopy\n");
-    if (a.havelink)
-        printf(" * havelink\n");
-    if (a.haveedit)
-        printf(" * haveedit\n");
-    if (a.create)
-        printf(" * havecreate\n");
-    if (a.touch)
-        printf(" * havetouch\n");
-    if (a.move_obstructions)
-        printf(" * move_obstructions\n");
-
-    if (a.repository)
-        printf(" * repository %s\n", a.repository);
-    if (a.transformer)
-        printf(" * transformer %s\n", a.transformer);
-
-    printf(".....................................................\n\n");
-}
-
-/*******************************************************************/
-/* Edit sub-bundles have their own attributes                      */
-/*******************************************************************/
 
 Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp)
 {

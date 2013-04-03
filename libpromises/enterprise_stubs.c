@@ -125,13 +125,6 @@ void LogTotalCompliance(const char *version, int background_tasks)
 }
 
 
-/* all agents: constraints.c */
-
-
-void PreSanitizePromise(EvalContext *ctx, Promise *pp)
-{
-}
-
 /* network communication: cf-serverd.c, client_protocol.c, client_code.c, crypto.c */
 
 

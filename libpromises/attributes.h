@@ -33,7 +33,7 @@ Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetEnvironmentsAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp);
-Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp);
+Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetInferencesAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp);
 Attributes GetMeasurementAttributes(const EvalContext *ctx, const Promise *pp);

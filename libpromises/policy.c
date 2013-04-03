@@ -2927,8 +2927,6 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
             }
         }
     }
-
-    PreSanitizePromise(ctx, pp);
 }
 
 /*****************************************************************************/

@@ -38,8 +38,6 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 int MakeParentDirectory(char *parentandchild, int force);
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
-int FileSanityChecks(EvalContext *ctx, char *path, Attributes a, Promise *pp);
-
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 

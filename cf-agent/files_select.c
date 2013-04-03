@@ -532,7 +532,7 @@ static int SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz)
+static int GetOwnerName(ARG_UNUSED char *path, struct stat *lstatptr, char *owner, int ownerSz)
 {
     struct passwd *pw;
 

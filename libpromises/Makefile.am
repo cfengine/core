@@ -115,9 +115,23 @@ libpromises_la_SOURCES += \
         process_linux.c
 endif
 
+if AIX
+libpromises_la_SOURCES += \
+	process_aix.c
+endif
+
+if SOLARIS
+libpromises_la_SOURCES += \
+	process_solaris.c
+endif
+
 if !LINUX
+if !AIX
+if !SOLARIS
 libpromises_la_SOURCES += \
         process_unix_stub.c
+endif
+endif
 endif
 
 endif # !NT

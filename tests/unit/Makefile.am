@@ -182,6 +182,30 @@ linux_process_test_LDADD = libtest.la ../../libutils/libutils.la
 
 endif
 
-process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+if AIX
+
+check_PROGRAMS += aix_process_test
+
+aix_process_test_SOURCES = aix_process_test.c \
 	../../libpromises/process_unix.c \
+	../../libpromises/process_aix.c \
+	../../libutils/file_lib.c
+aix_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+if SOLARIS
+
+check_PROGRAMS += solaris_process_test
+
+solaris_process_test_SOURCES = solaris_process_test.c \
+	../../libpromises/process_unix.c \
+	../../libpromises/process_solaris.c \
+	../../libutils/file_lib.c
+solaris_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+	../../libpromises/process_unix.c
 process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la

@@ -1,0 +1,12 @@
+body executor control
+{
+    splaytime => "1";
+    mailto => "cfengine_mail@example.org";
+    mailfrom => "cfengine@$(g.host).example.org";
+    smtpserver => "localhost";
+    mailmaxlines => "50";
+    schedule => { "Min00_05", "Min05_10" };
+    executorfacility => "LOG_LOCAL6";
+    agent_expireafter => "120";
+    exec_command => "/bin/echo";
+}

@@ -25,24 +25,7 @@
 #ifndef CFENGINE_CF_EXECD_RUNNER_H
 #define CFENGINE_CF_EXECD_RUNNER_H
 
-typedef struct
-{
-    bool scheduled_run;
-    char *exec_command;
-    int agent_expireafter;
-
-    char *mail_server;
-    char *mail_from_address;
-    char *mail_to_address;
-    int mail_max_lines;
-
-    /*
-     * Host information.
-     * Might change during policy reload, so copy is retained in each worker.
-     */
-    char *fq_name;
-    char *ip_address;
-} ExecConfig;
+#include "exec-config.h"
 
 void LocalExec(const ExecConfig *config);
 

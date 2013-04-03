@@ -2,7 +2,7 @@
 EXTRA_DIST = data
 
 AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
-	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
+	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
@@ -65,7 +65,8 @@ check_PROGRAMS = \
 	expand_test \
 	string_expressions_test \
 	var_expressions_test \
-	process_terminate_unix_test
+	process_terminate_unix_test \
+	exec-config-test
 
 #	ipaddress_test
 
@@ -209,3 +210,7 @@ endif
 process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
 	../../libpromises/process_unix.c
 process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
+
+exec_config_test_SOURCES = exec-config-test.c \
+	../../cf-execd/exec-config.c
+exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la

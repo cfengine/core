@@ -211,17 +211,7 @@ void FakeProcessDoSignals(void)
 
 int nanosleep(const struct timespec *req, struct timespec *rem)
 {
-    time_t sleep_time = 2 * req->tv_nsec / 3;
-    time_t next_time = current_time + sleep_time;
-    if (signal_time != -1 && next_time >= signal_time)
-    {
-        FakeProcessDoSignals();
-    }
-
-    current_time = next_time;
-
-    rem->tv_sec = 0;
-    rem->tv_nsec = req->tv_nsec - sleep_time;
+    time_t sleep_time;
 
     /* Simulate EINTR every second time */
 
@@ -230,12 +220,31 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
     if (!got_eintr)
     {
         got_eintr = true;
+        sleep_time = 2 * req->tv_nsec / 3;
+    }
+    else
+    {
+        got_eintr = false;
+        sleep_time = req->tv_nsec;
+    }
+
+    time_t next_time = current_time + sleep_time;
+    if (signal_time != -1 && next_time >= signal_time)
+    {
+        FakeProcessDoSignals();
+    }
+
+    current_time = next_time;
+
+    if (got_eintr)
+    {
+        rem->tv_sec = 0;
+        rem->tv_nsec = req->tv_nsec - sleep_time;
         errno = EINTR;
         return -1;
     }
     else
     {
-        got_eintr = false;
         return 0;
     }
 }

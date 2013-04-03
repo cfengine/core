@@ -63,7 +63,7 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
 static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
-int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp)
+int SelectLeaf(char *path, struct stat *sb, Attributes attr)
 {
     int result = true;
     Rlist *rp;

@@ -84,7 +84,7 @@ static bool CheckLinkSecurity(struct stat *sb, char *name);
 static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb, struct stat *dsb, FileCopy fc, Promise *pp);
 static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
-static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp, CompressedArray **inode_cache);
+static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArray **inode_cache);
 static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
 static int cf_stat(char *file, struct stat *buf, FileCopy fc, Promise *pp);
 #ifndef __MINGW32__
@@ -122,7 +122,7 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 {
 /* Here we can assume that we are in the parent directory of the leaf */
 
-    if (!SelectLeaf(path, sb, attr, pp))
+    if (!SelectLeaf(path, sb, attr))
     {
         CfDebug("Skipping non-selected file %s\n", path);
         return false;
@@ -212,7 +212,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
         return;
     }
 
-    if (!SelectLeaf(sourcefile, &ssb, attr, pp))
+    if (!SelectLeaf(sourcefile, &ssb, attr))
     {
         CfDebug("Skipping non-selected file %s\n", sourcefile);
         return;
@@ -864,7 +864,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
     if (ssb.st_nlink > 1)       /* Preserve hard link structure when copying */
     {
-        RegisterAHardLink(ssb.st_ino, destination, attr, pp, inode_cache);
+        RegisterAHardLink(ssb.st_ino, destination, attr, inode_cache);
     }
 
     if (S_ISDIR(ssb.st_mode))
@@ -2955,7 +2955,7 @@ static void TruncateFile(char *name)
     }
 }
 
-static void RegisterAHardLink(int i, char *value, Attributes attr, Promise *pp, CompressedArray **inode_cache)
+static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArray **inode_cache)
 {
     if (!FixCompressedArrayValue(i, value, inode_cache))
     {

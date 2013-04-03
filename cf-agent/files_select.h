@@ -3,6 +3,6 @@
 
 #include "cf3.defs.h"
 
-int SelectLeaf(char *path, struct stat *sb, Attributes attr, Promise *pp);
+int SelectLeaf(char *path, struct stat *sb, Attributes attr);
 
 #endif

@@ -480,7 +480,7 @@ int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
 
 /*********************************************************************/
 
-int MatchRegion(const char *chunk, const Item *start, const Item *begin, const Item *end)
+int MatchRegion(const char *chunk, const Item *begin, const Item *end)
 /*
   Match a region in between the selection delimiters. It is
   called after SelectRegion. The end delimiter will be visible

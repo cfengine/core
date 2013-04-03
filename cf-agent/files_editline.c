@@ -863,11 +863,11 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
     {
         if (a.not_matching)
         {
-            matches = !MatchRegion(pp->promiser, *start, ip, terminator);
+            matches = !MatchRegion(pp->promiser, ip, terminator);
         }
         else
         {
-            matches = MatchRegion(pp->promiser, *start, ip, terminator);
+            matches = MatchRegion(pp->promiser, ip, terminator);
         }
 
         if (matches)
@@ -1352,7 +1352,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(chunk, *start, location, NULL))
+    if (MatchRegion(chunk, location, NULL))
        {
        return false;
        }

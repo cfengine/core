@@ -25,6 +25,9 @@
 #ifndef CFENGINE_PROCESS_H
 #define CFENGINE_PROCESS_H
 
+#include <unistd.h>
+#include <sys/types.h>
+
 #define PROCESS_START_TIME_UNKNOWN ((time_t) 0)
 
 /*

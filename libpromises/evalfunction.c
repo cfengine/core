@@ -2069,7 +2069,7 @@ static FnCallResult FnCallHostRange(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     strcpy(buffer, "!any");
 
-    if (!FuzzyHostParse(prefix, range))
+    if (!FuzzyHostParse(range))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }

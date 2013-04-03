@@ -29,7 +29,7 @@
 
 bool IsLoopbackAddress(const char *address);
 int FuzzySetMatch(const char *s1, const char *s2);
-int FuzzyHostParse(char *arg1, char *arg2);
+int FuzzyHostParse(char *arg2);
 int FuzzyHostMatch(char *arg0, char *arg1, char *basename);
 int FuzzyMatchParse(char *item);
 

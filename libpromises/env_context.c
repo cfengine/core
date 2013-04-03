@@ -1277,7 +1277,7 @@ static void StackFrameBundleDestroy(StackFrameBundle frame)
     StringSetDestroy(frame.contexts_negated);
 }
 
-static void StackFrameBodyDestroy(StackFrameBody frame)
+static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
 {
     return;
 }
@@ -1287,7 +1287,7 @@ static void StackFramePromiseDestroy(StackFramePromise frame)
     HashFree(frame.variables);
 }
 
-static void StackFramePromiseIterationDestroy(StackFramePromiseIteration frame)
+static void StackFramePromiseIterationDestroy(ARG_UNUSED StackFramePromiseIteration frame)
 {
     return;
 }

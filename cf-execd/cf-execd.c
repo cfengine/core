@@ -58,9 +58,6 @@ static int NO_FORK;
 static int ONCE;
 static int WINSERVICE = true;
 
-static Item *SCHEDULE;
-static int SPLAYTIME = 0;
-
 static pthread_attr_t threads_attrs;
 
 /*******************************************************************/
@@ -75,10 +72,6 @@ static void Apoptosis(void);
 static bool LocalExecInThread(const ExecConfig *config);
 
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, ExecConfig *exec_config);
-void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config);
-
-static ExecConfig *CopyExecConfig(const ExecConfig *config);
-static void DestroyExecConfig(ExecConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -162,19 +155,9 @@ int main(int argc, char *argv[])
 
     ThisAgentInit();
 
-    ExecConfig exec_config = {
-        .scheduled_run = !ONCE,
-        .exec_command = SafeStringDuplicate(""),
-        .mail_server = SafeStringDuplicate(""),
-        .mail_from_address = SafeStringDuplicate(""),
-        .mail_to_address = SafeStringDuplicate(""),
-        .mail_max_lines = 30,
-        .fq_name = VFQNAME,
-        .ip_address = VIPADDRESS,
-        .agent_expireafter = 10080,
-    };
-
-    KeepPromises(ctx, policy, &exec_config);
+    ExecConfig *exec_config = ExecConfigNewDefault(!ONCE, VFQNAME, VIPADDRESS);
+    ExecConfigUpdate(ctx, policy, exec_config);
+    SetFacility(exec_config->log_facility);
 
 #ifdef __MINGW32__
     if (WINSERVICE)
@@ -184,9 +167,10 @@ int main(int argc, char *argv[])
     else
 #endif /* __MINGW32__ */
     {
-        StartServer(ctx, policy, config, &exec_config);
+        StartServer(ctx, policy, config, exec_config);
     }
 
+    ExecConfigDestroy(exec_config);
     GenericAgentConfigDestroy(config);
 
     return 0;
@@ -304,147 +288,9 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 /*****************************************************************************/
 
-static void LoadDefaultSchedule(void)
-{
-    CfDebug("Loading default schedule...\n");
-    DeleteItemList(SCHEDULE);
-    SCHEDULE = NULL;
-    AppendItem(&SCHEDULE, "Min00", NULL);
-    AppendItem(&SCHEDULE, "Min05", NULL);
-    AppendItem(&SCHEDULE, "Min10", NULL);
-    AppendItem(&SCHEDULE, "Min15", NULL);
-    AppendItem(&SCHEDULE, "Min20", NULL);
-    AppendItem(&SCHEDULE, "Min25", NULL);
-    AppendItem(&SCHEDULE, "Min30", NULL);
-    AppendItem(&SCHEDULE, "Min35", NULL);
-    AppendItem(&SCHEDULE, "Min40", NULL);
-    AppendItem(&SCHEDULE, "Min45", NULL);
-    AppendItem(&SCHEDULE, "Min50", NULL);
-    AppendItem(&SCHEDULE, "Min55", NULL);
-}
-
 void ThisAgentInit(void)
 {
     umask(077);
-
-    if (SCHEDULE == NULL)
-    {
-        LoadDefaultSchedule();
-    }
-}
-
-/*****************************************************************************/
-
-static double GetSplay(void)
-{
-    char splay[CF_BUFSIZE];
-
-    snprintf(splay, CF_BUFSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-
-    return ((double) OatHash(splay, CF_HASHTABLESIZE)) / CF_HASHTABLESIZE;
-}
-
-/*****************************************************************************/
-/* Might be called back from NovaWin_StartExecService */
-
-void KeepPromises(EvalContext *ctx, Policy *policy, ExecConfig *config)
-{
-    bool schedule_is_specified = false;
-
-    Seq *constraints = ControlBodyConstraints(policy, AGENT_TYPE_EXECUTOR);
-    if (constraints)
-    {
-        for (size_t i = 0; i < SeqLength(constraints); i++)
-        {
-            Constraint *cp = SeqAt(constraints, i);
-
-            if (!IsDefinedClass(ctx, cp->classes, NULL))
-            {
-                continue;
-            }
-
-            Rval retval;
-            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_executor", cp->lval }, &retval, NULL))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
-                continue;
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILFROM].lval) == 0)
-            {
-                free(config->mail_from_address);
-                config->mail_from_address = SafeStringDuplicate(retval.item);
-                CfDebug("mailfrom = %s\n", config->mail_from_address);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILTO].lval) == 0)
-            {
-                free(config->mail_to_address);
-                config->mail_to_address = SafeStringDuplicate(retval.item);
-                CfDebug("mailto = %s\n", config->mail_to_address);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SMTPSERVER].lval) == 0)
-            {
-                free(config->mail_server);
-                config->mail_server = SafeStringDuplicate(retval.item);
-                CfDebug("smtpserver = %s\n", config->mail_server);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECCOMMAND].lval) == 0)
-            {
-                free(config->exec_command);
-                config->exec_command = SafeStringDuplicate(retval.item);
-                CfDebug("exec_command = %s\n", config->exec_command);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_AGENT_EXPIREAFTER].lval) == 0)
-            {
-                config->agent_expireafter = IntFromString(retval.item);
-                CfDebug("agent_expireafter = %d\n", config->agent_expireafter);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
-            {
-                SetFacility(retval.item);
-                continue;
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILMAXLINES].lval) == 0)
-            {
-                config->mail_max_lines = IntFromString(retval.item);
-                CfDebug("maxlines = %d\n", config->mail_max_lines);
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
-            {
-                int time = IntFromString(RvalScalarValue(retval));
-
-                SPLAYTIME = (int) (time * SECONDS_PER_MINUTE * GetSplay());
-            }
-
-            if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
-            {
-                CfDebug("Loading user-defined schedule...\n");
-                DeleteItemList(SCHEDULE);
-                SCHEDULE = NULL;
-                schedule_is_specified = true;
-
-                for (const Rlist *rp = retval.item; rp; rp = rp->next)
-                {
-                    if (!IsItemIn(SCHEDULE, rp->item))
-                    {
-                        AppendItem(&SCHEDULE, rp->item, NULL);
-                    }
-                }
-            }
-        }
-    }
-
-    if (!schedule_is_specified)
-    {
-        LoadDefaultSchedule();
-    }
 }
 
 /*****************************************************************************/
@@ -513,8 +359,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, exec_config))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", SPLAYTIME);
-                sleep(SPLAYTIME);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for splaytime %d seconds\n\n", exec_config->splay_time);
+                sleep(exec_config->splay_time);
 
                 if (!LocalExecInThread(exec_config))
                 {
@@ -538,14 +384,14 @@ static void *LocalExecThread(void *param)
 
     ExecConfig *config = (ExecConfig *)param;
     LocalExec(config);
-    DestroyExecConfig(config);
+    ExecConfigDestroy(config);
 
     return NULL;
 }
 
 static bool LocalExecInThread(const ExecConfig *config)
 {
-    ExecConfig *thread_config = CopyExecConfig(config);
+    ExecConfig *thread_config = ExecConfigCopy(config);
 
     pthread_t tid;
 
@@ -555,7 +401,7 @@ static bool LocalExecInThread(const ExecConfig *config)
     }
     else
     {
-        DestroyExecConfig(thread_config);
+        ExecConfigDestroy(thread_config);
         CfOut(OUTPUT_LEVEL_INFORM, "pthread_create", "Can't create thread!");
         return false;
     }
@@ -640,9 +486,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const R
 
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config)
 {
-    Item *ip;
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping...\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for pulse time %d seconds...\n", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
 
 // recheck license (in case of license updates or expiry)
@@ -694,7 +538,9 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         GenericAgentConfigSetBundleSequence(config, NULL);
 
         *policy = GenericAgentLoadPolicy(ctx, config);
-        KeepPromises(ctx, *policy, exec_config);
+        ExecConfigUpdate(ctx, *policy, exec_config);
+
+        SetFacility(exec_config->log_facility);
     }
     else
     {
@@ -716,14 +562,16 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         SetReferenceTime(ctx, true);
     }
 
-    for (ip = SCHEDULE; ip != NULL; ip = ip->next)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking schedule %s...\n", ip->name);
-
-        if (IsDefinedClass(ctx, ip->name, NULL))
+        StringSetIterator it = StringSetIteratorInit(exec_config->schedule);
+        const char *time_context = NULL;
+        while ((time_context = StringSetIteratorNext(&it)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), ip->name);
-            return true;
+            if (IsDefinedClass(ctx, time_context, NULL))
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), time_context);
+                return true;
+            }
         }
     }
 
@@ -731,31 +579,3 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     return false;
 }
 
-/*************************************************************************/
-
-ExecConfig *CopyExecConfig(const ExecConfig *config)
-{
-    ExecConfig *copy = xcalloc(1, sizeof(ExecConfig));
-    copy->scheduled_run = config->scheduled_run;
-    copy->exec_command = xstrdup(config->exec_command);
-    copy->mail_server = xstrdup(config->mail_server);
-    copy->mail_from_address = xstrdup(config->mail_from_address);
-    copy->mail_to_address = xstrdup(config->mail_to_address);
-    copy->fq_name = xstrdup(config->fq_name);
-    copy->ip_address = xstrdup(config->ip_address);
-    copy->mail_max_lines = config->mail_max_lines;
-    copy->agent_expireafter = config->agent_expireafter;
-
-    return copy;
-}
-
-void DestroyExecConfig(ExecConfig *config)
-{
-    free(config->exec_command);
-    free(config->mail_server);
-    free(config->mail_from_address);
-    free(config->mail_to_address);
-    free(config->fq_name);
-    free(config->ip_address);
-    free(config);
-}

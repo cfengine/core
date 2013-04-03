@@ -9,6 +9,10 @@
 #include "cfstream.h"
 #include "generic_agent.h" // TODO: fix
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
+
 static void ExecConfigResetDefault(ExecConfig *exec_config)
 {
     free(exec_config->log_facility);

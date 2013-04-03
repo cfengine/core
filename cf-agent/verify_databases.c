@@ -36,6 +36,7 @@
 #include "logging.h"
 #include "rlist.h"
 #include "policy.h"
+#include "cf-agent-enterprise-stubs.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);

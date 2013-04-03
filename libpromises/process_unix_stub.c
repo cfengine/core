@@ -23,18 +23,24 @@
 */
 
 #include "cf3.defs.h"
-
+#include "cfstream.h"
 #include "process_lib.h"
 #include "process_unix_priv.h"
 
 time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
 {
-    /* Not implemented yet */
+    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+          "No platform-specific code for obtaining process start time. - "
+          "Falling back to no PID double-checking on kill().\n");
+
     return PROCESS_START_TIME_UNKNOWN;
 }
 
 ProcessState GetProcessState(ARG_UNUSED pid_t pid)
 {
-    /* Not implemented yet */
+    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+          "No platform-specific code for obtaining process state. - "
+          "Falling back to no PID double-checking on kill().\n");
+
     return PROCESS_STATE_RUNNING;
 }

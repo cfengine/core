@@ -22,16 +22,17 @@
   included file COSL.txt.
 */
 
+#include "cf3.defs.h"
 #include "process.h"
 #include "process_unix_priv.h"
 
-time_t GetProcessStartTime(pid_t pid)
+time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
 {
     /* Not implemented yet */
     return PROCESS_START_TIME_UNKNOWN;
 }
 
-ProcessState GetProcessState(pid_t pid)
+ProcessState GetProcessState(ARG_UNUSED pid_t pid)
 {
     /* Not implemented yet */
     return PROCESS_STATE_RUNNING;

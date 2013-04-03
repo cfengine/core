@@ -276,7 +276,7 @@ void test_kill_long_reacting_signal(void **state)
 {
     /* This process is very slow in reaction. It should not be left stopped though */
     InitTime();
-    InitFakeProcess(12345, 20000000000, false, false, true);
+    InitFakeProcess(12345, 2000000000, false, false, true);
 
     int res = GracefulTerminate(1, 12345);
     assert_true(res);

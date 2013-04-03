@@ -36,7 +36,7 @@
 #include "files_names.h"
 #include "logging.h"
 #include "rlist.h"
-#include "process.h"
+#include "process_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

@@ -2,7 +2,7 @@
 #include "compiler.h"
 #include "test.h"
 
-#include "process.h"
+#include "process_lib.h"
 #include "process_unix_priv.h"
 
 /* This mock implements single fake process with a several tunable parameters:

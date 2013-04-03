@@ -23,7 +23,8 @@
 */
 
 #include "cf3.defs.h"
-#include "process.h"
+
+#include "process_lib.h"
 #include "process_unix_priv.h"
 
 time_t GetProcessStartTime(ARG_UNUSED pid_t pid)

@@ -27,7 +27,7 @@
 
 #include "env_context.h"
 #include "cfstream.h"
-#include "process.h"
+#include "process_lib.h"
 
 /* Prototypes */
 

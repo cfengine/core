@@ -24,7 +24,7 @@
 
 #include "cf3.defs.h"
 
-#include "process.h"
+#include "process_lib.h"
 #include "process_unix_priv.h"
 #include "files_lib.h"
 #include <assert.h>

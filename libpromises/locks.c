@@ -425,8 +425,7 @@ static char *BodyName(const Promise *pp)
 static bool KillLockHolder(ARG_UNUSED const char *lock)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "",
-          "Process with pid %d is not running - ignoring lock (Windows does not support graceful processes termination)\n",
-          pid);
+          "Process is not running - ignoring lock (Windows does not support graceful processes termination)\n");
     return true;
 }
 

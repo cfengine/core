@@ -59,9 +59,7 @@ static bool ProcessWaitUntilStopped(pid_t pid, long timeout_ns)
             .tv_nsec = MIN(SLEEP_POLL_TIMEOUT_NS, timeout_ns),
         };
 
-        struct timespec rts;
-
-        while (nanosleep(&ts, &rts) < 0)
+        while (nanosleep(&ts, &ts) < 0)
         {
             if (errno != EINTR)
             {
@@ -69,7 +67,7 @@ static bool ProcessWaitUntilStopped(pid_t pid, long timeout_ns)
             }
         }
 
-        timeout_ns = MAX(0, timeout_ns - rts.tv_nsec);
+        timeout_ns = MAX(0, timeout_ns - SLEEP_POLL_TIMEOUT_NS);
     }
 
     return false;
@@ -92,9 +90,7 @@ static bool ProcessWaitUntilExited(pid_t pid, long timeout_ns)
             .tv_nsec = MIN(SLEEP_POLL_TIMEOUT_NS, timeout_ns),
         };
 
-        struct timespec rts;
-
-        while (nanosleep(&ts, &rts) < 0)
+        while (nanosleep(&ts, &ts) < 0)
         {
             if (errno != EINTR)
             {
@@ -102,7 +98,7 @@ static bool ProcessWaitUntilExited(pid_t pid, long timeout_ns)
             }
         }
 
-        timeout_ns = MAX(0, timeout_ns - rts.tv_nsec);
+        timeout_ns = MAX(0, timeout_ns - SLEEP_POLL_TIMEOUT_NS);
     }
 
     return false;

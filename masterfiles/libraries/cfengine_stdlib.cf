@@ -1978,6 +1978,62 @@ body package_method yum_rpm_enable_repo(repoid)
 
 ##
 
+body package_method yum_group
+
+# Makes use of the "groups of packages" feature of Yum possible. (yum groupinstall, groupremove)
+#
+# Groups must be specified by their groupids, available through yum grouplist -v (between parentheses)
+# $ yum grouplist -v|grep Networking|head -n 1
+#   Networking Tools (network-tools)       <--- network-tools is the groupid
+#
+# Policies examples:
+#
+# -Install "web-server" group:
+# ----------------------------
+#
+# packages:
+#   "web-server"
+#     package_policy   =>  "add",
+#     package_method   =>  yum_group;
+#
+# -Remove "debugging" and "php" groups:
+# -------------------------------------
+#
+# vars:
+#   "groups"  slist  => { "debugging", "php" };
+#
+# packages:
+#   "$(groups)"
+#      package_policy   =>   "delete",
+#      package_method   =>   yum_group;
+#
+
+{ 
+  package_add_command             =>  "/usr/bin/yum groupinstall -y";
+  package_changes                 =>  "bulk";
+  package_delete_command          =>  "/usr/bin/yum groupremove -y";
+  package_delete_convention       =>  "$(name)";
+  package_installed_regex         =>  "^i.*";
+
+  # Generate a dpkg -l like listing, "i" means installed, "a" available, and a dummy version 1
+  package_list_command            =>
+                                      "/usr/bin/yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\" || h==\"a\" {print h\" \"$0\" 1\"}'";
+
+  package_list_name_regex         =>  "a|i ([^\s]+) 1";
+  package_list_update_command     =>  "/usr/bin/yum --quiet check-update";
+  package_list_update_ifelapsed   =>  "240";
+  package_list_version_regex      =>  "(1)";
+  package_name_convention         =>  "$(name)";
+  package_name_regex              =>  "(.*)";
+  package_noverify_returncode     =>  "0";
+  package_update_command          =>  "/usr/bin/yum groupupdate";
+
+  # grep -x to only get full line matching
+  package_verify_command          =>
+                                      "yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\"|grep -qx";
+}
+
+##
 
 body package_method rpm_filebased(path)
 

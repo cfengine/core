@@ -86,6 +86,12 @@ curdir() {
 
 DEFAGENT=$(dirname $(dirname $(curdir)))/src/cf-agent
 AGENT=${AGENT:-${DEFAGENT}}
+DEFCF_PROMISES=$(dirname $(dirname $(curdir)))/src/cf-promises
+CF_PROMISES=${CF_PROMISES:-${DEFCF_PROMISES}}
+DEFCF_SERVERD=$(dirname $(dirname $(curdir)))/src/cf-serverd
+CF_SERVERD=${CF_SERVERD:-${DEFCF_SERVERD}}
+DEFCF_KEY=$(dirname $(dirname $(curdir)))/src/cf-key
+CF_KEY=${CF_KEY:-${DEFCF_KEY}}
 
 usage() {
   echo "testall [-q] [--gainroot=<command>] [--agent=<agent>] [--no-nova] [--staging] [--no-network] [<test> <test>...]"
@@ -147,10 +153,15 @@ runtest() {
     WORKDIR=$BASE_WORKDIR/$FLATNAME
     mkdir -p $WORKDIR/bin $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
-    ln -sf $(dirname $AGENT)/cf-promises $WORKDIR/bin
+    ln -sf $CF_PROMISES $WORKDIR/bin
+    ln -sf $CF_SERVERD $WORKDIR/bin
+    ln -sf $CF_KEY $WORKDIR/bin
 
     echo "#!/bin/sh
-CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
+CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR
+TEMP=$WORKDIR/tmp
+export CFENGINE_TEST_OVERRIDE_WORKDIR TEMP
+$AGENT -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
 " > $WORKDIR/runtest
     chmod +x $WORKDIR/runtest
 

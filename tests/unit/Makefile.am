@@ -23,7 +23,6 @@ check_PROGRAMS = \
 	set_domainname_test \
 	str_test \
 	json_test \
-	evalfunction_test \
 	regex_test \
 	alloc_test \
 	string_writer_test \

@@ -3320,3 +3320,15 @@ bundle common paths
       expression => fileexists("$(path[$(all_paths)])"),
       comment    => "It's useful to know if $(all_paths) exists on the filesystem as defined";
 }
+
+bundle agent fileinfo(f)
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+
+      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+
+  reports:
+    verbose_mode::
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
+}

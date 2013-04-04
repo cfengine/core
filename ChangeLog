@@ -1,7 +1,7 @@
 3.5.0 - Alpha 2
 
        New features:
-       - new built-in functions: classesmatching, strftime, filestat, ifelse
+       - new built-in functions: classesmatching, strftime, filestat, ifelse, maparray
        - cf-promises flag --parse-tree is replaced by --policy-output-format=, requiring the
           user to specify the output format (none, cf, json)
        - cf-promises allows partial check of policy (without body common control) without integrity check;

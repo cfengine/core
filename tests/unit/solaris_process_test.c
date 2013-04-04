@@ -2,7 +2,7 @@
 
 #include "compiler.h"
 #include "test.h"
-#include "process.h"
+#include "process_lib.h"
 #include "process_unix_priv.h"
 
 #include <procfs.h>

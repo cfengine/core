@@ -630,6 +630,51 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 /*********************************************************************/
 
+static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    Rlist *arg = NULL;
+    int argcount = 0;
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall ifelse-arg");
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+        argcount++;
+    }
+
+    /* Require an odd number of arguments. We will always return something. */
+    if (argcount%2 != 1)
+    {
+        FatalError(ctx, "in built-in FnCall ifelse: even number of arguments");
+    }
+
+    for (arg = finalargs;        /* Start with arg set to finalargs. */
+         arg && arg->next;       /* We must have arg and arg->next to proceed. */
+         arg = arg->next->next)  /* arg steps forward *twice* every time. */
+    {
+        /* Similar to classmatch(), we evaluate the first of the two
+         * arguments as a class. */
+        if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
+        {
+            /* If the evaluation returned true in the current context,
+             * return the second of the two arguments. */
+            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg->next)), RVAL_TYPE_SCALAR } };
+        }
+    }
+
+    /* If we get here, we've reached the last argument (arg->next is NULL). */
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg)), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *string = RlistScalarValue(finalargs);
@@ -4408,6 +4453,11 @@ FnCallArg HOSTSWITHCLASS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg IFELSE_ARGS[] =
+{
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg IPRANGE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "IP address range syntax"},
@@ -4859,6 +4909,7 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Extract the list of hosts with the given class set from the hub database (commercial extension)"},
     {"hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge,
      "Read global knowledge from the hub host by id (commercial extension)"},
+    {"ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true},
     {"iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange,
      "True if the current host lies in the range of IP addresses specified"},
     {"irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use"},

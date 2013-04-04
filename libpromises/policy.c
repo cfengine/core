@@ -50,13 +50,13 @@
 
 static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (does not contain a body common control)";
 
-static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
-static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";
-static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
 
-static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
 
-static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
+
+
+
+
+
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
 static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
 static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
@@ -2366,11 +2366,6 @@ bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, con
     return false;
 }
 
-static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
-{
-    return !((isdigit((int)*identifier)) && (IntFromString(identifier) != CF_NOINT));
-}
-
 static bool CheckScalarNotEmptyVarRef(const char *scalar)
 {
     return (strcmp("$()", scalar) != 0) && (strcmp("${}", scalar) != 0);
@@ -2394,84 +2389,12 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success &= ConstraintCheckSyntax(constraint, errors);
     }
 
-    if (strcmp("vars", pp->parent_promise_type->name) == 0)
+    PromiseTypeSyntax pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
+                                                    pp->parent_promise_type->name);
+
+    if (pts.parse_tree_check)
     {
-        if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
-        {
-            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
-                                             POLICY_ERROR_VARS_PROMISER_NUMERICAL));
-            success = false;
-        }
-
-        if (!CheckParseVariableName(pp->promiser))
-        {
-            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
-                                             POLICY_ERROR_VARS_PROMISER_RESERVED));
-            success = false;
-        }
-
-        // ensure variables are declared with only one type.
-        {
-            char *data_type = NULL;
-
-            for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-            {
-                Constraint *cp = SeqAt(pp->conlist, i);
-
-                if (IsDataType(cp->lval))
-                {
-                    if (data_type != NULL)
-                    {
-                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                         POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE,
-                                                         data_type, cp->lval));
-                        success = false;
-                    }
-                    data_type = cp->lval;
-                }
-            }
-        }
-    }
-    else if (strcmp("classes", pp->parent_promise_type->name) == 0)
-    {
-        if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
-        {
-            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
-                                             POLICY_ERROR_CLASSES_PROMISER_NUMERICAL));
-            success = false;
-        }
-    }
-    else if (strcmp("methods", pp->parent_promise_type->name) == 0)
-    {
-        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
-        {
-            const Constraint *cp = SeqAt(pp->conlist, i);
-
-            // ensure: if call and callee are resolved, then they have matching arity
-            if (StringSafeEqual(cp->lval, "usebundle"))
-            {
-                if (cp->rval.type == RVAL_TYPE_FNCALL)
-                {
-                    const FnCall *call = (const FnCall *)cp->rval.item;
-                    const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
-                    if (!callee)
-                    {
-                        callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", call->name);
-                    }
-
-                    if (callee)
-                    {
-                        if (RlistLen(call->args) != RlistLen(callee->args))
-                        {
-                            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                             POLICY_ERROR_METHODS_BUNDLE_ARITY,
-                                                             call->name, RlistLen(callee->args), RlistLen(call->args)));
-                            success = false;
-                        }
-                    }
-                }
-            }
-        }
+        success &= pts.parse_tree_check(pp, errors);
     }
 
     return success;

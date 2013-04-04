@@ -2086,6 +2086,123 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 /*********************************************************************/
 
+static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char buffer[CF_BUFSIZE], *path = RlistScalarValue(finalargs);
+    char *detail = RlistScalarValue(finalargs->next);
+    struct stat statbuf;
+
+    buffer[0] = '\0';
+
+/* begin fn specific content */
+
+    if (lstat(path, &statbuf) == -1)
+    {
+        return (FnCallResult) { FNCALL_FAILURE, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    }
+    else
+    {
+        if (!strcmp(detail, "size"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
+        }
+        else if (!strcmp(detail, "gid"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_gid);
+        }
+        else if (!strcmp(detail, "uid"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_uid);
+        }
+        else if (!strcmp(detail, "ino"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ino);
+        }
+        else if (!strcmp(detail, "nlink"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_nlink);
+        }
+        else if (!strcmp(detail, "ctime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ctime);
+        }
+        else if (!strcmp(detail, "mtime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mtime);
+        }
+        else if (!strcmp(detail, "atime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_atime);
+        }
+        else if (!strcmp(detail, "permstr"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE,
+                     "%c%c%c%c%c%c%c%c%c%c",
+                     S_ISDIR(statbuf.st_mode) ? 'd' : '-',
+                     (statbuf.st_mode & S_IRUSR) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWUSR) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXUSR) ? 'x' : '-',
+                     (statbuf.st_mode & S_IRGRP) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWGRP) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXGRP) ? 'x' : '-',
+                     (statbuf.st_mode & S_IROTH) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
+        }
+        else if (!strcmp(detail, "permoct"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) (statbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)));
+        }
+        else if (!strcmp(detail, "modeoct"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) statbuf.st_mode);
+        }
+        else if (!strcmp(detail, "mode"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mode);
+        }
+        else if (!strcmp(detail, "type"))
+        {
+          switch (statbuf.st_mode & S_IFMT)
+          {
+          case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
+          case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
+          case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
+          case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
+          case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
+          case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
+          case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
+          default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
+          }
+        }
+        else if (!strcmp(detail, "dev_minor"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
+        }
+        else if (!strcmp(detail, "dev_major"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
+        }
+        else if (!strcmp(detail, "devno"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
+        }
+        else if (!strcmp(detail, "dirname"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
+            ChopLastNode(buffer);
+        }
+        else if (!strcmp(detail, "basename"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
+        }
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
@@ -4404,6 +4521,13 @@ FnCallArg FILESTAT_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg FILESTAT_DETAIL_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
+    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", DATA_TYPE_OPTION, "stat() field to get"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg FILESEXIST_ARGS[] =
 {
     {CF_NAKEDLRANGE, DATA_TYPE_STRING, "Array identifier containing list"},
@@ -4954,6 +5078,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed"},
     {"filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed"},
     {"filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file"},
+    {"filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file"},
     {"getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv,
      "Return the environment variable named arg1, truncated at arg2 characters"},
     {"getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields,

@@ -1,0 +1,5 @@
+
+@i{History}: Was introduced in version 3.5.0,Enterprise 3.1 (2013)
+
+If the file object does not exist, the function call fails and the variable
+does not expand.

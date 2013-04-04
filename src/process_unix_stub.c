@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "process.h"
+#include "process_lib.h"
 #include "process_unix_priv.h"
 
 time_t GetProcessStartTime(pid_t pid)

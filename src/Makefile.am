@@ -120,7 +120,7 @@ libpromises_la_SOURCES = \
         pipes.c \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
-	process.h process_unix_priv.h \
+	process_lib.h process_unix_priv.h \
         promises.c \
         prototypes3.h \
         recursion.c \

@@ -973,7 +973,7 @@ void CleanScheduledPackages(void);
 
 /* process_linux.c, process_unix.c, process_unix_stub.c */
 #include "process_unix_priv.h"
-#include "process.h"
+#include "process_lib.h"
 
 /* verify_processes.c */
 

@@ -22,7 +22,7 @@
        - cf-execd: --once implies --no-fork
 
        Bugfixes:
-
+       - ifvarclass checked from classes promises in common bundles
        - do not wait for splaytime when executing only once
        - disable xml editing functionality when libxml2 doesn't provide necessary APIs (Redmine #1937)
 

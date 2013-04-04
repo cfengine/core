@@ -3131,6 +3131,7 @@ bundle common paths
       "path[ls]"       string => "/usr/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3155,6 +3156,7 @@ bundle common paths
       "path[ls]"       string => "/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3179,6 +3181,7 @@ bundle common paths
       "path[ls]"       string => "/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3203,6 +3206,7 @@ bundle common paths
       "path[ls]"       string => "/usr/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3236,6 +3240,7 @@ bundle common paths
       "path[ls]"            string => "/bin/ls";
       "path[netstat]"       string => "/bin/netstat";
       "path[ping]"          string => "/usr/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
       "path[printf]"        string => "/usr/bin/printf";
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/bin/sort";
@@ -3283,6 +3288,7 @@ bundle common paths
       "path[iptables_save]" string => "/sbin/iptables-save";
       "path[netstat]"       string => "/bin/netstat";
       "path[ping]"          string => "/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
       "path[printf]"        string => "/usr/bin/printf";
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/usr/bin/sort";

@@ -31,7 +31,7 @@
 void BeginAudit(void);
 void EndAudit(const EvalContext *ctx, int background_tasks);
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason);
+void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
 void PromiseLog(char *s);
 void PromiseBanner(Promise *pp);
 void BannerSubBundle(Bundle *bp, Rlist *params);

@@ -187,6 +187,7 @@ static const struct option OPTIONS[15] =
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
+    {"short-version", no_argument, 0, 'S'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -205,6 +206,7 @@ static const char *HINTS[15] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
+    "Output the short version string of the software",
     NULL
 };
 
@@ -319,7 +321,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
 
-    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:VSx:MB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -434,6 +436,10 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'V':
             PrintVersionBanner("cf-agent");
+            exit(0);
+
+        case 'S':
+            PrintShortVersionBanner();
             exit(0);
 
         case 'h':

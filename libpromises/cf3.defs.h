@@ -33,6 +33,8 @@
 #include <libxml/xpathInternals.h>
 #endif
 
+#include "sequence.h"
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -716,13 +718,23 @@ typedef struct
     const char *default_value;
 } BodySyntax;
 
-/*************************************************************************/
+/*
+ * Promise type may optionally provide parse-tree check function, called after
+ * parsing to do a preliminary syntax/semantic checking of unexpanded promises.
+ *
+ * This check function should populate #errors sequence with errors it finds and
+ * return false in case it has found at least one error.
+ *
+ * If the check function has not found any errors, it should return true.
+ */
+typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
 typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
     const BodySyntax *bs;
+    ParseTreeCheckFn parse_tree_check;
 } PromiseTypeSyntax;
 
 /*************************************************************************/

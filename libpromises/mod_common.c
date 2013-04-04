@@ -40,6 +40,15 @@
 #include "mod_services.h"
 #include "mod_measurement.h"
 
+#include "conversion.h"
+#include "policy.h"
+#include "syntax.h"
+
+static const char *POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE = "Variable contains existing data type contstraint %s, tried to redefine with %s";
+static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises cannot have a purely numerical promiser (name)";
+static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
+static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
+
 static const BodySyntax CF_TRANSACTION_BODY[] =
 {
     {"action_policy", DATA_TYPE_OPTION, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
@@ -105,6 +114,53 @@ const BodySyntax CF_VARBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
+bool CheckIdentifierNotPurelyNumerical(const char *identifier)
+{
+    return !((isdigit((int)*identifier)) && (IntFromString(identifier) != CF_NOINT));
+}
+
+static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)
+{
+    bool success = true;
+
+    if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_VARS_PROMISER_NUMERICAL));
+        success = false;
+    }
+
+    if (!CheckParseVariableName(pp->promiser))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_VARS_PROMISER_RESERVED));
+        success = false;
+    }
+
+    // ensure variables are declared with only one type.
+    {
+        char *data_type = NULL;
+
+        for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+        {
+            Constraint *cp = SeqAt(pp->conlist, i);
+
+            if (IsDataType(cp->lval))
+            {
+                if (data_type != NULL)
+                {
+                    SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                                     POLICY_ERROR_VARS_CONSTRAINT_DUPLICATE_TYPE,
+                                                     data_type, cp->lval));
+                    success = false;
+                }
+                data_type = cp->lval;
+            }
+        }
+    }
+
+    return success;
+}
 
 const BodySyntax CF_METABODY[] =
 {
@@ -135,6 +191,20 @@ const BodySyntax CF_CLASSBODY[] =
     {"xor", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with XOR"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
+
+static bool ClassesParseTreeCheck(const Promise *pp, Seq *errors)
+{
+    bool success = true;
+
+    if (!CheckIdentifierNotPurelyNumerical(pp->promiser))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_CLASSES_PROMISER_NUMERICAL));
+        success = false;
+    }
+
+    return success;
+}
 
 const BodySyntax CFG_CONTROLBODY[] =
 {
@@ -358,11 +428,11 @@ const BodySyntax CF_COMMON_BODIES[] =
 const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
-    {"*", "classes", CF_CLASSBODY},
+    {"*", "classes", CF_CLASSBODY, &ClassesParseTreeCheck},
     {"*", "defaults", CF_DEFAULTSBODY},
     {"*", "meta", CF_METABODY},
     {"*", "reports", CF_REPORT_BODIES},
-    {"*", "vars", CF_VARBODY},
+    {"*", "vars", CF_VARBODY, &VarsParseTreeCheck},
     {"*", "*", CF_COMMON_BODIES},
     {NULL, NULL, NULL}
 };

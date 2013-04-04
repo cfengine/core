@@ -310,8 +310,8 @@ static void UpdatePromiseCounters(PromiseResult status, const Promise *pp, Trans
 
 static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
-    Rlist *add_classes;
-    Rlist *del_classes;
+    Rlist *add_classes = NULL;
+    Rlist *del_classes = NULL;
 
     switch (status)
     {
@@ -320,15 +320,12 @@ static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, con
         del_classes = dc.del_change;
         break;
 
-    case PROMISE_RESULT_WARN:
-        /* FIXME: nothing? */
-        return;
-
     case PROMISE_RESULT_TIMEOUT:
         add_classes = dc.timeout;
         del_classes = dc.del_notkept;
         break;
 
+    case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_FAIL:
         add_classes = dc.failure;
         del_classes = dc.del_notkept;
@@ -372,7 +369,7 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
     }
 }
 
-void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
+void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason)
 {
     if (!IsPromiseValuableForLogging(pp))
     {

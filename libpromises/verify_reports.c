@@ -85,6 +85,13 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     PromiseBanner(pp);
 
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, "", pp, a, "Need to repair reports promise: %s", pp->promiser);
+        YieldCurrentLock(thislock);
+        return;
+    }
+
     cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)

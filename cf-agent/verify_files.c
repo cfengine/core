@@ -245,43 +245,6 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
 static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Promise *pp)
 {
-    if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-    {
-        if ((a.haverename) || (a.havedelete) || (a.haveperms) || (a.havechange) ||
-            (a.havecopy) || (a.havelink) || (a.haveedit) || (a.create) || (a.touch) ||
-            (a.transformer) || (a.acl.acl_entries))
-        {
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! files promise makes no intention about system state");
-        }
-
-        if ((a.create) && (a.havecopy))
-        {
-            if (((a.copy.compare) != (FILE_COMPARATOR_CHECKSUM)) && ((a.copy.compare) != FILE_COMPARATOR_HASH))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
-                      " !! Promise constraint conflicts - %s file will never be copied as created file is always newer",
-                      pp->promiser);
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-            }
-            else
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                      " !! Promise constraint conflicts - %s file cannot strictly both be created empty and copied from a source file.",
-                      pp->promiser);
-            }
-        }
-
-        if ((a.create) && (a.havelink))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be created and linked at the same time",
-                  pp->promiser);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        }
-    }
-
     if ((a.havelink) && (a.havecopy))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "",

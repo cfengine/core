@@ -3162,6 +3162,43 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 }
 
 /*********************************************************************/
+
+static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    /* begin fn specific content */
+
+    char *mode = RlistScalarValue(finalargs);
+    char *format_string = RlistScalarValue(finalargs->next);
+    // this will be a problem on 32-bit systems...
+    const time_t when = IntFromString(RlistScalarValue(finalargs->next->next));
+
+    char buffer[CF_BUFSIZE];
+    buffer[0] = '\0';
+
+    struct tm* tm;
+
+    if (0 == strcmp("gmtime", mode))
+    {
+        tm = gmtime(&when);
+    }
+    else
+    {
+        tm = localtime(&when);
+    }
+
+    if(tm != NULL)
+    {
+        strftime(buffer, sizeof buffer, format_string, tm);
+    }
+    else
+    {
+        CfOut(OUTPUT_LEVEL_INFORM, "strftime", "The given time stamp %ld was invalid", when);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
 /* Read functions                                                    */
 /*********************************************************************/
 
@@ -4825,6 +4862,14 @@ FnCallArg STRCMP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg STRFTIME_ARGS[] =
+{
+    {"gmtime,localtime", DATA_TYPE_OPTION, "Use GMT or local time"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "A format string"},
+    {CF_VALRANGE, DATA_TYPE_INT, "The time as a Unix epoch offset"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg TRANSLATEPATH_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Unix style path"},
@@ -5000,6 +5045,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString,
      "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
     {"strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly"},
+    {"strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string"},
     {"sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals"},
     {"translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath,
      "Translate path separators from Unix style to the host's native"},

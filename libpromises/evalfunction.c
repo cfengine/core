@@ -58,6 +58,7 @@
 #include "sort.h"
 #include "logging.h"
 #include "set.h"
+#include "buffer.h"
 
 #include <libgen.h>
 #include <assert.h>
@@ -2700,6 +2701,182 @@ static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rlist *sorted = AlphaSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sorted, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall %s-arg", fp->name);
+
+/* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (const Rlist *arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+    }
+
+/* begin fn specific content */
+    if (!finalargs)
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    char *format = RlistScalarValue(finalargs);
+
+    if (!format)
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    const Rlist *rp = finalargs->next;
+
+    char *check = strchr(format, '%');
+    char check_buffer[CF_BUFSIZE];
+    Buffer *buf = BufferNew();
+
+    if (check)
+    {
+        BufferAppend(buf, format, (check - format));
+
+        while (check && FullTextMatch("(%%|%[^diouxXeEfFgGaAcsCSpnm%]*?[diouxXeEfFgGaAcsCSpnm])([^%]*)(.*)", check))
+        {
+            Scope *ptr = ScopeGet("match");
+
+            if (ptr && ptr->hashtable)
+            {
+                AssocHashTableIterator i = HashIteratorInit(ptr->hashtable);
+                CfAssoc *assoc;
+
+                while ((assoc = HashIteratorNext(&i)))
+                {
+                    if (assoc->rval.type != RVAL_TYPE_SCALAR)
+                    {
+                        CfOut(OUTPUT_LEVEL_ERROR, "",
+                              " !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
+                        BufferDestroy(&buf);
+                        return (FnCallResult) { FNCALL_FAILURE };
+                    }
+                    else
+                    {
+                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: matched format piece %s with data '%s'", assoc->lval, assoc->rval.item);
+
+                        // this is the whole match
+                        if (assoc->lval[0] == '0')
+                        {
+                        }
+                        else if (assoc->lval[0] == '3') // another format?  great!
+                        {
+                            strncpy(check_buffer, assoc->rval.item, CF_BUFSIZE);
+                            check = check_buffer;
+                        }
+                        else if (assoc->lval[0] == '1') // the format specifier
+                        {
+                            char* format_piece = assoc->rval.item;
+                            bool percent = (0 == strncmp(format_piece, "%%", 2));
+                            char *data = NULL;
+
+                            if (percent)
+                            {
+                            }
+                            else if (rp)
+                            {
+                                data = RlistScalarValue(rp);
+                                rp = rp->next;
+                            }
+                            else // not %% and no data
+                            {
+                                CfOut(OUTPUT_LEVEL_ERROR, "",
+                                      " !! format() didn't have enough parameters, aborting");
+                                BufferDestroy(&buf);
+                                return (FnCallResult) { FNCALL_FAILURE };
+                            }
+
+                            char piece[CF_BUFSIZE];
+                            memset(piece, 0, CF_BUFSIZE);
+
+                            // CfOut(OUTPUT_LEVEL_INFORM, "", "format: processing format piece = '%s' with data '%s'", format_piece, percent ? "%" : data);
+
+                            char bad_modifiers[] = "hLqjzt";
+                            for (int b = 0; b < strlen(bad_modifiers); b++)
+                            {
+                                if (NULL != strchr(format_piece, bad_modifiers[b]))
+                                {
+                                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                                          " !! format() does not allow modifier character '%c' in format specifier %s, sorry!",
+                                          bad_modifiers[b],
+                                          format_piece);
+                                    BufferDestroy(&buf);
+                                    return (FnCallResult) { FNCALL_FAILURE };
+                                }
+                            }
+
+                            if (strrchr(format_piece, 'd') || strrchr(format_piece, 'o') || strrchr(format_piece, 'x'))
+                            {
+                                long x = 0;
+                                sscanf(data, "%ld%s", &x, piece); // we don't care about the remainder and will overwrite it
+                                snprintf(piece, CF_BUFSIZE, format_piece, x);
+                                BufferAppend(buf, piece, strlen(piece));
+                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
+                            }
+                            else if (percent)
+                            {
+                                BufferAppend(buf, "%", 1);
+                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending int format piece = '%s' with data '%s'", format_piece, data);
+                            }
+                            else if (strrchr(format_piece, 'f'))
+                            {
+                                double x = 0;
+                                sscanf(data, "%lf%s", &x, piece); // we don't care about the remainder and will overwrite it
+                                snprintf(piece, CF_BUFSIZE, format_piece, x);
+                                BufferAppend(buf, piece, strlen(piece));
+                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending float format piece = '%s' with data '%s'", format_piece, data);
+                            }
+                            else if (strrchr(format_piece, 's'))
+                            {
+                                snprintf(piece, CF_BUFSIZE, format_piece, data);
+                                BufferAppend(buf, piece, strlen(piece));
+                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending string format piece = '%s' with data '%s'", format_piece, data);
+                            }
+                            else
+                            {
+                                char error[] = "(unhandled format)";
+                                BufferAppend(buf, error, strlen(error));
+                                // CfOut(OUTPUT_LEVEL_INFORM, "", "format: error appending unhandled format piece = '%s' with data '%s'", format_piece, data);
+                            }
+                        }
+                        else if (assoc->lval[0] == '2') // the rest after the format specifier
+                        {
+                            char* static_piece = assoc->rval.item;
+                            BufferAppend(buf, static_piece, strlen(static_piece));
+                            // CfOut(OUTPUT_LEVEL_INFORM, "", "format: appending static piece = '%s'", static_piece);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                check = NULL;
+            }
+        }
+    }
+    else
+    {
+        BufferAppend(buf, format, strlen(format));
+    }
+
+    char result[CF_BUFSIZE] = "";
+    memset(result, 0, CF_BUFSIZE);
+    strncpy(result, BufferData(buf), CF_BUFSIZE);
+    BufferDestroy(&buf);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(result), RVAL_TYPE_SCALAR } };
+
 }
 
 /*********************************************************************/
@@ -5647,6 +5824,12 @@ FnCallArg SETOP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg FORMAT_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "CFEngine format string"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5678,6 +5861,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("filter", DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(, SYNTAX_STATUS_NORMAL), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("format", DATA_TYPE_STRING, FORMAT_ARGS, &FnCallFormat, "Applies a list of string values in arg2,arg3... to a string format in arg1 with sprintf() rules", true, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields, "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("getgid", DATA_TYPE_INT, GETGID_ARGS, &FnCallGetGid, "Return the integer group id of the named group on this host", false, SYNTAX_STATUS_NORMAL),

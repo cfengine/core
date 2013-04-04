@@ -64,7 +64,7 @@ const char *GetConsolePrefix(void);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
-void NotePromiseCompliance(const Promise *pp, PromiseState state, char *reasoin);
+void NotePromiseCompliance(const Promise *pp, PromiseState state, const char *reason);
 void LogTotalCompliance(const char *version, int background_tasks);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);

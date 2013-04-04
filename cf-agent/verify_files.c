@@ -399,9 +399,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         {
             if (!CfCreateFile(ctx, path, pp, a))
             {
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
             else
             {
@@ -450,9 +448,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         if (!S_ISDIR(oslb.st_mode))
         {
-            SaveSetuid(ctx, a, pp);
-            YieldCurrentLock(thislock);
-            return;
+            goto exit;
         }
     }
 
@@ -462,9 +458,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         {
             if (!CfCreateFile(ctx, path, pp, a))
             {
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
             else
             {
@@ -485,9 +479,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
                 CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Warning: depth_search (recursion) is promised for a base object %s that is not a directory",
                       path);
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
         }
 
@@ -502,9 +494,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link the children of %s as it is not a directory!",
                       a.link.source);
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
         }
     }
@@ -583,6 +573,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }
 
+exit:
     SaveSetuid(ctx, a, pp);
     YieldCurrentLock(thislock);
 }

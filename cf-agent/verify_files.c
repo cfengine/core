@@ -370,7 +370,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     struct stat osb, oslb, dsb;
     Attributes a = { {0} };
     CfLock thislock;
-    int exists, rlevel = 0;
+    int exists;
 
     a = GetFilesAttributes(ctx, pp);
 
@@ -505,7 +505,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
-        DepthSearch(ctx, path, &oslb, rlevel, a, pp, oslb.st_dev);
+        DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
 
         /* normally searches do not include the base directory */
 
@@ -516,7 +516,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             /* Handle this node specially */
 
             a.havedepthsearch = false;
-            DepthSearch(ctx, path, &oslb, rlevel, a, pp, oslb.st_dev);
+            DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
             a.havedepthsearch = save_search;
         }
         else

@@ -20,54 +20,35 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifdef HAVE_CONFIG_H
-# include "../src/conf.h"
+#ifndef CFENGINE_PROCESS_H
+#define CFENGINE_PROCESS_H
+
+#include <unistd.h>
+#include <sys/types.h>
+
+#define PROCESS_START_TIME_UNKNOWN ((time_t) 0)
+
+/*
+ * Obtain start time of specified process.
+ *
+ * @return start time (Unix timestamp) of specified process
+ * @return PROCESS_START_TIME_UNKNOWN if start time cannot be determined
+ */
+time_t GetProcessStartTime(pid_t pid);
+
+/*
+ * Gracefully kill the process with pid #pid and start time #process_start_time.
+ *
+ * Under Unix this will send SIGINT, then SIGTERM and then SIGKILL if process
+ * does not exit.
+ *
+ * #process_start_time may be PROCESS_START_TIME_UNKNOWN, which will disable
+ * safety check for killing right process.
+ *
+ * @return true if process was killed succesfully, false otherwise.
+ */
+int GracefulTerminate(pid_t pid, time_t process_start_time);
+
 #endif
-
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
-
-#if !HAVE_DECL_MKDTEMP
-char *mkdtemp(char *template);
-#endif
-
-#if !HAVE_DECL_STRRSTR
-char *strrstr(const char *haystack, const char *needle);
-#endif
-
-#define MAXTRY 999999
-
-char *mkdtemp(char *template)
-{
-    char *xxx = strrstr(template, "XXXXXX");
-
-    if (xxx == NULL || strcmp(xxx, "XXXXXX") != 0)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    for (int i = 0; i <= MAXTRY; ++i)
-    {
-        snprintf(xxx, 7, "%06d", i);
-
-        int fd = mkdir(template, S_IRUSR | S_IWUSR | S_IXUSR);
-        if (fd >= 0)
-        {
-            close(fd);
-            return template;
-        }
-
-        if (errno != EEXIST)
-        {
-            return NULL;
-        }
-    }
-
-    errno = EEXIST;
-    return NULL;
-}

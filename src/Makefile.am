@@ -120,6 +120,7 @@ libpromises_la_SOURCES = \
         pipes.c \
         proc_keyvalue.c proc_keyvalue.h \
         processes_select.c \
+	process_lib.h process_unix_priv.h \
         promises.c \
         prototypes3.h \
         recursion.c \
@@ -146,6 +147,37 @@ libpromises_la_SOURCES = \
         verify_reports.c \
         writer.c writer.h \
         xml_writer.c xml_writer.h
+
+if !NT
+
+libpromises_la_SOURCES += \
+        process_unix.c
+
+if LINUX
+libpromises_la_SOURCES += \
+        process_linux.c
+endif
+
+if AIX
+libpromises_la_SOURCES += \
+  process_aix.c
+endif
+
+if SOLARIS
+libpromises_la_SOURCES += \
+  process_solaris.c
+endif
+
+if !LINUX
+if !AIX
+if !SOLARIS
+libpromises_la_SOURCES += \
+        process_unix_stub.c
+endif
+endif
+endif
+
+endif # !NT
 
 if !NT
 libpromises_la_SOURCES += \

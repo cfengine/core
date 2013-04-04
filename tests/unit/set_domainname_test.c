@@ -16,7 +16,11 @@ static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };
 
+#ifdef SOLARIS
+int gethostname(char *name, int len)
+#else
 int gethostname(char *name, size_t len)
+#endif
 {
     strcpy(name, "laptop.intra");
     return 0;

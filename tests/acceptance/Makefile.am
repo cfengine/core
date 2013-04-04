@@ -11,7 +11,7 @@ mock_package_manager_LDADD = ../../src/libpromises.la
 EXTRA_DIST = default.cf.sub testall
 
 TESTS = testall
-TESTS_ENVIRONMENT = env AGENT=`pwd`/../../src/cf-agent MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager
+TESTS_ENVIRONMENT = env AGENT=`pwd`/../../src/cf-agent MOCK_PACKAGE_MANAGER=`pwd`/mock-package-manager GREP=$(GREP)
 
 dist-hook:
 	tar -c -f - [0-9]* --exclude '*svn*' | tar -x -C $(distdir) -f -

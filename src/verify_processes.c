@@ -452,14 +452,3 @@ void GetProcessColumnNames(char *proc, char **names, int *start, int *end)
         end[col] = offset;
     }
 }
-
-/**********************************************************************************/
-
-int GracefulTerminate(pid_t pid)
-{
-#ifdef MINGW
-    return NovaWin_GracefulTerminate(pid);
-#else
-    return Unix_GracefulTerminate(pid);
-#endif
-}

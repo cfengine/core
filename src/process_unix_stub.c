@@ -20,54 +20,19 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifdef HAVE_CONFIG_H
-# include "../src/conf.h"
-#endif
+#include "process_lib.h"
+#include "process_unix_priv.h"
 
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
-
-#if !HAVE_DECL_MKDTEMP
-char *mkdtemp(char *template);
-#endif
-
-#if !HAVE_DECL_STRRSTR
-char *strrstr(const char *haystack, const char *needle);
-#endif
-
-#define MAXTRY 999999
-
-char *mkdtemp(char *template)
+time_t GetProcessStartTime(pid_t pid)
 {
-    char *xxx = strrstr(template, "XXXXXX");
+    /* Not implemented yet */
+    return PROCESS_START_TIME_UNKNOWN;
+}
 
-    if (xxx == NULL || strcmp(xxx, "XXXXXX") != 0)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    for (int i = 0; i <= MAXTRY; ++i)
-    {
-        snprintf(xxx, 7, "%06d", i);
-
-        int fd = mkdir(template, S_IRUSR | S_IWUSR | S_IXUSR);
-        if (fd >= 0)
-        {
-            close(fd);
-            return template;
-        }
-
-        if (errno != EEXIST)
-        {
-            return NULL;
-        }
-    }
-
-    errno = EEXIST;
-    return NULL;
+ProcessState GetProcessState(pid_t pid)
+{
+    /* Not implemented yet */
+    return PROCESS_STATE_RUNNING;
 }

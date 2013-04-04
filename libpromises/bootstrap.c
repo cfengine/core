@@ -86,7 +86,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
-    PrintVersionBanner("CFEngine");
+    PrintVersion();
     printf("\n");
 
     printf(" -> This host is: %s\n", VSYSNAME.nodename);

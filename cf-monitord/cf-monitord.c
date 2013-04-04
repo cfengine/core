@@ -175,7 +175,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-monitord");
+            PrintVersion();
             exit(0);
 
         case 'h':

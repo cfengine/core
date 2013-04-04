@@ -177,7 +177,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-key");
+            PrintVersion();
             exit(0);
 
         case 'v':

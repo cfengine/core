@@ -238,7 +238,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-promises");
+            PrintVersion();
             exit(0);
 
         case 'h':

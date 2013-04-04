@@ -433,7 +433,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-agent");
+            PrintVersion();
             exit(0);
 
         case 'h':

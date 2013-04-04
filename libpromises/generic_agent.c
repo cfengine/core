@@ -1360,60 +1360,12 @@ void ManPage(const char *component, const struct option options[], const char *h
     printf(".pp\nThis software is Copyright (C) 2008-%d CFEngine AS.\n", BUILD_YEAR);
 }
 
-/*******************************************************************/
-
-static const char *banner_lines[] =
+void PrintVersion(void)
 {
-    "   @@@      ",
-    "   @@@      ",
-    "            ",
-    " @ @@@ @    ",
-    " @ @@@ @    ",
-    " @ @@@ @    ",
-    " @     @    ",
-    "   @@@      ",
-    "   @ @      ",
-    "   @ @      ",
-    "   @ @      ",
-    NULL
-};
-
-static void AgentBanner(const char **text)
-{
-    const char **b = banner_lines;
-
-    while (*b)
-    {
-        printf("%s%s\n", *b, *text ? *text : "");
-        b++;
-        if (*text)
-        {
-            text++;
-        }
-    }
-}
-
-/*******************************************************************/
-
-void PrintVersionBanner(const char *component)
-{
-    const char *text[] =
-{
-        "",
-        component,
-        "",
-        NameVersion(),
+    printf("%s\n", NameVersion());
 #ifdef HAVE_NOVA
-        Nova_NameVersion(),
+    printf("%s\n", Nova_NameVersion());
 #endif
-        NULL
-    };
-
-    printf("\n");
-    AgentBanner(text);
-    printf("\n");
-    printf("Copyright (C) CFEngine AS 2008-%d\n", BUILD_YEAR);
-    printf("See Licensing at http://cfengine.com/3rdpartylicenses\n");
 }
 
 /*******************************************************************/

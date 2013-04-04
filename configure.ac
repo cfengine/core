@@ -65,6 +65,7 @@ dnl ######################################################################
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_MKDIR_P
+AC_PROG_GREP
 AC_EXEEXT
 
 # Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros

@@ -36,6 +36,9 @@ FAILED_TESTS=0
 FAILED_TO_CRASH_TESTS=0
 SKIPPED_TESTS=0
 
+[ x"$GREP" == x ] && GREP=`which grep`
+
+
 curdir() {
   case $(dirname "$0") in
     .)
@@ -82,16 +85,16 @@ runtest() {
     echo -n "$TEST "
   fi
 
-  if echo "$TEST" | grep -q -F -e .x.cf ; then
+  if echo "$TEST" | $GREP -q -F -e .x.cf ; then
     EXPECTED_CRASH=1
   else
     EXPECTED_CRASH=
   fi
 
-  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'staging'; then
+  if [ "x$STAGING_TESTS" = "x0" ] && echo "$TEST" | $GREP -q -e 'staging'; then
     SKIP=1
     SKIPREASON="Staging tests are disabled"
-  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | grep -q -e 'network'; then
+  elif [ "x$NETWORK_TESTS" = "x0" ] && echo "$TEST" | $GREP -q -e 'network'; then
     SKIP=1
     SKIPREASON="Network-dependent tests are disabled"
   else
@@ -128,7 +131,7 @@ CFENGINE_TEST_OVERRIDE_WORKDIR=$WORKDIR TEMP=$WORKDIR/tmp exec $AGENT -Kf \"$TES
     $GAINROOT rm -rf $WORKDIR
 
     if [ -z "$EXPECTED_CRASH" ]; then
-      if [ $RETVAL -eq 0 ] && echo "$OUT" | grep -q -F -e "R: $TEST Pass"; then
+      if [ $RETVAL -eq 0 ] && echo "$OUT" | $GREP -q -F -e "R: $TEST Pass"; then
         RESULT=Pass
       else
         RESULT=FAIL

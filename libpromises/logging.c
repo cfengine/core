@@ -244,7 +244,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 }
 
 #ifdef HAVE_NOVA
-static void TrackTotalCompliance(char status, const Promise *pp)
+static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
 {
     if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
     {
@@ -279,7 +279,7 @@ static void TrackTotalCompliance(char status, const Promise *pp)
 }
 #endif
 
-static void UpdatePromiseCounters(char status, const Promise *pp, TransactionContext tc)
+static void UpdatePromiseCounters(PromiseResult status, const Promise *pp, TransactionContext tc)
 {
     if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
     {
@@ -308,7 +308,7 @@ static void UpdatePromiseCounters(char status, const Promise *pp, TransactionCon
     }
 }
 
-static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
+static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
     Rlist *add_classes;
     Rlist *del_classes;
@@ -357,7 +357,7 @@ static void SetPromiseOutcomeClasses(char status, EvalContext *ctx, const Promis
     DeleteAllClasses(ctx, del_classes);
 }
 
-static void NotifyDependantPromises(char status, EvalContext *ctx, const Promise *pp)
+static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, const Promise *pp)
 {
     switch (status)
     {
@@ -406,7 +406,7 @@ void UpdatePromiseComplianceStatus(char status, const Promise *pp, char *reason)
     NotePromiseCompliance(pp, compliance_status, reason);
 }
 
-static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise *pp, TransactionContext tc)
+static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, TransactionContext tc)
 {
     if (!IsPromiseValuableForLogging(pp))
     {
@@ -440,7 +440,7 @@ static void DoSummarizeTransaction(EvalContext *ctx, char status, const Promise 
     SummarizeTransaction(ctx, tc, log_name);
 }
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, char status)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
 #ifdef HAVE_NOVA
     TrackTotalCompliance(status, pp);

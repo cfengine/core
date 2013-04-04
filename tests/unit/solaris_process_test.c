@@ -6,6 +6,13 @@
 #include "process.h"
 #include "process_unix_priv.h"
 
+/*
+ * procfs.h is not 64-bit off_t clean, but the only affected structure is
+ * priovec, which we don't use. Hence we may work around #error in sys/procfs.h
+ * by lying that we are not compiling with large file support (while we do).
+ */
+#define _FILE_OFFSET_BITS 32
+
 #include <procfs.h>
 
 int open(const char *filename, int flags, ...)

@@ -1507,6 +1507,44 @@ size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *c
     return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
 }
 
+StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)
+{
+    const char *element = NULL;
+    while ((element = SetIteratorNext(&it)))
+    {
+        if (StringMatch(filter_regex, element))
+        {
+            StringSetAdd(base, xstrdup(element));
+        }
+    }
+    return base;
+}
+
+StringSet *StringSetAddAllMatching(StringSet* base, const StringSet* filtered, const char *filter_regex)
+{
+    return StringSetAddAllMatchingIterator(base, StringSetIteratorInit((StringSet*)filtered), filter_regex);
+}
+
+StringSet *EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    return StringSetAddAllMatching(base, ctx->heap_soft, context_regex);
+}
+
+StringSet *EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    return StringSetAddAllMatching(base, ctx->heap_hard, context_regex);
+}
+
+StringSet *EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return base;
+    }
+
+    return StringSetAddAllMatchingIterator(base, EvalContextStackFrameIteratorSoft(ctx), context_regex);
+}
+
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
 {
     return StringSetIteratorInit(ctx->heap_soft);

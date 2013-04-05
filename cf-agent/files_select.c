@@ -57,7 +57,7 @@ static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int owne
 #endif
 
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp);
+static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags);
 #endif
 #ifndef __MINGW32__
 static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
@@ -158,7 +158,7 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr)
     }
 
 #if defined HAVE_CHFLAGS
-    if (SelectBSDMatch(sb, attr.select.bsdflags, pp))
+    if (SelectBSDMatch(sb, attr.select.bsdflags))
     {
         StringSetAdd(leaf_attr, xstrdup("bsdflags"));
     }
@@ -377,14 +377,13 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 /*******************************************************************/
 
 #if defined HAVE_CHFLAGS
-static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags, Promise *pp)
+static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags)
 {
     u_long newflags, plus, minus;
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Problem validating a BSD flag string");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
     newflags = (lstatptr->st_flags & CHFLAGS_MASK);

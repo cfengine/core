@@ -21,7 +21,6 @@ bundle agent example
       "gmt_then" string => strftime("gmtime", "%F %T", 0);
 
   reports:
-    cfengine::
       "time $(time); now $(now); then $(then)";
       "time $(time); GMT now $(now); GMT then $(then)";
 }

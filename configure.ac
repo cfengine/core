@@ -19,7 +19,7 @@ dnl The version in the next line is the only one to set
 dnl
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.3.11.revison)
+AM_INIT_AUTOMAKE(cfengine, 3.3.12)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")

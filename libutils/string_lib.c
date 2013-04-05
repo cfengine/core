@@ -791,3 +791,31 @@ char *StringFormat(const char *fmt, ...)
     va_end(ap);
     return res;
 }
+
+char *MemSpan(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem != c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
+}
+
+char *MemSpanInverse(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem == c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
+}

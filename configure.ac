@@ -65,6 +65,7 @@ dnl ######################################################################
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_MKDIR_P
+AC_PROG_GREP
 AC_EXEEXT
 
 # Use either new LT_INIT or old AC_DISABLE_STATIC/AC_PROG_LIBTOOL macros
@@ -458,7 +459,7 @@ AC_CHECK_FUNCS(getpwent setpwent endpwent)
 AC_CHECK_FUNCS(getcwd getnetgrent waitpid seteuid setegid setreuid setregid)
 
 AC_CHECK_DECLS(mkdtemp)
-AC_CHECK_FUNCS(mkdtemp)
+AC_REPLACE_FUNCS(mkdtemp)
 
 AC_CHECK_DECLS(setnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(setnetgrent)
@@ -468,7 +469,7 @@ AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <netdb.h>]],
   [AC_DEFINE([SETNETGRENT_RETURNS_INT], 0, [Whether setnetgrent returns int])])
 
 AC_CHECK_DECLS(strrstr)
-AC_CHECK_FUNCS(strrstr)
+AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(putenv)

@@ -91,15 +91,15 @@ bundle agent check_diff(file1, file2, test, expected_difference)
 {
 vars:
     DEBUG.!no_difference::
-        "file1r" string => readfile("$(file1)", "9999999999");
+        "file1r" string => readfile("$(file1)", "999999999");
         "file1h" string => execresult("/usr/bin/hexdump -C $(file1)", "useshell");
-        "file2r" string => readfile("$(file2)", "9999999999");
+        "file2r" string => readfile("$(file2)", "999999999");
         "file2h" string => execresult("/usr/bin/hexdump -C $(file2)", "useshell");
-        "diffu"  string => execresult("/usr/bin/diff -u $(file2) $(file1)", "noshell");
+        "diffu"  string => execresult("/usr/bin/diff $(file2) $(file1)", "noshell");
 
 classes:
     "no_difference" expression => returnszero(
-        "/usr/bin/diff -q $(file1) $(file2)",
+        "/usr/bin/cmp $(file1) $(file2)",
         "useshell");
 
         "expected_difference" expression => strcmp("$(expected_difference)", "yes");

@@ -20,54 +20,33 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifdef HAVE_CONFIG_H
-# include "../src/conf.h"
-#endif
+#ifndef CFENGINE_PROCESS_PRIV_H
+#define CFENGINE_PROCESS_PRIV_H
 
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/stat.h>
+/*
+ * Unix-like OS should provide implementations of the following functions.
+ */
 
-#if !HAVE_DECL_MKDTEMP
-char *mkdtemp(char *template);
-#endif
+/*
+ * GetProcessStartTime (see process_lib.h)
+ */
 
-#if !HAVE_DECL_STRRSTR
-char *strrstr(const char *haystack, const char *needle);
-#endif
-
-#define MAXTRY 999999
-
-char *mkdtemp(char *template)
+typedef enum
 {
-    char *xxx = strrstr(template, "XXXXXX");
+    PROCESS_STATE_RUNNING,
+    PROCESS_STATE_STOPPED,
+    PROCESS_STATE_DOES_NOT_EXIST
+} ProcessState;
 
-    if (xxx == NULL || strcmp(xxx, "XXXXXX") != 0)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
+/*
+ * Obtain process state.
+ *
+ * @return PROCESS_STATE_RUNNING if process exists and is running,
+ * @return PROCESS_STATE_STOPPED if process exists and has been stopped by SIGSTOP signal,
+ * @return PROCESS_STATE_DOES_NOT_EXIST if process cannot be found.
+ */
+ProcessState GetProcessState(pid_t pid);
 
-    for (int i = 0; i <= MAXTRY; ++i)
-    {
-        snprintf(xxx, 7, "%06d", i);
-
-        int fd = mkdir(template, S_IRUSR | S_IWUSR | S_IXUSR);
-        if (fd >= 0)
-        {
-            close(fd);
-            return template;
-        }
-
-        if (errno != EEXIST)
-        {
-            return NULL;
-        }
-    }
-
-    errno = EEXIST;
-    return NULL;
-}
+#endif

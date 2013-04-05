@@ -195,6 +195,10 @@ static void test_show_object_nan(void **state)
     JsonElementDestroy(obj);
 }
 
+#ifndef INFINITY
+  #define INFINITY (1.0/0.0)
+#endif
+
 static void test_show_object_infinity(void **state)
 {
     JsonElement *obj = JsonObjectCreate(1);

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-srcdir=$(dirname $0)
+srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 
-ORIGDIR=$(pwd)
+ORIGDIR=`pwd`
 cd $srcdir
 
 if [ -z "$NO_SUBPROJECTS" ]; then

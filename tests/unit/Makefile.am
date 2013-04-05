@@ -23,7 +23,6 @@ check_PROGRAMS = \
 	set_domainname_test \
 	str_test \
 	json_test \
-	evalfunction_test \
 	regex_test \
 	alloc_test \
 	string_writer_test \
@@ -36,11 +35,45 @@ check_PROGRAMS = \
 	misc_lib_test \
 	crypto_symmetric_test \
         timeout_test \
-	package_versions_compare_test
-	persistent_lock_test  \
-        thread_test \
 	package_versions_compare_test \
-	files_lib_test
+	files_lib_test \
+	process_terminate_unix_test
+
+if LINUX
+
+check_PROGRAMS += linux_process_test
+
+linux_process_test_SOURCES = linux_process_test.c \
+	../../src/process_unix.c \
+	../../src/process_linux.c \
+	../../src/full_write.c
+
+endif
+
+if AIX
+
+check_PROGRAMS += aix_process_test
+
+aix_process_test_SOURCES = aix_process_test.c \
+	../../src/process_unix.c \
+	../../src/process_aix.c \
+	../../src/full_write.c
+
+endif
+
+if SOLARIS
+
+check_PROGRAMS += solaris_process_test
+
+solaris_process_test_SOURCES = solaris_process_test.c \
+	../../src/process_unix.c \
+	../../src/process_solaris.c \
+	../../src/full_write.c
+
+endif
+
+process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+  ../../src/process_unix.c
 
 TESTS = $(check_PROGRAMS)
 

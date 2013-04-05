@@ -2307,15 +2307,27 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
         }
         else if (!strcmp(detail, "dev_minor"))
         {
+        #if !defined(__MINGW32__)
             snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
         }
         else if (!strcmp(detail, "dev_major"))
         {
+        #if !defined(__MINGW32__)
             snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
         }
         else if (!strcmp(detail, "devno"))
         {
+        #if !defined(__MINGW32__)
             snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "%c:", statbuf.st_dev + 'A');
+        #endif
         }
         else if (!strcmp(detail, "dirname"))
         {

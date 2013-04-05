@@ -217,6 +217,13 @@ void NoteClassUsage(AlphaList baselist, int purge)
         }
     }
 
+    CloseDB(dbp);
+
+    if (!OpenDB(&dbp, dbid_classes))
+    {
+        return;
+    }
+
 /* Then update with zero the ones we know about that are not active */
 
     if (purge)

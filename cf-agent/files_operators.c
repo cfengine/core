@@ -56,11 +56,6 @@
 
 #include <assert.h>
 
-extern AgentConnection *COMS;
-
-
-/*****************************************************************************/
-
 int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 {
     struct stat sb;

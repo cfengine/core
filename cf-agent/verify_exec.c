@@ -81,7 +81,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     }
 
     char *lock_name = GetLockNameExec(a, pp);
-    CfLock thislock = AcquireLock(ctx, lock_name, VUQNAME, CFSTARTTIME, a, pp, false);
+    CfLock thislock = AcquireLock(lock_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     free(lock_name);
 
     if (thislock.lock == NULL)
@@ -418,7 +418,7 @@ void PreviewProtocolLine(char *line, char *comm)
      */
 
     char *prefixes[] =
-{
+    {
         ":silent:",
         ":inform:",
         ":verbose:",

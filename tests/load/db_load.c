@@ -310,7 +310,7 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     printf("CfOut: %s\n", buf);
 }
 
-void FatalError(EvalContext *ctx, char *fmt, ...)
+void FatalError(const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {

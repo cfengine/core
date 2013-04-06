@@ -24,13 +24,6 @@
 
 #include "hashes.h"
 
-int GetHash(const char *key, unsigned int max)
-{
-    return OatHash(key, max);
-}
-
-/*****************************************************************************/
-
 int OatHash(const char *key, unsigned int max)
 {
     unsigned const char *p = key;
@@ -47,46 +40,6 @@ int OatHash(const char *key, unsigned int max)
     h += (h << 3);
     h ^= (h >> 11);
     h += (h << 15);
-
-    return (h & (max - 1));
-}
-
-/*****************************************************************************/
-
-int RefHash(char *name, unsigned int max)         // This function wants max to be prime
-{
-    int i, slot = 0;
-    unsigned int macro_alphabet_size = 61;
-
-    for (i = 0; name[i] != '\0'; i++)
-    {
-        slot = (macro_alphabet_size * slot + name[i]) % max;
-    }
-
-    return slot;
-}
-
-/*****************************************************************************/
-
-int ElfHash(char *key, unsigned int max)
-{
-    unsigned char *p = key;
-    int len = strlen(key);
-    unsigned h = 0, g;
-    int i;
-
-    for (i = 0; i < len; i++)
-    {
-        h = (h << 4) + p[i];
-        g = h & 0xf0000000L;
-
-        if (g != 0)
-        {
-            h ^= g >> 24;
-        }
-
-        h &= ~g;
-    }
 
     return (h & (max - 1));
 }

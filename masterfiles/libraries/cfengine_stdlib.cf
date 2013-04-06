@@ -690,7 +690,9 @@ vars:
    "crontab" string => "/var/spool/cron/tabs";
   redhat|fedora::
    "crontab" string => "/var/spool/cron";
- !(SuSE|redhat|fedora)::
+  freebsd::
+   "crontab" string => "/var/cron/tabs";
+ !(SuSE|redhat|fedora|freebsd)::
     "crontab" string => "/var/spool/cron/crontabs";
 
 files:
@@ -701,7 +703,7 @@ files:
     comment => "A user's regular batch jobs are added to this file",
      create => "true",
   edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
-      perms => mo("644","$(user)"),
+      perms => mo("600","$(user)"),
     classes => if_repaired("changed_crontab");
 
 processes:
@@ -1976,6 +1978,62 @@ body package_method yum_rpm_enable_repo(repoid)
 
 ##
 
+body package_method yum_group
+
+# Makes use of the "groups of packages" feature of Yum possible. (yum groupinstall, groupremove)
+#
+# Groups must be specified by their groupids, available through yum grouplist -v (between parentheses)
+# $ yum grouplist -v|grep Networking|head -n 1
+#   Networking Tools (network-tools)       <--- network-tools is the groupid
+#
+# Policies examples:
+#
+# -Install "web-server" group:
+# ----------------------------
+#
+# packages:
+#   "web-server"
+#     package_policy   =>  "add",
+#     package_method   =>  yum_group;
+#
+# -Remove "debugging" and "php" groups:
+# -------------------------------------
+#
+# vars:
+#   "groups"  slist  => { "debugging", "php" };
+#
+# packages:
+#   "$(groups)"
+#      package_policy   =>   "delete",
+#      package_method   =>   yum_group;
+#
+
+{ 
+  package_add_command             =>  "/usr/bin/yum groupinstall -y";
+  package_changes                 =>  "bulk";
+  package_delete_command          =>  "/usr/bin/yum groupremove -y";
+  package_delete_convention       =>  "$(name)";
+  package_installed_regex         =>  "^i.*";
+
+  # Generate a dpkg -l like listing, "i" means installed, "a" available, and a dummy version 1
+  package_list_command            =>
+                                      "/usr/bin/yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\" || h==\"a\" {print h\" \"$0\" 1\"}'";
+
+  package_list_name_regex         =>  "a|i ([^\s]+) 1";
+  package_list_update_command     =>  "/usr/bin/yum --quiet check-update";
+  package_list_update_ifelapsed   =>  "240";
+  package_list_version_regex      =>  "(1)";
+  package_name_convention         =>  "$(name)";
+  package_name_regex              =>  "(.*)";
+  package_noverify_returncode     =>  "0";
+  package_update_command          =>  "/usr/bin/yum groupupdate";
+
+  # grep -x to only get full line matching
+  package_verify_command          =>
+                                      "yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\"|grep -qx";
+}
+
+##
 
 body package_method rpm_filebased(path)
 
@@ -2033,21 +2091,43 @@ body package_method rpm_filebased(path)
 
 # OpenSolaris based systems (Solaris 11, Illumos, etc) use the much better
 # Image Package System.
+#
+# A note about Solaris 11.1 versioning format:
+#
+# $ pkg list -v --no-refresh zsh
+# FMRI                                                                         IFO
+# pkg://solaris/shell/zsh@4.3.17,5.11-0.175.1.0.0.24.0:20120904T174236Z        i--
+# name--------- |<----->| |/________________________\|
+# version---------------- |\                        /|
+#
+# Notice that the publisher and timestamp aren't used. And that the package
+# version then must have the commas replaced by underscores.
+#
+# Thus,
+#     4.3.17,5.11-0.175.1.0.0.24.0
+# Becomes:
+#     4.3.17_5.11-0.175.1.0.0.24.0
+#
+# Therefore, a properly formatted package promise looks like this:
+#    "shell/zsh"
+#      package_policy  => "addupdate",
+#      package_method  => ips,
+#      package_select  => ">=",
+#      package_version => "4.3.17_5.11-0.175.1.0.0.24.0";
 
 body package_method ips
 {
   package_changes => "bulk";
   package_list_command => "/usr/bin/pkg list -v --no-refresh";
-  package_list_name_regex    => "pkg://.+?/([^\s]+)@.*$";
-  package_list_version_regex => "[^\s]+@([^\s]+).*";
+  package_list_name_regex    => "pkg://.+?(?<=/)([^\s]+)@.*$";
+  package_list_version_regex => "[^\s]+@([^\s]+):.*";
   package_installed_regex => ".*(i..)"; # all reported are installed
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/bin/true";  # Fixme later
+  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_list_update_ifelapsed => "240";
 
   package_add_command => "/usr/bin/pkg install --accept ";
-  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_delete_command => "/usr/bin/pkg uninstall";
   package_update_command =>  "/usr/bin/pkg install --accept";
   package_patch_command =>  "/usr/bin/pkg install --accept";
@@ -3051,6 +3131,7 @@ bundle common paths
       "path[ls]"       string => "/usr/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3075,6 +3156,7 @@ bundle common paths
       "path[ls]"       string => "/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3099,6 +3181,7 @@ bundle common paths
       "path[ls]"       string => "/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3123,6 +3206,7 @@ bundle common paths
       "path[ls]"       string => "/usr/bin/ls";
       "path[netstat]"  string => "/usr/bin/netstat";
       "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
       "path[printf]"   string => "/usr/bin/printf";
       "path[sed]"      string => "/usr/bin/sed";
       "path[sort]"     string => "/usr/bin/sort";
@@ -3156,6 +3240,7 @@ bundle common paths
       "path[ls]"            string => "/bin/ls";
       "path[netstat]"       string => "/bin/netstat";
       "path[ping]"          string => "/usr/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
       "path[printf]"        string => "/usr/bin/printf";
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/bin/sort";
@@ -3203,6 +3288,7 @@ bundle common paths
       "path[iptables_save]" string => "/sbin/iptables-save";
       "path[netstat]"       string => "/bin/netstat";
       "path[ping]"          string => "/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
       "path[printf]"        string => "/usr/bin/printf";
       "path[sed]"           string => "/bin/sed";
       "path[sort]"          string => "/usr/bin/sort";
@@ -3239,4 +3325,16 @@ bundle common paths
     "_stdlib_path_exists_$(all_paths)"
       expression => fileexists("$(path[$(all_paths)])"),
       comment    => "It's useful to know if $(all_paths) exists on the filesystem as defined";
+}
+
+bundle agent fileinfo(f)
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+
+      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+
+  reports:
+    verbose_mode::
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
 }

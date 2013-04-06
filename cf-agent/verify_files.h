@@ -29,8 +29,7 @@
 #include "cf3.defs.h"
 
 void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp,
-                             void (*fnptr)(EvalContext *, char *, Promise *, const ReportContext *),
-                             const ReportContext *report_context); /* FIXME */
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+                             void (*fnptr)(EvalContext *, char *, Promise *));
+void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 
 #endif

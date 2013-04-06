@@ -78,35 +78,6 @@ static void InitIgnoreInterfaces(void);
 static Rlist *IGNORE_INTERFACES = NULL;
 
 
-/*****************************************************************************/
-/* newly created, used in timeout.c and transaction.c */
-
-int GracefulTerminate(pid_t pid)
-{
-    int res;
-
-    if ((res = kill(pid, SIGINT)) == -1)
-    {
-        sleep(1);
-        res = 0;
-
-        if ((res = kill(pid, SIGTERM)) == -1)
-        {
-            sleep(5);
-            res = 0;
-
-            if ((res = kill(pid, SIGKILL)) == -1)
-            {
-                sleep(1);
-            }
-        }
-    }
-
-    return (res == 0);
-}
-
-/*************************************************************/
-
 void ProcessSignalTerminate(pid_t pid)
 {
     if(!IsProcessRunning(pid))
@@ -689,19 +660,19 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
     /* NT cannot do this */
     return;
 #elif defined(__hpux)
-    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #elif defined(_AIX)
-    if ((pp = cf_popen("/etc/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/etc/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;
     }
 #else
-    if ((pp = cf_popen("/sbin/ifconfig -a", "r")) == NULL)
+    if ((pp = cf_popen("/sbin/ifconfig -a", "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find interface info\n");
         return;

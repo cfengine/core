@@ -213,7 +213,7 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
-bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
     fail();
 }

@@ -32,7 +32,6 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-#include "files_properties.h"
 #include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
@@ -43,11 +42,10 @@
 
 /*********************************************************************/
 
-int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
+int IsNewerFileTree(char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     char path[CF_BUFSIZE] = { 0 };
-    Attributes dummyattr = { {0} };
     Dir *dirh;
     struct stat sb;
 
@@ -78,7 +76,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
     {
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
+            if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
             {
                 continue;
             }
@@ -111,7 +109,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
                 }
                 else
                 {
-                    if (IsNewerFileTree(ctx, path, reftime))
+                    if (IsNewerFileTree(path, reftime))
                     {
                         DirClose(dirh);
                         return true;
@@ -266,7 +264,7 @@ void AddSlash(char *str)
 
 /*********************************************************************/
 
-char *GetParentDirectoryCopy(EvalContext *ctx, const char *path)
+char *GetParentDirectoryCopy(const char *path)
 /**
  * WARNING: Remember to free return value.
  **/
@@ -285,7 +283,9 @@ char *GetParentDirectoryCopy(EvalContext *ctx, const char *path)
 
     if(!sp)
     {
-        FatalError(ctx, "Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        free(path_copy);
+        return NULL;
     }
 
     if(sp == FirstFileSeparator(path_copy))  // don't chop off first path separator

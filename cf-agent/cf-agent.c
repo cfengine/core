@@ -51,6 +51,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "instrumentation.h"
+#include "promises.h"
 #include "unix.h"
 #include "attributes.h"
 #include "cfstream.h"
@@ -62,6 +63,7 @@
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "cf-agent-enterprise-stubs.h"
 
 #include "mod_common.h"
 
@@ -147,14 +149,14 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static int NewTypeContext(EvalContext *ctx, TypeSequence type);
-static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context);
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp);
+static int NewTypeContext(TypeSequence type);
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static bool VerifyBootstrap(EvalContext *ctx);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+static bool VerifyBootstrap(void);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 static bool HasAvahiSupport(void);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
@@ -237,14 +239,12 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
     if (GenericAgentCheckPolicy(ctx, config, ALWAYS_VALIDATE))
     {
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
     else if (config->tty_interactive)
     {
@@ -256,15 +256,14 @@ int main(int argc, char *argv[])
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
 
     CheckLicenses(ctx);
 
     ThisAgentInit();
     BeginAudit();
-    KeepPromises(ctx, policy, config, report_context);
-    CloseReports("agent", report_context);
+    KeepPromises(ctx, policy, config);
 
     // only note class usage when default policy is run
     if (!config->input_file)
@@ -281,7 +280,7 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap(ctx))
+    if (BOOTSTRAP && !VerifyBootstrap())
     {
         ret = 1;
     }
@@ -434,7 +433,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-agent");
+            PrintVersion();
             exit(0);
 
         case 'h':
@@ -635,12 +634,12 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     double efficiency, model;
 
     KeepControlPromises(ctx, policy);
-    KeepPromiseBundles(ctx, policy, config, report_context);
+    KeepPromiseBundles(ctx, policy, config);
 
 // TOPICS counts the number of currently defined promises
 // OCCUR counts the number of objects touched while verifying config
@@ -676,7 +675,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval) != DATA_TYPE_NONE)
+            if (EvalContextVariableControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval))
             {
                 /* Already handled in generic_agent */
                 continue;
@@ -1003,24 +1002,24 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
     {
         SetSyslogPort(IntFromString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
         SetSyslogHost(Hostname2IPString(retval.item));
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
@@ -1033,7 +1032,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -1047,7 +1046,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (ScopeControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval) == DATA_TYPE_NONE)
+    else if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         // TODO: somewhat frenzied way of telling user about an error
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -1136,7 +1135,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             EvalContextStackPushBundleFrame(ctx, bp, false);
             ScopeAugment(ctx, bp, params);
 
-            ScheduleAgentOperations(ctx, bp, report_context);
+            ScheduleAgentOperations(ctx, bp);
             ResetBundleOutputs(bp->name);
 
             EvalContextStackPopFrame(ctx);
@@ -1187,7 +1186,7 @@ static void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
     }
 }
 
-int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
     PromiseType *sp;
@@ -1216,7 +1215,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
             BannerPromiseType(bp->name, sp->name, pass);
 
-            if (!NewTypeContext(ctx, type))
+            if (!NewTypeContext(type))
             {
                 continue;
             }
@@ -1248,18 +1247,18 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(ctx, pp, KeepAgentPromise, report_context);
+                ExpandPromise(ctx, pp, KeepAgentPromise);
 
                 if (Abort())
                 {
                     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
-                    DeleteTypeContext(ctx, bp, type, report_context);
+                    DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(ctx, bp, type, report_context);
+            DeleteTypeContext(ctx, bp, type);
         }
     }
 
@@ -1395,7 +1394,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     ConvergeVarHashPromise(ctx, pp, true);
 }
 
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
     struct timespec start = BeginMeasure();
@@ -1448,7 +1447,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
@@ -1468,7 +1467,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
-        FindAndVerifyStoragePromises(ctx, pp, report_context);
+        FindAndVerifyStoragePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
@@ -1482,14 +1481,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
-        if (PromiseGetConstraintAsBoolean(ctx, "background", pp))
-        {
-            ParallelFindAndVerifyFilesPromises(ctx, pp, report_context);
-        }
-        else
-        {
-            FindAndVerifyFilesPromises(ctx, pp, report_context);
-        }
+        ParallelFindAndVerifyFilesPromises(ctx, pp);
 
         EndMeasurePromise(ctx, start, pp);
         return;
@@ -1511,14 +1503,14 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 
     if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
-        VerifyMethodsPromise(ctx, pp, report_context);
+        VerifyMethodsPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
     if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
-        VerifyServicesPromise(ctx, pp, report_context);
+        VerifyServicesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
@@ -1541,7 +1533,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
 /* Type context                                                      */
 /*********************************************************************/
 
-static int NewTypeContext(EvalContext *ctx, TypeSequence type)
+static int NewTypeContext(TypeSequence type)
 {
 // get maxconnections
 
@@ -1587,12 +1579,12 @@ static int NewTypeContext(EvalContext *ctx, TypeSequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type, const ReportContext *report_context)
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
 {
     switch (type)
     {
     case TYPE_SEQUENCE_CONTEXTS:
-        BundleHashVariables(ctx, bp, report_context);
+        BundleHashVariables(ctx, bp);
         break;
 
     case TYPE_SEQUENCE_ENVIRONMENTS:
@@ -1692,7 +1684,7 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
 #ifdef __MINGW32__
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
 
@@ -1701,42 +1693,46 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, co
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(ctx, pp, report_context);
+    FindAndVerifyFilesPromises(ctx, pp);
 }
 
 #else /* !__MINGW32__ */
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
 
-    if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
+    if (background)
     {
-        CFA_BACKGROUND++;
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Spawning new process...\n");
-        child = fork();
-
-        if (child == 0)
+        if (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT)
         {
-            ALARM_PID = -1;
-            AM_BACKGROUND_PROCESS = true;
+            CFA_BACKGROUND++;
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Spawning new process...\n");
+            child = fork();
+
+            if (child == 0)
+            {
+                ALARM_PID = -1;
+
+                FindAndVerifyFilesPromises(ctx, pp);
+
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
+                PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                _exit(0);
+            }
         }
         else
         {
-            AM_BACKGROUND_PROCESS = false;
+            CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                  " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+            background = 0;
         }
     }
-    else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
-        background = 0;
-    }
 
-    if (child == 0 || !background)
+    if (!background)
     {
-        FindAndVerifyFilesPromises(ctx, pp, report_context);
+        FindAndVerifyFilesPromises(ctx, pp);
     }
 }
 
@@ -1744,7 +1740,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, co
 
 /**************************************************************/
 
-static bool VerifyBootstrap(EvalContext *ctx)
+static bool VerifyBootstrap(void)
 {
     struct stat sb;
     char filePath[CF_MAXVARSIZE];

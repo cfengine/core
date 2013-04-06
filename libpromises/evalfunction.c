@@ -630,6 +630,51 @@ static FnCallResult FnCallClassMatch(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 /*********************************************************************/
 
+static FnCallResult FnCallIfElse(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    Rlist *arg = NULL;
+    int argcount = 0;
+    char id[CF_BUFSIZE];
+
+    snprintf(id, CF_BUFSIZE, "built-in FnCall ifelse-arg");
+
+    /* We need to check all the arguments, ArgTemplate does not check varadic functions */
+    for (arg = finalargs; arg; arg = arg->next)
+    {
+        SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {arg->item, arg->type}, DATA_TYPE_STRING, "", 1);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
+        }
+        argcount++;
+    }
+
+    /* Require an odd number of arguments. We will always return something. */
+    if (argcount%2 != 1)
+    {
+        FatalError(ctx, "in built-in FnCall ifelse: even number of arguments");
+    }
+
+    for (arg = finalargs;        /* Start with arg set to finalargs. */
+         arg && arg->next;       /* We must have arg and arg->next to proceed. */
+         arg = arg->next->next)  /* arg steps forward *twice* every time. */
+    {
+        /* Similar to classmatch(), we evaluate the first of the two
+         * arguments as a class. */
+        if (IsDefinedClass(ctx, RlistScalarValue(arg), PromiseGetNamespace(fp->caller)))
+        {
+            /* If the evaluation returned true in the current context,
+             * return the second of the two arguments. */
+            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg->next)), RVAL_TYPE_SCALAR } };
+        }
+    }
+
+    /* If we get here, we've reached the last argument (arg->next is NULL). */
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(RlistScalarValue(arg)), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *string = RlistScalarValue(finalargs);
@@ -642,6 +687,35 @@ static FnCallResult FnCallCountClassesMatching(EvalContext *ctx, FnCall *fp, Rli
     snprintf(buffer, CF_MAXVARSIZE, "%d", count);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallClassesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *string = RlistScalarValue(finalargs);
+    StringSet* base = StringSetNew();
+
+    EvalContextHeapAddMatchingSoft(ctx, base, string);
+    EvalContextHeapAddMatchingHard(ctx, base, string);
+    EvalContextStackFrameAddMatchingSoft(ctx, base, string);
+
+    Rlist *returnlist = NULL;
+    StringSetIterator it = StringSetIteratorInit(base);
+    char *element = NULL;
+    while ((element = StringSetIteratorNext(&it)))
+    {
+        RlistPrependScalar(&returnlist, element);
+    }
+
+    if (returnlist == NULL)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    StringSetDestroy(base);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
@@ -833,13 +907,13 @@ static FnCallResult FnCallSplayClass(EvalContext *ctx, FnCall *fp, Rlist *finala
     if (policy == INTERVAL_HOURLY)
     {
         /* 12 5-minute slots in hour */
-        int slot = GetHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
+        int slot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 / CF_HASHTABLESIZE;
         snprintf(class, CF_MAXVARSIZE, "Min%02d_%02d", slot * 5, ((slot + 1) * 5) % 60);
     }
     else
     {
         /* 12*24 5-minute slots in day */
-        int dayslot = GetHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
+        int dayslot = OatHash(RlistScalarValue(finalargs), CF_HASHTABLESIZE) * 12 * 24 / CF_HASHTABLESIZE;
         int hour = dayslot / 12;
         int slot = dayslot % 12;
 
@@ -867,7 +941,6 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char buffer[CF_BUFSIZE];
     int val = 0, n_read = 0;
     short portnum;
-    Attributes attr = { {0} };
 
     memset(buffer, 0, sizeof(buffer));
 
@@ -896,10 +969,12 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     conn = NewAgentConn();
 
-    attr.copy.force_ipv4 = false;
-    attr.copy.portnumber = portnum;
+    FileCopy fc = {
+        .force_ipv4 = false,
+        .portnumber = portnum,
+    };
 
-    if (!ServerConnect(ctx, conn, hostnameip, attr, NULL))
+    if (!ServerConnect(conn, hostnameip, fc))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a tcp socket");
         DeleteAgentConn(conn);
@@ -1632,6 +1707,124 @@ static FnCallResult FnCallLsDir(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
+    char index[CF_MAXVARSIZE], match[CF_MAXVARSIZE];
+    Scope *ptr;
+    Rlist *rp, *returnlist = NULL;
+    AssocHashTableIterator i;
+    CfAssoc *assoc;
+
+/* begin fn specific content */
+
+    char *map = RlistScalarValue(finalargs);
+    char *arrayname = RlistScalarValue(finalargs->next);
+
+/* Locate the array */
+
+    if (strstr(arrayname, "."))
+    {
+        scopeid[0] = '\0';
+        sscanf(arrayname, "%127[^.].%127s", scopeid, lval);
+    }
+    else
+    {
+        strcpy(lval, arrayname);
+        strcpy(scopeid, ScopeGetCurrent()->scope);
+    }
+
+    if ((ptr = ScopeGet(scopeid)) == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Function maparray was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
+              scopeid);
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+        return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
+    }
+
+    i = HashIteratorInit(ptr->hashtable);
+
+    while ((assoc = HashIteratorNext(&i)))
+    {
+        snprintf(match, CF_MAXVARSIZE - 1, "%.127s[", lval);
+
+        if (strncmp(match, assoc->lval, strlen(match)) == 0)
+        {
+            char *sp;
+
+            index[0] = '\0';
+            sscanf(assoc->lval + strlen(match), "%127[^\n]", index);
+            if ((sp = strchr(index, ']')))
+            {
+                *sp = '\0';
+            }
+            else
+            {
+                index[strlen(index) - 1] = '\0';
+            }
+
+            if (strlen(index) > 0)
+            {
+                ScopeNewSpecialScalar(ctx, "this", "k", index, DATA_TYPE_STRING);
+
+                switch (assoc->rval.type)
+                {
+                case RVAL_TYPE_SCALAR:
+                    ScopeNewSpecialScalar(ctx, "this", "v", assoc->rval.item, DATA_TYPE_STRING);
+                    ExpandScalar(ctx, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                    if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                        strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                    {
+                        RlistDestroy(returnlist);
+                        ScopeDeleteSpecialScalar("this", "k");
+                        ScopeDeleteSpecialScalar("this", "v");
+                        return (FnCallResult) { FNCALL_FAILURE };
+                    }
+
+                    RlistAppendScalar(&returnlist, expbuf);
+                    ScopeDeleteSpecialScalar("this", "v");
+                    break;
+
+                case RVAL_TYPE_LIST:
+                    for (rp = assoc->rval.item; rp != NULL; rp = rp->next)
+                    {
+                        ScopeNewSpecialScalar(ctx, "this", "v", rp->item, DATA_TYPE_STRING);
+                        ExpandScalar(ctx, PromiseGetBundle(fp->caller)->name, map, expbuf);
+
+                        if (strstr(expbuf, "$(this.k)") || strstr(expbuf, "${this.k}") ||
+                            strstr(expbuf, "$(this.v)") || strstr(expbuf, "${this.v}"))
+                        {
+                            RlistDestroy(returnlist);
+                            ScopeDeleteSpecialScalar("this", "k");
+                            ScopeDeleteSpecialScalar("this", "v");
+                            return (FnCallResult) { FNCALL_FAILURE };
+                        }
+
+                        RlistAppendScalarIdemp(&returnlist, expbuf);
+                        ScopeDeleteSpecialScalar("this", "v");
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+                ScopeDeleteSpecialScalar("this", "k");
+            }
+        }
+    }
+
+    if (returnlist == NULL)
+    {
+        RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
@@ -1715,7 +1908,6 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     char buffer[CF_BUFSIZE], naked[CF_MAXVARSIZE];
     int val = 0, n_read = 0, count = 0;
     short portnum;
-    Attributes attr = { {0} };
     Rval retval;
     buffer[0] = '\0';
 
@@ -1791,10 +1983,12 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
         conn = NewAgentConn();
 
-        attr.copy.force_ipv4 = false;
-        attr.copy.portnumber = portnum;
+        FileCopy fc = {
+            .force_ipv4 = false,
+            .portnumber = portnum,
+        };
 
-        if (!ServerConnect(ctx, conn, rp->item, attr, pp))
+        if (!ServerConnect(conn, rp->item, fc))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a tcp socket");
             DeleteAgentConn(conn);
@@ -2010,6 +2204,147 @@ static FnCallResult FnCallFileStat(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 /*********************************************************************/
 
+static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char buffer[CF_BUFSIZE], *path = RlistScalarValue(finalargs);
+    char *detail = RlistScalarValue(finalargs->next);
+    struct stat statbuf;
+
+    buffer[0] = '\0';
+
+/* begin fn specific content */
+
+    if (lstat(path, &statbuf) == -1)
+    {
+        return (FnCallResult) { FNCALL_FAILURE, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+    }
+    else
+    {
+        if (!strcmp(detail, "size"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_size);
+        }
+        else if (!strcmp(detail, "gid"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_gid);
+        }
+        else if (!strcmp(detail, "uid"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_uid);
+        }
+        else if (!strcmp(detail, "ino"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ino);
+        }
+        else if (!strcmp(detail, "nlink"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_nlink);
+        }
+        else if (!strcmp(detail, "ctime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_ctime);
+        }
+        else if (!strcmp(detail, "mtime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mtime);
+        }
+        else if (!strcmp(detail, "atime"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_atime);
+        }
+        else if (!strcmp(detail, "permstr"))
+        {
+        #if !defined(__MINGW32__)
+            snprintf(buffer, CF_MAXVARSIZE,
+                     "%c%c%c%c%c%c%c%c%c%c",
+                     S_ISDIR(statbuf.st_mode) ? 'd' : '-',
+                     (statbuf.st_mode & S_IRUSR) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWUSR) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXUSR) ? 'x' : '-',
+                     (statbuf.st_mode & S_IRGRP) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWGRP) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXGRP) ? 'x' : '-',
+                     (statbuf.st_mode & S_IROTH) ? 'r' : '-',
+                     (statbuf.st_mode & S_IWOTH) ? 'w' : '-',
+                     (statbuf.st_mode & S_IXOTH) ? 'x' : '-');
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
+        }
+        else if (!strcmp(detail, "permoct"))
+        {
+        #if !defined(__MINGW32__)
+            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) (statbuf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO)));
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
+        }
+        else if (!strcmp(detail, "modeoct"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jo", (uintmax_t) statbuf.st_mode);
+        }
+        else if (!strcmp(detail, "mode"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_mode);
+        }
+        else if (!strcmp(detail, "type"))
+        {
+        #if !defined(__MINGW32__)
+          switch (statbuf.st_mode & S_IFMT)
+          {
+          case S_IFBLK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "block device");     break;
+          case S_IFCHR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "character device"); break;
+          case S_IFDIR:  snprintf(buffer, CF_MAXVARSIZE, "%s", "directory");        break;
+          case S_IFIFO:  snprintf(buffer, CF_MAXVARSIZE, "%s", "FIFO/pipe");        break;
+          case S_IFLNK:  snprintf(buffer, CF_MAXVARSIZE, "%s", "symlink");          break;
+          case S_IFREG:  snprintf(buffer, CF_MAXVARSIZE, "%s", "regular file");     break;
+          case S_IFSOCK: snprintf(buffer, CF_MAXVARSIZE, "%s", "socket");           break;
+          default:       snprintf(buffer, CF_MAXVARSIZE, "%s", "unknown");          break;
+          }
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
+        }
+        else if (!strcmp(detail, "dev_minor"))
+        {
+        #if !defined(__MINGW32__)
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) minor(statbuf.st_dev) );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
+        }
+        else if (!strcmp(detail, "dev_major"))
+        {
+        #if !defined(__MINGW32__)
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) major(statbuf.st_dev) );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "Not available on Windows");
+        #endif
+        }
+        else if (!strcmp(detail, "devno"))
+        {
+        #if !defined(__MINGW32__)
+            snprintf(buffer, CF_MAXVARSIZE, "%jd", (uintmax_t) statbuf.st_dev );
+        #else
+            snprintf(buffer, CF_MAXVARSIZE, "%c:", statbuf.st_dev + 'A');
+        #endif
+        }
+        else if (!strcmp(detail, "dirname"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%s", path);
+            ChopLastNode(buffer);
+        }
+        else if (!strcmp(detail, "basename"))
+        {
+            snprintf(buffer, CF_MAXVARSIZE, "%s", ReadLastNode(path));
+        }
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
@@ -2067,7 +2402,7 @@ static FnCallResult FnCallHostRange(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     strcpy(buffer, "!any");
 
-    if (!FuzzyHostParse(prefix, range))
+    if (!FuzzyHostParse(range))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -3115,6 +3450,43 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 }
 
 /*********************************************************************/
+
+static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    /* begin fn specific content */
+
+    char *mode = RlistScalarValue(finalargs);
+    char *format_string = RlistScalarValue(finalargs->next);
+    // this will be a problem on 32-bit systems...
+    const time_t when = IntFromString(RlistScalarValue(finalargs->next->next));
+
+    char buffer[CF_BUFSIZE];
+    buffer[0] = '\0';
+
+    struct tm* tm;
+
+    if (0 == strcmp("gmtime", mode))
+    {
+        tm = gmtime(&when);
+    }
+    else
+    {
+        tm = localtime(&when);
+    }
+
+    if(tm != NULL)
+    {
+        strftime(buffer, sizeof buffer, format_string, tm);
+    }
+    else
+    {
+        CfOut(OUTPUT_LEVEL_INFORM, "strftime", "The given time stamp %ld was invalid", when);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
 /* Read functions                                                    */
 /*********************************************************************/
 
@@ -3998,7 +4370,7 @@ static int ExecModule(EvalContext *ctx, char *command, const char *ns)
     char *sp, line[CF_BUFSIZE];
     int print = false;
 
-    if ((pp = cf_popen(command, "r")) == NULL)
+    if ((pp = cf_popen(command, "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe from %s\n", command);
         return false;
@@ -4291,6 +4663,13 @@ FnCallArg FILESTAT_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg FILESTAT_DETAIL_ARGS[] =
+{
+    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "File object name"},
+    {"size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", DATA_TYPE_OPTION, "stat() field to get"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg FILESEXIST_ARGS[] =
 {
     {CF_NAKEDLRANGE, DATA_TYPE_STRING, "Array identifier containing list"},
@@ -4406,6 +4785,11 @@ FnCallArg HOSTSWITHCLASS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg IFELSE_ARGS[] =
+{
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg IPRANGE_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "IP address range syntax"},
@@ -4505,6 +4889,13 @@ FnCallArg MAPLIST_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Pattern based on $(this) as original text"},
     {CF_IDRANGE, DATA_TYPE_STRING, "The name of the list variable to map"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+FnCallArg MAPARRAY_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Pattern based on $(this.k) and $(this.v) as original text"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "The name of the array variable to map"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -4773,6 +5164,14 @@ FnCallArg STRCMP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg STRFTIME_ARGS[] =
+{
+    {"gmtime,localtime", DATA_TYPE_OPTION, "Use GMT or local time"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "A format string"},
+    {CF_VALRANGE, DATA_TYPE_INT, "The time as a Unix epoch offset"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg TRANSLATEPATH_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Unix style path"},
@@ -4814,6 +5213,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "True if the canonicalization of the argument is a currently defined class"},
     {"classmatch", DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch,
      "True if the regular expression matches any currently defined class"},
+    {"classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching,
+     "List the defined classes matching regex arg1"},
     {"countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching,
      "Count the number of defined classes matching regex arg1"},
     {"countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching,
@@ -4826,6 +5227,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed"},
     {"filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed"},
     {"filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file"},
+    {"filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file"},
     {"getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv,
      "Return the environment variable named arg1, truncated at arg2 characters"},
     {"getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields,
@@ -4857,6 +5259,7 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Extract the list of hosts with the given class set from the hub database (commercial extension)"},
     {"hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge,
      "Read global knowledge from the hub host by id (commercial extension)"},
+    {"ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true},
     {"iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange,
      "True if the current host lies in the range of IP addresses specified"},
     {"irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use"},
@@ -4881,6 +5284,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap"},
     {"lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir,
      "Return a list of files in a directory matching a regular expression"},
+    {"maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray,
+     "Return a list with each element modified by a pattern based $(this.k) and $(this.v)"},
     {"maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList,
      "Return a list with each element modified by a pattern based $(this)"},
     {"not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false"},
@@ -4947,6 +5352,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString,
      "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
     {"strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly"},
+    {"strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string"},
     {"sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals"},
     {"translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath,
      "Translate path separators from Unix style to the host's native"},

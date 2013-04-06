@@ -43,6 +43,7 @@
 #include "net.h"
 #include "rlist.h"
 #include "misc_lib.h"
+#include "cf-serverd-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -992,7 +993,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
         
-        if (ReceiveCollectCall(ctx, conn))
+        if (ReceiveCollectCall(conn))
         {
             return true;
         }
@@ -2882,12 +2883,8 @@ static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
     {
         return false;
     }
-    
-#ifdef HAVE_NOVA
-    return Nova_ReturnQueryData(conn, query);
-#else
-    return false;
-#endif
+
+    return ReturnQueryData(conn, query);
 }
 
 /**************************************************************/

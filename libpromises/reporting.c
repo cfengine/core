@@ -30,7 +30,6 @@
 #include "files_names.h"
 #include "item_lib.h"
 #include "sort.h"
-#include "writer.h"
 #include "hashes.h"
 #include "vars.h"
 #include "cfstream.h"
@@ -41,6 +40,7 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "policy.h"
+#include "sequence.h"
 
 #ifdef HAVE_NOVA
 #include "nova_reporting.h"
@@ -48,209 +48,73 @@
 
 #include <assert.h>
 
-static void ReportBannerText(Writer *writer, const char *s);
-
-/*******************************************************************/
-
-ReportContext *ReportContextNew(void)
+void ShowContext(EvalContext *ctx)
 {
-    ReportContext *ctx = xcalloc(1, sizeof(ReportContext));
-    return ctx;
-}
-
-/*******************************************************************/
-
-bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer)
-{
-    bool replaced = false;
-    if (context->report_writers[type])
     {
-        WriterClose(context->report_writers[type]);
-        replaced = true;
-    }
+        printf("%s>  -> Hard classes = { ", VPREFIX);
 
-    context->report_writers[type] = writer;
-
-    return replaced;
-}
-
-/*******************************************************************/
-
-void ReportContextDestroy(ReportContext *context)
-{
-    if (context)
-    {
-        if (context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE])
+        Seq *hard_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorHard(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
         {
-            WriterWriteF(context->report_writers[REPORT_OUTPUT_TYPE_KNOWLEDGE], "}\n");
-        }
-
-        for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
-        {
-            if (context->report_writers[i])
+            if (!EvalContextHeapContainsNegated(ctx, context))
             {
-                WriterClose(context->report_writers[i]);
+                SeqAppend(hard_contexts, context);
             }
         }
-        free(context);
+
+        SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
+
+        for (size_t i = 0; i < SeqLength(hard_contexts); i++)
+        {
+            const char *context = SeqAt(hard_contexts, i);
+            printf("%s ", context);
+        }
+
+        printf("}\n");
+        SeqDestroy(hard_contexts);
     }
-}
 
-/*******************************************************************/
-/* Generic                                                         */
-/*******************************************************************/
-
-void ShowContext(EvalContext *ctx, const ReportContext *report_context)
-{
-    if (VERBOSE || DEBUG)
     {
-        if (report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT])
+        printf("%s>  -> Additional classes = { ", VPREFIX);
+
+        Seq *soft_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorSoft(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
         {
-            char vbuff[CF_BUFSIZE];
-            snprintf(vbuff, CF_BUFSIZE, "Host %s's basic classified context", VFQNAME);
-            ReportBannerText(report_context->report_writers[REPORT_OUTPUT_TYPE_TEXT], vbuff);
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                SeqAppend(soft_contexts, context);
+            }
         }
 
-        Writer *writer = FileWriter(stdout);
+        SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
 
+        for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
-            WriterWriteF(writer, "%s>  -> Hard classes = { ", VPREFIX);
-
-            Seq *hard_contexts = SeqNew(1000, NULL);
-            SetIterator it = EvalContextHeapIteratorHard(ctx);
-            char *context = NULL;
-            while ((context = SetIteratorNext(&it)))
-            {
-                if (!EvalContextHeapContainsNegated(ctx, context))
-                {
-                    SeqAppend(hard_contexts, context);
-                }
-            }
-
-            SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
-
-            for (size_t i = 0; i < SeqLength(hard_contexts); i++)
-            {
-                const char *context = SeqAt(hard_contexts, i);
-                WriterWriteF(writer, "%s ", context);
-            }
-
-            WriterWriteF(writer, "}\n");
-            SeqDestroy(hard_contexts);
+            const char *context = SeqAt(soft_contexts, i);
+            printf("%s ", context);
         }
 
-        {
-            WriterWriteF(writer, "%s>  -> Additional classes = { ", VPREFIX);
-
-            Seq *soft_contexts = SeqNew(1000, NULL);
-            SetIterator it = EvalContextHeapIteratorSoft(ctx);
-            char *context = NULL;
-            while ((context = SetIteratorNext(&it)))
-            {
-                if (!EvalContextHeapContainsNegated(ctx, context))
-                {
-                    SeqAppend(soft_contexts, context);
-                }
-            }
-
-            SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
-
-            for (size_t i = 0; i < SeqLength(soft_contexts); i++)
-            {
-                const char *context = SeqAt(soft_contexts, i);
-                WriterWriteF(writer, "%s ", context);
-            }
-
-            WriterWriteF(writer, "}\n");
-            SeqDestroy(soft_contexts);
-        }
-
-        {
-            WriterWriteF(writer, "%s>  -> Negated Classes = { ", VPREFIX);
-
-            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
-            {
-                WriterWriteF(writer, "%s ", context);
-            }
-
-            WriterWriteF(writer, "}\n");
-        }
-
-        FileWriterDetach(writer);
+        printf("}\n");
+        SeqDestroy(soft_contexts);
     }
-}
 
-/*******************************************************************/
-
-void ShowPromises(
-#if !defined(HAVE_NOVA)
-    ARG_UNUSED EvalContext *ctx, ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies
-#else
-    EvalContext *ctx, const Seq *bundles, const Seq *bodies
-#endif
-    )
-{
-#if defined(HAVE_NOVA)
-    Nova_ShowPromises(ctx, bundles, bodies);
-#endif
-}
-
-void ShowPromise(
-#if !defined(HAVE_NOVA)
-    ARG_UNUSED
-#endif
-    const Promise *pp)
-{
-#if defined(HAVE_NOVA)
-    Nova_ShowPromise(pp);
-#endif
-}
-
-static void PrintVariablesInScope(Writer *writer, const Scope *scope)
-{
-    AssocHashTableIterator i = HashIteratorInit(scope->hashtable);
-    CfAssoc *assoc;
-
-    while ((assoc = HashIteratorNext(&i)))
     {
-        WriterWriteF(writer, "%8s %c %s = ", CF_DATATYPES[assoc->dtype], assoc->rval.type, assoc->lval);
-        RvalWrite(writer, assoc->rval);
-        WriterWriteF(writer, "\n");
-    }
-}
+        printf("%s>  -> Negated Classes = { ", VPREFIX);
 
-/*******************************************************************/
-
-static void ShowScopedVariablesText(Writer *writer)
-{
-    for (const Scope *ptr = VSCOPE; ptr != NULL; ptr = ptr->next)
-    {
-        if (strcmp(ptr->scope, "this") == 0)
+        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
         {
-            continue;
+            printf("%s ", context);
         }
 
-        WriterWriteF(writer, "\nScope %s:\n", ptr->scope);
-
-        PrintVariablesInScope(writer, ptr);
+        printf("}\n");
     }
 }
-
-void ShowScopedVariables(const ReportContext *context, ReportOutputType type)
-/* WARNING: Not thread safe (access to VSCOPE) */
-{
-    switch (type)
-    {
-    default:
-    case REPORT_OUTPUT_TYPE_TEXT:
-        ShowScopedVariablesText(context->report_writers[REPORT_OUTPUT_TYPE_TEXT]);
-        break;
-    }
-}
-
-/*******************************************************************/
 
 void Banner(const char *s)
 {
@@ -258,17 +122,6 @@ void Banner(const char *s)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " %s ", s);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
 }
-
-/*******************************************************************/
-
-static void ReportBannerText(Writer *writer, const char *s)
-{
-    WriterWriteF(writer, "***********************************************************\n");
-    WriterWriteF(writer, " %s \n", s);
-    WriterWriteF(writer, "***********************************************************\n");
-}
-
-/**************************************************************/
 
 void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {

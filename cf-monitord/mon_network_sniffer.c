@@ -112,7 +112,7 @@ void MonNetworkSnifferOpen(void)
 
         if (cfstat(buffer, &statbuf) != -1)
         {
-            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r")) == NULL)
+            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r", true)) == NULL)
             {
                 TCPDUMP = false;
             }

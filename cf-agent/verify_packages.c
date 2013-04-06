@@ -118,7 +118,7 @@ void VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -395,7 +395,7 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
             return false;
         }
     }
-    else if ((fin = cf_popen(a.packages.package_list_command, "r")) == NULL)
+    else if ((fin = cf_popen(a.packages.package_list_command, "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open the package list with command %s",
               a.packages.package_list_command);
@@ -658,7 +658,7 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
                 return false;
             }
         }
-        else if ((fin = cf_popen(a.packages.package_patch_list_command, "r")) == NULL)
+        else if ((fin = cf_popen(a.packages.package_patch_list_command, "r", true)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open the patch list with command %s\n",
                   a.packages.package_patch_list_command);
@@ -1801,8 +1801,11 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
         free(command_string);
     }
 
-/* We have performed some operation on packages, our cache is invalid */
-    InvalidateSoftwareCache();
+/* We have performed some modification operation on packages, our cache is invalid */
+    if (!verify)
+    {
+        InvalidateSoftwareCache();
+    }
 
     return retval;
 }
@@ -2151,7 +2154,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
     }
     else
     {
-        if ((pfp = cf_popen(command, "r")) == NULL)
+        if ((pfp = cf_popen(command, "r", true)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_popen", pp, a, "Couldn't start command %20s...\n", command);
             return false;

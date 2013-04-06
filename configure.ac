@@ -286,7 +286,8 @@ if test x"$with_openssl" = xno ; then
 fi
 
 CF3_WITH_LIBRARY(openssl, [
-   AC_CHECK_LIB(crypto, RSA_generate_key, [], [AC_MSG_ERROR(Cannot find OpenSSL)])
+   AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
+   AC_CHECK_LIB(crypto, RSA_generate_key, [], [])
    AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
 
    AC_MSG_CHECKING(for OpenSSL version)
@@ -298,6 +299,15 @@ CF3_WITH_LIBRARY(openssl, [
    #This OpenSSL is too old
    #endif
    ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of CFEngine requires OpenSSL >= 0.9.7)])
+
+   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xyes" ; then
+      AC_DEFINE(OPENSSL_NO_DEPRECATED, 1, [Define if non deprecated API is available.])
+   fi
+
+   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xno" && \
+      test "x$ac_cv_lib_crypto_RSA_generate_key" = "xno" ; then
+      AC_MSG_ERROR(Cannot find OpenSSL)
+   fi
 ])
 
 dnl PCRE

@@ -55,11 +55,11 @@ int cfstat(const char *path, struct stat *buf)
 
 /*********************************************************************/
 
-int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Promise *pp)
+int cf_lstat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
 {
     int res;
 
-    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         res = lstat(file, buf);
         CheckForFileHoles(buf, pp);
@@ -67,7 +67,7 @@ int cf_lstat(EvalContext *ctx, char *file, struct stat *buf, Attributes attr, Pr
     }
     else
     {
-        return cf_remote_stat(ctx, file, buf, "link", attr, pp);
+        return cf_remote_stat(file, buf, "link", fc.encrypt, pp);
     }
 }
 

@@ -27,24 +27,8 @@
 
 #include "cf3.defs.h"
 
-#include "sequence.h"
-#include "writer.h"
-
-struct ReportContext_
-{
-    Writer *report_writers[REPORT_OUTPUT_TYPE_MAX];
-};
-
-ReportContext *ReportContextNew(void);
-bool ReportContextAddWriter(ReportContext *context, ReportOutputType type, Writer *writer);
-void ReportContextDestroy(ReportContext *context);
-
-void ShowPromises(EvalContext *ctx, const Seq *bundles, const Seq *bodies);
-void ShowPromise(const Promise *pp);
-void ShowScopedVariables(const ReportContext *context, ReportOutputType type);
-void ShowContext(EvalContext *ctx, const ReportContext *report_context);
-
 // stdout only
+void ShowContext(EvalContext *ctx);
 void BannerPromiseType(const char *bundlename, const char *type, int p);
 void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);

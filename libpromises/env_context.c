@@ -78,6 +78,7 @@ static const char *StackFrameOwnerName(const StackFrame *frame)
         return frame->data.body.owner->name;
 
     case STACK_FRAME_TYPE_PROMISE:
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
         return "this";
 
     default:
@@ -122,6 +123,14 @@ static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
     case STACK_FRAME_TYPE_PROMISE:
         {
             StackFrame *previous_frame = LastStackFrame(ctx, 1);
+            assert(previous_frame);
+            assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
+            return previous_frame;
+        }
+
+    case STACK_FRAME_TYPE_PROMISE_ITERATION:
+        {
+            StackFrame *previous_frame = LastStackFrame(ctx, 2);
             assert(previous_frame);
             assert("Promise stack frame does not follow bundle stack frame" && previous_frame->type == STACK_FRAME_TYPE_BUNDLE);
             return previous_frame;
@@ -255,7 +264,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) GetHash(splay, CF_HASHTABLESIZE);
+        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
         n = (int) (total * hash / (double) CF_HASHTABLESIZE);
 
         for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)
@@ -366,7 +375,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
 /*******************************************************************/
 
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const ReportContext *report_context)
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a;
 
@@ -396,6 +405,18 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED const Rep
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {
+            {
+                char *sp = NULL;
+                if (VarClassExcluded(ctx, pp, &sp))
+                {
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+                    return;
+                }
+            }
+
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
 
             if (!ValidClassName(pp->promiser))
@@ -852,8 +873,17 @@ static bool ValidClassName(const char *str)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *classname, void *ns)
+typedef struct
 {
+    const EvalContext *ctx;
+    const char *ns;
+} EvalTokenAsClassContext;
+
+static ExpressionValue EvalTokenAsClass(const char *classname, void *param)
+{
+    const EvalContext *ctx = ((EvalTokenAsClassContext *)param)->ctx;
+    const char *ns = ((EvalTokenAsClassContext *)param)->ns;
+
     char qualified_class[CF_MAXVARSIZE];
 
     if (strcmp(classname, "any") == 0)
@@ -874,7 +904,7 @@ static ExpressionValue EvalTokenAsClass(const EvalContext *ctx, const char *clas
     }
     else if (ns != NULL && strcmp(ns, "default") != 0)
     {
-        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", (char *)ns, (char *)classname);
+        snprintf(qualified_class, CF_MAXVARSIZE, "%s:%s", ns, (char *)classname);
     }
     else
     {
@@ -939,9 +969,14 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
     }
     else
     {
-        ExpressionValue r = EvalExpression(ctx, res.result,
+        EvalTokenAsClassContext etacc = {
+            .ctx = ctx,
+            .ns = ns
+        };
+
+        ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenAsClass, &EvalVarRef,
-                                           (void *)ns);
+                                           &etacc);
 
         FreeExpression(res.result);
 
@@ -954,8 +989,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 /**********************************************************************/
 
-static ExpressionValue EvalTokenFromList(ARG_UNUSED const EvalContext *ctx,
-                                         const char *token, void *param)
+static ExpressionValue EvalTokenFromList(const char *token, void *param)
 {
     StringSet *set = param;
     return StringSetContains(set, token);
@@ -963,7 +997,7 @@ static ExpressionValue EvalTokenFromList(ARG_UNUSED const EvalContext *ctx,
 
 /**********************************************************************/
 
-static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet *token_set)
+static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 {
     ParseResult res = ParseExpression(expr, 0, strlen(expr));
 
@@ -977,8 +1011,7 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet 
     }
     else
     {
-        ExpressionValue r = EvalExpression(ctx,
-                                           res.result,
+        ExpressionValue r = EvalExpression(res.result,
                                            &EvalTokenFromList,
                                            &EvalVarRef,
                                            token_set);
@@ -994,18 +1027,18 @@ static bool EvalWithTokenFromList(EvalContext *ctx, const char *expr, StringSet 
 
 /* Process result expression */
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr)
+bool EvalProcessResult(const char *process_result, StringSet *proc_attr)
 {
-    return EvalWithTokenFromList(ctx, process_result, proc_attr);
+    return EvalWithTokenFromList(process_result, proc_attr);
 }
 
 /**********************************************************************/
 
 /* File result expressions */
 
-bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr)
+bool EvalFileResult(const char *file_result, StringSet *leaf_attr)
 {
-    return EvalWithTokenFromList(ctx, file_result, leaf_attr);
+    return EvalWithTokenFromList(file_result, leaf_attr);
 }
 
 /*****************************************************************************/
@@ -1256,7 +1289,7 @@ static void StackFrameBundleDestroy(StackFrameBundle frame)
     StringSetDestroy(frame.contexts_negated);
 }
 
-static void StackFrameBodyDestroy(StackFrameBody frame)
+static void StackFrameBodyDestroy(ARG_UNUSED StackFrameBody frame)
 {
     return;
 }
@@ -1264,6 +1297,11 @@ static void StackFrameBodyDestroy(StackFrameBody frame)
 static void StackFramePromiseDestroy(StackFramePromise frame)
 {
     HashFree(frame.variables);
+}
+
+static void StackFramePromiseIterationDestroy(ARG_UNUSED StackFramePromiseIteration frame)
+{
+    return;
 }
 
 static void StackFrameDestroy(StackFrame *frame)
@@ -1282,6 +1320,10 @@ static void StackFrameDestroy(StackFrame *frame)
 
         case STACK_FRAME_TYPE_PROMISE:
             StackFramePromiseDestroy(frame->data.promise);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            StackFramePromiseIterationDestroy(frame->data.promise_iteration);
             break;
 
         default:
@@ -1465,6 +1507,44 @@ size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *c
     return StringSetMatchCount(frame->data.bundle.contexts, context_regex);
 }
 
+StringSet *StringSetAddAllMatchingIterator(StringSet* base, StringSetIterator it, const char *filter_regex)
+{
+    const char *element = NULL;
+    while ((element = SetIteratorNext(&it)))
+    {
+        if (StringMatch(filter_regex, element))
+        {
+            StringSetAdd(base, xstrdup(element));
+        }
+    }
+    return base;
+}
+
+StringSet *StringSetAddAllMatching(StringSet* base, const StringSet* filtered, const char *filter_regex)
+{
+    return StringSetAddAllMatchingIterator(base, StringSetIteratorInit((StringSet*)filtered), filter_regex);
+}
+
+StringSet *EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    return StringSetAddAllMatching(base, ctx->heap_soft, context_regex);
+}
+
+StringSet *EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    return StringSetAddAllMatching(base, ctx->heap_hard, context_regex);
+}
+
+StringSet *EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex)
+{
+    if (SeqLength(ctx->stack) == 0)
+    {
+        return base;
+    }
+
+    return StringSetAddAllMatchingIterator(base, EvalContextStackFrameIteratorSoft(ctx), context_regex);
+}
+
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx)
 {
     return StringSetIteratorInit(ctx->heap_soft);
@@ -1520,6 +1600,15 @@ static StackFrame *StackFrameNewPromise(const Promise *owner)
     return frame;
 }
 
+static StackFrame *StackFrameNewPromiseIteration(const Promise *owner)
+{
+    StackFrame *frame = StackFrameNew(STACK_FRAME_TYPE_PROMISE_ITERATION, true);
+
+    frame->data.promise_iteration.owner = owner;
+
+    return frame;
+}
+
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context)
 {
     StackFrame *frame = LastStackFrameBundle(ctx);
@@ -1535,7 +1624,7 @@ static void EvalContextStackPushFrame(EvalContext *ctx, StackFrame *frame)
 
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous)
 {
-    assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+    assert(!LastStackFrame(ctx, 0) || LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE_ITERATION);
 
     EvalContextStackPushFrame(ctx, StackFrameNewBundle(owner, inherits_previous));
     ScopeSetCurrent(owner->name);
@@ -1553,6 +1642,14 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner)
     assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_BUNDLE);
 
     EvalContextStackPushFrame(ctx, StackFrameNewPromise(owner));
+    ScopeSetCurrent("this");
+}
+
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner)
+{
+    assert(LastStackFrame(ctx, 0) && LastStackFrame(ctx, 0)->type == STACK_FRAME_TYPE_PROMISE);
+
+    EvalContextStackPushFrame(ctx, StackFrameNewPromiseIteration(owner));
     ScopeSetCurrent("this");
 }
 
@@ -1579,6 +1676,8 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
+    assert(type != DATA_TYPE_NONE);
+
     Scope *ptr;
     const Rlist *rp;
     CfAssoc *assoc;
@@ -1709,7 +1808,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     return true;
 }
 
-bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
     Scope *ptr = NULL;
     char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
@@ -1720,8 +1819,15 @@ bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataT
 
     if (lval.lval == NULL)
     {
-        *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
-        return DATA_TYPE_NONE;
+        if (rval_out)
+        {
+            *rval_out = (Rval) {NULL, RVAL_TYPE_SCALAR };
+        }
+        if (type_out)
+        {
+            *type_out = DATA_TYPE_NONE;
+        }
+        return false;
     }
 
     if (!IsExpandable(lval.lval))
@@ -1824,7 +1930,13 @@ bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataT
     if (type_out)
     {
         *type_out = assoc->dtype;
+        assert(*type_out != DATA_TYPE_NONE);
     }
 
     return true;
+}
+
+bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
+{
+    return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
 }

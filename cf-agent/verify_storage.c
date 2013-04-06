@@ -48,7 +48,7 @@
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
 
-static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp);
 static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
@@ -63,26 +63,26 @@ static int VerifyMountPromise(EvalContext *ctx, char *file, Attributes a, Promis
 
 /*****************************************************************************/
 
-void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp)
 {
     PromiseBanner(pp);
-    FindStoragePromiserObjects(ctx, pp, report_context);
+    FindStoragePromiserObjects(ctx, pp);
 
     return (void *) NULL;
 }
 
 /*****************************************************************************/
 
-static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp)
 {
 /* Check if we are searching over a regular expression */
 
-    LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyStoragePromise, report_context);
+    LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyStoragePromise);
 }
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, ARG_UNUSED const ReportContext *report_context) /* FIXME: unused param */
+void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
@@ -120,7 +120,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, ARG_UNUSED 
         }
     }
 
-    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -199,7 +199,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, name, a, pp))
+            if (!ConsiderFile(dirp->d_name, name, a.copy, pp))
             {
                 continue;
             }

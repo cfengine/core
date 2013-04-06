@@ -51,7 +51,7 @@ bool GetExecOutput(const char *command, char *buffer, bool useshell)
     }
     else
     {
-        pp = cf_popen(command, "r");
+        pp = cf_popen(command, "r", true);
     }
 
     if (pp == NULL)

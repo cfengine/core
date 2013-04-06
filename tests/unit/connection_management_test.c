@@ -147,7 +147,7 @@ int main()
 
 /* stubs */
 
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn)
+int ReceiveCollectCall(struct ServerConnectionState *conn)
 {
     return false;
 }
@@ -157,7 +157,7 @@ int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
     return 0;
 }
 
-int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu)
+int ReturnQueryData(ServerConnectionState *conn, char *menu)
 {
     return false;
 }

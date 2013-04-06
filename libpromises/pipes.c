@@ -204,7 +204,7 @@ static pid_t CreatePipeAndFork(char *type, int *pd)
 
 /*****************************************************************************/
 
-FILE *cf_popen(const char *command, char *type)
+FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 {
     int pd[2];
     char **argv;
@@ -229,7 +229,18 @@ FILE *cf_popen(const char *command, char *type)
             if (pd[1] != 1)
             {
                 dup2(pd[1], 1); /* Attach pp=pd[1] to our stdout */
-                dup2(pd[1], 2); /* Merge stdout/stderr */
+
+                if (capture_stderr)
+                {
+                    dup2(pd[1], 2); /* Merge stdout/stderr */
+                }
+                else
+                {
+                    int nullfd = open(NULLFILE, O_WRONLY);
+                    dup2(nullfd, 2);
+                    close(nullfd);
+                }
+
                 close(pd[1]);
             }
 

@@ -66,9 +66,12 @@ int UnresolvedArgs(Rlist *args)
 
         if (IsCf3Scalar(rp->item))
         {
-            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}"))
+            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}") ||
+                strstr(rp->item, "$(this.k)") || strstr(rp->item, "${this.k}") ||
+                strstr(rp->item, "$(this.v)") || strstr(rp->item, "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
+                // We should allow this.k and this.v in function args for substitution in maparray() etc
             }
             else
             {

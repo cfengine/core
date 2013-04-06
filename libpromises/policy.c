@@ -603,7 +603,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
     return success;
 }
 
-static bool PolicyCheckRequiredComments(EvalContext *ctx, const Policy *policy, Seq *errors)
+static bool PolicyCheckRequiredComments(const EvalContext *ctx, const Policy *policy, Seq *errors)
 {
     const Body *common_control = PolicyGetBody(policy, NULL, "common", "control");
     if (common_control)
@@ -662,7 +662,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
 {
     bool success = true;
 
-    Set *used_handles = SetNew((unsigned int (*)(const void*, unsigned int))GetHash, (bool (*)(const void *, const void *))StringSafeEqual, NULL);
+    Set *used_handles = SetNew((unsigned int (*)(const void*, unsigned int))OatHash, (bool (*)(const void *, const void *))StringSafeEqual, NULL);
 
     for (size_t bpi = 0; bpi < SeqLength(policy->bundles); bpi++)
     {
@@ -700,7 +700,7 @@ bool PolicyCheckDuplicateHandles(const Policy *policy, Seq *errors)
     return success;
 }
 
-bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
+bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles)
 {
     // check has body common control
     {
@@ -2114,7 +2114,7 @@ const char *ConstraintContext(const Constraint *cp)
     }
 }
 
-Constraint *EffectiveConstraint(EvalContext *ctx, Seq *constraints)
+Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints)
 {
     for (size_t i = 0; i < SeqLength(constraints); i++)
     {
@@ -2163,7 +2163,7 @@ void ConstraintDestroy(Constraint *cp)
 
 /*****************************************************************************/
 
-int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Promise *pp)
+int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 
@@ -2217,7 +2217,7 @@ int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Prom
 
 /*****************************************************************************/
 
-int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints)
+int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq *constraints)
 {
     int retval = CF_UNDEFINED;
 
@@ -2269,7 +2269,7 @@ int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *const
 
 /*****************************************************************************/
 
-bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Promise *pp)
+bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_UNDEFINED;
 
@@ -2422,7 +2422,7 @@ const char *PromiseGetHandle(const Promise *pp)
     return (const char *)PromiseGetImmediateRvalValue("handle", pp, RVAL_TYPE_SCALAR);
 }
 
-int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp)
+int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_NOINT;
 
@@ -2462,7 +2462,7 @@ int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise 
 
 /*****************************************************************************/
 
-bool PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *pp, double *value_out)
+bool PromiseGetConstraintAsReal(const EvalContext *ctx, const char *lval, const Promise *pp, double *value_out)
 {
     bool found_constraint = false;
 
@@ -2525,7 +2525,7 @@ static bool Str2Mode(const char *s, mode_t *mode_out)
     return true;
 }
 
-mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Promise *pp)
+mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     mode_t retval = 077;
 
@@ -2573,14 +2573,14 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
 
 #ifdef __MINGW32__
 
-uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp)
+uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp)
 {                               // we use sids on windows instead
     return CF_SAME_OWNER;
 }
 
 #else /* !__MINGW32__ */
 
-uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp)
+uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     int retval = CF_SAME_OWNER;
     char buffer[CF_MAXVARSIZE];
@@ -2626,14 +2626,14 @@ uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promis
 
 #ifdef __MINGW32__
 
-gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
+gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp)
 {                               // not applicable on windows: processes have no group
     return CF_SAME_GROUP;
 }
 
 #else /* !__MINGW32__ */
 
-gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
+gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp)
 {
     int retval = CF_SAME_GROUP;
     char buffer[CF_MAXVARSIZE];
@@ -2676,7 +2676,7 @@ gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
 
 /*****************************************************************************/
 
-Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Promise *pp)
+Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp)
 {
     Rlist *retval = NULL;
 
@@ -2780,7 +2780,7 @@ static int VerifyConstraintName(const char *lval)
     return false;
 }
 
-Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *pp, const char *lval)
+Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
 
@@ -2861,7 +2861,7 @@ void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType
 
 /*****************************************************************************/
 
-void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)
+void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Promise *pp, RvalType rtype)
 {
     const Constraint *constraint = PromiseGetConstraint(ctx, pp, lval);
 
@@ -2927,8 +2927,6 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
             }
         }
     }
-
-    PreSanitizePromise(ctx, pp);
 }
 
 /*****************************************************************************/

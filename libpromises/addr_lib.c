@@ -281,7 +281,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
     return -1;
 }
 
-int FuzzyHostParse(char *arg1, char *arg2)
+int FuzzyHostParse(char *arg2)
 {
     long start = -1, end = -1;
     int n;

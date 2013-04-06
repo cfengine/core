@@ -45,7 +45,7 @@
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line);
 static int SelectProcRegexMatch(char *name1, char *name2, char *regex, char **colNames, char **line);
 static int SplitProcLine(char *proc, char **names, int *start, int *end, char **line);
-static int SelectProcTimeCounterRangeMatch(EvalContext *ctx, char *name1, char *name2, time_t min, time_t max, char **names, char **line);
+static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(char *name1, char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
@@ -53,7 +53,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     int result = true, i;
     char *column[CF_PROCCOLS];
@@ -110,7 +110,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(proc_attr, xstrdup("rsize"));
     }
 
-    if (SelectProcTimeCounterRangeMatch(ctx, "TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
+    if (SelectProcTimeCounterRangeMatch("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
         StringSetAdd(proc_attr, xstrdup("ttime"));
     }
@@ -146,7 +146,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(proc_attr, xstrdup("tty"));
     }
 
-    result = EvalProcessResult(ctx, a.process_result, proc_attr);
+    result = EvalProcessResult(a.process_result, proc_attr);
 
     StringSetDestroy(proc_attr);
 
@@ -158,7 +158,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
     return result;
 }
 
-Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
     Item *result = NULL;
 
@@ -184,7 +184,7 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
                 continue;
             }
 
-            if (attrselect && !SelectProcess(ctx, ip->name, names, start, end, a))
+            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
             {
                 continue;
             }
@@ -209,77 +209,6 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
 
     return result;
 }
-
-int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, const char *promiser)
-{
-    int matches = 0;
-    pid_t cfengine_pid = getpid();
-
-    Item *matched = SelectProcesses(ctx, procdata, promiser, a.process_select, a.haveselect);
-
-    for (Item *ip = matched; ip != NULL; ip = ip->next)
-    {
-        CF_OCCUR++;
-
-        if (a.transaction.action == cfa_warn)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Matched: %s\n", ip->name);
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Matched: %s\n", ip->name);
-        }
-
-        pid_t pid = ip->counter;
-
-        if (pid == 1)
-        {
-            if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "(Okay to send only HUP to init)\n");
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        if ((pid < 4) && (a.signals))
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
-                  promiser);
-            continue;
-        }
-
-        bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
-
-        if ((a.transaction.action == cfa_warn) && promised_zero)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", procdata->name);     /* legend */
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", ip->name);
-            continue;
-        }
-
-        if ((pid == cfengine_pid) && (a.signals))
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! cf-agent will not signal itself!\n");
-            continue;
-        }
-
-        PrependItem(killlist, ip->name, "");
-        (*killlist)->counter = pid;
-        matches++;
-    }
-
-    DeleteItemList(matched);
-
-    return matches;
-}
-
-
-/***************************************************************************/
-/* Level                                                                   */
-/***************************************************************************/
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line)
 {
@@ -317,7 +246,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
 /***************************************************************************/
 
-static long TimeCounter2Int(EvalContext *ctx, const char *s)
+static long TimeCounter2Int(const char *s)
 {
     long d = 0, h = 0, m = 0;
     char output[CF_BUFSIZE];
@@ -332,7 +261,7 @@ static long TimeCounter2Int(EvalContext *ctx, const char *s)
         if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
-            FatalError(ctx, "%s", output);
+            return CF_NOINT;
         }
     }
     else
@@ -340,14 +269,14 @@ static long TimeCounter2Int(EvalContext *ctx, const char *s)
         if (sscanf(s, "%ld:%ld", &h, &m) != 2)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
-            FatalError(ctx, "%s", output);
+            return CF_NOINT;
         }
     }
 
     return 60 * (m + 60 * (h + 24 * d));
 }
 
-static int SelectProcTimeCounterRangeMatch(EvalContext *ctx, char *name1, char *name2, time_t min, time_t max, char **names, char **line)
+static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line)
 {
     int i;
     time_t value;
@@ -359,7 +288,7 @@ static int SelectProcTimeCounterRangeMatch(EvalContext *ctx, char *name1, char *
 
     if ((i = GetProcColumnIndex(name1, name2, names)) != -1)
     {
-        value = (time_t) TimeCounter2Int(ctx, line[i]);
+        value = (time_t) TimeCounter2Int(line[i]);
 
         if (value == CF_NOINT)
         {
@@ -833,7 +762,7 @@ int LoadProcessTable(Item **procdata)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Observe process table with %s\n", pscomm);
 
-    if ((prp = cf_popen(pscomm, "r")) == NULL)
+    if ((prp = cf_popen(pscomm, "r", false)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "popen", "Couldn't open the process list with command %s\n", pscomm);
         return false;

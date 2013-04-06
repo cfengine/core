@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     if (SHOWHOSTS)
     {
@@ -149,7 +148,6 @@ int main(int argc, char *argv[])
     free(public_key_file);
     free(private_key_file);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -179,7 +177,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-key");
+            PrintVersion();
             exit(0);
 
         case 'v':

@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) Cfengine AS
 
@@ -21,23 +20,19 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#include "cf-serverd-functions.h"
+#ifndef CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
+#define CFENGINE_CF_AGENT_ENTERPRISE_STUBS_H
 
-#include "cfstream.h"
+#include "cf3.defs.h"
 
-#if !defined(HAVE_NOVA)
+#if defined(__MINGW32__)
+void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
+#endif
+void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
 
-int SetServerListenState(EvalContext *ctx, size_t queue_size)
-{
-    if (!SERVER_LISTEN)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
-    }
-
-    return InitServer(queue_size);
-}
+void LastSawBundle(const Bundle *bundle, double compliance);
 
 #endif
+

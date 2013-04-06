@@ -92,14 +92,12 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
     if (SHOWREPORTS)
     {
-        ShowPromises(ctx, policy->bundles, policy->bodies);
+        ShowPromises(policy->bundles, policy->bodies);
     }
 
     CheckLicenses(ctx);
@@ -133,7 +131,6 @@ int main(int argc, char *argv[])
     }
 
     GenericAgentConfigDestroy(config);
-    CloseReports("commmon", report_context);
     EvalContextDestroy(ctx);
 
     if (ERRORCOUNT > 0)
@@ -241,7 +238,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-promises");
+            PrintVersion();
             exit(0);
 
         case 'h':

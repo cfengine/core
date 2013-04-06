@@ -69,7 +69,7 @@ char *EDITXMLTYPESEQUENCE[] =
 };
 
 static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type);
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp);
 #ifdef HAVE_LIBXML2
 static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp);
 static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp);
@@ -147,8 +147,7 @@ static int XmlAttributeCount(xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                              const ReportContext *report_context)
+int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp)
 {
     enum editxmltypesequence type;
     PromiseType *sp;
@@ -157,7 +156,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -204,7 +203,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attr
                 pp->this_server = filename;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditXmlPromise, report_context);
+                ExpandPromise(ctx, pp, KeepEditXmlPromise);
 
                 if (Abort())
                 {
@@ -250,7 +249,7 @@ static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence 
 
 /***************************************************************************/
 
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
     Attributes a = { {0} };
@@ -278,7 +277,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, const ReportContex
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
@@ -430,7 +429,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -493,7 +492,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetree-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -547,7 +546,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttree-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -608,7 +607,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteattribute-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -661,7 +660,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "setattribute-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -714,7 +713,7 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -767,7 +766,7 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "settext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -820,7 +819,7 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttext-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -1738,7 +1737,7 @@ static bool SanityCheckTextInsertions(Attributes a)
 
 /***************************************************************************/
 
-int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, Promise *pp)
+int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
 /* returns true if XML on disk is identical to XML in memory */
 {
     struct stat statbuf;
@@ -1761,7 +1760,7 @@ int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, 
         return false;
     }
 
-    if (!LoadFileAsXmlDoc(ctx, &cmpdoc, file, a, pp))
+    if (!LoadFileAsXmlDoc(&cmpdoc, file, edits))
     {
         return false;
     }

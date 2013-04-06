@@ -30,17 +30,17 @@
 
 #include "reporting.h"
 
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+typedef void PromiseActuator(EvalContext *ctx, Promise *pp);
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+void CommonEvalPromise(EvalContext *ctx, Promise *pp);
 
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, const ReportContext *report_context);
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
 void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rval rval);
 
 int IsExpandable(const char *str);
-int ExpandScalar(EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
 Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
 FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f, int expandnaked);
 Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
@@ -64,6 +64,5 @@ void GetNaked(char *s1, const char *s2);
   */
 bool IsVarList(const char *var);
 void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
-int ExpandPrivateScalar(EvalContext *ctx, const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 #endif

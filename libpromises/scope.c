@@ -563,16 +563,6 @@ void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, 
 
 /*******************************************************************/
 
-DataType ScopeControlCommonGet(EvalContext *ctx, CommonControl lval, Rval *rval_out)
-{
-    const char *lval_str = CFG_CONTROLBODY[lval].lval;
-    DataType type = DATA_TYPE_NONE;
-    EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", lval_str }, rval_out, &type);
-    return type;
-}
-
-/*******************************************************************/
-
 void ScopeDeleteVariable(const char *scope, const char *id)
 {
     Scope *ptr = ScopeGet(scope);

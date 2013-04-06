@@ -76,8 +76,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     if (GENERATE_XML)
     {
@@ -88,7 +87,6 @@ int main(int argc, char *argv[])
         GenerateManual(ctx);
     }
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;

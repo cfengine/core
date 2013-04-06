@@ -20,15 +20,31 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_FILES_PROPERTIES_H
-#define CFENGINE_FILES_PROPERTIES_H
+#include "cf-monitord-enterprise-stubs.h"
 
-#include "cf3.defs.h"
+void GetObservable(int i, char *name, char *desc)
+{
+    strcpy(name, OBS[i][0]);
+}
 
-void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(EvalContext *ctx, const char *nodename, char *path, Attributes attr, Promise *pp);
+void SetMeasurementPromises(Item **classlist)
+{
+}
 
-#endif
+void MonOtherInit(void)
+{
+}
+
+void MonOtherGatherData(double *cf_this)
+{
+}
+
+void HistoryUpdate(EvalContext *ctx, Averages newvals)
+{
+}
+
+void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp)
+{
+}

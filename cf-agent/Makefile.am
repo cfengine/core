@@ -47,6 +47,7 @@ cf_agent_SOURCES = \
         nfs.c nfs.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
+	verify_files_hashes.c verify_files_hashes.h \
         verify_storage.c verify_storage.h \
         verify_exec.c verify_exec.h \
         verify_methods.c verify_methods.h \
@@ -57,14 +58,19 @@ cf_agent_SOURCES = \
         verify_environments.c verify_environments.h \
         files_edit.c files_edit.h \
         files_editline.c files_editline.h \
-        files_editxml.c \
+        files_editxml.c files_editxml.h \
         files_links.c files_links.h \
         files_operators.c files_operators.h \
+        files_properties.c files_properties.h \
         files_repository.c files_repository.h \
-        files_select.c \
+        files_select.c files_select.h \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
+
+if !HAVE_NOVA
+cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
+endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

@@ -43,7 +43,6 @@ int FIPS_MODE = false;
 struct utsname VSYSNAME;
 
 int CFA_MAXTHREADS = 10;
-int AM_BACKGROUND_PROCESS = false;
 int CF_PERSISTENCE = 10;
 
 AgentType THIS_AGENT_TYPE;

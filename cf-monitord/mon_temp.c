@@ -28,7 +28,6 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "files_properties.h"
 #include "cfstream.h"
 #include "pipes.h"
 #include "logging.h"
@@ -41,7 +40,7 @@ static bool LMSENSORS;
 /* Prototypes */
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this);
+static bool GetAcpi(double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -55,11 +54,11 @@ static bool GetLMSensors(double *cf_this);
 
 #if defined(__linux__)
 
-void MonTempGatherData(EvalContext *ctx, double *cf_this)
+void MonTempGatherData(double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
-    if (ACPI && GetAcpi(ctx, cf_this))
+    if (ACPI && GetAcpi(cf_this))
     {
         return;
     }
@@ -72,7 +71,7 @@ void MonTempGatherData(EvalContext *ctx, double *cf_this)
 
 #else
 
-void MonTempGatherData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED double *cf_this)
+void MonTempGatherData(ARG_UNUSED double *cf_this)
 {
 }
 
@@ -103,7 +102,7 @@ void MonTempInit(void)
 /******************************************************************************/
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this)
+static bool GetAcpi(double *cf_this)
 {
     Dir *dirh;
     FILE *fp;
@@ -111,10 +110,6 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
     int count = 0;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
-    Attributes attr;
-
-    memset(&attr, 0, sizeof(attr));
-    attr.transaction.audit = false;
 
     CfDebug("ACPI temperature\n");
 
@@ -126,7 +121,7 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
 
     for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {
             continue;
         }
@@ -196,7 +191,7 @@ static bool GetLMSensors(double *cf_this)
     cf_this[ob_temp2] = 0.0;
     cf_this[ob_temp3] = 0.0;
 
-    if ((pp = cf_popen("/usr/bin/sensors", "r")) == NULL)
+    if ((pp = cf_popen("/usr/bin/sensors", "r", true)) == NULL)
     {
         LMSENSORS = false;      /* Broken */
         return false;

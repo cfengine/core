@@ -17,7 +17,13 @@ endif
 
 cf_execd_SOURCES = \
         cf-execd.c \
-        cf-execd-runner.c cf-execd-runner.h
+        cf-execd-runner.c cf-execd-runner.h \
+        exec-config.c exec-config.h
+
+if !HAVE_NOVA
+cf_execd_SOURCES += \
+	cf-execd-enterprise-stubs.c cf-execd-enterprise-stubs.h
+endif
 
 CLEANFILES = *.gcno *.gcda
 

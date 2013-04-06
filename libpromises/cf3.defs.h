@@ -150,7 +150,6 @@ typedef enum
     PROMISE_RESULT_DENIED = 'd',
     PROMISE_RESULT_TIMEOUT = 't',
     PROMISE_RESULT_INTERRUPTED = 'i',
-    PROMISE_RESULT_REGULAR = 'r' // TODO: in use?
 } PromiseResult;
 
 /*****************************************************************************/
@@ -193,6 +192,7 @@ typedef struct
 {
     pid_t pid;
     time_t time;
+    time_t process_start_time;
 } LockData;
 
 /*****************************************************************************/
@@ -706,18 +706,6 @@ typedef struct
 } Rval;
 
 typedef struct Rlist_ Rlist;
-
-typedef enum
-{
-    REPORT_OUTPUT_TYPE_TEXT,
-    REPORT_OUTPUT_TYPE_KNOWLEDGE,
-
-    REPORT_OUTPUT_TYPE_MAX
-} ReportOutputType;
-
-typedef struct ReportContext_ ReportContext;
-
-/*************************************************************************/
 
 typedef struct
 {
@@ -1705,6 +1693,7 @@ typedef struct
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
 #include "dbm_api.h"
+#include "sequence.h"
 #include "prototypes3.h"
 #include "alloc.h"
 #include "cf3.extern.h"

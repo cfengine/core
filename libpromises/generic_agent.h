@@ -65,20 +65,20 @@ typedef struct
 } GenericAgentConfig;
 
 const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
-void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context);
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
-void PrintVersionBanner(const char *component);
-int CheckPromises(EvalContext *ctx, const char *input_file);
-Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+void PrintVersion(void);
+int CheckPromises(const char *input_file);
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);
 int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
 
-void BundleHashVariables(EvalContext *ctx, Bundle *bundle, const ReportContext *report_context);
-void PolicyHashVariables(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle);
+void PolicyHashVariables(EvalContext *ctx, Policy *policy);
 
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
@@ -100,14 +100,9 @@ void WritePID(char *filename);
 void CheckLicenses(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
-ReportContext *OpenReports(EvalContext *ctx, AgentType agent_type);
-void CloseReports(const char *agents, ReportContext *report_context);
-
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
 void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);
-
-const char *AgentTypeToString(AgentType agent_type);
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);

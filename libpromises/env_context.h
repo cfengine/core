@@ -36,6 +36,7 @@ typedef enum
 {
     STACK_FRAME_TYPE_BUNDLE,
     STACK_FRAME_TYPE_PROMISE,
+    STACK_FRAME_TYPE_PROMISE_ITERATION,
     STACK_FRAME_TYPE_BODY
 } StackFrameType;
 
@@ -61,6 +62,11 @@ typedef struct
 
 typedef struct
 {
+    const Promise *owner;
+} StackFramePromiseIteration;
+
+typedef struct
+{
     StackFrameType type;
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
 
@@ -69,6 +75,7 @@ typedef struct
         StackFrameBundle bundle;
         StackFrameBody body;
         StackFramePromise promise;
+        StackFramePromiseIteration promise_iteration;
     } data;
 } StackFrame;
 
@@ -115,6 +122,10 @@ size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 
+StringSet* EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
+
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
@@ -123,21 +134,24 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
 void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
-bool EvalContextVariableGet(EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
+
+bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
 bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
-bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
+bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
+bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 
 /* - Rest - */
 int Abort(void);
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);

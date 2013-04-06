@@ -38,7 +38,7 @@ void yyerror(const char *s);
 
 /* agent.c */
 
-int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context);
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp);
 
 /* Mark connection as free */
 void ServerNotBusy(AgentConnection *conn);
@@ -54,36 +54,21 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
-#if defined(__MINGW32__)
-void VerifyRegistryPromise(EvalContext *ctx, Attributes a, Promise *pp);
-#endif
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
-void Aggregate(char *stylesheet, char *banner, char *footer, char *webdriver);
 int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
 int EnterpriseExpiry(EvalContext *ctx, AgentType agent_type);
 const char *GetConsolePrefix(void);
-const char *MailSubject(void);
-void PreSanitizePromise(EvalContext *ctx, Promise *pp);
-void GetObservable(int i, char *name, char *desc);
-void SetMeasurementPromises(Item **classlist);
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
-void MonOtherInit(void);
-void MonOtherGatherData(double *cf_this);
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp);
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
 const char *PromiseID(const Promise *pp);     /* Not thread-safe */
-void NotePromiseCompliance(const Promise *pp, PromiseState state, char *reasoin);
+void NotePromiseCompliance(const Promise *pp, PromiseState state, const char *reason);
 void LogTotalCompliance(const char *version, int background_tasks);
 #if defined(__MINGW32__)
 int GetRegistryValue(char *key, char *name, char *buf, int bufSz);
 #endif
-void NoteVarUsage(void);
-void NoteVarUsageDB(void);
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec);
 void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec);
@@ -92,28 +77,10 @@ void CacheUnreliableValue(char *caller, char *handle, char *buffer);
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer);
 void TranslatePath(char *new, const char *old);
 void TrackValue(char *date, double kept, double repaired, double notkept);
-void LastSawBundle(const Bundle *bundle, double compliance);
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
 bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format);
 
-void TryCollectCall(void);
-int SetServerListenState(EvalContext *ctx, size_t queue_size);
-
-struct ServerConnectionState;
-
-int ReceiveCollectCall(EvalContext *ctx, struct ServerConnectionState *conn);
-
-/* files_editxml.c */
-
-int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                              const ReportContext *report_context);
-#ifdef HAVE_LIBXML2
-int XmlCompareToFile(EvalContext *ctx, xmlDocPtr doc, char *file, Attributes a, Promise *pp);
-#endif
-
-/* files_select.c */
-
-int SelectLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp);
+void ShowPromises(const Seq* bundles, const Seq *bodies);
+void ShowPromise(const Promise *pp);
 
 /* manual.c */
 
@@ -172,9 +139,5 @@ void SetStartTime(void);
 /* verify_reports.c */
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp);
-
-/* misc */
-
-int GracefulTerminate(pid_t pid);
 
 #endif

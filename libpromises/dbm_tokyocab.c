@@ -118,6 +118,12 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
+    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    {
+        tchdbclose(*hdb);
+        return false;
+    }
+
     return true;
 }
 

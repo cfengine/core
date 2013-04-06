@@ -36,6 +36,7 @@
 #include "files_operators.h"
 #include "files_hashes.h"
 #include "files_edit.h"
+#include "files_editxml.h"
 #include "files_editline.h"
 #include "files_properties.h"
 #include "item_lib.h"
@@ -45,6 +46,7 @@
 #include "locks.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"
+#include "verify_files_hashes.h"
 #include "logging.h"
 #include "generic_agent.h" // HashVariables
 #include "misc_lib.h"
@@ -54,15 +56,14 @@
 #include "cf.nova.h"
 #endif
 
-static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp);
+static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
-static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
+static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp);
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
 
 /*****************************************************************************/
 
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr, const ReportContext *report_context),
-                             const ReportContext *report_context) /* FIXME */
+void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
 {
     Item *path, *ip, *remainder = NULL;
     char pbuffer[CF_BUFSIZE];
@@ -79,7 +80,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (ctx, wildpath, pp, report_context);
+        (*fnptr) (ctx, wildpath, pp);
         return;
     }
     else
@@ -138,9 +139,8 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         char nextbuffer[CF_BUFSIZE], nextbufferOrig[CF_BUFSIZE], regex[CF_BUFSIZE];
         const struct dirent *dirp;
         Dir *dirh;
-        Attributes dummyattr = { {0} };
+        FileCopy dummyfc = { 0 };
 
-        memset(&dummyattr, 0, sizeof(dummyattr));
         memset(regex, 0, CF_BUFSIZE);
 
         strncpy(regex, ip->name, CF_BUFSIZE - 1);
@@ -149,7 +149,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         {
             // Could be a dummy directory to be created so this is not an error.
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (ctx, wildpath, pp, report_context);
+            (*fnptr) (ctx, wildpath, pp);
             DeleteItemList(path);
             return;
         }
@@ -159,7 +159,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
             for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
             {
-                if (!ConsiderFile(ctx, dirp->d_name, pbuffer, dummyattr, pp))
+                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp))
                 {
                     continue;
                 }
@@ -195,7 +195,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                 if ((!lastnode) && (strcmp(nextbuffer, wildpath) != 0))
                 {
-                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr, report_context);
+                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr);
                 }
                 else
                 {
@@ -216,7 +216,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                     /* If there were back references there could still be match.x vars to expand */
 
                     pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent()->scope, pp);
-                    (*fnptr) (ctx, nextbufferOrig, pcopy, report_context);
+                    (*fnptr) (ctx, nextbufferOrig, pcopy);
                     PromiseDestroy(pcopy);
                 }
             }
@@ -227,7 +227,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     else
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (ctx, pbuffer, pp, report_context);
+        (*fnptr) (ctx, pbuffer, pp);
     }
 
     if (count == 0)
@@ -236,19 +236,141 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
         if (create)
         {
-            VerifyFilePromise(ctx, pp->promiser, pp, report_context);
+            VerifyFilePromise(ctx, pp->promiser, pp);
         }
     }
 
     DeleteItemList(path);
 }
 
-static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context)
+static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Promise *pp)
+{
+    if ((a.havelink) && (a.havecopy))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              " !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havelink) && (!a.link.source))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise to establish a link at %s has no source", path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+/* We can't do this verification during parsing as we did not yet read the body,
+ * so we can't distinguish between link and copy source. In post-verification
+ * all bodies are already expanded, so we don't have the information either */
+
+    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
+    {
+        /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        FatalError(ctx, "Bailing out");
+    }
+
+    if ((a.haveeditline) && (a.haveeditxml))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",
+              path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.haveedit))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Recursive depth_searches are not compatible with general file editing");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              " !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              " !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
+              path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (!a.select.result))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File select constraint body promised no result (check body definition)");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havedelete) && (a.haverename))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File %s cannot promise both deletion and renaming", path);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
+    {
+        CfOut(OUTPUT_LEVEL_INFORM, "",
+              " !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
+              pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+    }
+
+    if ((a.transaction.background) && (a.transaction.audit))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Auditing cannot be performed on backgrounded promises (this might change).");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if (((a.havecopy) || (a.havelink)) && (a.transformer))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File object(s) %s cannot both be a copy of source and transformed simultaneously",
+              pp->promiser);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.haveselect) && (a.select.result == NULL))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Missing file_result attribute in file_select body");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    if ((a.havedepthsearch) && (a.change.report_diffs))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Difference reporting is not allowed during a depth_search");
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return false;
+    }
+
+    return true;
+}
+
+static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     struct stat osb, oslb, dsb;
     Attributes a = { {0} };
     CfLock thislock;
-    int exists, rlevel = 0;
+    int exists;
 
     a = GetFilesAttributes(ctx, pp);
 
@@ -260,7 +382,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
     ScopeDeleteSpecialScalar("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", path, DATA_TYPE_STRING);
     
-    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -269,7 +391,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
     CF_OCCUR++;
 
-    LoadSetuid(ctx, a, pp);
+    LoadSetuid(a);
 
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */
     {
@@ -277,9 +399,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
         {
             if (!CfCreateFile(ctx, path, pp, a))
             {
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
             else
             {
@@ -328,9 +448,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
     {
         if (!S_ISDIR(oslb.st_mode))
         {
-            SaveSetuid(ctx, a, pp);
-            YieldCurrentLock(thislock);
-            return;
+            goto exit;
         }
     }
 
@@ -340,9 +458,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
         {
             if (!CfCreateFile(ctx, path, pp, a))
             {
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
             else
             {
@@ -363,9 +479,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
                 CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Warning: depth_search (recursion) is promised for a base object %s that is not a directory",
                       path);
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
         }
 
@@ -380,9 +494,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot promise to link the children of %s as it is not a directory!",
                       a.link.source);
-                SaveSetuid(ctx, a, pp);
-                YieldCurrentLock(thislock);
-                return;
+                goto exit;
             }
         }
     }
@@ -393,12 +505,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
-        if (a.havedepthsearch)
-        {
-            SetSearchDevice(&oslb, pp);
-        }
-
-        DepthSearch(ctx, path, &oslb, rlevel, a, pp);
+        DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
 
         /* normally searches do not include the base directory */
 
@@ -409,7 +516,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
             /* Handle this node specially */
 
             a.havedepthsearch = false;
-            DepthSearch(ctx, path, &oslb, rlevel, a, pp);
+            DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
             a.havedepthsearch = save_search;
         }
         else
@@ -456,7 +563,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
 
     if (a.haveedit)
     {
-        ScheduleEditOperation(ctx, path, a, pp, report_context);
+        ScheduleEditOperation(ctx, path, a, pp);
     }
 
 // Once more in case a file has been created as a result of editing or copying
@@ -466,13 +573,14 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp, const R
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }
 
+exit:
     SaveSetuid(ctx, a, pp);
     YieldCurrentLock(thislock);
 }
 
 /*****************************************************************************/
 
-int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp, const ReportContext *report_context)
+int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promise *pp)
 {
     void *vp;
     FnCall *fp;
@@ -482,14 +590,14 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
         return false;
     }
 
-    pp->edcontext = NewEditContext(ctx, filename, a, pp);
+    pp->edcontext = NewEditContext(filename, a);
 
     if (pp->edcontext == NULL)
     {
@@ -545,10 +653,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -599,10 +707,10 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -623,9 +731,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
-            BundleHashVariables(ctx, bp, report_context);
+            BundleHashVariables(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp, report_context);
+            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -642,24 +750,16 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
 /*****************************************************************************/
 
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     PromiseBanner(pp);
-    FindFilePromiserObjects(ctx, pp, report_context);
-
-    if (AM_BACKGROUND_PROCESS && (!pp->done))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Exiting backgrounded promise");
-        PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
-        exit(0);
-    }
-
+    FindFilePromiserObjects(ctx, pp);
     return (void *) NULL;
 }
 
 /*****************************************************************************/
 
-static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp)
 {
     char *val = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
     int literal = (PromiseGetConstraintAsBoolean(ctx, "copy_from", pp)) || ((val != NULL) && (strcmp(val, "literal") == 0));
@@ -670,27 +770,26 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp, const ReportC
     {
         // Prime the promiser temporarily, may override later
         ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
-        VerifyFilePromise(ctx, pp->promiser, pp, report_context);
+        VerifyFilePromise(ctx, pp->promiser, pp);
     }
     else                        // Default is to expand regex paths
     {
-        LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyFilePromise, report_context);
+        LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyFilePromise);
     }
 }
 
-static void LoadSetuid(EvalContext *ctx, Attributes a, Promise *pp)
+static void LoadSetuid(Attributes a)
 {
-    Attributes b = { {0} };
     char filename[CF_BUFSIZE];
 
-    b = a;
-    b.edits.backup = BACKUP_OPTION_NO_BACKUP;
-    b.edits.maxfilesize = 1000000;
+    EditDefaults edits = a.edits;
+    edits.backup = BACKUP_OPTION_NO_BACKUP;
+    edits.maxfilesize = 1000000;
 
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
-    if (!LoadFileAsItemList(ctx, &VSETUIDLIST, filename, b, pp))
+    if (!LoadFileAsItemList(&VSETUIDLIST, filename, edits))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Did not find any previous setuid log %s, creating a new one", filename);
     }

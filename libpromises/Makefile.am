@@ -51,7 +51,6 @@ libpromises_la_SOURCES = \
         files_interfaces.c files_interfaces.h \
         files_lib.c files_lib.h \
         files_names.c files_names.h \
-        files_properties.c files_properties.h \
         fncall.c fncall.h \
         generic_agent.c generic_agent.h \
         granules.c granules.h \
@@ -87,6 +86,7 @@ libpromises_la_SOURCES = \
         patches.c \
         pipes.c pipes.h \
         processes_select.c processes_select.h \
+        process_lib.h process_unix_priv.h \
         promises.c promises.h \
         prototypes3.h \
         reporting.c reporting.h \
@@ -104,6 +104,37 @@ libpromises_la_SOURCES = \
         var_expressions.c \
         vars.c vars.h \
         verify_reports.c
+
+if !NT
+
+libpromises_la_SOURCES += \
+        process_unix.c
+
+if LINUX
+libpromises_la_SOURCES += \
+        process_linux.c
+endif
+
+if AIX
+libpromises_la_SOURCES += \
+	process_aix.c
+endif
+
+if SOLARIS
+libpromises_la_SOURCES += \
+	process_solaris.c
+endif
+
+if !LINUX
+if !AIX
+if !SOLARIS
+libpromises_la_SOURCES += \
+        process_unix_stub.c
+endif
+endif
+endif
+
+endif # !NT
 
 if !NT
 libpromises_la_SOURCES += \

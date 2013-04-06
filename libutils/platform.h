@@ -195,6 +195,8 @@ struct utsname
 # include <sys/statvfs.h>
 # undef nfstype
 
+#include <sys/mkdev.h>
+
 #ifndef timersub
 # define timersub(a, b, result)                             \
     do                                                      \

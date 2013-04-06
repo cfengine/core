@@ -112,18 +112,16 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(ctx, config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
     CheckLicenses(ctx);
 
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy);
 
-    MonitorStartServer(ctx, policy, report_context);
+    MonitorStartServer(ctx, policy);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -177,7 +175,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-monitord");
+            PrintVersion();
             exit(0);
 
         case 'h':

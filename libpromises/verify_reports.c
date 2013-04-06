@@ -56,7 +56,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     a = GetReportsAttributes(ctx, pp);
 
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
-    thislock = AcquireLock(ctx, unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     // Handle return values before locks, as we always do this
 
@@ -84,6 +84,13 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     }
 
     PromiseBanner(pp);
+
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, "", pp, a, "Need to repair reports promise: %s", pp->promiser);
+        YieldCurrentLock(thislock);
+        return;
+    }
 
     cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
 

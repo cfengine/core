@@ -28,12 +28,12 @@
 #include "files_names.h"
 #include "policy.h"
 #include "item_lib.h"
-#include "scope.h"
 #include "mutex.h"
 #include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -152,7 +152,7 @@ static void AmendErrorMessageWithPromiseInformation(EvalContext *ctx, Item **err
 {
     Rval retval;
     char *v;
-    if (ScopeControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
     {
         v = (char *) retval.item;
     }

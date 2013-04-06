@@ -73,7 +73,7 @@ char *EDITLINETYPESEQUENCE[] =
     NULL
 };
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp);
 static void VerifyLineDeletions(EvalContext *ctx, Promise *pp);
 static void VerifyColumnEdits(EvalContext *ctx, Promise *pp);
 static void VerifyPatterns(EvalContext *ctx, Promise *pp);
@@ -103,8 +103,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *bp, Attributes a, Promise *parentp,
-                               const ReportContext *report_context)
+int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *bp, Attributes a, Promise *parentp)
 {
     enum editlinetypesequence type;
     PromiseType *sp;
@@ -113,7 +112,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", filename);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, parentp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -162,7 +161,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, const char *filename, Bundle *b
                 pp->this_server = xstrdup(filename);
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditLinePromise, report_context);
+                ExpandPromise(ctx, pp, KeepEditLinePromise);
 
                 if (Abort())
                 {
@@ -339,7 +338,7 @@ static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence ty
 
 /***************************************************************************/
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 {
     char *sp = NULL;
 
@@ -371,7 +370,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, const ReportConte
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, report_context);
+        KeepClassContextPromise(ctx, pp);
         return;
     }
 
@@ -454,7 +453,7 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -522,7 +521,7 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp)
 /* locate and split line */
 
     snprintf(lockname, CF_BUFSIZE - 1, "column-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -577,7 +576,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "replace-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -634,7 +633,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp)
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, pp->this_server);
-    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a, pp, true);
+    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -864,11 +863,11 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
     {
         if (a.not_matching)
         {
-            matches = !MatchRegion(pp->promiser, *start, ip, terminator);
+            matches = !MatchRegion(pp->promiser, ip, terminator);
         }
         else
         {
-            matches = MatchRegion(pp->promiser, *start, ip, terminator);
+            matches = MatchRegion(pp->promiser, ip, terminator);
         }
 
         if (matches)
@@ -1301,7 +1300,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
             continue;
         }
         
-        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a, pp))
+        if (!preserve_block && IsItemInRegion(exp, begin_ptr, end_ptr, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
                  " -> Promised file line \"%s\" exists within file %s (promise kept)", exp, pp->this_server);
@@ -1353,7 +1352,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(chunk, *start, location, NULL))
+    if (MatchRegion(chunk, location, NULL))
        {
        return false;
        }
@@ -1371,7 +1370,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
             continue;
         }
 
-        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a, pp))
+        if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a.insert_match, pp))
            {
            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->this_server);
            continue;
@@ -1469,7 +1468,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
 
     if (a.location.before_after == EDIT_ORDER_BEFORE)
     {    
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_BEFORE, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised line \"%s\" exists before locator in (promise kept)",
                  newline);
@@ -1496,7 +1495,7 @@ static int InsertLineAtLocation(EvalContext *ctx, char *newline, Item **start, I
     }
     else
     {
-        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a, pp))
+        if (!preserve_block && NeighbourItemMatches(*start, location, newline, EDIT_ORDER_AFTER, a.insert_match, pp))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised line \"%s\" exists after locator (promise kept)",
                  newline);

@@ -164,7 +164,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->done = pp->done;
-    pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;
     pcopy->donep = pp->donep;
     pcopy->conn = pp->conn;
@@ -363,7 +362,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->ref = pp->ref;
     pcopy->ref_alloc = pp->ref_alloc;
     pcopy->cache = pp->cache;
-    pcopy->inode_cache = pp->inode_cache;
     pcopy->this_server = pp->this_server;
     pcopy->conn = pp->conn;
     pcopy->edcontext = pp->edcontext;

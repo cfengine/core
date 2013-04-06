@@ -2991,7 +2991,7 @@ processes:
    "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" },
 
             comment => "Execute command to restart the $(service) service",
-         ifvarclass => "restart_$(service)";
+         ifvarclass => canonify("restart_$(service)");
 }
 
 

@@ -120,6 +120,7 @@ blocks:                block
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/* Can be much simpler, reduce the yacc errors
 block:                 bundles
                      | bodies
 
@@ -128,12 +129,19 @@ bundles:              bundle
 
 bodies:               body
                     | bodies body
+*/
+
+block:                bundle
+                    | body
                     
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/*
 bundle:                bundle_syntax
-
 bundle_syntax:         BUNDLE bundle_type bundle_id bundle_body 
+*/
+
+bundle:                BUNDLE bundle_type bundle_id bundle_body 
                      | BUNDLE bundle_type bundle_id usearglist bundle_body
                      | error
                        {
@@ -170,12 +178,12 @@ bundle_values:         COMMON
                           parse_error("Unknown bundle type\n");
                        }
 
-bundle_id:           bundle_id_syntax
-                     {
-                         strncpy(P.blockid,yytext,CF_MAXVARSIZE);
-                         P.offsets.last_block_id = P.offsets.last_id;
-                         ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
-                     }
+bundle_id:             bundle_id_syntax
+                       {
+                           strncpy(P.blockid,yytext,CF_MAXVARSIZE);
+                           P.offsets.last_block_id = P.offsets.last_id;
+                           ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
+                       }
                      | error
                        {
                           parse_error("Bundle id is not valid\n");
@@ -210,9 +218,6 @@ bundle_body:         BLOCK_OPEN
                         INSTALL_SKIP = false; 
                         if (!INSTALL_SKIP) 
                         {
-                        /*
-                            P.currentbundle = AppendBundle(P.policy, P.blockid, P.blocktype, P.useargs, P.filename);
-                        */
                             P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename); 
                             P.currentbundle->offset.line = P.line_no;
                             P.currentbundle->offset.start = P.offsets.last_block_id;
@@ -254,6 +259,7 @@ bundle_body:         BLOCK_OPEN
 bundle_statements:    bundle_statement
                     | bundle_statements bundle_statement 
 
+/* reduce a lot of shift/reduce errors, due to double recursion
 bundle_statement:   categories
                     {
                         ParserDebug("\tP: Ending bundle categories \n");
@@ -261,8 +267,17 @@ bundle_statement:   categories
 
 categories:         category
                   | categories category
-
 category:           category_type
+
+bundle_statement:           category_type
+                            category_statements
+*/
+
+bundle_statement:    category_types
+                   | category_types category_statements
+
+
+category_types:      category_type
                     {
                        /* 
                         reset check for category
@@ -308,26 +323,6 @@ category:           category_type
                           P.currentclasses = NULL;
                        }
                      }
-                     category_statements
-
-
-
-category_statements:   class_or_promise
-                     | category_statements class_or_promise
-                     | ;
-                         
-
-class_or_promise:        class
-                       | promise ';'
-                       | promise error
-                         {
-                             parse_error("check previous statement, expected ';'\n");
-                         }
-
-
-promise:                 promiser
-                       | promiser constraints
-
 
 category_type:           REPORTS_CATEGORY 
                             { extra_bodysyntax_p = NULL; }
@@ -384,15 +379,32 @@ category_type:           REPORTS_CATEGORY
                          }
 
 
+category_statements:   class_or_promise
+                     | category_statements class_or_promise
+                         
+
+class_or_promise:         class
+                        | promise_statement ';' 
+                        | error
+                         {
+                             parse_error("check previous statement, expected ';'\n");
+                         }
+
+/*
+ *  for commands QSTRING can be followe by ',', see notes
+*/
+promise_statement:        promiser 
+                        | promiser constraints
+                        | promiser ',' constraints
+
 constraints:          constraint
                     | constraints ',' constraint
-                    | error
+                    | constraint error
                          {
                              parse_error("check previous statement, expected ',' \n");
                          }
-                    |;
 
-constraint:           promiser_type         
+constraint:           promiser_type  
                       { 
 
                           strncpy(P.lval, yytext, CF_MAXVARSIZE); 
@@ -403,15 +415,14 @@ constraint:           promiser_type
                           P.currentRlist = NULL;
 
                       }
-                      ASSIGN
-                      {
-                        ParserDebug("\tP:ASSIGN\n");
-                      }
+                      assign_type
                       rval_bundle_statement
+                      /*
                     | error
                       {
                         parse_error("Invalid syntax for promise line\n");
                       }
+                      */
 
 promiser_type:       promiser_id 
                      {
@@ -432,9 +443,11 @@ promiser_type:       promiser_id
                            if (strcmp(yytext, valid_types_p->lval) == 0)
                            {
                               found = true; 
+                              /* wrong copy/paste action
                               P.currentbundle = PolicyAppendBundle(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
                               P.currentbundle->offset.line = P.line_no;
                               P.currentbundle->offset.start = P.offsets.last_block_id;
+                              */
                               break;
                            }
                            else
@@ -513,6 +526,18 @@ promiser_id:          id
                       }
 
 
+assign_type:        assign_id
+assign_id:          ASSIGN 
+                      {
+                        ParserDebug("\tP:ASSIGN\n");
+                      }
+                    | error
+                      {
+                        sprintf(error_txt, "expected =>", yytext);
+                        parse_error(error_txt);
+                      }
+
+
 rval_bundle_statement:   rval_type
                          {
                                 /*
@@ -585,14 +610,17 @@ blockid:               BLOCK_IDSYNTAX
 /*
  * Body Section
 */
+
+/* 
+ *  to compilcated
 body:              body_syntax
                    {
-                    /*
                     printf("\t body %s %s %s\n", $<text>4, $<text>3, $<text>2 );
-                    */
                    }
-
 body_syntax:       BODY body_type body_id body_body
+*/
+
+body:              BODY body_type body_id body_body
                  | BODY body_type body_id usearglist body_body
 
 body_type:         body_type_values
@@ -618,6 +646,28 @@ body_type_values:     COMMON
                     | EDITLINE
                     | typeid
 
+body_id:           typeid
+                   {
+                     ParserDebug("\tP:%s:%s body blockid: %s\n", P.block, P.blocktype, yytext);
+                     strncpy(P.blockid, yytext, CF_MAXVARSIZE);
+                   }
+                   | error
+                     {
+                        parse_error("Invalid body id indentifier\n");
+                     }
+
+/* 
+ blockid is not used in body_id_syntax 
+ made things simpler
+*/
+/*
+body_type_values:     COMMON 
+                    | AGENT
+                    | SERVER
+                    | EDITLINE
+                    | EDITLINE
+                    | typeid
+
 body_id:           body_id_syntax
                    {
                      ParserDebug("\tP:%s:%s body blockid: %s\n", P.block, P.blocktype, yytext);
@@ -630,6 +680,7 @@ body_id_syntax:      typeid
                      {
                         parse_error("Invalid body id indentifier\n");
                      }
+*/
  
 body_body:          BLOCK_OPEN
                     {
@@ -665,25 +716,18 @@ body_body:          BLOCK_OPEN
                      }
 
 
-body_statements:       body_statement
-                     | body_statements body_statement
-                     | error
-                       {
-                           parse_error("check previous statement, expected ';'\n");
-                       }
+body_statements:       class_or_bodystatement
+                     | body_statements  class_or_bodystatement
 
-body_statement:        class
-                     | selection ';'
-                     | selection error
-                       {
-                          parse_error("check previous statement, expected ';'\n");
-                       }
+class_or_bodystatement:    class
+                         | body_statement  ';'
+                         | body_statement error
+                           {
+                              parse_error("check previous statement, expected ';'\n");
+                           }
 
-selection:             selection_id
-                       ASSIGN
-                       {
-                           ParserDebug("\tP:ASSIGN\n");
-                       }
+body_statement:        selection_type
+                       assign_type
                        rval_type
                        {
                            CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
@@ -736,12 +780,14 @@ selection:             selection_id
                            
                            P.rval = (Rval) { NULL, '\0' };
                         }
+                        /*
                      | error
                        {
-                           parse_error("check previous statement, expected ';'\n");
+                           parse_error("Error detected in body statement, unexpected token\n");
                        }
+                       */
 
-selection_id:          id
+selection_type:        selection_id
                        {
                            if ( !BodyTypeSyntaxLookup(P.blocktype, P.blockid, yytext) )
                            {
@@ -751,48 +797,13 @@ selection_id:          id
                            }
                        }
 
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-constraint:            id                        /* BUNDLE ONLY */
-                       ASSIGN
-                       rval_type
+selection_id:          id
+                       | error
                        {
-                           if (!INSTALL_SKIP)
-                           {
-                               Constraint *cp = NULL;
-                               SubTypeSyntax ss = SubTypeSyntaxLookup(P.blocktype,P.currenttype);
-                               CheckConstraint(P.currenttype, P.current_namespace, P.blockid, P.lval, P.rval, ss);
-                               if (P.rval.rtype == CF_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
-                               {
-                                   ValidateClassSyntax(P.rval.item);
-                               }
+                           sprintf(error_txt, "Expected an ID token, but %s is not a valid id\n", yytext);
+                           parse_error(error_txt);
+                       }
 
-                               cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
-                               P.currentstype->offset.end = P.offsets.current;
-
-                               // Cache whether there are subbundles for later $(this.promiser) logic
-
-                               if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
-                                   || strcmp(P.lval,"edit_xml") == 0)
-                               {
-                                   P.currentpromise->has_subbundles = true;
-                               }
-
-                               P.rval = (Rval) { NULL, '\0' };
-                               strcpy(P.lval,"no lval");
-                               DeleteRlist(P.currentRlist);
-                               P.currentRlist = NULL;
-                           }
-                           else
-                           {
-                               DeleteRvalItem(P.rval);
-                           }
-                       };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -809,7 +820,7 @@ id:                    id_types
                            strncpy(P.lval, yytext, CF_MAXVARSIZE);
                            DeleteRlist(P.currentRlist);
                            P.currentRlist = NULL;
-                           ParserDebug("\tP:%s:%s:%s:%s lval for '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
+                           ParserDebug("\tP:%s:%s:%s:%s ID lval for '%s'\n", P.block, P.blocktype, P.blockid, P.currenttype, P.lval);
                        };
 
 id_types:             IDSYNTAX
@@ -892,10 +903,12 @@ rval_type:            /*  These token can never be RVAL HvB
                            ParserDebug("\tP:%s:%s:%s:%s id RVAL '%s'\n", 
                                P.block, P.blocktype, P.blockid, P.currenttype, P.currentstring);
                        }
+/*
                      | error
                        {
                        parse_error("invalid\n"); 
                        }
+*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -959,10 +972,12 @@ litem:                 IDSYNTAX
                            AppendRlist((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1],CF_FNCALL);
                            DeleteFnCall(P.currentfncall[P.arg_nesting+1]);
                        }
+/*
                      | error 
                        {
                           parse_error("Not a valid list item\n");
                        }
+*/
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -984,10 +999,12 @@ functionid:            IDSYNTAX
                            P.currentstring = NULL;
                            ParserDebug("P: Found variable in place of a function identifier %s\n",P.currentid);
                        }
+/*
                      | error
                        {
                           parse_error("Not a valid function indentifier\n");
                        }
+*/
                        
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1042,10 +1059,12 @@ usefunction:           functionid givearglist
                            /* Careful about recursion */
                            ParserDebug("\tP: Finished with function call, now at level %d\n",P.arg_nesting);
                        }
+/*
                        | error
                          {
                             parse_error("Error in function definition\n");
                          }
+*/
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

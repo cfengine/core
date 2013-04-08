@@ -96,7 +96,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
                 return false;
             }
 
-            if (ArchiveToRepository(saved, attr, pp))
+            if (ArchiveToRepository(saved, attr))
             {
                 unlink(saved);
             }
@@ -205,7 +205,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (a.edits.backup != BACKUP_OPTION_NO_BACKUP)
     {
-        if (ArchiveToRepository(backup, a, pp))
+        if (ArchiveToRepository(backup, a))
         {
             unlink(backup);
         }

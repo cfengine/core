@@ -127,7 +127,7 @@ int TrustKey(const char* pubkey)
     snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
     free(digeststr);
 
-    ok = CopyRegularFileDisk(pubkey, outfilename, false);
+    ok = CopyRegularFileDisk(pubkey, outfilename);
 
     return (ok? 0 : 1);
 }

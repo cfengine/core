@@ -42,6 +42,7 @@
 #include "policy.h"
 #include "item_lib.h"
 #include "files_lib.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -81,64 +82,36 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
 /*********************************************************************/
 
-static int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Promise *pp)
+static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
 {
-    int *intp;
-    char *cp;
+    const void *cur = buf;
+    const void *end = buf + n_write;
 
-    intp = 0;
-
-    if (pp && (pp->makeholes))
+    while (cur < end)
     {
-        buf[n_read] = 1;        /* Sentinel to stop loop.  */
-
-        /* Find first non-zero *word*, or the word with the sentinel.  */
-        intp = (int *) buf;
-
-        while (*intp++ == 0)
+        const void *skip_span = MemSpan(cur, 0, end - cur);
+        if (skip_span > cur)
         {
-        }
-
-        /* Find the first non-zero *byte*, or the sentinel.  */
-
-        cp = (char *) (intp - 1);
-
-        while (*cp++ == 0)
-        {
-        }
-
-        /* If we found the sentinel, the whole input block was zero,
-           and we can make a hole.  */
-
-        if (cp > buf + n_read)
-        {
-            /* Make a hole.  */
-
-            if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
+            if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "lseek", "lseek in EmbeddedWrite, dest=%s\n", new);
+                CfOut(OUTPUT_LEVEL_ERROR, "lseek", "Copy failed (no space?) while copying to %s from network", destination);
                 return false;
             }
 
-            *last_write_made_hole = 1;
-        }
-        else
-        {
-            /* Clear to indicate that a normal write is needed. */
-            intp = 0;
-        }
-    }
-
-    if (intp == 0)
-    {
-        if (FullWrite(dd, buf, towrite) < 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "write", "Local disk write(%.256s) failed\n", new);
-            pp->conn->error = true;
-            return false;
+            cur = skip_span;
         }
 
-        *last_write_made_hole = 0;
+        const void *copy_span = MemSpanInverse(cur, 0, end - cur);
+        if (copy_span > cur)
+        {
+            if (FullWrite(dd, cur, copy_span - cur) < 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "write", "Copy failed (no space?) while copying to %s from network", destination);
+                return false;
+            }
+
+            cur = copy_span;
+        }
     }
 
     return true;
@@ -457,7 +430,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, P
         cfst.cf_mtime = (time_t) d8;
         cfst.cf_ctime = (time_t) d9;
         cfst.cf_makeholes = (char) d10;
-        pp->makeholes = (char) d10;
         cfst.cf_ino = d11;
         cfst.cf_nlink = d12;
         cfst.cf_dev = (dev_t)d13;
@@ -776,7 +748,7 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, Promise *pp)
 int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
-    int last_write_made_hole = 0, done = false, tosend, value;
+    int done = false, tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
     off_t n_read_total = 0;
@@ -885,9 +857,13 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
             return false;
         }
 
-        if (!FSWrite(new, dd, buf, towrite, &last_write_made_hole, n_read, pp))
+        if (!FSWrite(new, dd, buf, n_read))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Local disk write failed copying %s:%s to %s\n", pp->this_server, source, new);
+            if (pp && pp->conn)
+            {
+                pp->conn->error = true;
+            }
             free(buf);
             unlink(new);
             close(dd);
@@ -909,17 +885,14 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
        of the last write operation. Write a null character and truncate
        it again.  */
 
-    if (last_write_made_hole)
+    if (ftruncate(dd, n_read_total) < 0)
     {
-        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "FullWrite or ftruncate error in CopyReg, source %s\n", source);
-            free(buf);
-            unlink(new);
-            close(dd);
-            FlushFileStream(conn->sd, size - n_read_total);
-            return false;
-        }
+        CfOut(OUTPUT_LEVEL_ERROR, "ftruncate", "Copy failed (no space?) while copying %s from network", new);
+        free(buf);
+        unlink(new);
+        close(dd);
+        FlushFileStream(conn->sd, size - n_read_total);
+        return false;
     }
 
     CfDebug("End of CopyNetReg\n");
@@ -933,7 +906,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
 int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
 {
     int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
-    int last_write_made_hole = 0, tosend, cipherlen = 0;
+    int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -1039,10 +1012,14 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
 
         n_read_total += n_read;
 
-        if (!FSWrite(new, dd, workbuf, towrite, &last_write_made_hole, n_read, pp))
+        if (!FSWrite(new, dd, workbuf, towrite))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Local disk write failed copying %s:%s to %s\n", pp->this_server,
                  source, new);
+            if (pp && pp->conn)
+            {
+                pp->conn->error = true;
+            }
             free(buf);
             unlink(new);
             close(dd);
@@ -1056,17 +1033,14 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp)
        of the last write operation. Write a null character and truncate
        it again.  */
 
-    if (last_write_made_hole)
+    if (ftruncate(dd, n_read_total) < 0)
     {
-        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "FullWrite or ftruncate error in CopyReg, source %s\n", source);
-            free(buf);
-            unlink(new);
-            close(dd);
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-            return false;
-        }
+        CfOut(OUTPUT_LEVEL_ERROR, "ftruncate", "Copy failed (no space?) while copying %s from network", new);
+        free(buf);
+        unlink(new);
+        close(dd);
+        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+        return false;
     }
 
     close(dd);

@@ -116,7 +116,6 @@ struct Promise_
     /* Runtime bus for private flags and work space */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */
-    int makeholes;
     char *this_server;
     int has_subbundles;
     Stat *cache; /* Cache for network connection (READDIR result) */

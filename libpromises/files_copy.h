@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes);
-void CheckForFileHoles(struct stat *sstat, Promise *pp);
+bool CopyRegularFileDisk(const char *source, const char *destination);
 
 #endif

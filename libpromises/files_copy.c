@@ -33,35 +33,6 @@
 #include "files_lib.h"
 #include "string_lib.h"
 
-/*****************************************************************************/
-/* Local low level                                                           */
-/*****************************************************************************/
-
-void CheckForFileHoles(struct stat *sstat, Promise *pp)
-/* Need a transparent way of getting this into CopyReg() */
-/* Use a public member in struct Image                   */
-{
-    if (pp == NULL)
-    {
-        return;
-    }
-
-#if !defined(__MINGW32__)
-    if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
-#else
-# ifdef HAVE_ST_BLOCKS
-    if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
-# else
-    if (sstat->st_size > ST_NBLOCKS((*sstat)) * DEV_BSIZE)
-# endif
-#endif
-    {
-        pp->makeholes = 1;      /* must have a hole to get checksum right */
-    }
-
-    pp->makeholes = 0;
-}
-
 /*
  * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.
  */
@@ -122,6 +93,7 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
                 cur = skip_span;
             }
 
+
             void *copy_span = MemSpanInverse(cur, 0, end - cur);
             if (copy_span > cur)
             {
@@ -134,11 +106,10 @@ static bool CopyData(const char *source, int sd, const char *destination, int dd
                 cur = copy_span;
             }
         }
-
     }
 }
 
-bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes)
+bool CopyRegularFileDisk(const char *source, const char *destination)
 {
     int sd, dd;
 

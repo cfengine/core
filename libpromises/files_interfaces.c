@@ -57,13 +57,9 @@ int cfstat(const char *path, struct stat *buf)
 
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
 {
-    int res;
-
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        res = lstat(file, buf);
-        CheckForFileHoles(buf, pp);
-        return res;
+        return lstat(file, buf);
     }
     else
     {

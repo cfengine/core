@@ -1420,7 +1420,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot move a directory to repository, leaving at %s", backup);
     }
-    else if ((!discardbackup) && (ArchiveToRepository(backup, attr, pp)))
+    else if ((!discardbackup) && (ArchiveToRepository(backup, attr)))
     {
         unlink(backup);
     }
@@ -1700,7 +1700,7 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
                          newname, (uintmax_t)newperm);
                 }
 
-                if (ArchiveToRepository(newname, attr, pp))
+                if (ArchiveToRepository(newname, attr))
                 {
                     unlink(newname);
                 }
@@ -2981,13 +2981,9 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArr
 
 static int cf_stat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
 {
-    int res;
-
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        res = cfstat(file, buf);
-        CheckForFileHoles(buf, pp);
-        return res;
+        return cfstat(file, buf);
     }
     else
     {
@@ -3039,14 +3035,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *destination, Attributes attr, Promise *pp)
 // TODO: return error codes in CopyRegularFileDisk and print them to cfPS here
 {
-    bool make_holes = false;
-
-    if(pp && (pp->makeholes))
-    {
-        make_holes = true;
-    }
-
-    bool result = CopyRegularFileDisk(source, destination, make_holes);
+    bool result = CopyRegularFileDisk(source, destination);
 
     if(!result)
     {

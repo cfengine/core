@@ -679,7 +679,7 @@ void RotateFiles(char *name, int number)
 
     snprintf(to, CF_BUFSIZE, "%s.1", name);
 
-    if (CopyRegularFileDisk(name, to, false) == false)
+    if (CopyRegularFileDisk(name, to) == false)
     {
         CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;

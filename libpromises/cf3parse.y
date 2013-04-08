@@ -188,7 +188,8 @@ bundlebody:            '{'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-statements:            statement
+statements:            /* empty */
+                     | statement
                      | statements statement;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

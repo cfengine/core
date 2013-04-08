@@ -35,6 +35,7 @@
 #include "item_lib.h"
 #include "policy.h"
 #include "mod_files.h"
+#include "string_lib.h"
 
 int yylex(void);
 
@@ -49,6 +50,8 @@ static bool LvalWantsBody(char *stype, char *lval);
 static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
 static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss);
 static void fatal_yyerror(const char *s);
+
+static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
 
 static bool INSTALL_SKIP = false;
 
@@ -145,6 +148,17 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 bundlebody:            '{'
                        {
+                           /* FIXME: We keep it here, because we skip unknown
+                            * promise bundles. Ought to be moved to
+                            * after-parsing step once we know how to deal with
+                            * it */
+
+                           if (!BundleTypeCheck(P.blocktype))
+                           {
+                               ParseError("Unknown bundle type: %s", P.blocktype);
+                               INSTALL_SKIP = true;
+                           }
+
                            if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
                                CfDebug("We a compiling everything here\n");
@@ -699,20 +713,24 @@ gaitem:                IDSYNTAX
 
 /*****************************************************************/
 
-void yyerror(const char *s)
+static void ParseErrorV(const char *s, va_list ap)
 {
-    char *sp = yytext;
+    char *errmsg = StringVFormat(s, ap);
 
+    char *sp = yytext;
     if (sp == NULL)
     {
-        fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, s);
+        fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
     }
-    else if (*sp == '\"' && strlen(sp) > 1)
+    else
     {
-        sp++;
+        if (*sp == '\"' && strlen(sp) > 1)
+        {
+            sp++;
+        }
+        fprintf(stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, errmsg, sp);
     }
-
-    fprintf(stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, s, sp);
+    free(errmsg);
 
     ERRORCOUNT++;
 
@@ -721,6 +739,19 @@ void yyerror(const char *s)
         fprintf(stderr, "Too many errors");
         exit(1);
     }
+}
+
+static void ParseError(const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    ParseErrorV(s, ap);
+    va_end(ap);
+}
+
+void yyerror(const char *str)
+{
+    ParseError("%s", str);
 }
 
 static void fatal_yyerror(const char *s)

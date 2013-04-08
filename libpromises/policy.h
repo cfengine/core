@@ -418,4 +418,9 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name);
  */
 char *QualifiedNameScopeComponent(const char *qualified_name);
 
+/**
+ * @brief Check whether the promise type is allowed one
+ */
+bool BundleTypeCheck(const char *name);
+
 #endif

@@ -3025,3 +3025,28 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
     return SYNTAX_TYPE_MATCH_OK;
 }
+
+/* FIXME: need to be done automatically */
+bool BundleTypeCheck(const char *name)
+{
+    /* FIXME: export size of CF_AGENTTYPES somewhere */
+    for (int i = 0; strcmp(CF_AGENTTYPES[i], "<notype>") != 0; ++i)
+    {
+        if (!strcmp(CF_AGENTTYPES[i], name))
+        {
+            return true;
+        }
+    }
+
+    if (!strcmp("edit_line", name))
+    {
+        return true;
+    }
+
+    if (!strcmp("edit_xml", name))
+    {
+        return true;
+    }
+
+    return false;
+}

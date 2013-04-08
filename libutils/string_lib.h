@@ -97,6 +97,12 @@ int Chop(char *str, size_t max_length);
 bool StringEndsWith(const char *str, const char *suffix);
 
 /**
+ * @brief Format string like vsprintf and return formatted string allocated
+ * on heap as a return value.
+ */
+char *StringVFormat(const char *fmt, va_list ap);
+
+/**
  * @brief Format string like sprintf and return formatted string allocated on
  * heap as a return value.
  *

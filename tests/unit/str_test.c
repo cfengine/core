@@ -415,6 +415,29 @@ static void test_ends_with(void **state)
     assert_false(StringEndsWith("a", "aa"));
 }
 
+char *test_stringvformat_sup(const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    char *fmted = StringVFormat(s, ap);
+    va_end(ap);
+    return fmted;
+}
+
+static void test_stringvformat(void **state)
+{
+    char *s = test_stringvformat_sup("%s%d", "abc", 42);
+    assert_string_equal(s, "abc42");
+    free(s);
+}
+
+static void test_stringformat(void **state)
+{
+    char *s = StringFormat("%d%s%d", 1, "a", 2);
+    assert_string_equal(s, "1a2");
+    free(s);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -471,7 +494,10 @@ int main()
         unit_test(test_chop_empty_single_space),
         unit_test(test_chop_empty_two_spaces),
 
-        unit_test(test_ends_with)
+        unit_test(test_ends_with),
+
+        unit_test(test_stringformat),
+        unit_test(test_stringvformat),
     };
 
     return run_tests(tests);

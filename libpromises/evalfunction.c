@@ -4518,7 +4518,7 @@ static int CheckID(char *id)
 
     for (sp = id; *sp != '\0'; sp++)
     {
-        if (!isalnum((int) *sp) && (*sp != '_') && (*sp != '[') && (*sp != ']'))
+        if (!isalnum((int) *sp) && (*sp != '.') && (*sp != '-') && (*sp != '_') && (*sp != '[') && (*sp != ']'))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
                   "Module protocol contained an illegal character \'%c\' in class/variable identifier \'%s\'.", *sp,

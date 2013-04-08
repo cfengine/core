@@ -832,10 +832,80 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
     return false;
 }
 
+static const char *PackageAction2String(PackageAction pa)
+{
+    switch (pa)
+    {
+    case PACKAGE_ACTION_ADD:
+        return "installing";
+    case PACKAGE_ACTION_DELETE:
+        return "uninstalling";
+    case PACKAGE_ACTION_REINSTALL:
+        return "reinstalling";
+    case PACKAGE_ACTION_UPDATE:
+        return "updating";
+    case PACKAGE_ACTION_ADDUPDATE:
+        return "installing/updating";
+    case PACKAGE_ACTION_PATCH:
+        return "patching";
+    case PACKAGE_ACTION_VERIFY:
+        return "verifying";
+    default:
+        ProgrammingError("Cfengine: internal error: illegal package action\n");
+    }
+}
+
+static void AddPackageToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
+                                 const char *name, const char *version, const char *arch, Promise *pp)
+{
+    PackageManager *manager;
+
+    switch (a->transaction.action)
+    {
+    case cfa_warn:
+
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, *a, "Need to repair promise %s by %s package %s",
+             pp->promiser, PackageAction2String(pa), name);
+        break;
+
+    case cfa_fix:
+
+        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        PrependPackageItem(ctx, &(manager->pack_list), name, version, arch, pp);
+        break;
+
+    default:
+        ProgrammingError("Cfengine: internal error: illegal file action\n");
+    }
+}
+
+static void AddPatchToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
+                                 const char *name, const char *version, const char *arch, Promise *pp)
+{
+    PackageManager *manager;
+
+    switch (a->transaction.action)
+    {
+    case cfa_warn:
+
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, *a, "Need to repair promise %s by %s package %s",
+             pp->promiser, PackageAction2String(pa), name);
+        break;
+
+    case cfa_fix:
+
+        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        PrependPackageItem(ctx, &(manager->patch_list), name, version, arch, pp);
+        break;
+
+    default:
+        ProgrammingError("Cfengine: internal error: illegal file action\n");
+    }
+}
+
 static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *version, const char *arch, int installed, int matched,
                               int no_version_specified, Attributes a, Promise *pp)
 {
-    PackageManager *manager;
     char reference[CF_EXPANDSIZE], reference2[CF_EXPANDSIZE];
     char refAnyVer[CF_EXPANDSIZE];
     char refAnyVerEsc[CF_EXPANDSIZE];
@@ -952,10 +1022,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, a, "Package add command undefined");
                 return;
             }
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
         }
         else
         {
@@ -1000,10 +1067,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 }
             }
 
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id, "any", "any", pp);
         }
         else
         {
@@ -1028,15 +1092,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             }
             if ((matched && package_select_in_range) || (installed && no_version_specified))
             {
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id, "any", "any", pp);
             }
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
         }
         else
         {
@@ -1146,23 +1204,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, a, "Package delete command undefined");
                     return;
                 }
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id_del, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id_del, "any", "any", pp);
 
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
             }
             else
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for update\n");
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_update_command, PACKAGE_ACTION_UPDATE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_update_command, PACKAGE_ACTION_UPDATE, id, "any", "any", pp);
             }
         }
         else
@@ -1177,10 +1226,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if (matched && (!installed))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for patching\n");
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_patch_command, PACKAGE_ACTION_PATCH,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->patch_list), id, "any", "any", pp);
+            AddPatchToSchedule(ctx, &a, a.packages.package_patch_command, PACKAGE_ACTION_PATCH, id, "any", "any", pp);
         }
         else
         {
@@ -1194,10 +1240,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for verification\n");
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY, id, "any", "any", pp);
         }
         else
         {

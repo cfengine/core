@@ -73,6 +73,8 @@ space      [ \t]+
 
 newline    ([\n]|[\xd][\xa])
 
+line       ^.*$
+
 comment    #[^\n]*
 
 promises   bundle
@@ -118,6 +120,12 @@ class      [.|&!()a-zA-Z0-9_\200-\377:]+::
 category   [a-zA-Z_]+:
 
 %%
+
+{line}                {
+                          free(P.current_line);
+                          P.current_line = xstrdup(yytext);
+                          REJECT;
+                      }
 
 {newline}             {
                           P.line_no++;

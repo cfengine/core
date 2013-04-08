@@ -37,6 +37,7 @@ static void ParserStateReset(ParserState *p)
 {
     p->policy = NULL;
 
+    free(p->current_line);
     p->line_no = 1;
     p->line_pos = 1;
     p->list_nesting = 0;

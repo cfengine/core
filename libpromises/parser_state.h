@@ -36,6 +36,7 @@ typedef struct
     char blockid[CF_MAXVARSIZE];
 
     char filename[CF_MAXVARSIZE];
+    char *current_line;
     int line_pos;
     int line_no;
 

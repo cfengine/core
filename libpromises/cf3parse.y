@@ -717,19 +717,10 @@ static void ParseErrorV(const char *s, va_list ap)
 {
     char *errmsg = StringVFormat(s, ap);
 
-    char *sp = yytext;
-    if (sp == NULL)
-    {
-        fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
-    }
-    else
-    {
-        if (*sp == '\"' && strlen(sp) > 1)
-        {
-            sp++;
-        }
-        fprintf(stderr, "%s:%d:%d: error: %s, near token \'%.20s\'\n", P.filename, P.line_no, P.line_pos, errmsg, sp);
-    }
+    fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
+    fprintf(stderr, "%s\n", P.current_line);
+    fprintf(stderr, "%*s\n", P.line_pos, "^");
+
     free(errmsg);
 
     ERRORCOUNT++;

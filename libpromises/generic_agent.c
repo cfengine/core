@@ -342,7 +342,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
     Seq *errors = SeqNew(100, PolicyErrorDestroy);
     Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
 
-    if( main_policy )
+    if (main_policy)
     {
         PolicyHashVariables(ctx, main_policy);
         HashControls(ctx, main_policy, config);

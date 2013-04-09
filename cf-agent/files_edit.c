@@ -140,7 +140,14 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                SaveXmlDocAsFile(ctx, ec->xmldoc, ec->filename, a, pp);
+                if (SaveXmlDocAsFile(ctx, ec->xmldoc, ec->filename, a, pp))
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s", ec->filename);
+                }
+                else
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Failed to edit XML file %s", ec->filename);
+                }
             }
             xmlFreeDoc(ec->xmldoc);
 #else
@@ -227,11 +234,10 @@ bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *or
     //saving xml to file
     if (xmlSaveFile(dest_filename, doc) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "xmlSaveFile", "Failed to write xml document to file %s after editing\n", dest_filename);
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s \n", orig_filename);
     return true;
 }
 #endif

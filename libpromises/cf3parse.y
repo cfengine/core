@@ -739,7 +739,6 @@ static void ParseError(const char *s, ...)
 
 void yyerror(const char *str)
 {
-    P.error_count++;
     ParseError("%s", str);
 }
 

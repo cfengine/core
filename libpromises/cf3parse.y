@@ -57,6 +57,8 @@ static bool INSTALL_SKIP = false;
 
 #define YYMALLOC xmalloc
 
+#define ParserDebug if (DEBUG) printf
+
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
@@ -76,7 +78,7 @@ blocks:                block
 block:                 bundle
                      | body
 
-bundle:                BUNDLE bundletype blockid arglist bundlebody
+bundle:                BUNDLE bundletype bundleid arglist bundlebody
 
 body:                  body typeid blockid arglist bodybody
 
@@ -85,6 +87,7 @@ body:                  body typeid blockid arglist bodybody
 bundletype:            bundletype_values
                        {
                            DebugBanner("Bundle");
+                           ParserDebug("P:bundle:%s\n", P.blocktype);
                            P.block = "bundle";
                            P.rval = (Rval) { NULL, '\0' };
                            RlistDestroy(P.currentRlist);
@@ -109,7 +112,20 @@ bundletype_values:     typeid
                      | error 
                        {
                            yyclearin;
-                           ParseError("Wrong token expected  bundle type: %s", P.blocktype);
+                           ParseError("Expected bundle type, wrong input: %s", yytext);
+                           INSTALL_SKIP = true;
+                       }
+
+bundleid:              bundleid_values
+                       {
+                          ParserDebug("\tP:bundle:%s:%s\n", P.blocktype, P.blockid);
+                       }
+
+bundleid_values:       blockid
+                     | error 
+                       {
+                           yyclearin;
+                           ParseError("Expected bundle id, wrong input:%s", yytext);
                            INSTALL_SKIP = true;
                        }
 

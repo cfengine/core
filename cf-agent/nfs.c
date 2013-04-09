@@ -753,7 +753,7 @@ static void DeleteThisItem(Item **liststart, Item *entry)
     }
 }
 
-void CleanupNFS(EvalContext *ctx)
+void CleanupNFS(void)
 {
     Attributes a = { {0} };
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
@@ -762,7 +762,7 @@ void CleanupNFS(EvalContext *ctx)
     {
         if (FSTABLIST)
         {
-            SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
+            SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a);
             DeleteItemList(FSTABLIST);
             FSTABLIST = NULL;
         }

@@ -34,7 +34,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp);
-void CleanupNFS(EvalContext *ctx);
+void CleanupNFS(void);
 void MountAll(void);
 #endif /* !__MINGW32__ */
 

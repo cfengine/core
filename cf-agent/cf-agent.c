@@ -1599,7 +1599,7 @@ static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_STORAGE:
-        DeleteStorageContext(ctx);
+        DeleteStorageContext();
         break;
 
     case TYPE_SEQUENCE_PACKAGES:

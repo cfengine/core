@@ -34,6 +34,6 @@ extern int CF_MOUNTALL;
 void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp);
 void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp);
 
-void DeleteStorageContext(EvalContext *ctx);
+void DeleteStorageContext(void);
 
 #endif

@@ -117,7 +117,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                if (SaveItemListAsFile(ctx, ec->file_start, ec->filename, a, pp))
+                if (SaveItemListAsFile(ec->file_start, ec->filename, a))
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Edit file %s", ec->filename);
                 }
@@ -140,7 +140,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                if (SaveXmlDocAsFile(ctx, ec->xmldoc, ec->filename, a, pp))
+                if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s", ec->filename);
                 }
@@ -227,7 +227,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+bool SaveXmlCallback(const char *dest_filename, void *param)
 {
     xmlDocPtr doc = param;
 
@@ -245,8 +245,8 @@ bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *or
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp)
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a)
 {
-    return SaveAsFile(ctx, &SaveXmlCallback, doc, file, a, pp);
+    return SaveAsFile(&SaveXmlCallback, doc, file, a);
 }
 #endif

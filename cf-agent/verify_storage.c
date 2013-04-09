@@ -506,10 +506,10 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 
 #endif /* !__MINGW32__ */
 
-void DeleteStorageContext(EvalContext *ctx)
+void DeleteStorageContext(void)
 {
 #ifndef __MINGW32__
-    CleanupNFS(ctx);
+    CleanupNFS();
 
     if (!DONTDO && CF_MOUNTALL)
     {

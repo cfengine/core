@@ -7,8 +7,8 @@ EditContext *NewEditContext(char *filename, Attributes a);
 void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise *pp);
 
 #ifdef HAVE_LIBXML2
-int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits);
-int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp);
+int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults ed);
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a);
 #endif
 
 #endif

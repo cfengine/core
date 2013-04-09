@@ -142,7 +142,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
 /*********************************************************************/
 
-int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp)
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
@@ -167,7 +167,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (cfstat(file, &statbuf) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Can no longer access file %s, which needed editing!\n", file);
         return false;
     }
 
@@ -185,14 +185,14 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
-    if ((*callback)(ctx, new, file, param, a, pp) == false)
+    if ((*callback)(new, param) == false)
     {
         return false;
     }
 
     if (cf_rename(file, backup) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
+        CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
         return false;
     }
@@ -218,7 +218,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (cf_rename(new, file) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
+        CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
         return false;
     }
@@ -244,7 +244,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
 /*********************************************************************/
 
-static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+static bool SaveItemListCallback(const char *dest_filename, void *param)
 {
     Item *liststart = param, *ip;
     FILE *fp;
@@ -276,9 +276,9 @@ static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, co
 
 /*********************************************************************/
 
-int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attributes a, Promise *pp)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a)
 {
-    return SaveAsFile(ctx, &SaveItemListCallback, liststart, file, a, pp);
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a);
 }
 
 // Some complex logic here to enable warnings of diffs to be given

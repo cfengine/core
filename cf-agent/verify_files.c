@@ -799,13 +799,12 @@ static void LoadSetuid(Attributes a)
 
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
 {
-    Attributes b = { {0} };
-    char filename[CF_BUFSIZE];
+    Attributes b = a;
 
-    b = a;
     b.edits.backup = BACKUP_OPTION_NO_BACKUP;
     b.edits.maxfilesize = 1000000;
 
+    char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
@@ -813,7 +812,7 @@ static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp))
     {
-        SaveItemListAsFile(ctx, VSETUIDLIST, filename, b, pp);
+        SaveItemListAsFile(VSETUIDLIST, filename, b);
     }
 
     DeleteItemList(VSETUIDLIST);

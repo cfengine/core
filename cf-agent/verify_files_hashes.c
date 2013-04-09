@@ -33,6 +33,13 @@
 #include "files_hashes.h"
 #include "misc_lib.h"
 
+/*
+ * Key format:
+ *
+ * 7 bytes    hash name, \0 padded at right
+ * 1 byte     \0
+ * N bytes    filename
+ */
 static char *NewIndexKey(char type, char *name, int *size)
 {
     char *chk_key;

@@ -73,12 +73,16 @@ blocks:                block
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-block:                 bundle typeid blockid arglist bundlebody
-                     | body typeid blockid arglist bodybody;
+block:                 bundle
+                     | body
+
+bundle:                BUNDLE bundletype blockid arglist bundlebody
+
+body:                  body typeid blockid arglist bodybody
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundle:                BUNDLE
+bundletype:            bundletype_values
                        {
                            DebugBanner("Bundle");
                            P.block = "bundle";
@@ -87,8 +91,28 @@ bundle:                BUNDLE
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
                            strcpy(P.blockid,"");
-                           strcpy(P.blocktype,"");
-                       };
+                       }
+
+bundletype_values:     typeid
+                       {
+                           /* FIXME: We keep it here, because we skip unknown
+                            * promise bundles. Ought to be moved to
+                            * after-parsing step once we know how to deal with
+                            * it */
+
+                           if (!BundleTypeCheck(P.blocktype))
+                           {
+                               ParseError("Unknown bundle type: %s", P.blocktype);
+                               INSTALL_SKIP = true;
+                           }
+                       }
+                     | error 
+                       {
+                           yyclearin;
+                           ParseError("Wrong token expected  bundle type: %s", P.blocktype);
+                           INSTALL_SKIP = true;
+                       }
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -112,7 +136,7 @@ typeid:                IDSYNTAX
 
                            RlistDestroy(P.useargs);
                            P.useargs = NULL;
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -145,17 +169,6 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 bundlebody:            '{'
                        {
-                           /* FIXME: We keep it here, because we skip unknown
-                            * promise bundles. Ought to be moved to
-                            * after-parsing step once we know how to deal with
-                            * it */
-
-                           if (!BundleTypeCheck(P.blocktype))
-                           {
-                               ParseError("Unknown bundle type: %s", P.blocktype);
-                               INSTALL_SKIP = true;
-                           }
-
                            if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
                                CfDebug("We a compiling everything here\n");

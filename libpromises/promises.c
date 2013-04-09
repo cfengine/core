@@ -143,9 +143,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     if (pp->promisee.item)
     {
         pcopy->promisee = RvalCopy(pp->promisee);
-        Rlist *rval_list = RvalRlistValue(pcopy->promisee);
-        RlistFlatten(ctx, &rval_list);
-        pcopy->promisee.item = rval_list;
+        if (pcopy->promisee.type == RVAL_TYPE_LIST)
+        {
+            Rlist *rval_list = RvalRlistValue(pcopy->promisee);
+            RlistFlatten(ctx, &rval_list);
+            pcopy->promisee.item = rval_list;
+        }
     }
 
     if (pp->classes)

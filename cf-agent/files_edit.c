@@ -117,7 +117,14 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                SaveItemListAsFile(ctx, ec->file_start, ec->filename, a, pp);
+                if (SaveItemListAsFile(ctx, ec->file_start, ec->filename, a, pp))
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Edit file %s", ec->filename);
+                }
+                else
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "-> Unable to save file %s after editing", ec->filename);
+                }
             }
         }
 

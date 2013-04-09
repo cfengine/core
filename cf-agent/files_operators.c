@@ -252,22 +252,25 @@ static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, co
     //saving list to file
     if ((fp = fopen(dest_filename, "w")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to open destination file %s for writing", dest_filename);
         return false;
     }
 
     for (ip = liststart; ip != NULL; ip = ip->next)
     {
-        fprintf(fp, "%s\n", ip->name);
+        if (fprintf(fp, "%s\n", ip->name) < 0)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fprintf", "Unable to write into destination file %s", dest_filename);
+            return false;
+        }
     }
 
     if (fclose(fp) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        CfOut(OUTPUT_LEVEL_ERROR, "fclose", "Unable to close file %s after writing", dest_filename);
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited file %s \n", orig_filename);
     return true;
 }
 

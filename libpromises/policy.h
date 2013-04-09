@@ -423,4 +423,9 @@ char *QualifiedNameScopeComponent(const char *qualified_name);
  */
 bool BundleTypeCheck(const char *name);
 
+/**
+ * @brief Check whether the body type is allowed one
+ */
+bool BodyTypeCheck(const char *name);
+
 #endif

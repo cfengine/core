@@ -39,7 +39,7 @@ typedef struct
     char *current_line;
     int line_pos;
     int line_no;
-    size_t error_count;
+    int error_count;
 
     int arg_nesting;
     int list_nesting;

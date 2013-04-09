@@ -50,7 +50,7 @@ bundle agent test
                            # range of single
                            classesmatching("^a[n]y$"),
                            # alternation of multiples
-                           classesmatching("^(Mon|Tue|Wednes|Thurs|Fri|Satur|Sun)day$"),
+                           classesmatching("^(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day$"),
                            # interpolation
                            classesmatching("^$(init.dow)$"),
       };

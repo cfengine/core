@@ -51,6 +51,8 @@
 #define malloc xmalloc
 #define realloc xrealloc
 
+#define ParserDebug if (DEBUG) printf
+
 static int DeEscapeQuotedString(const char *from, char *to);
 
 int yywrap(void)
@@ -124,6 +126,7 @@ category   [a-zA-Z_]+:
 {line}                {
                           free(P.current_line);
                           P.current_line = xstrdup(yytext);
+                          ParserDebug("L:line %s\n", P.current_line);
                           REJECT;
                       }
 
@@ -141,6 +144,7 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL:bundle %d\n", P.line_pos);
                           return BUNDLE;
                       }
 
@@ -153,6 +157,7 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
                       }
 
@@ -160,6 +165,7 @@ category   [a-zA-Z_]+:
                           size_t token_length = strlen(yytext);
                           P.offsets.last_id = P.offsets.current - token_length;
                           P.line_pos += token_length;
+                          ParserDebug("\tL:id %s %d\n", yytext, P.line_pos);
                           if (strlen(yytext) > CF_MAXVARSIZE-1)
                           {
                               yyerror("identifier too long");
@@ -173,6 +179,7 @@ category   [a-zA-Z_]+:
                           size_t token_length = strlen(yytext);
                           P.offsets.last_id = P.offsets.current - token_length;
                           P.line_pos += token_length;
+                          ParserDebug("\tL:blockid %s %d\n", yytext, P.line_pos);
                           if (strlen(yytext) > CF_MAXVARSIZE-1)
                           {
                               yyerror("qualified identifier too long");
@@ -184,16 +191,19 @@ category   [a-zA-Z_]+:
 
 {assign}              {
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL:assign %d\n", P.line_pos);
                           return ASSIGN;
                       }
 
 {arrow}               {
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL:arrow %d\n", P.line_pos);
                           return ARROW;
                       }
 
 {class}               {
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
 
                           if (P.currentclasses != NULL)
                           {
@@ -209,6 +219,7 @@ category   [a-zA-Z_]+:
 {category}            {
                           size_t token_size = strlen(yytext);
                           P.line_pos += token_size;
+                          ParserDebug("\tL:category %s %d\n", yytext, P.line_pos);
                           P.offsets.last_promise_type_id = P.offsets.current - token_size;
                           yytext[token_size - 1] = '\0';
                           strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
@@ -229,6 +240,7 @@ category   [a-zA-Z_]+:
 
                           P.offsets.last_string = P.offsets.current - token_length;
                           P.line_pos += token_length;
+                          ParserDebug("\tL:qstring %s %d\n", yytext, P.line_pos);
 
                           for (char *c = yytext; *c; ++c)
                           {
@@ -265,6 +277,7 @@ category   [a-zA-Z_]+:
 
 {nakedvar}            {
                           P.line_pos += strlen(yytext);
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
                       }

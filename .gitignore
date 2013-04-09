@@ -107,6 +107,7 @@ tests/*/*.trs
 # unit tests
 
 tests/unit/*_test
+tests/unit/exec-config-test
 
 # load tests
 

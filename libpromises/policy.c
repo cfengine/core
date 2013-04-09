@@ -70,6 +70,8 @@ static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attr
 
 static const char *POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH = "Type mismatch in constraint: %s";
 
+static const char *POLICY_ERROR_EMPTY_VARREF = "Empty variable reference";
+
 //************************************************************************
 
 static void BundleDestroy(Bundle *bundle);
@@ -2313,9 +2315,21 @@ static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
     return !((isdigit((int)*identifier)) && (IntFromString(identifier) != CF_NOINT));
 }
 
+static bool CheckScalarNotEmptyVarRef(const char *scalar)
+{
+    return (strcmp("$()", scalar) != 0) && (strcmp("${}", scalar) != 0);
+}
+
 static bool PromiseCheck(const Promise *pp, Seq *errors)
 {
     bool success = true;
+
+    if (!CheckScalarNotEmptyVarRef(pp->promiser))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE, pp,
+                                         POLICY_ERROR_EMPTY_VARREF));
+        success = false;
+    }
 
     // check if promise's constraints are valid
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)

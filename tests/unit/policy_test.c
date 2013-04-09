@@ -22,8 +22,19 @@ static Seq *LoadAndCheck(const char *filename)
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
     PolicyCheckPartial(p, errs);
 
+    if (SeqLength(errs) > 0)
+    {
+        Writer *writer = FileWriter(stderr);
+        for (size_t i = 0; i < errs->length; i++)
+        {
+            PolicyErrorWrite(writer, errs->data[i]);
+        }
+        WriterClose(writer);
+    }
+
     return errs;
 }
+
 
 static void test_bundle_redefinition(void **state)
 {
@@ -281,6 +292,14 @@ static void test_constraint_lval_invalid(void **state)
     SeqDestroy(errs);
 }
 
+static void test_promiser_empty_varref(void **state)
+{
+    Seq *errs = LoadAndCheck("promiser_empty_varref.cf");
+    assert_int_equal(1, errs->length);
+
+    SeqDestroy(errs);
+}
+
 
 int main()
 {
@@ -300,7 +319,8 @@ int main()
         unit_test(test_util_bundle_qualified_name),
         unit_test(test_util_qualified_name_components),
 
-        unit_test(test_constraint_lval_invalid)
+        unit_test(test_constraint_lval_invalid),
+        unit_test(test_promiser_empty_varref)
     };
 
     return run_tests(tests);

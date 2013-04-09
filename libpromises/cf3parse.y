@@ -73,10 +73,8 @@ blocks:                block
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-block:                 bundle typeid blockid bundlebody
-                     | bundle typeid blockid usearglist bundlebody
-                     | body typeid blockid bodybody
-                     | body typeid blockid usearglist bodybody;
+block:                 bundle typeid blockid arglist bundlebody
+                     | body typeid blockid arglist bodybody;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -127,9 +125,8 @@ blockid:               IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-usearglist:            '('
-                       aitems
-                       ')';
+arglist:               /* Empty */
+                     | '(' aitems ')';
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

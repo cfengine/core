@@ -94,6 +94,11 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    if (!policy)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Input files contain errors.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (SHOWREPORTS)
     {
@@ -132,17 +137,6 @@ int main(int argc, char *argv[])
 
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
-
-    if (ERRORCOUNT > 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
-        exit(1);
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
-        exit(0);
-    }
 }
 
 /*******************************************************************/

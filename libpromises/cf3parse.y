@@ -720,9 +720,9 @@ static void ParseErrorV(const char *s, va_list ap)
 
     free(errmsg);
 
-    ERRORCOUNT++;
+    P.error_count++;
 
-    if (ERRORCOUNT > 10)
+    if (P.error_count > 10)
     {
         fprintf(stderr, "Too many errors");
         exit(1);
@@ -739,6 +739,7 @@ static void ParseError(const char *s, ...)
 
 void yyerror(const char *str)
 {
+    P.error_count++;
     ParseError("%s", str);
 }
 

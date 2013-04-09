@@ -221,7 +221,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
                       bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
-                ERRORCOUNT++;
             }
 
             /* Keep the referent body type as a boolean for convenience when checking later */
@@ -242,7 +241,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
-                    ERRORCOUNT++;
                     CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);

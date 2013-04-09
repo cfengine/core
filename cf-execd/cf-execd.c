@@ -519,8 +519,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         PolicyDestroy(*policy);
         *policy = NULL;
 
-        ERRORCOUNT = 0;
-
         SetPolicyServer(ctx, POLICY_SERVER);
         ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 

@@ -381,7 +381,10 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         ShowContext(ctx);
     }
 
-    VerifyPromises(ctx, main_policy, config);
+    if (main_policy)
+    {
+        VerifyPromises(ctx, main_policy, config);
+    }
 
     return main_policy;
 }
@@ -854,9 +857,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         policy = ParserParseFile(wfilename);
     }
 
-    assert(policy);
-
-    return PolicyCheckPartial(policy, errors) ? policy : NULL;
+    return (policy && PolicyCheckPartial(policy, errors)) ? policy : NULL;
 }
 
 /*******************************************************************/

@@ -123,7 +123,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
    to the database. Returns true if hashes do not match and also potentially
    updates database to the new value */
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, HashMethod type,
+int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
                     Attributes attr, Promise *pp)
 {
     int i, size = 21;
@@ -149,16 +149,16 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             {
                 CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
 
-                CfOut(warnlevel, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
                 if (pp->ref)
                 {
-                    CfOut(warnlevel, "", "Preceding promise: %s", pp->ref);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->ref);
                 }
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -166,7 +166,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 }
                 else
                 {
-                    cfPS(ctx, warnlevel, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
                 }
 
                 CloseDB(dbp);
@@ -181,7 +181,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
              FileHashName(type));
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);

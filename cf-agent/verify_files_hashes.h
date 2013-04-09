@@ -28,7 +28,7 @@
 #ifndef CFENGINE_VERIFY_FILES_HASHES_H
 #define CFENGINE_VERIFY_FILES_HASHES_H
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, HashMethod type, Attributes attr, Promise *pp);
+int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type, Attributes attr, Promise *pp);
 int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp);
 int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp);
 

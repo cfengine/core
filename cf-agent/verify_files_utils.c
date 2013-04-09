@@ -2612,8 +2612,8 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
             HashFile(file, digest1, HASH_METHOD_MD5);
             HashFile(file, digest2, HASH_METHOD_SHA1);
 
-            one = FileHashChanged(ctx, file, digest1, OUTPUT_LEVEL_ERROR, HASH_METHOD_MD5, attr, pp);
-            two = FileHashChanged(ctx, file, digest2, OUTPUT_LEVEL_ERROR, HASH_METHOD_SHA1, attr, pp);
+            one = FileHashChanged(ctx, file, digest1, HASH_METHOD_MD5, attr, pp);
+            two = FileHashChanged(ctx, file, digest2, HASH_METHOD_SHA1, attr, pp);
 
             if (one || two)
             {
@@ -2627,7 +2627,7 @@ static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, P
         {
             HashFile(file, digest1, attr.change.hash);
 
-            if (FileHashChanged(ctx, file, digest1, OUTPUT_LEVEL_ERROR, attr.change.hash, attr, pp))
+            if (FileHashChanged(ctx, file, digest1, attr.change.hash, attr, pp))
             {
                 changed = true;
             }

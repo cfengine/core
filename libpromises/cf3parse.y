@@ -846,7 +846,7 @@ static bool LvalWantsBody(char *stype, char *lval)
 {
     int i, j, l;
     const PromiseTypeSyntax *ss;
-    const BodySyntax *bs;
+    const ConstraintSyntax *bs;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
@@ -892,7 +892,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
     int lmatch = false;
     int i, j, k, l;
     const PromiseTypeSyntax *ss;
-    const BodySyntax *bs, *bs2;
+    const ConstraintSyntax *bs, *bs2;
     char output[CF_BUFSIZE];
 
     CfDebug("CheckSelection(%s,%s,", type, lval);
@@ -964,7 +964,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
             {
                 if (bs[l].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = (const BodySyntax *) (bs[l].range);
+                    bs2 = (const ConstraintSyntax *) (bs[l].range);
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -1006,7 +1006,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss)
 {
     int l;
-    const BodySyntax *bs;
+    const ConstraintSyntax *bs;
 
     CfDebug("CheckConstraint(%s,%s,", type, lval);
 

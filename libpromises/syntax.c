@@ -84,7 +84,7 @@ PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *p
 DataType ExpectedDataType(const char *lvalname)
 {
     int i, j, k, l;
-    const BodySyntax *bs, *bs2;
+    const ConstraintSyntax *bs, *bs2;
     const PromiseTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
@@ -113,7 +113,7 @@ DataType ExpectedDataType(const char *lvalname)
             {
                 if (bs[k].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = (const BodySyntax *) (bs[k].range);
+                    bs2 = (const ConstraintSyntax *) (bs[k].range);
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -875,7 +875,7 @@ static char *PCREStringToJsonString(const char *pcre)
 
 /****************************************************************************/
 
-static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
+static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attributes[])
 {
     JsonElement *json = JsonObjectCreate(10);
     int i = 0;
@@ -894,7 +894,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
         }
         else if (attributes[i].dtype == DATA_TYPE_BODY)
         {
-            JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *) attributes[i].range);
+            JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const ConstraintSyntax *) attributes[i].range);
 
             JsonObjectAppendObject(json, attributes[i].lval, json_attributes);
         }

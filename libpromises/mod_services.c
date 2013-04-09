@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_services.h"
 
-static const BodySyntax CF_SERVMETHOD_BODY[] =
+static const ConstraintSyntax CF_SERVMETHOD_BODY[] =
 {
     {"service_args", DATA_TYPE_STRING, "", "Parameters for starting the service as command"},
     {"service_autostart_policy", DATA_TYPE_OPTION, "none,boot_time,on_demand",
@@ -38,7 +38,7 @@ static const BodySyntax CF_SERVMETHOD_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_SERVICES_BODIES[] =
+static const ConstraintSyntax CF_SERVICES_BODIES[] =
 {
     {"service_policy", DATA_TYPE_OPTION, "start,stop,disable,restart,reload", "Policy for cfengine service status"},
     {"service_dependencies", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of services on which the named service abstraction depends"},

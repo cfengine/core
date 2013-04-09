@@ -48,8 +48,8 @@ extern char BUILD_DIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context);
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs);
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context);
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, ConstraintSyntax *bs);
 static void TexinfoShowRange(FILE *fout, char *s, DataType type);
 static void IncludeManualFile(const char *source_dir, FILE *fout, char *filename);
 static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st);
@@ -451,7 +451,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context)
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -486,7 +486,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, (ConstraintSyntax *) bs[i].range);
         }
         else
         {
@@ -642,7 +642,7 @@ static void TexinfoShowRange(FILE *fout, char *s, DataType type)
 
 /*****************************************************************************/
 
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs)
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, ConstraintSyntax *bs)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -664,7 +664,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, (ConstraintSyntax *) bs[i].range);
         }
         else
         {

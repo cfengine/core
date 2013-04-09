@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_exec.h"
 
-static const BodySyntax CF_EXECCONTAIN_BODY[] =
+static const ConstraintSyntax CF_EXECCONTAIN_BODY[] =
 {
     {"useshell", DATA_TYPE_OPTION, CF_BOOL, "true/false embed the command in a shell environment", "false"},
     {"umask", DATA_TYPE_OPTION, "0,77,22,27,72,077,022,027,072", "The umask value for the child process"},
@@ -39,7 +39,7 @@ static const BodySyntax CF_EXECCONTAIN_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_EXEC_BODIES[] =
+static const ConstraintSyntax CF_EXEC_BODIES[] =
 {
     {"args", DATA_TYPE_STRING, "", "Alternative string of arguments for the command (concatenated with promiser string)"},
     {"contain", DATA_TYPE_BODY, CF_EXECCONTAIN_BODY, "Containment options for the execution process"},

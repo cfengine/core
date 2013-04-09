@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_storage.h"
 
-static const BodySyntax CF_CHECKVOL_BODY[] =
+static const ConstraintSyntax CF_CHECKVOL_BODY[] =
 {
     {"check_foreign", DATA_TYPE_OPTION, CF_BOOL, "true/false verify storage that is mounted from a foreign system on this host",
      "false"},
@@ -40,7 +40,7 @@ static const BodySyntax CF_CHECKVOL_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_MOUNT_BODY[] =
+static const ConstraintSyntax CF_MOUNT_BODY[] =
 {
     {"edit_fstab", DATA_TYPE_OPTION, CF_BOOL, "true/false add or remove entries to the file system table (\"fstab\")", "false"},
     {"mount_type", DATA_TYPE_OPTION, "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system"},
@@ -51,7 +51,7 @@ static const BodySyntax CF_MOUNT_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_STORAGE_BODIES[] =
+static const ConstraintSyntax CF_STORAGE_BODIES[] =
 {
     {"mount", DATA_TYPE_BODY, CF_MOUNT_BODY, "Criteria for mounting foreign file systems"},
     {"volume", DATA_TYPE_BODY, CF_CHECKVOL_BODY, "Criteria for monitoring/probing mounted volumes"},

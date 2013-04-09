@@ -313,7 +313,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     const PromiseTypeSyntax promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
     for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
     {
-        const BodySyntax *body_syntax = &promise_type_syntax.bs[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax.bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             if (!RvalTypeCheckDataType(constraint->rval.type, body_syntax->dtype))
@@ -453,7 +453,7 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
 /* Get the syntax of a constraint according to its promise_type and lvalue.
    Make sure you've already checked the constraint's validity.
 */
-static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
+static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
 {
     if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
     {
@@ -469,7 +469,7 @@ static const BodySyntax *ConstraintGetSyntax(const Constraint *constraint)
     /* Check if lvalue is valid for the bundle's specific promise_type. */
     for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
     {
-        const BodySyntax *body_syntax = &promise_type_syntax.bs[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax.bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return body_syntax;
@@ -581,7 +581,7 @@ static bool PolicyCheckUndefinedBodies(const Policy *policy, Seq *errors)
                 {
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
-                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
+                    const ConstraintSyntax *syntax = ConstraintGetSyntax(constraint);
                     if (syntax->dtype == DATA_TYPE_BODY)
                     {
                         char *ns = QualifiedNameNamespaceComponent(RvalFullSymbol(&constraint->rval));
@@ -626,7 +626,7 @@ static bool PolicyCheckUndefinedBundles(const Policy *policy, Seq *errors)
                 {
                     Constraint *constraint = SeqAt(promise->conlist, cpi);
 
-                    const BodySyntax *syntax = ConstraintGetSyntax(constraint);
+                    const ConstraintSyntax *syntax = ConstraintGetSyntax(constraint);
                     if (syntax->dtype == DATA_TYPE_BUNDLE &&
                         !IsCf3VarString(RvalFullSymbol(&constraint->rval)))
                     {
@@ -2794,7 +2794,7 @@ static int VerifyConstraintName(const char *lval)
 {
     PromiseTypeSyntax ss;
     int i, j, l, m;
-    const BodySyntax *bs, *bs2;
+    const ConstraintSyntax *bs, *bs2;
     const PromiseTypeSyntax *ssp;
 
     CfDebug("  Verify Constrant name %s\n", lval);
@@ -2821,7 +2821,7 @@ static int VerifyConstraintName(const char *lval)
                     }
                     else if (bs[l].dtype == DATA_TYPE_BODY)
                     {
-                        bs2 = (BodySyntax *) bs[l].range;
+                        bs2 = (ConstraintSyntax *) bs[l].range;
 
                         for (m = 0; bs2[m].lval != NULL; m++)
                         {
@@ -3050,7 +3050,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                 {
                     if (strcmp(ss.promise_type, promise_type->name) == 0)
                     {
-                        const BodySyntax *bs = ss.bs;
+                        const ConstraintSyntax *bs = ss.bs;
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {
@@ -3059,7 +3059,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                             }
                             else if (bs[l].dtype == DATA_TYPE_BODY)
                             {
-                                const BodySyntax *bs2 = bs[l].range;
+                                const ConstraintSyntax *bs2 = bs[l].range;
 
                                 for (size_t m = 0; bs2[m].lval != NULL; m++)
                                 {

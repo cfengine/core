@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_files.h"
 
-static const BodySyntax CF_LOCATION_BODY[] =
+static const ConstraintSyntax CF_LOCATION_BODY[] =
 {
     {"before_after", DATA_TYPE_OPTION, "before,after", "Menu option, point cursor before of after matched line", "after"},
     {"first_last", DATA_TYPE_OPTION, "first,last", "Menu option, choose first or last occurrence of match in file", "last"},
@@ -33,7 +33,7 @@ static const BodySyntax CF_LOCATION_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_EDITCOL_BODY[] =
+static const ConstraintSyntax CF_EDITCOL_BODY[] =
 {
     {"allow_blank_fields", DATA_TYPE_OPTION, CF_BOOL, "true/false allow blank fields in a line (do not purge)", "false"},
     {"extend_fields", DATA_TYPE_OPTION, CF_BOOL, "true/false add new fields at end of line if necessary to complete edit",
@@ -48,7 +48,7 @@ static const BodySyntax CF_EDITCOL_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_REPLACEWITH_BODY[] =
+static const ConstraintSyntax CF_REPLACEWITH_BODY[] =
 {
     {"occurrences", DATA_TYPE_OPTION, "all,first",
      "Menu option to replace all occurrences or just first (NB the latter is non-convergent)", "all"},
@@ -56,7 +56,7 @@ static const BodySyntax CF_REPLACEWITH_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_EDSCOPE_BODY[] =
+static const ConstraintSyntax CF_EDSCOPE_BODY[] =
 {
     {"include_start_delimiter", DATA_TYPE_OPTION, CF_BOOL, "Whether to include the section delimiter", "false"},
     {"include_end_delimiter", DATA_TYPE_OPTION, CF_BOOL, "Whether to include the section delimiter", "false"},
@@ -65,7 +65,7 @@ static const BodySyntax CF_EDSCOPE_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DELETESELECT_BODY[] =
+static const ConstraintSyntax CF_DELETESELECT_BODY[] =
 {
     {"delete_if_startwith_from_list", DATA_TYPE_STRING_LIST, CF_ANYSTRING, "Delete line if it starts with a string in the list"},
     {"delete_if_not_startwith_from_list", DATA_TYPE_STRING_LIST, CF_ANYSTRING,
@@ -80,7 +80,7 @@ static const BodySyntax CF_DELETESELECT_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_INSERTSELECT_BODY[] =
+static const ConstraintSyntax CF_INSERTSELECT_BODY[] =
 {
     {"insert_if_startwith_from_list", DATA_TYPE_STRING_LIST, CF_ANYSTRING, "Insert line if it starts with a string in the list"},
     {"insert_if_not_startwith_from_list", DATA_TYPE_STRING_LIST, CF_ANYSTRING,
@@ -95,7 +95,7 @@ static const BodySyntax CF_INSERTSELECT_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_INSERTLINES_BODIES[] =
+static const ConstraintSyntax CF_INSERTLINES_BODIES[] =
 {
     {"expand_scalars", DATA_TYPE_OPTION, CF_BOOL, "Expand any unexpanded variables", "false"},
     {"insert_type", DATA_TYPE_OPTION, "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to",
@@ -107,32 +107,32 @@ static const BodySyntax CF_INSERTLINES_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DELETELINES_BODIES[] =
+static const ConstraintSyntax CF_DELETELINES_BODIES[] =
 {
     {"delete_select", DATA_TYPE_BODY, CF_DELETESELECT_BODY, "Delete only if lines pass filter criteria"},
     {"not_matching", DATA_TYPE_OPTION, CF_BOOL, "true/false negate match criterion", "false"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_COLUMN_BODIES[] =
+static const ConstraintSyntax CF_COLUMN_BODIES[] =
 {
     {"edit_field", DATA_TYPE_BODY, CF_EDITCOL_BODY, "Edit line-based file as matrix of fields"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_REPLACE_BODIES[] =
+static const ConstraintSyntax CF_REPLACE_BODIES[] =
 {
     {"replace_with", DATA_TYPE_BODY, CF_REPLACEWITH_BODY, "Search-replace pattern"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CF_COMMON_EDITBODIES[] =
+const ConstraintSyntax CF_COMMON_EDITBODIES[] =
 {
     {"select_region", DATA_TYPE_BODY, CF_EDSCOPE_BODY, "Limit edits to a demarked region of the file"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_ACL_BODY[] =
+static const ConstraintSyntax CF_ACL_BODY[] =
 {
     {"aces", DATA_TYPE_STRING_LIST,
      "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)",
@@ -147,7 +147,7 @@ static const BodySyntax CF_ACL_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_CHANGEMGT_BODY[] =
+static const ConstraintSyntax CF_CHANGEMGT_BODY[] =
 {
     {"hash", DATA_TYPE_OPTION, "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection"},
     {"report_changes", DATA_TYPE_OPTION, "all,stats,content,none", "Specify criteria for change warnings"},
@@ -157,7 +157,7 @@ static const BodySyntax CF_CHANGEMGT_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_RECURSION_BODY[] =
+static const ConstraintSyntax CF_RECURSION_BODY[] =
 {
     {"depth", DATA_TYPE_INT, CF_VALRANGE, "Maximum depth level for search"},
     {"exclude_dirs", DATA_TYPE_STRING_LIST, ".*", "List of regexes of directory names NOT to include in depth search"},
@@ -169,7 +169,7 @@ static const BodySyntax CF_RECURSION_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_EDITS_BODY[] =
+static const ConstraintSyntax CF_EDITS_BODY[] =
 {
     {"edit_backup", DATA_TYPE_OPTION, "true,false,timestamp,rotate", "Menu option for backup policy on edit changes", "true"},
     {"empty_file_before_editing", DATA_TYPE_OPTION, CF_BOOL,
@@ -181,7 +181,7 @@ static const BodySyntax CF_EDITS_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_TIDY_BODY[] =
+static const ConstraintSyntax CF_TIDY_BODY[] =
 {
     {"dirlinks", DATA_TYPE_OPTION, "delete,tidy,keep",
      "Menu option policy for dealing with symbolic links to directories during deletion"},
@@ -189,7 +189,7 @@ static const BodySyntax CF_TIDY_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_RENAME_BODY[] =
+static const ConstraintSyntax CF_RENAME_BODY[] =
 {
     {"disable", DATA_TYPE_OPTION, CF_BOOL, "true/false automatically rename and remove permissions", "false"},
     {"disable_mode", DATA_TYPE_STRING, CF_MODERANGE, "The permissions to set when a file is disabled"},
@@ -199,7 +199,7 @@ static const BodySyntax CF_RENAME_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_ACCESS_BODIES[] =
+static const ConstraintSyntax CF_ACCESS_BODIES[] =
 {
     {"bsdflags", DATA_TYPE_STRING_LIST, CF_BSDFLAGRANGE, "List of menu options for bsd file system flags to set"},
     {"groups", DATA_TYPE_STRING_LIST, CF_USERRANGE, "List of acceptable groups of group ids, first is change target"},
@@ -209,7 +209,7 @@ static const BodySyntax CF_ACCESS_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_FILEFILTER_BODY[] =
+static const ConstraintSyntax CF_FILEFILTER_BODY[] =
 {
     {"leaf_name", DATA_TYPE_STRING_LIST, "", "List of regexes that match an acceptable name"},
     {"path_name", DATA_TYPE_STRING_LIST, CF_ABSPATHRANGE, "List of pathnames to match acceptable target"},
@@ -238,7 +238,7 @@ static const BodySyntax CF_FILEFILTER_BODY[] =
    okay that some names overlap (like source) as there is
    no ambiguity in XOR */
 
-static const BodySyntax CF_LINKTO_BODY[] =
+static const ConstraintSyntax CF_LINKTO_BODY[] =
 {
     {"copy_patterns", DATA_TYPE_STRING_LIST, "", "A set of patterns that should be copied and synchronized instead of linked"},
     {"link_children", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to link all directory's children to source originals",
@@ -251,7 +251,7 @@ static const BodySyntax CF_LINKTO_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_COPYFROM_BODY[] =
+static const ConstraintSyntax CF_COPYFROM_BODY[] =
 {
     /* We use CF_PATHRANGE due to collision with LINKTO_BODY and a bug lurking in
      * a verification stage -- this attribute gets picked instead of another
@@ -286,7 +286,7 @@ static const BodySyntax CF_COPYFROM_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_FILES_BODIES[] =
+static const ConstraintSyntax CF_FILES_BODIES[] =
 {
     {"acl", DATA_TYPE_BODY, CF_ACL_BODY, "Criteria for access control lists on file"},
     {"changes", DATA_TYPE_BODY, CF_CHANGEMGT_BODY, "Criteria for change management"},
@@ -312,30 +312,30 @@ static const BodySyntax CF_FILES_BODIES[] =
 };
 
 // edit_xml body syntax
-const BodySyntax CF_COMMON_XMLBODIES[] =
+const ConstraintSyntax CF_COMMON_XMLBODIES[] =
 {
     {"build_xpath", DATA_TYPE_STRING, "", "Build an XPath within the XML file"},
     {"select_xpath", DATA_TYPE_STRING, "", "Select the XPath node in the XML file to edit"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_INSERTTAGS_BODIES[] =
+static const ConstraintSyntax CF_INSERTTAGS_BODIES[] =
 {
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DELETETAGS_BODIES[] =
+static const ConstraintSyntax CF_DELETETAGS_BODIES[] =
 {
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_INSERTATTRIBUTES_BODIES[] =
+static const ConstraintSyntax CF_INSERTATTRIBUTES_BODIES[] =
 {
     {"attribute_value", DATA_TYPE_STRING, "", "Value of the attribute to be inserted into the XPath node of the XML file"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DELETEATTRIBUTES_BODIES[] =
+static const ConstraintSyntax CF_DELETEATTRIBUTES_BODIES[] =
 {
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };

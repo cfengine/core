@@ -69,7 +69,7 @@ bool IsRealNumber(const char *s);
 
 // Misc.
 char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval);
 char *MapAddress(char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);

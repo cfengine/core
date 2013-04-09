@@ -25,14 +25,14 @@
 #include "cf3.defs.h"
 #include "mod_report.h"
 
-static const BodySyntax CF_PRINTFILE_BODY[] =
+static const ConstraintSyntax CF_PRINTFILE_BODY[] =
 {
     {"file_to_print", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Path name to the file that is to be sent to standard output"},
     {"number_of_lines", DATA_TYPE_INT, CF_VALRANGE, "Integer maximum number of lines to print from selected file"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const const BodySyntax CF_REPORT_BODIES[] =
+const const ConstraintSyntax CF_REPORT_BODIES[] =
 {
     {"friend_pattern", DATA_TYPE_STRING, "", "Regular expression to keep selected hosts from the friends report list"},
     {"intermittency", DATA_TYPE_REAL, "0,1", "Real number threshold [0,1] of intermittency about current peers, report above", "false"},

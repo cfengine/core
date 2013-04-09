@@ -64,8 +64,8 @@ static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
 static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
 static void XmlExportControl(Writer *writer, PromiseTypeSyntax body);
-static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
-static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
+static void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs);
+static void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportType(Writer *writer, DataType dtype, const void *range);
 
 /*****************************************************************************/
@@ -315,7 +315,7 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
 
 /*****************************************************************************/
 
-void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
+void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs)
 {
     int i;
 
@@ -328,7 +328,7 @@ void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
     XmlStartTag(writer, XMLTAG_CONSTRAINTS_ROOT, 0);
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        XmlExportConstraint(writer, (const BodySyntax *) &bs[i]);
+        XmlExportConstraint(writer, (const ConstraintSyntax *) &bs[i]);
     }
 /* END XML ELEMENT -- CONSTRAINTS */
     XmlEndTag(writer, XMLTAG_CONSTRAINTS_ROOT);
@@ -336,7 +336,7 @@ void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
+void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 {
     char *filebuffer = NULL;
 
@@ -401,7 +401,7 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
     {
     case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, (BodySyntax *) range);
+        XmlExportConstraints(writer, (ConstraintSyntax *) range);
         break;
 
     case DATA_TYPE_INT:

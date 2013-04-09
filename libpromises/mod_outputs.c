@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_outputs.h"
 
-static const BodySyntax CF_OUTPUTS_BODIES[] =
+static const ConstraintSyntax CF_OUTPUTS_BODIES[] =
 {
     {"output_level", DATA_TYPE_OPTION, "verbose,debug,inform",
      "Output level to observe for the named promise or bundle (meta-promise)", "verbose"},

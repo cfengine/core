@@ -46,7 +46,7 @@
   like in a body "sub-routine"
 */
 
-const BodySyntax CF_REMACCESS_BODIES[] =
+const ConstraintSyntax CF_REMACCESS_BODIES[] =
 {
     {"admit", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to grant access to file objects"},
     {"deny", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to deny access to file objects"},
@@ -59,7 +59,7 @@ const BodySyntax CF_REMACCESS_BODIES[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CF_REMROLE_BODIES[] =
+const ConstraintSyntax CF_REMROLE_BODIES[] =
 {
     {"authorize", DATA_TYPE_STRING_LIST, "",
      "List of public-key user names that are allowed to activate the promised class during remote agent activation"},

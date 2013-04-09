@@ -255,7 +255,7 @@ DataType DataTypeFromString(const char *name)
 }
 
 
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval)
 {
     int i = 0;
 

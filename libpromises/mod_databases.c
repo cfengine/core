@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_databases.h"
 
-static const BodySyntax CF_SQLSERVER_BODY[] =
+static const ConstraintSyntax CF_SQLSERVER_BODY[] =
 {
     {"db_server_owner", DATA_TYPE_STRING, "", "User name for database connection"},
     {"db_server_password", DATA_TYPE_STRING, "", "Clear text password for database connection"},
@@ -36,7 +36,7 @@ static const BodySyntax CF_SQLSERVER_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DATABASES_BODIES[] =
+static const ConstraintSyntax CF_DATABASES_BODIES[] =
 {
     {"database_server", DATA_TYPE_BODY, CF_SQLSERVER_BODY, "Credentials for connecting to a local/remote database server"},
     {"database_type", DATA_TYPE_OPTION, "sql,ms_registry", "The type of database that is to be manipulated", "none"},

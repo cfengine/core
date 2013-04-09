@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_methods.h"
 
-static const BodySyntax CF_METHOD_BODIES[] =
+static const ConstraintSyntax CF_METHOD_BODIES[] =
 {
     {"inherit", DATA_TYPE_OPTION, CF_BOOL, "If true this causes the sub-bundle to inherit the private classes of its parent"},
     {"usebundle", DATA_TYPE_BUNDLE, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},

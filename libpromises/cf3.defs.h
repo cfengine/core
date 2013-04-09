@@ -714,7 +714,7 @@ typedef struct
     const void *range;          /* either char or BodySyntax * */
     const char *description;
     const char *default_value;
-} BodySyntax;
+} ConstraintSyntax;
 
 /*************************************************************************/
 
@@ -722,7 +722,7 @@ typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
-    const BodySyntax *bs;
+    const ConstraintSyntax *bs;
 } PromiseTypeSyntax;
 
 /*************************************************************************/
@@ -1698,17 +1698,17 @@ typedef struct
 #include "alloc.h"
 #include "cf3.extern.h"
 
-extern const BodySyntax CF_COMMON_BODIES[];
-extern const BodySyntax CF_VARBODY[];
+extern const ConstraintSyntax CF_COMMON_BODIES[];
+extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
-extern const BodySyntax CFG_CONTROLBODY[];
+extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
 extern const PromiseTypeSyntax CF_ALL_BODIES[];
-extern const BodySyntax CFH_CONTROLBODY[];
+extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
-extern const BodySyntax CF_CLASSBODY[];
-extern const BodySyntax CFA_CONTROLBODY[];
-extern const BodySyntax CFEX_CONTROLBODY[];
+extern const ConstraintSyntax CF_CLASSBODY[];
+extern const ConstraintSyntax CFA_CONTROLBODY[];
+extern const ConstraintSyntax CFEX_CONTROLBODY[];
 
 #endif
 

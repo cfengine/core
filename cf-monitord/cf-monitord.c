@@ -57,7 +57,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy);
 
 extern int NO_FORK;
 
-extern const BodySyntax CFM_CONTROLBODY[];
+extern const ConstraintSyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */

@@ -40,7 +40,7 @@
 #include "mod_services.h"
 #include "mod_measurement.h"
 
-static const BodySyntax CF_TRANSACTION_BODY[] =
+static const ConstraintSyntax CF_TRANSACTION_BODY[] =
 {
     {"action_policy", DATA_TYPE_OPTION, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
     {"ifelapsed", DATA_TYPE_INT, CF_VALRANGE, "Number of minutes before next allowed assessment of promise",
@@ -69,7 +69,7 @@ static const BodySyntax CF_TRANSACTION_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_DEFINECLASS_BODY[] =
+static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
 {
     {"scope", DATA_TYPE_OPTION, "namespace,bundle", "Scope of the contexts set by this body" },
     {"promise_repaired", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
@@ -92,7 +92,7 @@ static const BodySyntax CF_DEFINECLASS_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CF_VARBODY[] =
+const ConstraintSyntax CF_VARBODY[] =
 {
     {"string", DATA_TYPE_STRING, "", "A scalar string"},
     {"int", DATA_TYPE_INT, CF_INTRANGE, "A scalar integer"},
@@ -106,14 +106,14 @@ const BodySyntax CF_VARBODY[] =
 };
 
 
-const BodySyntax CF_METABODY[] =
+const ConstraintSyntax CF_METABODY[] =
 {
     {"string", DATA_TYPE_STRING, "", "A scalar string"},
     {"slist", DATA_TYPE_STRING_LIST, "", "A list of scalar strings"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CF_DEFAULTSBODY[] =
+const ConstraintSyntax CF_DEFAULTSBODY[] =
 {
     {"if_match_regex", DATA_TYPE_STRING, "", "If this regular expression matches the current value of the variable, replace it with default"},
     {"string", DATA_TYPE_STRING, "", "A scalar string"},
@@ -122,7 +122,7 @@ const BodySyntax CF_DEFAULTSBODY[] =
 };
 
 
-const BodySyntax CF_CLASSBODY[] =
+const ConstraintSyntax CF_CLASSBODY[] =
 {
     {"and", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with AND"},
     {"dist", DATA_TYPE_REAL_LIST, CF_REALRANGE, "Generate a probabilistic class distribution (from strategies in cfengine 2)"},
@@ -136,7 +136,7 @@ const BodySyntax CF_CLASSBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFG_CONTROLBODY[] =
+const ConstraintSyntax CFG_CONTROLBODY[] =
 {
     {"bundlesequence", DATA_TYPE_STRING_LIST, ".*", "List of promise bundles to verify in order"},
     {"goal_patterns", DATA_TYPE_STRING_LIST, "",
@@ -163,7 +163,7 @@ const BodySyntax CFG_CONTROLBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFA_CONTROLBODY[] =
+const ConstraintSyntax CFA_CONTROLBODY[] =
 {
     {"abortclasses", DATA_TYPE_STRING_LIST, ".*", "A list of classes which if defined lead to termination of cf-agent"},
     {"abortbundleclasses", DATA_TYPE_STRING_LIST, ".*", "A list of classes which if defined lead to termination of current bundle"},
@@ -225,7 +225,7 @@ const BodySyntax CFA_CONTROLBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFS_CONTROLBODY[] =
+const ConstraintSyntax CFS_CONTROLBODY[] =
 {
     {"allowallconnects", DATA_TYPE_STRING_LIST, "",
      "List of IPs or hostnames that may have more than one connection to the server port"},
@@ -256,7 +256,7 @@ const BodySyntax CFS_CONTROLBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFM_CONTROLBODY[] =
+const ConstraintSyntax CFM_CONTROLBODY[] =
 {
     {"forgetrate", DATA_TYPE_REAL, "0,1", "Decimal fraction [0,1] weighting of new values over old in 2d-average computation",
      "0.6"},
@@ -267,7 +267,7 @@ const BodySyntax CFM_CONTROLBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFR_CONTROLBODY[] =
+const ConstraintSyntax CFR_CONTROLBODY[] =
 {
     {"hosts", DATA_TYPE_STRING_LIST, "", "List of host or IP addresses to attempt connection with"},
     {"port", DATA_TYPE_INT, "1024,99999", "Default port for cfengine server", "5308"},
@@ -282,7 +282,7 @@ const BodySyntax CFR_CONTROLBODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
+const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 {
     {"splaytime", DATA_TYPE_INT, CF_VALRANGE, "Time in minutes to splay this host based on its name hash", "0"},
     {"mailfrom", DATA_TYPE_STRING, ".*@.*", "Email-address cfengine mail appears to come from"},
@@ -297,7 +297,7 @@ const BodySyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
+const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
     {"export_zenoss", DATA_TYPE_STRING, CF_PATHRANGE, "Generate report for Zenoss integration"},
     {"exclude_hosts", DATA_TYPE_STRING_LIST, "", "A list of IP addresses of hosts to exclude from report collection"},
@@ -306,7 +306,7 @@ const BodySyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-const BodySyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
+const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 {
     {"namespace", DATA_TYPE_STRING, CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions"},
     {NULL, DATA_TYPE_NONE, NULL, NULL}
@@ -340,7 +340,7 @@ const PromiseTypeSyntax CF_ALL_BODIES[] =
     apply to more than one promise_type, e.g. generic
     processing behavioural details */
 
-const BodySyntax CF_COMMON_BODIES[] =
+const ConstraintSyntax CF_COMMON_BODIES[] =
 {
     {CF_TRANSACTION, DATA_TYPE_BODY, CF_TRANSACTION_BODY, "Output behaviour"},
     {CF_DEFINECLASSES, DATA_TYPE_BODY, CF_DEFINECLASS_BODY, "Signalling behaviour"},
@@ -397,7 +397,7 @@ const int CF3_MODULES = (sizeof(CF_ALL_PROMISE_TYPES) / sizeof(CF_ALL_PROMISE_TY
 CommonControl CommonControlFromString(const char *lval)
 {
     int i = 0;
-    for (const BodySyntax *s = CFG_CONTROLBODY; s->lval; s++, i++)
+    for (const ConstraintSyntax *s = CFG_CONTROLBODY; s->lval; s++, i++)
     {
         if (strcmp(lval, s->lval) == 0)
         {

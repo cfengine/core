@@ -95,8 +95,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
-extern const BodySyntax CFS_CONTROLBODY[];
-extern const BodySyntax CF_REMROLE_BODIES[];
+extern const ConstraintSyntax CFS_CONTROLBODY[];
+extern const ConstraintSyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
 extern bool SERVER_LISTEN;

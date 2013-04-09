@@ -1195,7 +1195,7 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
 
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body)
 {
-    const BodySyntax *body_syntax = NULL;
+    const ConstraintSyntax *body_syntax = NULL;
     Rval returnval;
 
     CfDebug("CheckControlPromises(%s)\n", control_body->type);
@@ -1242,7 +1242,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         ScopeDeleteVariable(scope, cp->lval);
 
-        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, BodySyntaxGetDataType(body_syntax, cp->lval)))
+        if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
         }

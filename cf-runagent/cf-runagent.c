@@ -124,7 +124,7 @@ static const char *HINTS[17] =
     NULL
 };
 
-extern const BodySyntax CFR_CONTROLBODY[];
+extern const ConstraintSyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;

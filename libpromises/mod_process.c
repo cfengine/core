@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 #include "mod_process.h"
 
-static const BodySyntax CF_MATCHCLASS_BODY[] =
+static const ConstraintSyntax CF_MATCHCLASS_BODY[] =
 {
     {"in_range_define", DATA_TYPE_STRING_LIST, "", "List of classes to define if the matches are in range"},
     {"match_range", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Integer range for acceptable number of matches for this process"},
@@ -33,7 +33,7 @@ static const BodySyntax CF_MATCHCLASS_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_PROCFILTER_BODY[] =
+static const ConstraintSyntax CF_PROCFILTER_BODY[] =
 {
     {"command", DATA_TYPE_STRING, "", "Regular expression matching the command/cmd field of a process"},
     {"pid", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the process id of a process"},
@@ -54,7 +54,7 @@ static const BodySyntax CF_PROCFILTER_BODY[] =
     {NULL, DATA_TYPE_NONE, NULL, NULL}
 };
 
-static const BodySyntax CF_PROCESS_BODIES[] =
+static const ConstraintSyntax CF_PROCESS_BODIES[] =
 {
     {"process_count", DATA_TYPE_BODY, CF_MATCHCLASS_BODY,
      "Criteria for constraining the number of processes matching other criteria"},

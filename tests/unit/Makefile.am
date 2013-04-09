@@ -49,6 +49,7 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	map_test \
+	parser_test \
 	policy_test \
 	sort_test \
 	file_name_test \

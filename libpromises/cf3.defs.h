@@ -1342,6 +1342,7 @@ typedef struct
 typedef struct
 {
     Constraint *expression;
+    ContextScope scope;
     int nconstraints;
     int persistent;
 } ContextConstraint;

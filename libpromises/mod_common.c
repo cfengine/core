@@ -124,6 +124,7 @@ const BodySyntax CF_DEFAULTSBODY[] =
 
 const BodySyntax CF_CLASSBODY[] =
 {
+    {"scope", DATA_TYPE_OPTION, "namespace,bundle", "Scope of the class set by this promise" },
     {"and", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with AND"},
     {"dist", DATA_TYPE_REAL_LIST, CF_REALRANGE, "Generate a probabilistic class distribution (from strategies in cfengine 2)"},
     {"expression", DATA_TYPE_CONTEXT, CF_CLASSRANGE, "Evaluate string expression of classes in normal form"},

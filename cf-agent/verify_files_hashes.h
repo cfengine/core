@@ -34,4 +34,6 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
 void PurgeHashes(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
 
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
+
 #endif

@@ -31,6 +31,7 @@
 #include "files_interfaces.h"
 #include "files_lib.h"
 #include "files_hashes.h"
+#include "misc_lib.h"
 
 static char *NewIndexKey(char type, char *name, int *size)
 {
@@ -335,3 +336,70 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
     CloseDB(dbp);
 }
 
+
+static char FileStateToChar(FileState status)
+{
+    switch(status)
+    {
+    case FILE_STATE_NEW:
+        return 'N';
+
+    case FILE_STATE_REMOVED:
+        return 'R';
+
+    case FILE_STATE_CONTENT_CHANGED:
+        return 'C';
+
+    case FILE_STATE_STATS_CHANGED:
+        return 'S';
+
+    default:
+        ProgrammingError("Unhandled file status in switch: %d", status);
+    }
+}
+
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
+{
+    FILE *fp;
+    char fname[CF_BUFSIZE];
+    time_t now = time(NULL);
+    mode_t perm = 0600;
+    static char prevFile[CF_MAXVARSIZE] = { 0 };
+
+// we might get called twice..
+    if (strcmp(file, prevFile) == 0)
+    {
+        return;
+    }
+
+    strlcpy(prevFile, file, CF_MAXVARSIZE);
+
+/* This is inefficient but we don't want to lose any data */
+
+    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
+    MapName(fname);
+
+#ifndef __MINGW32__
+    struct stat sb;
+    if (cfstat(fname, &sb) != -1)
+    {
+        if (sb.st_mode & (S_IWGRP | S_IWOTH))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
+        }
+    }
+#endif /* !__MINGW32__ */
+
+    if ((fp = fopen(fname, "a")) == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not write to the hash change log");
+        return;
+    }
+
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
+    fclose(fp);
+
+    cf_chmod(fname, perm);
+}

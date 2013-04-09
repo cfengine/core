@@ -41,8 +41,6 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp);
-
 /*
  * Deletes directory #path recursively. Symlinks are not followed.
  *

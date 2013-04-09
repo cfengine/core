@@ -3064,3 +3064,9 @@ bool BundleTypeCheck(const char *name)
 
     return false;
 }
+
+/* FIXME: alway true */
+bool BodyTypeCheck(const char *name)
+{
+    return true;
+}

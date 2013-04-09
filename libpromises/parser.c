@@ -87,5 +87,11 @@ Policy *ParserParseFile(const char *path)
 
     fclose(yyin);
 
-    return (P.error_count == 0) ? P.policy : NULL;
+    if (P.error_count > 0)
+    {
+        PolicyDestroy(P.policy);
+        return NULL;
+    }
+
+    return P.policy;
 }

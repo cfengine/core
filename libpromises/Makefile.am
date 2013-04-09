@@ -157,7 +157,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

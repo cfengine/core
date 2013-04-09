@@ -23,6 +23,12 @@ void test_bundle_invalid_type(void **state)
     assert_false(LoadPolicy("bundle_invalid_type.cf"));
 }
 
+void test_constraint_comment_nonscalar(void **state)
+{
+    Policy *p = LoadPolicy("constraint_comment_nonscalar.cf");
+    assert_false(p);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();

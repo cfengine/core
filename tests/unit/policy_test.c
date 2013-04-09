@@ -24,12 +24,12 @@ static Seq *LoadAndCheck(const char *filename)
 
     if (SeqLength(errs) > 0)
     {
-        Writer *writer = FileWriter(stderr);
+        Writer *writer = FileWriter(stdout);
         for (size_t i = 0; i < errs->length; i++)
         {
             PolicyErrorWrite(writer, errs->data[i]);
         }
-        WriterClose(writer);
+        FileWriterDetach(writer);
     }
 
     return errs;
@@ -300,6 +300,14 @@ static void test_promiser_empty_varref(void **state)
     SeqDestroy(errs);
 }
 
+static void test_constraint_comment_nonscalar(void **state)
+{
+    Seq *errs = LoadAndCheck("constraint_comment_nonscalar.cf");
+    assert_int_equal(1, errs->length);
+
+    SeqDestroy(errs);
+}
+
 
 int main()
 {
@@ -320,6 +328,8 @@ int main()
         unit_test(test_util_qualified_name_components),
 
         unit_test(test_constraint_lval_invalid),
+        unit_test(test_constraint_comment_nonscalar),
+
         unit_test(test_promiser_empty_varref)
     };
 

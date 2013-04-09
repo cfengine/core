@@ -258,12 +258,47 @@ char *BundleQualifiedName(const Bundle *bundle)
     return NULL;
 }
 
+static bool RvalTypeCheckDataType(RvalType rval_type, DataType expected_datatype)
+{
+    if (rval_type == RVAL_TYPE_FNCALL)
+    {
+        return true;
+    }
+
+    switch (expected_datatype)
+    {
+    case DATA_TYPE_BODY:
+    case DATA_TYPE_BUNDLE:
+        return rval_type == RVAL_TYPE_SCALAR;
+
+    case DATA_TYPE_CONTEXT:
+    case DATA_TYPE_COUNTER:
+    case DATA_TYPE_INT:
+    case DATA_TYPE_INT_RANGE:
+    case DATA_TYPE_OPTION:
+    case DATA_TYPE_REAL:
+    case DATA_TYPE_REAL_RANGE:
+    case DATA_TYPE_STRING:
+        return rval_type == RVAL_TYPE_SCALAR;
+
+    case DATA_TYPE_CONTEXT_LIST:
+    case DATA_TYPE_INT_LIST:
+    case DATA_TYPE_OPTION_LIST:
+    case DATA_TYPE_REAL_LIST:
+    case DATA_TYPE_STRING_LIST:
+        return (rval_type == RVAL_TYPE_SCALAR) || (rval_type == RVAL_TYPE_LIST);
+
+    default:
+        ProgrammingError("Unhandled expected datatype in switch: %d", expected_datatype);
+    }
+}
+
 /*************************************************************************/
 
 /* Check if a constraint's syntax is correct according to its promise_type and
    lvalue.
 */
-bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
+static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
 {
     if (constraint->type != POLICY_ELEMENT_TYPE_PROMISE)
     {
@@ -281,6 +316,13 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
         const BodySyntax *body_syntax = &promise_type_syntax.bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
+            if (!RvalTypeCheckDataType(constraint->rval.type, body_syntax->dtype))
+            {
+                SeqAppend(errors,
+                          PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                         POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH, constraint->lval));
+                return false;
+            }
             return true;
         }
     }
@@ -292,6 +334,13 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     {
         if (strcmp(constraint->lval, CF_COMMON_BODIES[i].lval) == 0)
         {
+            if (!RvalTypeCheckDataType(constraint->rval.type, CF_COMMON_BODIES[i].dtype))
+            {
+                SeqAppend(errors,
+                          PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                         POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH, constraint->lval));
+                return false;
+            }
             return true;
         }
     }
@@ -299,6 +348,13 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     {
         if (strcmp(constraint->lval, CF_COMMON_EDITBODIES[i].lval) == 0)
         {
+            if (!RvalTypeCheckDataType(constraint->rval.type, CF_COMMON_EDITBODIES[i].dtype))
+            {
+                SeqAppend(errors,
+                          PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                         POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH, constraint->lval));
+                return false;
+            }
             return true;
         }
     }
@@ -306,19 +362,23 @@ bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     {
         if (strcmp(constraint->lval, CF_COMMON_XMLBODIES[i].lval) == 0)
         {
+            if (!RvalTypeCheckDataType(constraint->rval.type, CF_COMMON_XMLBODIES[i].dtype))
+            {
+                SeqAppend(errors,
+                          PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                                         POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH, constraint->lval));
+                return false;
+            }
             return true;
         }
     }
 
     /* lval is unknown for this promise type */
-    if (errors != NULL)
-    {
-        SeqAppend(errors,
-                  PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
-                                 POLICY_ERROR_LVAL_INVALID,
-                                 constraint->parent.promise->parent_promise_type->name,
-                                 constraint->lval));
-    }
+    SeqAppend(errors,
+              PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, constraint,
+                             POLICY_ERROR_LVAL_INVALID,
+                             constraint->parent.promise->parent_promise_type->name,
+                             constraint->lval));
 
     return false;
 }

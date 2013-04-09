@@ -160,7 +160,7 @@ bodyid:                bodyid_values
                           ParserDebug("\tP:body:%s:%s\n", P.blocktype, P.blockid);
                        }
 
-bodyid_values:         blockid /* is this true, can body id contain ':' */
+bodyid_values:         blockid
                      | error
                        {
                            yyclearin;

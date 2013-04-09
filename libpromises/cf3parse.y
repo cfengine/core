@@ -80,7 +80,7 @@ block:                 bundle
 
 bundle:                BUNDLE bundletype bundleid arglist bundlebody
 
-body:                  body typeid blockid arglist bodybody
+body:                  BODY bodytype bodyid arglist bodybody
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -129,19 +129,44 @@ bundleid_values:       blockid
                            INSTALL_SKIP = true;
                        }
 
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-body:                  BODY
+bodytype:              bodytype_values
                        {
                            DebugBanner("Body");
+                           ParserDebug("P:body:%s\n", P.blocktype);
                            P.block = "body";
                            strcpy(P.blockid,"");
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            P.currentstring = NULL;
-                           strcpy(P.blocktype,"");
-                       };
+                       }
+
+bodytype_values:       typeid
+                       {
+                           if (!BodyTypeCheck(P.blocktype))
+                           {
+                               ParseError("Unknown body type: %s", P.blocktype);
+                           }
+                       }
+                     | error
+                       {
+                           yyclearin;
+                           ParseError("Expected body type, wrong input: %s", yytext);
+                       }
+
+bodyid:                bodyid_values
+                       {
+                          ParserDebug("\tP:body:%s:%s\n", P.blocktype, P.blockid);
+                       }
+
+bodyid_values:         blockid /* is this true, can body id contain ':' */
+                     | error
+                       {
+                           yyclearin;
+                           ParseError("Expected body id, wrong input:%s", yytext);
+                           INSTALL_SKIP = true;
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

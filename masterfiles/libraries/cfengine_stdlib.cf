@@ -297,15 +297,15 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
     # If the line is there, but commented out, first uncomment it
         "#+\s*$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
-            edit_field => col("=","1","$(index)","set"),
-            ifvarclass => "edit_$(cindex[$(index)])";
+            edit_field    => col("=","1","$(index)","set"),
+            ifvarclass    => "edit_$(cindex[$(index)])";
 
     # match a line starting like the key something
         "$(index)\s*=.*"
-            edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
+            edit_field    => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
             select_region => INI_section("$(sectionName)"),
-            classes => if_ok("manage_variable_values_ini_not_$(cindex[$(index)])"),
-            ifvarclass => "edit_$(cindex[$(index)])";
+            classes       => if_ok("manage_variable_values_ini_not_$(cindex[$(index)])"),
+            ifvarclass    => "edit_$(cindex[$(index)])";
 
     delete_lines:
         ".*"
@@ -319,7 +319,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 
         "$(index)=$($(tab)[$(sectionName)][$(index)])",
                 select_region => INI_section("$(sectionName)"),
-                ifvarclass => "!manage_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+                ifvarclass    => "!manage_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
 
 }
 
@@ -372,15 +372,15 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
     # If the line is there, but commented out, first uncomment it
         "#+\s*$(index)\s*=.*"
             select_region => INI_section("$(sectionName)"),
-            edit_field => col("=","1","$(index)","set"),
-            ifvarclass => "edit_$(cindex[$(index)])";
+            edit_field    => col("=","1","$(index)","set"),
+            ifvarclass    => "edit_$(cindex[$(index)])";
 
     # match a line starting like the key something
         "$(index)\s*=.*"
-            edit_field => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
+            edit_field    => col("=","2","$($(tab)[$(sectionName)][$(index)])","set"),
             select_region => INI_section("$(sectionName)"),
-            classes => if_ok("set_variable_values_ini_not_$(cindex[$(index)])"),
-            ifvarclass => "edit_$(cindex[$(index)])";
+            classes       => if_ok("set_variable_values_ini_not_$(cindex[$(index)])"),
+            ifvarclass    => "edit_$(cindex[$(index)])";
 
     insert_lines:
         "[$(sectionName)]"
@@ -389,7 +389,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
         "$(index)=$($(tab)[$(sectionName)][$(index)])",
                 select_region => INI_section("$(sectionName)"),
-                ifvarclass => "!set_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
+                ifvarclass    => "!set_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
 
 }
 
@@ -516,19 +516,19 @@ bundle edit_line maintain_key_values(v,sep)
 
   classes:
     "$(cindex[$(index)])_key_in_file"
-       comment => "Dynamic Class created if patterns matching",
+       comment    => "Dynamic Class created if patterns matching",
        expression => regline("^$(keypat[$(index)]).*", "$(edit.filename)");
 
   replace_patterns:
     # For convergence need to use negative lookahead on value:
     # "key sep (?!value).*"
     "^($(keypat[$(index)]))(?!$(ve[$(index)])).*"
-      comment => "Replace definition of $(index)",
+      comment      => "Replace definition of $(index)",
       replace_with => value("$(match.1)$($(v)[$(index)])");
 
   insert_lines:
     "$(index)$(sep)$($(v)[$(index)])",
-      comment => "Insert definition of $(index)",
+      comment    => "Insert definition of $(index)",
       ifvarclass => "!$(cindex[$(index)])_key_in_file";
 }
 
@@ -723,12 +723,12 @@ changed_crontab::
 
 body edit_field quoted_var(newval,method)
 {
-field_separator => "\"";
-select_field    => "2";
-value_separator  => " ";
-field_value     => "$(newval)";
-field_operation => "$(method)";
-extend_fields => "false";
+field_separator    => "\"";
+select_field       => "2";
+value_separator    => " ";
+field_value        => "$(newval)";
+field_operation    => "$(method)";
+extend_fields      => "false";
 allow_blank_fields => "true";
 }
 
@@ -763,7 +763,7 @@ allow_blank_fields => "true";
 body replace_with value(x)
 {
 replace_value => "$(x)";
-occurrences => "all";
+occurrences   => "all";
 }
 
 ##
@@ -771,7 +771,7 @@ occurrences => "all";
 body select_region INI_section(x)
 {
 select_start => "\[$(x)\]\s*";
-select_end => "\[.*\]\s*";
+select_end   => "\[.*\]\s*";
 }
 
 ##-------------------------------------------------------
@@ -781,8 +781,8 @@ select_end => "\[.*\]\s*";
 body edit_defaults std_defs
 {
 empty_file_before_editing => "false";
-edit_backup => "false";
-#max_file_size => "300000";
+edit_backup               => "false";
+#max_file_size            => "300000";
 }
 
 ##
@@ -790,8 +790,8 @@ edit_backup => "false";
 body edit_defaults empty
 {
 empty_file_before_editing => "true";
-edit_backup => "false";
-#max_file_size => "300000";
+edit_backup               => "false";
+#max_file_size            => "300000";
 }
 
 ##
@@ -806,8 +806,8 @@ edit_backup => "false";
 body edit_defaults backup_timestamp
 {
 empty_file_before_editing => "false";
-edit_backup => "timestamp";
-#max_file_size => "300000";
+edit_backup               => "timestamp";
+#max_file_size            => "300000";
 }
 
 ##-------------------------------------------------------
@@ -823,7 +823,7 @@ before_after => "before";
 
 body location after(str)
 {
-before_after => "after";
+before_after         => "after";
 select_line_matching => "$(str)";
 }
 
@@ -831,7 +831,7 @@ select_line_matching => "$(str)";
 
 body location before(str)
 {
-before_after => "before";
+before_after         => "before";
 select_line_matching => "$(str)";
 }
 
@@ -845,7 +845,7 @@ select_line_matching => "$(str)";
 body replace_with comment(c)
 {
 replace_value => "$(c) $(match.1)";
-occurrences => "all";
+occurrences   => "all";
 }
 
 ##
@@ -853,7 +853,7 @@ occurrences => "all";
 body replace_with uncomment
 {
 replace_value => "$(match.1)";
-occurrences => "all";
+occurrences   => "all";
 }
 
 ####################################################
@@ -866,7 +866,7 @@ occurrences => "all";
 
 body action if_elapsed(x)
 {
-ifelapsed => "$(x)";
+ifelapsed   => "$(x)";
 expireafter => "$(x)";
 }
 
@@ -874,7 +874,7 @@ expireafter => "$(x)";
 
 body action if_elapsed_day
 {
-ifelapsed => "1440";    # 60 x 24
+ifelapsed   => "1440";    # 60 x 24
 expireafter => "1400";
 }
 
@@ -883,8 +883,8 @@ expireafter => "1400";
 body action measure_performance(x)
 {
 measurement_class => "Detect changes in $(this.promiser)";
-ifelapsed => "$(x)";
-expireafter => "$(x)";
+ifelapsed         => "$(x)";
+expireafter       => "$(x)";
 }
 
 ##
@@ -892,7 +892,7 @@ expireafter => "$(x)";
 body action warn_only
 {
 action_policy => "warn";
-ifelapsed => "60";
+ifelapsed     => "60";
 }
 
 ##
@@ -932,7 +932,7 @@ action_policy => "$(p)";
 
 body action log_repaired(log,message)
 {
-log_string => "$(sys.date), $(message)";
+log_string   => "$(sys.date), $(message)";
 log_repaired => "$(log)";
 }
 
@@ -963,7 +963,7 @@ chdir => "$(s)";
 
 body contain in_dir_shell(s)
 {
-chdir => "$(s)";
+chdir    => "$(s)";
 useshell => "true";
 }
 
@@ -971,7 +971,7 @@ useshell => "true";
 
 body contain silent_in_dir(s)
 {
-chdir => "$(s)";
+chdir     => "$(s)";
 no_output => "true";
 }
 
@@ -986,7 +986,7 @@ useshell => "true";
 
 body contain in_shell_bg
 {
-useshell => "true";
+useshell   => "true";
 background => "true";
 }
 
@@ -994,7 +994,7 @@ background => "true";
 
 body contain in_shell_and_silent
 {
-useshell => "true";
+useshell  => "true";
 no_output => "true";
 }
 
@@ -1002,9 +1002,9 @@ no_output => "true";
 
 body contain in_dir_shell_and_silent(dir)
 {
-useshell => "true";
+useshell  => "true";
 no_output => "true";
-chdir => "$(dir)";
+chdir     => "$(dir)";
 }
 
 ##
@@ -1012,7 +1012,7 @@ chdir => "$(dir)";
 body contain setuid(x)
 {
 exec_owner => "$(x)";
-useshell => "false";
+useshell   => "false";
 }
 
 ##
@@ -1020,7 +1020,7 @@ useshell => "false";
 body contain setuid_sh(x)
 {
 exec_owner => "$(x)";
-useshell => "true";
+useshell   => "true";
 }
 
 ##
@@ -1029,7 +1029,7 @@ body contain setuidgid_sh(owner,group)
 {
 exec_owner => "$(owner)";
 exec_group => "$(group)";
-useshell => "true";
+useshell   => "true";
 }
 
 ##
@@ -1037,9 +1037,9 @@ useshell => "true";
 body contain jail(owner,root,dir)
 {
 exec_owner => "$(owner)";
-useshell => "true";
-chdir => "$(dir)";
-chroot => "$(root)";
+useshell   => "true";
+chdir      => "$(dir)";
+chroot     => "$(root)";
 }
 
 ##
@@ -1058,7 +1058,7 @@ body contain setuid_umask(uid, umask)
 # 277   | 400     (r--------) | 500     (r-x------)
 {
 exec_owner => "$(uid)";
-umask => "$(umask)";
+umask      => "$(umask)";
 }
 
 
@@ -1111,7 +1111,7 @@ repair_timeout  => { "$(x)" };
 body classes if_ok(x)
 {
 promise_repaired => { "$(x)" };
-promise_kept => { "$(x)" };
+promise_kept     => { "$(x)" };
 }
 
 ##
@@ -1119,7 +1119,7 @@ promise_kept => { "$(x)" };
 body classes if_ok_cancel(x)
 {
 cancel_repaired => { "$(x)" };
-cancel_kept => { "$(x)" };
+cancel_kept     => { "$(x)" };
 }
 
 ##
@@ -1127,28 +1127,28 @@ cancel_kept => { "$(x)" };
 body classes cmd_repair(code,cl)
 {
 repaired_returncodes => { "$(code)" };
-promise_repaired => { "$(cl)" };
+promise_repaired     => { "$(cl)" };
 }
 
 body classes classes_generic(x)
 # Define x prefixed/suffixed with promise outcome
 {
   promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+  repair_failed    => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied    => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout   => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept     => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
 body classes scoped_classes_generic(scope, x)
 # Define x prefixed/suffixed with promise outcome
 {
-  scope => "$(scope)";
+  scope            => "$(scope)";
   promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
-  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
-  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+  repair_failed    => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied    => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout   => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept     => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
 }
 
 ##-------------------------------------------------------
@@ -1158,7 +1158,7 @@ body classes scoped_classes_generic(scope, x)
 body classes state_repaired(x)
 {
 promise_repaired => { "$(x)" };
-persist_time => "10";
+persist_time     => "10";
 }
 
 ##
@@ -1172,8 +1172,8 @@ body classes enumerate(x)
 
 {
 promise_repaired => { "mXC_$(x)" };
-promise_kept => { "mXC_$(x)" };
-persist_time => "15";
+promise_kept     => { "mXC_$(x)" };
+persist_time     => "15";
 }
 
 ##
@@ -1184,10 +1184,10 @@ body classes always(x)
 
 {
   promise_repaired => { "$(x)" };
-  promise_kept => { "$(x)" };
-  repair_failed => { "$(x)" };
-  repair_denied => { "$(x)" };
-  repair_timeout => { "$(x)" };
+  promise_kept     => { "$(x)" };
+  repair_failed    => { "$(x)" };
+  repair_denied    => { "$(x)" };
+  repair_timeout   => { "$(x)" };
 }
 
 ###################################################
@@ -1314,8 +1314,8 @@ copy_backup => "false";
 
 body link_from ln_s(x)
 {
-link_type => "symlink";
-source => "$(x)";
+link_type      => "symlink";
+source         => "$(x)";
 when_no_source => "force";
 }
 
@@ -1323,10 +1323,10 @@ when_no_source => "force";
 
 body link_from linkchildren(tofile)
 {
-source        => "$(tofile)";
-link_type     => "symlink";
-when_no_source  => "force";
-link_children => "true";
+source                => "$(tofile)";
+link_type             => "symlink";
+when_no_source        => "force";
+link_children         => "true";
 when_linking_children => "if_no_such_file"; # "override_file";
 }
 
@@ -1380,7 +1380,7 @@ body acl access_generic(acl)
 # applicable for both files and directories on all platforms
 {
 acl_method => "overwrite";
-aces => { "@(acl)" };
+aces       => { "@(acl)" };
 
 windows::
 acl_type => "ntfs";
@@ -1393,9 +1393,9 @@ acl_type => "posix";
 
 body acl ntfs(acl)
 {
-acl_type => "ntfs";
+acl_type   => "ntfs";
 acl_method => "overwrite";
-aces => { "@(acl)" };
+aces       => { "@(acl)" };
 }
 
 ##
@@ -1427,7 +1427,7 @@ xdev  => "true";
 
 body depth_search recurse_ignore(d,list)
 {
-depth => "$(d)";
+depth        => "$(d)";
 exclude_dirs => { @(list) };
 }
 
@@ -1503,7 +1503,7 @@ file_result => "size";
 
 body file_select exclude(name)
 {
-leaf_name  => { "$(name)"};
+leaf_name   => { "$(name)"};
 file_result => "!leaf_name";
 }
 
@@ -1525,7 +1525,7 @@ file_result => "file_types";
 
 body file_select by_name(names)
 {
-leaf_name  => { @(names)};
+leaf_name   => { @(names)};
 file_result => "leaf_name";
 }
 
@@ -1533,7 +1533,7 @@ file_result => "leaf_name";
 
 body file_select ex_list(names)
 {
-leaf_name  => { @(names)};
+leaf_name   => { @(names)};
 file_result => "!leaf_name";
 }
 
@@ -1541,7 +1541,7 @@ file_result => "!leaf_name";
 
 body file_select all
 {
-leaf_name => { ".*" };
+leaf_name   => { ".*" };
 file_result => "leaf_name";
 }
 
@@ -1552,8 +1552,8 @@ body file_select filetype_older_than(filetype, days)
 # Note: This body only takes a single filetype, see filetypes_older_than
 #       if you want to select more than one type of file
 {
-file_types => { "$(filetype)" };
-mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_types  => { "$(filetype)" };
+mtime       => irange(0,ago(0,0,"$(days)",0,0,0));
 file_result => "file_types.mtime";
 }
 
@@ -1563,8 +1563,8 @@ body file_select filetypes_older_than(filetypes, days)
 # Select files of specified type older than specified number of days
 # Note: This body only takes a list of filetypes
 {
-file_types => { @(filetypes) };
-mtime      => irange(0,ago(0,0,"$(days)",0,0,0));
+file_types  => { @(filetypes) };
+mtime       => irange(0,ago(0,0,"$(days)",0,0,0));
 file_result => "file_types.mtime";
 }
 
@@ -1678,65 +1678,65 @@ package_changes => "bulk";
 package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
 
 # set it to "0" to avoid caching of list during upgrade
-package_list_update_command => "/usr/bin/zypper list-updates";
+package_list_update_command   => "/usr/bin/zypper list-updates";
 package_list_update_ifelapsed => "240";
 
 package_patch_list_command => "/usr/bin/zypper patches";
-package_installed_regex => "i.*";
+package_installed_regex    => "i.*";
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
 package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
 package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
 
 package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
-package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
-package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+package_patch_name_regex      => "[^|]+\|\s+([^\s]+).*";
+package_patch_version_regex   => "[^|]+\|[^|]+\|\s+([^\s]+).*";
 
 package_name_convention => "$(name)";
-package_add_command => "/usr/bin/zypper --non-interactive install";
-package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
-package_update_command => "/usr/bin/zypper --non-interactive update";
-package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
-package_verify_command => "/usr/bin/zypper --non-interactive verify$";
+package_add_command     => "/usr/bin/zypper --non-interactive install";
+package_delete_command  => "/usr/bin/zypper --non-interactive remove --force-resolution";
+package_update_command  => "/usr/bin/zypper --non-interactive update";
+package_patch_command   => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
+package_verify_command  => "/usr/bin/zypper --non-interactive verify$";
 }
 
 ##
 
 body package_method apt
 {
-package_changes => "bulk";
-package_list_command => "/usr/bin/dpkg -l";
+package_changes            => "bulk";
+package_list_command       => "/usr/bin/dpkg -l";
 package_list_name_regex    => ".i\s+([^\s]+).*";
 package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
-package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
-package_name_convention => "$(name)";
+package_installed_regex    => ".i.*"; # packages that have been uninstalled may be listed
+package_name_convention    => "$(name)";
 
 # set it to "0" to avoid caching of list during upgrade
 package_list_update_ifelapsed => "240";
 
 have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_add_command         => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
    package_list_update_command => "/usr/bin/aptitude update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes -q remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_verify_command =>  "/usr/bin/aptitude show";
-   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
+   package_delete_command      => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes -q remove";
+   package_update_command      =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_patch_command       =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_verify_command      =>  "/usr/bin/aptitude show";
+   package_noverify_regex      => "(State: not installed|E: Unable to locate package .*)";
 
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 !have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_add_command         => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
    package_list_update_command => "/usr/bin/apt-get update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes -q remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_verify_command => "/usr/bin/dpkg -s";
+   package_delete_command      => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes -q remove";
+   package_update_command      =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_patch_command       =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_verify_command      => "/usr/bin/dpkg -s";
    package_noverify_returncode => "1";
 
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 }
@@ -1745,11 +1745,11 @@ have_aptitude::
 
 body package_method dpkg_version(repo)
 {
-package_changes => "individual";
+package_changes      => "individual";
 package_list_command => "/usr/bin/dpkg -l";
 
 # set it to "0" to avoid caching of list during upgrade
-package_list_update_command => "/usr/bin/apt-get update";
+package_list_update_command   => "/usr/bin/apt-get update";
 package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => ".i\s+([^\s]+).*";
@@ -1766,19 +1766,19 @@ debian.i686::
    package_name_convention => "$(name)_$(version)_i386.deb";
 
 have_aptitude::
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 !have_aptitude::
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 debian::
-   package_add_command => "/usr/bin/dpkg --install";
+   package_add_command    => "/usr/bin/dpkg --install";
    package_delete_command => "/usr/bin/dpkg --purge";
    package_update_command =>  "/usr/bin/dpkg --install";
-   package_patch_command =>  "/usr/bin/dpkg --install";
+   package_patch_command  =>  "/usr/bin/dpkg --install";
 }
 
 ##
@@ -1790,7 +1790,7 @@ package_changes => "individual";
 package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
 
 # set it to "0" to avoid caching of list during upgrade
-package_list_update_command => "/usr/bin/yum --quiet check-update";
+package_list_update_command   => "/usr/bin/yum --quiet check-update";
 package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s|]+).*";
@@ -1803,9 +1803,9 @@ package_file_repositories => { "$(repo)" };
 
 package_name_convention => "$(name)-$(version).$(arch).rpm";
 
-package_add_command => "/bin/rpm -ivh ";
+package_add_command    => "/bin/rpm -ivh ";
 package_update_command => "/bin/rpm -Uvh ";
-package_patch_command => "/bin/rpm -Uvh ";
+package_patch_command  => "/bin/rpm -Uvh ";
 package_delete_command => "/bin/rpm -e --nodeps";
 package_verify_command => "/bin/rpm -V";
 package_noverify_regex => ".*[^\s].*";
@@ -1820,8 +1820,8 @@ package_changes => "individual";
 package_name_convention   => "$(name)";
 package_delete_convention => "$(name)";
 
-package_installed_regex => ".*";
-package_list_name_regex => "(.*)";
+package_installed_regex    => ".*";
+package_list_name_regex    => "(.*)";
 package_list_version_regex => "(.*)";  # FIXME: the listing does not give version, so takes name for version too now
 
 package_add_command    => "$(sys.winsysdir)\\WindowsPowerShell\\v1.0\\powershell.exe -Command \"Import-Module ServerManager; Add-WindowsFeature -Name\"";
@@ -1835,19 +1835,19 @@ body package_method msi_implicit(repo)
 # Use whole file name as promiser, e.g. "7-Zip-4.50-x86_64.msi",
 # the name, version and arch is then deduced from the promiser
 {
-package_changes => "individual";
+package_changes           => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
 
-package_name_convention => "$(name)-$(version)-$(arch).msi";
+package_name_convention   => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
-package_name_regex => "^(\S+)-(\d+\.?)+";
+package_name_regex    => "^(\S+)-(\d+\.?)+";
 package_version_regex => "^\S+-((\d+\.?)+)";
-package_arch_regex => "^\S+-[\d\.]+-(.*).msi";
+package_arch_regex    => "^\S+-[\d\.]+-(.*).msi";
 
-package_add_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+package_add_command    => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
 package_update_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
 package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
 }
@@ -1858,15 +1858,15 @@ body package_method msi_explicit(repo)
 # use software name as promiser, e.g. "7-Zip", and explicitly
 # specify any package_version and package_arch
 {
-package_changes => "individual";
+package_changes           => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
 
-package_name_convention => "$(name)-$(version)-$(arch).msi";
+package_name_convention   => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
-package_add_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
+package_add_command    => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
 package_update_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /i";
 package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
 }
@@ -1875,8 +1875,8 @@ package_delete_command => "\"$(sys.winsysdir)\msiexec.exe\" /qn /x";
 
 body package_method yum
 {
-package_changes => "bulk";
-package_list_command => "/usr/bin/yum --quiet list installed";
+package_changes            => "bulk";
+package_list_command       => "/usr/bin/yum --quiet list installed";
 package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
 # Remember to escape special characters like |
@@ -1889,17 +1889,17 @@ package_installed_regex => ".*(installed|\s+@).*";
 package_name_convention => "$(name)-$(version).$(arch)";
 
 # set it to "0" to avoid caching of list during upgrade
-package_list_update_command => "/usr/bin/yum --quiet check-update";
+package_list_update_command   => "/usr/bin/yum --quiet check-update";
 package_list_update_ifelapsed => "240";
 
 package_patch_installed_regex => "^\s.*";
-package_patch_name_regex    => "([^.]+).*";
-package_patch_version_regex => "[^\s]\s+([^\s]+).*";
-package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+package_patch_name_regex      => "([^.]+).*";
+package_patch_version_regex   => "[^\s]\s+([^\s]+).*";
+package_patch_arch_regex      => "[^.]+\.([^\s]+).*";
 
-package_add_command => "/usr/bin/yum -y install";
+package_add_command    => "/usr/bin/yum -y install";
 package_update_command => "/usr/bin/yum -y update";
-package_patch_command => "/usr/bin/yum -y update";
+package_patch_command  => "/usr/bin/yum -y update";
 package_delete_command => "/bin/rpm -e --nodeps";
 package_verify_command => "/bin/rpm -V";
 }
@@ -1913,8 +1913,8 @@ body package_method yum_rpm
 # instead of yum to list installed packages
 
 {
-  package_changes => "bulk";
-  package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
+  package_changes            => "bulk";
+  package_list_command       => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
   package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
   package_list_name_regex    => "([^.]+).*";
@@ -1925,13 +1925,13 @@ body package_method yum_rpm
   package_name_convention => "$(name)-$(version).$(arch)";
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/usr/bin/yum --quiet check-update";
+  package_list_update_command   => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
 
   package_patch_installed_regex => "^\s.*";
-  package_patch_name_regex    => "([^.]+).*";
-  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
-  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+  package_patch_name_regex      => "([^.]+).*";
+  package_patch_version_regex   => "[^\s]\s+([^\s]+).*";
+  package_patch_arch_regex      => "[^.]+\.([^\s]+).*";
 
   package_add_command    => "/usr/bin/yum -y install";
   package_update_command => "/usr/bin/yum -y update";
@@ -1949,8 +1949,8 @@ body package_method yum_rpm_enable_repo(repoid)
 # this pacakge_method could be used when installing a package that exists in
 # the EPEL, which normally you do not want to install packages from.
 {
-  package_changes => "bulk";
-  package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+  package_changes            => "bulk";
+  package_list_command       => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
   package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
   package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
@@ -1961,17 +1961,17 @@ body package_method yum_rpm_enable_repo(repoid)
   package_name_convention => "$(name)";
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/usr/bin/yum --quiet check-update";
+  package_list_update_command   => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
 
   package_patch_installed_regex => "^\s.*";
-  package_patch_name_regex    => "([^.]+).*";
-  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
-  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+  package_patch_name_regex      => "([^.]+).*";
+  package_patch_version_regex   => "[^\s]\s+([^\s]+).*";
+  package_patch_arch_regex      => "[^.]+\.([^\s]+).*";
 
   package_add_command    => "/usr/bin/yum --enablerepo=$(repoid) -y install";
   package_update_command => "/usr/bin/yum --enablerepo=$(repoid) -y update";
-  package_patch_command => "/usr/bin/yum -y update";
+  package_patch_command  => "/usr/bin/yum -y update";
   package_delete_command => "/bin/rpm -e --nodeps --allmatches";
   package_verify_command => "/bin/rpm -V";
 }
@@ -2069,16 +2069,16 @@ body package_method rpm_filebased(path)
   # CFEngine 3 Reference Manual
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/usr/bin/yum --quiet check-update";
+  package_list_update_command   => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
 
   # The rest is unchanged from Trond's yum_rpm body
-  package_changes => "bulk";
+  package_changes      => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
 
-  package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
+  package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
   package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
-  package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
+  package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
 
   package_installed_regex => ".*";
 
@@ -2117,20 +2117,20 @@ body package_method rpm_filebased(path)
 
 body package_method ips
 {
-  package_changes => "bulk";
-  package_list_command => "/usr/bin/pkg list -v --no-refresh";
+  package_changes            => "bulk";
+  package_list_command       => "/usr/bin/pkg list -v --no-refresh";
   package_list_name_regex    => "pkg://.+?(?<=/)([^\s]+)@.*$";
   package_list_version_regex => "[^\s]+@([^\s]+):.*";
-  package_installed_regex => ".*(i..)"; # all reported are installed
+  package_installed_regex    => ".*(i..)"; # all reported are installed
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/usr/bin/pkg refresh --full";
+  package_list_update_command   => "/usr/bin/pkg refresh --full";
   package_list_update_ifelapsed => "240";
 
-  package_add_command => "/usr/bin/pkg install --accept ";
+  package_add_command    => "/usr/bin/pkg install --accept ";
   package_delete_command => "/usr/bin/pkg uninstall";
   package_update_command =>  "/usr/bin/pkg install --accept";
-  package_patch_command =>  "/usr/bin/pkg install --accept";
+  package_patch_command  =>  "/usr/bin/pkg install --accept";
   package_verify_command =>  "/usr/bin/pkg list -a -v --no-refresh";
   package_noverify_regex => "(.*---|pkg list: no packages matching .* installed)";
 }
@@ -2141,14 +2141,14 @@ body package_method ips
 
 body package_method smartos
 {
-  package_changes => "bulk";
-  package_list_command => "/opt/local/bin/pkgin list";
+  package_changes            => "bulk";
+  package_list_command       => "/opt/local/bin/pkgin list";
   package_list_name_regex    => "(.*)\-[0-9]+.*";
   package_list_version_regex => ".*\-([0-9][^\s]+).*";
 
   package_installed_regex => ".*"; # all reported are installed
 
-  package_list_update_command => "/opt/local/bin/pkgin -y update";
+  package_list_update_command   => "/opt/local/bin/pkgin -y update";
   package_list_update_ifelapsed => "240";
 
   package_add_command => "/opt/local/bin/pkgin -y install";
@@ -2161,14 +2161,14 @@ body package_method smartos
 
 body package_method opencsw
 {
-  package_changes => "bulk";
-  package_list_command => "/opt/csw/bin/pkgutil -c";
+  package_changes            => "bulk";
+  package_list_command       => "/opt/csw/bin/pkgutil -c";
   package_list_name_regex    => "CSW(.*?)\s.*";
   package_list_version_regex => ".*?\s+(.*),.*";
 
   package_installed_regex => ".*"; # all reported are installed
 
-  package_list_update_command => "/opt/csw/bin/pkgutil -U";
+  package_list_update_command   => "/opt/csw/bin/pkgutil -U";
   package_list_update_ifelapsed => "240";
 
   package_add_command => "/opt/csw/bin/pkgutil -yi";
@@ -2183,16 +2183,16 @@ body package_method opencsw
 
 body package_method solaris (pkgname, spoolfile, adminfile)
 {
-package_changes => "individual";
-package_list_command => "/usr/bin/pkginfo -l";
+package_changes            => "individual";
+package_list_command       => "/usr/bin/pkginfo -l";
 package_multiline_start    =>  "\s*PKGINST:\s+[^\s]+.*";
 package_list_name_regex    => "\s*PKGINST:\s+([^\s]+).*";
 package_list_version_regex => "\s*VERSION:\s+([^\s]+).*";
 package_list_arch_regex    => "\s*ARCH:\s+([^\s]+)";
-package_installed_regex => "\s*STATUS:\s*(completely|partially)\s+installed.*";
-package_name_convention => "$(name)";
-package_add_command => "/usr/sbin/pkgadd -n -a /tmp/$(adminfile) -d /tmp/$(spoolfile)";
-package_delete_command => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
+package_installed_regex    => "\s*STATUS:\s*(completely|partially)\s+installed.*";
+package_name_convention    => "$(name)";
+package_add_command        => "/usr/sbin/pkgadd -n -a /tmp/$(adminfile) -d /tmp/$(spoolfile)";
+package_delete_command     => "/usr/sbin/pkgrm -n -a /tmp/$(adminfile)";
 }
 
 ##
@@ -2246,7 +2246,7 @@ body package_method freebsd
  package_name_convention => "$(name)-$(version)";
 
 
- package_add_command => "/usr/sbin/pkg_add -r";
+ package_add_command    => "/usr/sbin/pkg_add -r";
  package_delete_command => "/usr/sbin/pkg_delete";
 }
 
@@ -2254,35 +2254,35 @@ body package_method freebsd
 
 body package_method alpinelinux
 {
- package_changes => "bulk";
- package_list_command => "/sbin/apk info -v";
+ package_changes            => "bulk";
+ package_list_command       => "/sbin/apk info -v";
  package_list_name_regex    => "([^\s]+)-.*";
  package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => ".*";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
- package_add_command => "/sbin/apk add";
- package_delete_command => "/sbin/apk del";
+ package_name_regex         => ".*";
+ package_installed_regex    => ".*";
+ package_name_convention    => "$(name)";
+ package_add_command        => "/sbin/apk add";
+ package_delete_command     => "/sbin/apk del";
 }
 
 ##
 
 body package_method emerge
 {
- package_changes => "individual";
- package_list_command => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
- package_list_name_regex => ".*/([^\s]+)-\d.*";
- package_list_version_regex => ".*/[^\s]+-(\d.*)";
- package_installed_regex => ".*";                          # all reported are installed
- package_name_convention => "$(name)";
- package_list_update_command => "/bin/true";               # I prefer manual syncing
- #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
+ package_changes               => "individual";
+ package_list_command          => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
+ package_list_name_regex       => ".*/([^\s]+)-\d.*";
+ package_list_version_regex    => ".*/[^\s]+-(\d.*)";
+ package_installed_regex       => ".*";                          # all reported are installed
+ package_name_convention       => "$(name)";
+ package_list_update_command   => "/bin/true";               # I prefer manual syncing
+ #package_list_update_command  => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
 
- package_add_command => "/usr/bin/emerge -q --quiet-build";
+ package_add_command    => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
- package_patch_command => "/usr/bin/emerge --update";
+ package_patch_command  => "/usr/bin/emerge --update";
  package_verify_command => "/usr/bin/emerge -s";
  package_noverify_regex => ".*(Not Installed|Applications found : 0).*";
 }
@@ -2301,12 +2301,12 @@ package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => "(.*)\s+.*";
 package_list_version_regex => ".*\s+(.*)";
-package_installed_regex => ".*";
+package_installed_regex    => ".*";
 
 package_name_convention => "$(name)";
-package_add_command => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
-package_delete_command => "/usr/bin/pacman -Rs --noconfirm";
-package_update_command => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
+package_add_command     => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
+package_delete_command  => "/usr/bin/pacman -Rs --noconfirm";
+package_update_command  => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
 }
 
 ##
@@ -2316,151 +2316,151 @@ package_update_command => "/usr/bin/pacman -S --noconfirm --noprogressbar --need
 body package_method generic
 {
 SuSE::
- package_changes => "bulk";
- package_list_command => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
+ package_changes               => "bulk";
+ package_list_command          => "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
  # set it to "0" to avoid caching of list during upgrade
- package_list_update_command => "/usr/bin/zypper list-updates";
+ package_list_update_command   => "/usr/bin/zypper list-updates";
  package_list_update_ifelapsed => "0";
- package_patch_list_command => "/usr/bin/zypper patches";
- package_installed_regex => "i.*";
- package_list_name_regex    => "[^|]+\|[^|]+\|\s+([^\s]+).*";
- package_list_version_regex => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
- package_list_arch_regex    => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_patch_list_command    => "/usr/bin/zypper patches";
+ package_installed_regex       => "i.*";
+ package_list_name_regex       => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_list_version_regex    => "[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_list_arch_regex       => "[^|]+\|[^|]+\|[^|]+\|[^|]+\|\s+([^\s]+).*";
  package_patch_installed_regex => ".*Installed.*|.*Not Applicable.*";
- package_patch_name_regex    => "[^|]+\|\s+([^\s]+).*";
- package_patch_version_regex => "[^|]+\|[^|]+\|\s+([^\s]+).*";
- package_name_convention => "$(name)";
- package_add_command => "/usr/bin/zypper --non-interactive install";
- package_delete_command => "/usr/bin/zypper --non-interactive remove --force-resolution";
- package_update_command => "/usr/bin/zypper --non-interactive update";
- package_patch_command => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
- package_verify_command => "/usr/bin/zypper --non-interactive verify$";
+ package_patch_name_regex      => "[^|]+\|\s+([^\s]+).*";
+ package_patch_version_regex   => "[^|]+\|[^|]+\|\s+([^\s]+).*";
+ package_name_convention       => "$(name)";
+ package_add_command           => "/usr/bin/zypper --non-interactive install";
+ package_delete_command        => "/usr/bin/zypper --non-interactive remove --force-resolution";
+ package_update_command        => "/usr/bin/zypper --non-interactive update";
+ package_patch_command         => "/usr/bin/zypper --non-interactive patch$"; # $ means no args
+ package_verify_command        => "/usr/bin/zypper --non-interactive verify$";
 
 redhat::
- package_changes => "bulk";
- package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
- package_patch_list_command => "/usr/bin/yum --quiet check-update";
- package_list_name_regex    => "^(\S+?)\s\S+?\s\S+$";
- package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
- package_list_arch_regex    => "^\S+?\s\S+?\s(\S+)$";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
- package_list_update_command => "/usr/bin/yum --quiet check-update";
+ package_changes               => "bulk";
+ package_list_command          => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
+ package_patch_list_command    => "/usr/bin/yum --quiet check-update";
+ package_list_name_regex       => "^(\S+?)\s\S+?\s\S+$";
+ package_list_version_regex    => "^\S+?\s(\S+?)\s\S+$";
+ package_list_arch_regex       => "^\S+?\s\S+?\s(\S+)$";
+ package_installed_regex       => ".*";
+ package_name_convention       => "$(name)";
+ package_list_update_command   => "/usr/bin/yum --quiet check-update";
  package_list_update_ifelapsed => "0";     # sometimes, caching is pretty disturbing
  package_patch_installed_regex => "^\s.*";
- package_patch_name_regex    => "([^.]+).*";
- package_patch_version_regex => "[^\s]\s+([^\s]+).*";
- package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
- package_add_command    => "/usr/bin/yum -y install";
- package_update_command => "/usr/bin/yum -y update";
- package_patch_command => "/usr/bin/yum -y update";
- package_delete_command => "/bin/rpm -e --nodeps --allmatches";
- package_verify_command => "/bin/rpm -V";
+ package_patch_name_regex      => "([^.]+).*";
+ package_patch_version_regex   => "[^\s]\s+([^\s]+).*";
+ package_patch_arch_regex      => "[^.]+\.([^\s]+).*";
+ package_add_command           => "/usr/bin/yum -y install";
+ package_update_command        => "/usr/bin/yum -y update";
+ package_patch_command         => "/usr/bin/yum -y update";
+ package_delete_command        => "/bin/rpm -e --nodeps --allmatches";
+ package_verify_command        => "/bin/rpm -V";
 
-# package_changes => "bulk";
-# package_list_command => "/usr/bin/yum list installed";
-# package_patch_list_command => "/usr/bin/yum check-update";
-# package_list_name_regex    => "([^.]+).*";
-# package_list_version_regex => "[^\s]\s+([^\s]+).*";
-# package_list_arch_regex    => "[^.]+\.([^\s]+).*";
-# package_installed_regex => ".*(installed|\s+@).*";
-# package_name_convention => "$(name).$(arch)";
+# package_changes               => "bulk";
+# package_list_command          => "/usr/bin/yum list installed";
+# package_patch_list_command    => "/usr/bin/yum check-update";
+# package_list_name_regex       => "([^.]+).*";
+# package_list_version_regex    => "[^\s]\s+([^\s]+).*";
+# package_list_arch_regex       => "[^.]+\.([^\s]+).*";
+# package_installed_regex       => ".*(installed|\s+@).*";
+# package_name_convention       => "$(name).$(arch)";
 # package_list_update_ifelapsed => "240";
 # package_patch_installed_regex => "^\s.*";
-# package_patch_name_regex    => "([^.]+).*";
-# package_patch_version_regex => "[^\s]\s+([^\s]+).*";
-# package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
-# package_add_command => "/usr/bin/yum -y install";
-# package_delete_command => "/bin/rpm -e --nodeps";
-# package_verify_command => "/bin/rpm -V";
+# package_patch_name_regex      => "([^.]+).*";
+# package_patch_version_regex   => "[^\s]\s+([^\s]+).*";
+# package_patch_arch_regex      => "[^.]+\.([^\s]+).*";
+# package_add_command           => "/usr/bin/yum -y install";
+# package_delete_command        => "/bin/rpm -e --nodeps";
+# package_verify_command        => "/bin/rpm -V";
 
 debian::
- package_changes => "bulk";
- package_list_command => "/usr/bin/dpkg -l";
- package_list_name_regex    => ".i\s+([^\s]+).*";
- package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
- package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
- package_name_convention => "$(name)";
+ package_changes               => "bulk";
+ package_list_command          => "/usr/bin/dpkg -l";
+ package_list_name_regex       => ".i\s+([^\s]+).*";
+ package_list_version_regex    => ".i\s+[^\s]+\s+([^\s]+).*";
+ package_installed_regex       => ".i.*"; # packages that have been uninstalled may be listed
+ package_name_convention       => "$(name)";
  package_list_update_ifelapsed => "240";		# 4 hours
 
 debian.have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_add_command         => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
    package_list_update_command => "/usr/bin/aptitude update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_verify_command =>  "/usr/bin/aptitude show";
-   package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
+   package_delete_command      => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes remove";
+   package_update_command      =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_patch_command       =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_verify_command      =>  "/usr/bin/aptitude show";
+   package_noverify_regex      => "(State: not installed|E: Unable to locate package .*)";
 
-   package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 debian.!have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_add_command         => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
    package_list_update_command => "/usr/bin/apt-get update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_verify_command => "/usr/bin/dpkg -s";
+   package_delete_command      => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes remove";
+   package_update_command      =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_patch_command       =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
+   package_verify_command      => "/usr/bin/dpkg -s";
    package_noverify_returncode => "1";
 
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
-   package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+   package_patch_list_command  => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_name_regex    => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 freebsd::
- package_changes => "individual";
- package_list_command => "/usr/sbin/pkg_info";
+ package_changes            => "individual";
+ package_list_command       => "/usr/sbin/pkg_info";
  package_list_name_regex    => "([^\s]+)-.*";
  package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => "([^\s]+)-.*";
- package_version_regex => "[^\s]+-([^\s]+).*";
- package_installed_regex => ".*";
- package_name_convention => "$(name)-$(version)";
- package_add_command => "/usr/sbin/pkg_add -r";
- package_delete_command => "/usr/sbin/pkg_delete";
+ package_name_regex         => "([^\s]+)-.*";
+ package_version_regex      => "[^\s]+-([^\s]+).*";
+ package_installed_regex    => ".*";
+ package_name_convention    => "$(name)-$(version)";
+ package_add_command        => "/usr/sbin/pkg_add -r";
+ package_delete_command     => "/usr/sbin/pkg_delete";
 
 alpinelinux::
- package_changes => "bulk";
- package_list_command => "/sbin/apk info -v";
+ package_changes            => "bulk";
+ package_list_command       => "/sbin/apk info -v";
  package_list_name_regex    => "([^\s]+)-.*";
  package_list_version_regex => "[^\s]+-([^\s]+).*";
- package_name_regex    => ".*";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
- package_add_command => "/sbin/apk add";
- package_delete_command => "/sbin/apk del";
+ package_name_regex         => ".*";
+ package_installed_regex    => ".*";
+ package_name_convention    => "$(name)";
+ package_add_command        => "/sbin/apk add";
+ package_delete_command     => "/sbin/apk del";
 
 gentoo::
- package_changes => "individual";
- package_list_command => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
- package_list_name_regex => ".*/([^\s]+)-\d.*";
- package_list_version_regex => ".*/[^\s]+-(\d.*)";
- package_installed_regex => ".*";                          # all reported are installed
- package_name_convention => "$(name)";
- package_list_update_command => "/bin/true";               # I prefer manual syncing
- #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
+ package_changes               => "individual";
+ package_list_command          => "/bin/sh -c '/bin/ls -d /var/db/pkg/*/* | cut -c 13-'";
+ package_list_name_regex       => ".*/([^\s]+)-\d.*";
+ package_list_version_regex    => ".*/[^\s]+-(\d.*)";
+ package_installed_regex       => ".*";                          # all reported are installed
+ package_name_convention       => "$(name)";
+ package_list_update_command   => "/bin/true";               # I prefer manual syncing
+ #package_list_update_command  => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
 
- package_add_command => "/usr/bin/emerge -q --quiet-build";
+ package_add_command    => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
- package_patch_command => "/usr/bin/emerge --update";
+ package_patch_command  => "/usr/bin/emerge --update";
  package_verify_command => "/usr/bin/emerge -s";
  package_noverify_regex => ".*(Not Installed|Applications found : 0).*";
 
 archlinux::
- package_changes => "bulk";
- package_list_command => "/usr/bin/pacman -Q";
- package_list_name_regex    => "(.*)\s+.*";
- package_list_version_regex => ".*\s+(.*)";
- package_installed_regex => ".*";
- package_name_convention => "$(name)";
+ package_changes               => "bulk";
+ package_list_command          => "/usr/bin/pacman -Q";
+ package_list_name_regex       => "(.*)\s+.*";
+ package_list_version_regex    => ".*\s+(.*)";
+ package_installed_regex       => ".*";
+ package_name_convention       => "$(name)";
  package_list_update_ifelapsed => "240";
- package_add_command => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
- package_delete_command => "/usr/bin/pacman -Rs --noconfirm";
- package_update_command => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
+ package_add_command           => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
+ package_delete_command        => "/usr/bin/pacman -Rs --noconfirm";
+ package_update_command        => "/usr/bin/pacman -S --noconfirm --noprogressbar --needed";
 }
 
 ##
@@ -2481,10 +2481,10 @@ sensible_count => "2";
 
 body mount nfs(server,source)
 {
-mount_type => "nfs";
+mount_type   => "nfs";
 mount_source => "$(source)";
 mount_server => "$(server)";
-edit_fstab => "true";
+edit_fstab   => "true";
 }
 
 
@@ -2492,11 +2492,11 @@ edit_fstab => "true";
 
 body mount nfs_p(server,source,perm)
 {
-mount_type => "nfs";
-mount_source => "$(source)";
-mount_server => "$(server)";
+mount_type    => "nfs";
+mount_source  => "$(source)";
+mount_server  => "$(server)";
 mount_options => {"$(perm)"};
-edit_fstab => "true";
+edit_fstab    => "true";
 }
 
 ##
@@ -2505,7 +2505,7 @@ body mount unmount
 {
 mount_type => "nfs";
 edit_fstab => "true";
-unmount => "true";
+unmount    => "true";
 }
 
 ##-------------------------------------------------------
@@ -2514,7 +2514,7 @@ unmount => "true";
 
 body process_select exclude_procs(x)
 {
-command => "$(x)";
+command        => "$(x)";
 process_result => "!command";
 }
 
@@ -2531,7 +2531,7 @@ process_result => "stime";
 body process_count any_count(cl)
 
 {
-match_range => "0,0";
+match_range         => "0,0";
 out_of_range_define => { "$(cl)" };
 }
 
@@ -2539,7 +2539,7 @@ out_of_range_define => { "$(cl)" };
 
 body process_count check_range(name,lower,upper)
 {
-match_range => irange("$(lower)","$(upper)");
+match_range         => irange("$(lower)","$(upper)");
 out_of_range_define => { "$(name)_out_of_range" };
 }
 
@@ -2575,18 +2575,18 @@ vars:
  any::
 
   "stakeholders[cfengine3]" slist => { "cfengine_in" };
-  "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
-  "stakeholders[mongod]" slist => { "mongo_in" };
-  "stakeholders[postfix]" slist => { "smtp_in" };
-  "stakeholders[sendmail]" slist => { "smtp_in" };
-  "stakeholders[www]" slist => { "www_in", "wwws_in", "www_alt_in" };
-  "stakeholders[ssh]" slist => { "ssh_in" };
-  "stakeholders[mysql]" slist => { "mysql_in" };
-  "stakeholders[nfs]" slist => { "nfsd_in" };
-  "stakeholders[syslog]" slist => { "syslog" };
-  "stakeholders[rsyslog]" slist => { "syslog" };
-  "stakeholders[tomcat5]" slist => { "www_alt_in" };
-  "stakeholders[tomcat6]" slist => { "www_alt_in" };
+  "stakeholders[acpid]"     slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
+  "stakeholders[mongod]"    slist => { "mongo_in" };
+  "stakeholders[postfix]"   slist => { "smtp_in" };
+  "stakeholders[sendmail]"  slist => { "smtp_in" };
+  "stakeholders[www]"       slist => { "www_in", "wwws_in", "www_alt_in" };
+  "stakeholders[ssh]"       slist => { "ssh_in" };
+  "stakeholders[mysql]"     slist => { "mysql_in" };
+  "stakeholders[nfs]"       slist => { "nfsd_in" };
+  "stakeholders[syslog]"    slist => { "syslog" };
+  "stakeholders[rsyslog]"   slist => { "syslog" };
+  "stakeholders[tomcat5]"   slist => { "www_alt_in" };
+  "stakeholders[tomcat6]"   slist => { "www_alt_in" };
 
  linux::
 
@@ -2816,8 +2816,8 @@ vars:
   "pattern[pand]"      string => ".*pand.*";
 
   "startcommand[pand]" string => "/etc/init.d/pand start";
-  "stopcommand[pcscd]"  string => "/etc/init.d/pand stop";
-  "pattern[pcscd]"      string => ".*pcscd.*";
+  "stopcommand[pcscd]" string => "/etc/init.d/pand stop";
+  "pattern[pcscd]"     string => ".*pcscd.*";
 
   "startcommand[portmap]" string => "/etc/init.d/portmap start";
   "stopcommand[portmap]"  string => "/etc/init.d/portmap stop";
@@ -3001,10 +3001,10 @@ processes:
 
 body database_server local_mysql(username, password)
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "mysql";
+db_server_owner         => "$(username)";
+db_server_password      => "$(password)";
+db_server_host          => "localhost";
+db_server_type          => "mysql";
 db_server_connection_db => "mysql";
 }
 
@@ -3012,10 +3012,10 @@ db_server_connection_db => "mysql";
 
 body database_server local_postgresql(username, password)
 {
-db_server_owner => "$(username)";
-db_server_password => "$(password)";
-db_server_host => "localhost";
-db_server_type => "postgres";
+db_server_owner         => "$(username)";
+db_server_password      => "$(password)";
+db_server_host          => "localhost";
+db_server_type          => "postgres";
 db_server_connection_db => "postgres";
 }
 
@@ -3065,7 +3065,7 @@ env_spec =>
 body match_value scan_log(line)
 {
 select_line_matching => "$(line)";
-track_growing_file => "true";
+track_growing_file   => "true";
 }
 
 ##
@@ -3073,7 +3073,7 @@ track_growing_file => "true";
 body match_value scan_changing_file(line)
 {
 select_line_matching => "$(line)";
-track_growing_file => "false";
+track_growing_file   => "false";
 }
 
 ##
@@ -3081,7 +3081,7 @@ track_growing_file => "false";
 body match_value single_value(regex)
 {
 select_line_matching => "$(regex)";
-extraction_regex => "($(regex))";
+extraction_regex     => "($(regex))";
 }
 
 ##
@@ -3089,14 +3089,14 @@ extraction_regex => "($(regex))";
 body match_value line_match_value(line_match, extract_regex)
 {
 select_line_matching => "$(line_match)";
-extraction_regex => "$(extract_regex)";
+extraction_regex     => "$(extract_regex)";
 }
 
 ##
 
 body action sample_rate(x)
 {
-ifelapsed => "$(x)";
+ifelapsed   => "$(x)";
 expireafter => "10";
 }
 

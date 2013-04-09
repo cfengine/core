@@ -63,7 +63,7 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags);
 static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
-int SelectLeaf(char *path, struct stat *sb, Attributes attr)
+int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
 {
     int result = true;
     Rlist *rp;
@@ -71,35 +71,30 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr)
     StringSet *leaf_attr = StringSetNew();
 
 #ifdef __MINGW32__
-    if (attr.select.issymlinkto != NULL)
+    if (fs.issymlinkto != NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "files_select.issymlinkto is ignored on Windows (symbolic links are not supported by Windows)");
     }
 
-    if (attr.select.groups != NULL)
+    if (fs.groups != NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
               "files_select.search_groups is ignored on Windows (file groups are not supported by Windows)");
     }
 
-    if (attr.select.bsdflags != NULL)
+    if (fs.bsdflags != NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "files_select.search_bsdflags is ignored on Windows");
     }
 #endif /* __MINGW32__ */
 
-    if (!attr.haveselect)
-    {
-        return true;
-    }
-
-    if (attr.select.name == NULL)
+    if (fs.name == NULL)
     {
         StringSetAdd(leaf_attr, xstrdup("leaf_name"));
     }
 
-    for (rp = attr.select.name; rp != NULL; rp = rp->next)
+    for (rp = fs.name; rp != NULL; rp = rp->next)
     {
         if (SelectNameRegexMatch(path, rp->item))
         {
@@ -108,12 +103,12 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr)
         }
     }
 
-    if (attr.select.path == NULL)
+    if (fs.path == NULL)
     {
         StringSetAdd(leaf_attr, xstrdup("leaf_path"));
     }
 
-    for (rp = attr.select.path; rp != NULL; rp = rp->next)
+    for (rp = fs.path; rp != NULL; rp = rp->next)
     {
         if (SelectPathRegexMatch(path, rp->item))
         {
@@ -122,17 +117,17 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr)
         }
     }
 
-    if (SelectTypeMatch(sb, attr.select.filetypes))
+    if (SelectTypeMatch(sb, fs.filetypes))
     {
         StringSetAdd(leaf_attr, xstrdup("file_types"));
     }
 
-    if ((attr.select.owners) && (SelectOwnerMatch(path, sb, attr.select.owners)))
+    if ((fs.owners) && (SelectOwnerMatch(path, sb, fs.owners)))
     {
         StringSetAdd(leaf_attr, xstrdup("owner"));
     }
 
-    if (attr.select.owners == NULL)
+    if (fs.owners == NULL)
     {
         StringSetAdd(leaf_attr, xstrdup("owner"));
     }
@@ -141,67 +136,67 @@ int SelectLeaf(char *path, struct stat *sb, Attributes attr)
     StringSetAdd(leaf_attr, xstrdup("group"));
 
 #else /* !__MINGW32__ */
-    if ((attr.select.groups) && (SelectGroupMatch(sb, attr.select.groups)))
+    if ((fs.groups) && (SelectGroupMatch(sb, fs.groups)))
     {
         StringSetAdd(leaf_attr, xstrdup("group"));
     }
 
-    if (attr.select.groups == NULL)
+    if (fs.groups == NULL)
     {
         StringSetAdd(leaf_attr, xstrdup("group"));
     }
 #endif /* !__MINGW32__ */
 
-    if (SelectModeMatch(sb, attr.select.perms))
+    if (SelectModeMatch(sb, fs.perms))
     {
         StringSetAdd(leaf_attr, xstrdup("mode"));
     }
 
 #if defined HAVE_CHFLAGS
-    if (SelectBSDMatch(sb, attr.select.bsdflags))
+    if (SelectBSDMatch(sb, fs.bsdflags))
     {
         StringSetAdd(leaf_attr, xstrdup("bsdflags"));
     }
 #endif
 
-    if (SelectTimeMatch(sb->st_atime, attr.select.min_atime, attr.select.max_atime))
+    if (SelectTimeMatch(sb->st_atime, fs.min_atime, fs.max_atime))
     {
         StringSetAdd(leaf_attr, xstrdup("atime"));
     }
 
-    if (SelectTimeMatch(sb->st_ctime, attr.select.min_ctime, attr.select.max_ctime))
+    if (SelectTimeMatch(sb->st_ctime, fs.min_ctime, fs.max_ctime))
     {
         StringSetAdd(leaf_attr, xstrdup("ctime"));
     }
 
-    if (SelectSizeMatch(sb->st_size, attr.select.min_size, attr.select.max_size))
+    if (SelectSizeMatch(sb->st_size, fs.min_size, fs.max_size))
     {
         StringSetAdd(leaf_attr, xstrdup("size"));
     }
 
-    if (SelectTimeMatch(sb->st_mtime, attr.select.min_mtime, attr.select.max_mtime))
+    if (SelectTimeMatch(sb->st_mtime, fs.min_mtime, fs.max_mtime))
     {
         StringSetAdd(leaf_attr, xstrdup("mtime"));
     }
 
-    if ((attr.select.issymlinkto) && (SelectIsSymLinkTo(path, attr.select.issymlinkto)))
+    if ((fs.issymlinkto) && (SelectIsSymLinkTo(path, fs.issymlinkto)))
     {
         StringSetAdd(leaf_attr, xstrdup("issymlinkto"));
     }
 
-    if ((attr.select.exec_regex) && (SelectExecRegexMatch(path, attr.select.exec_regex, attr.select.exec_program)))
+    if ((fs.exec_regex) && (SelectExecRegexMatch(path, fs.exec_regex, fs.exec_program)))
     {
         StringSetAdd(leaf_attr, xstrdup("exec_regex"));
     }
 
-    if ((attr.select.exec_program) && (SelectExecProgram(path, attr.select.exec_program)))
+    if ((fs.exec_program) && (SelectExecProgram(path, fs.exec_program)))
     {
         StringSetAdd(leaf_attr, xstrdup("exec_program"));
     }
 
-    result = EvalFileResult(attr.select.result, leaf_attr);
+    result = EvalFileResult(fs.result, leaf_attr);
 
-    CfDebug("Select result \"%s\"on %s was %d\n", attr.select.result, path, result);
+    CfDebug("Select result \"%s\"on %s was %d\n", fs.result, path, result);
 
     StringSetDestroy(leaf_attr);
 

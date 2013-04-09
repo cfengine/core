@@ -40,13 +40,13 @@
 #include "misc_lib.h"
 #include "rlist.h"
 
+#ifndef __MINGW32__
+
 /* seconds */
 #define RPCTIMEOUT 60
 
-int FSTAB_EDITS;
-Item *FSTABLIST = NULL;
-
-#ifndef __MINGW32__
+static int FSTAB_EDITS;
+static Item *FSTABLIST = NULL;
 
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
@@ -750,6 +750,23 @@ static void DeleteThisItem(Item **liststart, Item *entry)
         }
 
         free((char *) entry);
+    }
+}
+
+void CleanupNFS(EvalContext *ctx)
+{
+    Attributes a = { {0} };
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+
+    if (FSTAB_EDITS && FSTABLIST && !DONTDO)
+    {
+        if (FSTABLIST)
+        {
+            SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
+            DeleteItemList(FSTABLIST);
+            FSTABLIST = NULL;
+        }
+        FSTAB_EDITS = 0;
     }
 }
 

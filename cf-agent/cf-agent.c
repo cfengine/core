@@ -1599,29 +1599,7 @@ static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_STORAGE:
-#ifndef __MINGW32__
-    {
-        Attributes a = { {0} };
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
-
-        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
-        {
-            if (FSTABLIST)
-            {
-                SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
-                DeleteItemList(FSTABLIST);
-                FSTABLIST = NULL;
-            }
-            FSTAB_EDITS = 0;
-        }
-
-        if (!DONTDO && CF_MOUNTALL)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
-            MountAll();
-        }
-    }
-#endif /* !__MINGW32__ */
+        DeleteStorageContext(ctx);
         break;
 
     case TYPE_SEQUENCE_PACKAGES:

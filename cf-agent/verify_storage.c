@@ -505,3 +505,16 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 }
 
 #endif /* !__MINGW32__ */
+
+void DeleteStorageContext(EvalContext *ctx)
+{
+#ifndef __MINGW32__
+    CleanupNFS(ctx);
+
+    if (!DONTDO && CF_MOUNTALL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
+        MountAll();
+    }
+#endif /* !__MINGW32__ */
+}

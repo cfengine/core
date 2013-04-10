@@ -269,11 +269,6 @@ category   [a-zA-Z_]+:
 
                           P.currentstring = xstrdup(tmp);
 
-                          if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-                          {
-                              IsCf3VarString(tmp);
-                          }
-
                           free(tmp);
                           return QSTRING;
                       }

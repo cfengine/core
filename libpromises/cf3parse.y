@@ -62,6 +62,7 @@ static bool INSTALL_SKIP = false;
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token OP CP
 
 %%
 
@@ -191,7 +192,9 @@ blockid:               IDSYNTAX
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 arglist:               /* Empty */
-                     | '(' aitems ')';
+                     |  OP { ParserDebug("P:%s:%s:%s begin arglist\n", P.block,P.blocktype,P.blockid); }
+                        aitems 
+                        CP { ParserDebug("P:%s:%s:%s end arglist\n", P.block,P.blocktype,P.blockid); }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -203,8 +206,14 @@ aitems:                aitem
 
 aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                        {
+                           ParserDebug("P:%s:%s:%s  arg id: %s\n", P.block,P.blocktype,P.blockid, P.currentid);
                            RlistAppendScalar(&(P.useargs),P.currentid);
-                       };
+                       }
+                     | error
+                       {
+                          yyclearin;
+                          ParseError("Expected id, wrong input:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -700,8 +709,9 @@ usefunction:           functionid givearglist
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-givearglist:           '('
+givearglist:           OP 
                        {
+                           ParserDebug("P:%s:%s:%s begin givearglist\n", P.block,P.blocktype,P.blockid);
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                            {
                                fatal_yyerror("Nesting of functions is deeper than recommended");
@@ -711,8 +721,9 @@ givearglist:           '('
                        }
 
                        gaitems
-                       ')'
+                       CP 
                        {
+                           ParserDebug("P:%s:%s:%s end givearglist\n", P.block,P.blocktype,P.blockid);
                            CfDebug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;

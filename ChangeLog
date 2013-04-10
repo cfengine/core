@@ -1,4 +1,9 @@
 3.5.0 - Beta 2
+
+       New features:
+       - classes promises now take an optional scope constraint.
+
+       Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
 
 3.5.0 - Beta 1

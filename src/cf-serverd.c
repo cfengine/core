@@ -941,7 +941,7 @@ static void *HandleConnection(ServerConnectionState *conn)
     DisableSendDelays(conn->sd_reply);
 
     struct timeval tv = {
-        .tv_sec = CONNTIMEOUT,
+        .tv_sec = CONNTIMEOUT * 20,
     };
 
     SetReceiveTimeout(conn->sd_reply, &tv);

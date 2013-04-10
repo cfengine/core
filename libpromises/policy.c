@@ -3130,3 +3130,9 @@ bool BodyTypeCheck(const char *body_type)
 {
     return BodySyntaxLookup(body_type) != NULL;
 }
+
+/* FIXME: alway true */
+bool PromiseTypeCheck(const char *body_type)
+{
+    return true;
+}

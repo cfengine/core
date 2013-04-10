@@ -428,4 +428,9 @@ bool BundleTypeCheck(const char *name);
  */
 bool BodyTypeCheck(const char *name);
 
+/**
+ * @brief Check whether the promise type is allowed one
+ */
+bool PromiseTypeCheck(const char *name);
+
 #endif

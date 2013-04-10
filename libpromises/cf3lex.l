@@ -123,11 +123,11 @@ cb         [}]
  *
  */
 
-qstring    \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
+qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
-class      [.|&!()a-zA-Z0-9_\200-\377:]+::
+class          [.|&!()a-zA-Z0-9_\200-\377:]+::
 
-category   [a-zA-Z_]+:
+promise_type   [a-zA-Z_]+:
 
 %%
 
@@ -224,10 +224,10 @@ category   [a-zA-Z_]+:
                           return CLASS;
                       }
 
-{category}            {
-                          size_t token_size = strlen(yytext);
+{promise_type}        {
+                          size_t token_size = yyleng;
                           P.line_pos += token_size;
-                          ParserDebug("\tL:category %s %d\n", yytext, P.line_pos);
+                          ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
                           P.offsets.last_promise_type_id = P.offsets.current - token_size;
                           yytext[token_size - 1] = '\0';
                           strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
@@ -238,7 +238,7 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
 
-                          return CATEGORY;
+                          return PROMISE_TYPE;
                       }
 
 {qstring}             {

@@ -758,7 +758,6 @@ typedef struct
 {
     char *filename;
     Item *file_start;
-    Item *file_classes;
     int num_edits;
     int empty_first;
 #ifdef HAVE_LIBXML2

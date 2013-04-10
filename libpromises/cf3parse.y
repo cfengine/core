@@ -194,7 +194,11 @@ blockid:               IDSYNTAX
 arglist:               /* Empty */ 
                      | arglist_begin aitems arglist_end
                      | arglist_begin arglist_end
-
+                     | arglist_begin error
+                       {
+                          yyclearin;
+                          ParseError("error in bundle function definition expected ), wrong input:%s", yytext);
+                       }
 
 arglist_begin:         OP
                        {
@@ -204,10 +208,6 @@ arglist_begin:         OP
 arglist_end:           CP
                        {
                            ParserDebug("P:%s:%s:%s arglist end:%s\n", P.block,P.blocktype,P.blockid, yytext);
-                       }
-                     | error 
-                       {
-                          ParseError("error in bundle function definition expected ), wrong input:%s", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

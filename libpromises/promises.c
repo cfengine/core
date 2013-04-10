@@ -164,7 +164,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
-    pcopy->ref = pp->ref;
+    pcopy->comment = pp->comment;
     pcopy->done = pp->done;
     pcopy->this_server = pp->this_server;
     pcopy->donep = pp->donep;
@@ -359,7 +359,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
     pcopy->offset.line = pp->offset.line;
-    pcopy->ref = pp->ref;
+    pcopy->comment = pp->comment;
     pcopy->cache = pp->cache;
     pcopy->this_server = pp->this_server;
     pcopy->conn = pp->conn;
@@ -400,9 +400,9 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             }
             else
             {
-                pcopy->ref = final.item;        /* No alloc reference to comment item */
+                pcopy->comment = final.item;        /* No alloc reference to comment item */
 
-                if (pcopy->ref && (strstr(pcopy->ref, "$(this.promiser)") || strstr(pcopy->ref, "${this.promiser}")))
+                if (pcopy->comment && (strstr(pcopy->comment, "$(this.promiser)") || strstr(pcopy->comment, "${this.promiser}")))
                 {
                     DereferenceComment(pcopy);
                 }
@@ -431,9 +431,9 @@ void PromiseRef(OutputLevel level, const Promise *pp)
               pp->offset.line);
     }
 
-    if (pp->ref)
+    if (pp->comment)
     {
-        CfOut(level, "", "Comment: %s\n", pp->ref);
+        CfOut(level, "", "Comment: %s\n", pp->comment);
     }
 
     switch (pp->promisee.type)
@@ -462,16 +462,16 @@ static void DereferenceComment(Promise *pp)
     char pre_buffer[CF_BUFSIZE], post_buffer[CF_BUFSIZE], buffer[CF_BUFSIZE], *sp;
     int offset = 0;
 
-    strlcpy(pre_buffer, pp->ref, CF_BUFSIZE);
+    strlcpy(pre_buffer, pp->comment, CF_BUFSIZE);
 
     if ((sp = strstr(pre_buffer, "$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
     {
         *sp = '\0';
         offset = sp - pre_buffer + strlen("$(this.promiser)");
-        strncpy(post_buffer, pp->ref + offset, CF_BUFSIZE);
+        strncpy(post_buffer, pp->comment + offset, CF_BUFSIZE);
         snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
 
-        free(pp->ref);
-        pp->ref = xstrdup(buffer);
+        free(pp->comment);
+        pp->comment = xstrdup(buffer);
     }
 }

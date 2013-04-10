@@ -3360,9 +3360,9 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);
     }
 
-    if (pp->ref)
+    if (pp->comment)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->ref);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->comment);
     }
 
     if (attr.change.update && !DONTDO)

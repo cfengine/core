@@ -107,7 +107,7 @@ struct Promise_
     PromiseType *parent_promise_type;
 
     char *classes;
-    char *ref;                  /* comment */
+    char *comment;
     char *promiser;
     Rval promisee;
     Seq *conlist;

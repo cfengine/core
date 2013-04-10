@@ -159,9 +159,9 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
                 CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
-                if (pp->ref)
+                if (pp->comment)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->ref);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->comment);
                 }
 
                 if (attr.change.update)

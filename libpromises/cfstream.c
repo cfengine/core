@@ -212,9 +212,9 @@ static void AmendErrorMessageWithPromiseInformation(EvalContext *ctx, Item **err
             break;
         }
 
-        if (pp->ref)
+        if (pp->comment)
         {
-            snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->ref);
+            snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->comment);
             AppendItem(error_message, output, NULL);
         }
     }

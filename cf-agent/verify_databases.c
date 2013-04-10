@@ -397,7 +397,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
     if ((a.database.operation)
         && ((strcmp(a.database.operation, "delete") == 0) || (strcmp(a.database.operation, "drop") == 0)))
     {
-        if (pp->ref == NULL)
+        if (pp->comment == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
                   "When specifying a delete/drop from an SQL database you must add a comment. Take a backup of the database before making this change. This is a highly destructive operation.");

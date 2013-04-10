@@ -513,10 +513,10 @@ void PromiseBanner(Promise *pp)
         printf("\n");
     }
 
-    if (pp->ref)
+    if (pp->comment)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    Comment:  %s\n", pp->ref);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    Comment:  %s\n", pp->comment);
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");

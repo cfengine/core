@@ -1029,7 +1029,7 @@ void PromiseTypeDestroy(PromiseType *promise_type)
                 ThreadUnlock(cft_policy);
             }
             ThreadLock(cft_policy);
-            free(pp->ref);
+            free(pp->comment);
             ThreadUnlock(cft_policy);
         }
 
@@ -1835,9 +1835,9 @@ void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_M
         EVP_DigestUpdate(&context, pp->promiser, strlen(pp->promiser));
     }
 
-    if (pp->ref)
+    if (pp->comment)
     {
-        EVP_DigestUpdate(&context, pp->ref, strlen(pp->ref));
+        EVP_DigestUpdate(&context, pp->comment, strlen(pp->comment));
     }
 
     if (pp->this_server)

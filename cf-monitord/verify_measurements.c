@@ -47,9 +47,9 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
 
     if (pp->done)
     {
-        if (pp->ref)
+        if (pp->comment)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->ref);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->comment);
         }
         else
         {

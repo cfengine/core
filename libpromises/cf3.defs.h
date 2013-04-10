@@ -759,7 +759,6 @@ typedef struct
     char *filename;
     Item *file_start;
     int num_edits;
-    int empty_first;
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif

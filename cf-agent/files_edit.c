@@ -51,7 +51,6 @@ EditContext *NewEditContext(char *filename, Attributes a)
     ec = xcalloc(1, sizeof(EditContext));
 
     ec->filename = filename;
-    ec->empty_first = a.edits.empty_before_use;
 
     if (a.haveeditline)
     {

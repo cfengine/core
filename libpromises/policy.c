@@ -1028,12 +1028,9 @@ void PromiseTypeDestroy(PromiseType *promise_type)
                 free(pp->this_server);
                 ThreadUnlock(cft_policy);
             }
-            if (pp->ref_alloc == 'y')
-            {
-                ThreadLock(cft_policy);
-                free(pp->ref);
-                ThreadUnlock(cft_policy);
-            }
+            ThreadLock(cft_policy);
+            free(pp->ref);
+            ThreadUnlock(cft_policy);
         }
 
         SeqDestroy(promise_type->promises);
@@ -1187,7 +1184,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
     pp->org_pp = NULL;
-    pp->ref_alloc = 'n';
 
     return pp;
 }

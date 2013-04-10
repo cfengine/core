@@ -108,7 +108,6 @@ struct Promise_
 
     char *classes;
     char *ref;                  /* comment */
-    char ref_alloc;
     char *promiser;
     Rval promisee;
     Seq *conlist;

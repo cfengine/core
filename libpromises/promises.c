@@ -165,7 +165,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
     pcopy->ref = pp->ref;
-    pcopy->ref_alloc = pp->ref_alloc;
     pcopy->done = pp->done;
     pcopy->this_server = pp->this_server;
     pcopy->donep = pp->donep;
@@ -361,7 +360,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->donep = pp->donep;
     pcopy->offset.line = pp->offset.line;
     pcopy->ref = pp->ref;
-    pcopy->ref_alloc = pp->ref_alloc;
     pcopy->cache = pp->cache;
     pcopy->this_server = pp->this_server;
     pcopy->conn = pp->conn;
@@ -473,12 +471,7 @@ static void DereferenceComment(Promise *pp)
         strncpy(post_buffer, pp->ref + offset, CF_BUFSIZE);
         snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
 
-        if (pp->ref_alloc == 'y')
-        {
-            free(pp->ref);
-        }
-
+        free(pp->ref);
         pp->ref = xstrdup(buffer);
-        pp->ref_alloc = 'y';
     }
 }

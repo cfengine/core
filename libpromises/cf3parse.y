@@ -191,16 +191,29 @@ blockid:               IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-arglist:               /* Empty */
-                     |  OP { ParserDebug("P:%s:%s:%s begin arglist\n", P.block,P.blocktype,P.blockid); }
-                        aitems 
-                        CP { ParserDebug("P:%s:%s:%s end arglist\n", P.block,P.blocktype,P.blockid); }
+arglist:               /* Empty */ 
+                     | arglist_begin aitems arglist_end
+                     | arglist_begin arglist_end
+
+
+arglist_begin:         OP
+                       {
+                           ParserDebug("P:%s:%s:%s arglist begin:%s\n", P.block,P.blocktype,P.blockid, yytext);
+                       }
+
+arglist_end:           CP
+                       {
+                           ParserDebug("P:%s:%s:%s arglist end:%s\n", P.block,P.blocktype,P.blockid, yytext);
+                       }
+                     | error 
+                       {
+                          ParseError("error in bundle function definition expected ), wrong input:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 aitems:                aitem
                      | aitems ',' aitem
-                     |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

@@ -29,13 +29,13 @@
 /*                                                                 */
 /*******************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3parse.h"
+#include "platform.h"
 
-#include "env_context.h"
+#include "cf3parse.h"
 #include "parser_state.h"
-#include "files_names.h"
-#include "vars.h"
+
+#include "env_context.h" /* TODO: remove, for class syntax */
+
 
 /* yyinput/input are generated and unused */
 

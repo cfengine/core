@@ -293,8 +293,8 @@ statements:            /* empty */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-statement:             promise_type
-                     | classpromises;
+statement:             promise_type 
+                     | promise_type classpromises
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -412,7 +412,7 @@ classpromises:         classpromise                     /* BUNDLE ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 classpromise:          class
-                     | promises;
+                     | promises
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -446,7 +446,12 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                    P.currentstype = NULL;
                                }
                            }
-                       };
+                       }
+                     | error 
+                       {
+                          yyclearin;
+                          ParseError("Expected promise type, got:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

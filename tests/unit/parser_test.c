@@ -57,6 +57,11 @@ void test_bundle_invalid_promise_type(void **state)
     assert_true(LoadPolicy("bundle_invalid_promise_type.cf"));
 }
 
+void test_bundle_body_wrong_promise_type_token(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_wrong_promise_type_token.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -71,6 +76,7 @@ int main()
         unit_test(test_body_invalid_type),
         unit_test(test_constraint_ifvarclass_invalid),
         unit_test(test_bundle_invalid_promise_type),
+        unit_test(test_bundle_body_wrong_promise_type_token),
     };
 
     return run_tests(tests);

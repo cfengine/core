@@ -210,17 +210,25 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {class}               {
-                          P.line_pos += strlen(yytext);
+                          char *tmp = NULL;
+                        
+                          tmp = xmalloc(yyleng + 1);
+
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
+
+                          tmp = xstrdup(yytext);
+                          tmp[yyleng-2] = '\0';
 
                           if (P.currentclasses != NULL)
                           {
                               free(P.currentclasses);
                           }
 
-                          yytext[strlen(yytext)-2] = '\0';
-                          ValidateClassSyntax(yytext);
-                          P.currentclasses = xstrdup(yytext);
+                          ValidateClassSyntax(tmp);
+                          P.currentclasses = xstrdup(tmp);
+
+                          free(tmp);
                           return CLASS;
                       }
 

@@ -72,6 +72,13 @@ DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);
 
+/**
+ * @brief An array of ConstraintSyntax for the given body_type
+ * @param body_type Type of body, e.g. 'contain'
+ * @return NULL if not found
+ */
+const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
+
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);
 

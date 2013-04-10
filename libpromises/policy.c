@@ -3126,7 +3126,7 @@ bool BundleTypeCheck(const char *name)
 }
 
 /* FIXME: alway true */
-bool BodyTypeCheck(const char *name)
+bool BodyTypeCheck(const char *body_type)
 {
-    return true;
+    return BodySyntaxLookup(body_type) != NULL;
 }

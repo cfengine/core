@@ -79,6 +79,42 @@ PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *p
     return (PromiseTypeSyntax) { NULL, NULL, NULL };
 }
 
+const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
+{
+    for (int i = 0; i < CF3_MODULES; i++)
+    {
+        for (int j = 0; CF_ALL_PROMISE_TYPES[j] != NULL; j++)
+        {
+            const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[j];
+
+            for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
+            {
+                for (int z = 0; promise_type_syntax[k].bs[z].lval != NULL; z++)
+                {
+                    const ConstraintSyntax constraint_syntax = promise_type_syntax[k].bs[z];
+
+                    if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
+                    {
+                        return constraint_syntax.range;
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    {
+        const PromiseTypeSyntax promise_type_syntax = CF_ALL_BODIES[i];
+
+        if (strcmp(body_type, promise_type_syntax.bundle_type) == 0)
+        {
+            return promise_type_syntax.bs;
+        }
+    }
+
+    return NULL;
+}
+
 /****************************************************************************/
 
 DataType ExpectedDataType(const char *lvalname)

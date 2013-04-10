@@ -62,7 +62,7 @@ static bool INSTALL_SKIP = false;
 %}
 
 %token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
-%token OP CP
+%token OP CP OB CB
 
 %%
 
@@ -230,7 +230,7 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundlebody:            '{'
+bundlebody:            body_begin
                        {
                            if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
@@ -259,7 +259,7 @@ bundlebody:            '{'
                        }
 
                        statements
-                       '}'
+                       CB 
                        {
                            INSTALL_SKIP = false;
                            P.offsets.last_id = -1;
@@ -275,6 +275,18 @@ bundlebody:            '{'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+body_begin:            OB
+                       {
+                           ParserDebug("P:%s:%s:%s begin body open\n", P.block,P.blocktype,P.blockid);
+                       }
+                     | error
+                       {
+                           ParseError("Expected body open:{, wrong input:%s", yytext);
+                       }
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 statements:            /* empty */
                      | statement
                      | statements statement;
@@ -286,7 +298,7 @@ statement:             category
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bodybody:              '{'
+bodybody:              body_begin
                        {
                            P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
                            if (P.currentbody)
@@ -304,7 +316,7 @@ bodybody:              '{'
 
                        bodyattribs
 
-                       '}'
+                       CB 
                        {
                            P.offsets.last_id = -1;
                            P.offsets.last_string = -1;
@@ -647,8 +659,8 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  '{' '}'
-                     | '{' litems '}';
+list:                  OB CB 
+                     | OB litems CB;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

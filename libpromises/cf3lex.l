@@ -97,6 +97,10 @@ op         [(]
 
 cp         [)]
 
+ob         [{]
+
+cb         [}]
+
 /*
  * Three types of quoted strings:
  *
@@ -291,6 +295,18 @@ category   [a-zA-Z_]+:
                           P.line_pos += yyleng;
                           ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
                           return CP;
+                      }
+
+{ob}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return OB;
+                      }
+
+{cb}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return CB;
                       }
 
 

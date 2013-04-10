@@ -50,6 +50,11 @@ void test_bundle_args_forgot_cp(void **state)
     assert_false(LoadPolicy("bundle_args_forgot_cp.cf"));
 }
 
+void bundle_body_forgot_ob(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_forgot_ob.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -61,8 +66,8 @@ int main()
         unit_test(test_body_invalid_type),
         unit_test(test_bundle_args_invalid_type),
         unit_test(test_bundle_args_forgot_cp),
-
         unit_test(test_constraint_ifvarclass_invalid)
+        unit_test(bundle_body_forgot_ob),
     };
 
     return run_tests(tests);

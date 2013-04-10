@@ -93,6 +93,10 @@ assign     =>
 
 arrow      ->
 
+op         [(]
+
+cp         [)]
+
 /*
  * Three types of quoted strings:
  *
@@ -280,6 +284,18 @@ category   [a-zA-Z_]+:
                           ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
+                      }
+
+{op}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return OP;
+                      }
+
+{cp}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return CP;
                       }
 
 

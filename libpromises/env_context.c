@@ -433,6 +433,11 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                     EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
+                else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
+                {
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
+                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
+                }
                 else
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
@@ -467,6 +472,11 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
                     EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
+                }
+                else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
+                {
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
                     EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
                 }
                 else

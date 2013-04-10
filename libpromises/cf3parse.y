@@ -61,7 +61,7 @@ static bool INSTALL_SKIP = false;
 
 %}
 
-%token IDSYNTAX BLOCKID QSTRING CLASS CATEGORY BUNDLE BODY ASSIGN ARROW NAKEDVAR
+%token IDSYNTAX BLOCKID QSTRING CLASS PROMISE_TYPE BUNDLE BODY ASSIGN ARROW NAKEDVAR
 %token OP CP OB CB
 
 %%
@@ -293,7 +293,7 @@ statements:            /* empty */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-statement:             category
+statement:             promise_type
                      | classpromises;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -421,9 +421,17 @@ promises:              promise                  /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-category:              CATEGORY                  /* BUNDLE ONLY */
+promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                        {
-                           CfDebug("\n* Begin new promise type category %s in function \n\n",P.currenttype);
+
+                           CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
+                           ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
+
+                           if (!PromiseTypeCheck(P.currenttype))
+                           {
+                               ParseError("Unknown promise type: %s", P.currenttype);
+                               INSTALL_SKIP = true;
+                           }
 
                            if (strcmp(P.block,"bundle") == 0)
                            {

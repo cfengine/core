@@ -1024,13 +1024,9 @@ void PromiseTypeDestroy(PromiseType *promise_type)
 
             if (pp->this_server != NULL)
             {
-                ThreadLock(cft_policy);
                 free(pp->this_server);
-                ThreadUnlock(cft_policy);
             }
-            ThreadLock(cft_policy);
             free(pp->comment);
-            ThreadUnlock(cft_policy);
         }
 
         SeqDestroy(promise_type->promises);
@@ -1219,8 +1215,6 @@ void PromiseDestroy(Promise *pp)
 {
     if (pp)
     {
-        ThreadLock(cft_policy);
-
         free(pp->promiser);
 
         if (pp->promisee.item)
@@ -1231,10 +1225,10 @@ void PromiseDestroy(Promise *pp)
         free(pp->classes);
 
         // ref and agentpromise_type are only references, do not free
+
         SeqDestroy(pp->conlist);
 
         free((char *) pp);
-        ThreadUnlock(cft_policy);
     }
 }
 

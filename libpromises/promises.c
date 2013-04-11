@@ -164,7 +164,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
-    pcopy->comment = pp->comment;
+    pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->done = pp->done;
     pcopy->this_server = pp->this_server;
     pcopy->donep = pp->donep;
@@ -359,7 +359,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->done = pp->done;
     pcopy->donep = pp->donep;
     pcopy->offset.line = pp->offset.line;
-    pcopy->comment = pp->comment;
+    pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->cache = pp->cache;
     pcopy->this_server = pp->this_server;
     pcopy->conn = pp->conn;
@@ -400,7 +400,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             }
             else
             {
-                pcopy->comment = final.item;        /* No alloc reference to comment item */
+                pcopy->comment = final.item ? xstrdup(final.item) : NULL;
 
                 if (pcopy->comment && (strstr(pcopy->comment, "$(this.promiser)") || strstr(pcopy->comment, "${this.promiser}")))
                 {

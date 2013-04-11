@@ -31,7 +31,7 @@ cf_monitord_SOURCES = \
 
 if !HAVE_NOVA
 cf_monitord_SOURCES += \
-	cf-monitord-enterprise-stubs.c cf-monitord-enterpsise-stubs.h
+	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif
 
 CLEANFILES = *.gcno *.gcda

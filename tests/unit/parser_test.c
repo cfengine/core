@@ -67,6 +67,10 @@ void test_bundle_body_wrong_statement(void **state)
     assert_false(LoadPolicy("bundle_body_wrong_statement.cf"));
 }
 
+void test_bundle_body_forgot_semicolon(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_forgot_semicolon.cf"));
+}
 
 int main()
 {
@@ -84,6 +88,7 @@ int main()
         unit_test(test_bundle_invalid_promise_type),
         unit_test(test_bundle_body_wrong_promise_type_token),
         unit_test(test_bundle_body_wrong_statement),
+        unit_test(test_bundle_body_forgot_semicolon),
     };
 
     return run_tests(tests);

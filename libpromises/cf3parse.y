@@ -424,8 +424,8 @@ classpromise:          class
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promises:              promise                  /* BUNDLE ONLY */
-                     | promises promise
+promises:              promise_line             /* BUNDLE ONLY */
+                     | promises promise_line
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -463,6 +463,14 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+promise_line:          promise ';'                   /* BUNDLE ONLY */
+                     | promise error 
+                       {
+                          ParseError("Check previous statement for missing ;, got:%s", yytext);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 promise:               promiser                    /* BUNDLE ONLY */
 
                        ARROW
@@ -489,7 +497,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints ';'
+                       constraints
                        {
                            CfDebug("End implicit promise %s\n\n",P.promiser);
                            strcpy(P.currentid,"");
@@ -530,7 +538,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints ';'
+                       constraints 
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 

@@ -3,6 +3,9 @@
        New features:
        - classes promises now take an optional scope constraint.
 
+       Changes:
+       - parser no longer allows ',' after promiser. must be either ';' or lval
+
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
 

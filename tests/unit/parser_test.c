@@ -87,7 +87,13 @@ void test_bundle_body_promise_missing_arrow(void **state)
     assert_false(LoadPolicy("bundle_body_promise_missing_arrow.cf"));
 }
 
-
+void test_bundle_body_promiser_unknown_constraint_id(void **state)
+{
+    /* 
+     * FIXME function to test this is not yet implemented
+    */
+    assert_true(LoadPolicy("bundle_body_promiser_unknown_constraint_id.cf"));
+}
 
 int main()
 {
@@ -109,6 +115,7 @@ int main()
         unit_test(test_bundle_body_promiser_statement_contains_colon),
         unit_test(test_bundle_body_promiser_statement_missing_assign),
         unit_test(test_bundle_body_promise_missing_arrow),
+        unit_test(test_bundle_body_promiser_unknown_constraint_id),
     };
 
     return run_tests(tests);

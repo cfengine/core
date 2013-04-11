@@ -399,86 +399,65 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-// If this is a common bundle ...
-
-    if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
+    bool global_class;
+    if (a.context.persistent > 0) /* Persistent classes are always global */
     {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
+        global_class = true;
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_NONE)
+    {
+        /* If there is no explicit scope, common bundles define global classes, other bundles define local classes */
+        if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
-
-            if (!ValidClassName(pp->promiser))
-            {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
-            }
-            else
-            {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-            }
+            global_class = true;
         }
-
-        /* These are global and loaded once */
-        /* *(pp->donep) = true; */
-
-        return;
+        else
+        {
+            global_class = false;
+        }
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
+    {
+        global_class = true;
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
+    {
+        global_class = false;
     }
 
-// If this is some other kind of bundle (else here??)
-
-    if (strcmp(PromiseGetBundle(pp)->type, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", PromiseGetBundle(pp)->type))
+    if (EvalClassExpression(ctx, a.context.expression, pp))
     {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
+        if (!ValidClassName(pp->promiser))
         {
-            if (!ValidClassName(pp->promiser))
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
+                 " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+        }
+        else
+        {
+            if (global_class)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
+                EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
             }
             else
             {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                          " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
-                }
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
+                EvalContextStackFrameAddSoft(ctx, pp->promiser);
+            }
+
+            if (a.context.persistent > 0)
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                      a.context.persistent);
+                EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
         }
 
-        // Private to bundle, can be reloaded
-
-        *(pp->donep) = false;
-        return;
+        if (strcmp(PromiseGetBundle(pp)->type, "common") != 0)
+        {
+            /* Classes private to bundle may be evaluated several times during execution */
+            *(pp->donep) = false;
+        }
     }
 }
 

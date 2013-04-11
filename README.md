@@ -31,7 +31,11 @@ The following policy code may be executed with cf-agent (the main CFEngine binar
     $ cf-agent/cf-agent -f ./hello.cf
     R: Hello, world
 
-### Relationship to cfengine 2
+### Contributing
+
+Please see the HACKING file.
+
+### Relationship to CFEngine 2
 
 CFEngine 3 is *not* a drop-in upgrade for CFEngine 2 installations.  It is a
 significantly more powerful version, but it is incompatible with the CFEngine 2

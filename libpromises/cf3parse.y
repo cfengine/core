@@ -258,7 +258,8 @@ bundlebody:            body_begin
                            P.useargs = NULL;
                        }
 
-                       statements
+                       bundle_statements
+
                        CB 
                        {
                            INSTALL_SKIP = false;
@@ -287,14 +288,20 @@ body_begin:            OB
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-statements:            /* empty */
-                     | statement
-                     | statements statement;
+bundle_statements:     /* empty */
+                     | bundle_statement
+                     | bundle_statements bundle_statement
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-statement:             promise_type 
+bundle_statement:      promise_type 
                      | promise_type classpromises
+                     | promise_type error
+                       {
+                          yyclearin;
+                          ParseError("Expected a class or promise statement, got:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -407,7 +414,8 @@ selection:             id                         /* BODY ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 classpromises:         classpromise                     /* BUNDLE ONLY */
-                     | classpromises classpromise;
+                     | classpromises classpromise
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -417,7 +425,7 @@ classpromise:          class
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promises:              promise                  /* BUNDLE ONLY */
-                     | promises promise;
+                     | promises promise
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -601,6 +609,7 @@ constraint:            id                        /* BUNDLE ONLY */
 class:                 CLASS
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
+                           ParserDebug("\tP:%s:%s:%s:%s class = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext);
                            CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
                        };
 

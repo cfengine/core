@@ -487,11 +487,6 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
         EVP_DigestUpdate(&context, pp->comment, strlen(pp->comment));
     }
 
-    if (pp->this_server)
-    {
-        EVP_DigestUpdate(&context, pp->this_server, strlen(pp->this_server));
-    }
-
     if (salt)
     {
         EVP_DigestUpdate(&context, salt, strlen(salt));

@@ -77,6 +77,12 @@ void test_bundle_body_promiser_statement_contains_colon(void **state)
     assert_false(LoadPolicy("bundle_body_promiser_statement_contains_colon.cf"));
 }
 
+void test_bundle_body_promiser_statement_missing_assign(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_promiser_statement_missing_assign.cf"));
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -95,6 +101,7 @@ int main()
         unit_test(test_bundle_body_wrong_statement),
         unit_test(test_bundle_body_forgot_semicolon),
         unit_test(test_bundle_body_promiser_statement_contains_colon),
+        unit_test(test_bundle_body_promiser_statement_missing_assign),
     };
 
     return run_tests(tests);

@@ -1336,6 +1336,7 @@ void EvalContextDestroy(EvalContext *ctx)
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
+        ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
     }

@@ -301,6 +301,7 @@ void ScopeDeleteAll()
     }
 
     VSCOPE = NULL;
+    SCOPE_CURRENT = NULL;
 
     ThreadUnlock(cft_vscope);
 }

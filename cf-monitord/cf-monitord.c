@@ -115,7 +115,8 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    CheckLicenses(ctx);
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy);

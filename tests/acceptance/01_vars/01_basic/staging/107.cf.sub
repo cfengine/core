@@ -6,8 +6,6 @@ body common control
 {
   inputs => { "../../default.cf", "107.cf.ext" };
   bundlesequence => { "g", default("$(this.promise_filename)") };
-  nova_edition::
-  host_licenses_paid => "5";
 }
 
 

@@ -260,7 +260,6 @@ static void CreateFailSafe(char *name)
             "\nbody common control\n"
             "{\n"
             " bundlesequence => { \"cfe_internal_update\" };\n"
-            " host_licenses_paid => \"25\";\n"
             "}\n\n"
             "################################################################################\n"
             "\nbody agent control\n"

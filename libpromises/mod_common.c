@@ -223,7 +223,7 @@ const ConstraintSyntax CFG_CONTROLBODY[] =
     {"domain", DATA_TYPE_STRING, ".*", "Specify the domain name for this host"},
     {"require_comments", DATA_TYPE_OPTION, CF_BOOL, "Warn about promises that do not have comment documentation", "false"},
     {"host_licenses_paid", DATA_TYPE_INT, CF_VALRANGE,
-     "The number of licenses that you promise to have paid for by setting this value (legally binding for commercial license)",
+     "This promise is deprecated since CFEngine version 3.1 and is ignored",
      "25"},
     {"site_classes", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE,
      "A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise."},

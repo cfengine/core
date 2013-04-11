@@ -77,15 +77,6 @@ void LoadSlowlyVaryingObservations(EvalContext *ctx)
 }
 
 
-/* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
-
-
-int EnterpriseExpiry(ARG_UNUSED EvalContext *ctx, ARG_UNUSED AgentType agent_type)
-{
-    return false;
-}
-
-
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
 

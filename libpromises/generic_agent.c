@@ -97,9 +97,19 @@ static void SanitizeEnvironment()
 
 /*****************************************************************************/
 
-#if !defined(HAVE_NOVA)
+void WarnAboutDeprecatedFeatures(EvalContext *ctx)
+{
+    Rval retval;
 
-void CheckLicenses(EvalContext *ctx)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LICENSES, &retval))
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The \"host_licenses_paid\" promise is deprecated and should be removed");
+    }
+}
+
+/*****************************************************************************/
+
+void CheckForPolicyHub(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
@@ -113,8 +123,6 @@ void CheckLicenses(EvalContext *ctx)
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Additional class defined: am_policy_hub");
     }
 }
-
-#endif
 
 /*****************************************************************************/
 
@@ -136,12 +144,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
-
-    if (EnterpriseExpiry(ctx, config->agent_type))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-        exit(1);
-    }
 
     if (AM_NOVA)
     {

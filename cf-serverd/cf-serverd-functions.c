@@ -572,11 +572,6 @@ int OpenReceiverChannel(void)
 
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
-    }
-
     CfDebug("Checking file updates on %s\n", config->input_file);
 
     if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
@@ -641,12 +636,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
             SetPolicyServer(ctx, POLICY_SERVER);
             ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
-
-            if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
-                      "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-            }
 
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);

@@ -6,7 +6,6 @@ body common control
 {
 bundlesequence => { "test" };
 syslog_host => "loghost.example.org";
-host_licenses_paid => "1";
 }
 
 #

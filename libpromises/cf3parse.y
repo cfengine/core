@@ -497,22 +497,7 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints
-                       {
-                           CfDebug("End implicit promise %s\n\n",P.promiser);
-                           strcpy(P.currentid,"");
-                           RlistDestroy(P.currentRlist);
-                           P.currentRlist = NULL;
-                           free(P.promiser);
-                           if (P.currentstring)
-                           {
-                               free(P.currentstring);
-                           }
-                           P.currentstring = NULL;
-                           P.promiser = NULL;
-                           P.promisee = NULL;
-                           /* reset argptrs etc*/
-                       }
+                       ',' constraints_decl
 
                        |
 
@@ -538,7 +523,19 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints 
+                       constraints_decl
+
+                       | 
+
+                       promiser error
+                       {
+                          yyclearin;
+                          ParseError("Expected ';' or promise attribute, got:%s", yytext);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+constraints_decl:    | constraints
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -556,13 +553,12 @@ promise:               promiser                    /* BUNDLE ONLY */
                            P.promisee = NULL;
                            /* reset argptrs etc*/
                        }
-                       ;
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 constraints:           constraint               /* BUNDLE ONLY */
                      | constraints ',' constraint
-                     |;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -752,8 +748,15 @@ promiser:              QSTRING
                        {
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
+                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
                            CfDebug("Promising object name \'%s\'\n",P.promiser);
-                       };
+                       }
+                       /*
+                       error
+                       {
+                       printf("basje\n");
+                       }
+                       */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

@@ -166,7 +166,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->done = pp->done;
-    pcopy->this_server = pp->this_server;
+    pcopy->this_server = pp->this_server ? xstrdup(pp->this_server) : NULL;
     pcopy->donep = pp->donep;
     pcopy->conn = pp->conn;
     pcopy->edcontext = pp->edcontext;
@@ -361,7 +361,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->cache = pp->cache;
-    pcopy->this_server = pp->this_server;
+    pcopy->this_server = pp->this_server ? xstrdup(pp->this_server) : NULL;
     pcopy->conn = pp->conn;
     pcopy->edcontext = pp->edcontext;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);

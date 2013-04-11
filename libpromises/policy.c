@@ -1018,19 +1018,7 @@ void PromiseTypeDestroy(PromiseType *promise_type)
 {
     if (promise_type)
     {
-        for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
-        {
-            Promise *pp = SeqAt(promise_type->promises, i);
-
-            if (pp->this_server != NULL)
-            {
-                free(pp->this_server);
-            }
-            free(pp->comment);
-        }
-
         SeqDestroy(promise_type->promises);
-
 
         free(promise_type->name);
         free(promise_type);
@@ -1223,12 +1211,12 @@ void PromiseDestroy(Promise *pp)
         }
 
         free(pp->classes);
-
-        // ref and agentpromise_type are only references, do not free
+        free(pp->this_server);
+        free(pp->comment);
 
         SeqDestroy(pp->conlist);
 
-        free((char *) pp);
+        free(pp);
     }
 }
 

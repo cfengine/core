@@ -195,7 +195,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
 /*********************************************************************/
 
-int AuthenticateAgent(AgentConnection *conn, bool trust_key, const char *this_server)
+int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
@@ -335,19 +335,19 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key, const char *this_se
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", ".....................[.h.a.i.l.].................................\n");
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Strong authentication of server=%s connection confirmed\n", this_server);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Strong authentication of server=%s connection confirmed\n", conn->this_server);
         }
         else
         {
             if (trust_key)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trusting server identity, promise to accept key from %s=%s", this_server,
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trusting server identity, promise to accept key from %s=%s", conn->this_server,
                       conn->remoteip);
             }
             else
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Not authorized to trust the server=%s's public key (trustkey=false)\n",
-                      this_server);
+                      conn->this_server);
                 RSA_free(server_pubkey);
                 return false;
             }
@@ -355,7 +355,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key, const char *this_se
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Challenge response from server %s/%s was incorrect!", this_server,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Challenge response from server %s/%s was incorrect!", conn->this_server,
              conn->remoteip);
         RSA_free(server_pubkey);
         return false;
@@ -421,7 +421,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key, const char *this_se
         /* proposition S4 - conditional */
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol error in RSA authentation from IP %s\n", this_server);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol error in RSA authentation from IP %s\n", conn->this_server);
             return false;
         }
 
@@ -438,7 +438,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key, const char *this_se
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Protocol error in RSA authentation from IP %s\n",
-                 this_server);
+                 conn->this_server);
             RSA_free(newkey);
             return false;
         }

@@ -63,7 +63,7 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
+static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
@@ -168,18 +168,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    Policy *runagent_adhoc_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(policy, NamespaceDefault(), "runagent_adhoc_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "runagent");
-
-        pp = PromiseTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
-
-        // TODO: wat?
-        pp->donep = &(pp->done);
-    }
-
 /* HvB */
     if (HOSTLIST)
     {
@@ -202,7 +190,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, rp->item, RUNATTR, pp);
+                        HailServer(ctx, rp->item);
                         exit(0);
                     }
                     else        /* parent process */
@@ -221,7 +209,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, rp->item, RUNATTR, pp);
+                HailServer(ctx, rp->item);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -239,8 +227,6 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-
-    PolicyDestroy(runagent_adhoc_policy);
 
     GenericAgentConfigDestroy(config);
 
@@ -378,7 +364,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
+static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
@@ -386,7 +372,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
     bool gotkey;
     char reply[8];
 
-    a.copy.portnumber = (short) ParseHostname(host, peer);
+    FileCopy fc = {
+        .portnumber = (short) ParseHostname(host, peer),
+    };
 
     snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
     Address2Hostkey(ipv4, digest);
@@ -423,13 +411,13 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
                 if (strcmp(reply, "yes") == 0)
                 {
                     printf(" -> Will trust the key...\n");
-                    a.copy.trustkey = true;
+                    fc.trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
                     printf(" -> Will not trust the key...\n");
-                    a.copy.trustkey = false;
+                    fc.trustkey = false;
                     break;
                 }
                 else
@@ -445,7 +433,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 #ifdef __MINGW32__
 
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
           REMOTE_AGENT_OPTIONS);
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
 
@@ -453,34 +441,34 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
     if (BACKGROUND)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
     }
 
 #endif /* !__MINGW32__ */
 
-    a.copy.servers = RlistFromSplitString(peer, '*');
+    fc.servers = RlistFromSplitString(peer, '*');
 
-    if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "No hosts are registered to connect to");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "No hosts are registered to connect to");
         return false;
     }
     else
     {
         int err = 0;
-        conn = NewServerConnection(a.copy, a.transaction.background, pp, &err);
+        conn = NewServerConnection(fc, false, &err);
 
         if (conn == NULL)
         {
-            RlistDestroy(a.copy.servers);
+            RlistDestroy(fc.servers);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No suitable server responded to hail\n");
             return false;
         }
@@ -488,11 +476,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
 /* Check trust interaction*/
 
-    pp->cache = NULL;
-
     HailExec(conn, peer, recvbuffer, sendbuffer);
 
-    RlistDestroy(a.copy.servers);
+    RlistDestroy(fc.servers);
 
     return true;
 }

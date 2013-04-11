@@ -28,7 +28,7 @@
 
 #include "cf3.defs.h"
 
-AgentConnection *NewAgentConn(void);
+AgentConnection *NewAgentConn(const char *server_name);
 void DeleteAgentConn(AgentConnection *ap);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);

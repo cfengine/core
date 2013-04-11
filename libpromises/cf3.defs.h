@@ -391,6 +391,8 @@ typedef struct
     unsigned char *session_key;
     char encryption_type;
     short error;
+    char *this_server;
+    Stat *cache; /* Cache for network connection (READDIR result) */
 } AgentConnection;
 
 /*******************************************************************/

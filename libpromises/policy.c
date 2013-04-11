@@ -1211,7 +1211,6 @@ void PromiseDestroy(Promise *pp)
         }
 
         free(pp->classes);
-        free(pp->this_server);
         free(pp->comment);
 
         SeqDestroy(pp->conlist);

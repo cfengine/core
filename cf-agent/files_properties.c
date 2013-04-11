@@ -51,7 +51,7 @@ static const char *SKIPFILES[] =
     NULL
 };
 
-int ConsiderFile(const char *nodename, char *path, FileCopy fc, Promise *pp)
+int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection *conn)
 {
     int i;
     struct stat statbuf;
@@ -121,7 +121,7 @@ int ConsiderFile(const char *nodename, char *path, FileCopy fc, Promise *pp)
         }
     }
 
-    if (cf_lstat(buf, &statbuf, fc, pp) == -1)
+    if (cf_lstat(buf, &statbuf, fc, conn) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Couldn't stat %s", buf);
         return true;

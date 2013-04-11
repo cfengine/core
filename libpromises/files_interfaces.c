@@ -55,7 +55,7 @@ int cfstat(const char *path, struct stat *buf)
 
 /*********************************************************************/
 
-int cf_lstat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
+int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
@@ -63,7 +63,7 @@ int cf_lstat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
     }
     else
     {
-        return cf_remote_stat(file, buf, "link", fc.encrypt, pp);
+        return cf_remote_stat(file, buf, "link", fc.encrypt, conn);
     }
 }
 

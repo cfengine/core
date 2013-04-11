@@ -29,6 +29,6 @@
 #include "cf3.defs.h"
 
 void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, FileCopy fc, Promise *pp);
+int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection *conn);
 
 #endif

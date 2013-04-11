@@ -159,7 +159,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
             for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
             {
-                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp))
+                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp->conn))
                 {
                     continue;
                 }

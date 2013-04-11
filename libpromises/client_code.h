@@ -32,15 +32,16 @@ void DetermineCfenginePort(void);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-AgentConnection *NewServerConnection(FileCopy fc, bool background, Promise *pp, int *err);
+AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err);
 void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, Promise *pp);
-void DeleteClientCache(Promise *pp);
-int CompareHashNet(char *file1, char *file2, bool encrypt, Promise *pp);
-int CopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, Promise *pp);
-int ServerConnect(AgentConnection *conn, char *host, FileCopy fc);
+int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn);
+int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn);
+int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
+int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
+int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc);
 
-Item *RemoteDirList(const char *dirname, bool encrypt, Promise *pp);
+Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
+
+const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
 
 #endif

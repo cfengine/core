@@ -201,7 +201,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     }
 }
 
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
+int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -232,11 +232,11 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
     }
     else
     {
-        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
+int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -277,7 +277,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
     else
     {
         CfDebug("Using network checksum instead\n");
-        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 

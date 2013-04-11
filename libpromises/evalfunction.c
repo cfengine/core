@@ -967,7 +967,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     CfDebug("Want to read %d bytes from port %d at %s\n", val, portnum, hostnameip);
 
-    conn = NewAgentConn();
+    conn = NewAgentConn(hostnameip);
 
     FileCopy fc = {
         .force_ipv4 = false,
@@ -1981,7 +1981,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     {
         CfDebug("Want to read %d bytes from port %d at %s\n", val, portnum, (char *) rp->item);
 
-        conn = NewAgentConn();
+        conn = NewAgentConn(RlistScalarValue(rp));
 
         FileCopy fc = {
             .force_ipv4 = false,

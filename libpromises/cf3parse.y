@@ -569,7 +569,7 @@ constraints:           constraint               /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-constraint:            id                        /* BUNDLE ONLY */
+constraint:            constraint_id                        /* BUNDLE ONLY */
                        assign_type
                        rval
                        {
@@ -614,6 +614,22 @@ constraint:            id                        /* BUNDLE ONLY */
                                RvalDestroy(P.rval);
                            }
                        };
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
+                       {
+                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser, P.currentid);
+
+                           if (!ConstraintTypeCheck(P.currenttype, P.currentid))
+                           {
+                               ParseError("Unknown attribute:%s for promise type: %s", P.currentid, P.currenttype);
+                           }
+
+                           strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           RlistDestroy(P.currentRlist);
+                           P.currentRlist = NULL;
+                           CfDebug("Recorded LVAL %s\n",P.lval);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

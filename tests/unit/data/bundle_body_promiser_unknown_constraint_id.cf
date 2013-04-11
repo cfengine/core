@@ -1,0 +1,10 @@
+bundle agent foo
+{
+
+vars:
+
+    debian::
+        "foo" string => "bar",
+            cmment => "test";
+}
+

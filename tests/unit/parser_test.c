@@ -52,7 +52,7 @@ void test_bundle_body_forgot_ob(void **state)
 void test_bundle_invalid_promise_type(void **state)
 {
     /* 
-     * FIXME
+     * FIXME function to test this is not yet implemented
     */
     assert_true(LoadPolicy("bundle_invalid_promise_type.cf"));
 }
@@ -61,6 +61,12 @@ void test_bundle_body_wrong_promise_type_token(void **state)
 {
     assert_false(LoadPolicy("bundle_body_wrong_promise_type_token.cf"));
 }
+
+void test_bundle_body_wrong_statement(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_wrong_statement.cf"));
+}
+
 
 int main()
 {
@@ -77,6 +83,7 @@ int main()
         unit_test(test_constraint_ifvarclass_invalid),
         unit_test(test_bundle_invalid_promise_type),
         unit_test(test_bundle_body_wrong_promise_type_token),
+        unit_test(test_bundle_body_wrong_statement),
     };
 
     return run_tests(tests);

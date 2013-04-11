@@ -473,7 +473,7 @@ promise_line:          promise ';'                   /* BUNDLE ONLY */
 
 promise:               promiser                    /* BUNDLE ONLY */
 
-                       ARROW
+                       assign_type
 
                        rval            /* This is full form with rlist promisees */
                        {
@@ -563,7 +563,7 @@ constraints:           constraint               /* BUNDLE ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 constraint:            id                        /* BUNDLE ONLY */
-                       ASSIGN
+                       assign_type
                        rval
                        {
                            if (!INSTALL_SKIP)
@@ -610,6 +610,18 @@ constraint:            id                        /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+assign_type:           ASSIGN
+                       {
+                           ParserDebug("\tP:=>\n");
+                       }
+                     | error
+                       {
+                          yyclearin;
+                          ParseError("Expected =>, got: %s", yytext);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 class:                 CLASS
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
@@ -621,11 +633,12 @@ class:                 CLASS
 
 id:                    IDSYNTAX
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser, P.currentid);
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
-                       };
+                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

@@ -405,18 +405,6 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
     {
         if (EvalClassExpression(ctx, a.context.expression, pp))
         {
-            {
-                char *sp = NULL;
-                if (VarClassExcluded(ctx, pp, &sp))
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    return;
-                }
-            }
-
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
 
             if (!ValidClassName(pp->promiser))

@@ -165,22 +165,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promis
 
     ScopeNewSpecialScalar(ctx, "edit", "filename", parentp->edcontext->filename, DATA_TYPE_STRING);
 
-/* Reset the done state for every call here, since bundle is reusable */
-
-    for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)
-    {
-        if ((sp = BundleGetPromiseType(bp, EDITXMLTYPESEQUENCE[type])) == NULL)
-        {
-            continue;
-        }
-
-        for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-        {
-            Promise *pp = SeqAt(sp->promises, ppi);
-            pp->donep = false;
-        }
-    }
-
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (type = 0; EDITXMLTYPESEQUENCE[type] != NULL; type++)

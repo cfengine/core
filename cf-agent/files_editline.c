@@ -121,22 +121,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promi
 
     ScopeNewSpecialScalar(ctx, "edit", "filename", parentp->edcontext->filename, DATA_TYPE_STRING);
 
-/* Reset the done state for every call here, since bundle is reusable */
-
-    for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
-    {
-        if ((sp = BundleGetPromiseType(bp, EDITLINETYPESEQUENCE[type])) == NULL)
-        {
-            continue;
-        }
-
-        for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
-        {
-            Promise *pp = SeqAt(sp->promises, ppi);
-            pp->donep = false;
-        }
-    }
-
     for (pass = 1; pass < CF_DONEPASSES; pass++)
     {
         for (type = 0; EDITLINETYPESEQUENCE[type] != NULL; type++)
@@ -414,8 +398,6 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-/* *(pp->donep) = true;	*/
-
     a = GetDeletionAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
@@ -474,8 +456,6 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp)
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
-
-/* *(pp->donep) = true; */
 
     a = GetColumnAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
@@ -543,8 +523,6 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-/* *(pp->donep) = true; */
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking at pattern %s\n", pp->promiser);
 
 /* Are we working in a restricted region? */
@@ -601,8 +579,6 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp)
     Attributes a = { {0} };
     CfLock thislock;
     char lockname[CF_BUFSIZE];
-
-    /* *(pp->donep) = true; */
 
     a = GetInsertionAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;

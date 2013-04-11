@@ -1187,6 +1187,17 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
         Promise *pp = SeqAt(class_promises, i);
+
+        char *sp = NULL;
+        if (VarClassExcluded(ctx, pp, &sp))
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            continue;
+        }
+
         ExpandPromise(ctx, pp, KeepClassContextPromise);
     }
 }

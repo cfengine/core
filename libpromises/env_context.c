@@ -149,7 +149,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
     int result = 0, total = 0;
     char buffer[CF_MAXVARSIZE];
     Rlist *rp;
-    double prob, cum = 0, fluct;
     FnCall *fp;
     Rval rval;
 
@@ -277,6 +276,15 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
     }
 
+/* If we get here, anything remaining on the RHS must be a clist */
+
+    if (cp->rval.type != RVAL_TYPE_LIST)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
+        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        return true;
+    }
+
 // Class distributions
 
     if (strcmp(cp->lval, "dist") == 0)
@@ -301,19 +309,38 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
-    }
 
-    fluct = drand48();          /* Get random number 0-1 */
-    cum = 0.0;
+        double fluct = drand48();
+        double cum = 0.0;
 
-/* If we get here, anything remaining on the RHS must be a clist */
+        for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
+        {
+            double prob = ((double) IntFromString(rp->item)) / ((double) total);
+            cum += prob;
 
-    if (cp->rval.type != RVAL_TYPE_LIST)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            if (fluct < cum)
+            {
+                break;
+            }
+        }
+
+        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
+        *(pp->donep) = true;
+
+        if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
+        {
+            EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
+        }
+        else
+        {
+            EvalContextStackFrameAddSoft(ctx, buffer);
+        }
+
+        CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
         return true;
     }
+
+    /* and/or/xor expressions */
 
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
@@ -327,30 +354,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         result_and = result_and && result;
         result_or = result_or || result;
         result_xor ^= result;
-
-        if (total > 0)          // dist class
-        {
-            prob = ((double) IntFromString(rp->item)) / ((double) total);
-            cum += prob;
-
-            if ((fluct < cum) || rp->next == NULL)
-            {
-                snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
-                *(pp->donep) = true;
-
-                if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
-                {
-                    EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    EvalContextStackFrameAddSoft(ctx, buffer);
-                }
-
-                CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
-                return true;
-            }
-        }
     }
 
 // Class combinations
@@ -399,98 +402,59 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-// If this is a common bundle ...
-
-    if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
+    bool global_class;
+    if (a.context.persistent > 0) /* Persistent classes are always global */
     {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
+        global_class = true;
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_NONE)
+    {
+        /* If there is no explicit scope, common bundles define global classes, other bundles define local classes */
+        if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
-            {
-                char *sp = NULL;
-                if (VarClassExcluded(ctx, pp, &sp))
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    return;
-                }
-            }
-
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
-
-            if (!ValidClassName(pp->promiser))
-            {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
-            }
-            else
-            {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-            }
+            global_class = true;
         }
-
-        /* These are global and loaded once */
-        /* *(pp->donep) = true; */
-
-        return;
+        else
+        {
+            global_class = false;
+        }
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
+    {
+        global_class = true;
+    }
+    else if (a.context.scope == CONTEXT_SCOPE_BUNDLE)
+    {
+        global_class = false;
     }
 
-// If this is some other kind of bundle (else here??)
-
-    if (strcmp(PromiseGetBundle(pp)->type, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", PromiseGetBundle(pp)->type))
+    if (EvalClassExpression(ctx, a.context.expression, pp))
     {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
+        if (!ValidClassName(pp->promiser))
         {
-            if (!ValidClassName(pp->promiser))
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
+                 " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+        }
+        else
+        {
+            if (global_class)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
+                EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
             }
             else
             {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                          " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else if (a.context.scope == CONTEXT_SCOPE_NAMESPACE)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
-                }
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
+                EvalContextStackFrameAddSoft(ctx, pp->promiser);
+            }
+
+            if (a.context.persistent > 0)
+            {
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                      a.context.persistent);
+                EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
         }
-
-        // Private to bundle, can be reloaded
-
-        *(pp->donep) = false;
-        return;
     }
 }
 

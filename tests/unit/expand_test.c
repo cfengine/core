@@ -172,19 +172,20 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     EvalContextDestroy(ctx);
 }
 
-static int actuator_expand_promise_slist_state = 0;
+
+static int actuator_state = 0;
 
 static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp)
 {
     if (strcmp("a", pp->promiser) == 0)
     {
-        assert_int_equal(0, actuator_expand_promise_slist_state);
-        actuator_expand_promise_slist_state++;
+        assert_int_equal(0, actuator_state);
+        actuator_state++;
     }
     else if (strcmp("b", pp->promiser) == 0)
     {
-        assert_int_equal(1, actuator_expand_promise_slist_state);
-        actuator_expand_promise_slist_state++;
+        assert_int_equal(1, actuator_state);
+        actuator_state++;
     }
     else
     {
@@ -194,6 +195,8 @@ static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp)
 
 static void test_expand_promise_slist(void **state)
 {
+    actuator_state = 0;
+
     EvalContext *ctx = EvalContextNew();
     {
         VarRef lval = VarRefParse("default:bundle.foo");
@@ -217,12 +220,76 @@ static void test_expand_promise_slist(void **state)
     ExpandPromise(ctx, promise, actuator_expand_promise_slist);
     EvalContextStackPopFrame(ctx);
 
-    assert_int_equal(2, actuator_expand_promise_slist_state);
+    assert_int_equal(2, actuator_state);
 
     PolicyDestroy(policy);
     EvalContextDestroy(ctx);
 }
 
+
+static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promise *pp)
+{
+    if (strcmp("first", pp->promiser) == 0)
+    {
+        assert_int_equal(0, actuator_state);
+        actuator_state++;
+    }
+    else if (strcmp("second", pp->promiser) == 0)
+    {
+        assert_int_equal(1, actuator_state);
+        actuator_state++;
+    }
+    else
+    {
+        fprintf(stderr, "Got promiser: '%s'\n", pp->promiser);
+        fail();
+    }
+}
+
+static void test_expand_promise_array_with_slist_arg(void **state)
+{
+    actuator_state = 0;
+
+    EvalContext *ctx = EvalContextNew();
+    {
+        VarRef lval = VarRefParse("default:bundle.keys");
+        Rlist *list = NULL;
+        RlistAppendScalar(&list, "one");
+        RlistAppendScalar(&list, "two");
+
+        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+
+        RlistDestroy(list);
+        VarRefDestroy(lval);
+    }
+
+    {
+        VarRef lval = VarRefParse("default:bundle.arr[one]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+
+    {
+        VarRef lval = VarRefParse("default:bundle.arr[two]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+
+
+    Policy *policy = PolicyNew();
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
+
+    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg);
+    EvalContextStackPopFrame(ctx);
+
+    assert_int_equal(2, actuator_state);
+
+    PolicyDestroy(policy);
+    EvalContextDestroy(ctx);
+}
 
 int main()
 {
@@ -237,7 +304,8 @@ int main()
         unit_test(test_expand_scalar_array_concat),
         unit_test(test_expand_scalar_array_with_scalar_arg),
         unit_test(test_expand_promise_array_with_scalar_arg),
-        unit_test(test_expand_promise_slist)
+        unit_test(test_expand_promise_slist),
+        unit_test(test_expand_promise_array_with_slist_arg)
     };
 
     return run_tests(tests);

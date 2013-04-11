@@ -414,8 +414,6 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-/* *(pp->donep) = true;	*/
-
     a = GetDeletionAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
 
@@ -474,8 +472,6 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp)
     Item *begin_ptr, *end_ptr;
     CfLock thislock;
     char lockname[CF_BUFSIZE];
-
-/* *(pp->donep) = true; */
 
     a = GetColumnAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;
@@ -543,8 +539,6 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp)
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-/* *(pp->donep) = true; */
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking at pattern %s\n", pp->promiser);
 
 /* Are we working in a restricted region? */
@@ -601,8 +595,6 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp)
     Attributes a = { {0} };
     CfLock thislock;
     char lockname[CF_BUFSIZE];
-
-    /* *(pp->donep) = true; */
 
     a = GetInsertionAttributes(ctx, pp);
     a.transaction.ifelapsed = CF_EDIT_IFELAPSED;

@@ -2938,3 +2938,9 @@ bool PromiseTypeCheck(const char *body_type)
 {
     return true;
 }
+
+/* FIXME: alway true */
+bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id)
+{
+    return true;
+}

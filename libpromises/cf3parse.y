@@ -463,19 +463,29 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise_line:          promise ';'                   /* BUNDLE ONLY */
-                     | promise error 
+promise_line:          promise ';'
+                     | promise error
                        {
                           ParseError("Check previous statement for missing ;, got:%s", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise:               promiser                    /* BUNDLE ONLY */
+promise:               promisee
+                     | promiser_statement
+                     | promiser error
+                       {
+                          yyclearin;
+                          ParseError("Expected ';' or promise attribute, got:%s", yytext);
+                       }
 
-                       arrow_type 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-                       rval            /* This is full form with rlist promisees */
+promisee:              promiser
+
+                       arrow_type
+
+                       rval
                        {
                            if (!INSTALL_SKIP)
                            {
@@ -497,11 +507,11 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       ',' constraints_decl
+                       promisee_constraints
 
-                       |
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-                       promiser
+promiser_statement:    promiser
                        {
                            if (!INSTALL_SKIP)
                            {
@@ -523,19 +533,17 @@ promise:               promiser                    /* BUNDLE ONLY */
                            }
                        }
 
-                       constraints_decl
-
-                       | 
-
-                       promiser error
-                       {
-                          yyclearin;
-                          ParseError("Expected ';' or promise attribute, got:%s", yytext);
-                       }
+                       promiser_constraints
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-constraints_decl:    | constraints
+promisee_constraints:  /* empty */
+                     | ',' constraints
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+promiser_constraints:  /* empty */
+                     | constraints
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -553,7 +561,6 @@ constraints_decl:    | constraints
                            P.promisee = NULL;
                            /* reset argptrs etc*/
                        }
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

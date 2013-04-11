@@ -83,20 +83,17 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
-        for (int j = 0; CF_ALL_PROMISE_TYPES[j] != NULL; j++)
+        const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[i];
+
+        for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
         {
-            const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[j];
-
-            for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
+            for (int z = 0; promise_type_syntax[k].bs[z].lval != NULL; z++)
             {
-                for (int z = 0; promise_type_syntax[k].bs[z].lval != NULL; z++)
-                {
-                    const ConstraintSyntax constraint_syntax = promise_type_syntax[k].bs[z];
+                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].bs[z];
 
-                    if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
-                    {
-                        return constraint_syntax.range;
-                    }
+                if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
+                {
+                    return constraint_syntax.range;
                 }
             }
         }

@@ -140,6 +140,38 @@ static void test_expand_scalar_array_with_scalar_arg(void **state)
     EvalContextDestroy(ctx);
 }
 
+static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Promise *pp)
+{
+    assert_string_equal("first", pp->promiser);
+}
+
+static void test_expand_promise_array_with_scalar_arg(void **state)
+{
+    EvalContext *ctx = EvalContextNew();
+    {
+        VarRef lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+    {
+        VarRef lval = VarRefParse("default:bundle.bar");
+        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+
+    Policy *policy = PolicyNew();
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
+
+    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg);
+    EvalContextStackPopFrame(ctx);
+
+    PolicyDestroy(policy);
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -152,6 +184,7 @@ int main()
         unit_test(test_expand_scalar_two_scalars_nested),
         unit_test(test_expand_scalar_array_concat),
         unit_test(test_expand_scalar_array_with_scalar_arg),
+        unit_test(test_expand_promise_array_with_scalar_arg)
     };
 
     return run_tests(tests);

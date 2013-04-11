@@ -96,6 +96,28 @@ void test_expand_scalar_two_scalars_nested(void **state)
     EvalContextDestroy(ctx);
 }
 
+void test_expand_scalar_array_concat(void **state)
+{
+    EvalContext *ctx = EvalContextNew();
+    {
+        VarRef lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+    {
+        VarRef lval = VarRefParse("default:bundle.foo[two]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "second", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+
+    char res[CF_EXPANDSIZE] = { 0 };
+    ExpandScalar(ctx, "bundle", "a $(foo[one]) b $(foo[two])c", res);
+
+    assert_string_equal("a first b secondc", res);
+
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -106,6 +128,7 @@ int main()
         unit_test(test_map_iterators_from_rval_naked_list_var),
         unit_test(test_expand_scalar_two_scalars_concat),
         unit_test(test_expand_scalar_two_scalars_nested),
+        unit_test(test_expand_scalar_array_concat),
     };
 
     return run_tests(tests);

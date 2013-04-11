@@ -1716,7 +1716,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
     if (strlen(lval.lval) > CF_MAXVARSIZE)
     {
-        char *lval_str = VarRefToString(lval);
+        char *lval_str = VarRefToString(lval, true);
         CfOut(OUTPUT_LEVEL_ERROR, "", "Variable %s cannot be added because its length exceeds the maximum length allowed: %d", lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
@@ -1808,10 +1808,15 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     }
     else
     {
-        if (!HashInsertElement(ptr->hashtable, lval.lval, rval, type))
+        // FIX: lval is stored with array params as part of the lval for legacy reasons.
+        char *final_lval = VarRefToString(lval, false);
+
+        if (!HashInsertElement(ptr->hashtable, final_lval, rval, type))
         {
             ProgrammingError("Hash table is full");
         }
+
+        free(final_lval);
     }
 
     CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);

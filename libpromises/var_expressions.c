@@ -139,20 +139,23 @@ void VarRefDestroy(VarRef ref)
     free(ref.lval);
 }
 
-char *VarRefToString(VarRef ref)
+char *VarRefToString(VarRef ref, bool qualified)
 {
     assert(ref.lval);
 
     Buffer *buf = BufferNew();
-    if (ref.ns)
+    if (qualified)
     {
-        BufferAppend(buf, ref.ns, strlen(ref.ns));
-        BufferAppend(buf, ":", sizeof(char));
-    }
-    if (ref.scope)
-    {
-        BufferAppend(buf, ref.scope, strlen(ref.scope));
-        BufferAppend(buf, ".", sizeof(char));
+        if (ref.ns)
+        {
+            BufferAppend(buf, ref.ns, strlen(ref.ns));
+            BufferAppend(buf, ":", sizeof(char));
+        }
+        if (ref.scope)
+        {
+            BufferAppend(buf, ref.scope, strlen(ref.scope));
+            BufferAppend(buf, ".", sizeof(char));
+        }
     }
 
     BufferAppend(buf, ref.lval, strlen(ref.lval));

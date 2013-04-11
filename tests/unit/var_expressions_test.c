@@ -92,23 +92,66 @@ static void test_qualified_array(void **state)
     VarRefDestroy(ref);
 }
 
-static void CheckToString(const char *str)
+static void CheckToStringQualified(const char *str)
 {
     VarRef ref = VarRefParse(str);
-    char *out = VarRefToString(ref);
+    char *out = VarRefToString(ref, true);
     assert_string_equal(str, out);
     free(out);
     VarRefDestroy(ref);
 }
 
-static void test_to_string(void **state)
+static void test_to_string_qualified(void **state)
 {
-    CheckToString("ns:scope.lval[x][y]");
-    CheckToString("ns:scope.lval[x]");
-    CheckToString("ns:scope.lval");
-    CheckToString("ns:lval");
-    CheckToString("scope.lval");
-    CheckToString("lval");
+    CheckToStringQualified("ns:scope.lval[x][y]");
+    CheckToStringQualified("ns:scope.lval[x]");
+    CheckToStringQualified("ns:scope.lval");
+    CheckToStringQualified("ns:lval");
+    CheckToStringQualified("scope.lval");
+    CheckToStringQualified("lval");
+}
+
+static void test_to_string_unqualified(void **state)
+{
+    {
+        VarRef ref = VarRefParse("ns:scope.lval[x][y]");
+        char *out = VarRefToString(ref, false);
+        assert_string_equal("lval[x][y]", out);
+        free(out);
+        VarRefDestroy(ref);
+    }
+
+    {
+        VarRef ref = VarRefParse("ns:scope.lval[x]");
+        char *out = VarRefToString(ref, false);
+        assert_string_equal("lval[x]", out);
+        free(out);
+        VarRefDestroy(ref);
+    }
+
+    {
+        VarRef ref = VarRefParse("ns:lval");
+        char *out = VarRefToString(ref, false);
+        assert_string_equal("lval", out);
+        free(out);
+        VarRefDestroy(ref);
+    }
+
+    {
+        VarRef ref = VarRefParse("scope.lval");
+        char *out = VarRefToString(ref, false);
+        assert_string_equal("lval", out);
+        free(out);
+        VarRefDestroy(ref);
+    }
+
+    {
+        VarRef ref = VarRefParse("lval");
+        char *out = VarRefToString(ref, false);
+        assert_string_equal("lval", out);
+        free(out);
+        VarRefDestroy(ref);
+    }
 }
 
 int main()
@@ -124,7 +167,8 @@ int main()
         unit_test(test_levels),
         unit_test(test_unqualified_array),
         unit_test(test_qualified_array),
-        unit_test(test_to_string)
+        unit_test(test_to_string_qualified),
+        unit_test(test_to_string_unqualified),
     };
 
     return run_tests(tests);

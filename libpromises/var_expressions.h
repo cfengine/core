@@ -25,6 +25,6 @@ VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle);
 
 void VarRefDestroy(VarRef ref);
 
-char *VarRefToString(VarRef ref);
+char *VarRefToString(VarRef ref, bool qualified);
 
 #endif

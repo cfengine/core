@@ -473,7 +473,7 @@ promise_line:          promise ';'                   /* BUNDLE ONLY */
 
 promise:               promiser                    /* BUNDLE ONLY */
 
-                       assign_type
+                       arrow_type 
 
                        rval            /* This is full form with rlist promisees */
                        {
@@ -618,6 +618,18 @@ assign_type:           ASSIGN
                        {
                           yyclearin;
                           ParseError("Expected =>, got: %s", yytext);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+arrow_type:            ARROW
+                       {
+                           ParserDebug("\tP:->\n");
+                       }
+                     | error
+                       {
+                          yyclearin;
+                          ParseError("Expected ->, got: %s", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

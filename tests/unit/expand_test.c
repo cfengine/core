@@ -5,7 +5,7 @@
 #include "scope.h"
 #include "env_context.h"
 
-void test_map_iterators_from_rval_empty(void **state)
+static void test_map_iterators_from_rval_empty(void **state)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -17,7 +17,7 @@ void test_map_iterators_from_rval_empty(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_map_iterators_from_rval_literal(void **state)
+static void test_map_iterators_from_rval_literal(void **state)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -29,7 +29,7 @@ void test_map_iterators_from_rval_literal(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_map_iterators_from_rval_naked_list_var(void **state)
+static void test_map_iterators_from_rval_naked_list_var(void **state)
 {
     EvalContext *ctx = EvalContextNew();
     ScopeDeleteAll();
@@ -52,7 +52,7 @@ void test_map_iterators_from_rval_naked_list_var(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_expand_scalar_two_scalars_concat(void **state)
+static void test_expand_scalar_two_scalars_concat(void **state)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -74,7 +74,7 @@ void test_expand_scalar_two_scalars_concat(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_expand_scalar_two_scalars_nested(void **state)
+static void test_expand_scalar_two_scalars_nested(void **state)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -96,7 +96,7 @@ void test_expand_scalar_two_scalars_nested(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_expand_scalar_array_concat(void **state)
+static void test_expand_scalar_array_concat(void **state)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -118,6 +118,28 @@ void test_expand_scalar_array_concat(void **state)
     EvalContextDestroy(ctx);
 }
 
+static void test_expand_scalar_array_with_scalar_arg(void **state)
+{
+    EvalContext *ctx = EvalContextNew();
+    {
+        VarRef lval = VarRefParse("default:bundle.foo[one]");
+        EvalContextVariablePut(ctx, lval, (Rval) { "first", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+    {
+        VarRef lval = VarRefParse("default:bundle.bar");
+        EvalContextVariablePut(ctx, lval, (Rval) { "one", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
+        VarRefDestroy(lval);
+    }
+
+    char res[CF_EXPANDSIZE] = { 0 };
+    ExpandScalar(ctx, "bundle", "a$(foo[$(bar)])b", res);
+
+    assert_string_equal("afirstb", res);
+
+    EvalContextDestroy(ctx);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -129,6 +151,7 @@ int main()
         unit_test(test_expand_scalar_two_scalars_concat),
         unit_test(test_expand_scalar_two_scalars_nested),
         unit_test(test_expand_scalar_array_concat),
+        unit_test(test_expand_scalar_array_with_scalar_arg),
     };
 
     return run_tests(tests);

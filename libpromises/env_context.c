@@ -1785,7 +1785,10 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         }
     }
 
-    assoc = HashLookupElement(ptr->hashtable, lval.lval);
+    // FIX: lval is stored with array params as part of the lval for legacy reasons.
+    char *final_lval = VarRefToString(lval, false);
+
+    assoc = HashLookupElement(ptr->hashtable, final_lval);
 
     if (assoc)
     {
@@ -1808,16 +1811,13 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     }
     else
     {
-        // FIX: lval is stored with array params as part of the lval for legacy reasons.
-        char *final_lval = VarRefToString(lval, false);
-
         if (!HashInsertElement(ptr->hashtable, final_lval, rval, type))
         {
             ProgrammingError("Hash table is full");
         }
-
-        free(final_lval);
     }
+
+    free(final_lval);
 
     CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);
     return true;

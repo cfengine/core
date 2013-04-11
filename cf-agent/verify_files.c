@@ -645,7 +645,6 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
-        // add current filename to context - already there?
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
@@ -656,7 +655,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -710,7 +709,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditXmlOperations(ctx, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 
@@ -733,7 +732,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp);
 
             EvalContextStackPopFrame(ctx);
 

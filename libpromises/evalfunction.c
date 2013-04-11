@@ -91,6 +91,8 @@ typedef enum
     DATE_TEMPLATE_SEC
 } DateTemplate;
 
+static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
+
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
@@ -1264,59 +1266,13 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
 static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char lval[CF_MAXVARSIZE];
-    char scopeid[CF_MAXVARSIZE];
-    Rval rval2;
-    Rlist *rp, *returnlist = NULL;
-
-/* begin fn specific content */
-
-    char *regex = RlistScalarValue(finalargs);
-    char *name = RlistScalarValue(finalargs->next);
-
-/* Locate the array */
-
-    if (strstr(name, "."))
-    {
-        scopeid[0] = '\0';
-        sscanf(name, "%127[^.].%127s", scopeid, lval);
-    }
-    else
-    {
-        strcpy(lval, name);
-        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
-    }
-
-    if (!ScopeExists(scopeid))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised an array in scope \"%s\" but this was not found\n",
-              scopeid);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"grep\" was promised a list called \"%s\" but this was not found\n", name);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    if (rval2.type != RVAL_TYPE_LIST)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function grep was promised a list called \"%s\" but this was not found\n", name);
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
-
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
-    {
-        if (FullTextMatch(regex, rp->item))
-        {
-            RlistAppendScalar(&returnlist, rp->item);
-        }
-    }
-
-    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+    return filter(ctx,
+                  fp,
+                  RlistScalarValue(finalargs), // regex
+                  RlistScalarValue(finalargs->next), // list identifier
+                  1, // regex match = TRUE
+                  0, // invert matches = FALSE
+                  99999999999); // max results = max int
 }
 
 /*********************************************************************/
@@ -2345,6 +2301,76 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallFilter(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    return filter(ctx,
+                  fp,
+                  RlistScalarValue(finalargs), // regex or string
+                  RlistScalarValue(finalargs->next), // list identifier
+                  BooleanFromString(RlistScalarValue(finalargs->next->next)), // match as regex or exactly
+                  BooleanFromString(RlistScalarValue(finalargs->next->next->next)), // invert matches
+                  IntFromString(RlistScalarValue(finalargs->next->next->next->next))); // max results
+}
+
+static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
+{
+    char lval[CF_MAXVARSIZE];
+    char scopeid[CF_MAXVARSIZE];
+
+    Rval rval2;
+    Rlist *rp, *returnlist = NULL;
+
+/* Locate the array */
+
+    if (strstr(name, "."))
+    {
+        scopeid[0] = '\0';
+        sscanf(name, "%127[^.].%127s", scopeid, lval);
+    }
+    else
+    {
+        strcpy(lval, name);
+        strcpy(scopeid, PromiseGetBundle(fp->caller)->name);
+    }
+
+    if (!ScopeExists(scopeid))
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised an array in scope \"%s\" but this was not found\n",
+              fp->name,
+              scopeid);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised a list called \"%s\" but this was not found\n", fp->name, name);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (rval2.type != RVAL_TYPE_LIST)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised a list called \"%s\" but this was not found\n", fp->name, name);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    long match_count = 0;
+    for (rp = (Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
+    {
+        int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
+        if (invert ? !found : found)
+        {
+            RlistAppendScalar(&returnlist, rp->item);
+            match_count++;
+        }
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
@@ -4684,6 +4710,16 @@ FnCallArg FILESEXIST_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg FILTER_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression or string"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_BOOL, DATA_TYPE_OPTION, "Match as regular expression if true, as exact string otherwise"},
+    {CF_BOOL, DATA_TYPE_OPTION, "Invert matches"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of matches to return"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg GETFIELDS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression to match line"},
@@ -5236,6 +5272,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed"},
     {"filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file"},
     {"filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file"},
+    {"filter", DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter,
+     "Similarly to grep(), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5."},
     {"getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv,
      "Return the environment variable named arg1, truncated at arg2 characters"},
     {"getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields,

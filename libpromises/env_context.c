@@ -455,12 +455,6 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
         }
-
-        if (strcmp(PromiseGetBundle(pp)->type, "common") != 0)
-        {
-            /* Classes private to bundle may be evaluated several times during execution */
-            *(pp->donep) = false;
-        }
     }
 }
 

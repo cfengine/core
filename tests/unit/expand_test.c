@@ -172,6 +172,58 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     EvalContextDestroy(ctx);
 }
 
+static int actuator_expand_promise_slist_state = 0;
+
+static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp)
+{
+    if (strcmp("a", pp->promiser) == 0)
+    {
+        assert_int_equal(0, actuator_expand_promise_slist_state);
+        actuator_expand_promise_slist_state++;
+    }
+    else if (strcmp("b", pp->promiser) == 0)
+    {
+        assert_int_equal(1, actuator_expand_promise_slist_state);
+        actuator_expand_promise_slist_state++;
+    }
+    else
+    {
+        fail();
+    }
+}
+
+static void test_expand_promise_slist(void **state)
+{
+    EvalContext *ctx = EvalContextNew();
+    {
+        VarRef lval = VarRefParse("default:bundle.foo");
+        Rlist *list = NULL;
+        RlistAppendScalar(&list, "a");
+        RlistAppendScalar(&list, "b");
+
+        EvalContextVariablePut(ctx, lval, (Rval) { list, RVAL_TYPE_LIST }, DATA_TYPE_STRING_LIST);
+
+        RlistDestroy(list);
+        VarRefDestroy(lval);
+    }
+
+
+    Policy *policy = PolicyNew();
+    Bundle *bundle = PolicyAppendBundle(policy, NamespaceDefault(), "bundle", "agent", NULL, NULL);
+    PromiseType *promise_type = BundleAppendPromiseType(bundle, "dummy");
+    Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
+
+    EvalContextStackPushBundleFrame(ctx, bundle, false);
+    ExpandPromise(ctx, promise, actuator_expand_promise_slist);
+    EvalContextStackPopFrame(ctx);
+
+    assert_int_equal(2, actuator_expand_promise_slist_state);
+
+    PolicyDestroy(policy);
+    EvalContextDestroy(ctx);
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -184,7 +236,8 @@ int main()
         unit_test(test_expand_scalar_two_scalars_nested),
         unit_test(test_expand_scalar_array_concat),
         unit_test(test_expand_scalar_array_with_scalar_arg),
-        unit_test(test_expand_promise_array_with_scalar_arg)
+        unit_test(test_expand_promise_array_with_scalar_arg),
+        unit_test(test_expand_promise_slist)
     };
 
     return run_tests(tests);

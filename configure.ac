@@ -400,6 +400,9 @@ AC_CHECK_HEADERS(sys/mount.h, [], [], [AC_INCLUDES_DEFAULT
 #endif
 ])
 
+# Required on BSD to get struct sockaddr_dl (for retrieving MAC addresses from getifaddrs())
+AC_CHECK_HEADERS(net/if_dl.h)
+
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -639,6 +642,8 @@ AC_CHECK_FUNCS(socket)
 AC_CHECK_FUNCS(setsockopt)
 AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
+
+AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 

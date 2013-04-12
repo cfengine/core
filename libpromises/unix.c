@@ -49,6 +49,13 @@
 # include <sys/jail.h>
 #endif
 
+#ifdef HAVE_GETIFADDRS
+# include <ifaddrs.h>
+# ifdef HAVE_NET_IF_DL_H
+#   include <net/if_dl.h>
+# endif
+#endif
+
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
 #define CF_IGNORE_INTERFACES "ignore_interfaces.rx"
 
@@ -369,6 +376,59 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     EvalContextHeapAddHard(ctx, name);
+
+# elif defined(HAVE_GETIFADDRS)
+    char hw_mac[CF_MAXVARSIZE];
+    char *m;
+    struct ifaddrs *ifaddr, *ifa;
+    struct sockaddr_dl *sdl;
+
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "getifaddrs", "!! Could not get interface %s addresses\n", 
+          ifp->ifr_name);
+
+        ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+        EvalContextHeapAddHard(ctx, "mac_unknown");
+        return;
+    }
+    for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
+    {
+        if ( strcmp(ifa->ifa_name, ifp->ifr_name) == 0) 
+        {
+            if (ifa->ifa_addr->sa_family == AF_LINK) 
+            {
+                sdl = (struct sockaddr_dl *)ifa->ifa_addr;
+                m = (char *) LLADDR(sdl);
+                
+                // Skip zeroed mac addresses (loopback interfaces, ...)
+                if (m[0] == 0 && m[1] == 0 
+                    && m[2] == 0 && m[3] == 0 
+                    && m[4] == 0 && m[5] == 0)
+                {
+                    continue;
+                }
+
+                snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+                    (unsigned char) m[0],
+                    (unsigned char) m[1],
+                    (unsigned char) m[2],
+                    (unsigned char) m[3],
+                    (unsigned char) m[4],
+                    (unsigned char) m[5]);
+
+                ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+                RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+                RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
+
+                snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+                EvalContextHeapAddHard(ctx, name);
+            }
+        }
+
+    }
+    freeifaddrs(ifaddr);
+
 # else
     ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, "mac_unknown");

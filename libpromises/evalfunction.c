@@ -2429,6 +2429,27 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 /*********************************************************************/
 
+static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *name = RlistScalarValue(finalargs);
+
+    Rval rval2;
+    Rlist *rp, *returnlist = NULL;
+
+    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    {
+        RlistAppendScalarIdemp(&returnlist, rp->item);
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
@@ -5291,6 +5312,12 @@ FnCallArg USEMODULE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg UNIQ_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg USEREXISTS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "User name or identifier"},
@@ -5466,6 +5493,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals"},
     {"translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath,
      "Translate path separators from Unix style to the host's native"},
+    {"uniq", DATA_TYPE_STRING_LIST, UNIQ_ARGS, &FnCallUniq,
+     "Returns all the unique elements of list arg1"},
     {"usemodule", DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule,
      "Execute cfengine module script and set class if successful"},
     {"userexists", DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists,

@@ -571,40 +571,39 @@ bodybody:              body_begin
                                P.currentbody->offset.end = P.offsets.current;
                            }
                            CfDebug("End promise body\n");
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 bodyattribs:           bodyattrib                    /* BODY ONLY */
-                     | bodyattribs bodyattrib;
+                     | bodyattribs bodyattrib
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 bodyattrib:            class
-                     | selections;
+                     | selections
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 selections:            selection                 /* BODY ONLY */
-                     | selections selection;
+                     | selections selection
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-selection:             id                         /* BODY ONLY */
-                       ASSIGN
+selection:             selection_id                         /* BODY ONLY */
+                       assign_type
                        rval
                        {
+
+                           if (!INSTALL_SKIP)
                            {
+                               Constraint *cp = NULL;
+
                                SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
                                if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
                                {
                                    yyerror(SyntaxTypeMatchToString(err));
                                }
-                           }
-
-                           if (!INSTALL_SKIP)
-                           {
-                               Constraint *cp = NULL;
 
                                if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
@@ -646,8 +645,27 @@ selection:             id                         /* BODY ONLY */
                            }
                            
                            P.rval = (Rval) { NULL, '\0' };
+
                        }
-                       ';' ;
+
+                       ';'
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+selection_id:          IDSYNTAX
+                       {
+                           ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses, P.currentid);
+                           strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           RlistDestroy(P.currentRlist);
+                           P.currentRlist = NULL;
+                           CfDebug("Recorded LVAL %s\n",P.lval);
+                       }
+                     | error
+                       {
+                           yyclearin;
+                           INSTALL_SKIP=true;
+                           ParseError("Expected selection id, wrong input:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -684,14 +702,6 @@ class:                 CLASS
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-id:                    IDSYNTAX
-                       {
-                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser, P.currentid);
-                           strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
-                           RlistDestroy(P.currentRlist);
-                           P.currentRlist = NULL;
-                           CfDebug("Recorded LVAL %s\n",P.lval);
-                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

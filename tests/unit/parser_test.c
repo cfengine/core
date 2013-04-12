@@ -120,6 +120,15 @@ void test_body_selection_forgot_semicolon(void **state)
     assert_false(LoadPolicy("body_selection_forgot_semicolon.cf"));
 }
 
+
+void test_body_selection_unknown_selection_id(void **state)
+{
+    /* 
+     * FIXME function to test this is not yet implemented
+    */
+    assert_true(LoadPolicy("body_selection_unknown_selection_id.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -145,6 +154,7 @@ int main()
         unit_test(test_body_invalid_type),
         unit_test(test_body_selection_wrong_token),
         unit_test(test_body_selection_forgot_semicolon),
+        unit_test(test_body_selection_unknown_selection_id),
 
         unit_test(test_promise_promiser_nonscalar),
 

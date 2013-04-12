@@ -647,6 +647,13 @@ selection:             selection_id                         /* BODY ONLY */
 selection_id:          IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses, P.currentid);
+
+                           if (!SelectionTypeCheck(P.currenttype, P.currentid))
+                           {
+                               ParseError("Unknown selection:%s for body type: %s", P.currentid, P.currenttype);
+                               INSTALL_SKIP=true;
+                           }
+
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;

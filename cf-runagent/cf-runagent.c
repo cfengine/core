@@ -634,7 +634,7 @@ static void SendClassData(AgentConnection *conn)
     Rlist *classes, *rp;
     char sendbuffer[CF_BUFSIZE];
 
-    classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, false);
+    classes = RlistFromSplitRegex(SENDCLASSES, "[,: ]", 99, 0);
 
     for (rp = classes; rp != NULL; rp = rp->next)
     {

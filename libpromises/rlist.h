@@ -77,7 +77,10 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type);
 Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn);
 
 Rlist *RlistFromSplitString(const char *string, char sep);
-Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int purge);
+#define RLIST_SPLIT_BLANKS	0x1
+#define RLIST_SPLIT_APPENDREST	0x2
+Rlist *RlistFromSplitRegex(const char *string, const char *regex,
+                           int maxent, int flags);
 void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);

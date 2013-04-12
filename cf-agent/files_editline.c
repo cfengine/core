@@ -1102,7 +1102,8 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
         strncpy(separator, ip->name + s, e - s);
         separator[e - s] = '\0';
 
-        columns = RlistFromSplitRegex(ip->name, a.column.column_separator, CF_INFINITY, a.column.blanks_ok);
+        columns = RlistFromSplitRegex(ip->name, a.column.column_separator, CF_INFINITY,
+                                      (a.column.blanks_ok ? RLIST_SPLIT_BLANKS : 0));
         retval = EditLineByColumn(ctx, &columns, a, pp);
 
         if (retval)

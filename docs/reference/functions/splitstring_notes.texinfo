@@ -13,8 +13,6 @@ to split up the file into items.  The regex is unanchored,
 @pxref{Anchored vs. unanchored regular expressions}).
 
 @item maxent
-The maximum number of splits to perform.
+The maximum number of split parts to return.
 @end table
- 
-If the maximum number of splits is insufficient to accomodate all entries, the
-final entry in the slist that is generated will contain the rest of the unsplit string.
+

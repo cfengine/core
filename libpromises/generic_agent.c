@@ -1100,29 +1100,52 @@ const char *GenericAgentResolveInputPath(const char *filename, const char *base_
 {
     static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-    if (FilePathGetType(filename) == FILE_PATH_TYPE_ABSOLUTE)
+    switch (FilePathGetType(filename))
     {
-         strlcpy(wfilename, filename, CF_BUFSIZE);
-         return MapName(wfilename);
+    case FILE_PATH_TYPE_ABSOLUTE:
+        strlcpy(wfilename, filename, CF_BUFSIZE);
+        return MapName(wfilename);
+
+    case FILE_PATH_TYPE_NON_ANCHORED:
+        if (MINUSF)
+        {
+            if (FilePathGetType(base_input_file) == FILE_PATH_TYPE_NON_ANCHORED)
+            {
+                // Base file is in inputs/
+                snprintf(wfilename, CF_BUFSIZE - 1, "%s%cinputs%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, filename);
+            }
+            else
+            {
+                strncpy(path, base_input_file, CF_BUFSIZE - 1);
+                ChopLastNode(path);
+                snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
+            }
+        }
+        else
+        {
+            snprintf(wfilename, CF_BUFSIZE - 1, "%s%cinputs%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, filename);
+        }
+        return MapName(wfilename);
+
+    case FILE_PATH_TYPE_RELATIVE:
+        if (filename != base_input_file && MINUSF && FilePathGetType(base_input_file) != FILE_PATH_TYPE_NON_ANCHORED)
+        {
+            /* If -f assume included relative files are in same directory */
+            strncpy(path, base_input_file, CF_BUFSIZE - 1);
+            ChopLastNode(path);
+            snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
+        }
+        else
+        {
+            strncpy(wfilename, filename, CF_BUFSIZE - 1);
+        }
+
+        return MapName(wfilename);
+
+    default:
+        ProgrammingError("Unhandled file path type in switch");
     }
 
-    if (MINUSF && (filename != base_input_file) && FilePathGetType(base_input_file) != FILE_PATH_TYPE_NON_ANCHORED)
-    {
-        /* If -f assume included relative files are in same directory */
-        strncpy(path, base_input_file, CF_BUFSIZE - 1);
-        ChopLastNode(path);
-        snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
-    }
-    else if (FilePathGetType(filename) != FILE_PATH_TYPE_NON_ANCHORED)
-    {
-        strncpy(wfilename, filename, CF_BUFSIZE - 1);
-    }
-    else
-    {
-        snprintf(wfilename, CF_BUFSIZE - 1, "%s%cinputs%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, filename);
-    }
-
-    return MapName(wfilename);
 }
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)

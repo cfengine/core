@@ -95,6 +95,11 @@ void test_bundle_body_promiser_unknown_constraint_id(void **state)
     assert_true(LoadPolicy("bundle_body_promiser_unknown_constraint_id.cf"));
 }
 
+void test_promise_promiser_nonscalar(void **state)
+{
+    assert_false(LoadPolicy("promise_promiser_nonscalar.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -116,6 +121,8 @@ int main()
         unit_test(test_bundle_body_promiser_statement_missing_assign),
         unit_test(test_bundle_body_promise_missing_arrow),
         unit_test(test_bundle_body_promiser_unknown_constraint_id),
+
+        unit_test(test_promise_promiser_nonscalar)
     };
 
     return run_tests(tests);

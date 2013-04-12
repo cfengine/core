@@ -573,12 +573,15 @@ bodyattribs:           bodyattrib                    /* BODY ONLY */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 bodyattrib:            class
-                     | selections
+                     | selection_line
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-selections:            selection                 /* BODY ONLY */
-                     | selections selection
+selection_line:        selection ';'
+                     | selection error
+                       {
+                          ParseError("Expected ';' check previous statement, got:%s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -637,10 +640,7 @@ selection:             selection_id                         /* BODY ONLY */
                            }
                            
                            P.rval = (Rval) { NULL, '\0' };
-
                        }
-
-                       ';'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

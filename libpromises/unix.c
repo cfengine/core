@@ -517,12 +517,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Interface %d: %s\n", j + 1, ifp->ifr_name);
         }
 
-        // Ignore the loopback
-
-        if (strcmp(ifp->ifr_name, "lo") == 0)
-        {
-            continue;
-        }
 
         if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
         {
@@ -553,7 +547,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                 continue;
             }
 
-            if ((ifr.ifr_flags & IFF_UP) && (!(ifr.ifr_flags & IFF_LOOPBACK)))
+            if (ifr.ifr_flags & IFF_UP)
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 

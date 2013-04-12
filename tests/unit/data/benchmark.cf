@@ -14,7 +14,7 @@ reports:
       friend_pattern => hash("abc", "md5");
 
 files:
-  "/tmp/stuff" -> { "stakeholder" },
+  "/tmp/stuff" -> { "stakeholder" }
     create => "true",
     perms => myperms;
 

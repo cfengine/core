@@ -368,7 +368,8 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],
              (unsigned char) ifr->ifr_hwaddr.sa_data[2],
              (unsigned char) ifr->ifr_hwaddr.sa_data[3],
-             (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
+             (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
+             (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);

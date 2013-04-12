@@ -366,7 +366,7 @@ promise_line:          promise ';'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise:               promisee
+promise:               promisee promiser_constraints 
                      | promiser_statement
                      /*
                      | promiser error
@@ -405,8 +405,6 @@ promisee:              promiser
                            }
                        }
 
-                       promisee_constraints
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promiser_statement:    promiser
@@ -432,12 +430,6 @@ promiser_statement:    promiser
                        }
 
                        promiser_constraints
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-promisee_constraints:  /* empty */
-                     | ',' constraint_decl
-
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

@@ -6,6 +6,7 @@
 #include "fncall.h"
 #include "env_context.h"
 #include "item_lib.h"
+#include "bootstrap.h"
 
 static Policy *LoadPolicy(const char *filename)
 {
@@ -15,13 +16,8 @@ static Policy *LoadPolicy(const char *filename)
     return ParserParseFile(path);
 }
 
-static Seq *LoadAndCheck(const char *filename)
+static void DumpErrors(Seq *errs)
 {
-    Policy *p = LoadPolicy(filename);
-
-    Seq *errs = SeqNew(10, PolicyErrorDestroy);
-    PolicyCheckPartial(p, errs);
-
     if (SeqLength(errs) > 0)
     {
         Writer *writer = FileWriter(stdout);
@@ -31,8 +27,53 @@ static Seq *LoadAndCheck(const char *filename)
         }
         FileWriterDetach(writer);
     }
+}
+
+static Seq *LoadAndCheck(const char *filename)
+{
+    Policy *p = LoadPolicy(filename);
+
+    Seq *errs = SeqNew(10, PolicyErrorDestroy);
+    PolicyCheckPartial(p, errs);
+
+    DumpErrors(errs);
 
     return errs;
+}
+
+static void test_failsafe(void **state)
+{
+    char *tmp = tempnam(NULL, "cfengine_test");
+    CreateFailSafe(tmp);
+
+    Policy *failsafe = ParserParseFile(tmp);
+
+    unlink(tmp);
+    free(tmp);
+
+    assert_true(failsafe);
+
+    Seq *errs = SeqNew(10, PolicyErrorDestroy);
+    PolicyCheckPartial(failsafe, errs);
+
+    DumpErrors(errs);
+    assert_int_equal(0, SeqLength(errs));
+
+    {
+        EvalContext *ctx = EvalContextNew();
+
+        PolicyCheckRunnable(ctx, failsafe, errs, false);
+
+        DumpErrors(errs);
+        assert_int_equal(0, SeqLength(errs));
+
+        EvalContextDestroy(ctx);
+    }
+
+    assert_int_equal(0, (SeqLength(errs)));
+
+    SeqDestroy(errs);
+    PolicyDestroy(failsafe);
 }
 
 
@@ -314,6 +355,8 @@ int main()
     PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
+        unit_test(test_failsafe),
+
         unit_test(test_bundle_redefinition),
         unit_test(test_bundle_reserved_name),
         unit_test(test_body_redefinition),

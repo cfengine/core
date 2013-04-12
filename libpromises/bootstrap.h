@@ -29,5 +29,6 @@
 
 void CheckAutoBootstrap(EvalContext *ctx);
 void SetPolicyServer(EvalContext *ctx, char *name);
+void CreateFailSafe(char *name);
 
 #endif

@@ -58,8 +58,6 @@ During commercial bootstrap:
 
 /*****************************************************************************/
 
-static void CreateFailSafe(char *name);
-
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
 static bool BootstrapAllowed(void)
@@ -237,7 +235,7 @@ void SetPolicyServer(EvalContext *ctx, char *name)
 
 /********************************************************************/
 
-static void CreateFailSafe(char *name)
+void CreateFailSafe(char *name)
 {
     FILE *fout;
 
@@ -260,7 +258,6 @@ static void CreateFailSafe(char *name)
             "\nbody common control\n"
             "{\n"
             " bundlesequence => { \"cfe_internal_update\" };\n"
-            " host_licenses_paid => \"25\";\n"
             "}\n\n"
             "################################################################################\n"
             "\nbody agent control\n"
@@ -341,33 +338,33 @@ static void CreateFailSafe(char *name)
             "\n#\n\n"
             " reports:\n\n"
             "  bootstrap_mode.am_policy_hub::\n"
-            "   \"This host assumes the role of policy distribution host\",\n"
+            "   \"This host assumes the role of policy distribution host\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_policy_hub\";\n"
             "  bootstrap_mode.!am_policy_hub::\n"
-            "   \"This autonomous node assumes the role of voluntary client\",\n"
+            "   \"This autonomous node assumes the role of voluntary client\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_voluntary_client\";\n"
             "  got_policy::\n"
-            "   \" -> Updated local policy from policy server\",\n"
+            "   \" -> Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\",\n"
+            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
             "  server_started::\n"
-            "   \" -> Started the server\",\n"
+            "   \" -> Started the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
             "  am_policy_hub.!server_started.!have_promises_cf::\n"
-            "   \" !! Failed to start the server\",\n"
+            "   \" !! Failed to start the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
             "  executor_started::\n"
-            "   \" -> Started the scheduler\",\n"
+            "   \" -> Started the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
             "  !executor_started.!have_promises_cf::\n"
-            "   \" !! Did not start the scheduler\",\n"
+            "   \" !! Did not start the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
             "  !executor_started.have_promises_cf::\n"
             "   \" -> You are running a hard-coded failsafe. Please use the following command instead.\n"
             "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
-            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\",\n"
+            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"

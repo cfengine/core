@@ -27,6 +27,10 @@
 # include <config.h>
 #endif
 
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/stat.h>
+
 #if !HAVE_DECL_MKDTEMP
 char *mkdtemp(char *template);
 #endif

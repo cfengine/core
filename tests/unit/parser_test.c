@@ -110,6 +110,11 @@ void test_bundle_body_promisee_forgot_colon(void **state)
     assert_false(LoadPolicy("bundle_body_promisee_forgot_colon.cf"));
 }
 
+void test_body_selection_wrong_token(void **state)
+{
+    assert_false(LoadPolicy("body_selection_wrong_token.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -131,12 +136,10 @@ int main()
         unit_test(test_bundle_body_promiser_unknown_constraint_id),
         unit_test(test_bundle_body_promiser_forgot_colon),
         unit_test(test_bundle_body_promisee_forgot_colon),
-
         unit_test(test_body_invalid_type),
-
         unit_test(test_promise_promiser_nonscalar),
-
-        unit_test(test_constraint_ifvarclass_invalid)
+        unit_test(test_constraint_ifvarclass_invalid),
+        unit_test(test_body_selection_wrong_token),
     };
 
     return run_tests(tests);

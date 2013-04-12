@@ -433,4 +433,9 @@ bool PromiseTypeCheck(const char *name);
  */
 bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id);
 
+/**
+ * @brief Check whether the selection id is valid one for body type
+ */
+bool SelectionTypeCheck(const char *body_type, const char *selection_id);
+
 #endif

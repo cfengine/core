@@ -2944,3 +2944,9 @@ bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id)
 {
     return true;
 }
+
+/* FIXME: alway true */
+bool SelectionTypeCheck(const char *body_type, const char *selection_id)
+{
+    return true;
+}

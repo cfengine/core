@@ -2973,14 +2973,14 @@ processes:
 
   start::
 
-    "$(pattern[$(service)])" ->  { "@(stakeholders[$(service)])" } ,
+    "$(pattern[$(service)])" ->  { "@(stakeholders[$(service)])" }
 
              comment => "Verify that the service appears in the process table",
        restart_class => "restart_$(service)";
 
   stop::
 
-    "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" },
+    "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
 
             comment => "Verify that the service does not appear in the process",
        process_stop => "$(stopcommand[$(service)])",
@@ -2988,7 +2988,7 @@ processes:
 
   commands:
 
-   "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" },
+   "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
 
             comment => "Execute command to restart the $(service) service",
          ifvarclass => canonify("restart_$(service)");

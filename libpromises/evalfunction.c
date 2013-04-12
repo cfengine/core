@@ -2316,13 +2316,12 @@ static FnCallResult FnCallFilter(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                   IntFromString(RlistScalarValue(finalargs->next->next->next->next))); // max results
 }
 
-static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
+/*********************************************************************/
+
+static int preplist(EvalContext *ctx, FnCall *fp, char *name, Rval *rval2)
 {
     char lval[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
-
-    Rval rval2;
-    Rlist *rp, *returnlist = NULL;
 
 /* Locate the array */
 
@@ -2342,20 +2341,32 @@ static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised an array in scope \"%s\" but this was not found\n",
               fp->name,
               scopeid);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return false;
     }
 
-    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
+    if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, rval2, NULL))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised a list called \"%s\" but this was not found\n", fp->name, name);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return false;
     }
 
-    if (rval2.type != RVAL_TYPE_LIST)
+    if (rval2->type != RVAL_TYPE_LIST)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Function \"%s\" was promised a list called \"%s\" but this was not found\n", fp->name, name);
-        return (FnCallResult) { FNCALL_FAILURE };
+        return false;
     }
+
+    return true;
+}
+
+/*********************************************************************/
+
+static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
+{
+    Rval rval2;
+    Rlist *rp, *returnlist = NULL;
+
+    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
@@ -2368,6 +2379,49 @@ static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name
             RlistAppendScalar(&returnlist, rp->item);
             match_count++;
         }
+    }
+
+    return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *name = RlistScalarValue(finalargs); // list identifier
+    int head = 0==strcmp(RlistScalarValue(finalargs->next), "head"); // heads or tails
+    long max = IntFromString(RlistScalarValue(finalargs->next->next)); // max results
+
+    Rval rval2;
+    Rlist *rp, *returnlist = NULL;
+
+    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    if (head)
+    {
+        long count = 0;
+        for (rp = (Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
+        {
+            RlistAppendScalar(&returnlist, rp->item);
+            count++;
+        }
+    }
+    else if (max > 0) // tail mode
+    {
+        rp = (Rlist *) rval2.item;
+        int length = RlistLen((const Rlist *) rp);
+
+        int offset = max >= length ? 0 : length-max;
+
+        for (rp; rp != NULL && offset--; rp = rp->next);
+
+        for (; rp != NULL; rp = rp->next)
+        {
+            RlistAppendScalar(&returnlist, rp->item);
+        }
+
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -5216,6 +5270,14 @@ FnCallArg STRFTIME_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg SUBLIST_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {"head,tail", DATA_TYPE_OPTION, "Whether to return elements from the head or from the tail of the list"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Maximum number of elements to return"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg TRANSLATEPATH_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Unix style path"},
@@ -5399,6 +5461,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
     {"strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly"},
     {"strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string"},
+    {"sublist", DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist,
+     "Returns arg3 element from either the head or the tail (according to arg2) of list arg1."},
     {"sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals"},
     {"translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath,
      "Translate path separators from Unix style to the host's native"},

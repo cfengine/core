@@ -300,118 +300,12 @@ bundle_statement:      promise_type
                      | promise_type error
                        {
                           yyclearin;
+                          INSTALL_SKIP=true;
                           ParseError("Expected a class or promise statement, got:%s", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bodybody:              body_begin
-                       {
-                           P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                           if (P.currentbody)
-                           {
-                               P.currentbody->offset.line = P.line_no;
-                               P.currentbody->offset.start = P.offsets.last_block_id;
-                           }
-
-                           RlistDestroy(P.useargs);
-                           P.useargs = NULL;
-
-                           strcpy(P.currentid,"");
-                           CfDebug("Starting block\n");
-                       }
-
-                       bodyattribs
-
-                       CB 
-                       {
-                           P.offsets.last_id = -1;
-                           P.offsets.last_string = -1;
-                           P.offsets.last_class_id = -1;
-                           if (P.currentbody)
-                           {
-                               P.currentbody->offset.end = P.offsets.current;
-                           }
-                           CfDebug("End promise body\n");
-                       };
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-bodyattribs:           bodyattrib                    /* BODY ONLY */
-                     | bodyattribs bodyattrib;
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-bodyattrib:            class
-                     | selections;
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-selections:            selection                 /* BODY ONLY */
-                     | selections selection;
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-selection:             id                         /* BODY ONLY */
-                       ASSIGN
-                       rval
-                       {
-                           {
-                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
-                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-                               {
-                                   yyerror(SyntaxTypeMatchToString(err));
-                               }
-                           }
-
-                           if (!INSTALL_SKIP)
-                           {
-                               Constraint *cp = NULL;
-
-                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
-                               {
-                                   ValidateClassSyntax(P.rval.item);
-                               }
-
-                               if (P.currentclasses == NULL)
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
-                               }
-                               else
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
-                               }
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
-                           }
-                           else
-                           {
-                               RvalDestroy(P.rval);
-                           }
-
-                           if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
-                           {
-                               if (strcmp(P.lval,"namespace") == 0)
-                               {
-                                   if (P.rval.type != RVAL_TYPE_SCALAR)
-                                   {
-                                       yyerror("namespace must be a constant scalar string");
-                                   }
-                                   else
-                                   {
-                                       free(P.current_namespace);
-                                       P.current_namespace = xstrdup(P.rval.item);
-                                   }
-                               }
-                           }
-                           
-                           P.rval = (Rval) { NULL, '\0' };
-                       }
-                       ';' ;
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 classpromises:         classpromise                     /* BUNDLE ONLY */
                      | classpromises classpromise
@@ -457,7 +351,8 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                        }
                      | error 
                        {
-                          yyclearin;
+                          yyclearin; 
+                          INSTALL_SKIP=true;
                           ParseError("Expected promise type, got:%s", yytext);
                        }
 
@@ -476,6 +371,7 @@ promise:               promisee
                      | promiser error
                        {
                           yyclearin;
+                          INSTALL_SKIP=true;
                           ParseError("Expected ';' or promise attribute, got:%s", yytext);
                        }
 
@@ -623,6 +519,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            if (!ConstraintTypeCheck(P.currenttype, P.currentid))
                            {
                                ParseError("Unknown attribute:%s for promise type: %s", P.currentid, P.currenttype);
+                               INSTALL_SKIP=true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
@@ -630,6 +527,114 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
                        }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+bodybody:              body_begin
+                       {
+                           P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
+                           if (P.currentbody)
+                           {
+                               P.currentbody->offset.line = P.line_no;
+                               P.currentbody->offset.start = P.offsets.last_block_id;
+                           }
+
+                           RlistDestroy(P.useargs);
+                           P.useargs = NULL;
+
+                           strcpy(P.currentid,"");
+                           CfDebug("Starting block\n");
+                       }
+
+                       bodyattribs
+
+                       CB 
+                       {
+                           P.offsets.last_id = -1;
+                           P.offsets.last_string = -1;
+                           P.offsets.last_class_id = -1;
+                           if (P.currentbody)
+                           {
+                               P.currentbody->offset.end = P.offsets.current;
+                           }
+                           CfDebug("End promise body\n");
+                       };
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+bodyattribs:           bodyattrib                    /* BODY ONLY */
+                     | bodyattribs bodyattrib;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+bodyattrib:            class
+                     | selections;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+selections:            selection                 /* BODY ONLY */
+                     | selections selection;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+selection:             id                         /* BODY ONLY */
+                       ASSIGN
+                       rval
+                       {
+                           {
+                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                               {
+                                   yyerror(SyntaxTypeMatchToString(err));
+                               }
+                           }
+
+                           if (!INSTALL_SKIP)
+                           {
+                               Constraint *cp = NULL;
+
+                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               {
+                                   ValidateClassSyntax(P.rval.item);
+                               }
+
+                               if (P.currentclasses == NULL)
+                               {
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                               }
+                               else
+                               {
+                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
+                               }
+                               cp->offset.line = P.line_no;
+                               cp->offset.start = P.offsets.last_id;
+                               cp->offset.end = P.offsets.current;
+                               cp->offset.context = P.offsets.last_class_id;
+                           }
+                           else
+                           {
+                               RvalDestroy(P.rval);
+                           }
+
+                           if (strcmp(P.blockid,"control") == 0 && strcmp(P.blocktype,"file") == 0)
+                           {
+                               if (strcmp(P.lval,"namespace") == 0)
+                               {
+                                   if (P.rval.type != RVAL_TYPE_SCALAR)
+                                   {
+                                       yyerror("namespace must be a constant scalar string");
+                                   }
+                                   else
+                                   {
+                                       free(P.current_namespace);
+                                       P.current_namespace = xstrdup(P.rval.item);
+                                   }
+                               }
+                           }
+                           
+                           P.rval = (Rval) { NULL, '\0' };
+                       }
+                       ';' ;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -802,7 +807,7 @@ promiser:              QSTRING
                        /*
                        error
                        {
-                       printf("basje\n");
+                       printf("Expected promiser id, got:%s", yytext);
                        }
                        */
 

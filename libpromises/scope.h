@@ -100,6 +100,7 @@ void ScopeDeleteScalar(VarRef lval);
 void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
 void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt);
 void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt);
+bool ScopeIsReserved(const char *scope);
 
 void ScopeDeleteVariable(const char *scope, const char *id);
 

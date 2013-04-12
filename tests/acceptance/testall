@@ -225,7 +225,7 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       fi
     fi
 
-    if [ $RESULT = Pass ]; then
+    if [ "$RESULT" = "Pass" ]; then
       $GAINROOT rm -rf $WORKDIR
     fi
 

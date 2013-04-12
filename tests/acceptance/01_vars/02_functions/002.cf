@@ -42,9 +42,9 @@ vars:
   !linux.!freebsd.!solaris.!darwin.!openbsd::
     "gid_0" string => "fixme";
 
-  SuSE|redhat::
+  SuSE|redhat|gentoo::
     "num_daemon" int => "2";
-  (linux.!SuSE.!redhat)|freebsd|darwin|openbsd::
+  (linux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
     "num_daemon" int => "1";
   solaris::
     "num_daemon" int => "12";

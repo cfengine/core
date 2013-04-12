@@ -272,7 +272,7 @@ bundlebody:            body_begin
                                P.currentbundle->offset.end = P.offsets.current;
                            }
                            CfDebug("End promise bundle\n\n");
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -368,12 +368,14 @@ promise_line:          promise ';'
 
 promise:               promisee
                      | promiser_statement
+                     /*
                      | promiser error
                        {
                           yyclearin;
                           INSTALL_SKIP=true;
                           ParseError("Expected ';' or promise attribute, got:%s", yytext);
                        }
+                     */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -434,12 +436,13 @@ promiser_statement:    promiser
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promisee_constraints:  /* empty */
-                     | ',' constraints
+                     | ',' constraint_decl
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promiser_constraints:  /* empty */
-                     | constraints
+                     | constraint_decl
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -460,7 +463,16 @@ promiser_constraints:  /* empty */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-constraints:           constraint               /* BUNDLE ONLY */
+constraint_decl:       constraints
+                     | constraints error
+                       {
+                          yyclearin;
+                          ParseError("Expected ',' check previous statement, got:%s", yytext);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+constraints:           constraint                           /* BUNDLE ONLY */
                      | constraints ',' constraint
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -509,7 +521,8 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                            {
                                RvalDestroy(P.rval);
                            }
-                       };
+                       }
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */

@@ -150,7 +150,8 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
 
@@ -487,14 +488,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for pulse time %d seconds...\n", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
-
-// recheck license (in case of license updates or expiry)
-
-    if (EnterpriseExpiry(ctx, AGENT_TYPE_EXECUTOR))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-        exit(1);
-    }
 
     /*
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.

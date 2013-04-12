@@ -209,11 +209,6 @@ CFEngine will output diagnostic information upon bootstrap. Error messages will 
 
 @item CFEngine should now be up and running on your system. It will copy its default policy files into @file{masterfiles} on the hub (policy server). When the clients are bootstrapped, they will contact the hub and copy them to their @file{inputs} directory.
 
-@item Commercial CFEngine 3 Enterprise customers: To complete licensing setup, you should make a promise to accept the license
-terms by editing @file{/var/cfengine/masterfiles/promises.cf}
-on the hub (policy server), changing the line @samp{host_licenses_paid => "<NUMBER>";}
-in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
-
 @end enumerate
 
 @noindent @b{How to assess success in this procedure:}

@@ -42,7 +42,6 @@ body common control
 bundlesequence  => { "testbundle"  };
 
 version => "1.2.3";
-host_licenses_paid => "10";
 }
 
 ########################################################

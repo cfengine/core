@@ -59,7 +59,6 @@ char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
 int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
-int EnterpriseExpiry(EvalContext *ctx, AgentType agent_type);
 const char *GetConsolePrefix(void);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);

@@ -803,19 +803,6 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
 
         /* Allow $(this.handle) etc variables */
 
-        if (handle)
-        {
-            char tmp[CF_EXPANDSIZE];
-            // This ordering is necessary to get automated canonification
-            ExpandScalar(ctx, "this", handle, tmp);
-            CanonifyNameInPlace(tmp);
-            ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
-        }
-        else
-        {
-            ScopeNewSpecialScalar(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
-        }
-
         if (PromiseGetBundle(pp)->source_path)
         {
             ScopeNewSpecialScalar(ctx, "this", "promise_filename",PromiseGetBundle(pp)->source_path, DATA_TYPE_STRING);
@@ -839,6 +826,20 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         if (pp->has_subbundles)
         {
             ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        }
+
+        if (handle)
+        {
+            char tmp[CF_EXPANDSIZE];
+            // This ordering is necessary to get automated canonification
+            ExpandScalar(ctx, "this", handle, tmp);
+            CanonifyNameInPlace(tmp);
+            CfDebug("Expanded handle to %s\n", tmp);
+            ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
+        }
+        else
+        {
+            ScopeNewSpecialScalar(ctx, "this", "handle", PromiseID(pp), DATA_TYPE_STRING);
         }
 
         /* End special variables */

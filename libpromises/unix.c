@@ -361,8 +361,12 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 # if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     char hw_mac[CF_MAXVARSIZE];
 
-    
-    ioctl(fd, SIOCGIFHWADDR, ifr);
+    if ((ioctl(fd, SIOCGIFHWADDR, ifr) == -1))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "Couldn't get mac address for %s interface\n", ifr->ifr_name);
+        return;
+    }
+      
     snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
              (unsigned char) ifr->ifr_hwaddr.sa_data[0],
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],

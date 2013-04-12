@@ -100,6 +100,16 @@ void test_promise_promiser_nonscalar(void **state)
     assert_false(LoadPolicy("promise_promiser_nonscalar.cf"));
 }
 
+void test_bundle_body_promiser_forgot_colon(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_promiser_forgot_colon.cf"));
+}
+
+void test_bundle_body_promisee_forgot_colon(void **state)
+{
+    assert_false(LoadPolicy("bundle_body_promisee_forgot_colon.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -111,8 +121,6 @@ int main()
         unit_test(test_bundle_args_invalid_type),
         unit_test(test_bundle_args_forgot_cp),
         unit_test(test_bundle_body_forgot_ob),
-        unit_test(test_body_invalid_type),
-        unit_test(test_constraint_ifvarclass_invalid),
         unit_test(test_bundle_invalid_promise_type),
         unit_test(test_bundle_body_wrong_promise_type_token),
         unit_test(test_bundle_body_wrong_statement),
@@ -121,8 +129,14 @@ int main()
         unit_test(test_bundle_body_promiser_statement_missing_assign),
         unit_test(test_bundle_body_promise_missing_arrow),
         unit_test(test_bundle_body_promiser_unknown_constraint_id),
+        unit_test(test_bundle_body_promiser_forgot_colon),
+        unit_test(test_bundle_body_promisee_forgot_colon),
 
-        unit_test(test_promise_promiser_nonscalar)
+        unit_test(test_body_invalid_type),
+
+        unit_test(test_promise_promiser_nonscalar),
+
+        unit_test(test_constraint_ifvarclass_invalid)
     };
 
     return run_tests(tests);

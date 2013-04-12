@@ -622,12 +622,6 @@ Use the same command on all hosts, i.e. do not bootstrap the policy
 server with a localhost address.
 @item The software should now be running.
 
-@item To complete to licensing, you should make a promise to accept the license
-terms by editing the @file{/var/cfengine/masterfiles/promises.cf} on
-the policy server, and editing the @samp{host_licenses_paid => "100";}
-line in @samp{body common control} to reflect the correct number of
-licenses that you have subscribed to.
-
 @end enumerate
 
 @noindent @b{How to assess success in this procedure:}

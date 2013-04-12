@@ -97,7 +97,8 @@ void CheckBundleParameters(char *scope, Rlist *args);
 void BannerBundle(Bundle *bp, Rlist *args);
 void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
-void CheckLicenses(EvalContext *ctx);
+void WarnAboutDeprecatedFeatures(EvalContext *ctx);
+void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);

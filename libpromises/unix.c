@@ -358,6 +358,12 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
     }
 
+    // mac address on a loopback interface doesn't make sense
+    if (ifr->ifr_flags & IFF_LOOPBACK)
+    {
+      return;
+    }
+
 # if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     char hw_mac[CF_MAXVARSIZE];
 
@@ -402,14 +408,6 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                 sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                 m = (char *) LLADDR(sdl);
                 
-                // Skip zeroed mac addresses (loopback interfaces, ...)
-                if (m[0] == 0 && m[1] == 0 
-                    && m[2] == 0 && m[3] == 0 
-                    && m[4] == 0 && m[5] == 0)
-                {
-                    continue;
-                }
-
                 snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
                     (unsigned char) m[0],
                     (unsigned char) m[1],

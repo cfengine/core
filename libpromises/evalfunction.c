@@ -2450,6 +2450,25 @@ static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 /*********************************************************************/
 
+static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *name = RlistScalarValue(finalargs);
+    long offset = IntFromString(RlistScalarValue(finalargs->next)); // offset
+
+    Rval rval2;
+    Rlist *rp = NULL;
+
+    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+
+    for (rp = (Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
+
+    if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(rp->item), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
@@ -5318,6 +5337,13 @@ FnCallArg UNIQ_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg NTH_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_VALRANGE, DATA_TYPE_INT, "Offset of element to return"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg USEREXISTS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "User name or identifier"},
@@ -5425,6 +5451,7 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Return a list with each element modified by a pattern based $(this)"},
     {"not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false"},
     {"now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation"},
+    {"nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list arg1"},
     {"on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation"},
     {"or", DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true", true},
     {"parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray,

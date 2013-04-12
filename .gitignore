@@ -88,6 +88,7 @@ libpromises/cf3parse.h
 cf3parse.output
 libutils/config.h
 libutils/config.h.in
+libutils/config.post.h
 
 # acceptance tests
 

@@ -570,6 +570,28 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+CF3_CHECK_PROPER_FUNC([mkdir],
+  [[#include <sys/stat.h>
+    #include <sys/types.h>]],
+  [[int mkdir(const char *pathname, mode_t mode);]])
+
+dnl AC_CHECK_FUNC([mkdir], [], [AC_MSG_ERROR([Unable to find mkdir function])])
+
+dnl AC_CACHE_CHECK([whether mkdir accepts two parameters],
+dnl   [hw_cv_func_mkdir_posix],
+dnl   [AC_COMPILE_IFELSE(
+dnl     [AC_LANG_PROGRAM([[#include <sys/stat.h>
+dnl                        #include <sys/types.h>]],
+dnl                      [[int mkdir(const char *pathname, mode_t mode);]])],
+dnl     [hw_cv_func_mkdir_posix=yes],
+dnl     [hw_cv_func_mkdir_posix=no])])
+
+dnl AS_IF([test "$hw_cv_func_mkdir_posix" = yes],
+dnl   [AC_DEFINE([HAVE_MKDIR_POSIX], [1], [Define to 1 if you have POSIX-compliant `mkdir' function])],
+dnl   [post_macros="$post_macros
+dnl #define mkdir rpl_mkdir"
+dnl    AC_LIBOBJ([rpl_mkdir])])
+
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 
@@ -954,6 +976,10 @@ fi
 AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
 AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
 
+#
+# Populate contents of config.post.h
+#
+AC_SUBST(post_macros)
 
 dnl ######################################################################
 dnl Summarize
@@ -1021,6 +1047,7 @@ dnl ######################################################################
 AC_CONFIG_FILES([Makefile
     libcompat/Makefile
     libutils/Makefile
+    libutils/config.post.h
     libpromises/Makefile
     cf-agent/Makefile
     cf-promises/Makefile
@@ -1049,5 +1076,3 @@ m4_indir(incstart[]incend, [nova/output.m4])
 AC_OUTPUT
 
 AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine.)
-
-

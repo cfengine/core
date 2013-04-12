@@ -693,9 +693,9 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             }
 
             mask = umask(0);
-            if (cf_mkdir(to, DEFAULTMODE) == -1)
+            if (mkdir(to, DEFAULTMODE) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "cf_mkdir", "Unable to make directory %s", to);
+                CfOut(OUTPUT_LEVEL_ERROR, "mkdir", "Unable to make directory %s", to);
                 umask(mask);
                 return;
             }
@@ -794,9 +794,9 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
             if ((!attr.copy.collapse) && (cfstat(newto, &dsb) == -1))
             {
-                if (cf_mkdir(newto, 0700) == -1)
+                if (mkdir(newto, 0700) == -1)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "cf_mkdir", pp, attr, " !! Can't make directory %s\n", newto);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "mkdir", pp, attr, " !! Can't make directory %s\n", newto);
                     continue;
                 }
 

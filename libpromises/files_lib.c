@@ -390,9 +390,9 @@ int MakeParentDirectory(char *parentandchild, int force)
                 {
                     mask = umask(0);
 
-                    if (cf_mkdir(currentpath, DEFAULTMODE) == -1)
+                    if (mkdir(currentpath, DEFAULTMODE) == -1)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "cf_mkdir", "Unable to make directories to %s\n", parentandchild);
+                        CfOut(OUTPUT_LEVEL_ERROR, "mkdir", "Unable to make directories to %s\n", parentandchild);
                         umask(mask);
                         return (false);
                     }

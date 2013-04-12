@@ -479,6 +479,10 @@ char *mkdtemp(char *template);
 char *strrstr(const char *haystack, const char *needle);
 #endif
 
+#if !defined(HAVE_MKDIR_PROPER)
+int rpl_mkdir(const char *pathname, mode_t mode);
+#endif
+
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif
@@ -707,5 +711,12 @@ struct timespec
 #if !defined O_BINARY
 # define O_BINARY 0
 #endif
+
+#if defined(__MINGW32__)
+/* _mkdir(3) */
+#include <direct.h>
+#endif
+
+#include "config.post.h"
 
 #endif

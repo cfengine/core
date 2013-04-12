@@ -99,7 +99,6 @@ char *cf_ctime(const time_t *timep);
 char *cf_strtimestamp_local(const time_t time, char *buf);
 char *cf_strtimestamp_utc(const time_t time, char *buf);
 int cf_closesocket(int sd);
-int cf_mkdir(const char *path, mode_t mode);
 int cf_chmod(const char *path, mode_t mode);
 int cf_rename(const char *oldpath, const char *newpath);
 

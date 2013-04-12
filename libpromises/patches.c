@@ -412,19 +412,6 @@ int cf_closesocket(int sd)
     return res;
 }
 
-/*******************************************************************/
-
-int cf_mkdir(const char *path, mode_t mode)
-{
-#ifdef __MINGW32__
-    return NovaWin_mkdir(path, mode);
-#else
-    return mkdir(path, mode);
-#endif
-}
-
-/*******************************************************************/
-
 int cf_chmod(const char *path, mode_t mode)
 {
 #ifdef __MINGW32__

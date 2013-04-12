@@ -275,6 +275,10 @@ static void test_show_array_nan(void **state)
     free(output);
 }
 
+#ifndef INFINITY
+  #define INFINITY (1.0/0.0)
+#endif
+
 static void test_show_array_infinity(void **state)
 {
     JsonElement *array = JsonArrayCreate(10);

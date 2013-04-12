@@ -61,7 +61,7 @@ ssize_t read(int fd, void *buf, size_t bufsize)
         {
             pstatus_t pstatus;
             pstatus.pr_lwp.pr_flags = PR_STOPPED;
-            pstatus.pr_lwp.pr_why = PR_SIGALLED;
+            pstatus.pr_lwp.pr_why = PR_SIGNALLED;
             memcpy(buf, &pstatus, sizeof(pstatus));
             fdpos[1] = sizeof(pstatus);
             return sizeof(pstatus);

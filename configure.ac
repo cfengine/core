@@ -568,10 +568,10 @@ AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
 AC_CHECK_DECLS(mkdtemp)
-AC_CHECK_FUNCS(mkdtemp)
+AC_REPLACE_FUNCS(mkdtemp)
 
 AC_CHECK_DECLS(strrstr)
-AC_CHECK_FUNCS(strrstr)
+AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)

@@ -30,7 +30,7 @@
  */
 
 /*
- * GetProcessStartTime (see process.h)
+ * GetProcessStartTime (see process_lib.h)
  */
 
 typedef enum

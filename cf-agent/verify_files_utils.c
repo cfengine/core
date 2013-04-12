@@ -1690,7 +1690,7 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %jo\n", path,
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Disabling/renaming file %s to %s with mode %04jo\n", path,
                          newname, (uintmax_t)newperm);
                 }
 
@@ -1954,7 +1954,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
         {
         case cfa_warn:
 
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! %s has permission %jo - [should be %jo]\n", file,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, " !! %s has permission %04jo - [should be %04jo]\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -1969,7 +1969,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
                 }
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Object %s had permission %jo, changed it to %jo\n", file,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Object %s had permission %04jo, changed it to %04jo\n", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -2197,7 +2197,7 @@ static int PushDirState(EvalContext *ctx, char *name, struct stat *sb)
 {
     if (chdir(name) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "chdir", "Could not change to directory %s, mode %jo in tidy", name, (uintmax_t)(sb->st_mode & 07777));
+        CfOut(OUTPUT_LEVEL_INFORM, "chdir", "Could not change to directory %s, mode %04jo in tidy", name, (uintmax_t)(sb->st_mode & 07777));
         return false;
     }
     else
@@ -2285,7 +2285,7 @@ static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat
 
     if (attr.copy.preserve)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Attempting to preserve file permissions from the source: %jo",
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Attempting to preserve file permissions from the source: %04jo",
               (uintmax_t)(sstat->st_mode & 07777));
 
         if ((attr.perms.owners)->uid == CF_SAME_OWNER)  /* Preserve uid and gid  */
@@ -3286,12 +3286,12 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
 
     if (cmpsb.st_mode != sb->st_mode)
     {
-        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %jo -> %jo", file,
+        snprintf(message, CF_BUFSIZE - 1, "ALERT: Permissions for %s changed %04jo -> %04jo", file,
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
         CfOut(OUTPUT_LEVEL_ERROR, "", "%s", message);
 
         char msg_temp[CF_MAXVARSIZE] = { 0 };
-        snprintf(msg_temp, sizeof(msg_temp), "Permission: %jo -> %jo",
+        snprintf(msg_temp, sizeof(msg_temp), "Permission: %04jo -> %04jo",
                  (uintmax_t)cmpsb.st_mode, (uintmax_t)sb->st_mode);
 
         LogHashChange(file, FILE_STATE_STATS_CHANGED, msg_temp, pp);
@@ -3407,7 +3407,7 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
             {
                 /* Relying on umask is risky */
                 filemode = 0600;
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No mode was set, choose plain file default %ju\n", (uintmax_t)filemode);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No mode was set, choose plain file default %04jo\n", (uintmax_t)filemode);
             }
             else
             {
@@ -3418,13 +3418,13 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
 
             if ((fd = creat(file, filemode)) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "creat", pp, attr, " !! Error creating file %s, mode = %04jo\n", file, (uintmax_t)filemode);
                 umask(saveumask);
                 return false;
             }
             else
             {
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Created file %s, mode = %ju\n", file, (uintmax_t)filemode);
+                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Created file %s, mode = %04jo\n", file, (uintmax_t)filemode);
                 close(fd);
                 umask(saveumask);
             }

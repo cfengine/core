@@ -599,6 +599,22 @@ int IsAbsoluteFileName(const char *f)
     return false;
 }
 
+FilePathType FilePathGetType(const char *file_path)
+{
+    if (IsAbsoluteFileName(file_path))
+    {
+        return FILE_PATH_TYPE_ABSOLUTE;
+    }
+    else if (IsFileOutsideDefaultRepository(file_path))
+    {
+        return FILE_PATH_TYPE_RELATIVE;
+    }
+    else
+    {
+        return FILE_PATH_TYPE_NON_ANCHORED;
+    }
+}
+
 bool IsFileOutsideDefaultRepository(const char *f)
 {
     return (*f == '.') || (IsAbsoluteFileName(f));

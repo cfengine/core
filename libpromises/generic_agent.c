@@ -1100,15 +1100,20 @@ const char *GenericAgentResolveInputPath(const char *filename, const char *base_
 {
     static char wfilename[CF_BUFSIZE], path[CF_BUFSIZE];
 
-    if (MINUSF && (filename != base_input_file) && IsFileOutsideDefaultRepository(base_input_file)
-        && !IsAbsoluteFileName(filename))
+    if (FilePathGetType(filename) == FILE_PATH_TYPE_ABSOLUTE)
+    {
+         strlcpy(wfilename, filename, CF_BUFSIZE);
+         return MapName(wfilename);
+    }
+
+    if (MINUSF && (filename != base_input_file) && FilePathGetType(base_input_file) != FILE_PATH_TYPE_NON_ANCHORED)
     {
         /* If -f assume included relative files are in same directory */
         strncpy(path, base_input_file, CF_BUFSIZE - 1);
         ChopLastNode(path);
         snprintf(wfilename, CF_BUFSIZE - 1, "%s%c%s", path, FILE_SEPARATOR, filename);
     }
-    else if (IsFileOutsideDefaultRepository(filename))
+    else if (FilePathGetType(filename) != FILE_PATH_TYPE_NON_ANCHORED)
     {
         strncpy(wfilename, filename, CF_BUFSIZE - 1);
     }

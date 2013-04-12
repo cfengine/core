@@ -27,6 +27,15 @@
 
 #include "cf3.defs.h"
 
+typedef enum
+{
+    FILE_PATH_TYPE_ABSOLUTE, // /foo.cf
+    FILE_PATH_TYPE_RELATIVE, // ./../foo.cf
+    FILE_PATH_TYPE_NON_ANCHORED, // foo.cf
+} FilePathType;
+
+FilePathType FilePathGetType(const char *file_path);
+
 int IsNewerFileTree(char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);

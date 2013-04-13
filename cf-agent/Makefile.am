@@ -45,6 +45,7 @@ cf_agent_SOURCES = \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
+        promiser_regex_resolver.c promiser_regex_resolver.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
 	verify_files_hashes.c verify_files_hashes.h \

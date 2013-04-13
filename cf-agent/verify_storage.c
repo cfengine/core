@@ -40,6 +40,7 @@
 #include "rlist.h"
 #include "policy.h"
 #include "verify_files.h"
+#include "promiser_regex_resolver.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

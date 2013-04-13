@@ -20,14 +20,11 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_VERIFY_FILES_H
-#define CFENGINE_VERIFY_FILES_H
+#ifndef CFENGINE_PROMISER_REGEX_RESOLVER_H
+#define CFENGINE_PROMISER_REGEX_RESOLVER_H
 
-#include "cf3.defs.h"
-
-void *FindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
+void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr));
 
 #endif

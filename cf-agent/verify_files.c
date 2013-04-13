@@ -322,11 +322,11 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
 /* Phase 1 - */
 
-    if (exists && ((a.havedelete) || (a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer)))
+    if (exists)
     {
         lstat(path, &oslb);     /* if doesn't exist have to stat again anyway */
 
-        DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
+        DepthSearch(ctx, path, &osb, 0, a, pp, osb.st_dev);
 
         /* normally searches do not include the base directory */
 
@@ -337,13 +337,13 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             /* Handle this node specially */
 
             a.havedepthsearch = false;
-            DepthSearch(ctx, path, &oslb, 0, a, pp, oslb.st_dev);
+            DepthSearch(ctx, path, &osb, 0, a, pp, osb.st_dev);
             a.havedepthsearch = save_search;
         }
         else
         {
             /* unless child nodes were repaired, set a promise kept class */
-            if (!IsDefinedClass(ctx, "repaired" , PromiseGetNamespace(pp)))
+            if (exists && ((a.havedelete) || (a.haverename) || (a.haveperms) || (a.havechange) || (a.transformer)) && !IsDefinedClass(ctx, "repaired" , PromiseGetNamespace(pp)))
             {
                 cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Basedir \"%s\" not promising anything", path);
             }
@@ -361,35 +361,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             }
         }
     }
-
-/* Phase 2a - copying is potentially threadable if no followup actions */
-
-    if (a.havecopy)
-    {
-        ScheduleCopyOperation(ctx, path, a, pp);
-    }
-
-/* Phase 2b link after copy in case need file first */
-
-    if ((a.havelink) && (a.link.link_children))
-    {
-        ScheduleLinkChildrenOperation(ctx, path, a.link.source, 1, a, pp);
-    }
-    else if (a.havelink)
-    {
-        ScheduleLinkOperation(ctx, path, a.link.source, a, pp);
-    }
-
-/* Phase 3 - content editing */
-
-    if (a.haveedit)
-    {
-        ScheduleEditOperation(ctx, path, a, pp);
-    }
-
-// Once more in case a file has been created as a result of editing or copying
-
-    if ((cfstat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
+    else
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }

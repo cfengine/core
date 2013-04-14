@@ -43,6 +43,6 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
 int ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, Promise *pp);
 int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, Promise *pp);
 
-int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache);
+int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
 #endif

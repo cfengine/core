@@ -37,11 +37,6 @@ void AddFilenameToListOfSuspicious(const char *pattern)
     PrependItem(&SUSPICIOUSLIST, pattern, NULL);
 }
 
-static bool SuspiciousFile(const char *filename)
-{
-    return IsItemIn(SUSPICIOUSLIST, filename);
-}
-
 static const char *SKIPFILES[] =
 {
     ".",
@@ -51,12 +46,10 @@ static const char *SKIPFILES[] =
     NULL
 };
 
-int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection *conn)
+static bool ConsiderFile(const char *nodename, const char *path, struct stat *stat)
 {
     int i;
-    struct stat statbuf;
     const char *sp;
-
 
     if (strlen(nodename) < 1)
     {
@@ -64,17 +57,12 @@ int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection 
         return true;
     }
 
-    if (SuspiciousFile(nodename))
+    if (IsItemIn(SUSPICIOUSLIST, nodename))
     {
-        struct stat statbuf;
-
-        if (cfstat(nodename, &statbuf) != -1)
+        if (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode))
         {
-            if (S_ISREG(statbuf.st_mode))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious file %s found in %s\n", nodename, path);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious file %s found in %s\n", nodename, path);
                 return false;
-            }
         }
     }
 
@@ -108,11 +96,6 @@ int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection 
         }
     }
 
-    char buf[CF_BUFSIZE];
-
-    snprintf(buf, sizeof(buf), "%s/%s", path, nodename);
-    MapName(buf);
-
     for (sp = nodename; *sp != '\0'; sp++)      /* Check for files like ".. ." */
     {
         if ((*sp != '.') && (!isspace((int)*sp)))
@@ -121,13 +104,7 @@ int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection 
         }
     }
 
-    if (cf_lstat(buf, &statbuf, fc, conn) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Couldn't stat %s", buf);
-        return true;
-    }
-
-    if ((statbuf.st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
+    if ((stat->st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
     {
         return false;
     }
@@ -135,16 +112,44 @@ int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection 
     CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious looking file object \"%s\" masquerading as hidden file in %s\n", nodename, path);
     CfDebug("Filename looks suspicious\n");
 
-    if (S_ISLNK(statbuf.st_mode))
+    if (S_ISLNK(stat->st_mode))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "   %s is a symbolic link\n", nodename);
     }
-    else if (S_ISDIR(statbuf.st_mode))
+    else if (S_ISDIR(stat->st_mode))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "   %s is a directory\n", nodename);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (statbuf.st_size),
-          (unsigned int) (statbuf.st_mode));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%s] has size %ld and full mode %o\n", nodename, (unsigned long) (stat->st_size),
+          (unsigned int) (stat->st_mode));
     return true;
+}
+
+bool ConsiderLocalFile(const char *filename, const char *directory)
+{
+    struct stat stat;
+    if (lstat(filename, &stat) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Unable to stat %s/%s", directory, filename);
+        return true;
+    }
+
+    return ConsiderFile(filename, directory, &stat);
+}
+
+bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy fc, AgentConnection *conn)
+{
+    struct stat stat;
+    char buf[CF_BUFSIZE];
+    snprintf(buf, sizeof(buf), "%s/%s", filename, directory);
+    MapName(buf);
+
+    if (cf_lstat(buf, &stat, fc, conn) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "cf_lstat", "Couldn't stat %s/%s", directory, filename);
+        return true;
+    }
+
+    return ConsiderFile(filename, directory, &stat);
 }

@@ -29,6 +29,13 @@
 #include "cf3.defs.h"
 
 void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, FileCopy fc, AgentConnection *conn);
+
+/*
+ * Both functions assume that current working directory is #path, so #filename
+ * can be stat'ed at relative path (if it is a local file).
+ */
+bool ConsiderLocalFile(const char *filename, const char *path);
+
+bool ConsiderAbstractFile(const char *nodename, const char *path, FileCopy fc, AgentConnection *conn);
 
 #endif

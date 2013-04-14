@@ -117,7 +117,6 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         char nextbuffer[CF_BUFSIZE], nextbufferOrig[CF_BUFSIZE], regex[CF_BUFSIZE];
         const struct dirent *dirp;
         Dir *dirh;
-        FileCopy dummyfc = { 0 };
 
         memset(regex, 0, CF_BUFSIZE);
 
@@ -137,7 +136,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
             for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
             {
-                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp->conn))
+                if (!ConsiderLocalFile(dirp->d_name, pbuffer))
                 {
                     continue;
                 }

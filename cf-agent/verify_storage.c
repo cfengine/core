@@ -200,7 +200,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(dirp->d_name, name, a.copy, pp->conn))
+            if (!ConsiderLocalFile(dirp->d_name, name))
             {
                 continue;
             }

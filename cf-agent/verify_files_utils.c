@@ -120,32 +120,6 @@ void SetFileAutoDefineList(Rlist *auto_define_list)
 
 int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes attr, Promise *pp)
 {
-
-/* Phase 2a - copying is potentially threadable if no followup actions */
-
-    if (attr.havecopy)
-    {
-        ScheduleCopyOperation(ctx, path, attr, pp);
-    }
-
-/* Phase 2b link after copy in case need file first */
-
-    if ((attr.havelink) && (attr.link.link_children))
-    {
-        ScheduleLinkChildrenOperation(ctx, path, attr.link.source, 1, attr, pp);
-    }
-    else if (attr.havelink)
-    {
-        ScheduleLinkOperation(ctx, path, attr.link.source, attr, pp);
-    }
-
-/* Phase 3 - content editing */
-
-    if (attr.haveedit)
-    {
-        ScheduleEditOperation(ctx, path, attr, pp);
-    }
-
 /* Here we can assume that we are in the parent directory of the leaf */
 
     if (attr.haveselect && !SelectLeaf(path, sb, attr.select))

@@ -29,7 +29,7 @@
 #include "cf3.defs.h"
 
 int cfstat(const char *path, struct stat *buf);
-int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
+int cf_lstat(char *file, struct stat *buf, bool encrypt, AgentConnection *conn);
 
 /**
  * Reads one line from #fp and places it in #buff. Newline at the end of line is

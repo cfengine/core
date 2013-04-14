@@ -29,8 +29,8 @@
 #define CFENGINE_VERIFY_FILES_HASHES_H
 
 int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type, Attributes attr, Promise *pp);
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn);
+int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, bool encrypt, AgentConnection *conn);
+int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, bool encrypt, AgentConnection *conn);
 
 void PurgeHashes(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
 

@@ -138,14 +138,14 @@ bool ConsiderLocalFile(const char *filename, const char *directory)
     return ConsiderFile(filename, directory, &stat);
 }
 
-bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy fc, AgentConnection *conn)
+bool ConsiderAbstractFile(const char *filename, const char *directory, bool encrypt, AgentConnection *conn)
 {
     struct stat stat;
     char buf[CF_BUFSIZE];
     snprintf(buf, sizeof(buf), "%s/%s", filename, directory);
     MapName(buf);
 
-    if (cf_lstat(buf, &stat, fc, conn) == -1)
+    if (cf_lstat(buf, &stat, encrypt, conn) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "cf_lstat", "Couldn't stat %s/%s", directory, filename);
         return true;

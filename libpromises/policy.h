@@ -116,7 +116,6 @@ struct Promise_
     /* Runtime bus for private flags and work space */
     int done;                   /* this needs to be preserved across runs */
     int *donep;                 /* used by locks to mark as done */
-    EditContext *edcontext;
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 
     SourceOffset offset;

@@ -418,9 +418,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         return false;
     }
 
-    pp->edcontext = NewEditContext(filename, a);
+    EditContext *edcontext = NewEditContext(filename, a);
 
-    if (pp->edcontext == NULL)
+    if (edcontext == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
         retval = false;
@@ -474,7 +474,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditLineOperations(ctx, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -527,7 +527,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             BundleHashVariables(ctx, bp);
             ScopeAugment(ctx, bp, params);
 
-            retval = ScheduleEditXmlOperations(ctx, bp, a, pp);
+            retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -550,7 +550,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -561,7 +561,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     }
 
 exit:
-    FinishEditContext(ctx, pp->edcontext, a, pp);
+    FinishEditContext(ctx, edcontext, a, pp);
     YieldCurrentLock(thislock);
     return retval;
 }

@@ -70,7 +70,7 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
-PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);
+const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);
 
 /**
  * @brief An array of ConstraintSyntax for the given body_type

@@ -54,7 +54,7 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
+const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
@@ -71,12 +71,12 @@ PromiseTypeSyntax PromiseTypeSyntaxLookup(const char *bundle_type, const char *p
                     (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
                      StringSafeEqual("*", syntax[j].bundle_type)))
             {
-                return syntax[j];
+                return &syntax[j];
             }
         }
     }
 
-    return (PromiseTypeSyntax) { NULL, NULL, NULL };
+    return NULL;
 }
 
 const ConstraintSyntax *BodySyntaxLookup(const char *body_type)

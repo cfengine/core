@@ -37,18 +37,19 @@
 #include "mod_files.h"
 #include "string_lib.h"
 
-int yylex(void);
-
 // FIX: remove
 #include "syntax.h"
 
+#include <assert.h>
+
+int yylex(void);
 extern char *yytext;
 
 static int RelevantBundle(const char *agent, const char *blocktype);
 static void DebugBanner(const char *s);
 static bool LvalWantsBody(char *stype, char *lval);
 static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval);
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss);
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *ss);
 static void fatal_yyerror(const char *s);
 
 static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
@@ -480,7 +481,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                            if (!INSTALL_SKIP)
                            {
                                Constraint *cp = NULL;
-                               PromiseTypeSyntax ss = PromiseTypeSyntaxLookup(P.blocktype,P.currenttype);
+                               const PromiseTypeSyntax *ss = PromiseTypeSyntaxLookup(P.blocktype,P.currenttype);
                                {
                                    SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
                                    if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
@@ -1151,8 +1152,10 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
     return SYNTAX_TYPE_MATCH_OK;
 }
 
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, PromiseTypeSyntax ss)
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *ss)
 {
+    assert(ss);
+
     int l;
     const ConstraintSyntax *bs;
 
@@ -1165,13 +1168,13 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
 
     CfDebug(")\n");
 
-    if (ss.promise_type != NULL)     /* In a bundle */
+    if (ss->promise_type != NULL)     /* In a bundle */
     {
-        if (strcmp(ss.promise_type, type) == 0)
+        if (strcmp(ss->promise_type, type) == 0)
         {
             CfDebug("Found type %s's body syntax\n", type);
 
-            bs = ss.bs;
+            bs = ss->bs;
 
             for (l = 0; bs[l].lval != NULL; l++)
             {

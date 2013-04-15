@@ -310,10 +310,10 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     const Bundle *bundle = promise_type->parent_bundle;
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
-    const PromiseTypeSyntax promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
-    for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
+    for (size_t i = 0; promise_type_syntax->bs[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax.bs[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             if (!RvalTypeCheckDataType(constraint->rval.type, body_syntax->dtype))
@@ -403,19 +403,23 @@ static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
         success = false;
     }
 
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(promise_type->parent_bundle->type, promise_type->name);
+
     // ensure promise_type is allowed in bundle (type)
-    if (!PromiseTypeSyntaxLookup(promise_type->parent_bundle->type, promise_type->name).promise_type)
+    if (!promise_type_syntax)
     {
         SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise_type,
                                               POLICY_ERROR_PROMISE_TYPE_INVALID,
                                               promise_type->name, promise_type->parent_bundle->name));
         success = false;
     }
-
-    for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
+    else
     {
-        const Promise *pp = SeqAt(promise_type->promises, i);
-        success &= PromiseCheck(pp, errors);
+        for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
+        {
+            const Promise *pp = SeqAt(promise_type->promises, i);
+            success &= PromiseCheck(pp, errors);
+        }
     }
 
     return success;
@@ -464,12 +468,12 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     const PromiseType *promise_type = promise->parent_promise_type;
     const Bundle *bundle = promise_type->parent_bundle;
 
-    const PromiseTypeSyntax promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
-    for (size_t i = 0; promise_type_syntax.bs[i].lval != NULL; i++)
+    for (size_t i = 0; promise_type_syntax->bs[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax.bs[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->bs[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return body_syntax;
@@ -2279,12 +2283,12 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success &= ConstraintCheckSyntax(constraint, errors);
     }
 
-    PromiseTypeSyntax pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
-                                                    pp->parent_promise_type->name);
+    const PromiseTypeSyntax *pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
+                                                           pp->parent_promise_type->name);
 
-    if (pts.parse_tree_check)
+    if (pts->parse_tree_check)
     {
-        success &= pts.parse_tree_check(pp, errors);
+        success &= pts->parse_tree_check(pp, errors);
     }
 
     return success;

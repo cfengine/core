@@ -1165,7 +1165,7 @@ static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig 
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-                ExpandPromise(ctx, pp, CommonEvalPromise);
+                ExpandPromise(ctx, pp, CommonEvalPromise, NULL);
             }
         }
 
@@ -1228,7 +1228,7 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
             continue;
         }
 
-        ExpandPromise(ctx, pp, KeepClassContextPromise);
+        ExpandPromise(ctx, pp, KeepClassContextPromise, NULL);
     }
 }
 

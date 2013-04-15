@@ -73,7 +73,7 @@ char *EDITLINETYPESEQUENCE[] =
     NULL
 };
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp);
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param);
 static void VerifyLineDeletions(EvalContext *ctx, Promise *pp);
 static void VerifyColumnEdits(EvalContext *ctx, Promise *pp);
 static void VerifyPatterns(EvalContext *ctx, Promise *pp);
@@ -142,7 +142,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promi
                 pp->edcontext = parentp->edcontext;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditLinePromise);
+                ExpandPromise(ctx, pp, KeepEditLinePromise, NULL);
 
                 if (Abort())
                 {
@@ -319,7 +319,7 @@ static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence ty
 
 /***************************************************************************/
 
-static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
+static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     char *sp = NULL;
 
@@ -351,7 +351,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 

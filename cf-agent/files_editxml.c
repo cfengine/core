@@ -69,7 +69,7 @@ char *EDITXMLTYPESEQUENCE[] =
 };
 
 static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence type);
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp);
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param);
 #ifdef HAVE_LIBXML2
 static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp);
 static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp);
@@ -186,7 +186,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promis
                 pp->edcontext = parentp->edcontext;
                 pp->donep = &(pp->done);
 
-                ExpandPromise(ctx, pp, KeepEditXmlPromise);
+                ExpandPromise(ctx, pp, KeepEditXmlPromise, NULL);
 
                 if (Abort())
                 {
@@ -232,7 +232,7 @@ static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence 
 
 /***************************************************************************/
 
-static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
+static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     char *sp = NULL;
     Attributes a = { {0} };
@@ -260,7 +260,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 

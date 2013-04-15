@@ -59,7 +59,7 @@
 #include <assert.h>
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,
-                               PromiseActuator *ActOnPromise);
+                               PromiseActuator *ActOnPromise, void *param);
 static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scope, Rlist **list_vars_out, Rlist **scalar_vars_out,
                                             Rlist **full_expansion, char *string, size_t length, int level);
 static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rval rval, int level);
@@ -128,7 +128,7 @@ since these cannot be mapped into "this" without some magic.
    
 **********************************************************************/
 
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise)
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *listvars = NULL;
     Rlist *scalars = NULL;
@@ -167,7 +167,7 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise)
     CopyLocalizedScalarsToThisScope(ctx, PromiseGetBundle(pp)->name, scalars);
 
     ScopePushThis();
-    ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise);
+    ExpandPromiseAndDo(ctx, pcopy, listvars, ActOnPromise, param);
     ScopePopThis();
 
     PromiseDestroy(pcopy);
@@ -759,7 +759,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
 
 /*********************************************************************/
 
-static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise)
+static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars, PromiseActuator *ActOnPromise, void *param)
 {
     Rlist *lol = NULL;
     Promise *pexp;
@@ -847,7 +847,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
         pexp = ExpandDeRefPromise(ctx, "this", pp);
 
         assert(ActOnPromise);
-        ActOnPromise(ctx, pexp);
+        ActOnPromise(ctx, pexp, param);
 
         if (strcmp(pp->parent_promise_type->name, "vars") == 0 || strcmp(pp->parent_promise_type->name, "meta") == 0)
         {
@@ -1773,8 +1773,10 @@ static int CompareRlist(Rlist *list1, Rlist *list2)
 
 /*******************************************************************/
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp)
+void CommonEvalPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     ShowPromise(pp);
     CheckRecursion(ctx, pp);
     PromiseRecheckAllConstraints(ctx, pp);
@@ -1845,7 +1847,7 @@ static void CheckRecursion(EvalContext *ctx, Promise *pp)
                 for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
                 {
                     Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                    ExpandPromise(ctx, ppsub, CommonEvalPromise);
+                    ExpandPromise(ctx, ppsub, CommonEvalPromise, NULL);
                 }
             }
             EvalContextStackPopFrame(ctx);
@@ -1945,7 +1947,7 @@ static void ParseServices(EvalContext *ctx, Promise *pp)
             for (size_t ppsubi = 0; ppsubi < SeqLength(sbp->promises); ppsubi++)
             {
                 Promise *ppsub = SeqAt(sbp->promises, ppsubi);
-                ExpandPromise(ctx, ppsub, CommonEvalPromise);
+                ExpandPromise(ctx, ppsub, CommonEvalPromise, NULL);
             }
         }
 

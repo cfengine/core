@@ -146,7 +146,7 @@ static void test_expand_scalar_array_with_scalar_arg(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Promise *pp)
+static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED *param)
 {
     assert_string_equal("first", pp->promiser);
 }
@@ -171,7 +171,7 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo[$(bar)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, false);
-    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg);
+    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_scalar_arg, NULL);
     EvalContextStackPopFrame(ctx);
 
     PolicyDestroy(policy);
@@ -181,7 +181,7 @@ static void test_expand_promise_array_with_scalar_arg(void **state)
 
 static int actuator_state = 0;
 
-static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp)
+static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     if (strcmp("a", pp->promiser) == 0)
     {
@@ -223,7 +223,7 @@ static void test_expand_promise_slist(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(foo)", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, false);
-    ExpandPromise(ctx, promise, actuator_expand_promise_slist);
+    ExpandPromise(ctx, promise, actuator_expand_promise_slist, NULL);
     EvalContextStackPopFrame(ctx);
 
     assert_int_equal(2, actuator_state);
@@ -233,7 +233,7 @@ static void test_expand_promise_slist(void **state)
 }
 
 
-static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promise *pp)
+static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED *param)
 {
     if (strcmp("first", pp->promiser) == 0)
     {
@@ -288,7 +288,7 @@ static void test_expand_promise_array_with_slist_arg(void **state)
     Promise *promise = PromiseTypeAppendPromise(promise_type, "$(arr[$(keys)])", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, "any");
 
     EvalContextStackPushBundleFrame(ctx, bundle, false);
-    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg);
+    ExpandPromise(ctx, promise, actuator_expand_promise_array_with_slist_arg, NULL);
     EvalContextStackPopFrame(ctx);
 
     assert_int_equal(2, actuator_state);

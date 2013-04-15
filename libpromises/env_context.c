@@ -378,8 +378,10 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
 /*******************************************************************/
 
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     Attributes a;
 
     a = GetClassContextAttributes(ctx, pp);

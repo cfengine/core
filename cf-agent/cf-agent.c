@@ -101,6 +101,8 @@ typedef enum
 #include "reporting.h"
 #endif
 
+#include <assert.h>
+
 extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
@@ -149,7 +151,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp);
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
@@ -1247,7 +1249,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
                     CF_TOPICS++;
                 }
 
-                ExpandPromise(ctx, pp, KeepAgentPromise);
+                ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
 
                 if (Abort())
                 {
@@ -1394,8 +1396,10 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     ConvergeVarHashPromise(ctx, pp, true);
 }
 
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
@@ -1447,7 +1451,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 

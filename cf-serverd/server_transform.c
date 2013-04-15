@@ -46,6 +46,8 @@
 
 #include "generic_agent.h" // HashControls
 
+#include <assert.h>
+
 typedef enum
 {
     REMOTE_ACCESS_ADMIT,
@@ -88,7 +90,7 @@ typedef enum
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
@@ -531,7 +533,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -577,7 +579,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -590,9 +592,11 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     char *sp = NULL;
+
+    assert(param == NULL);
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
@@ -612,7 +616,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 

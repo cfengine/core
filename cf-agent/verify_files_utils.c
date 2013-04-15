@@ -86,7 +86,7 @@ static void FileAutoDefine(EvalContext *ctx, char *destfile, const char *ns);
 static void TruncateFile(char *name);
 static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArray **inode_cache);
 static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, struct stat *sstat, Attributes attr, Promise *pp);
-static int cf_stat(char *file, struct stat *buf, bool encrypt, AgentConnection *conn);
+static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 #ifndef __MINGW32__
 static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int buffsize, Attributes attr, Promise *pp, AgentConnection *conn);
 #endif
@@ -703,7 +703,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         }
     }
 
-    if ((dirh = AbstractDirOpen(from, attr.copy.encrypt, conn)) == NULL)
+    if ((dirh = AbstractDirOpen(from, attr.copy, conn)) == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, "copy can't open directory [%s]\n", from);
         return;
@@ -711,7 +711,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
     for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
     {
-        if (!ConsiderAbstractFile(dirp->d_name, from, attr.copy.encrypt, conn))
+        if (!ConsiderAbstractFile(dirp->d_name, from, attr.copy, conn))
         {
             continue;
         }
@@ -735,7 +735,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             /* No point in checking if there are untrusted symlinks here,
                since this is from a trusted source, by defintion */
 
-            if (cf_stat(newfrom, &sb, attr.copy.encrypt, conn) == -1)
+            if (cf_stat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
@@ -743,7 +743,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
         }
         else
         {
-            if (cf_lstat(newfrom, &sb, attr.copy.encrypt, conn) == -1)
+            if (cf_lstat(newfrom, &sb, attr.copy, conn) == -1)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "cf_stat", " !! (Can't stat %s)\n", newfrom);
                 continue;
@@ -848,11 +848,11 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
     if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
     {
         CfDebug("Treating links as files for %s\n", source);
-        found = cf_stat(source, &ssb, attr.copy.encrypt, conn);
+        found = cf_stat(source, &ssb, attr.copy, conn);
     }
     else
     {
-        found = cf_lstat(source, &ssb, attr.copy.encrypt, conn);
+        found = cf_lstat(source, &ssb, attr.copy, conn);
     }
 
     if (found == -1)
@@ -873,7 +873,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
         strcpy(destdir, destination);
         AddSlash(destdir);
 
-        if ((dirh = AbstractDirOpen(sourcedir, attr.copy.encrypt, conn)) == NULL)
+        if ((dirh = AbstractDirOpen(sourcedir, attr.copy, conn)) == NULL)
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "opendir", pp, attr, "Can't open directory %s\n", sourcedir);
             return;
@@ -892,7 +892,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
         for (dirp = AbstractDirRead(dirh); dirp != NULL; dirp = AbstractDirRead(dirh))
         {
-            if (!ConsiderAbstractFile(dirp->d_name, sourcedir, attr.copy.encrypt, conn))
+            if (!ConsiderAbstractFile(dirp->d_name, sourcedir, attr.copy, conn))
             {
                 continue;
             }
@@ -913,7 +913,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
             if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
             {
-                if (cf_stat(sourcefile, &ssb, attr.copy.encrypt, conn) == -1)
+                if (cf_stat(sourcefile, &ssb, attr.copy, conn) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "stat", pp, attr, "Can't stat source file (notlinked) %s\n", sourcefile);
                     return;
@@ -921,7 +921,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
             }
             else
             {
-                if (cf_lstat(sourcefile, &ssb, attr.copy.encrypt, conn) == -1)
+                if (cf_lstat(sourcefile, &ssb, attr.copy, conn) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "lstat", pp, attr, "Can't stat source file %s\n", sourcefile);
                     return;
@@ -1132,7 +1132,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         }
     }
 
-    if (conn != NULL)
+    if ((attr.copy.servers != NULL) && (strcmp(attr.copy.servers->item, "localhost") != 0))
     {
         CfDebug("This is a remote copy from server: %s\n", (char *) attr.copy.servers->item);
         remote = true;
@@ -1295,7 +1295,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?? Final verification of transmission ...\n");
 
-        if (CompareFileHashes(source, new, &sstat, &dstat, attr.copy.encrypt, conn))
+        if (CompareFileHashes(source, new, &sstat, &dstat, attr.copy, conn))
         {
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr,
                  " !! New file %s seems to have been corrupted in transit, aborting!\n", new);
@@ -2342,7 +2342,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
         return NULL;
     }
 
-    if (cf_stat(attr.copy.source, &ssb, attr.copy.encrypt, conn) == -1)
+    if (cf_stat(attr.copy.source, &ssb, attr.copy, conn) == -1)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr, "Can't stat %s in files.copyfrom promise\n", source);
         return NULL;
@@ -2411,7 +2411,7 @@ int ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Copy file %s from %s check\n", destination, attr.copy.source);
     }
 
-    if (conn == NULL)
+    if (attr.copy.servers == NULL || strcmp(attr.copy.servers->item, "localhost") == 0)
     {
     }
     else
@@ -2638,7 +2638,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
-            ok_to_copy = CompareFileHashes(sourcefile, destfile, ssb, dsb, fc.encrypt, conn);
+            ok_to_copy = CompareFileHashes(sourcefile, destfile, ssb, dsb, fc, conn);
         }
         else
         {
@@ -2658,7 +2658,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
 
         if (S_ISREG(dsb->st_mode) && S_ISREG(ssb->st_mode))
         {
-            ok_to_copy = CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc.encrypt, conn);
+            ok_to_copy = CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc, conn);
         }
         else
         {
@@ -2688,7 +2688,7 @@ static int CompareForFileCopy(char *sourcefile, char *destfile, struct stat *ssb
     case FILE_COMPARATOR_ATIME:
 
         ok_to_copy = (dsb->st_ctime < ssb->st_ctime) ||
-            (dsb->st_mtime < ssb->st_mtime) || (CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc.encrypt, conn));
+            (dsb->st_mtime < ssb->st_mtime) || (CompareBinaryFiles(sourcefile, destfile, ssb, dsb, fc, conn));
 
         if (ok_to_copy)
         {
@@ -2959,15 +2959,15 @@ static void RegisterAHardLink(int i, char *value, Attributes attr, CompressedArr
     }
 }
 
-static int cf_stat(char *file, struct stat *buf, bool encrypt, AgentConnection *conn)
+static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-    if (conn == NULL)
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         return cfstat(file, buf);
     }
     else
     {
-        return cf_remote_stat(file, buf, "file", encrypt, conn);
+        return cf_remote_stat(file, buf, "file", fc.encrypt, conn);
     }
 }
 
@@ -2978,7 +2978,7 @@ static int cf_readlink(EvalContext *ctx, char *sourcefile, char *linkbuf, int bu
 {
     memset(linkbuf, 0, buffsize);
 
-    if (conn == NULL)
+    if ((attr.copy.servers == NULL) || (strcmp(attr.copy.servers->item, "localhost") == 0))
     {
         return readlink(sourcefile, linkbuf, buffsize - 1);
     }

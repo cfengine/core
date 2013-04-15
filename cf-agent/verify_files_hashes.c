@@ -201,7 +201,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     }
 }
 
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, bool encrypt, AgentConnection *conn)
+int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -214,7 +214,7 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
         return true;
     }
 
-    if (conn == NULL)
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         HashFile(file1, digest1, CF_DEFAULT_DIGEST);
         HashFile(file2, digest2, CF_DEFAULT_DIGEST);
@@ -232,11 +232,11 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
     }
     else
     {
-        return CompareHashNet(file1, file2, encrypt, conn);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, bool encrypt, AgentConnection *conn)
+int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -249,7 +249,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
         return true;
     }
 
-    if (conn == NULL)
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         fd1 = open(file1, O_RDONLY | O_BINARY, 0400);
         fd2 = open(file2, O_RDONLY | O_BINARY, 0400);
@@ -277,7 +277,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
     else
     {
         CfDebug("Using network checksum instead\n");
-        return CompareHashNet(file1, file2, encrypt, conn);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 

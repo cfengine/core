@@ -55,15 +55,15 @@ int cfstat(const char *path, struct stat *buf)
 
 /*********************************************************************/
 
-int cf_lstat(char *file, struct stat *buf, bool encrypt, AgentConnection *conn)
+int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-    if (conn == NULL)
+    if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
         return lstat(file, buf);
     }
     else
     {
-        return cf_remote_stat(file, buf, "link", encrypt, conn);
+        return cf_remote_stat(file, buf, "link", fc.encrypt, conn);
     }
 }
 

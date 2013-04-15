@@ -36,6 +36,6 @@ void AddFilenameToListOfSuspicious(const char *filename);
  */
 bool ConsiderLocalFile(const char *filename, const char *path);
 
-bool ConsiderAbstractFile(const char *nodename, const char *path, bool encrypt, AgentConnection *conn);
+bool ConsiderAbstractFile(const char *nodename, const char *path, FileCopy fc, AgentConnection *conn);
 
 #endif

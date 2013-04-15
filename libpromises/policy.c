@@ -1424,6 +1424,16 @@ static JsonElement *BodyContextsToJson(const Seq *constraints)
 
         JsonElement *json_attribute = JsonObjectCreate(10);
 
+        if (strcmp(current_context, cp->classes) != 0)
+        {
+            JsonArrayAppendObject(json_contexts,
+                                  CreateContextAsJson(current_context,
+                                                      context_offset_start,
+                                                      context_offset_end, "attributes", json_attributes));
+            json_attributes = JsonArrayCreate(10);
+            current_context = cp->classes;
+        }
+
         JsonObjectAppendInteger(json_attribute, "offset", cp->offset.start);
         JsonObjectAppendInteger(json_attribute, "offsetEnd", cp->offset.end);
 
@@ -1433,19 +1443,12 @@ static JsonElement *BodyContextsToJson(const Seq *constraints)
         JsonObjectAppendString(json_attribute, "lval", cp->lval);
         JsonObjectAppendObject(json_attribute, "rval", AttributeValueToJson(cp->rval, false));
         JsonArrayAppendObject(json_attributes, json_attribute);
-
-
-
-        if (i == (SeqLength(constraints) - 1) || strcmp(current_context, ((Constraint *)SeqAt(constraints, i + 1))->classes) != 0)
-        {
-            JsonArrayAppendObject(json_contexts,
-                                  CreateContextAsJson(current_context,
-                                                      context_offset_start,
-                                                      context_offset_end, "attributes", json_attributes));
-
-            current_context = cp->classes;
-        }
     }
+
+    JsonArrayAppendObject(json_contexts,
+                          CreateContextAsJson(current_context,
+                                              context_offset_start,
+                                              context_offset_end, "attributes", json_attributes));
 
     return json_contexts;
 }
@@ -1468,6 +1471,16 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
         }
 
         JsonElement *json_promise = JsonObjectCreate(10);
+
+        if (strcmp(current_context, pp->classes) != 0)
+        {
+            JsonArrayAppendObject(json_contexts,
+                                  CreateContextAsJson(current_context,
+                                                      context_offset_start,
+                                                      context_offset_end, "promises", json_promises));
+            json_promises = JsonArrayCreate(10);
+            current_context = pp->classes;
+        }
 
         JsonObjectAppendInteger(json_promise, "offset", pp->offset.start);
 
@@ -1518,17 +1531,12 @@ static JsonElement *BundleContextsToJson(const Seq *promises)
             JsonObjectAppendArray(json_promise, "attributes", json_promise_attributes);
         }
         JsonArrayAppendObject(json_promises, json_promise);
-
-        if (ppi == (SeqLength(promises) - 1) || strcmp(current_context, ((Promise *)SeqAt(promises, ppi + 1))->classes) != 0)
-        {
-            JsonArrayAppendObject(json_contexts,
-                                  CreateContextAsJson(current_context,
-                                                      context_offset_start,
-                                                      context_offset_end, "promises", json_promises));
-
-            current_context = pp->classes;
-        }
     }
+
+    JsonArrayAppendObject(json_contexts,
+                          CreateContextAsJson(current_context,
+                                              context_offset_start,
+                                              context_offset_end, "promises", json_promises));
 
     return json_contexts;
 }

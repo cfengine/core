@@ -64,7 +64,7 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
 
     if (IsItemIn(SUSPICIOUSLIST, nodename))
     {
-        if (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode))
+        if (stat && (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode)))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Suspicious file %s found in %s\n", nodename, path);
                 return false;
@@ -109,6 +109,12 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
         }
     }
 
+    if (stat == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "cf_lstat", "Couldn't stat %s/%s", path, nodename);
+        return true;
+    }
+
     if ((stat->st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
     {
         return false;
@@ -136,11 +142,12 @@ bool ConsiderLocalFile(const char *filename, const char *directory)
     struct stat stat;
     if (lstat(filename, &stat) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "lstat", "Unable to stat %s/%s", directory, filename);
-        return true;
+        return ConsiderFile(filename, directory, NULL);
     }
-
-    return ConsiderFile(filename, directory, &stat);
+    else
+    {
+        return ConsiderFile(filename, directory, &stat);
+    }
 }
 
 bool ConsiderAbstractFile(const char *filename, const char *directory, bool encrypt, AgentConnection *conn)
@@ -152,9 +159,10 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, bool encr
 
     if (cf_lstat(buf, &stat, encrypt, conn) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "cf_lstat", "Couldn't stat %s/%s", directory, filename);
-        return true;
+        return ConsiderFile(filename, directory, NULL);
     }
-
-    return ConsiderFile(filename, directory, &stat);
+    else
+    {
+        return ConsiderFile(filename, directory, &stat);
+    }
 }

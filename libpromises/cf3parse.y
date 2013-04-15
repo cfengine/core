@@ -258,7 +258,7 @@ bundlebody:            body_begin
                            P.useargs = NULL;
                        }
 
-                       bundle_statements
+                       bundle_decl
 
                        CB 
                        {
@@ -288,8 +288,12 @@ body_begin:            OB
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundle_statements:     /* empty */
-                     | bundle_statement
+bundle_decl:           /* empty */
+                     | bundle_statements
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
 
 

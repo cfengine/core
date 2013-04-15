@@ -1,4 +1,4 @@
-/* 
+ /* 
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -29,6 +29,11 @@
 #include "files_interfaces.h"
 #include "item_lib.h"
 #include "cfstream.h"
+
+/* lstat */
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 static Item *SUSPICIOUSLIST = NULL;
 

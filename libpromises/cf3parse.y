@@ -1006,7 +1006,7 @@ static bool LvalWantsBody(char *stype, char *lval)
 
         for (j = 0; ss[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].bs) == NULL)
+            if ((bs = ss[j].constraint_set.constraints) == NULL)
             {
                 continue;
             }
@@ -1061,7 +1061,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
-            bs = CONTROL_BODIES[i].bs;
+            bs = CONTROL_BODIES[i].constraint_set.constraints;
 
             for (l = 0; bs[l].lval != NULL; l++)
             {
@@ -1102,7 +1102,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
         for (j = 0; ss[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].bs) == NULL)
+            if ((bs = ss[j].constraint_set.constraints) == NULL)
             {
                 continue;
             }
@@ -1174,7 +1174,7 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
         {
             CfDebug("Found type %s's body syntax\n", type);
 
-            bs = ss->bs;
+            bs = ss->constraint_set.constraints;
 
             for (l = 0; bs[l].lval != NULL; l++)
             {

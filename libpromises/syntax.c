@@ -87,9 +87,9 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
         for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
         {
-            for (int z = 0; promise_type_syntax[k].bs[z].lval != NULL; z++)
+            for (int z = 0; promise_type_syntax[k].constraint_set.constraints[z].lval != NULL; z++)
             {
-                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].bs[z];
+                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].constraint_set.constraints[z];
 
                 if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
                 {
@@ -105,7 +105,7 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
         if (strcmp(body_type, promise_type_syntax.bundle_type) == 0)
         {
-            return promise_type_syntax.bs;
+            return promise_type_syntax.constraint_set.constraints;
         }
     }
 
@@ -129,7 +129,7 @@ DataType ExpectedDataType(const char *lvalname)
 
         for (j = 0; ss[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].bs) == NULL)
+            if ((bs = ss[j].constraint_set.constraints) == NULL)
             {
                 continue;
             }
@@ -985,7 +985,7 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
         {
             if (strcmp(bundle_type, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
-                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
+                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].constraint_set.constraints);
 
                 JsonObjectAppendObject(json, st[j].promise_type, attributes);
             }
@@ -1004,7 +1004,7 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
 
     for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].bs);
+        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].constraint_set.constraints);
 
         JsonObjectAppendObject(control_bodies, CONTROL_BODIES[i].bundle_type, attributes);
     }

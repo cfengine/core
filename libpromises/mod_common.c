@@ -387,18 +387,18 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 const PromiseTypeSyntax CONTROL_BODIES[] =
 {
-    {CF_COMMONC, "control", CFG_CONTROLBODY, NULL},
-    {CF_AGENTC, "control", CFA_CONTROLBODY, NULL},
-    {CF_SERVERC, "control", CFS_CONTROLBODY, NULL},
-    {CF_MONITORC, "control", CFM_CONTROLBODY, NULL},
-    {CF_RUNC, "control", CFR_CONTROLBODY, NULL},
-    {CF_EXECC, "control", CFEX_CONTROLBODY, NULL},
-    {CF_HUBC, "control", CFH_CONTROLBODY, NULL},
-    {"file", "control", CFFILE_CONTROLBODY, NULL},
+    {CF_COMMONC, "control", { CFG_CONTROLBODY, NULL } },
+    {CF_AGENTC, "control", { CFA_CONTROLBODY, NULL } },
+    {CF_SERVERC, "control", { CFS_CONTROLBODY, NULL } },
+    {CF_MONITORC, "control", { CFM_CONTROLBODY, NULL } },
+    {CF_RUNC, "control", { CFR_CONTROLBODY, NULL } },
+    {CF_EXECC, "control", { CFEX_CONTROLBODY, NULL } },
+    {CF_HUBC, "control", { CFH_CONTROLBODY, NULL } },
+    {"file", "control", { CFFILE_CONTROLBODY, NULL } },
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
-    {NULL, NULL, NULL}
+    {NULL, NULL, { NULL, NULL } }
 };
 
 /*********************************************************/
@@ -429,13 +429,13 @@ const ConstraintSyntax CF_COMMON_BODIES[] =
 const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
-    {"*", "classes", CF_CLASSBODY, &ClassesParseTreeCheck},
-    {"*", "defaults", CF_DEFAULTSBODY},
-    {"*", "meta", CF_METABODY},
-    {"*", "reports", CF_REPORT_BODIES},
-    {"*", "vars", CF_VARBODY, &VarsParseTreeCheck},
-    {"*", "*", CF_COMMON_BODIES},
-    {NULL, NULL, NULL}
+    {"*", "classes", { CF_CLASSBODY, &ClassesParseTreeCheck } },
+    {"*", "defaults", { CF_DEFAULTSBODY, NULL } },
+    {"*", "meta", { CF_METABODY, NULL } },
+    {"*", "reports", { CF_REPORT_BODIES, NULL } },
+    {"*", "vars", { CF_VARBODY, &VarsParseTreeCheck }},
+    {"*", "*", { CF_COMMON_BODIES, NULL } },
+    {NULL, NULL, { NULL, NULL } }
 };
 
 /*********************************************************/

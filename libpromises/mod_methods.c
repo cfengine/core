@@ -78,6 +78,6 @@ static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
 
 const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[] =
 {
-    {"agent", "methods", CF_METHOD_BODIES, &MethodsParseTreeCheck},
-    {NULL, NULL, NULL},
+    {"agent", "methods", { CF_METHOD_BODIES, &MethodsParseTreeCheck } },
+    {NULL, NULL, { NULL, NULL } },
 };

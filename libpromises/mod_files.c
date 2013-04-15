@@ -347,25 +347,25 @@ const PromiseTypeSyntax CF_FILES_PROMISE_TYPES[] =
 {
     /* Body lists belonging to "files:" type in Agent */
 
-    {"agent", "files", CF_FILES_BODIES},
+    {"agent", "files", { CF_FILES_BODIES, NULL } },
 
     /* Body lists belonging to th edit_line sub-bundle of files: */
 
-    {"edit_line", "*", CF_COMMON_EDITBODIES},
-    {"edit_line", "delete_lines", CF_DELETELINES_BODIES},
-    {"edit_line", "insert_lines", CF_INSERTLINES_BODIES},
-    {"edit_line", "field_edits", CF_COLUMN_BODIES},
-    {"edit_line", "replace_patterns", CF_REPLACE_BODIES},
+    {"edit_line", "*", { CF_COMMON_EDITBODIES, NULL } },
+    {"edit_line", "delete_lines", { CF_DELETELINES_BODIES, NULL } },
+    {"edit_line", "insert_lines", { CF_INSERTLINES_BODIES, NULL } },
+    {"edit_line", "field_edits", { CF_COLUMN_BODIES, NULL } },
+    {"edit_line", "replace_patterns", { CF_REPLACE_BODIES, NULL } },
 
-    {"edit_xml", "*", CF_COMMON_XMLBODIES},
-    {"edit_xml", "build_xpath", CF_INSERTTAGS_BODIES},
-    {"edit_xml", "delete_tree", CF_DELETETAGS_BODIES},
-    {"edit_xml", "insert_tree", CF_INSERTTAGS_BODIES},
-    {"edit_xml", "delete_attribute", CF_DELETEATTRIBUTES_BODIES},
-    {"edit_xml", "set_attribute", CF_INSERTATTRIBUTES_BODIES},
-    {"edit_xml", "delete_text", CF_DELETETAGS_BODIES},
-    {"edit_xml", "set_text", CF_INSERTTAGS_BODIES},
-    {"edit_xml", "insert_text", CF_INSERTTAGS_BODIES},
+    {"edit_xml", "*", { CF_COMMON_XMLBODIES, NULL } },
+    {"edit_xml", "build_xpath", { CF_INSERTTAGS_BODIES, NULL } },
+    {"edit_xml", "delete_tree", { CF_DELETETAGS_BODIES, NULL } },
+    {"edit_xml", "insert_tree", { CF_INSERTTAGS_BODIES, NULL } },
+    {"edit_xml", "delete_attribute", { CF_DELETEATTRIBUTES_BODIES, NULL } },
+    {"edit_xml", "set_attribute", { CF_INSERTATTRIBUTES_BODIES, NULL } },
+    {"edit_xml", "delete_text", { CF_DELETETAGS_BODIES, NULL } },
+    {"edit_xml", "set_text", { CF_INSERTTAGS_BODIES, NULL } },
+    {"edit_xml", "insert_text", { CF_INSERTTAGS_BODIES, NULL } },
 
-    {NULL, NULL, NULL},
+    {NULL, NULL, { NULL, NULL } },
 };

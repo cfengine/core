@@ -49,6 +49,6 @@ static const ConstraintSyntax CF_EXEC_BODIES[] =
 
 const PromiseTypeSyntax CF_EXEC_PROMISE_TYPES[] =
 {
-    {"agent", "commands", CF_EXEC_BODIES},
-    {NULL, NULL, NULL},
+    {"agent", "commands", { CF_EXEC_BODIES, NULL }},
+    {NULL, NULL, { NULL, NULL } },
 };

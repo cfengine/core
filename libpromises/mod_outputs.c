@@ -36,6 +36,6 @@ static const ConstraintSyntax CF_OUTPUTS_BODIES[] =
 
 const PromiseTypeSyntax CF_OUTPUTS_PROMISE_TYPES[] =
 {
-    {"agent", "outputs", CF_OUTPUTS_BODIES},
-    {NULL, NULL, NULL},
+    {"agent", "outputs", { CF_OUTPUTS_BODIES, NULL } },
+    {NULL, NULL, { NULL, NULL } },
 };

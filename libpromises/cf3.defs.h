@@ -733,10 +733,15 @@ typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
 typedef struct
 {
+    const ConstraintSyntax *constraints;
+    ParseTreeCheckFn parse_tree_check;
+} ConstraintSetSyntax;
+
+typedef struct
+{
     const char *bundle_type;
     const char *promise_type;
-    const ConstraintSyntax *bs;
-    ParseTreeCheckFn parse_tree_check;
+    ConstraintSetSyntax constraint_set;
 } PromiseTypeSyntax;
 
 /*************************************************************************/

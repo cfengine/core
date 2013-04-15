@@ -59,6 +59,6 @@ static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 
 const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[] =
 {
-    {"agent", "guest_environments", CF_ENVIRON_BODIES},
-    {NULL, NULL, NULL},
+    {"agent", "guest_environments", { CF_ENVIRON_BODIES, NULL } },
+    {NULL, NULL, { NULL, NULL } },
 };

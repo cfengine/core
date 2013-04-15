@@ -191,17 +191,19 @@ static void test_policy_json_to_from(void **state)
             }
 
             {
+                const char* reportOutput[2] = { "Hello, CFEngine", "Hello, world" };
+                const char* reportClass[2] = { "cfengine", "any" };
                 PromiseType *reports = BundleGetPromiseType(main_bundle, "reports");
                 assert_true(reports);
-                assert_int_equal(1, SeqLength(reports->promises));
+                assert_int_equal(2, SeqLength(reports->promises));
 
                 for (size_t i = 0; i < SeqLength(reports->promises); i++)
                 {
                     Promise *promise = SeqAt(reports->promises, i);
 
-                    if (strcmp("Hello, world", promise->promiser) == 0)
+                    if (strcmp(reportOutput[i], promise->promiser) == 0)
                     {
-                        assert_string_equal("cfengine", promise->classes);
+                        assert_string_equal(reportClass[i], promise->classes);
 
                         assert_int_equal(1, SeqLength(promise->conlist));
 

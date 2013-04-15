@@ -423,9 +423,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     if (pp->edcontext == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
-        FinishEditContext(ctx, pp->edcontext, a, pp);
-        YieldCurrentLock(thislock);
-        return false;
+        retval = false;
+        goto exit;
     }
 
     Policy *policy = PolicyFromPromise(pp);
@@ -445,9 +444,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         }             
         else
         {
-            FinishEditContext(ctx, pp->edcontext, a, pp);
-            YieldCurrentLock(thislock);
-            return false;
+            retval = false;
+            goto exit;
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
@@ -504,9 +502,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         }
         else
         {
-            FinishEditContext(ctx, pp->edcontext, a, pp);
-            YieldCurrentLock(thislock);
-            return false;
+            retval = false;
+            goto exit;
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
@@ -563,6 +560,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         PolicyDestroy(tmp_policy);
     }
 
+exit:
     FinishEditContext(ctx, pp->edcontext, a, pp);
     YieldCurrentLock(thislock);
     return retval;

@@ -32,6 +32,7 @@
 #include "logging.h"
 #include "policy.h"
 #include "cf-monitord-enterprise-stubs.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "history.h"
@@ -45,7 +46,7 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
 {
     Attributes a = { {0} };
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         if (pp->comment)
         {

@@ -1228,7 +1228,7 @@ static ConvergeVariableOptions CollectConvergeVariableOptions(EvalContext *ctx, 
     opts.ok_redefine = allow_redefine;
     opts.cp_save = NULL;
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return opts;
     }

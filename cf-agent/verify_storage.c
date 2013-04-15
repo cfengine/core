@@ -121,7 +121,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
         }
     }
 
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {

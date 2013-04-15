@@ -37,6 +37,7 @@
 #include "rlist.h"
 #include "policy.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "env_context.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
@@ -64,7 +65,7 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return;
     }
@@ -108,7 +109,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "db-%s", pp->promiser);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {

@@ -306,7 +306,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         .expireafter = 0,
     };
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -1194,7 +1194,8 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
     if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
-        *pp->donep = false;
+        /* FIXME: Verify why this explicit promise status change is done */
+        EvalContextMarkPromiseNotDone(ctx, pp);
         return;
     }
 }

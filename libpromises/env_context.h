@@ -79,6 +79,8 @@ typedef struct
     } data;
 } StackFrame;
 
+TYPED_SET_DECLARE(Promise, const Promise *)
+
 struct EvalContext_
 {
     StringSet *heap_soft;
@@ -90,6 +92,8 @@ struct EvalContext_
     Seq *stack;
 
     StringSet *dependency_handles;
+
+    PromiseSet *promises_done;
 };
 
 EvalContext *EvalContextNew(void);
@@ -148,6 +152,17 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
+
+/* - Promise status */
+bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp);
+
+/* Those two functions are compromises: there are pieces of code which
+ * manipulate promise 'doneness', and it's not simple to figure out how to
+ * properly reimplement it. So for the time being, let particular pieces of code
+ * continue to manipulate the state.
+ */
+void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
+void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 
 /* - Rest - */
 int Abort(void);

@@ -1413,7 +1413,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
         return;
     }
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return;
     }

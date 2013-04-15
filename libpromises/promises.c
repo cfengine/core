@@ -165,11 +165,9 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
-    pcopy->done = pp->done;
-    pcopy->donep = pp->donep;
     pcopy->has_subbundles = pp->has_subbundles;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
-    pcopy->org_pp = pp;
+    pcopy->org_pp = pp->org_pp;
 
     CfDebug("Copying promise constraints\n\n");
 
@@ -353,12 +351,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     }
 
     pcopy->parent_promise_type = pp->parent_promise_type;
-    pcopy->done = pp->done;
-    pcopy->donep = pp->donep;
     pcopy->offset.line = pp->offset.line;
     pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
-    pcopy->org_pp = pp;
+    pcopy->org_pp = pp->org_pp;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 

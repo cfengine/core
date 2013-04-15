@@ -38,6 +38,7 @@
 #include "rlist.h"
 #include "process_lib.h"
 #include "fncall.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -552,7 +553,7 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
 /* Digest length stored in md_len */
 }
 
-CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;
@@ -583,15 +584,15 @@ CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc,
    promises. Sub routine bundles cannot be marked as done or it will
    disallow iteration over bundles */
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return this;
     }
 
     if (RlistLen(CF_STCK) == 1)
     {
-        *(pp->donep) = true;
-        /* Must not set pp->done = true for editfiles etc */
+        /* Must not set promise to be done for editfiles etc */
+        EvalContextMarkPromiseDone(ctx, pp);
     }
 
     PromiseHash(pp, operand, digest, CF_DEFAULT_DIGEST);

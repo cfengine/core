@@ -109,7 +109,7 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promi
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -135,8 +135,6 @@ int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promi
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-
-                pp->donep = &(pp->done);
 
                 ExpandPromise(ctx, pp, KeepEditLinePromise, edcontext);
 
@@ -330,11 +328,6 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
         return;
     }
 
-    if (pp->done)
-    {
-//   return;
-    }
-
     if (VarClassExcluded(ctx, pp, &sp))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
@@ -430,7 +423,7 @@ static void VerifyLineDeletions(EvalContext *ctx, Promise *pp, EditContext *edco
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteline-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -496,7 +489,7 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcont
 /* locate and split line */
 
     snprintf(lockname, CF_BUFSIZE - 1, "column-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -549,7 +542,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "replace-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -604,7 +597,7 @@ static void VerifyLineInsertions(EvalContext *ctx, Promise *pp, EditContext *edc
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "insertline-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {

@@ -32,7 +32,7 @@ time_t FindLockTime(char *name);
 bool InvalidateLockTime(const char *lock_id);
 
 
-CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses);
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses);
 void YieldCurrentLock(CfLock this);
 void GetLockName(char *lockname, char *locktype, char *base, Rlist *params);
 

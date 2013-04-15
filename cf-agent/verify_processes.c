@@ -128,7 +128,7 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         snprintf(lockname, CF_BUFSIZE - 1, "proc-%s-norestart", pp->promiser);
     }
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {

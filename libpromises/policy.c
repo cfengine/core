@@ -1164,10 +1164,9 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     pp->promiser = sp;
     pp->promisee = promisee;
     pp->classes = spe;
-    pp->donep = &(pp->done);
     pp->has_subbundles = false;
     pp->conlist = SeqNew(10, ConstraintDestroy);
-    pp->org_pp = NULL;
+    pp->org_pp = pp;
 
     return pp;
 }

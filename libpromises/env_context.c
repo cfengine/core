@@ -162,7 +162,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         return false;
     }
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return false;
     }
@@ -325,7 +325,8 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         }
 
         snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
-        *(pp->donep) = true;
+        /* FIXME: figure why explicit mark and get rid of it */
+        EvalContextMarkPromiseDone(ctx, pp);
 
         if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
         {
@@ -1310,6 +1311,18 @@ static void StackFrameDestroy(StackFrame *frame)
     }
 }
 
+static unsigned PointerHashFn(const void *p, unsigned int max)
+{
+    return ((unsigned)(uintptr_t)p) % max;
+}
+
+static bool PointerEqualFn(const void *key1, const void *key2)
+{
+    return key1 == key2;
+}
+
+TYPED_SET_DEFINE(Promise, const Promise *, &PointerHashFn, &PointerEqualFn, NULL)
+
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
@@ -1323,6 +1336,8 @@ EvalContext *EvalContextNew(void)
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
     ctx->dependency_handles = StringSetNew();
+
+    ctx->promises_done = PromiseSetNew();
 
     return ctx;
 }
@@ -1341,6 +1356,8 @@ void EvalContextDestroy(EvalContext *ctx)
         ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
+
+        PromiseSetDestroy(ctx->promises_done);
     }
 }
 
@@ -1923,4 +1940,19 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
     return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
+}
+
+bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)
+{
+    return PromiseSetContains(ctx->promises_done, pp);
+}
+
+void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp)
+{
+    PromiseSetAdd(ctx->promises_done, pp->org_pp);
+}
+
+void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
+{
+    PromiseSetRemove(ctx->promises_done, pp->org_pp);
 }

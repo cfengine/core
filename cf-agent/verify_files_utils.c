@@ -1475,7 +1475,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
 
     if (!DONTDO)
     {
-        CfLock thislock = AcquireLock(comm, VUQNAME, CFSTARTTIME, attr.transaction, pp, false);
+        CfLock thislock = AcquireLock(ctx, comm, VUQNAME, CFSTARTTIME, attr.transaction, pp, false);
 
         if (thislock.lock == NULL)
         {

@@ -156,7 +156,7 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promis
     int pass;
 
     snprintf(lockname, CF_BUFSIZE - 1, "masterfilelock-%s", edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, parentp, true);
 
     if (thislock.lock == NULL)
     {
@@ -182,8 +182,6 @@ int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promis
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-
-                pp->donep = &(pp->done);
 
                 ExpandPromise(ctx, pp, KeepEditXmlPromise, edcontext);
 
@@ -413,7 +411,7 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditCo
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "buildxpath-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -476,7 +474,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetree-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -530,7 +528,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttree-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -591,7 +589,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deleteattribute-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -644,7 +642,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, Edit
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "setattribute-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -697,7 +695,7 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "deletetext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -750,7 +748,7 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditConte
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "settext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {
@@ -803,7 +801,7 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
     }
 
     snprintf(lockname, CF_BUFSIZE - 1, "inserttext-%s-%s", pp->promiser, edcontext->filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, true);
 
     if (thislock.lock == NULL)
     {

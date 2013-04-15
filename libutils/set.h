@@ -75,7 +75,7 @@ void *SetIteratorNext(SetIterator *i);
                                                                         \
     void Prefix##SetAdd(const Prefix##Set *set, ElementType element)    \
     {                                                                   \
-        SetAdd(set->impl, element);                                     \
+        SetAdd(set->impl, (void *)element);                             \
     }                                                                   \
                                                                         \
     bool Prefix##SetContains(const Prefix##Set *set, const ElementType element)   \

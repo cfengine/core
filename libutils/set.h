@@ -33,7 +33,7 @@ typedef MapIterator SetIterator;
 Set *SetNew(MapHashFn element_hash_fn,
             MapKeyEqualFn element_equal_fn,
             MapDestroyDataFn element_destroy_fn);
-void SetDestroy(void *set);
+void SetDestroy(Set *set);
 
 void SetAdd(Set *set, void *element);
 bool SetContains(const Set *set, const void *element);

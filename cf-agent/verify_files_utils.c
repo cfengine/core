@@ -2175,17 +2175,10 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
                 {
                     FatalError(ctx, "Not safe to continue");
                 }
-                VerifyFileLeaf(ctx, path, &lsb, attr, pp);
-            }
-            else
-            {
-                VerifyFileLeaf(ctx, path, &lsb, attr, pp);
             }
         }
-        else
-        {
-            VerifyFileLeaf(ctx, path, &lsb, attr, pp);
-        }
+
+        VerifyFileLeaf(ctx, path, &lsb, attr, pp);
     }
 
     DirClose(dirh);

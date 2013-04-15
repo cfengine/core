@@ -836,11 +836,11 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
     {
         if (a.not_matching)
         {
-            matches = !MatchRegion(pp->promiser, ip, terminator);
+            matches = !MatchRegion(pp->promiser, ip, terminator, true);
         }
         else
         {
-            matches = MatchRegion(pp->promiser, ip, terminator);
+            matches = MatchRegion(pp->promiser, ip, terminator, true);
         }
 
         if (matches)
@@ -1325,10 +1325,10 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
     char *sp;
     int preserve_block = a.sourcetype && (strcmp(a.sourcetype, "preserve_block") == 0 || strcmp(a.sourcetype, "file_preserve_block") == 0);
 
-    if (MatchRegion(chunk, location, NULL))
-       {
-       return false;
-       }
+    if (MatchRegion(chunk, location, NULL, false))
+    {
+        return false;
+    }
 
     // Iterate over any lines within the chunk
 
@@ -1337,27 +1337,27 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *chunk, Item **st
         memset(buf, 0, CF_BUFSIZE);
         sscanf(sp, "%2048[^\n]", buf);
         sp += strlen(buf);
-        
+
         if (!SelectLine(buf, a))
         {
             continue;
         }
 
         if (!preserve_block && IsItemInRegion(buf, begin_ptr, end_ptr, a.insert_match, pp))
-           {
-           cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->edcontext->filename);
-           continue;
-           }
+        {
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Promised chunk \"%s\" exists within selected region of %s (promise kept)", pp->promiser, pp->edcontext->filename);
+            continue;
+        }
 
         result |= InsertLineAtLocation(ctx, buf, start, location, prev, a, pp);
 
         if (preserve_block && a.location.before_after == EDIT_ORDER_BEFORE && location == NULL && prev == CF_UNDEFINED_ITEM)
-           {
-           // If we are inserting a preserved block before, need to flip the implied order after the first insertion
-           // to get the order of the block right
-           // a.location.before_after = cfe_after;
-           location = *start;
-           }
+        {
+            // If we are inserting a preserved block before, need to flip the implied order after the first insertion
+            // to get the order of the block right
+            // a.location.before_after = cfe_after;
+            location = *start;
+        }
         
         if (prev && prev != CF_UNDEFINED_ITEM)
         {

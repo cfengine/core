@@ -1532,7 +1532,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     Rlist *rp, *newlist;
-    char name[CF_MAXVARSIZE], line[CF_BUFSIZE], retval[CF_SMALLBUF];
+    char name[CF_MAXVARSIZE], retval[CF_SMALLBUF];
     int lcount = 0, vcount = 0, nopurge = true;
     FILE *fin;
 
@@ -1549,24 +1549,27 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    while (!feof(fin))
+    for (;;)
     {
-        line[0] = '\0';
+        char line[CF_BUFSIZE];
+
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            if (strlen(line))
+            if (ferror(fin))
             {
-                UnexpectedError("Failed to read line from stream");
+                CfOut(OUTPUT_LEVEL_ERROR, "fgets", "Unable to read data from file %s", filename);
+                fclose(fin);
+                return (FnCallResult) { FNCALL_FAILURE };
+            }
+            else /* feof */
+            {
+                break;
             }
         }
+
         if (Chop(line, CF_EXPANDSIZE) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-        }
-
-        if (feof(fin))
-        {
-            break;
         }
 
         if (!FullTextMatch(regex, line))
@@ -1603,7 +1606,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
 static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char line[CF_BUFSIZE], retval[CF_SMALLBUF];
+    char retval[CF_SMALLBUF];
     int lcount = 0;
     FILE *fin;
 
@@ -1619,24 +1622,25 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(retval), RVAL_TYPE_SCALAR } };
     }
 
-    while (!feof(fin))
+    for (;;)
     {
-        line[0] = '\0';
+        char line[CF_BUFSIZE];
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            if (strlen(line))
+            if (ferror(fin))
             {
-                UnexpectedError("Failed to read line from stream");
+                CfOut(OUTPUT_LEVEL_ERROR, "fgets", "Unable to read data from file %s", filename);
+                fclose(fin);
+                return (FnCallResult) { FNCALL_FAILURE };
+            }
+            else /* feof */
+            {
+                break;
             }
         }
         if (Chop(line, CF_EXPANDSIZE) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-        }
-
-        if (feof(fin))
-        {
-            break;
         }
 
         if (FullTextMatch(regex, line))
@@ -3010,7 +3014,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    char buffer[CF_BUFSIZE], line[CF_BUFSIZE];
+    char buffer[CF_BUFSIZE];
     FILE *fin;
 
     buffer[0] = '\0';
@@ -3022,22 +3026,26 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     strcpy(buffer, "!any");
 
-    if ((fin = fopen(argv1, "r")) == NULL)
+    if ((fin = fopen(argv1, "r")) != NULL)
     {
-        strcpy(buffer, "!any");
-    }
-    else
-    {
-        while (!feof(fin))
+        for (;;)
         {
-            line[0] = '\0';
+            char line[CF_BUFSIZE];
+
             if (fgets(line, CF_BUFSIZE, fin) == NULL)
             {
-                if (strlen(line))
+                if (ferror(fin))
                 {
-                    UnexpectedError("Failed to read line from stream");
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to read from the file %s", argv1);
+                    fclose(fin);
+                    return (FnCallResult) { FNCALL_FAILURE };
+                }
+                else /* feof */
+                {
+                    break;
                 }
             }
+
             if (Chop(line, CF_EXPANDSIZE) == -1)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");

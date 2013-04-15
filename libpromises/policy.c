@@ -2907,12 +2907,6 @@ bool BundleTypeCheck(const char *name)
 }
 
 /* FIXME: alway true */
-bool BodyTypeCheck(const char *body_type)
-{
-    return BodySyntaxLookup(body_type) != NULL;
-}
-
-/* FIXME: alway true */
 bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id)
 {
     return true;

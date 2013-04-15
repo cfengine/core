@@ -146,7 +146,7 @@ bodytype:              bodytype_values
 
 bodytype_values:       typeid
                        {
-                           if (!BodyTypeCheck(P.blocktype))
+                           if (!BodySyntaxLookup(P.blocktype))
                            {
                                ParseError("Unknown body type: %s", P.blocktype);
                            }

@@ -414,11 +414,6 @@ char *QualifiedNameScopeComponent(const char *qualified_name);
 bool BundleTypeCheck(const char *name);
 
 /**
- * @brief Check whether the body type is allowed one
- */
-bool BodyTypeCheck(const char *name);
-
-/**
  * @brief Check whether the constraint id is valid one for promise type
  */
 bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id);

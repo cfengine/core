@@ -99,9 +99,9 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
         }
     }
 
-    for (int i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (int i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        const PromiseTypeSyntax promise_type_syntax = CF_ALL_BODIES[i];
+        const PromiseTypeSyntax promise_type_syntax = CONTROL_BODIES[i];
 
         if (strcmp(body_type, promise_type_syntax.bundle_type) == 0)
         {
@@ -1002,11 +1002,11 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
     JsonElement *control_bodies = JsonObjectCreate(10);
     int i = 0;
 
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        JsonElement *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
+        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].bs);
 
-        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].bundle_type, attributes);
+        JsonObjectAppendObject(control_bodies, CONTROL_BODIES[i].bundle_type, attributes);
     }
 
     return control_bodies;
@@ -1028,11 +1028,11 @@ void SyntaxPrintAsJson(Writer *writer)
         JsonElement *bundle_types = JsonObjectCreate(10);
         int i = 0;
 
-        for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+        for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
         {
-            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].bundle_type);
+            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CONTROL_BODIES[i].bundle_type);
 
-            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].bundle_type, bundle_type);
+            JsonObjectAppendObject(bundle_types, CONTROL_BODIES[i].bundle_type, bundle_type);
         }
 
         JsonObjectAppendObject(syntax_tree, "bundle-types", bundle_types);

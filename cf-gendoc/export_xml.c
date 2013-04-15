@@ -108,9 +108,9 @@ void XmlManual(const char *mandir, FILE *fout)
 
 /* CONTROL */
     XmlStartTag(writer, XMLTAG_CONTROLS_ROOT, 0);
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        XmlExportControl(writer, CF_ALL_BODIES[i]);
+        XmlExportControl(writer, CONTROL_BODIES[i]);
     }
     XmlEndTag(writer, XMLTAG_CONTROLS_ROOT);
 

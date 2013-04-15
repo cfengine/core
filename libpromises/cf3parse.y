@@ -1055,13 +1055,13 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
 /* Check internal control bodies etc */
 
-    for (i = 0; CF_ALL_BODIES[i].promise_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].promise_type != NULL; i++)
     {
-        if (strcmp(CF_ALL_BODIES[i].promise_type, name) == 0 && strcmp(type, CF_ALL_BODIES[i].bundle_type) == 0)
+        if (strcmp(CONTROL_BODIES[i].promise_type, name) == 0 && strcmp(type, CONTROL_BODIES[i].bundle_type) == 0)
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
-            bs = CF_ALL_BODIES[i].bs;
+            bs = CONTROL_BODIES[i].bs;
 
             for (l = 0; bs[l].lval != NULL; l++)
             {

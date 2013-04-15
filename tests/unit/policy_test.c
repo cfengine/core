@@ -101,14 +101,6 @@ static void test_body_redefinition(void **state)
     SeqDestroy(errs);
 }
 
-static void test_promise_type_invalid(void **state)
-{
-    Seq *errs = LoadAndCheck("promise_type_invalid.cf");
-    assert_int_equal(1, errs->length);
-
-    SeqDestroy(errs);
-}
-
 static void test_vars_multiple_types(void **state)
 {
     Seq *errs = LoadAndCheck("vars_multiple_types.cf");
@@ -362,7 +354,6 @@ int main()
         unit_test(test_bundle_redefinition),
         unit_test(test_bundle_reserved_name),
         unit_test(test_body_redefinition),
-        unit_test(test_promise_type_invalid),
         unit_test(test_vars_multiple_types),
         unit_test(test_methods_invalid_arity),
         unit_test(test_promise_duplicate_handle),

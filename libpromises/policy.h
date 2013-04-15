@@ -419,11 +419,6 @@ bool BundleTypeCheck(const char *name);
 bool BodyTypeCheck(const char *name);
 
 /**
- * @brief Check whether the promise type is allowed one
- */
-bool PromiseTypeCheck(const char *name);
-
-/**
  * @brief Check whether the constraint id is valid one for promise type
  */
 bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id);

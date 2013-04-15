@@ -334,7 +334,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                            CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
-                           if (!PromiseTypeCheck(P.currenttype))
+                           if (!PromiseTypeSyntaxLookup(P.blocktype, P.currenttype))
                            {
                                ParseError("Unknown promise type: %s", P.currenttype);
                                INSTALL_SKIP = true;

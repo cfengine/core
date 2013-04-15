@@ -52,18 +52,11 @@ static const char *POLICY_ERROR_POLICY_NOT_RUNNABLE = "Policy is not runnable (d
 
 
 
-
-
-
-
-
 static const char *POLICY_ERROR_BUNDLE_NAME_RESERVED = "Use of a reserved container name as a bundle name \"%s\"";
 static const char *POLICY_ERROR_BUNDLE_REDEFINITION = "Duplicate definition of bundle %s with type %s";
 static const char *POLICY_ERROR_BUNDLE_UNDEFINED = "Undefined bundle %s with type %s";
 static const char *POLICY_ERROR_BODY_REDEFINITION = "Duplicate definition of body %s with type %s";
 static const char *POLICY_ERROR_BODY_UNDEFINED = "Undefined body %s with type %s";
-static const char *POLICY_ERROR_PROMISE_TYPE_MISSING_NAME = "Missing promise type category for %s bundle";
-static const char *POLICY_ERROR_PROMISE_TYPE_INVALID = "%s is not a valid type category for bundle %s";
 static const char *POLICY_ERROR_PROMISE_UNCOMMENTED = "Promise is missing a comment attribute, and comments are required by policy";
 static const char *POLICY_ERROR_PROMISE_DUPLICATE_HANDLE = "Duplicate promise handle %s found";
 static const char *POLICY_ERROR_LVAL_INVALID = "Promise type %s has unknown attribute %s";
@@ -391,35 +384,10 @@ static bool PolicyCheckPromiseType(const PromiseType *promise_type, Seq *errors)
     assert(promise_type->parent_bundle);
     bool success = true;
 
-    // ensure promise_type name is defined
-    // FIX: shouldn't this be a syntax error in the parser?
-    // FIX: this was copied from syntax:CheckPromiseType
-    // FIX: if you are able to write a unit test for this error, please do
-    if (!promise_type->name)
+    for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
     {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise_type,
-                                              POLICY_ERROR_PROMISE_TYPE_MISSING_NAME,
-                                              promise_type->parent_bundle));
-        success = false;
-    }
-
-    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(promise_type->parent_bundle->type, promise_type->name);
-
-    // ensure promise_type is allowed in bundle (type)
-    if (!promise_type_syntax)
-    {
-        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_PROMISE_TYPE, promise_type,
-                                              POLICY_ERROR_PROMISE_TYPE_INVALID,
-                                              promise_type->name, promise_type->parent_bundle->name));
-        success = false;
-    }
-    else
-    {
-        for (size_t i = 0; i < SeqLength(promise_type->promises); i++)
-        {
-            const Promise *pp = SeqAt(promise_type->promises, i);
-            success &= PromiseCheck(pp, errors);
-        }
+        const Promise *pp = SeqAt(promise_type->promises, i);
+        success &= PromiseCheck(pp, errors);
     }
 
     return success;
@@ -2942,12 +2910,6 @@ bool BundleTypeCheck(const char *name)
 bool BodyTypeCheck(const char *body_type)
 {
     return BodySyntaxLookup(body_type) != NULL;
-}
-
-/* FIXME: alway true */
-bool PromiseTypeCheck(const char *body_type)
-{
-    return true;
 }
 
 /* FIXME: alway true */

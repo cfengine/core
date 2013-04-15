@@ -299,31 +299,7 @@ bundle_statements:     bundle_statement
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-bundle_statement:      promise_type 
-                     | promise_type classpromises
-                     | promise_type error
-                       {
-                          yyclearin;
-                          INSTALL_SKIP=true;
-                          ParseError("Expected a class or promise statement, got:%s", yytext);
-                       }
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-
-classpromises:         classpromise                     /* BUNDLE ONLY */
-                     | classpromises classpromise
-
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-classpromise:          class
-                     | promises
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-promises:              promise_line             /* BUNDLE ONLY */
-                     | promises promise_line
+bundle_statement:      promise_type classpromises_decl
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -362,28 +338,37 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise_line:          promise ';'
-                     | promise error
-                       {
-                          ParseError("Check previous statement for missing ;, got:%s", yytext);
-                       }
+classpromises_decl:    /* empty */
+                     | classpromises
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promise:               promisee promiser_constraints 
-                     | promiser_statement
-                     /*
-                     | promiser error
-                       {
-                          yyclearin;
-                          INSTALL_SKIP=true;
-                          ParseError("Expected ';' or promise attribute, got:%s", yytext);
-                       }
-                     */
+classpromises:         classpromise
+                     | classpromises classpromise
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promisee:              promiser
+classpromise:          class
+                     | promise_decl
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+promise_decl:           promise_line ';'
+                      | error
+                        {
+                           yyclearin;
+                           ParseError("Expected promiser object, got:%s", yytext);
+                        }
+
+
+promise_line:           promisee_statement
+                      | promiser_statement
+
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+promisee_statement:    promiser
 
                        arrow_type
 
@@ -409,10 +394,14 @@ promisee:              promiser
                            }
                        }
 
+                       promiser_constraints_decl
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 
 promiser_statement:    promiser
                        {
+
                            if (!INSTALL_SKIP)
                            {
                                if (!P.currentstype)
@@ -433,12 +422,64 @@ promiser_statement:    promiser
                            }
                        }
 
-                       promiser_constraints
+                       promiser_constraints_decl
+
+                     | promiser error
+                       {
+                           /*
+                            * Based on yychar display right error message
+                           */
+                           ParserDebug("P:promiser:error yychar = %d\n", yychar);
+                           if ( yychar =='-' || yychar == '>'  )
+                           {
+                              ParseError("Expected '->', got:%s", yytext);
+                           }
+                           else if ( yychar == IDSYNTAX || yychar == ',' )
+                           {
+                              ParseError("Expected constraint id, got:%s", yytext);
+                           }
+                           else
+                           {
+                              ParseError("Expected ';', got:%s", yytext);
+                           }
+                           yyclearin;
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promiser_constraints:  /* empty */
-                     | constraint_decl
+promiser:              QSTRING
+                       {
+                           P.promiser = P.currentstring;
+                           P.currentstring = NULL;
+                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
+                           CfDebug("Promising object name \'%s\'\n",P.promiser);
+                       }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+promiser_constraints_decl:      /* empty */
+                              | constraints_decl
+                              | constraints_decl error
+                                {
+                                   /*
+                                    * Based on next token id display right error message
+                                   */
+                                   if ( yychar == IDSYNTAX )
+                                   {
+                                       ParseError("Check previuos line, Expected ',', got:%s", yytext);
+                                   }
+                                   else
+                                   {
+                                       ParseError("Check previuos line, Expected ';', got:%s", yytext);
+                                   }
+                                   yyclearin;
+
+                                }
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+
+constraints_decl:      constraints
                        {
                            CfDebug("End full promise with promisee %s\n\n",P.promiser);
 
@@ -459,17 +500,9 @@ promiser_constraints:  /* empty */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-constraint_decl:       constraints
-                     | constraints error
-                       {
-                          yyclearin;
-                          ParseError("Expected ',' check previous statement, got:%s", yytext);
-                       }
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 constraints:           constraint                           /* BUNDLE ONLY */
                      | constraints ',' constraint
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -535,6 +568,10 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);
+                       }
+                     | error
+                       {
+                             ParseError("Expected constraint id, got:%s\n", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -688,11 +725,13 @@ arrow_type:            ARROW
                        {
                            ParserDebug("\tP:->\n");
                        }
+                       /* else we display the wrong error
                      | error
                        {
                           yyclearin;
                           ParseError("Expected ->, got: %s", yytext);
                        }
+                       */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -701,7 +740,7 @@ class:                 CLASS
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
                            ParserDebug("\tP:%s:%s:%s:%s class = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext);
                            CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -823,19 +862,6 @@ functionid:            IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-promiser:              QSTRING
-                       {
-                           P.promiser = P.currentstring;
-                           P.currentstring = NULL;
-                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
-                           CfDebug("Promising object name \'%s\'\n",P.promiser);
-                       }
-                       /*
-                       error
-                       {
-                       printf("Expected promiser id, got:%s", yytext);
-                       }
-                       */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

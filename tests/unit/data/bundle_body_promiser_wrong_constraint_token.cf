@@ -1,0 +1,8 @@
+bundle agent foo
+{
+
+  vars:
+      "a" string  => "foo",
+          "comment" => "bar"; 
+
+}

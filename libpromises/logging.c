@@ -289,10 +289,13 @@ static void UpdatePromiseCounters(PromiseResult status, const Promise *pp, Trans
     switch (status)
     {
     case PROMISE_RESULT_CHANGE:
-    case PROMISE_RESULT_NOOP:
         PR_REPAIRED++;
         VAL_REPAIRED += tc.value_repaired;
         break;
+
+    case PROMISE_RESULT_NOOP:
+        PR_KEPT++;
+        VAL_KEPT += tr.value_kept;
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_TIMEOUT:

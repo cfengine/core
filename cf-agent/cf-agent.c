@@ -1114,9 +1114,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            char ns[CF_BUFSIZE];
-            snprintf(ns,CF_BUFSIZE,"%s_meta", name);
-
             SetBundleOutputs(bp->name);
             BannerBundle(bp, params);
 

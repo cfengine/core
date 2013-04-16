@@ -127,8 +127,6 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         ScopeClear(bp->name);
         BundleHashVariables(ctx, bp);
 
-        char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
         SetBundleOutputs(bp->name);
 
         ScopeAugment(ctx, bp, params);

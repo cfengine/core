@@ -54,11 +54,6 @@ int AM_PHP_MODULE = false;
 char EXPIRY[CF_SMALLBUF] = { 0 };
 char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 
-// These are used to measure graph complexity in know/agent
-
-int CF_TOPICS = 0;              // objects
-int CF_OCCUR = 0;               // objects
-
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
 Item *DONELIST = NULL;

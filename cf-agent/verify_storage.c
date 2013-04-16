@@ -90,8 +90,6 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 
     a = GetStorageAttributes(ctx, pp);
 
-    CF_OCCUR++;
-
 #ifdef __MINGW32__
     if (!a.havemount)
     {

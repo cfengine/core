@@ -89,8 +89,6 @@ extern int LICENSES;
 extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
-extern int CF_TOPICS;
-extern int CF_OCCUR;
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 

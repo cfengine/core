@@ -210,8 +210,6 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         return;
     }
 
-    CF_OCCUR++;
-
     LoadSetuid(a);
 
     if (lstat(path, &oslb) == -1)       /* Careful if the object is a link */

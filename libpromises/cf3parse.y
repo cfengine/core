@@ -296,6 +296,13 @@ bundle_decl:           /* empty */
 
 bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
+                     | error 
+                       {
+                          INSTALL_SKIP=true;
+                          ParseError("Expected promise type, got:%s", yytext);
+                          ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
+                          yyclearin; 
+                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -330,12 +337,6 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                }
                            }
                        }
-                     | error 
-                       {
-                          yyclearin; 
-                          INSTALL_SKIP=true;
-                          ParseError("Expected promise type, got:%s", yytext);
-                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -355,13 +356,27 @@ classpromise:          class
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
-promise_decl:           promise_line ';'
-                      | error
-                        {
+promise_decl:          promise_line ';'
+                     | promiser error
+                       {
+                           /*
+                            * Based on yychar display right error message
+                           */
+                           ParserDebug("P:promiser:error yychar = %d\n", yychar);
+                           if ( yychar =='-' || yychar == '>'  )
+                           {
+                              ParseError("Expected '->', got:%s", yytext);
+                           }
+                           else if ( yychar == IDSYNTAX || yychar == ',' )
+                           {
+                              ParseError("Expected constraint id, got:%s", yytext);
+                           }
+                           else
+                           {
+                              ParseError("Expected ';', got:%s", yytext);
+                           }
                            yyclearin;
-                           ParseError("Expected promiser object, got:%s", yytext);
-                        }
-
+                       }
 
 promise_line:           promisee_statement
                       | promiser_statement
@@ -399,7 +414,6 @@ promisee_statement:    promiser
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-
 promiser_statement:    promiser
                        {
 
@@ -425,27 +439,6 @@ promiser_statement:    promiser
 
                        promiser_constraints_decl
 
-                     | promiser error
-                       {
-                           /*
-                            * Based on yychar display right error message
-                           */
-                           ParserDebug("P:promiser:error yychar = %d\n", yychar);
-                           if ( yychar =='-' || yychar == '>'  )
-                           {
-                              ParseError("Expected '->', got:%s", yytext);
-                           }
-                           else if ( yychar == IDSYNTAX || yychar == ',' )
-                           {
-                              ParseError("Expected constraint id, got:%s", yytext);
-                           }
-                           else
-                           {
-                              ParseError("Expected ';', got:%s", yytext);
-                           }
-                           yyclearin;
-                       }
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 promiser:              QSTRING
@@ -454,6 +447,12 @@ promiser:              QSTRING
                            P.currentstring = NULL;
                            ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
                            CfDebug("Promising object name \'%s\'\n",P.promiser);
+                       }
+                     | error
+                       {
+                          INSTALL_SKIP=true;
+                          ParseError("Expected promiser id, got:%s", yytext);
+                          yyclearin;
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

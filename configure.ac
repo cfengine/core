@@ -1043,6 +1043,7 @@ AC_CONFIG_FILES([Makefile
     libcompat/Makefile
     libutils/Makefile
     libutils/config.post.h
+    libcfnet/Makefile
     libpromises/Makefile
     cf-agent/Makefile
     cf-promises/Makefile

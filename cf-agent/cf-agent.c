@@ -1174,9 +1174,6 @@ static void AllClassesReport(const EvalContext *ctx)
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
-    PromiseType *sp;
-    TypeSequence type;
-    int pass;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -1187,13 +1184,15 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
         PROCESSTABLE = NULL;
     }
 
-    for (pass = 1; pass < CF_DONEPASSES; pass++)
+    for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
+        for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(ctx, type);
 
-            if ((sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
+            PromiseType *sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type]);
+
+            if (sp == NULL)
             {
                 continue;
             }

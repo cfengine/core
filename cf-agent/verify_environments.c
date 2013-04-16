@@ -83,7 +83,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
 static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
-static void ShowDormant(virConnectPtr vc);
+static void ShowDormant(void);
 static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
 static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
@@ -339,7 +339,7 @@ static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors env
     ShowRunList(CFVC[envtype]);
     num = virConnectListDefinedDomains(CFVC[envtype], CF_SUSPENDED, CF_MAX_CONCURRENT_ENVIRONMENTS);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found %d dormant guest environments on this host", num);
-    ShowDormant(CFVC[envtype]);
+    ShowDormant();
 
     switch (a.env.state)
     {
@@ -984,7 +984,7 @@ static void ShowRunList(virConnectPtr vc)
 
 /*****************************************************************************/
 
-static void ShowDormant(virConnectPtr vc)
+static void ShowDormant(void)
 {
     int i;
 

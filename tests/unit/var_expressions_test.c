@@ -13,17 +13,6 @@ static void test_plain_variable_with_no_stuff_in_it(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_namespaced(void **state)
-{
-    VarRef ref = VarRefParse("ns:lval");
-    assert_string_equal("ns", ref.ns);
-    assert_false(ref.scope);
-    assert_string_equal("lval", ref.lval);
-    assert_int_equal(0, ref.num_indices);
-    assert_false(ref.indices);
-    VarRefDestroy(ref);
-}
-
 static void test_scoped(void **state)
 {
     VarRef ref = VarRefParse("scope.lval");
@@ -106,7 +95,6 @@ static void test_to_string_qualified(void **state)
     CheckToStringQualified("ns:scope.lval[x][y]");
     CheckToStringQualified("ns:scope.lval[x]");
     CheckToStringQualified("ns:scope.lval");
-    CheckToStringQualified("ns:lval");
     CheckToStringQualified("scope.lval");
     CheckToStringQualified("lval");
 }
@@ -125,14 +113,6 @@ static void test_to_string_unqualified(void **state)
         VarRef ref = VarRefParse("ns:scope.lval[x]");
         char *out = VarRefToString(ref, false);
         assert_string_equal("lval[x]", out);
-        free(out);
-        VarRefDestroy(ref);
-    }
-
-    {
-        VarRef ref = VarRefParse("ns:lval");
-        char *out = VarRefToString(ref, false);
-        assert_string_equal("lval", out);
         free(out);
         VarRefDestroy(ref);
     }
@@ -160,7 +140,6 @@ int main()
     const UnitTest tests[] =
     {
         unit_test(test_plain_variable_with_no_stuff_in_it),
-        unit_test(test_namespaced),
         unit_test(test_scoped),
         unit_test(test_full),
         unit_test(test_dotted_array),

@@ -2,6 +2,7 @@
 
 #include "cf3.defs.h"
 #include "buffer.h"
+#include "misc_lib.h"
 
 #include <assert.h>
 
@@ -39,7 +40,7 @@ static size_t IndexCount(const char *var_string)
     return count;
 }
 
-VarRef VarRefParse(const char *qualified_name)
+VarRef VarRefParseFromBundle(const char *qualified_name, const Bundle *bundle)
 {
     char *ns = NULL;
 
@@ -109,34 +110,39 @@ VarRef VarRefParse(const char *qualified_name)
 
     assert(lval);
 
+    if (!scope)
+    {
+        assert(ns == NULL && "A variable missing a scope should not have a namespace");
+    }
+
     return (VarRef) {
-        .ns = ns,
-        .scope = scope,
+        .ns = scope ? ns : (bundle ? xstrdup(bundle->ns) : NULL),
+        .scope = scope ? scope : (bundle ? xstrdup(bundle->name) : NULL),
         .lval = lval,
-        .indices = indices,
-        .num_indices = num_indices
+        .indices = (const char *const *const)indices,
+        .num_indices = num_indices,
+        .allocated = true,
     };
 }
 
-VarRef VarRefParseFromBundle(const char *var_ref_string, const Bundle *bundle)
+VarRef VarRefParse(const char *var_ref_string)
 {
-    VarRef var = VarRefParse(var_ref_string);
-    if (!var.scope)
-    {
-        var.scope = xstrdup(bundle->name);
-
-        assert("A variable missing a scope should not have a namespace" && !var.ns);
-        var.ns = xstrdup(bundle->ns);
-    }
-
-    return var;
+    return VarRefParseFromBundle(var_ref_string, NULL);
 }
 
 void VarRefDestroy(VarRef ref)
 {
-    free(ref.ns);
-    free(ref.scope);
-    free(ref.lval);
+    if (!ref.allocated)
+    {
+        ProgrammingError("Static VarRef has been passed to VarRefDestroy");
+    }
+    free((char *)ref.ns);
+    free((char *)ref.scope);
+    free((char *)ref.lval);
+    for (int i = 0; i < ref.num_indices; ++i)
+    {
+        free((char *)ref.indices[i]);
+    }
 }
 
 char *VarRefToString(VarRef ref, bool qualified)

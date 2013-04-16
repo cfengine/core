@@ -8,11 +8,12 @@
 
 typedef struct
 {
-    char *ns;
-    char *scope;
-    char *lval;
-    char **indices;
-    size_t num_indices;
+    const char *const ns;
+    const char *const scope;
+    const char *const lval;
+    const char *const *const indices;
+    const size_t num_indices;
+    const bool allocated; /* Mark that VarRef was allocated by VarRefParse */
 } VarRef;
 
 VarRef VarRefParse(const char *var_ref_string);

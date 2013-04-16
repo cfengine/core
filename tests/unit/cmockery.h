@@ -241,18 +241,19 @@
 # define run_test(f) _run_test(#f, f, NULL, UNIT_TEST_FUNCTION_TYPE_TEST, NULL)
 
 // Initializes a UnitTest structure.
-# define unit_test(f) { #f, f, UNIT_TEST_FUNCTION_TYPE_TEST }
+# define unit_test(func) { .name = #func, .f = { .function = func }, .function_type = UNIT_TEST_FUNCTION_TYPE_TEST }
+# define unit_test_with_state(func) { .name = #func, .f = { .function_with_state = func }, .function_type = UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE }
 # define unit_test_setup(test, setup) \
-    { #test "_" #setup, setup, UNIT_TEST_FUNCTION_TYPE_SETUP }
+    { .name = #test "_" #setup, .f = { .function_with_state = setup }, .function_type = UNIT_TEST_FUNCTION_TYPE_SETUP }
 # define unit_test_teardown(test, teardown) \
-    { #test "_" #teardown, teardown, UNIT_TEST_FUNCTION_TYPE_TEARDOWN }
+    { .name = #test "_" #teardown, .f = { .function_with_state = teardown }, .function_type = UNIT_TEST_FUNCTION_TYPE_TEARDOWN }
 
 /* Initialize an array of UnitTest structures with a setup function for a test
  * and a teardown function.  Either setup or teardown can be NULL.
  */
 # define unit_test_setup_teardown(test, setup, teardown) \
     unit_test_setup(test, setup), \
-    unit_test(test), \
+    unit_test_with_state(test), \
     unit_test_teardown(test, teardown)
 
 /*
@@ -319,7 +320,9 @@
   }
 
 // Function prototype for setup, test and teardown functions.
-typedef void (*UnitTestFunction) (void **state);
+typedef void (*UnitTestFunction) (void);
+
+typedef void (*UnitTestFunctionWithState) (void **state);
 
 // Function that determines whether a function parameter value is correct.
 typedef int (*CheckParameterValue) (const LargestIntegralType value, const LargestIntegralType check_value_data);
@@ -328,6 +331,7 @@ typedef int (*CheckParameterValue) (const LargestIntegralType value, const Large
 typedef enum UnitTestFunctionType
 {
     UNIT_TEST_FUNCTION_TYPE_TEST = 0,
+    UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE,
     UNIT_TEST_FUNCTION_TYPE_SETUP,
     UNIT_TEST_FUNCTION_TYPE_TEARDOWN,
 } UnitTestFunctionType;
@@ -339,7 +343,11 @@ typedef enum UnitTestFunctionType
 typedef struct UnitTest
 {
     const char *name;
-    UnitTestFunction function;
+    union
+    {
+        UnitTestFunction function;
+        UnitTestFunctionWithState function_with_state;
+    } f;
     UnitTestFunctionType function_type;
 } UnitTest;
 

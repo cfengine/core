@@ -28,7 +28,6 @@
 #include "cf3.defs.h"
 
 // stdout only
-void ShowContext(EvalContext *ctx);
 void BannerPromiseType(const char *bundlename, const char *type, int p);
 void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type);
 void Banner(const char *s);

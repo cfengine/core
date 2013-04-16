@@ -58,8 +58,6 @@
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #include "nova_reporting.h"
-#else
-#include "reporting.h"
 #endif
 
 #include <assert.h>
@@ -335,7 +333,74 @@ int CheckPromises(const char *input_file)
     }
 }
 
-/*****************************************************************************/
+
+static void ShowContext(EvalContext *ctx)
+{
+    {
+        printf("%s>  -> Hard classes = { ", VPREFIX);
+
+        Seq *hard_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorHard(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                SeqAppend(hard_contexts, context);
+            }
+        }
+
+        SeqSort(hard_contexts, (SeqItemComparator)strcmp, NULL);
+
+        for (size_t i = 0; i < SeqLength(hard_contexts); i++)
+        {
+            const char *context = SeqAt(hard_contexts, i);
+            printf("%s ", context);
+        }
+
+        printf("}\n");
+        SeqDestroy(hard_contexts);
+    }
+
+    {
+        printf("%s>  -> Additional classes = { ", VPREFIX);
+
+        Seq *soft_contexts = SeqNew(1000, NULL);
+        SetIterator it = EvalContextHeapIteratorSoft(ctx);
+        char *context = NULL;
+        while ((context = SetIteratorNext(&it)))
+        {
+            if (!EvalContextHeapContainsNegated(ctx, context))
+            {
+                SeqAppend(soft_contexts, context);
+            }
+        }
+
+        SeqSort(soft_contexts, (SeqItemComparator)strcmp, NULL);
+
+        for (size_t i = 0; i < SeqLength(soft_contexts); i++)
+        {
+            const char *context = SeqAt(soft_contexts, i);
+            printf("%s ", context);
+        }
+
+        printf("}\n");
+        SeqDestroy(soft_contexts);
+    }
+
+    {
+        printf("%s>  -> Negated Classes = { ", VPREFIX);
+
+        StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            printf("%s ", context);
+        }
+
+        printf("}\n");
+    }
+}
 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {

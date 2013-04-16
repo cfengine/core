@@ -41,7 +41,7 @@ static Seq *LoadAndCheck(const char *filename)
     return errs;
 }
 
-static void test_failsafe(void **state)
+static void test_failsafe(void)
 {
     char *tmp = tempnam(NULL, "cfengine_test");
     CreateFailSafe(tmp);
@@ -77,7 +77,7 @@ static void test_failsafe(void **state)
 }
 
 
-static void test_bundle_redefinition(void **state)
+static void test_bundle_redefinition(void)
 {
     Seq *errs = LoadAndCheck("bundle_redefinition.cf");
     assert_int_equal(2, errs->length);
@@ -85,7 +85,7 @@ static void test_bundle_redefinition(void **state)
     SeqDestroy(errs);
 }
 
-static void test_bundle_reserved_name(void **state)
+static void test_bundle_reserved_name(void)
 {
     Seq *errs = LoadAndCheck("bundle_reserved_name.cf");
     assert_int_equal(1, errs->length);
@@ -93,7 +93,7 @@ static void test_bundle_reserved_name(void **state)
     SeqDestroy(errs);
 }
 
-static void test_body_redefinition(void **state)
+static void test_body_redefinition(void)
 {
     Seq *errs = LoadAndCheck("body_redefinition.cf");
     assert_int_equal(2, errs->length);
@@ -101,7 +101,7 @@ static void test_body_redefinition(void **state)
     SeqDestroy(errs);
 }
 
-static void test_vars_multiple_types(void **state)
+static void test_vars_multiple_types(void)
 {
     Seq *errs = LoadAndCheck("vars_multiple_types.cf");
     assert_int_equal(1, errs->length);
@@ -109,7 +109,7 @@ static void test_vars_multiple_types(void **state)
     SeqDestroy(errs);
 }
 
-static void test_methods_invalid_arity(void **state)
+static void test_methods_invalid_arity(void)
 {
     Seq *errs = LoadAndCheck("methods_invalid_arity.cf");
     assert_int_equal(1, errs->length);
@@ -117,7 +117,7 @@ static void test_methods_invalid_arity(void **state)
     SeqDestroy(errs);
 }
 
-static void test_promise_duplicate_handle(void **state)
+static void test_promise_duplicate_handle(void)
 {
     Seq *errs = LoadAndCheck("promise_duplicate_handle.cf");
     assert_int_equal(1, errs->length);
@@ -125,7 +125,7 @@ static void test_promise_duplicate_handle(void **state)
     SeqDestroy(errs);
 }
 
-static void test_policy_json_to_from(void **state)
+static void test_policy_json_to_from(void)
 {
     EvalContext *ctx = EvalContextNew();
     Policy *policy = NULL;
@@ -237,7 +237,7 @@ static void test_policy_json_to_from(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_util_bundle_qualified_name(void **state)
+static void test_util_bundle_qualified_name(void)
 {
     Bundle *b = xcalloc(1, sizeof(struct Bundle_));
     assert_false(BundleQualifiedName(b));
@@ -256,7 +256,7 @@ static void test_util_bundle_qualified_name(void **state)
     free(b);
 }
 
-static void test_util_qualified_name_components(void **state)
+static void test_util_qualified_name_components(void)
 {
     {
         char *ns = QualifiedNameNamespaceComponent(":");
@@ -319,7 +319,7 @@ static void test_util_qualified_name_components(void **state)
     }
 }
 
-static void test_constraint_lval_invalid(void **state)
+static void test_constraint_lval_invalid(void)
 {
     Seq *errs = LoadAndCheck("constraint_lval_invalid.cf");
     assert_int_equal(1, errs->length);
@@ -327,7 +327,7 @@ static void test_constraint_lval_invalid(void **state)
     SeqDestroy(errs);
 }
 
-static void test_promiser_empty_varref(void **state)
+static void test_promiser_empty_varref(void)
 {
     Seq *errs = LoadAndCheck("promiser_empty_varref.cf");
     assert_int_equal(1, errs->length);
@@ -335,7 +335,7 @@ static void test_promiser_empty_varref(void **state)
     SeqDestroy(errs);
 }
 
-static void test_constraint_comment_nonscalar(void **state)
+static void test_constraint_comment_nonscalar(void)
 {
     Seq *errs = LoadAndCheck("constraint_comment_nonscalar.cf");
     assert_int_equal(1, errs->length);

@@ -2,7 +2,7 @@
 
 #include "assoc.h"
 
-static void test_create_destroy(void **state)
+static void test_create_destroy(void)
 {
     CfAssoc *ap = NewAssoc("hello", (Rval) { "world", RVAL_TYPE_SCALAR }, DATA_TYPE_STRING);
     DeleteAssoc(ap);

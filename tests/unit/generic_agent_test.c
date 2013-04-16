@@ -3,7 +3,7 @@
 #include "generic_agent.h"
 #include "env_context.h"
 
-void test_load_masterfiles(void **state)
+void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
@@ -19,12 +19,12 @@ void test_load_masterfiles(void **state)
     EvalContextDestroy(ctx);
 }
 
-void test_resolve_absolute_input_path(void **state)
+void test_resolve_absolute_input_path(void)
 {
     assert_string_equal("/abs/aux.cf", GenericAgentResolveInputPath("/abs/aux.cf", NULL));
 }
 
-void test_resolve_non_anchored_input_path(void **state)
+void test_resolve_non_anchored_input_path(void)
 {
     MINUSF = false;
 
@@ -40,7 +40,7 @@ void test_resolve_non_anchored_input_path(void **state)
     assert_string_equal("/workdir/inputs/a/a/b.cf", GenericAgentResolveInputPath("a/b.cf", "/workdir/inputs/a/b.cf"));
 }
 
-void test_resolve_relative_input_path(void **state)
+void test_resolve_relative_input_path(void)
 {
     MINUSF = false;
     assert_string_equal("./aux.cf", GenericAgentResolveInputPath("./aux.cf", "promises.cf"));

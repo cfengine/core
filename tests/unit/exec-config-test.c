@@ -28,14 +28,14 @@ static void TestCheckConfigIsDefault(ExecConfig *c)
     assert_int_equal(12, StringSetSize(c->schedule));
 }
 
-static void test_new_destroy(void **state)
+static void test_new_destroy(void)
 {
     ExecConfig *c = ExecConfigNewDefault(true, "host", "ip");
     TestCheckConfigIsDefault(c);
     ExecConfigDestroy(c);
 }
 
-static void test_load(void **state)
+static void test_load(void)
 {
     GenericAgentConfig *agent_config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
     ExecConfig *c = ExecConfigNewDefault(true, "host", "ip");

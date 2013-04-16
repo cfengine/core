@@ -18,7 +18,7 @@ void tests_teardown(void)
     system(cmd);
 }
 
-void test_iter_modify_entry(void **state)
+void test_iter_modify_entry(void)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
 
@@ -50,7 +50,7 @@ void test_iter_modify_entry(void **state)
 }
 
 
-void test_iter_delete_entry(void **state)
+void test_iter_delete_entry(void)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
 
@@ -91,7 +91,7 @@ static void CreateGarbage(const char *filename)
     fclose(fh);
 }
 
-void test_recreate(void **state)
+void test_recreate(void)
 {
     /* Test that recreating database works properly */
 

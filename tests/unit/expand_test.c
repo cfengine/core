@@ -5,7 +5,7 @@
 #include "scope.h"
 #include "env_context.h"
 
-static void test_map_iterators_from_rval_empty(void **state)
+static void test_map_iterators_from_rval_empty(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -19,7 +19,7 @@ static void test_map_iterators_from_rval_empty(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_map_iterators_from_rval_literal(void **state)
+static void test_map_iterators_from_rval_literal(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -33,7 +33,7 @@ static void test_map_iterators_from_rval_literal(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_map_iterators_from_rval_naked_list_var(void **state)
+static void test_map_iterators_from_rval_naked_list_var(void)
 {
     EvalContext *ctx = EvalContextNew();
     ScopeDeleteAll();
@@ -58,7 +58,7 @@ static void test_map_iterators_from_rval_naked_list_var(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_expand_scalar_two_scalars_concat(void **state)
+static void test_expand_scalar_two_scalars_concat(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -80,7 +80,7 @@ static void test_expand_scalar_two_scalars_concat(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_expand_scalar_two_scalars_nested(void **state)
+static void test_expand_scalar_two_scalars_nested(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -102,7 +102,7 @@ static void test_expand_scalar_two_scalars_nested(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_expand_scalar_array_concat(void **state)
+static void test_expand_scalar_array_concat(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -124,7 +124,7 @@ static void test_expand_scalar_array_concat(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_expand_scalar_array_with_scalar_arg(void **state)
+static void test_expand_scalar_array_with_scalar_arg(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -151,7 +151,7 @@ static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Prom
     assert_string_equal("first", pp->promiser);
 }
 
-static void test_expand_promise_array_with_scalar_arg(void **state)
+static void test_expand_promise_array_with_scalar_arg(void)
 {
     EvalContext *ctx = EvalContextNew();
     {
@@ -199,7 +199,7 @@ static void actuator_expand_promise_slist(EvalContext *ctx, Promise *pp, ARG_UNU
     }
 }
 
-static void test_expand_promise_slist(void **state)
+static void test_expand_promise_slist(void)
 {
     actuator_state = 0;
 
@@ -252,7 +252,7 @@ static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promi
     }
 }
 
-static void test_expand_promise_array_with_slist_arg(void **state)
+static void test_expand_promise_array_with_slist_arg(void)
 {
     actuator_state = 0;
 

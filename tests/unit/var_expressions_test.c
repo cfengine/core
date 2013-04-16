@@ -2,7 +2,7 @@
 
 #include "var_expressions.h"
 
-static void test_plain_variable_with_no_stuff_in_it(void **state)
+static void test_plain_variable_with_no_stuff_in_it(void)
 {
     VarRef ref = VarRefParse("foo");
     assert_false(ref.ns);
@@ -13,7 +13,7 @@ static void test_plain_variable_with_no_stuff_in_it(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_scoped(void **state)
+static void test_scoped(void)
 {
     VarRef ref = VarRefParse("scope.lval");
     assert_false(ref.ns);
@@ -24,7 +24,7 @@ static void test_scoped(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_full(void **state)
+static void test_full(void)
 {
     VarRef ref = VarRefParse("ns:scope.lval");
     assert_string_equal("ns", ref.ns);
@@ -35,7 +35,7 @@ static void test_full(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_dotted_array(void **state)
+static void test_dotted_array(void)
 {
     VarRef ref = VarRefParse("ns:scope.lval[la.la]");
     assert_string_equal("ns", ref.ns);
@@ -46,7 +46,7 @@ static void test_dotted_array(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_levels(void **state)
+static void test_levels(void)
 {
     VarRef ref = VarRefParse("ns:scope.lval[x][y][z]");
     assert_string_equal("ns", ref.ns);
@@ -59,7 +59,7 @@ static void test_levels(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_unqualified_array(void **state)
+static void test_unqualified_array(void)
 {
     VarRef ref = VarRefParse("lval[x]");
     assert_false(ref.ns);
@@ -70,7 +70,7 @@ static void test_unqualified_array(void **state)
     VarRefDestroy(ref);
 }
 
-static void test_qualified_array(void **state)
+static void test_qualified_array(void)
 {
     VarRef ref = VarRefParse("scope.lval[x]");
     assert_false(ref.ns);
@@ -90,7 +90,7 @@ static void CheckToStringQualified(const char *str)
     VarRefDestroy(ref);
 }
 
-static void test_to_string_qualified(void **state)
+static void test_to_string_qualified(void)
 {
     CheckToStringQualified("ns:scope.lval[x][y]");
     CheckToStringQualified("ns:scope.lval[x]");
@@ -99,7 +99,7 @@ static void test_to_string_qualified(void **state)
     CheckToStringQualified("lval");
 }
 
-static void test_to_string_unqualified(void **state)
+static void test_to_string_unqualified(void)
 {
     {
         VarRef ref = VarRefParse("ns:scope.lval[x][y]");

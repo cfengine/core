@@ -14,7 +14,7 @@ typedef enum
 
 VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *a, PackageItem * pi, Attributes attr, Promise *pp);
 
-void test_different_name(void **context)
+void test_different_name(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -34,7 +34,7 @@ void test_different_name(void **context)
     EvalContextDestroy(ctx);
 }
 
-void test_wildcard_arch(void **context)
+void test_wildcard_arch(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -54,7 +54,7 @@ void test_wildcard_arch(void **context)
     EvalContextDestroy(ctx);
 }
 
-void test_non_matching_arch(void **context)
+void test_non_matching_arch(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -94,25 +94,25 @@ bool DoCompare(const char *lhs, const char *rhs, PackageVersionComparator cmp)
     EvalContextDestroy(ctx);
 }
 
-void test_wildcard_version(void **context)
+void test_wildcard_version(void)
 {
     assert_int_equal(DoCompare("1.0-1", "*", PACKAGE_VERSION_COMPARATOR_EQ), true);
 }
 
-void test_eq(void **context)
+void test_eq(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0-1", PACKAGE_VERSION_COMPARATOR_EQ), true);
     assert_int_equal(DoCompare("1.0-1", "1.0-1", PACKAGE_VERSION_COMPARATOR_NONE), true);
     assert_int_equal(DoCompare("1.0-1", "1.0-2", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void test_ne(void **context)
+void test_ne(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0-1", PACKAGE_VERSION_COMPARATOR_NEQ), false);
     assert_int_equal(DoCompare("1.0-1", "1.0-2", PACKAGE_VERSION_COMPARATOR_NEQ), true);
 }
 
-void test_gt_lt(void **context)
+void test_gt_lt(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0-1", PACKAGE_VERSION_COMPARATOR_GT), false);
     assert_int_equal(DoCompare("1.0-1", "1.0-2", PACKAGE_VERSION_COMPARATOR_GT), false);
@@ -122,7 +122,7 @@ void test_gt_lt(void **context)
     assert_int_equal(DoCompare("1.0-2", "1.0-1", PACKAGE_VERSION_COMPARATOR_LT), false);
 }
 
-void test_gte_lte(void **context)
+void test_gte_lte(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0-1", PACKAGE_VERSION_COMPARATOR_GE), true);
     assert_int_equal(DoCompare("1.0-1", "1.0-2", PACKAGE_VERSION_COMPARATOR_GE), false);
@@ -132,107 +132,107 @@ void test_gte_lte(void **context)
     assert_int_equal(DoCompare("1.0-2", "1.0-1", PACKAGE_VERSION_COMPARATOR_LE), false);
 }
 
-void wrong_separators(void **context)
+void wrong_separators(void)
 {
     assert_int_equal(DoCompare("1.0", "1,0", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void uneven_lengths_1(void **context)
+void uneven_lengths_1(void)
 {
     assert_int_equal(DoCompare("1.0.1", "1.0", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void uneven_lengths_2(void **context)
+void uneven_lengths_2(void)
 {
     assert_int_equal(DoCompare("1.0.1", "1.0", PACKAGE_VERSION_COMPARATOR_GT), true);
 }
 
-void uneven_lengths_3(void **context)
+void uneven_lengths_3(void)
 {
     assert_int_equal(DoCompare("1.0.1", "1.0", PACKAGE_VERSION_COMPARATOR_LT), false);
 }
 
-void uneven_lengths_4(void **context)
+void uneven_lengths_4(void)
 {
     assert_int_equal(DoCompare("1.0.1", "1.0", PACKAGE_VERSION_COMPARATOR_GE), true);
 }
 
-void uneven_lengths_5(void **context)
+void uneven_lengths_5(void)
 {
     assert_int_equal(DoCompare("1.0.1", "1.0", PACKAGE_VERSION_COMPARATOR_LE), false);
 }
 
-void uneven_lengths_6(void **context)
+void uneven_lengths_6(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0.1", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void uneven_lengths_7(void **context)
+void uneven_lengths_7(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0.1", PACKAGE_VERSION_COMPARATOR_GT), false);
 }
 
-void uneven_lengths_8(void **context)
+void uneven_lengths_8(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0.1", PACKAGE_VERSION_COMPARATOR_LT), true);
 }
 
-void uneven_lengths_9(void **context)
+void uneven_lengths_9(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0.1", PACKAGE_VERSION_COMPARATOR_GE), false);
 }
 
-void uneven_lengths_10(void **context)
+void uneven_lengths_10(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0.1", PACKAGE_VERSION_COMPARATOR_LE), true);
 }
 
-void uneven_lengths_11(void **context)
+void uneven_lengths_11(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void uneven_lengths_12(void **context)
+void uneven_lengths_12(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0", PACKAGE_VERSION_COMPARATOR_GT), true);
 }
 
-void uneven_lengths_13(void **context)
+void uneven_lengths_13(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0", PACKAGE_VERSION_COMPARATOR_LT), false);
 }
 
-void uneven_lengths_14(void **context)
+void uneven_lengths_14(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0", PACKAGE_VERSION_COMPARATOR_GE), true);
 }
 
-void uneven_lengths_15(void **context)
+void uneven_lengths_15(void)
 {
     assert_int_equal(DoCompare("1.0-1", "1.0", PACKAGE_VERSION_COMPARATOR_LE), false);
 }
 
-void uneven_lengths_16(void **context)
+void uneven_lengths_16(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0-1", PACKAGE_VERSION_COMPARATOR_EQ), false);
 }
 
-void uneven_lengths_17(void **context)
+void uneven_lengths_17(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0-1", PACKAGE_VERSION_COMPARATOR_GT), false);
 }
 
-void uneven_lengths_18(void **context)
+void uneven_lengths_18(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0-1", PACKAGE_VERSION_COMPARATOR_LT), true);
 }
 
-void uneven_lengths_19(void **context)
+void uneven_lengths_19(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0-1", PACKAGE_VERSION_COMPARATOR_GE), false);
 }
 
-void uneven_lengths_20(void **context)
+void uneven_lengths_20(void)
 {
     assert_int_equal(DoCompare("1.0", "1.0-1", PACKAGE_VERSION_COMPARATOR_LE), true);
 }

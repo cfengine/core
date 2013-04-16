@@ -252,7 +252,7 @@ int nanosleep(const struct timespec *req, struct timespec *rem)
 
 /* Tests */
 
-void test_kill_simple_process(ARG_UNUSED void **state)
+void test_kill_simple_process(void)
 {
     InitTime();
     InitFakeProcess(12345, 100, false, false, true);
@@ -266,7 +266,7 @@ void test_kill_simple_process(ARG_UNUSED void **state)
     assert_int_equal(exit_signal, SIGINT);
 }
 
-void test_kill_wrong_process(ARG_UNUSED void **state)
+void test_kill_wrong_process(void)
 {
     InitTime();
     InitFakeProcess(66666, 100, false, false, true);
@@ -282,7 +282,7 @@ void test_kill_wrong_process(ARG_UNUSED void **state)
     assert_int_equal(signal_time, (time_t)-1); /* No pending signals either */
 }
 
-void test_kill_long_reacting_signal(ARG_UNUSED void **state)
+void test_kill_long_reacting_signal(void)
 {
     /* This process is very slow in reaction. It should not be left stopped though */
     InitTime();
@@ -297,7 +297,7 @@ void test_kill_long_reacting_signal(ARG_UNUSED void **state)
     assert_false(stopped); /* It should either be running or waiting to process SIGCONT */
 }
 
-void test_kill_no_sigint(ARG_UNUSED void **state)
+void test_kill_no_sigint(void)
 {
     /* This process blocks SIGINT */
     InitTime();
@@ -312,7 +312,7 @@ void test_kill_no_sigint(ARG_UNUSED void **state)
     assert_int_equal(exit_signal, SIGTERM);
 }
 
-void test_kill_no_sigint_sigterm(ARG_UNUSED void **state)
+void test_kill_no_sigint_sigterm(void)
 {
     /* This process only can be killed by SIGKILL */
     InitTime();
@@ -327,7 +327,7 @@ void test_kill_no_sigint_sigterm(ARG_UNUSED void **state)
     assert_int_equal(exit_signal, SIGKILL);
 }
 
-void test_kill_anothers_process(ARG_UNUSED void **state)
+void test_kill_anothers_process(void)
 {
     /* This process is not owned by killer */
     InitTime();

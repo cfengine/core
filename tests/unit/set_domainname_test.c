@@ -104,7 +104,7 @@ void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname
     ScopeNewScalar(ctx, ns, varname, value, type);
 }
 
-static void test_set_names(void **state)
+static void test_set_names(void)
 {
     int i = 0;
 

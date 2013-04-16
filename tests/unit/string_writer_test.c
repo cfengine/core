@@ -4,7 +4,7 @@
 
 #include "writer.h"
 
-void test_empty_string_buffer(void **p)
+void test_empty_string_buffer(void)
 {
     Writer *w = StringWriter();
 
@@ -14,7 +14,7 @@ void test_empty_string_buffer(void **p)
     WriterClose(w);
 }
 
-void test_write_empty_string_buffer(void **p)
+void test_write_empty_string_buffer(void)
 {
     Writer *w = StringWriter();
 
@@ -26,7 +26,7 @@ void test_write_empty_string_buffer(void **p)
     WriterClose(w);
 }
 
-void test_write_string_buffer(void **p)
+void test_write_string_buffer(void)
 {
     Writer *w = StringWriter();
 
@@ -38,7 +38,7 @@ void test_write_string_buffer(void **p)
     WriterClose(w);
 }
 
-void test_multiwrite_string_buffer(void **p)
+void test_multiwrite_string_buffer(void)
 {
     Writer *w = StringWriter();
 
@@ -51,7 +51,7 @@ void test_multiwrite_string_buffer(void **p)
     WriterClose(w);
 }
 
-void test_write_char_string_buffer(void **p)
+void test_write_char_string_buffer(void)
 {
     Writer *w = StringWriter();
 
@@ -64,7 +64,7 @@ void test_write_char_string_buffer(void **p)
     WriterClose(w);
 }
 
-void test_release_string(void **p)
+void test_release_string(void)
 {
     Writer *w = StringWriter();
 

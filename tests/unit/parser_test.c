@@ -11,85 +11,85 @@ static Policy *LoadPolicy(const char *filename)
     return ParserParseFile(path);
 }
 
-void test_benchmark(void **state)
+void test_benchmark(void)
 {
     Policy *p = LoadPolicy("benchmark.cf");
     assert_true(p);
     PolicyDestroy(p);
 }
 
-void test_bundle_invalid_type(void **state)
+void test_bundle_invalid_type(void)
 {
     assert_false(LoadPolicy("bundle_invalid_type.cf"));
 }
 
-void test_body_invalid_type(void **state)
+void test_body_invalid_type(void)
 {
     assert_false(LoadPolicy("body_invalid_type.cf"));
 }
 
-void test_constraint_ifvarclass_invalid(void **state)
+void test_constraint_ifvarclass_invalid(void)
 {
     Policy *p = LoadPolicy("constraint_ifvarclass_invalid.cf");
     assert_false(p);
 }
 
-void test_bundle_args_invalid_type(void **state)
+void test_bundle_args_invalid_type(void)
 {
     assert_false(LoadPolicy("bundle_args_invalid_type.cf"));
 }
 
-void test_bundle_args_forgot_cp(void **state)
+void test_bundle_args_forgot_cp(void)
 {
     assert_false(LoadPolicy("bundle_args_forgot_cp.cf"));
 }
 
-void test_bundle_body_forgot_ob(void **state)
+void test_bundle_body_forgot_ob(void)
 {
     assert_false(LoadPolicy("bundle_body_forgot_ob.cf"));
 }
 
-void test_bundle_invalid_promise_type(void **state)
+void test_bundle_invalid_promise_type(void)
 {
     assert_false(LoadPolicy("bundle_invalid_promise_type.cf"));
 }
 
-void test_bundle_body_wrong_promise_type_token(void **state)
+void test_bundle_body_wrong_promise_type_token(void)
 {
     assert_false(LoadPolicy("bundle_body_wrong_promise_type_token.cf"));
 }
 
-void test_bundle_body_wrong_statement(void **state)
+void test_bundle_body_wrong_statement(void)
 {
     assert_false(LoadPolicy("bundle_body_wrong_statement.cf"));
 }
 
-void test_bundle_body_forgot_semicolon(void **state)
+void test_bundle_body_forgot_semicolon(void)
 {
     assert_false(LoadPolicy("bundle_body_forgot_semicolon.cf"));
 }
 
-void test_bundle_body_promiser_statement_contains_colon(void **state)
+void test_bundle_body_promiser_statement_contains_colon(void)
 {
     assert_false(LoadPolicy("bundle_body_promiser_statement_contains_colon.cf"));
 }
 
-void test_bundle_body_promiser_statement_missing_assign(void **state)
+void test_bundle_body_promiser_statement_missing_assign(void)
 {
     assert_false(LoadPolicy("bundle_body_promiser_statement_missing_assign.cf"));
 }
 
-void test_bundle_body_promise_missing_arrow(void **state)
+void test_bundle_body_promise_missing_arrow(void)
 {
     assert_false(LoadPolicy("bundle_body_promise_missing_arrow.cf"));
 }
 
-void test_bundle_body_promiser_wrong_constraint_token(void **state)
+void test_bundle_body_promiser_wrong_constraint_token(void)
 {
     assert_false(LoadPolicy("bundle_body_promiser_wrong_constraint_token.cf"));
 }
 
-void test_bundle_body_promiser_unknown_constraint_id(void **state)
+void test_bundle_body_promiser_unknown_constraint_id(void)
 {
     /* 
      * FIXME function to test this is not yet implemented
@@ -97,33 +97,33 @@ void test_bundle_body_promiser_unknown_constraint_id(void **state)
     assert_true(LoadPolicy("bundle_body_promiser_unknown_constraint_id.cf"));
 }
 
-void test_promise_promiser_nonscalar(void **state)
+void test_promise_promiser_nonscalar(void)
 {
     assert_false(LoadPolicy("promise_promiser_nonscalar.cf"));
 }
 
-void test_bundle_body_promiser_forgot_colon(void **state)
+void test_bundle_body_promiser_forgot_colon(void)
 {
     assert_false(LoadPolicy("bundle_body_promiser_forgot_colon.cf"));
 }
 
-void test_bundle_body_promisee_no_colon_allowed(void **state)
+void test_bundle_body_promisee_no_colon_allowed(void)
 {
     assert_false(LoadPolicy("bundle_body_promisee_no_colon_allowed.cf"));
 }
 
-void test_body_selection_wrong_token(void **state)
+void test_body_selection_wrong_token(void)
 {
     assert_false(LoadPolicy("body_selection_wrong_token.cf"));
 }
 
-void test_body_selection_forgot_semicolon(void **state)
+void test_body_selection_forgot_semicolon(void)
 {
     assert_false(LoadPolicy("body_selection_forgot_semicolon.cf"));
 }
 
 
-void test_body_selection_unknown_selection_id(void **state)
+void test_body_selection_unknown_selection_id(void)
 {
     /* 
      * FIXME function to test this is not yet implemented

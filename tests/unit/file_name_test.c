@@ -3,7 +3,7 @@
 #include "files_names.h"
 
 
-static void test_first_file_separator(void **state)
+static void test_first_file_separator(void)
 {
     const char *out;
 
@@ -24,7 +24,7 @@ static void test_first_file_separator(void **state)
     assert_true(out == in4 + 1);
 }
 
-static void test_get_parent_directory_copy(void **state)
+static void test_get_parent_directory_copy(void)
 {
     char *out;
 

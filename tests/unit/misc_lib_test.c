@@ -3,7 +3,7 @@
 
 #include "misc_lib.h"
 
-static void test_unsigned_modulus(void **state)
+static void test_unsigned_modulus(void)
 {
     assert_int_equal(UnsignedModulus(0, 3), 0);
     assert_int_equal(UnsignedModulus(1, 3), 1);

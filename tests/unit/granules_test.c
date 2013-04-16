@@ -13,19 +13,19 @@ time_t MeasurementSlotStart(time_t t);
 time_t MeasurementSlotTime(size_t slot, size_t num_slots, time_t now);
 */
 
-static void test_get_time_slot(void **state)
+static void test_get_time_slot(void)
 {
     assert_int_equal(0, GetTimeSlot(1325462400)); // monday 00:00
     assert_int_equal(1152, GetTimeSlot(1325808000)); // friday 00:00
     assert_int_equal(2015, GetTimeSlot(1326067020)); // sunday 23:57
 }
 
-static void test_measurement_slot_start(void **state)
+static void test_measurement_slot_start(void)
 {
     assert_int_equal(1326066900, MeasurementSlotStart(1326067020)); // sunday 23:57 -> 23:55
 }
 
-static void test_measurement_slot_time(void **state)
+static void test_measurement_slot_time(void)
 {
     static const time_t now = 1326066900; // sunday 23:55
     assert_int_equal(1325462400, MeasurementSlotTime(0, 2016, now)); // monday 00:00

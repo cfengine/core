@@ -98,31 +98,31 @@ int close(int fd)
     return 0;
 }
 
-static void test_get_start_time_process1(ARG_UNUSED void **state)
+static void test_get_start_time_process1(void)
 {
     time_t t = GetProcessStartTime(1);
     assert_int_equal(t, 100);
 }
 
-static void test_get_start_time_process2(ARG_UNUSED void **state)
+static void test_get_start_time_process2(void)
 {
     time_t t = GetProcessStartTime(2);
     assert_int_equal(t, PROCESS_START_TIME_UNKNOWN);
 }
 
-static void test_get_state_process1(ARG_UNUSED void **state)
+static void test_get_state_process1(void)
 {
     ProcessState s = GetProcessState(1);
     assert_int_equal(s, PROCESS_STATE_STOPPED);
 }
 
-static void test_get_state_process2(ARG_UNUSED void **state)
+static void test_get_state_process2(void)
 {
     ProcessState s = GetProcessState(2);
     assert_int_equal(s, PROCESS_STATE_RUNNING);
 }
 
-static void test_get_state_process3(ARG_UNUSED void **state)
+static void test_get_state_process3(void)
 {
     ProcessState s = GetProcessState(3);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);

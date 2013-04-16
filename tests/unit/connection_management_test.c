@@ -10,7 +10,7 @@ const int CONNECTION_MAX_AGE_SECONDS = SECONDS_PER_HOUR * 2;
          in valgrind will detect it.                                     */
 
 
-static void test_purge_old_connections_nochange(void **state)
+static void test_purge_old_connections_nochange(void)
 {
     const time_t time_now = 100000;
 
@@ -40,7 +40,7 @@ static void test_purge_old_connections_nochange(void **state)
 }
 
 
-static void test_purge_old_connections_purge_first(void **state)
+static void test_purge_old_connections_purge_first(void)
 {
     const time_t time_now = 100000;
 
@@ -70,7 +70,7 @@ static void test_purge_old_connections_purge_first(void **state)
 }
 
 
-static void test_purge_old_connections_purge_middle(void **state)
+static void test_purge_old_connections_purge_middle(void)
 {
     const time_t time_now = 100000;
 
@@ -100,7 +100,7 @@ static void test_purge_old_connections_purge_middle(void **state)
 }
 
 
-static void test_purge_old_connections_purge_last(void **state)
+static void test_purge_old_connections_purge_last(void)
 {
     const time_t time_now = 100000;
 

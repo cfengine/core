@@ -6,7 +6,7 @@
 #include "cf-key-functions.c"
 #include "cf-key-functions.h"
 
-static void test_RemoveKeys(void **state)
+static void test_RemoveKeys(void)
 {
 	assert_true(1);
 }

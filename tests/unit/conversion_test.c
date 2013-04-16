@@ -3,13 +3,13 @@
 #include "cmockery.h"
 #include "conversion.h"
 
-static void test_str_to_service_policy(void **state)
+static void test_str_to_service_policy(void)
 {
     assert_int_equal(ServicePolicyFromString("start"), SERVICE_POLICY_START);
     assert_int_equal(ServicePolicyFromString("restart"), SERVICE_POLICY_RESTART);
 }
 
-static void test_double_from_string(void **state)
+static void test_double_from_string(void)
 {
     {
         double val;

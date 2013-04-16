@@ -3,7 +3,7 @@
 #include "set.h"
 #include "alloc.h"
 
-void test_stringset_from_string(void **state)
+void test_stringset_from_string(void)
 {
     StringSet *s = StringSetFromString("one,two, three four", ',');
 
@@ -16,7 +16,7 @@ void test_stringset_from_string(void **state)
     StringSetDestroy(s);
 }
 
-void test_stringset_clear(void **state)
+void test_stringset_clear(void)
 {
     StringSet *s = StringSetNew();
     StringSetAdd(s, xstrdup("a"));

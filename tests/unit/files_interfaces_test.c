@@ -47,7 +47,7 @@ static void CreateCorruptedGarbage(const char *filename)
     fclose(fh);
 }
 
-static void test_cfreadline_valid(void **state)
+static void test_cfreadline_valid(void)
 {
     int read = 0;
     char output[CF_BUFSIZE] = { 0 };
@@ -67,7 +67,7 @@ static void test_cfreadline_valid(void **state)
     }
 }
 
-static void test_cfreadline_corrupted(void **state)
+static void test_cfreadline_corrupted(void)
 {
     int read = 0;
     char output[CF_BUFSIZE] = { 0 };

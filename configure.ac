@@ -735,11 +735,6 @@ dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
 
-dnl To ensure config.h is picked up via VPATH
-if test "$srcdir" != "."; then
-  CPPFLAGS="$CPPFLAGS -I`pwd`/libpromises"
-fi
-
 case "$target_os" in
 
    solaris2.8|solaris2.9)

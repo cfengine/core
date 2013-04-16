@@ -86,7 +86,7 @@ static int InsertCompoundLineAtLocation(EvalContext *ctx, char *newline, Item **
 static int ReplacePatterns(EvalContext *ctx, Item *start, Item *end, Attributes a, Promise *pp, EditContext *edcontext);
 static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attributes a, Promise *pp, EditContext *edcontext);
 static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Promise *pp, EditContext *edcontext);
-static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp, EditContext *edcontext);
+static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext);
 static int SanityCheckInsertions(Attributes a);
 static int SanityCheckDeletions(Attributes a, Promise *pp);
 static int SelectLine(char *line, Attributes a);
@@ -1547,7 +1547,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
         else
         {
             this_column = RlistFromSplitString(rp->item, a.column.value_separator);
-            retval = DoEditColumn(&this_column, a, pp, edcontext);
+            retval = DoEditColumn(&this_column, a, edcontext);
         }
 
         if (retval)
@@ -1731,7 +1731,7 @@ static int SelectLine(char *line, Attributes a)
 /* Level                                                                   */
 /***************************************************************************/
 
-static int DoEditColumn(Rlist **columns, Attributes a, Promise *pp, EditContext *edcontext)
+static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
 {
     Rlist *rp, *found;
     int retval = false;

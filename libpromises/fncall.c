@@ -96,18 +96,10 @@ void FnCallDestroy(FnCall *fp)
 {
     if (fp)
     {
-        if (fp->name)
-        {
-            free(fp->name);
-        }
-
-        if (fp->args)
-        {
-            RlistDestroy(fp->args);
-        }
-
-        free(fp);
+        free(fp->name);
+        RlistDestroy(fp->args);
     }
+    free(fp);
 }
 
 /*********************************************************************/

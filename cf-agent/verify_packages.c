@@ -422,8 +422,6 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
             return false;
         }
 
-        CF_OCCUR++;
-
         if (a.packages.package_multiline_start)
         {
             if (FullTextMatch(a.packages.package_multiline_start, buf))

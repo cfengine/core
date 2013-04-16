@@ -134,8 +134,6 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
             return;
         }
 
-        CF_OCCUR++;
-
         PromiseBanner(pp);
         ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
 

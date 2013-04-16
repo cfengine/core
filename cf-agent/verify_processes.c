@@ -327,8 +327,6 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {
-        CF_OCCUR++;
-
         if (a.transaction.action == cfa_warn)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Matched: %s\n", ip->name);

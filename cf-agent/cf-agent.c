@@ -211,12 +211,6 @@ static const char *HINTS[15] =
     NULL
 };
 
-#ifndef HAVE_NOVA
-void NoteEfficiency(ARG_UNUSED double e)
-{
-}
-#endif
-
 /*******************************************************************/
 
 int main(int argc, char *argv[])
@@ -644,22 +638,8 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
-    double efficiency, model;
-
     KeepControlPromises(ctx, policy);
     KeepPromiseBundles(ctx, policy, config);
-
-// TOPICS counts the number of currently defined promises
-// OCCUR counts the number of objects touched while verifying config
-
-    efficiency = 100.0 * CF_OCCUR / (double) (CF_OCCUR + CF_TOPICS);
-    model = 100.0 * (1.0 - CF_TOPICS / (double)(PR_KEPT + PR_NOTKEPT + PR_REPAIRED));
-    
-    NoteEfficiency(efficiency);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checked %d objects with %d promises, i.e. model efficiency %.2lf%%", CF_OCCUR, CF_TOPICS, efficiency);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The %d declared promise patterns actually expanded into %d individual promises, i.e. declaration efficiency %.2lf%%", (int) CF_TOPICS, PR_KEPT + PR_NOTKEPT + PR_REPAIRED, model);
-
 }
 
 /*******************************************************************/
@@ -1228,11 +1208,6 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-
-                if (pass == 1)  // Count the number of promises modelled for efficiency
-                {
-                    CF_TOPICS++;
-                }
 
                 ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
 

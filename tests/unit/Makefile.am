@@ -137,7 +137,7 @@ endif
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libstr.la
-file_writer_test_LDLFAGS =
+file_writer_test_LDFLAGS =
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la

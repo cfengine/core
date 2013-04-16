@@ -521,7 +521,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *scopeid, Rval rval)
 
         /* Note expand function does not mean evaluate function, must preserve type */
         fp = (FnCall *) rval.item;
-        fpe = ExpandFnCall(ctx, scopeid, fp, true);
+        fpe = ExpandFnCall(ctx, scopeid, fp);
         returnval.item = fpe;
         returnval.type = RVAL_TYPE_FNCALL;
         break;
@@ -556,7 +556,7 @@ Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval)
         /* Note expand function does not mean evaluate function, must preserve type */
         FnCall *fp = (FnCall *) rval.item;
 
-        return (Rval) {ExpandFnCall(ctx, scopeid, fp, false), RVAL_TYPE_FNCALL};
+        return (Rval) {ExpandFnCall(ctx, scopeid, fp), RVAL_TYPE_FNCALL};
     }
 
     default:

@@ -160,6 +160,7 @@ static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -266,6 +267,11 @@ int main(int argc, char *argv[])
     ThisAgentInit();
     BeginAudit();
     KeepPromises(ctx, policy, config);
+
+    if (ALLCLASSESREPORT)
+    {
+        AllClassesReport(ctx);
+    }
 
     // only note class usage when default policy is run
     if (!config->input_file)
@@ -1145,46 +1151,43 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
     }
 }
 
-/*********************************************************************/
-/* Level 3                                                           */
-/*********************************************************************/
-
-static void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
+static void SaveClassEnvironment(const EvalContext *ctx, Writer *writer)
 {
+    SetIterator it = EvalContextHeapIteratorHard(ctx);
+    const char *context;
+    while ((context = SetIteratorNext(&it)))
     {
-        SetIterator it = EvalContextHeapIteratorHard(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
+        if (!EvalContextHeapContainsNegated(ctx, context))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
+            WriterWriteF(writer, "%s\n", context);
         }
     }
 
+    it = EvalContextHeapIteratorSoft(ctx);
+    while ((context = SetIteratorNext(&it)))
     {
-        SetIterator it = EvalContextHeapIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
+        if (!EvalContextHeapContainsNegated(ctx, context))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
+            WriterWriteF(writer, "%s\n", context);
         }
     }
+}
 
+static void AllClassesReport(const EvalContext *ctx)
+{
+    char context_report_file[CF_BUFSIZE];
+    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+    FILE *fp = NULL;
+    if ((fp = fopen(context_report_file, "w")) == NULL)
     {
-        SetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
-        }
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
+    }
+    else
+    {
+        Writer *writer = FileWriter(fp);
+        SaveClassEnvironment(ctx, writer);
+        WriterClose(writer);
     }
 }
 
@@ -1225,24 +1228,6 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
             for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
-
-                if (ALLCLASSESREPORT)
-                {
-                    char context_report_file[CF_BUFSIZE];
-                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-
-                    FILE *fp = NULL;
-                    if ((fp = fopen(context_report_file, "w")) == NULL)
-                    {
-                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-                    }
-                    else
-                    {
-                        Writer *writer = FileWriter(fp);
-                        SaveClassEnvironment(ctx, writer);
-                        WriterClose(writer);
-                    }
-                }
 
                 if (pass == 1)  // Count the number of promises modelled for efficiency
                 {

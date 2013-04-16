@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_PACKAGES_H
 #define CFENGINE_MOD_PACKAGES_H
 
+#include "cf3.defs.h"
+
 extern const PromiseTypeSyntax CF_PACKAGES_PROMISE_TYPES[];
 
 #endif

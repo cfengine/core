@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_FILES_H
 #define CFENGINE_MOD_FILES_H
 
+#include "cf3.defs.h"
+
 extern const PromiseTypeSyntax CF_FILES_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_COMMON_EDITBODIES[];
 extern const ConstraintSyntax CF_COMMON_XMLBODIES[];

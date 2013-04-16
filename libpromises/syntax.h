@@ -79,6 +79,31 @@ const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const 
  */
 const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
 
+
+
+#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, NULL }
+#define ConstraintSyntaxNewBool(lval, description, default_value) { lval, DATA_TYPE_OPTION, CF_BOOL, description, default_value }
+
+#define ConstraintSyntaxNewOption(lval, range, description, default_value) { lval, DATA_TYPE_OPTION, range, description, default_value }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, item_range, description, NULL }
+
+#define ConstraintSyntaxNewString(lval, regex, description, default_value) { lval, DATA_TYPE_STRING, regex, description, default_value }
+#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, item_range, description, NULL }
+
+#define ConstraintSyntaxNewInt(lval, range, description, default_value) { lval, DATA_TYPE_INT, range, description, default_value }
+#define ConstraintSyntaxNewIntRange(lval, range, description, default_value ) { lval , DATA_TYPE_INT_RANGE, range, description, default_value }
+#define ConstraintSyntaxNewIntList(lval, description) { lval, DATA_TYPE_INT_LIST, CF_INTRANGE, description }
+
+#define ConstraintSyntaxNewReal(lval, range, description, default_value) { lval, DATA_TYPE_REAL, range, description, default_value }
+#define ConstraintSyntaxNewRealList(lval, description) { lval, DATA_TYPE_REAL_LIST, CF_REALRANGE, description }
+
+#define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, CF_CLASSRANGE, description }
+#define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, description, default_value }
+
+#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, body_syntax, description }
+#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, CF_BUNDLE, description }
+
+
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);
 

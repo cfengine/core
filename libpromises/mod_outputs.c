@@ -22,16 +22,15 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_outputs.h"
+
+#include "syntax.h"
 
 static const ConstraintSyntax CF_OUTPUTS_BODIES[] =
 {
-    {"output_level", DATA_TYPE_OPTION, "verbose,debug,inform",
-     "Output level to observe for the named promise or bundle (meta-promise)", "verbose"},
-    {"promiser_type", DATA_TYPE_OPTION, "promise,bundle",
-     "Output level to observe for the named promise or bundle (meta-promise)", "promise"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("output_level", "verbose,debug,inform", "Output level to observe for the named promise or bundle (meta-promise)", "verbose"),
+    ConstraintSyntaxNewOption("promiser_type", "promise,bundle", "Output level to observe for the named promise or bundle (meta-promise)", "promise"),
+    ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_OUTPUTS_PROMISE_TYPES[] =

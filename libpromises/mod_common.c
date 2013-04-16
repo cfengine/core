@@ -51,67 +51,54 @@ static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises c
 
 static const ConstraintSyntax CF_TRANSACTION_BODY[] =
 {
-    {"action_policy", DATA_TYPE_OPTION, "fix,warn,nop", "Whether to repair or report about non-kept promises"},
-    {"ifelapsed", DATA_TYPE_INT, CF_VALRANGE, "Number of minutes before next allowed assessment of promise",
-     "control body value"},
-    {"expireafter", DATA_TYPE_INT, CF_VALRANGE, "Number of minutes before a repair action is interrupted and retried",
-     "control body value"},
-    {"log_string", DATA_TYPE_STRING, "", "A message to be written to the log when a promise verification leads to a repair"},
-    {"log_level", DATA_TYPE_OPTION, "inform,verbose,error,log", "The reporting level sent to syslog"},
-    {"log_kept", DATA_TYPE_STRING, CF_LOGRANGE,
-     "This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
-    {"log_priority", DATA_TYPE_OPTION, "emergency,alert,critical,error,warning,notice,info,debug",
-     "The priority level of the log message, as interpreted by a syslog server"},
-    {"log_repaired", DATA_TYPE_STRING, CF_LOGRANGE,
-     "This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
-    {"log_failed", DATA_TYPE_STRING, CF_LOGRANGE,
-     "This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger"},
-    {"value_kept", DATA_TYPE_REAL, CF_REALRANGE, "A real number value attributed to keeping this promise"},
-    {"value_repaired", DATA_TYPE_REAL, CF_REALRANGE, "A real number value attributed to reparing this promise"},
-    {"value_notkept", DATA_TYPE_REAL, CF_REALRANGE,
-     "A real number value (possibly negative) attributed to not keeping this promise"},
-    {"audit", DATA_TYPE_OPTION, CF_BOOL, "true/false switch for detailed audit records of this promise", "false"},
-    {"background", DATA_TYPE_OPTION, CF_BOOL, "true/false switch for parallelizing the promise repair", "false"},
-    {"report_level", DATA_TYPE_OPTION, "inform,verbose,error,log", "The reporting level for standard output for this promise",
-     "none"},
-    {"measurement_class", DATA_TYPE_STRING, "", "If set performance will be measured and recorded under this identifier"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("action_policy", "fix,warn,nop", "Whether to repair or report about non-kept promises", NULL),
+    ConstraintSyntaxNewInt("ifelapsed", CF_VALRANGE, "Number of minutes before next allowed assessment of promise","control body value"),
+    ConstraintSyntaxNewInt("expireafter", CF_VALRANGE, "Number of minutes before a repair action is interrupted and retried","control body value"),
+    ConstraintSyntaxNewString("log_string", "", "A message to be written to the log when a promise verification leads to a repair", NULL),
+    ConstraintSyntaxNewOption("log_level", "inform,verbose,error,log", "The reporting level sent to syslog", NULL),
+    ConstraintSyntaxNewString("log_kept", CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger", NULL),
+    ConstraintSyntaxNewOption("log_priority", "emergency,alert,critical,error,warning,notice,info,debug","The priority level of the log message, as interpreted by a syslog server", NULL),
+    ConstraintSyntaxNewString("log_repaired", CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger", NULL),
+    ConstraintSyntaxNewString("log_failed", CF_LOGRANGE,"This should be filename of a file to which log_string will be saved, if undefined it goes to the system logger", NULL),
+    ConstraintSyntaxNewReal("value_kept", CF_REALRANGE, "A real number value attributed to keeping this promise", NULL),
+    ConstraintSyntaxNewReal("value_repaired", CF_REALRANGE, "A real number value attributed to reparing this promise", NULL),
+    ConstraintSyntaxNewReal("value_notkept", CF_REALRANGE, "A real number value (possibly negative) attributed to not keeping this promise", NULL),
+    ConstraintSyntaxNewBool("audit", "true/false switch for detailed audit records of this promise", "false"),
+    ConstraintSyntaxNewBool("background", "true/false switch for parallelizing the promise repair", "false"),
+    ConstraintSyntaxNewOption("report_level", "inform,verbose,error,log", "The reporting level for standard output for this promise", "none"),
+    ConstraintSyntaxNewString("measurement_class", "", "If set performance will be measured and recorded under this identifier", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
 {
-    {"scope", DATA_TYPE_OPTION, "namespace,bundle", "Scope of the contexts set by this body" },
-    {"promise_repaired", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
-    {"repair_failed", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
-    {"repair_denied", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
-    {"repair_timeout", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
-    {"promise_kept", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be defined globally"},
-    {"cancel_kept", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be cancelled if the promise is kept"},
-    {"cancel_repaired", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of classes to be cancelled if the promise is repaired"},
-    {"cancel_notkept", DATA_TYPE_STRING_LIST, CF_IDRANGE,
-     "A list of classes to be cancelled if the promise is not kept for any reason"},
-    {"kept_returncodes", DATA_TYPE_STRING_LIST, CF_INTLISTRANGE, "A list of return codes indicating a kept command-related promise"},
-    {"repaired_returncodes", DATA_TYPE_STRING_LIST, CF_INTLISTRANGE,
-     "A list of return codes indicating a repaired command-related promise"},
-    {"failed_returncodes", DATA_TYPE_STRING_LIST, CF_INTLISTRANGE,
-     "A list of return codes indicating a failed command-related promise"},
-    {"persist_time", DATA_TYPE_INT, CF_VALRANGE, "A number of minutes the specified classes should remain active"},
-    {"timer_policy", DATA_TYPE_OPTION, "absolute,reset", "Whether a persistent class restarts its counter when rediscovered",
-     "reset"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the contexts set by this body", NULL),
+    ConstraintSyntaxNewStringList("promise_repaired", CF_IDRANGE, "A list of classes to be defined globally"),
+    ConstraintSyntaxNewStringList("repair_failed", CF_IDRANGE, "A list of classes to be defined globally"),
+    ConstraintSyntaxNewStringList("repair_denied", CF_IDRANGE, "A list of classes to be defined globally"),
+    ConstraintSyntaxNewStringList("repair_timeout", CF_IDRANGE, "A list of classes to be defined globally"),
+    ConstraintSyntaxNewStringList("promise_kept", CF_IDRANGE, "A list of classes to be defined globally"),
+    ConstraintSyntaxNewStringList("cancel_kept", CF_IDRANGE, "A list of classes to be cancelled if the promise is kept"),
+    ConstraintSyntaxNewStringList("cancel_repaired", CF_IDRANGE, "A list of classes to be cancelled if the promise is repaired"),
+    ConstraintSyntaxNewStringList("cancel_notkept", CF_IDRANGE, "A list of classes to be cancelled if the promise is not kept for any reason"),
+    ConstraintSyntaxNewStringList("kept_returncodes", CF_INTLISTRANGE, "A list of return codes indicating a kept command-related promise"),
+    ConstraintSyntaxNewStringList("repaired_returncodes", CF_INTLISTRANGE,"A list of return codes indicating a repaired command-related promise"),
+    ConstraintSyntaxNewStringList("failed_returncodes", CF_INTLISTRANGE, "A list of return codes indicating a failed command-related promise"),
+    ConstraintSyntaxNewInt("persist_time", CF_VALRANGE, "A number of minutes the specified classes should remain active", NULL),
+    ConstraintSyntaxNewOption("timer_policy", "absolute,reset", "Whether a persistent class restarts its counter when rediscovered", "reset"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CF_VARBODY[] =
 {
-    {"string", DATA_TYPE_STRING, "", "A scalar string"},
-    {"int", DATA_TYPE_INT, CF_INTRANGE, "A scalar integer"},
-    {"real", DATA_TYPE_REAL, CF_REALRANGE, "A scalar real number"},
-    {"slist", DATA_TYPE_STRING_LIST, "", "A list of scalar strings"},
-    {"ilist", DATA_TYPE_INT_LIST, CF_INTRANGE, "A list of integers"},
-    {"rlist", DATA_TYPE_REAL_LIST, CF_REALRANGE, "A list of real numbers"},
-    {"policy", DATA_TYPE_OPTION, "free,overridable,constant,ifdefined",
-     "The policy for (dis)allowing (re)definition of variables"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("string", "", "A scalar string", NULL),
+    ConstraintSyntaxNewInt("int", CF_INTRANGE, "A scalar integer", NULL),
+    ConstraintSyntaxNewReal("real", CF_REALRANGE, "A scalar real number", NULL),
+    ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings"),
+    ConstraintSyntaxNewIntList("ilist", "A list of integers"),
+    ConstraintSyntaxNewRealList("rlist", "A list of real numbers"),
+    ConstraintSyntaxNewOption("policy", "free,overridable,constant,ifdefined", "The policy for (dis)allowing (re)definition of variables", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
@@ -164,33 +151,32 @@ static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)
 
 const ConstraintSyntax CF_METABODY[] =
 {
-    {"string", DATA_TYPE_STRING, "", "A scalar string"},
-    {"slist", DATA_TYPE_STRING_LIST, "", "A list of scalar strings"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("string", "", "A scalar string", NULL),
+    ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CF_DEFAULTSBODY[] =
 {
-    {"if_match_regex", DATA_TYPE_STRING, "", "If this regular expression matches the current value of the variable, replace it with default"},
-    {"string", DATA_TYPE_STRING, "", "A scalar string"},
-    {"slist", DATA_TYPE_STRING_LIST, "", "A list of scalar strings"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("if_match_regex", "", "If this regular expression matches the current value of the variable, replace it with default", NULL),
+    ConstraintSyntaxNewString("string", "", "A scalar string", NULL),
+    ConstraintSyntaxNewStringList("slist", "", "A list of scalar strings"),
+    ConstraintSyntaxNewNull()
 };
 
 
 const ConstraintSyntax CF_CLASSBODY[] =
 {
-    {"scope", DATA_TYPE_OPTION, "namespace,bundle", "Scope of the class set by this promise" },
-    {"and", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with AND"},
-    {"dist", DATA_TYPE_REAL_LIST, CF_REALRANGE, "Generate a probabilistic class distribution (from strategies in cfengine 2)"},
-    {"expression", DATA_TYPE_CONTEXT, CF_CLASSRANGE, "Evaluate string expression of classes in normal form"},
-    {"or", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with inclusive OR"},
-    {"persistence", DATA_TYPE_INT, CF_VALRANGE, "Make the class persistent (cached) to avoid reevaluation, time in minutes"},
-    {"not", DATA_TYPE_CONTEXT, CF_CLASSRANGE, "Evaluate the negation of string expression in normal form"},
-    {"select_class", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE,
-     "Select one of the named list of classes to define based on host identity", "random_selection"},
-    {"xor", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, "Combine class sources with XOR"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the class set by this promise", NULL),
+    ConstraintSyntaxNewContextList("and", "Combine class sources with AND", NULL),
+    ConstraintSyntaxNewRealList("dist", "Generate a probabilistic class distribution (from strategies in cfengine 2)"),
+    ConstraintSyntaxNewContext("expression", "Evaluate string expression of classes in normal form"),
+    ConstraintSyntaxNewContextList("or", "Combine class sources with inclusive OR", NULL),
+    ConstraintSyntaxNewInt("persistence", CF_VALRANGE, "Make the class persistent (cached) to avoid reevaluation, time in minutes", NULL),
+    ConstraintSyntaxNewContext("not", "Evaluate the negation of string expression in normal form"),
+    ConstraintSyntaxNewContextList("select_class", "Select one of the named list of classes to define based on host identity", "random_selection"),
+    ConstraintSyntaxNewContextList("xor", "Combine class sources with XOR", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 static bool ClassesParseTreeCheck(const Promise *pp, Seq *errors)
@@ -209,178 +195,150 @@ static bool ClassesParseTreeCheck(const Promise *pp, Seq *errors)
 
 const ConstraintSyntax CFG_CONTROLBODY[] =
 {
-    {"bundlesequence", DATA_TYPE_STRING_LIST, ".*", "List of promise bundles to verify in order"},
-    {"goal_patterns", DATA_TYPE_STRING_LIST, "",
-     "A list of regular expressions that match promisees/topics considered to be organizational goals"},
-    {"ignore_missing_bundles", DATA_TYPE_OPTION, CF_BOOL,
-     "If any bundles in the bundlesequence do not exist, ignore and continue", "false"},
-    {"ignore_missing_inputs", DATA_TYPE_OPTION, CF_BOOL, "If any input files do not exist, ignore and continue", "false"},
-    {"inputs", DATA_TYPE_STRING_LIST, ".*", "List of additional filenames to parse for promises"},
-    {"version", DATA_TYPE_STRING, "", "Scalar version string for this configuration"},
-    {"lastseenexpireafter", DATA_TYPE_INT, CF_VALRANGE, "Number of minutes after which last-seen entries are purged",
-     "One week"},
-    {"output_prefix", DATA_TYPE_STRING, "", "The string prefix for standard output"},
-    {"domain", DATA_TYPE_STRING, ".*", "Specify the domain name for this host"},
-    {"require_comments", DATA_TYPE_OPTION, CF_BOOL, "Warn about promises that do not have comment documentation", "false"},
-    {"host_licenses_paid", DATA_TYPE_INT, CF_VALRANGE,
-     "This promise is deprecated since CFEngine version 3.1 and is ignored",
-     "25"},
-    {"site_classes", DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE,
-     "A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise."},
-    {"syslog_host", DATA_TYPE_STRING, CF_IPRANGE,
-     "The name or address of a host to which syslog messages should be sent directly by UDP", "514"},
-    {"syslog_port", DATA_TYPE_INT, CF_VALRANGE, "The port number of a UDP syslog service"},
-    {"fips_mode", DATA_TYPE_OPTION, CF_BOOL, "Activate full FIPS mode restrictions", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("bundlesequence", ".*", "List of promise bundles to verify in order"),
+    ConstraintSyntaxNewStringList("goal_patterns", "", "A list of regular expressions that match promisees/topics considered to be organizational goals"),
+    ConstraintSyntaxNewBool("ignore_missing_bundles", "If any bundles in the bundlesequence do not exist, ignore and continue", "false"),
+    ConstraintSyntaxNewBool("ignore_missing_inputs", "If any input files do not exist, ignore and continue", "false"),
+    ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises"),
+    ConstraintSyntaxNewString("version", "", "Scalar version string for this configuration", NULL),
+    ConstraintSyntaxNewInt("lastseenexpireafter", CF_VALRANGE, "Number of minutes after which last-seen entries are purged", "One week"),
+    ConstraintSyntaxNewString("output_prefix", "", "The string prefix for standard output", NULL),
+    ConstraintSyntaxNewString("domain", ".*", "Specify the domain name for this host", NULL),
+    ConstraintSyntaxNewBool("require_comments", "Warn about promises that do not have comment documentation", "false"),
+    ConstraintSyntaxNewInt("host_licenses_paid", CF_VALRANGE, "This promise is deprecated since CFEngine version 3.1 and is ignored", "25"),
+    ConstraintSyntaxNewContextList("site_classes", "A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise.", NULL),
+    ConstraintSyntaxNewString("syslog_host", CF_IPRANGE, "The name or address of a host to which syslog messages should be sent directly by UDP", "514"),
+    ConstraintSyntaxNewInt("syslog_port", CF_VALRANGE, "The port number of a UDP syslog service", NULL),
+    ConstraintSyntaxNewBool("fips_mode", "Activate full FIPS mode restrictions", "false"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFA_CONTROLBODY[] =
 {
-    {"abortclasses", DATA_TYPE_STRING_LIST, ".*", "A list of classes which if defined lead to termination of cf-agent"},
-    {"abortbundleclasses", DATA_TYPE_STRING_LIST, ".*", "A list of classes which if defined lead to termination of current bundle"},
-    {"addclasses", DATA_TYPE_STRING_LIST, ".*", "A list of classes to be defined always in the current context"},
-    {"agentaccess", DATA_TYPE_STRING_LIST, ".*", "A list of user names allowed to execute cf-agent"},
-    {"agentfacility", DATA_TYPE_OPTION, CF_FACILITY, "The syslog facility for cf-agent", "LOG_USER"},
-    {"allclassesreport", DATA_TYPE_OPTION, CF_BOOL, "Generate allclasses.txt report"},
-    {"alwaysvalidate", DATA_TYPE_OPTION, CF_BOOL,
-     "true/false flag to determine whether configurations will always be checked before executing, or only after updates"},
-    {"auditing", DATA_TYPE_OPTION, CF_BOOL, "This option is deprecated, does nothing and is kept for backward compatibility", "false"},
-    {"binarypaddingchar", DATA_TYPE_STRING, "", "Character used to pad unequal replacements in binary editing", "space (ASC=32)"},
-    {"bindtointerface", DATA_TYPE_STRING, ".*", "Use this interface for outgoing connections"},
-    {"hashupdates", DATA_TYPE_OPTION, CF_BOOL, "true/false whether stored hashes are updated when change is detected in source",
-     "false"},
-    {"childlibpath", DATA_TYPE_STRING, ".*", "LD_LIBRARY_PATH for child processes"},
-    {"checksum_alert_time", DATA_TYPE_INT, "0,60", "The persistence time for the checksum_alert class", "10 mins"},
-    {"defaultcopytype", DATA_TYPE_OPTION, "mtime,atime,ctime,digest,hash,binary", "ctime or mtime differ"},
-    {"dryrun", DATA_TYPE_OPTION, CF_BOOL, "All talk and no action mode", "false"},
-    {"editbinaryfilesize", DATA_TYPE_INT, CF_VALRANGE, "Integer limit on maximum binary file size to be edited", "100000"},
-    {"editfilesize", DATA_TYPE_INT, CF_VALRANGE, "Integer limit on maximum text file size to be edited", "100000"},
-    {"environment", DATA_TYPE_STRING_LIST, "[A-Za-z0-9_]+=.*", "List of environment variables to be inherited by children"},
-    {"exclamation", DATA_TYPE_OPTION, CF_BOOL, "true/false print exclamation marks during security warnings", "true"},
-    {"expireafter", DATA_TYPE_INT, CF_VALRANGE, "Global default for time before on-going promise repairs are interrupted",
-     "1 min"},
-    {"files_single_copy", DATA_TYPE_STRING_LIST, "", "List of filenames to be watched for multiple-source conflicts"},
-    {"files_auto_define", DATA_TYPE_STRING_LIST, "", "List of filenames to define classes if copied"},
-    {"hostnamekeys", DATA_TYPE_OPTION, CF_BOOL, "true/false label ppkeys by hostname not IP address", "false"},
-    {"ifelapsed", DATA_TYPE_INT, CF_VALRANGE, "Global default for time that must elapse before promise will be rechecked",
-     "1"},
-    {"inform", DATA_TYPE_OPTION, CF_BOOL, "true/false set inform level default", "false"},
-    {"intermittency", DATA_TYPE_OPTION, CF_BOOL,
-     "This option is deprecated, does nothing and is kept for backward compatibility",
-     "false"},
-    {"max_children", DATA_TYPE_INT, CF_VALRANGE, "Maximum number of background tasks that should be allowed concurrently",
-     "1 concurrent agent promise"},
-    {"maxconnections", DATA_TYPE_INT, CF_VALRANGE, "Maximum number of outgoing connections to cf-serverd",
-     "30 remote queries"},
-    {"mountfilesystems", DATA_TYPE_OPTION, CF_BOOL, "true/false mount any filesystems promised", "false"},
-    {"nonalphanumfiles", DATA_TYPE_OPTION, CF_BOOL, "true/false warn about filenames with no alphanumeric content", "false"},
-    {"repchar", DATA_TYPE_STRING, ".", "The character used to canonize pathnames in the file repository", "_"},
-    {"refresh_processes", DATA_TYPE_STRING_LIST, CF_IDRANGE,
-     "Reload the process table before verifying the bundles named in this list (lazy evaluation)"},
-    {"default_repository", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Path to the default file repository", "in situ"},
-    {"secureinput", DATA_TYPE_OPTION, CF_BOOL, "true/false check whether input files are writable by unauthorized users",
-     "false"},
-    {"sensiblecount", DATA_TYPE_INT, CF_VALRANGE, "Minimum number of files a mounted filesystem is expected to have",
-     "2 files"},
-    {"sensiblesize", DATA_TYPE_INT, CF_VALRANGE, "Minimum number of bytes a mounted filesystem is expected to have",
-     "1000 bytes"},
-    {"skipidentify", DATA_TYPE_OPTION, CF_BOOL,
-     "Do not send IP/name during server connection because address resolution is broken", "false"},
-    {"suspiciousnames", DATA_TYPE_STRING_LIST, "", "List of names to warn about if found during any file search"},
-    {"syslog", DATA_TYPE_OPTION, CF_BOOL, "true/false switches on output to syslog at the inform level", "false"},
-    {"track_value", DATA_TYPE_OPTION, CF_BOOL, "true/false switches on tracking of promise valuation", "false"},
-    {"timezone", DATA_TYPE_STRING_LIST, "", "List of allowed timezones this machine must comply with"},
-    {"default_timeout", DATA_TYPE_INT, CF_VALRANGE, "Maximum time a network connection should attempt to connect",
-     "10 seconds"},
-    {"verbose", DATA_TYPE_OPTION, CF_BOOL, "true/false switches on verbose standard output", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("abortclasses", ".*", "A list of classes which if defined lead to termination of cf-agent"),
+    ConstraintSyntaxNewStringList("abortbundleclasses", ".*", "A list of classes which if defined lead to termination of current bundle"),
+    ConstraintSyntaxNewStringList("addclasses", ".*", "A list of classes to be defined always in the current context"),
+    ConstraintSyntaxNewStringList("agentaccess", ".*", "A list of user names allowed to execute cf-agent"),
+    ConstraintSyntaxNewOption("agentfacility", CF_FACILITY, "The syslog facility for cf-agent", "LOG_USER"),
+    ConstraintSyntaxNewBool("allclassesreport", "Generate allclasses.txt report", NULL),
+    ConstraintSyntaxNewBool("alwaysvalidate", "true/false flag to determine whether configurations will always be checked before executing, or only after updates", NULL),
+    ConstraintSyntaxNewBool("auditing", "This option is deprecated, does nothing and is kept for backward compatibility", "false"),
+    ConstraintSyntaxNewString("binarypaddingchar", "", "Character used to pad unequal replacements in binary editing", "space (ASC=32)"),
+    ConstraintSyntaxNewString("bindtointerface", ".*", "Use this interface for outgoing connections", NULL),
+    ConstraintSyntaxNewBool("hashupdates", "true/false whether stored hashes are updated when change is detected in source","false"),
+    ConstraintSyntaxNewString("childlibpath", ".*", "LD_LIBRARY_PATH for child processes", NULL),
+    ConstraintSyntaxNewInt("checksum_alert_time", "0,60", "The persistence time for the checksum_alert class", "10 mins"),
+    ConstraintSyntaxNewOption("defaultcopytype", "mtime,atime,ctime,digest,hash,binary", "ctime or mtime differ", NULL),
+    ConstraintSyntaxNewBool("dryrun", "All talk and no action mode", "false"),
+    ConstraintSyntaxNewInt("editbinaryfilesize", CF_VALRANGE, "Integer limit on maximum binary file size to be edited", "100000"),
+    ConstraintSyntaxNewInt("editfilesize", CF_VALRANGE, "Integer limit on maximum text file size to be edited", "100000"),
+    ConstraintSyntaxNewStringList("environment", "[A-Za-z0-9_]+=.*", "List of environment variables to be inherited by children"),
+    ConstraintSyntaxNewBool("exclamation", "true/false print exclamation marks during security warnings", "true"),
+    ConstraintSyntaxNewInt("expireafter", CF_VALRANGE, "Global default for time before on-going promise repairs are interrupted", "1 min"),
+    ConstraintSyntaxNewStringList("files_single_copy", "", "List of filenames to be watched for multiple-source conflicts"),
+    ConstraintSyntaxNewStringList("files_auto_define", "", "List of filenames to define classes if copied"),
+    ConstraintSyntaxNewBool("hostnamekeys", "true/false label ppkeys by hostname not IP address", "false"),
+    ConstraintSyntaxNewInt("ifelapsed", CF_VALRANGE, "Global default for time that must elapse before promise will be rechecked","1"),
+    ConstraintSyntaxNewBool("inform", "true/false set inform level default", "false"),
+    ConstraintSyntaxNewBool("intermittency", "This option is deprecated, does nothing and is kept for backward compatibility", "false"),
+    ConstraintSyntaxNewInt("max_children", CF_VALRANGE, "Maximum number of background tasks that should be allowed concurrently","1 concurrent agent promise"),
+    ConstraintSyntaxNewInt("maxconnections", CF_VALRANGE, "Maximum number of outgoing connections to cf-serverd", "30 remote queries"),
+    ConstraintSyntaxNewBool("mountfilesystems", "true/false mount any filesystems promised", "false"),
+    ConstraintSyntaxNewBool("nonalphanumfiles", "true/false warn about filenames with no alphanumeric content", "false"),
+    ConstraintSyntaxNewString("repchar", ".", "The character used to canonize pathnames in the file repository", "_"),
+    ConstraintSyntaxNewStringList("refresh_processes", CF_IDRANGE, "Reload the process table before verifying the bundles named in this list (lazy evaluation)"),
+    ConstraintSyntaxNewString("default_repository", CF_ABSPATHRANGE, "Path to the default file repository", "in situ"),
+    ConstraintSyntaxNewBool("secureinput", "true/false check whether input files are writable by unauthorized users", "false"),
+    ConstraintSyntaxNewInt("sensiblecount", CF_VALRANGE, "Minimum number of files a mounted filesystem is expected to have", "2 files"),
+    ConstraintSyntaxNewInt("sensiblesize", CF_VALRANGE, "Minimum number of bytes a mounted filesystem is expected to have", "1000 bytes"),
+    ConstraintSyntaxNewBool("skipidentify", "Do not send IP/name during server connection because address resolution is broken", "false"),
+    ConstraintSyntaxNewStringList("suspiciousnames", "", "List of names to warn about if found during any file search"),
+    ConstraintSyntaxNewBool("syslog", "true/false switches on output to syslog at the inform level", "false"),
+    ConstraintSyntaxNewBool("track_value", "true/false switches on tracking of promise valuation", "false"),
+    ConstraintSyntaxNewStringList("timezone", "", "List of allowed timezones this machine must comply with"),
+    ConstraintSyntaxNewInt("default_timeout", CF_VALRANGE, "Maximum time a network connection should attempt to connect","10 seconds"),
+    ConstraintSyntaxNewBool("verbose", "true/false switches on verbose standard output", "false"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFS_CONTROLBODY[] =
 {
-    {"allowallconnects", DATA_TYPE_STRING_LIST, "",
-     "List of IPs or hostnames that may have more than one connection to the server port"},
-    {"allowconnects", DATA_TYPE_STRING_LIST, "", "List of IPs or hostnames that may connect to the server port"},
-    {"allowusers", DATA_TYPE_STRING_LIST, "", "List of usernames who may execute requests from this server"},
-    {"auditing", DATA_TYPE_OPTION, CF_BOOL, "true/false activate auditing of server connections", "false"},
-    {"bindtointerface", DATA_TYPE_STRING, "", "IP of the interface to which the server should bind on multi-homed hosts"},
-    {"cfruncommand", DATA_TYPE_STRING, CF_PATHRANGE, "Path to the cf-agent command or cf-execd wrapper for remote execution"},
-    {"call_collect_interval", DATA_TYPE_INT, CF_VALRANGE, "The interval in minutes in between collect calls to the policy hub offering a tunnel for report collection (Enterprise)"},
-    {"collect_window", DATA_TYPE_INT, CF_VALRANGE, "A time in seconds that a collect-call tunnel remains open to a hub to attempt a report transfer before it is closed (Enterprise)"},
-    {"denybadclocks", DATA_TYPE_OPTION, CF_BOOL, "true/false accept connections from hosts with clocks that are out of sync",
-     "true"},
-    {"denyconnects", DATA_TYPE_STRING_LIST, "", "List of IPs or hostnames that may NOT connect to the server port"},
-    {"dynamicaddresses", DATA_TYPE_STRING_LIST, "", "List of IPs or hostnames for which the IP/name binding is expected to change"},
-    {"hostnamekeys", DATA_TYPE_OPTION, CF_BOOL, "true/false store keys using hostname lookup instead of IP addresses", "false"},
-    {"keycacheTTL", DATA_TYPE_INT, CF_VALRANGE, "Maximum number of hours to hold public keys in the cache", "24"},
-    {"logallconnections", DATA_TYPE_OPTION, CF_BOOL, "true/false causes the server to log all new connections to syslog",
-     "false"},
-    {"logencryptedtransfers", DATA_TYPE_OPTION, CF_BOOL, "true/false log all successful transfers required to be encrypted",
-     "false"},
-    {"maxconnections", DATA_TYPE_INT, CF_VALRANGE, "Maximum number of connections that will be accepted by cf-serverd",
-     "30 remote queries"},
-    {"port", DATA_TYPE_INT, "1024,99999", "Default port for cfengine server", "5308"},
-    {"serverfacility", DATA_TYPE_OPTION, CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"},
-    {"skipverify", DATA_TYPE_STRING_LIST, "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify"},
-    {"trustkeysfrom", DATA_TYPE_STRING_LIST, "", "List of IPs from whom we accept public keys on trust"},
-    {"listen", DATA_TYPE_OPTION, CF_BOOL, "true/false enable server deamon to listen on defined port", "true"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("allowallconnects", "","List of IPs or hostnames that may have more than one connection to the server port"),
+    ConstraintSyntaxNewStringList("allowconnects", "", "List of IPs or hostnames that may connect to the server port"),
+    ConstraintSyntaxNewStringList("allowusers", "", "List of usernames who may execute requests from this server"),
+    ConstraintSyntaxNewBool("auditing", "true/false activate auditing of server connections", "false"),
+    ConstraintSyntaxNewString("bindtointerface", "", "IP of the interface to which the server should bind on multi-homed hosts", NULL),
+    ConstraintSyntaxNewString("cfruncommand", CF_PATHRANGE, "Path to the cf-agent command or cf-execd wrapper for remote execution", NULL),
+    ConstraintSyntaxNewInt("call_collect_interval", CF_VALRANGE, "The interval in minutes in between collect calls to the policy hub offering a tunnel for report collection (Enterprise)", NULL),
+    ConstraintSyntaxNewInt("collect_window", CF_VALRANGE, "A time in seconds that a collect-call tunnel remains open to a hub to attempt a report transfer before it is closed (Enterprise)", NULL),
+    ConstraintSyntaxNewBool("denybadclocks", "true/false accept connections from hosts with clocks that are out of sync", "true"),
+    ConstraintSyntaxNewStringList("denyconnects", "", "List of IPs or hostnames that may NOT connect to the server port"),
+    ConstraintSyntaxNewStringList("dynamicaddresses", "", "List of IPs or hostnames for which the IP/name binding is expected to change"),
+    ConstraintSyntaxNewBool("hostnamekeys", "true/false store keys using hostname lookup instead of IP addresses", "false"),
+    ConstraintSyntaxNewInt("keycacheTTL", CF_VALRANGE, "Maximum number of hours to hold public keys in the cache", "24"),
+    ConstraintSyntaxNewBool("logallconnections", "true/false causes the server to log all new connections to syslog", "false"),
+    ConstraintSyntaxNewBool("logencryptedtransfers", "true/false log all successful transfers required to be encrypted", "false"),
+    ConstraintSyntaxNewInt("maxconnections", CF_VALRANGE, "Maximum number of connections that will be accepted by cf-serverd","30 remote queries"),
+    ConstraintSyntaxNewInt("port", "1024,99999", "Default port for cfengine server", "5308"),
+    ConstraintSyntaxNewOption("serverfacility", CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"),
+    ConstraintSyntaxNewStringList("skipverify", "", "List of IPs or hostnames for which we expect no DNS binding and cannot verify"),
+    ConstraintSyntaxNewStringList("trustkeysfrom", "", "List of IPs from whom we accept public keys on trust"),
+    ConstraintSyntaxNewBool("listen", "true/false enable server deamon to listen on defined port", "true"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFM_CONTROLBODY[] =
 {
-    {"forgetrate", DATA_TYPE_REAL, "0,1", "Decimal fraction [0,1] weighting of new values over old in 2d-average computation",
-     "0.6"},
-    {"monitorfacility", DATA_TYPE_OPTION, CF_FACILITY, "Menu option for syslog facility", "LOG_USER"},
-    {"histograms", DATA_TYPE_OPTION, CF_BOOL, "Ignored, kept for backward compatibility", "true"},
-    {"tcpdump", DATA_TYPE_OPTION, CF_BOOL, "true/false use tcpdump if found", "false"},
-    {"tcpdumpcommand", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Path to the tcpdump command on this system"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewReal("forgetrate", "0,1", "Decimal fraction [0,1] weighting of new values over old in 2d-average computation", "0.6"),
+    ConstraintSyntaxNewOption("monitorfacility", CF_FACILITY, "Menu option for syslog facility", "LOG_USER"),
+    ConstraintSyntaxNewBool("histograms", "Ignored, kept for backward compatibility", "true"),
+    ConstraintSyntaxNewBool("tcpdump", "true/false use tcpdump if found", "false"),
+    ConstraintSyntaxNewString("tcpdumpcommand", CF_ABSPATHRANGE, "Path to the tcpdump command on this system", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFR_CONTROLBODY[] =
 {
-    {"hosts", DATA_TYPE_STRING_LIST, "", "List of host or IP addresses to attempt connection with"},
-    {"port", DATA_TYPE_INT, "1024,99999", "Default port for cfengine server", "5308"},
-    {"force_ipv4", DATA_TYPE_OPTION, CF_BOOL, "true/false force use of ipv4 in connection", "false"},
-    {"trustkey", DATA_TYPE_OPTION, CF_BOOL, "true/false automatically accept all keys on trust from servers", "false"},
-    {"encrypt", DATA_TYPE_OPTION, CF_BOOL, "true/false encrypt connections with servers", "false"},
-    {"background_children", DATA_TYPE_OPTION, CF_BOOL, "true/false parallelize connections to servers", "false"},
-    {"max_children", DATA_TYPE_INT, CF_VALRANGE, "Maximum number of simultaneous connections to attempt", "50 runagents"},
-    {"output_to_file", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to send collected output to file(s)", "false"},
-    {"output_directory", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Directory where the output is stored"},
-    {"timeout", DATA_TYPE_INT, "1,9999", "Connection timeout, sec"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("hosts", "", "List of host or IP addresses to attempt connection with"),
+    ConstraintSyntaxNewInt("port", "1024,99999", "Default port for cfengine server", "5308"),
+    ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 in connection", "false"),
+    ConstraintSyntaxNewBool("trustkey", "true/false automatically accept all keys on trust from servers", "false"),
+    ConstraintSyntaxNewBool("encrypt", "true/false encrypt connections with servers", "false"),
+    ConstraintSyntaxNewBool("background_children", "true/false parallelize connections to servers", "false"),
+    ConstraintSyntaxNewInt("max_children", CF_VALRANGE, "Maximum number of simultaneous connections to attempt", "50 runagents"),
+    ConstraintSyntaxNewBool("output_to_file", "true/false whether to send collected output to file(s)", "false"),
+    ConstraintSyntaxNewString("output_directory", CF_ABSPATHRANGE, "Directory where the output is stored", NULL),
+    ConstraintSyntaxNewInt("timeout", "1,9999", "Connection timeout, sec", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFEX_CONTROLBODY[] = /* enum cfexcontrol */
 {
-    {"splaytime", DATA_TYPE_INT, CF_VALRANGE, "Time in minutes to splay this host based on its name hash", "0"},
-    {"mailfrom", DATA_TYPE_STRING, ".*@.*", "Email-address cfengine mail appears to come from"},
-    {"mailto", DATA_TYPE_STRING, ".*@.*", "Email-address cfengine mail is sent to"},
-    {"smtpserver", DATA_TYPE_STRING, ".*", "Name or IP of a willing smtp server for sending email"},
-    {"mailmaxlines", DATA_TYPE_INT, "0,1000", "Maximum number of lines of output to send by email", "30"},
-    {"schedule", DATA_TYPE_STRING_LIST, "", "The class schedule used by cf-execd for activating cf-agent"},
-    {"executorfacility", DATA_TYPE_OPTION, CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"},
-    {"exec_command", DATA_TYPE_STRING, CF_ABSPATHRANGE,
-     "The full path and command to the executable run by default (overriding builtin)"},
-    {"agent_expireafter", DATA_TYPE_INT, "0,10080", "Maximum agent runtime (in minutes)", "10080"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewInt("splaytime", CF_VALRANGE, "Time in minutes to splay this host based on its name hash", "0"),
+    ConstraintSyntaxNewString("mailfrom", ".*@.*", "Email-address cfengine mail appears to come from", NULL),
+    ConstraintSyntaxNewString("mailto", ".*@.*", "Email-address cfengine mail is sent to", NULL),
+    ConstraintSyntaxNewString("smtpserver", ".*", "Name or IP of a willing smtp server for sending email", NULL),
+    ConstraintSyntaxNewInt("mailmaxlines", "0,1000", "Maximum number of lines of output to send by email", "30"),
+    ConstraintSyntaxNewStringList("schedule", "", "The class schedule used by cf-execd for activating cf-agent"),
+    ConstraintSyntaxNewOption("executorfacility", CF_FACILITY, "Menu option for syslog facility level", "LOG_USER"),
+    ConstraintSyntaxNewString("exec_command", CF_ABSPATHRANGE,"The full path and command to the executable run by default (overriding builtin)", NULL),
+    ConstraintSyntaxNewInt("agent_expireafter", "0,10080", "Maximum agent runtime (in minutes)", "10080"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFH_CONTROLBODY[] =  /* enum cfh_control */
 {
-    {"export_zenoss", DATA_TYPE_STRING, CF_PATHRANGE, "Generate report for Zenoss integration"},
-    {"exclude_hosts", DATA_TYPE_STRING_LIST, "", "A list of IP addresses of hosts to exclude from report collection"},
-    {"hub_schedule", DATA_TYPE_STRING_LIST, "", "The class schedule used by cf-hub for report collation"},
-    {"port", DATA_TYPE_INT, "1024,99999", "Default port for contacting hub nodes", "5308"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("export_zenoss", CF_PATHRANGE, "Generate report for Zenoss integration", NULL),
+    ConstraintSyntaxNewStringList("exclude_hosts", "", "A list of IP addresses of hosts to exclude from report collection"),
+    ConstraintSyntaxNewStringList("hub_schedule", "", "The class schedule used by cf-hub for report collation"),
+    ConstraintSyntaxNewInt("port", "1024,99999", "Default port for contacting hub nodes", "5308"),
+    ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 {
-    {"namespace", DATA_TYPE_STRING, CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("namespace", CF_IDRANGE, "Switch to a private namespace to protect current file from duplicate definitions", NULL),
+    ConstraintSyntaxNewNull()
 };
 
 /* This list is for checking free standing body lval => rval bindings */
@@ -413,14 +371,14 @@ const PromiseTypeSyntax CONTROL_BODIES[] =
 
 const ConstraintSyntax CF_COMMON_BODIES[] =
 {
-    {CF_TRANSACTION, DATA_TYPE_BODY, CF_TRANSACTION_BODY, "Output behaviour"},
-    {CF_DEFINECLASSES, DATA_TYPE_BODY, CF_DEFINECLASS_BODY, "Signalling behaviour"},
-    {"comment", DATA_TYPE_STRING, "", "A comment about this promise's real intention that follows through the program"},
-    {"depends_on", DATA_TYPE_STRING_LIST, "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"},
-    {"handle", DATA_TYPE_STRING, "", "A unique id-tag string for referring to this as a promisee elsewhere"},
-    {"ifvarclass", DATA_TYPE_STRING, "", "Extended classes ANDed with context"},
-    {"meta", DATA_TYPE_STRING_LIST, "", "User-data associated with policy, e.g. key=value strings"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBody(CF_TRANSACTION, CF_TRANSACTION_BODY, "Output behaviour"),
+    ConstraintSyntaxNewBody(CF_DEFINECLASSES, CF_DEFINECLASS_BODY, "Signalling behaviour"),
+    ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", NULL),
+    ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"),
+    ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", NULL),
+    ConstraintSyntaxNewString("ifvarclass", "", "Extended classes ANDed with context", NULL),
+    ConstraintSyntaxNewStringList("meta", "", "User-data associated with policy, e.g. key=value strings"),
+    ConstraintSyntaxNewNull()
 };
 
  /* This is where we place promise promise_types that apply

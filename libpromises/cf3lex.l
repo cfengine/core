@@ -233,12 +233,17 @@ promise_type   [a-zA-Z_]+:
                       }
 
 {promise_type}        {
+                          char *tmp = NULL;
                           size_t token_size = yyleng;
+
+                          tmp = xmalloc(yyleng + 1);
                           P.line_pos += token_size;
                           ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
                           P.offsets.last_promise_type_id = P.offsets.current - token_size;
-                          yytext[token_size - 1] = '\0';
-                          strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
+
+                          tmp = xstrdup(yytext);
+                          tmp[token_size - 1] = '\0';
+                          strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
 
                           if (P.currentclasses != NULL)
                           {
@@ -246,6 +251,7 @@ promise_type   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
 
+                          free(tmp);
                           return PROMISE_TYPE;
                       }
 

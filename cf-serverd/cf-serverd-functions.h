@@ -41,7 +41,6 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "xml_writer.h"
-#include "client_code.h"
 #include "pipes.h"
 
 void ThisAgentInit(void);

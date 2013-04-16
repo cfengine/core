@@ -24,6 +24,7 @@
 
 #include "cf-serverd-functions.h"
 
+#include "client_code.h"
 #include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"

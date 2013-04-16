@@ -29,6 +29,19 @@
 #include "generic_agent.h"
 
 #include "lastseen.h"
+#include "dir.h"
+#include "reporting.h"
+#include "scope.h"
+#include "files_copy.h"
+#include "files_interfaces.h"
+#include "files_hashes.h"
+#include "keyring.h"
+#include "env_context.h"
+#include "crypto.h"
+
+#ifdef HAVE_NOVA
+#include "license.h"
+#endif
 
 RSA* LoadPublicKey(const char* filename);
 char* GetPubkeyDigest(const char* pubkey);

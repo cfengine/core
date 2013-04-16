@@ -85,7 +85,7 @@ static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
 static void ShowDormant(void);
 static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
 
 /*****************************************************************************/
@@ -396,7 +396,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
         break;
 
     case ENVIRONMENT_STATE_DELETE:
-        DeleteVirtNetwork(ctx, CFVC[envtype], networks, a, pp);
+        DeleteVirtNetwork(ctx, CFVC[envtype], a, pp);
         break;
 
     default:
@@ -920,7 +920,7 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
 /*****************************************************************************/
 
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp)
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virNetworkPtr network;
     int ret = true;

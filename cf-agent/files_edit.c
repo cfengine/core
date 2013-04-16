@@ -91,8 +91,6 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
 void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
 {
-    Item *ip;
-
     EDIT_MODEL = false;
 
     if (DONTDO || (a.transaction.action == cfa_warn))

@@ -147,7 +147,7 @@ static int XmlAttributeCount(xmlNodePtr node);
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promise *parentp, EditContext *edcontext)
+int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
     enum editxmltypesequence type;
     PromiseType *sp;

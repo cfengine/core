@@ -56,7 +56,7 @@
 
 #include <assert.h>
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
+int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp)
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];

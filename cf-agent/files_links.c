@@ -39,7 +39,7 @@
 #define CF_MAXLINKLEVEL 4
 
 #if !defined(__MINGW32__)
-static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, Promise *pp);
+static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp);
 #endif
 static char *AbsLinkPath(const char *from, const char *relto);
 
@@ -47,7 +47,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 #ifdef __MINGW32__
 
-PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
     return PROMISE_RESULT_FAIL;
@@ -60,7 +60,7 @@ static bool EnforcePromise(enum cfopaction action)
     return ((!DONTDO) && (action != cfa_warn));
 }
 
-PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
@@ -186,7 +186,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
 /*****************************************************************************/
 
-PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char absto[CF_BUFSIZE];
     char expand[CF_BUFSIZE];
@@ -235,7 +235,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 
 /*****************************************************************************/
 
-PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char *sp, *commonto, *commonfrom;
     char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
@@ -311,7 +311,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
 /*****************************************************************************/
 
-PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char to[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat ssb, dsb;
@@ -460,7 +460,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
 /*****************************************************************************/
 
 #if !defined(__MINGW32__)
-static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, Promise *pp)
+static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp)
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {

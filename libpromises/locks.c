@@ -553,7 +553,7 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
 /* Digest length stored in md_len */
 }
 
-CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, const Promise *pp, int ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;

@@ -100,7 +100,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
 /* Level                                                                     */
 /*****************************************************************************/
 
-int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, Promise *parentp, EditContext *edcontext)
+int ScheduleEditLineOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext)
 {
     enum editlinetypesequence type;
     PromiseType *sp;

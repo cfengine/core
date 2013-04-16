@@ -34,13 +34,11 @@
 #include "mutex.h"
 #include "logging.h"
 #include "exec_tools.h"
-#include "cf-execd-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 # if defined(__MINGW32__)
 #  include "win_execd_pipe.h"
 # endif
-# include "mail-subject.h"
 #endif
 
 /*******************************************************************/
@@ -592,12 +590,12 @@ static void MailResult(const ExecConfig *config, char *file)
 
     if (anomaly)
     {
-        sprintf(vbuff, "Subject: %s **!! [%s/%s]\r\n", MailSubject(), config->fq_name, config->ip_address);
+        sprintf(vbuff, "Subject: **!! [%s/%s]\r\n", config->fq_name, config->ip_address);
         CfDebug("%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "Subject: %s [%s/%s]\r\n", MailSubject(), config->fq_name, config->ip_address);
+        sprintf(vbuff, "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
         CfDebug("%s", vbuff);
     }
 

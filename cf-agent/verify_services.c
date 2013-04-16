@@ -158,16 +158,6 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
-    // allow to start Cfengine windows executor without license
-#ifdef __MINGW32__
-
-    if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
-    {
-        return;
-    }
-
-#endif
-
     thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)

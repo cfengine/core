@@ -295,7 +295,7 @@ static void UpdatePromiseCounters(PromiseResult status, const Promise *pp, Trans
 
     case PROMISE_RESULT_NOOP:
         PR_KEPT++;
-        VAL_KEPT += tr.value_kept;
+        VAL_KEPT += tc.value_kept;
 
     case PROMISE_RESULT_WARN:
     case PROMISE_RESULT_TIMEOUT:

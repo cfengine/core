@@ -151,7 +151,7 @@ promise_type   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:bundle %d\n", P.line_pos);
                           return BUNDLE;
                       }
@@ -164,17 +164,16 @@ promise_type   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
                       }
 
 {id}                  {
-                          size_t token_length = strlen(yytext);
-                          P.offsets.last_id = P.offsets.current - token_length;
-                          P.line_pos += token_length;
+                          P.offsets.last_id = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:id %s %d\n", yytext, P.line_pos);
-                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          if (yyleng  > CF_MAXVARSIZE-1)
                           {
                               yyerror("identifier too long");
                           }
@@ -184,11 +183,10 @@ promise_type   [a-zA-Z_]+:
 
 
 {blockid}             {
-                          size_t token_length = strlen(yytext);
-                          P.offsets.last_id = P.offsets.current - token_length;
-                          P.line_pos += token_length;
+                          P.offsets.last_id = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:blockid %s %d\n", yytext, P.line_pos);
-                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          if (yyleng > CF_MAXVARSIZE-1)
                           {
                               yyerror("qualified identifier too long");
                           }
@@ -198,13 +196,13 @@ promise_type   [a-zA-Z_]+:
 
 
 {assign}              {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:assign %d\n", P.line_pos);
                           return ASSIGN;
                       }
 
 {arrow}               {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:arrow %d\n", P.line_pos);
                           return ARROW;
                       }
@@ -234,15 +232,14 @@ promise_type   [a-zA-Z_]+:
 
 {promise_type}        {
                           char *tmp = NULL;
-                          size_t token_size = yyleng;
 
                           tmp = xmalloc(yyleng + 1);
-                          P.line_pos += token_size;
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
-                          P.offsets.last_promise_type_id = P.offsets.current - token_size;
+                          P.offsets.last_promise_type_id = P.offsets.current - yyleng;
 
                           tmp = xstrdup(yytext);
-                          tmp[token_size - 1] = '\0';
+                          tmp[yyleng - 1] = '\0';
                           strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
 
                           if (P.currentclasses != NULL)
@@ -258,10 +255,9 @@ promise_type   [a-zA-Z_]+:
 {qstring}             {
                           char *tmp = NULL;
                           int less = 0;
-                          size_t token_length = strlen(yytext);
 
-                          P.offsets.last_string = P.offsets.current - token_length;
-                          P.line_pos += token_length;
+                          P.offsets.last_string = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
                           ParserDebug("\tL:qstring %s %d\n", yytext, P.line_pos);
 
                           for (char *c = yytext; *c; ++c)
@@ -272,7 +268,7 @@ promise_type   [a-zA-Z_]+:
                               }
                           }
 
-                          tmp = xmalloc(token_length + 1);
+                          tmp = xmalloc(yyleng + 1);
 
                           if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
                           {
@@ -293,7 +289,7 @@ promise_type   [a-zA-Z_]+:
 
 
 {nakedvar}            {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                           ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
@@ -325,7 +321,7 @@ promise_type   [a-zA-Z_]+:
 
 
 {space}+              {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                       }
 
 {comment}             {

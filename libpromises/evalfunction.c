@@ -2371,16 +2371,65 @@ static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
     long match_count = 0;
+    long total = 0;
     for (rp = (Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
         int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
+
+        CfDebug("%s() called: %s %s %s\n", fp->name, (char*) rp->item, found ? "matches" : "does not match", regex);
+
         if (invert ? !found : found)
         {
             RlistAppendScalar(&returnlist, rp->item);
             match_count++;
+
+            // exit early in case "some" is being called
+            if (0 == strcmp(fp->name, "some"))
+            {
+                break;
+            }
         }
+        // exit early in case "none" is being called
+        else if (0 == strcmp(fp->name, "every"))
+        {
+            total++; // we just 
+            break;
+        }
+
+        total++;
     }
 
+    bool contextmode = 0;
+    bool ret;
+    if (0 == strcmp(fp->name, "every"))
+    {
+        contextmode = 1;
+        ret = (match_count == total);
+    }
+    else if (0 == strcmp(fp->name, "none"))
+    {
+        contextmode = 1;
+        ret = (match_count == 0);
+    }
+    else if (0 == strcmp(fp->name, "some"))
+    {
+        contextmode = 1;
+        ret = (match_count > 0);
+    }
+    else
+    {
+        contextmode = -1;
+        ret = -1;
+        FatalError(ctx, "in built-in FnCall %s: unhandled filter() contextmode", fp->name);
+    }
+
+    if (contextmode)
+    {
+        CfDebug("%s() called: found %ld matches for %s; tested %ld\n", fp->name, match_count, regex, total);
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret ? "any" : "!any"), RVAL_TYPE_SCALAR } };
+    }
+
+    // else, return the list itself
     return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
 }
 
@@ -2465,6 +2514,19 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(rp->item), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    return filter(ctx,
+                  fp,
+                  RlistScalarValue(finalargs), // regex or string
+                  RlistScalarValue(finalargs->next), // list identifier
+                  1,
+                  0,
+                  99999999999);
 }
 
 /*********************************************************************/
@@ -5344,6 +5406,13 @@ FnCallArg NTH_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg EVERY_SOME_NONE_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression or string"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg USEREXISTS_ARGS[] =
 {
     {CF_ANYSTRING, DATA_TYPE_STRING, "User name or identifier"},
@@ -5382,6 +5451,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree,
      "Return the free space (in KB) available on the directory's current partition (0 if not found)"},
     {"escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string"},
+    {"every", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
+     "True if every element in the named list matches the given regular expression"},
     {"execresult", DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable"},
     {"fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed"},
     {"filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed"},
@@ -5449,6 +5520,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Return a list with each element modified by a pattern based $(this.k) and $(this.v)"},
     {"maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList,
      "Return a list with each element modified by a pattern based $(this)"},
+    {"none", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
+     "True if no element in the named list matches the given regular expression"},
     {"not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false"},
     {"now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation"},
     {"nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list arg1"},
@@ -5509,6 +5582,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"rrange", DATA_TYPE_REAL_RANGE, RRANGE_ARGS, &FnCallRRange, "Define a range of real numbers for cfengine internal use"},
     {"selectservers", DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers,
      "Select tcp servers which respond correctly to a query and return their number, set array of names"},
+    {"some", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
+     "True if an element in the named list matches the given regular expression"},
     {"splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass,
      "True if the first argument's time-slot has arrived, according to a policy in arg2"},
     {"splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString,

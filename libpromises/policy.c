@@ -2602,7 +2602,7 @@ static int VerifyConstraintName(const char *lval)
                     }
                     else if (bs[l].dtype == DATA_TYPE_BODY)
                     {
-                        bs2 = (ConstraintSyntax *) bs[l].range;
+                        bs2 = bs[l].range.body_type_syntax;
 
                         for (m = 0; bs2[m].lval != NULL; m++)
                         {
@@ -2803,7 +2803,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
     {
         if (strcmp(cp->lval, CF_CLASSBODY[i].lval) == 0)
         {
-            SyntaxTypeMatch err = CheckConstraintTypeMatch(cp->lval, cp->rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range, 0);
+            SyntaxTypeMatch err = CheckConstraintTypeMatch(cp->lval, cp->rval, CF_CLASSBODY[i].dtype, CF_CLASSBODY[i].range.validation_string, 0);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
                 return err;
@@ -2840,20 +2840,20 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                             }
                             else if (bs[l].dtype == DATA_TYPE_BODY)
                             {
-                                const ConstraintSyntax *bs2 = bs[l].range;
+                                const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax;
 
                                 for (size_t m = 0; bs2[m].lval != NULL; m++)
                                 {
                                     if (strcmp(cp->lval, bs2[m].lval) == 0)
                                     {
-                                        return CheckConstraintTypeMatch(cp->lval, cp->rval, bs2[m].dtype, (char *) (bs2[m].range), 0);
+                                        return CheckConstraintTypeMatch(cp->lval, cp->rval, bs2[m].dtype, bs2[m].range.validation_string, 0);
                                     }
                                 }
                             }
 
                             if (strcmp(cp->lval, bs[l].lval) == 0)
                             {
-                                return CheckConstraintTypeMatch(cp->lval, cp->rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                                return CheckConstraintTypeMatch(cp->lval, cp->rval, bs[l].dtype, bs[l].range.validation_string, 0);
                             }
                         }
                     }
@@ -2874,7 +2874,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
         if (strcmp(cp->lval, CF_COMMON_BODIES[i].lval) == 0)
         {
             CfDebug("Found a match for lval %s in the common constraint attributes\n", cp->lval);
-            return CheckConstraintTypeMatch(cp->lval, cp->rval, CF_COMMON_BODIES[i].dtype, (char *) (CF_COMMON_BODIES[i].range), 0);
+            return CheckConstraintTypeMatch(cp->lval, cp->rval, CF_COMMON_BODIES[i].dtype, CF_COMMON_BODIES[i].range.validation_string, 0);
         }
     }
 

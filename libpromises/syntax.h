@@ -81,27 +81,27 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
 
 
 
-#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, NULL }
-#define ConstraintSyntaxNewBool(lval, description, default_value) { lval, DATA_TYPE_OPTION, CF_BOOL, description, default_value }
+#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL }
+#define ConstraintSyntaxNewBool(lval, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, default_value }
 
-#define ConstraintSyntaxNewOption(lval, range, description, default_value) { lval, DATA_TYPE_OPTION, range, description, default_value }
-#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, item_range, description, NULL }
+#define ConstraintSyntaxNewOption(lval, options, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description, default_value }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, NULL }
 
-#define ConstraintSyntaxNewString(lval, regex, description, default_value) { lval, DATA_TYPE_STRING, regex, description, default_value }
-#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, item_range, description, NULL }
+#define ConstraintSyntaxNewString(lval, regex, description, default_value) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description, default_value }
+#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, NULL }
 
-#define ConstraintSyntaxNewInt(lval, range, description, default_value) { lval, DATA_TYPE_INT, range, description, default_value }
-#define ConstraintSyntaxNewIntRange(lval, range, description, default_value ) { lval , DATA_TYPE_INT_RANGE, range, description, default_value }
-#define ConstraintSyntaxNewIntList(lval, description) { lval, DATA_TYPE_INT_LIST, CF_INTRANGE, description }
+#define ConstraintSyntaxNewInt(lval, int_range, description, default_value) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description, default_value }
+#define ConstraintSyntaxNewIntRange(lval, int_range, description, default_value ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, default_value }
+#define ConstraintSyntaxNewIntList(lval, description) { lval, DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description }
 
-#define ConstraintSyntaxNewReal(lval, range, description, default_value) { lval, DATA_TYPE_REAL, range, description, default_value }
-#define ConstraintSyntaxNewRealList(lval, description) { lval, DATA_TYPE_REAL_LIST, CF_REALRANGE, description }
+#define ConstraintSyntaxNewReal(lval, real_range, description, default_value) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description, default_value }
+#define ConstraintSyntaxNewRealList(lval, description) { lval, DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description }
 
-#define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, CF_CLASSRANGE, description }
-#define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, CF_CLASSRANGE, description, default_value }
+#define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description }
+#define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, default_value }
 
-#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, body_syntax, description }
-#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, CF_BUNDLE, description }
+#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description }
+#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description }
 
 
 #define ConstraintSetSyntaxNew(constraints, validation_fn) { constraints, validation_fn }

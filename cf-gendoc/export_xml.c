@@ -66,7 +66,7 @@ static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
 static void XmlExportControl(Writer *writer, PromiseTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs);
-static void XmlExportType(Writer *writer, DataType dtype, const void *range);
+static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax);
 
 /*****************************************************************************/
 
@@ -350,7 +350,7 @@ void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
     XmlStartTag(writer, XMLTAG_CONSTRAINT, 1, constraint_name_attr);
 
 /* EXPORT TYPE */
-    XmlExportType(writer, bs->dtype, bs->range);
+    XmlExportType(writer, bs);
 
 /* XML ELEMENT -- DEFAULT-VALUE */
     if (bs->default_value != NULL)
@@ -388,20 +388,20 @@ void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportType(Writer *writer, DataType dtype, const void *range)
+static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax)
 {
     Rlist *list = NULL;
     Rlist *rp = NULL;
 
 /* START XML ELEMENT -- TYPE */
-    XmlAttribute type_name_attr = { "name", CF_DATATYPES[dtype] };
+    XmlAttribute type_name_attr = { "name", CF_DATATYPES[constraint_syntax->dtype] };
     XmlStartTag(writer, XMLTAG_TYPE, 1, type_name_attr);
 
-    switch (dtype)
+    switch (constraint_syntax->dtype)
     {
     case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, (ConstraintSyntax *) range);
+        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax);
         break;
 
     case DATA_TYPE_INT:
@@ -410,7 +410,7 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
     case DATA_TYPE_REAL_LIST:
     case DATA_TYPE_INT_RANGE:
     case DATA_TYPE_REAL_RANGE:
-        if (range != NULL)
+        if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- RANGE */
             XmlStartTag(writer, XMLTAG_RANGE, 0);
@@ -418,7 +418,7 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
             /* XML ELEMENT -- MIN/MAX */
             int i = 0;
 
-            list = RlistFromSplitString((char *) range, ',');
+            list = RlistFromSplitString(constraint_syntax->range.validation_string, ',');
             for (rp = list; rp != NULL; rp = rp->next, i++)
             {
                 if (i == 0)
@@ -440,13 +440,13 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
 
     case DATA_TYPE_OPTION:
     case DATA_TYPE_OPTION_LIST:
-        if (range != NULL)
+        if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- OPTIONS */
             XmlStartTag(writer, XMLTAG_OPTIONS, 0);
 
             /* XML ELEMENT -- VALUE */
-            list = RlistFromSplitString((char *) range, ',');
+            list = RlistFromSplitString(constraint_syntax->range.validation_string, ',');
             for (rp = list; rp != NULL; rp = rp->next)
             {
                 XmlTag(writer, XMLTAG_VALUE, RlistScalarValue(rp), 0);
@@ -464,13 +464,13 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
         /* XML ELEMENT -- ACCEPTED-VALUES */
-        if (strlen((char *) range) == 0)
+        if (strlen(constraint_syntax->range.validation_string) == 0)
         {
             XmlTag(writer, XMLTAG_ACCEPTEDVALS, "arbitrary string", 0);
         }
         else
         {
-            XmlTag(writer, XMLTAG_ACCEPTEDVALS, (char *) range, 0);
+            XmlTag(writer, XMLTAG_ACCEPTEDVALS, constraint_syntax->range.validation_string, 0);
         }
 
         break;

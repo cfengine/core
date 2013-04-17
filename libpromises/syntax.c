@@ -93,7 +93,7 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
                 if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
                 {
-                    return constraint_syntax.range;
+                    return constraint_syntax.range.body_type_syntax;
                 }
             }
         }
@@ -134,7 +134,7 @@ DataType ExpectedDataType(const char *lvalname)
                 continue;
             }
 
-            for (k = 0; bs[k].range != NULL; k++)
+            for (k = 0; bs[k].lval != NULL; k++)
             {
                 if (strcmp(lvalname, bs[k].lval) == 0)
                 {
@@ -142,11 +142,11 @@ DataType ExpectedDataType(const char *lvalname)
                 }
             }
 
-            for (k = 0; bs[k].range != NULL; k++)
+            for (k = 0; bs[k].lval != NULL; k++)
             {
                 if (bs[k].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = (const ConstraintSyntax *) (bs[k].range);
+                    bs2 = bs[k].range.body_type_syntax;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -920,14 +920,14 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
 
     for (i = 0; attributes[i].lval != NULL; i++)
     {
-        if (attributes[i].range == CF_BUNDLE)
+        if (attributes[i].range.validation_string == CF_BUNDLE)
         {
             /* TODO: must handle edit_line somehow */
             continue;
         }
         else if (attributes[i].dtype == DATA_TYPE_BODY)
         {
-            JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const ConstraintSyntax *) attributes[i].range);
+            JsonElement *json_attributes = ExportAttributesSyntaxAsJson(attributes[i].range.body_type_syntax);
 
             JsonObjectAppendObject(json, attributes[i].lval, json_attributes);
         }
@@ -937,7 +937,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
 
             JsonObjectAppendString(attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
 
-            if (strlen(attributes[i].range) == 0)
+            if (strlen(attributes[i].range.validation_string) == 0)
             {
                 JsonObjectAppendString(attribute, "pcre-range", ".*");
             }
@@ -947,7 +947,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
                 char options_buffer[CF_BUFSIZE];
                 char *option = NULL;
 
-                strcpy(options_buffer, attributes[i].range);
+                strcpy(options_buffer, attributes[i].range.validation_string);
                 for (option = strtok(options_buffer, ","); option != NULL; option = strtok(NULL, ","))
                 {
                     JsonArrayAppendString(options, option);
@@ -957,7 +957,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
             }
             else
             {
-                char *pcre_range = PCREStringToJsonString(attributes[i].range);
+                char *pcre_range = PCREStringToJsonString(attributes[i].range.validation_string);
 
                 JsonObjectAppendString(attribute, "pcre-range", pcre_range);
             }

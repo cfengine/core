@@ -1055,7 +1055,7 @@ static bool LvalWantsBody(char *stype, char *lval)
                 continue;
             }
 
-            for (l = 0; bs[l].range != NULL; l++)
+            for (l = 0; bs[l].lval != NULL; l++)
             {
                 if (strcmp(bs[l].lval, lval) == 0)
                 {
@@ -1120,7 +1120,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                     }
                     else
                     {
-                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, (char *) (bs[l].range), 0);
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, bs[l].range.validation_string, 0);
                     }
                 }
             }
@@ -1148,11 +1148,11 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
             CfDebug("\nExamining promise_type %s\n", ss[j].promise_type);
 
-            for (l = 0; bs[l].range != NULL; l++)
+            for (l = 0; bs[l].lval != NULL; l++)
             {
                 if (bs[l].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = (const ConstraintSyntax *) (bs[l].range);
+                    bs2 = bs[l].range.body_type_syntax;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -1174,7 +1174,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                         if (strcmp(lval, bs2[k].lval) == 0)
                         {
                             CfDebug("Matched\n");
-                            return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, (char *) (bs2[k].range), 0);
+                            return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, bs2[k].range.validation_string, 0);
                         }
                     }
                 }
@@ -1230,8 +1230,7 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
                     if (bs[l].dtype != DATA_TYPE_BODY &&
                         bs[l].dtype != DATA_TYPE_BUNDLE)
                     {
-                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype,
-                                                        (char *) bs[l].range, 0);
+                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, bs[l].range.validation_string, 0);
                     }
                 }
             }

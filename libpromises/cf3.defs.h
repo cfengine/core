@@ -711,11 +711,17 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
-typedef struct
+typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
+
+typedef struct ConstraintSyntax_
 {
     const char *lval;
     const DataType dtype;
-    const void *range;          /* either char or BodySyntax * */
+    union
+    {
+        const char *validation_string;
+        const struct ConstraintSyntax_ *body_type_syntax;
+    } range;
     const char *description;
     const char *default_value;
 } ConstraintSyntax;
@@ -731,11 +737,11 @@ typedef struct
  */
 typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
-typedef struct
+struct ConstraintSetSyntax_
 {
     const ConstraintSyntax *constraints;
     ParseTreeCheckFn parse_tree_check;
-} ConstraintSetSyntax;
+};
 
 typedef struct
 {
@@ -743,6 +749,12 @@ typedef struct
     const char *promise_type;
     ConstraintSetSyntax constraint_set;
 } PromiseTypeSyntax;
+
+typedef struct
+{
+    const char *body_type;
+    ConstraintSetSyntax constraint_set;
+} BodyTypeSyntax;
 
 /*************************************************************************/
 

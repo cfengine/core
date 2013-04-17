@@ -259,7 +259,7 @@ DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const 
 {
     int i = 0;
 
-    for (i = 0; body_syntax[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].lval != NULL; i++)
     {
         if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {

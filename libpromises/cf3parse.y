@@ -451,7 +451,20 @@ promiser:              QSTRING
                      | error
                        {
                           INSTALL_SKIP=true;
-                          ParseError("Expected promiser id, got:%s", yytext);
+                          ParserDebug("P:promiser:qstring::error yychar = %d\n", yychar);
+
+                          if ( yychar == BUNDLE || yychar == BODY || yychar == YYEOF )
+                          {
+                             ParseError("Expected '}', got:%s", yytext);
+                             /*
+                             YYABORT;
+                             */
+                          }
+                          else
+                          {
+                             ParseError("Expected promiser id, got:%s", yytext);
+                          }
+
                           yyclearin;
                        }
 
@@ -464,6 +477,7 @@ promiser_constraints_decl:      /* empty */
                                    /*
                                     * Based on next token id display right error message
                                    */
+                                   ParserDebug("P:constraints_decl:error yychar = %d\n", yychar);
                                    if ( yychar == IDSYNTAX )
                                    {
                                        ParseError("Check previuos line, Expected ',', got:%s", yytext);

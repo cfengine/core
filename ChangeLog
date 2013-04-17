@@ -9,6 +9,9 @@
          The subject will only contain "[fqname/ipaddress]" instead of "communnity/nova [fqname/ipaddress]"
          Please change your email filters accordingly if necessary.
 
+       - "outputs" promise type is retired. Their semantics was not clear, and the functionality
+         is better suited for control body setting, not a promise.
+
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
 

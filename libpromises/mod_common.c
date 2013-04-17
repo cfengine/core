@@ -345,18 +345,18 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 const PromiseTypeSyntax CONTROL_BODIES[] =
 {
-    {CF_COMMONC, "control", { CFG_CONTROLBODY, NULL } },
-    {CF_AGENTC, "control", { CFA_CONTROLBODY, NULL } },
-    {CF_SERVERC, "control", { CFS_CONTROLBODY, NULL } },
-    {CF_MONITORC, "control", { CFM_CONTROLBODY, NULL } },
-    {CF_RUNC, "control", { CFR_CONTROLBODY, NULL } },
-    {CF_EXECC, "control", { CFEX_CONTROLBODY, NULL } },
-    {CF_HUBC, "control", { CFH_CONTROLBODY, NULL } },
-    {"file", "control", { CFFILE_CONTROLBODY, NULL } },
+    PromiseTypeSyntaxNew(CF_COMMONC, "control", ConstraintSetSyntaxNew(CFG_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_AGENTC, "control", ConstraintSetSyntaxNew(CFA_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_SERVERC, "control", ConstraintSetSyntaxNew(CFS_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_MONITORC, "control", ConstraintSetSyntaxNew(CFM_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_RUNC, "control", ConstraintSetSyntaxNew(CFR_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_EXECC, "control", ConstraintSetSyntaxNew(CFEX_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew(CF_HUBC, "control", ConstraintSetSyntaxNew(CFH_CONTROLBODY, NULL)),
+    PromiseTypeSyntaxNew("file", "control", ConstraintSetSyntaxNew(CFFILE_CONTROLBODY, NULL)),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
-    {NULL, NULL, { NULL, NULL } }
+    PromiseTypeSyntaxNewNull()
 };
 
 /*********************************************************/
@@ -387,13 +387,13 @@ const ConstraintSyntax CF_COMMON_BODIES[] =
 const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
-    {"*", "classes", { CF_CLASSBODY, &ClassesParseTreeCheck } },
-    {"*", "defaults", { CF_DEFAULTSBODY, NULL } },
-    {"*", "meta", { CF_METABODY, NULL } },
-    {"*", "reports", { CF_REPORT_BODIES, NULL } },
-    {"*", "vars", { CF_VARBODY, &VarsParseTreeCheck }},
-    {"*", "*", { CF_COMMON_BODIES, NULL } },
-    {NULL, NULL, { NULL, NULL } }
+    PromiseTypeSyntaxNew("*", "classes", ConstraintSetSyntaxNew(CF_CLASSBODY, &ClassesParseTreeCheck)),
+    PromiseTypeSyntaxNew("*", "defaults", ConstraintSetSyntaxNew(CF_DEFAULTSBODY, NULL)),
+    PromiseTypeSyntaxNew("*", "meta", ConstraintSetSyntaxNew(CF_METABODY, NULL)),
+    PromiseTypeSyntaxNew("*", "reports", ConstraintSetSyntaxNew(CF_REPORT_BODIES, NULL)),
+    PromiseTypeSyntaxNew("*", "vars", ConstraintSetSyntaxNew(CF_VARBODY, &VarsParseTreeCheck)),
+    PromiseTypeSyntaxNew("*", "*", ConstraintSetSyntaxNew(CF_COMMON_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };
 
 /*********************************************************/

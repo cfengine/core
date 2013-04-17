@@ -68,6 +68,6 @@ static const ConstraintSyntax CF_PROCESS_BODIES[] =
 
 const PromiseTypeSyntax CF_PROCESS_PROMISE_TYPES[] =
 {
-    {"agent", "processes", { CF_PROCESS_BODIES, NULL } },
-    {NULL, NULL, { NULL, NULL } },
+    PromiseTypeSyntaxNew("agent", "processes", ConstraintSetSyntaxNew(CF_PROCESS_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

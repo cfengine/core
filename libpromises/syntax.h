@@ -104,6 +104,12 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
 #define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, CF_BUNDLE, description }
 
 
+#define ConstraintSetSyntaxNew(constraints, validation_fn) { constraints, validation_fn }
+
+
+#define PromiseTypeSyntaxNew(agent_type, promise_type, constraint_set) { agent_type, promise_type, constraint_set }
+#define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, ConstraintSetSyntaxNew(NULL, NULL))
+
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);
 

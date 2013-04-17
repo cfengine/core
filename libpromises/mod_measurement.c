@@ -50,6 +50,6 @@ static const ConstraintSyntax CF_MEASURE_BODIES[] =
 
 const PromiseTypeSyntax CF_MEASUREMENT_PROMISE_TYPES[] =
 {
-    {"monitor", "measurements", { CF_MEASURE_BODIES, NULL } },
-    { NULL, NULL, { NULL, NULL } }
+    PromiseTypeSyntaxNew("monitor", "measurements", ConstraintSetSyntaxNew(CF_MEASURE_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

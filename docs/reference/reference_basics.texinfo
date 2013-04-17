@@ -1895,6 +1895,11 @@ vars:
 Array variables are written with @samp{[} and @samp{]} brackets, e.g.
 
 @verbatim
+body common control
+
+{ 
+  bundlesequence => { example }; 
+}
 
 bundle agent example
 
@@ -1926,6 +1931,11 @@ Thus one could have written the example above in the form of the
 following example. Note, too, that the use of @code{getindices} avoids the earlier poor practice of repeating the enumeration of key names, and instead uses the better strategy of automatically deriving them.
 
 @verbatim
+body common control
+
+{ 
+  bundlesequence => { example }; 
+}
 
 bundle agent example
 
@@ -1934,7 +1944,7 @@ vars:
 
   "array[cf-monitord]" string => "The monitor";
   "array[cf-serverd]" string => "The server";
-  "array[cf-exced]" string => "The executor, not executioner";
+  "array[cf-execd]" string => "The executor, not executioner";
 
   "component" slist => getindices("array");
 

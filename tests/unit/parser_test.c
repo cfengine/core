@@ -137,13 +137,27 @@ void test_body_selection_forgot_semicolon(void)
     assert_false(LoadPolicy("body_selection_forgot_semicolon.cf"));
 }
 
-
 void test_body_selection_unknown_selection_id(void)
 {
     /* 
      * FIXME function to test this is not yet implemented
     */
     assert_true(LoadPolicy("body_selection_unknown_selection_id.cf"));
+}
+
+void test_body_body_forget_cb_eof(void)
+{
+    assert_false(LoadPolicy("body_body_forget_cb_eof.cf"));
+}
+
+void test_body_body_forget_cb_body(void)
+{
+    assert_false(LoadPolicy("body_body_forget_cb_body.cf"));
+}
+
+void test_body_body_forget_cb_bundle(void)
+{
+    assert_false(LoadPolicy("body_body_forget_cb_bundle.cf"));
 }
 
 int main()
@@ -176,6 +190,9 @@ int main()
         unit_test(test_body_selection_wrong_token),
         unit_test(test_body_selection_forgot_semicolon),
         unit_test(test_body_selection_unknown_selection_id),
+        unit_test(test_body_body_forget_cb_eof),
+        unit_test(test_body_body_forget_cb_body),
+        unit_test(test_body_body_forget_cb_bundle),
 
         unit_test(test_promise_promiser_nonscalar),
 

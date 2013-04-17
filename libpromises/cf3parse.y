@@ -716,9 +716,21 @@ selection_id:          IDSYNTAX
                        }
                      | error
                        {
-                           yyclearin;
-                           INSTALL_SKIP=true;
-                           ParseError("Expected selection id, wrong input:%s", yytext);
+                          ParserDebug("P:selection_id:idsyntax:error yychar = %d\n", yychar);
+
+                          if ( yychar == BUNDLE || yychar == BODY || yychar == YYEOF )
+                          {
+                             ParseError("Expected '}', got:%s", yytext);
+                             /*
+                             YYABORT;
+                             */
+                          }
+                          else
+                          {
+                             ParseError("Expected selection id, got:%s", yytext);
+                          }
+
+                          yyclearin;
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

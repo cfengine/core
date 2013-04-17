@@ -1898,7 +1898,7 @@ Array variables are written with @samp{[} and @samp{]} brackets, e.g.
 body common control
 
 { 
-  bundlesequence => { example }; 
+  bundlesequence => { "example" }; 
 }
 
 bundle agent example
@@ -1934,7 +1934,7 @@ following example. Note, too, that the use of @code{getindices} avoids the earli
 body common control
 
 { 
-  bundlesequence => { example }; 
+  bundlesequence => { "example" }; 
 }
 
 bundle agent example
@@ -2365,6 +2365,30 @@ so in the @samp{C_comment} body, they do not refer to the filename components,
 but instead to the hash-commented line in the @samp{replace_patterns} promise.
 
 @verbatim
+###########################################################
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+
+bundle agent example
+
+{
+vars:
+
+  "file" string => "/tmp/test.cfengine3";
+
+files:
+  "${file}"
+    create    => "true",
+    edit_line => myedit("test_parameter");
+} 
+
 
 bundle edit_line myedit(parameter)
   {
@@ -2409,7 +2433,7 @@ select_end => "\[.*\]";
 
 @end verbatim
 
-Try this example on the file
+Put this example in the file /tmp/test.cfengine3
 @verbatim
 [First section]
 
@@ -2448,7 +2472,7 @@ six
 seven
 eleven
 
-private edit variable is second backref: test
+private edit variable is test_parameter
 @end verbatim
 
 @menu

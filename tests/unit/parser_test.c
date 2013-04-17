@@ -79,7 +79,7 @@ void test_bundle_body_promiser_statement_missing_assign(void)
     assert_false(LoadPolicy("bundle_body_promiser_statement_missing_assign.cf"));
 }
 
-void test_bundle_body_promise_missing_arrow(void)
+void test_bundle_body_promisee_missing_arrow(void)
 {
     assert_false(LoadPolicy("bundle_body_promise_missing_arrow.cf"));
 }
@@ -110,6 +110,21 @@ void test_bundle_body_promiser_forgot_colon(void)
 void test_bundle_body_promisee_no_colon_allowed(void)
 {
     assert_false(LoadPolicy("bundle_body_promisee_no_colon_allowed.cf"));
+}
+
+void test_bundle_body_forget_cb_eof(void)
+{
+    assert_false(LoadPolicy("bundle_body_forget_cb_eof.cf"));
+}
+
+void test_bundle_body_forget_cb_body(void)
+{
+    assert_false(LoadPolicy("bundle_body_forget_cb_body.cf"));
+}
+
+void test_bundle_body_forget_cb_bundle(void)
+{
+    assert_false(LoadPolicy("bundle_body_forget_cb_bundle.cf"));
 }
 
 void test_body_selection_wrong_token(void)
@@ -148,11 +163,14 @@ int main()
         unit_test(test_bundle_body_forgot_semicolon),
         unit_test(test_bundle_body_promiser_statement_contains_colon),
         unit_test(test_bundle_body_promiser_statement_missing_assign),
-        unit_test(test_bundle_body_promise_missing_arrow),
+        unit_test(test_bundle_body_promisee_missing_arrow),
         unit_test(test_bundle_body_promiser_wrong_constraint_token),
         unit_test(test_bundle_body_promiser_unknown_constraint_id),
         unit_test(test_bundle_body_promiser_forgot_colon),
         unit_test(test_bundle_body_promisee_no_colon_allowed),
+        unit_test(test_bundle_body_forget_cb_eof),
+        unit_test(test_bundle_body_forget_cb_body),
+        unit_test(test_bundle_body_forget_cb_bundle),
 
         unit_test(test_body_invalid_type),
         unit_test(test_body_selection_wrong_token),

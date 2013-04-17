@@ -4,7 +4,7 @@ bundle agent foo
 vars:
 
     debian::
-        "HvB" - { "@(stakeholders[$(service)])" } ,
+        "HvB" - { "@(stakeholders[$(service)])" }
             comment => "foobar";
 
 }

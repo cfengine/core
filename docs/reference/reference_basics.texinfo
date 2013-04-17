@@ -915,7 +915,6 @@ reports:
 body contain standard
 
 {
-exec_owner => "mark";
 useshell => "true";
 }
 
@@ -1012,9 +1011,7 @@ by the type "common". You can view this output file in a suitable web browser
 to see exactly what CFEngine has understood by the configuration.
 
 
-Now that you have verified it, you can execute it. To run this example you need
-to change the username `mark' to your own, or obtain root privileges to change
-to another user. 
+Now that you have verified it, you can execute it. 
 The non-verbose output of the script when run in the CFEngine 3
 directory looks something like this:
 

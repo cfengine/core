@@ -148,13 +148,13 @@ bodytype_values:       typeid
                        {
                            if (!BodySyntaxLookup(P.blocktype))
                            {
-                               ParseError("Unknown body type: %s", P.blocktype);
+                               ParseError("Unknown body type: '%s'", P.blocktype);
                            }
                        }
                      | error
                        {
                            yyclearin;
-                           ParseError("Expected body type, wrong input: %s", yytext);
+                           ParseError("Expected body type, wrong input: '%s'", yytext);
                        }
 
 bodyid:                bodyid_values
@@ -166,7 +166,7 @@ bodyid_values:         blockid
                      | error
                        {
                            yyclearin;
-                           ParseError("Expected body id, wrong input:%s", yytext);
+                           ParseError("Expected body id, wrong input: '%s'", yytext);
                            INSTALL_SKIP = true;
                        }
 
@@ -572,9 +572,12 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser, P.currentid);
 
-                           if (!ConstraintTypeCheck(P.currenttype, P.currentid))
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                           assert(promise_type_syntax);
+
+                           if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
                            {
-                               ParseError("Unknown attribute:%s for promise type: %s", P.currentid, P.currenttype);
+                               ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
                                INSTALL_SKIP=true;
                            }
 

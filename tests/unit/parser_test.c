@@ -91,10 +91,17 @@ void test_bundle_body_promiser_wrong_constraint_token(void)
 
 void test_bundle_body_promiser_unknown_constraint_id(void)
 {
-    /* 
-     * FIXME function to test this is not yet implemented
-    */
-    assert_true(LoadPolicy("bundle_body_promiser_unknown_constraint_id.cf"));
+    assert_false(LoadPolicy("bundle_body_promiser_unknown_constraint_id.cf"));
+}
+
+void test_body_edit_line_common_constraints(void)
+{
+    assert_true(LoadPolicy("body_edit_line_common_constraints.cf"));
+}
+
+void test_body_edit_xml_common_constraints(void)
+{
+    assert_true(LoadPolicy("body_edit_xml_common_constraints.cf"));
 }
 
 void test_promise_promiser_nonscalar(void)
@@ -171,6 +178,8 @@ int main()
         unit_test(test_bundle_body_forget_cb_eof),
         unit_test(test_bundle_body_forget_cb_body),
         unit_test(test_bundle_body_forget_cb_bundle),
+        unit_test(test_body_edit_line_common_constraints),
+        unit_test(test_body_edit_xml_common_constraints),
 
         unit_test(test_body_invalid_type),
         unit_test(test_body_selection_wrong_token),

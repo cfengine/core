@@ -68,7 +68,8 @@ check_PROGRAMS = \
 	var_expressions_test \
 	process_terminate_unix_test \
 	exec-config-test \
-	generic_agent_test
+	generic_agent_test \
+	syntax_test
 
 #	ipaddress_test
 

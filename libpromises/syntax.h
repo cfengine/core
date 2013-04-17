@@ -32,6 +32,11 @@
 
 #include <stdio.h>
 
+/*
+ * WARNING: This file is in need of serious cleanup.
+ */
+
+
 typedef enum
 {
     SYNTAX_TYPE_MATCH_OK,
@@ -72,12 +77,16 @@ DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);
 
+const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
+
 /**
  * @brief An array of ConstraintSyntax for the given body_type
  * @param body_type Type of body, e.g. 'contain'
  * @return NULL if not found
  */
 const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
+
+
 
 
 

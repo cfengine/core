@@ -319,14 +319,6 @@ static void test_util_qualified_name_components(void)
     }
 }
 
-static void test_constraint_lval_invalid(void)
-{
-    Seq *errs = LoadAndCheck("constraint_lval_invalid.cf");
-    assert_int_equal(1, errs->length);
-
-    SeqDestroy(errs);
-}
-
 static void test_promiser_empty_varref(void)
 {
     Seq *errs = LoadAndCheck("promiser_empty_varref.cf");
@@ -363,7 +355,6 @@ int main()
         unit_test(test_util_bundle_qualified_name),
         unit_test(test_util_qualified_name_components),
 
-        unit_test(test_constraint_lval_invalid),
         unit_test(test_constraint_comment_nonscalar),
 
         unit_test(test_promiser_empty_varref)

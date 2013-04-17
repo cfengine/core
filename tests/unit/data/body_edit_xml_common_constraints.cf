@@ -1,0 +1,6 @@
+bundle edit_xml test
+{
+build_xpath:
+    "foo"
+       select_xpath => "abc";
+}

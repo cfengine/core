@@ -1,0 +1,6 @@
+bundle edit_line test
+{
+delete_lines:
+        "abc"
+            select_region => test_select;
+}

@@ -67,16 +67,85 @@ const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const 
 
         for (int j = 0; syntax[j].bundle_type != NULL; j++)
         {
-            if (StringSafeEqual(promise_type_name, syntax[j].promise_type) &&
-                    (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
-                     StringSafeEqual("*", syntax[j].bundle_type)))
+            if (strcmp(bundle_type, syntax[j].bundle_type) == 0)
             {
-                return &syntax[j];
+                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
+                {
+                    return &syntax[j];
+                }
+            }
+            else if (strcmp("*", syntax[j].bundle_type) == 0)
+            {
+                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
+                {
+                    return &syntax[j];
+                }
             }
         }
     }
 
     return NULL;
+}
+
+static const ConstraintSyntax *GetCommonConstraint(const char *lval)
+{
+    for (int i = 0; CF_COMMON_PROMISE_TYPES[i].promise_type; i++)
+    {
+        const PromiseTypeSyntax promise_type_syntax = CF_COMMON_PROMISE_TYPES[i];
+
+        for (int j = 0; promise_type_syntax.constraint_set.constraints[j].lval; j++)
+        {
+            if (strcmp(promise_type_syntax.constraint_set.constraints[j].lval, lval) == 0)
+            {
+                return &promise_type_syntax.constraint_set.constraints[j];
+            }
+        }
+    }
+
+    return NULL;
+}
+
+static const ConstraintSyntax *GetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval)
+{
+    for (int j = 0; body_syntax[j].lval; j++)
+    {
+        if (strcmp(body_syntax[j].lval, lval) == 0)
+        {
+            return &body_syntax[j];
+        }
+    }
+    return NULL;
+}
+
+const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval)
+{
+    for (int i = 0; promise_type_syntax->constraint_set.constraints[i].lval; i++)
+    {
+        if (strcmp(promise_type_syntax->constraint_set.constraints[i].lval, lval) == 0)
+        {
+            return &promise_type_syntax->constraint_set.constraints[i];
+        }
+    }
+
+    const ConstraintSyntax *constraint_syntax = NULL;
+    if (strcmp("edit_line", promise_type_syntax->bundle_type) == 0)
+    {
+        constraint_syntax = GetConstraintSyntax(CF_COMMON_EDITBODIES, lval);
+        if (constraint_syntax)
+        {
+            return constraint_syntax;
+        }
+    }
+    else if (strcmp("edit_xml", promise_type_syntax->bundle_type) == 0)
+    {
+        constraint_syntax = GetConstraintSyntax(CF_COMMON_XMLBODIES, lval);
+        if (constraint_syntax)
+        {
+            return constraint_syntax;
+        }
+    }
+
+    return GetCommonConstraint(lval);
 }
 
 const ConstraintSyntax *BodySyntaxLookup(const char *body_type)

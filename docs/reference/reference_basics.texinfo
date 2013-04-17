@@ -833,7 +833,7 @@ bundle agent test
 {
 reports:
 
- Yr2009::
+ cfengine::
     "Hello world";
 }
 

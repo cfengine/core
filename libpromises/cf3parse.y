@@ -1006,8 +1006,6 @@ static void DebugBanner(const char *s)
 
 static int RelevantBundle(const char *agent, const char *blocktype)
 {
-    Item *ip;
-
     if ((strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0) || (strcmp(CF_COMMONC, blocktype) == 0))
     {
         return true;
@@ -1015,7 +1013,7 @@ static int RelevantBundle(const char *agent, const char *blocktype)
 
 /* Here are some additional bundle types handled by cfAgent */
 
-    ip = SplitString("edit_line,edit_xml", ',');
+    Item *ip = SplitString("edit_line,edit_xml", ',');
 
     if (strcmp(agent, CF_AGENTTYPES[AGENT_TYPE_AGENT]) == 0)
     {
@@ -1032,30 +1030,28 @@ static int RelevantBundle(const char *agent, const char *blocktype)
 
 static bool LvalWantsBody(char *stype, char *lval)
 {
-    int i, j, l;
-    const PromiseTypeSyntax *ss;
-    const ConstraintSyntax *bs;
-
-    for (i = 0; i < CF3_MODULES; i++)
+    for (int i = 0; i < CF3_MODULES; i++)
     {
-        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
+        const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[i];
+        if (!promise_type_syntax)
         {
             continue;
         }
 
-        for (j = 0; ss[j].promise_type != NULL; j++)
+        for (int j = 0; promise_type_syntax[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].constraint_set.constraints) == NULL)
+            const ConstraintSyntax *bs = promise_type_syntax[j].constraint_set.constraints;
+            if (!bs)
             {
                 continue;
             }
 
-            if (strcmp(ss[j].promise_type, stype) != 0)
+            if (strcmp(promise_type_syntax[j].promise_type, stype) != 0)
             {
                 continue;
             }
 
-            for (l = 0; bs[l].lval != NULL; l++)
+            for (int l = 0; bs[l].lval != NULL; l++)
             {
                 if (strcmp(bs[l].lval, lval) == 0)
                 {
@@ -1077,32 +1073,16 @@ static bool LvalWantsBody(char *stype, char *lval)
 
 static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
 {
-    int lmatch = false;
-    int i, j, k, l;
-    const PromiseTypeSyntax *ss;
-    const ConstraintSyntax *bs, *bs2;
-    char output[CF_BUFSIZE];
-
-    CfDebug("CheckSelection(%s,%s,", type, lval);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, rval);
-    }
-
-    CfDebug(")\n");
-
-/* Check internal control bodies etc */
-
-    for (i = 0; CONTROL_BODIES[i].promise_type != NULL; i++)
+    // Check internal control bodies etc
+    for (int i = 0; CONTROL_BODIES[i].promise_type != NULL; i++)
     {
         if (strcmp(CONTROL_BODIES[i].promise_type, name) == 0 && strcmp(type, CONTROL_BODIES[i].bundle_type) == 0)
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
-            bs = CONTROL_BODIES[i].constraint_set.constraints;
+            const ConstraintSyntax *bs = CONTROL_BODIES[i].constraint_set.constraints;
 
-            for (l = 0; bs[l].lval != NULL; l++)
+            for (int l = 0; bs[l].lval != NULL; l++)
             {
                 if (strcmp(lval, bs[l].lval) == 0)
                 {
@@ -1128,52 +1108,52 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
         }
     }
 
-/* Now check the functional modules - extra level of indirection */
-
-    for (i = 0; i < CF3_MODULES; i++)
+    // Now check the functional modules - extra level of indirection
+    for (int i = 0; i < CF3_MODULES; i++)
     {
         CfDebug("Trying function module %d for matching lval %s\n", i, lval);
 
-        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
+        const PromiseTypeSyntax *promise_type_syntax =  CF_ALL_PROMISE_TYPES[i];
+        if (!promise_type_syntax)
         {
             continue;
         }
 
-        for (j = 0; ss[j].promise_type != NULL; j++)
+        for (int j = 0; promise_type_syntax[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].constraint_set.constraints) == NULL)
+            const ConstraintSyntax *bs = bs = promise_type_syntax[j].constraint_set.constraints;
+
+            if (!bs)
             {
                 continue;
             }
 
-            CfDebug("\nExamining promise_type %s\n", ss[j].promise_type);
-
-            for (l = 0; bs[l].lval != NULL; l++)
+            for (int l = 0; bs[l].lval != NULL; l++)
             {
                 if (bs[l].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = bs[l].range.body_type_syntax;
+                    const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
                         continue;
                     }
 
-                    for (k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
+                    for (int k = 0; bs2[k].dtype != DATA_TYPE_NONE; k++)
                     {
                         /* Either module defined or common */
 
-                        if (strcmp(ss[j].promise_type, type) == 0 && strcmp(ss[j].promise_type, "*") != 0)
+                        if (strcmp(promise_type_syntax[j].promise_type, type) == 0 && strcmp(promise_type_syntax[j].promise_type, "*") != 0)
                         {
+                            char output[CF_BUFSIZE];
                             snprintf(output, CF_BUFSIZE, "lval %s belongs to promise type \'%s:\' but this is '\%s\'\n",
-                                     lval, ss[j].promise_type, type);
+                                     lval, promise_type_syntax[j].promise_type, type);
                             yyerror(output);
                             return SYNTAX_TYPE_MATCH_OK;
                         }
 
                         if (strcmp(lval, bs2[k].lval) == 0)
                         {
-                            CfDebug("Matched\n");
                             return CheckConstraintTypeMatch(lval, rval, bs2[k].dtype, bs2[k].range.validation_string, 0);
                         }
                     }
@@ -1182,48 +1162,30 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
         }
     }
 
-    if (!lmatch)
-    {
-        snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
-        yyerror(output);
-    }
+    char output[CF_BUFSIZE];
+    snprintf(output, CF_BUFSIZE, "Constraint lvalue \"%s\" is not allowed in \'%s\' constraint body", lval, type);
+    yyerror(output);
 
-    return SYNTAX_TYPE_MATCH_OK;
+    return SYNTAX_TYPE_MATCH_OK; // TODO: OK?
 }
 
-static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *ss)
+static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *promise_type_syntax)
 {
-    assert(ss);
+    assert(promise_type_syntax);
 
-    int l;
-    const ConstraintSyntax *bs;
-
-    CfDebug("CheckConstraint(%s,%s,", type, lval);
-
-    if (DEBUG)
+    if (promise_type_syntax->promise_type != NULL)     /* In a bundle */
     {
-        RvalShow(stdout, rval);
-    }
-
-    CfDebug(")\n");
-
-    if (ss->promise_type != NULL)     /* In a bundle */
-    {
-        if (strcmp(ss->promise_type, type) == 0)
+        if (strcmp(promise_type_syntax->promise_type, type) == 0)
         {
-            CfDebug("Found type %s's body syntax\n", type);
+            const ConstraintSyntax *bs = promise_type_syntax->constraint_set.constraints;
 
-            bs = ss->constraint_set.constraints;
-
-            for (l = 0; bs[l].lval != NULL; l++)
+            for (int l = 0; bs[l].lval != NULL; l++)
             {
-                CfDebug("CMP-bundle # (%s,%s)\n", lval, bs[l].lval);
 
                 if (strcmp(lval, bs[l].lval) == 0)
                 {
                     /* If we get here we have found the lval and it is valid
                        for this promise_type */
-                    CfDebug("Matched syntatically correct bundle (lval,rval) item = (%s) to its rval\n", lval);
 
                     /* For bodies and bundles definitions can be elsewhere, so
                        they are checked in PolicyCheckRunnable(). */

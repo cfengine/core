@@ -2082,23 +2082,6 @@ Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints)
     return NULL;
 }
 
-/*****************************************************************************/
-
-void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval)
-{
-    for (size_t i = 0; i < SeqLength(conlist); i++)
-    {
-        Constraint *cp = SeqAt(conlist, i);
-
-        if (strcmp(lval, cp->lval) == 0)
-        {
-            RvalDestroy(cp->rval);
-            cp->rval = (Rval) { xstrdup(rval), RVAL_TYPE_SCALAR };
-            return;
-        }
-    }
-}
-
 void ConstraintDestroy(Constraint *cp)
 {
     if (cp)

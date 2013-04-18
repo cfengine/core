@@ -33,13 +33,13 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "locks.h"
 #include "logging.h"
+#include "locks.h"
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 #include "rlist.h"
+#include "ornaments.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     

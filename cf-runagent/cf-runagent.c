@@ -34,15 +34,15 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"
 #include "policy.h"
+#include "audit.h"
 
 typedef enum
 {

@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -21,27 +20,30 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_CFKEYFUNCTIONS_H
-#define CFENGINE_CFKEYFUNCTIONS_H
+#ifndef CFENGINE_AUDIT_H
+#define CFENGINE_AUDIT_H
 
-#include "generic_agent.h"
+/*
+ * This module keeps track of amount and value of promises kept/repaired/not-kept
+ */
 
-#include "lastseen.h"
+#include "cf3.defs.h"
+#include "policy.h"
+#include "env_context.h"
 
-RSA* LoadPublicKey(const char* filename);
-char* GetPubkeyDigest(const char* pubkey);
-int PrintDigest(const char* pubkey);
-int TrustKey(const char* pubkey);
-bool ShowHost(const char *hostkey, const char *address, bool incoming, const KeyHostSeen *quality, void *ctx);
-void ShowLastSeenHosts();
-int RemoveKeys(const char *host);
-void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
+void BeginAudit(void);
 
-#ifndef HAVE_NOVA
-bool LicenseInstall(char *path_source);
-#endif  /* HAVE_NOVA */
+void UpdatePromiseCounters(PromiseResult status, TransactionContext tc);
 
+void EndAudit(const EvalContext *ctx, int background_tasks);
 
-#endif // CFKEYFUNCTIONS_H
+/*
+ * FatalError causes EndAudit, so don't call it from the low-memory or corrupted stack situations.
+ */
+void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
+
+#endif
+

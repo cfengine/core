@@ -29,16 +29,16 @@
 #include "expand.h"
 #include "hashes.h"
 #include "unix.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "mutex.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "conversion.h"
 #include "syntax.h"
 #include "policy.h"
 #include "env_context.h"
+#include "audit.h"
 
 #include <assert.h>
 

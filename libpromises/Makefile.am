@@ -18,6 +18,7 @@ libpromises_la_SOURCES = \
         addr_lib.c addr_lib.h \
         args.c args.h \
         assoc.c assoc.h \
+        audit.c audit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
         cf.events.h \
@@ -25,7 +26,6 @@ libpromises_la_SOURCES = \
         cf3.extern.h \
         cf3globals.c \
         cf-key-functions.c cf-key-functions.h \
-        cfstream.c cfstream.h \
         chflags.c chflags.h \
         classes.c \
         client_code.c client_code.h \
@@ -80,6 +80,7 @@ libpromises_la_SOURCES = \
         modes.c \
         mutex.c mutex.h \
         net.c net.h \
+        ornaments.c ornaments.h \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
@@ -99,6 +100,7 @@ libpromises_la_SOURCES = \
         string_expressions.c string_expressions.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
+        syslog_client.c syslog_client.h \
         timeout.c \
         unix.c unix.h \
         var_expressions.c var_expressions.h \

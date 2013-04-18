@@ -20,18 +20,21 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_STREAM_H
-#define CFENGINE_STREAM_H
+#ifndef CFENGINE_SYSLOG_CLIENT_H
+#define CFENGINE_SYSLOG_CLIENT_H
 
-#include "cf3.defs.h"
+#include "platform.h"
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
+/*
+ * This module provides implementation of UDP syslog protocol
+ */
 
-/* reports.report_to_file */
-void ReportToFile(const char *logfile, const char *report);
+void SetSyslogHost(const char *host);
+void SetSyslogPort(uint16_t port);
+void SetSyslogFacility(int facility);
+
+void RemoteSysLog(int log_priority, const char *log_string);
 
 #endif

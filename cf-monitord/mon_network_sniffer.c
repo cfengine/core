@@ -29,7 +29,7 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "pipes.h"
 #include "signals.h"

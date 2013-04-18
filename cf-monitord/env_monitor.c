@@ -36,7 +36,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "signals.h"
 #include "locks.h"
 #include "exec_tools.h"

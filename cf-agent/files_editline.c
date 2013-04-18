@@ -37,13 +37,13 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
+#include "ornaments.h"
 
 #include <assert.h>
 

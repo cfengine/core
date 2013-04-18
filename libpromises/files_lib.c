@@ -28,7 +28,6 @@
 #include "files_names.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "promises.h"
 #include "matching.h"

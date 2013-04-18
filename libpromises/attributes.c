@@ -27,9 +27,9 @@
 #include "promises.h"
 #include "policy.h"
 #include "conversion.h"
-#include "cfstream.h"
-#include "chflags.h"
 #include "logging.h"
+#include "chflags.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

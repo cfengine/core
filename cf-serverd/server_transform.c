@@ -34,15 +34,15 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
-#include "logging.h"
 #include "scope.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "cf-serverd-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "generic_agent.h" // HashControls
 

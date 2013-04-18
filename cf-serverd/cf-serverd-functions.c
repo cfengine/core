@@ -27,11 +27,10 @@
 #include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "signals.h"
 #include "mutex.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "unix.h"
 

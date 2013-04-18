@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 
 #include "mon.h"
-#include "cfstream.h"
+#include "logging.h"
 
 #ifdef HAVE_SYS_LOADAVG_H
 # include <sys/loadavg.h>

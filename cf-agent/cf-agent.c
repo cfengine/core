@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "audit.h"
 #include "env_context.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
@@ -54,16 +55,16 @@
 #include "promises.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "signals.h"
-#include "logging.h"
 #include "nfs.h"
 #include "processes_select.h"
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "mod_common.h"
 

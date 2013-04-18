@@ -1,7 +1,7 @@
 #include "findhub.h"
 #include "atexit.h"
 #include "string_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "misc_lib.h"
 
 List *hublist = NULL; 

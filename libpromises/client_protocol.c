@@ -31,9 +31,8 @@
 #include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
-#include "cfstream.h"
-#include "files_hashes.h"
 #include "logging.h"
+#include "files_hashes.h"
 #include "policy.h"
 
 static bool SetSessionKey(AgentConnection *conn);

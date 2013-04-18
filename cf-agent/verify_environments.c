@@ -30,11 +30,11 @@
 #include "vars.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "locks.h"
 #include "logging.h"
+#include "locks.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/

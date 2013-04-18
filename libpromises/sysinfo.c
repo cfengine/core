@@ -35,11 +35,11 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "unix.h"
-#include "cfstream.h"
-#include "string_lib.h"
 #include "logging.h"
+#include "string_lib.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "audit.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

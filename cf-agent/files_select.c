@@ -30,11 +30,10 @@
 #include "files_interfaces.h"
 #include "promises.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "promises.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "chflags.h"
 

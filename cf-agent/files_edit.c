@@ -32,7 +32,6 @@
 #include "files_lib.h"
 #include "files_editxml.h"
 #include "item_lib.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "policy.h"
 

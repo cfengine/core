@@ -38,10 +38,10 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "locks.h"
 #include "logging.h"
+#include "locks.h"
 #include "policy.h"
+#include "ornaments.h"
 
 enum editxmltypesequence
 {

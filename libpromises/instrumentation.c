@@ -28,7 +28,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "policy.h"
 

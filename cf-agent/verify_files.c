@@ -42,16 +42,17 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"
 #include "verify_files_hashes.h"
-#include "logging.h"
 #include "generic_agent.h" // HashVariables
 #include "misc_lib.h"
 #include "fncall.h"
 #include "promiser_regex_resolver.h"
+#include "ornaments.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

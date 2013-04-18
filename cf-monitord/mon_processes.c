@@ -27,9 +27,8 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

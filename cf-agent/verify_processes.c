@@ -32,13 +32,13 @@
 #include "conversion.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "exec_tools.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

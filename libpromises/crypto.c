@@ -29,10 +29,9 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "hashes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "pipes.h"
 #include "mutex.h"
-#include "logging.h"
 
 static void RandomSeed(void);
 

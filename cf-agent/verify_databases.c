@@ -29,15 +29,15 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "locks.h"
 #include "cf_sql.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "env_context.h"
+#include "ornaments.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);

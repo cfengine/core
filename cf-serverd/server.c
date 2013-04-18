@@ -34,16 +34,16 @@
 #include "dir.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "signals.h"
 #include "mutex.h"
-#include "logging.h"
 #include "net.h"
 #include "rlist.h"
 #include "misc_lib.h"
 #include "cf-serverd-enterprise-stubs.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

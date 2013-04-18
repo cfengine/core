@@ -27,11 +27,10 @@
 
 #include "syntax.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "conversion.h"
 #include "reporting.h"
 #include "mutex.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "misc_lib.h"
 #include "mod_files.h"
 #include "vars.h"
@@ -43,6 +42,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "files_hashes.h"
+#include "audit.h"
 
 #include <assert.h>
 

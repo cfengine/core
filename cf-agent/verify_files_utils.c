@@ -24,7 +24,7 @@
 
 #include "verify_files_utils.h"
 
-#include "cfstream.h"
+#include "logging.h"
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"
@@ -38,7 +38,6 @@
 #include "files_operators.h"
 #include "item_lib.h"
 #include "client_code.h"
-#include "logging.h"
 #include "files_hashes.h"
 #include "files_repository.h"
 #include "files_select.h"
@@ -58,6 +57,7 @@
 #include "misc_lib.h"
 #include "abstract_dir.h"
 #include "verify_files_hashes.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

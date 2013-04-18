@@ -31,10 +31,10 @@
 /* ExpandScalar */
 #include "expand.h"
 #include "vars.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 #include "misc_lib.h"
+#include "env_context.h"
 
 static VersionCmpResult InvertResult(VersionCmpResult result)
 {

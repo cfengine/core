@@ -25,11 +25,12 @@
 
 #include "pipes.h"
 
-#include "cfstream.h"
+#include "logging.h"
 #include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "policy.h"
+#include "env_context.h"
 
 #ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);

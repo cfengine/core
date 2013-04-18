@@ -30,7 +30,7 @@
 #include "cf3.defs.h"
 
 #include "dbm_priv.h"
-#include "cfstream.h"
+#include "logging.h"
 
 #ifdef TCDB
 

@@ -26,7 +26,7 @@
 
 #include "lastseen.h"
 #include "conversion.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "files_hashes.h"
 #include "locks.h"
 

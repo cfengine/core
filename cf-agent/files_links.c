@@ -31,10 +31,10 @@
 #include "files_operators.h"
 #include "files_lib.h"
 #include "locks.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+#include "env_context.h"
 
 #define CF_MAXLINKLEVEL 4
 

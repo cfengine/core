@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
-#include "cfstream.h"
-#include "logging.h"
 
 #include <assert.h>
 
@@ -35,6 +33,8 @@ static bool ReadWriteDataIsValid(char *data);
 static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
+
+static void CfOut(OutputLevel level, const char *function, const char *fmt, ...);
 
 void *contend(void *param)
 {
@@ -299,7 +299,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
+static void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
 {
     va_list ap;
     char buf[CF_BUFSIZE] = "";

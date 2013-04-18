@@ -34,7 +34,7 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"

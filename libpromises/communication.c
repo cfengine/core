@@ -25,7 +25,7 @@
 
 #include "communication.h"
 
-#include "cfstream.h"
+#include "logging.h"
 
 /*********************************************************************/
 

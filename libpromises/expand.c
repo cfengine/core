@@ -44,13 +44,13 @@
 #include "matching.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "args.h"
-#include "logging.h"
 #include "iteration.h"
 #include "buffer.h"
 #include "string_lib.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

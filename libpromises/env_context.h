@@ -141,6 +141,11 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
+/**
+ * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
+ */
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
 
@@ -170,5 +175,6 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp, void *param);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
 
 #endif

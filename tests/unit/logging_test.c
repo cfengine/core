@@ -3,7 +3,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#include "logging.h"
+#include "syslog_client.h"
 
 static struct sockaddr *got_address;
 

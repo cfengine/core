@@ -27,9 +27,8 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "generic_agent.h" // CloseLog

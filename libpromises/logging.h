@@ -28,18 +28,6 @@
 
 #include "cf3.defs.h"
 
-void BeginAudit(void);
-void EndAudit(const EvalContext *ctx, int background_tasks);
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
-void PromiseLog(char *s);
-void PromiseBanner(Promise *pp);
-void BannerSubBundle(Bundle *bp, Rlist *params);
-void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
-
-void SetSyslogHost(const char *host);
-void SetSyslogPort(uint16_t port);
-void SetSyslogFacility(int facility);
-void RemoteSysLog(int log_priority, const char *log_string);
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 
 #endif

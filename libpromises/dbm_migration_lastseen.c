@@ -25,7 +25,7 @@
 #include "dbm_migration.h"
 
 #include "lastseen.h"
-#include "cfstream.h"
+#include "logging.h"
 
 typedef struct
 {

@@ -33,14 +33,15 @@
 #include "files_links.h"
 #include "files_properties.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "nfs.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "verify_files.h"
 #include "promiser_regex_resolver.h"
+#include "ornaments.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

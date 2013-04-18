@@ -39,15 +39,17 @@
 #include "matching.h"
 #include "hashes.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "rlist.h"
 #include "misc_lib.h"
 #include "assoc.h"
 #include "scope.h"
 #include "vars.h"
+#include "syslog_client.h"
+#include "audit.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -1667,6 +1669,24 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
     return StringSetIteratorInit(frame->data.bundle.contexts);
 }
 
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
+{
+    for (int i = SeqLength(ctx->stack) - 1; i >= 0; --i)
+    {
+        StackFrame *st = SeqAt(ctx->stack, i);
+        if (st->type == STACK_FRAME_TYPE_PROMISE)
+        {
+            return st->data.promise.owner;
+        }
+
+        if (st->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            return st->data.promise_iteration.owner;
+        }
+    }
+
+    return NULL;
+}
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
@@ -1957,3 +1977,506 @@ void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
 {
     PromiseSetRemove(ctx->promises_done, pp->org_pp);
 }
+
+
+
+/* cfPS and associated machinery */
+
+
+
+/*
+ * Internal functions temporarily used from logging implementation
+ */
+void SystemLog(Item *mess, OutputLevel level);
+void LogListStdout(const Item *messages, bool has_prefix);
+const char *GetErrorStr(void);
+
+static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
+static const char *NO_LOG_TYPES[] =
+    { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+
+/*
+ * Vars, classes and similar promises which do not affect the system itself (but
+ * just support evalution) do not need to be counted as repaired/failed, as they
+ * may change every iteration and introduce lot of churn in reports without
+ * giving any value.
+ */
+static bool IsPromiseValuableForStatus(const Promise *pp)
+{
+    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_STATUS_TYPES));
+}
+
+/*
+ * Vars, classes and subordinate promises (like edit_line) do not need to be
+ * logged, as they exist to support other promises.
+ */
+
+static bool IsPromiseValuableForLogging(const Promise *pp)
+{
+    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
+}
+
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        char *classname = xstrdup(rp->item);
+
+        CanonifyNameInPlace(classname);
+
+        if (EvalContextHeapContainsHard(ctx, classname))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            // TODO: ok.. but should we take any action? continue; maybe?
+        }
+
+        if (persist > 0)
+        {
+            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
+            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
+            EvalContextHeapAddSoft(ctx, classname, ns);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
+
+            switch (context_scope)
+            {
+            case CONTEXT_SCOPE_BUNDLE:
+                EvalContextStackFrameAddSoft(ctx, classname);
+                break;
+
+            default:
+            case CONTEXT_SCOPE_NAMESPACE:
+                EvalContextHeapAddSoft(ctx, classname, ns);
+                break;
+            }
+        }
+    }
+}
+
+static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        {
+            return; // TODO: interesting course of action, but why is the check there in the first place?
+        }
+
+        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+                  RlistScalarValue(rp));
+        }
+
+        const char *string = (char *) (rp->item);
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+
+        EvalContextHeapPersistentRemove(string);
+
+        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
+
+        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
+    }
+}
+
+static void AmendErrorMessageWithPromiseInformation(EvalContext *ctx, Item **error_message, const Promise *pp)
+{
+    Rval retval;
+    char *v;
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
+
+    const char *sp;
+    char handle[CF_MAXVARSIZE];
+    if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
+    {
+        strncpy(handle, sp, CF_MAXVARSIZE - 1);
+    }
+    else
+    {
+        strcpy(handle, "(unknown)");
+    }
+
+    char output[CF_BUFSIZE];
+    if (INFORM || VERBOSE || DEBUG)
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Report relates to a promise with handle \"%s\"", handle);
+        AppendItem(error_message, output, NULL);
+    }
+
+    if (pp && PromiseGetBundle(pp)->source_path)
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
+                 v, PromiseGetBundle(pp)->source_path, pp->offset.line);
+    }
+    else
+    {
+        snprintf(output, CF_BUFSIZE - 1, "I: Promise is made internally by cfengine");
+    }
+
+    AppendItem(error_message, output, NULL);
+
+    if (pp != NULL)
+    {
+        switch (pp->promisee.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+            AppendItem(error_message, output, NULL);
+            break;
+
+        case RVAL_TYPE_LIST:
+        {
+            Writer *w = StringWriter();
+            WriterWriteF(w, "I: The promise was made to (stakeholders): ");
+            RlistWrite(w, pp->promisee.item);
+            AppendItem(error_message, StringWriterClose(w), NULL);
+            break;
+        }
+        default:
+            break;
+        }
+
+        if (pp->comment)
+        {
+            snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->comment);
+            AppendItem(error_message, output, NULL);
+        }
+    }
+}
+
+#ifdef HAVE_NOVA
+static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
+{
+    char nova_status;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        nova_status = 'r';
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        nova_status = 'n';
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        nova_status = 'c';
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to TrackTotalCompliance", status);
+    }
+
+    EnterpriseTrackTotalCompliance(pp, nova_status);
+}
+#endif
+
+
+static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
+{
+    Rlist *add_classes = NULL;
+    Rlist *del_classes = NULL;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        add_classes = dc.change;
+        del_classes = dc.del_change;
+        break;
+
+    case PROMISE_RESULT_TIMEOUT:
+        add_classes = dc.timeout;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_FAIL:
+        add_classes = dc.failure;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_DENIED:
+        add_classes = dc.denied;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_INTERRUPTED:
+        add_classes = dc.interrupt;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        add_classes = dc.kept;
+        del_classes = dc.del_kept;
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
+    }
+
+    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, dc.persist, dc.timer, dc.scope);
+    DeleteAllClasses(ctx, del_classes);
+}
+
+static void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char compliance_status;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        compliance_status = PROMISE_STATE_REPAIRED;
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        compliance_status = PROMISE_STATE_NOTKEPT;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        compliance_status = PROMISE_STATE_ANY;
+        break;
+
+    default:
+        ProgrammingError("Unknown status '%c' has been passed to UpdatePromiseComplianceStatus", status);
+    }
+
+    NotePromiseCompliance(pp, compliance_status, reason);
+}
+
+static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
+{
+    if (logname && (tc.log_string))
+    {
+        char buffer[CF_EXPANDSIZE];
+
+        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
+
+        if (strcmp(logname, "udp_syslog") == 0)
+        {
+            RemoteSysLog(tc.log_priority, buffer);
+        }
+        else if (strcmp(logname, "stdout") == 0)
+        {
+            CfOut(OUTPUT_LEVEL_REPORTING, "", "L: %s\n", buffer);
+        }
+        else
+        {
+            FILE *fout = fopen(logname, "a");
+
+            if (fout == NULL)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open private log %s", logname);
+                return;
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
+            fprintf(fout, "%s\n", buffer);
+
+            fclose(fout);
+        }
+
+        tc.log_string = NULL;     /* To avoid repetition */
+    }
+}
+
+static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, TransactionContext tc)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char *log_name;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        log_name = tc.log_repaired;
+        break;
+
+    case PROMISE_RESULT_WARN:
+        /* FIXME: nothing? */
+        return;
+
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        log_name = tc.log_failed;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        log_name = tc.log_kept;
+        break;
+    }
+
+    SummarizeTransaction(ctx, tc, log_name);
+}
+
+static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, const Promise *pp)
+{
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+    case PROMISE_RESULT_NOOP:
+        MarkPromiseHandleDone(ctx, pp);
+        break;
+
+    default:
+        /* This promise is not yet done, don't mark it is as such */
+        break;
+    }
+}
+
+static void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
+{
+    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
+    {
+#ifdef HAVE_NOVA
+        TrackTotalCompliance(status, pp);
+#endif
+        UpdatePromiseCounters(status, attr.transaction);
+    }
+
+    SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
+    NotifyDependantPromises(status, ctx, pp);
+    DoSummarizeTransaction(ctx, status, pp, attr.transaction);
+}
+
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
+{
+    if ((fmt == NULL) || (strlen(fmt) == 0))
+    {
+        return;
+    }
+
+    va_list ap;
+    va_start(ap, fmt);
+    char buffer[CF_BUFSIZE];
+    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
+    va_end(ap);
+
+    if (Chop(buffer, CF_EXPANDSIZE) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+    }
+
+    Item *mess = NULL;
+    AppendItem(&mess, buffer, NULL);
+
+    if ((errstr == NULL) || (strlen(errstr) > 0))
+    {
+        char output[CF_BUFSIZE];
+        snprintf(output, CF_BUFSIZE - 1, " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
+        AppendItem(&mess, output, NULL);
+    }
+
+    if (level == OUTPUT_LEVEL_ERROR)
+    {
+        AmendErrorMessageWithPromiseInformation(ctx, &mess, pp);
+    }
+
+    int verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;
+
+    switch (level)
+    {
+    case OUTPUT_LEVEL_INFORM:
+
+        if (INFORM || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM)
+            || VERBOSE || (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE)
+            || DEBUG)
+        {
+            LogListStdout(mess, verbose);
+        }
+
+        if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
+        {
+            SystemLog(mess, level);
+        }
+        break;
+
+    case OUTPUT_LEVEL_VERBOSE:
+
+        if (VERBOSE || (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
+            || DEBUG)
+        {
+            LogListStdout(mess, verbose);
+        }
+
+        if (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
+        {
+            SystemLog(mess, level);
+        }
+
+        break;
+
+    case OUTPUT_LEVEL_ERROR:
+
+        LogListStdout(mess, verbose);
+
+        if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
+        {
+            SystemLog(mess, level);
+        }
+        break;
+
+    case OUTPUT_LEVEL_NONE:
+        break;
+
+    default:
+        ProgrammingError("Unexpected output level (%d) passed to cfPS", level);
+    }
+
+    if (pp != NULL)
+    {
+        LogPromiseResult(pp->promiser, pp->promisee.type, pp->promisee.item, status, attr.transaction.log_level, mess);
+    }
+
+/* Now complete the exits status classes and auditing */
+
+    if (pp != NULL)
+    {
+        ClassAuditLog(ctx, pp, attr, status);
+        UpdatePromiseComplianceStatus(status, pp, buffer);
+    }
+
+    DeleteItemList(mess);
+}
+
+#if !defined(__MINGW32__)
+
+void LogPromiseResult(ARG_UNUSED char *promiser, ARG_UNUSED char peeType,
+                             ARG_UNUSED void *promisee, ARG_UNUSED char status,
+                             ARG_UNUSED OutputLevel log_level, ARG_UNUSED Item *mess)
+{
+}
+
+#endif

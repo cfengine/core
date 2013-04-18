@@ -49,7 +49,6 @@ AgentType THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
 
 int LICENSES = 0;
-int AM_PHP_MODULE = false;
 char EXPIRY[CF_SMALLBUF] = { 0 };
 char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
 

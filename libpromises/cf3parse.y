@@ -444,7 +444,7 @@ promiser:              QSTRING
                        {
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
-                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser);
+                           ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
                            CfDebug("Promising object name \'%s\'\n",P.promiser);
                        }
                      | error
@@ -569,7 +569,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
 
 constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses, P.promiser, P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
                            assert(promise_type_syntax);
@@ -703,7 +703,7 @@ selection:             selection_id                         /* BODY ONLY */
 
 selection_id:          IDSYNTAX
                        {
-                           ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses, P.currentid);
+                           ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
                            const ConstraintSyntax *body_syntax = BodySyntaxLookup(P.currentbody->type);
 
@@ -780,18 +780,21 @@ class:                 CLASS
 
 rval:                  IDSYNTAX
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | BLOCKID
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
                            CfDebug("Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
 
@@ -808,6 +811,7 @@ rval:                  IDSYNTAX
                        }
                      | NAKEDVAR
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s nakedvar rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
                            CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
 
@@ -816,6 +820,7 @@ rval:                  IDSYNTAX
                        }
                      | list
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s install list =  %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval);
                            if (RlistLen(P.currentRlist) == 0)
                            {
                                RlistAppendScalar(&P.currentRlist, CF_NULL_VALUE);
@@ -847,12 +852,14 @@ litems_int:            litem
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 litem:                 IDSYNTAX
-                       {
+                       { 
+                           ParserDebug("\tP:%s:%s:%s:%s list append; id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                            RlistAppendScalar((Rlist **)&P.currentRlist, P.currentid);
                        }
 
                      | QSTRING
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s list append: qstring = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
                            RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -860,6 +867,7 @@ litem:                 IDSYNTAX
 
                      | NAKEDVAR
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s list append: nakedvar = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
                            RlistAppendScalar((Rlist **)&P.currentRlist,(void *)P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -876,14 +884,17 @@ litem:                 IDSYNTAX
 
 functionid:            IDSYNTAX
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                            CfDebug("Found function identifier %s\n",P.currentid);
                        }
                      | BLOCKID
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s function blockid = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
                            CfDebug("Found qualified function identifier %s\n",P.currentid);
                        }
                      | NAKEDVAR
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s function nakedvar = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentstring);
                            strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -897,6 +908,7 @@ functionid:            IDSYNTAX
 
 usefunction:           functionid givearglist
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s Finished with function, now at level %d\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.arg_nesting);
                            CfDebug("Finished with function call, now at level %d\n\n",P.arg_nesting);
                        };
 
@@ -904,19 +916,19 @@ usefunction:           functionid givearglist
 
 givearglist:           OP 
                        {
-                           ParserDebug("P:%s:%s:%s begin givearglist\n", P.block,P.blocktype,P.blockid);
                            if (++P.arg_nesting >= CF_MAX_NESTING)
                            {
                                fatal_yyerror("Nesting of functions is deeper than recommended");
                            }
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
+                           ParserDebug("\tP:%s:%s:%s begin givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            CfDebug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                        }
 
                        gaitems
                        CP 
                        {
-                           ParserDebug("P:%s:%s:%s end givearglist\n", P.block,P.blocktype,P.blockid);
+                           ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
                            CfDebug("End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
@@ -937,6 +949,7 @@ gaitems:               gaitem
 
 gaitem:                IDSYNTAX
                        {
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, id arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentid);
                            /* currently inside a use function */
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentid);
                        }
@@ -944,6 +957,7 @@ gaitem:                IDSYNTAX
                      | QSTRING
                        {
                            /* currently inside a use function */
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, qstring arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -952,6 +966,7 @@ gaitem:                IDSYNTAX
                      | NAKEDVAR
                        {
                            /* currently inside a use function */
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
                            free(P.currentstring);
                            P.currentstring = NULL;
@@ -960,6 +975,7 @@ gaitem:                IDSYNTAX
                      | usefunction
                        {
                            /* Careful about recursion */
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendFnCall(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1]);
                            RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
                        };

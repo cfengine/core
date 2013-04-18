@@ -32,7 +32,7 @@
 #include "conversion.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "exec_tools.h"
 #include "rlist.h"

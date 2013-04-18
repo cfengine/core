@@ -28,7 +28,7 @@
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "locks.h"
 #include "rlist.h"
@@ -36,6 +36,7 @@
 #include "scope.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "ornaments.h"
+#include "env_context.h"
 
 #ifdef __MINGW32__
 #include "cf.nova.h"

@@ -32,7 +32,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "pipes.h"
 #include "exec_tools.h"

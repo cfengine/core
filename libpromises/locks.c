@@ -25,7 +25,7 @@
 
 #include "locks.h"
 #include "mutex.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "files_interfaces.h"
 #include "files_lib.h"

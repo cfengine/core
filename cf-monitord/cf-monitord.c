@@ -30,7 +30,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "signals.h"
 #include "scope.h"
 

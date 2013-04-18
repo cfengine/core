@@ -26,7 +26,6 @@ libpromises_la_SOURCES = \
         cf3.extern.h \
         cf3globals.c \
         cf-key-functions.c cf-key-functions.h \
-        cfstream.c cfstream.h \
         chflags.c chflags.h \
         classes.c \
         client_code.c client_code.h \

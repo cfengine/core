@@ -24,7 +24,7 @@
 
 #include "verify_files_utils.h"
 
-#include "cfstream.h"
+#include "logging.h"
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"

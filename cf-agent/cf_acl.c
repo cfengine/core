@@ -27,9 +27,10 @@
 #include "acl_posix.h"
 #include "files_names.h"
 #include "promises.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

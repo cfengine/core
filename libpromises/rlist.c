@@ -30,7 +30,7 @@
 #include "expand.h"
 #include "matching.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "string_lib.h"
 #include "mutex.h"

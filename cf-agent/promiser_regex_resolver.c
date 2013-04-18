@@ -38,7 +38,7 @@
 #include "dir.h"
 #include "files_properties.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "item_lib.h"
 
 #ifdef HAVE_NOVA

@@ -37,7 +37,7 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "assoc.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "rlist.h"
 
 #ifdef HAVE_NOVA

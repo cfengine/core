@@ -33,7 +33,7 @@
 #include "dir_priv.h"
 #include "client_protocol.h"
 #include "crypto.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "files_hashes.h"
 #include "files_copy.h"
 #include "mutex.h"

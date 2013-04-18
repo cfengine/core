@@ -32,7 +32,7 @@
 #include "vars.h"
 #include "sort.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "locks.h"
 #include "string_lib.h"
@@ -40,6 +40,7 @@
 #include "policy.h"
 #include "scope.h"
 #include "ornaments.h"
+#include "env_context.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 static void ReportToFile(const char *logfile, const char *message);

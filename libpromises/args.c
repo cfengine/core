@@ -30,7 +30,7 @@
 #include "reporting.h"
 #include "expand.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "evalfunction.h"
 #include "misc_lib.h"

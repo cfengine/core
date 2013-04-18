@@ -26,7 +26,7 @@
 #include "audit.h"
 #include "misc_lib.h"
 #include "conversion.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 
 int PR_KEPT;

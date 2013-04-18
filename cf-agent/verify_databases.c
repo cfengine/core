@@ -29,7 +29,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "locks.h"
 #include "cf_sql.h"

@@ -25,7 +25,7 @@
 #include "cf-serverd-enterprise-stubs.h"
 
 #include "server.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "cf-serverd-functions.h"
 
 void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)

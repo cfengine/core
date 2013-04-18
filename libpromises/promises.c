@@ -31,7 +31,7 @@
 #include "files_names.h"
 #include "scope.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "args.h"
 #include "locks.h"
 #include "misc_lib.h"

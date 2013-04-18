@@ -36,7 +36,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "locks.h"
@@ -45,6 +45,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "ornaments.h"
+#include "env_context.h"
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"

@@ -25,7 +25,7 @@
 
 #include "signals.h"
 
-#include "cfstream.h"
+#include "logging.h"
 
 static const char *SIGNALS[] =
 {

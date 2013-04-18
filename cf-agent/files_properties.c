@@ -28,7 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 
 /* lstat */
 #ifdef HAVE_NOVA

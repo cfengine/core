@@ -44,7 +44,7 @@
 #include "matching.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "args.h"
 #include "iteration.h"

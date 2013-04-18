@@ -28,7 +28,7 @@
 #include "promises.h"
 #include "files_names.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "policy.h"
 #include "cf-monitord-enterprise-stubs.h"
 #include "env_context.h"

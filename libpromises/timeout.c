@@ -26,7 +26,7 @@
 #include "cf3.defs.h"
 
 #include "env_context.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "process_lib.h"
 
 /* Prototypes */

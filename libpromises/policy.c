@@ -30,7 +30,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "mutex.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "misc_lib.h"
 #include "mod_files.h"
 #include "vars.h"

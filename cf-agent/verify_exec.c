@@ -32,7 +32,7 @@
 #include "conversion.h"
 #include "instrumentation.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "pipes.h"
 #include "locks.h"
 #include "evalfunction.h"
@@ -43,6 +43,7 @@
 #include "string_lib.h"
 #include "scope.h"
 #include "ornaments.h"
+#include "env_context.h"
 
 typedef enum
 {

@@ -30,7 +30,7 @@
 #include "files_lib.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "mutex.h"
 #include "policy.h"
 

@@ -27,7 +27,7 @@
 #include "promises.h"
 #include "policy.h"
 #include "conversion.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "chflags.h"
 #include "audit.h"
 

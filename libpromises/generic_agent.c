@@ -45,7 +45,7 @@
 #include "scope.h"
 #include "atexit.h"
 #include "unix.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "client_code.h"
 #include "string_lib.h"
 #include "exec_tools.h"

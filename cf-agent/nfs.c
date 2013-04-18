@@ -32,12 +32,13 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "nfs.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 #ifndef __MINGW32__
 

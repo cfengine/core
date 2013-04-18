@@ -28,7 +28,6 @@
 
 #include "cf3.defs.h"
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 
 #endif

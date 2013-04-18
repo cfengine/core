@@ -28,7 +28,7 @@
 
 #include "prototypes3.h"
 #include "syntax.h"
-#include "cfstream.h"
+#include "logging.h"
 
 /*
  * This module contains numeruous functions which don't use all their parameters

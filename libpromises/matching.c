@@ -31,7 +31,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 

@@ -29,7 +29,7 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "item_lib.h"
 #include "pipes.h"

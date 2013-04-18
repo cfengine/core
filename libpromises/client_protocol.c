@@ -31,7 +31,7 @@
 #include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "files_hashes.h"
 #include "policy.h"
 

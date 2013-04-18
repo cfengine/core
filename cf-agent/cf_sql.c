@@ -25,7 +25,7 @@
 
 #include "cf_sql.h"
 
-#include "cfstream.h"
+#include "logging.h"
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>

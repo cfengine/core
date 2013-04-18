@@ -41,7 +41,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "client_code.h"
 #include "pipes.h"
 #include "locks.h"

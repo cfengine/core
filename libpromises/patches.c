@@ -33,7 +33,7 @@
 
 #include "cf3.defs.h"
 
-#include "cfstream.h"
+#include "logging.h"
 #include "audit.h"
 
 #ifdef HAVE_NOVA

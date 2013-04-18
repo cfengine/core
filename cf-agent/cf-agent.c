@@ -55,7 +55,7 @@
 #include "promises.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "signals.h"
 #include "nfs.h"

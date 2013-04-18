@@ -28,7 +28,7 @@
 #include "env_context.h"
 #include "conversion.h"
 #include "reporting.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"

@@ -33,7 +33,7 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "locks.h"
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables

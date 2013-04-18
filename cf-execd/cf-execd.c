@@ -36,7 +36,7 @@
 #include "scope.h"
 #include "hashes.h"
 #include "unix.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "signals.h"
 #include "locks.h"

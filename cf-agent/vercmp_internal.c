@@ -26,7 +26,7 @@
 
 #include "files_names.h"
 #include "vercmp_internal.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "rlist.h"
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);

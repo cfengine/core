@@ -1,0 +1,26 @@
+#######################################################
+#
+# Delete a file in a nonexistant directory.
+#
+#######################################################
+
+body common control
+{
+  bundlesequence  => { "delete" };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent delete
+{
+  files:
+    "/abc/nofile"
+      delete => test_delete;
+}
+
+body delete test_delete
+{
+  dirlinks => "delete";
+  rmdirs   => "true";
+}

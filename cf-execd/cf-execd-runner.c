@@ -107,7 +107,7 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
              "\"%s/%s\" -f failsafe.cf "
              "&& \"%s/%s\" -Dfrom_cfexecd%s",
              CFWORKDIR, twin_exists ? TwinFilename() : AgentFilename(),
-             CFWORKDIR, AgentFilename(), scheduled_run ? ":scheduled_run" : "");
+             CFWORKDIR, AgentFilename(), scheduled_run ? ",scheduled_run" : "");
 }
 
 #ifndef __MINGW32__

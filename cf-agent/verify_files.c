@@ -240,6 +240,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     if ((a.havedelete) && (!exists))
     {
         cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
+        goto exit;
     }
 
     if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */

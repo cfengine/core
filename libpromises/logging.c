@@ -323,34 +323,6 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
     DoSummarizeTransaction(ctx, status, pp, attr.transaction);
 }
 
-/************************************************************************/
-
-void PromiseLog(char *s)
-{
-    char filename[CF_BUFSIZE];
-    time_t now = time(NULL);
-    FILE *fout;
-
-    if ((s == NULL) || (strlen(s) == 0))
-    {
-        return;
-    }
-
-    snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
-    MapName(filename);
-
-    if ((fout = fopen(filename, "a")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
-        return;
-    }
-
-    fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)now, s);
-    fclose(fout);
-}
-
-/************************************************************************/
-
 void PromiseBanner(Promise *pp)
 {
     char handle[CF_MAXVARSIZE];

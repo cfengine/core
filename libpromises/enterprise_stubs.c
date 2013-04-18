@@ -112,7 +112,20 @@ void LogTotalCompliance(const char *version, int background_tasks)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Total: %s", string);
 
-    PromiseLog(string);
+    char filename[CF_BUFSIZE];
+    snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
+    MapName(filename);
+
+    FILE *fout = fopen(filename, "a");
+    if (fout == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
+    }
+    else
+    {
+        fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)time(NULL), string);
+        fclose(fout);
+    }
 }
 
 

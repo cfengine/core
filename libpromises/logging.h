@@ -30,7 +30,6 @@
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
 void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
-void PromiseLog(char *s);
 void PromiseBanner(Promise *pp);
 void BannerSubBundle(Bundle *bp, Rlist *params);
 void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);

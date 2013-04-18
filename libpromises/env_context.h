@@ -141,6 +141,11 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
+/**
+ * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
+ */
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
 

@@ -1667,6 +1667,24 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
     return StringSetIteratorInit(frame->data.bundle.contexts);
 }
 
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
+{
+    for (int i = SeqLength(ctx->stack) - 1; i >= 0; --i)
+    {
+        StackFrame *st = SeqAt(ctx->stack, i);
+        if (st->type == STACK_FRAME_TYPE_PROMISE)
+        {
+            return st->data.promise.owner;
+        }
+
+        if (st->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            return st->data.promise_iteration.owner;
+        }
+    }
+
+    return NULL;
+}
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {

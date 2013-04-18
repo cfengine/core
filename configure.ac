@@ -570,27 +570,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
     #include <sys/types.h>]],
   [[int mkdir(const char *pathname, mode_t mode);]])
-
-dnl AC_CHECK_FUNC([mkdir], [], [AC_MSG_ERROR([Unable to find mkdir function])])
-
-dnl AC_CACHE_CHECK([whether mkdir accepts two parameters],
-dnl   [hw_cv_func_mkdir_posix],
-dnl   [AC_COMPILE_IFELSE(
-dnl     [AC_LANG_PROGRAM([[#include <sys/stat.h>
-dnl                        #include <sys/types.h>]],
-dnl                      [[int mkdir(const char *pathname, mode_t mode);]])],
-dnl     [hw_cv_func_mkdir_posix=yes],
-dnl     [hw_cv_func_mkdir_posix=no])])
-
-dnl AS_IF([test "$hw_cv_func_mkdir_posix" = yes],
-dnl   [AC_DEFINE([HAVE_MKDIR_POSIX], [1], [Define to 1 if you have POSIX-compliant `mkdir' function])],
-dnl   [post_macros="$post_macros
-dnl #define mkdir rpl_mkdir"
-dnl    AC_LIBOBJ([rpl_mkdir])])
 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)

@@ -1645,6 +1645,12 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
         if (IsCf3VarString(rval.item))
         {
             ExpandScalar(ctx, scope, rval.item, exp);
+
+            if (strcmp(exp, (const char *) rval.item) == 0)
+            {
+                return false;
+            }
+
             CfDebug("bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
                     exp);
 

@@ -22,18 +22,20 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "client_protocol.h"
 
 #include "communication.h"
 #include "net.h"
-#include "sysinfo.h"
-#include "promises.h"
-#include "lastseen.h"
-#include "crypto.h"
-#include "logging.h"
-#include "files_hashes.h"
-#include "policy.h"
+
+/* TODO remove all includes from libpromises. */
+extern char VIPADDRESS[];
+extern char VDOMAIN[];
+extern char VFQNAME[];
+#include "sysinfo.h"                           /* GetCurrentUsername */
+#include "lastseen.h"                          /* LastSaw */
+#include "crypto.h"                            /* PublicKeyFile */
+#include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
+
 
 static bool SetSessionKey(AgentConnection *conn);
 
@@ -102,7 +104,7 @@ int IdentifyAgent(int sd, char *localip, int family)
             return false;
         }
 
-        snprintf(localip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop((struct sockaddr *) &myaddr));
+        sockaddr_ntop((struct sockaddr *) &myaddr, localip, CF_MAX_IP_LEN);
 
         CfDebug("Identifying this agent as %s i.e. %s, with signature %d, family %d\n", localip, VFQNAME, 0, family);
 

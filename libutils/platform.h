@@ -478,6 +478,12 @@ char *mkdtemp(char *template);
 #if !HAVE_DECL_STRRSTR
 char *strrstr(const char *haystack, const char *needle);
 #endif
+#if !HAVE_DECL_INET_NTOP
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+#endif
+#if !HAVE_DECL_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
 
 #if !defined(HAVE_MKDIR_PROPER)
 int rpl_mkdir(const char *pathname, mode_t mode);

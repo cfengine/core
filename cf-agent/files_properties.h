@@ -27,6 +27,7 @@
 #define CFENGINE_FILES_PROPERTIES_H
 
 #include "cf3.defs.h"
+#include "cfnet.h"                                       /* AgentConnection */
 
 void AddFilenameToListOfSuspicious(const char *filename);
 

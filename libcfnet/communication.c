@@ -25,9 +25,6 @@
 
 #include "communication.h"
 
-#include "logging.h"
-
-/*********************************************************************/
 
 AgentConnection *NewAgentConn(const char *server_name)
 {
@@ -154,9 +151,10 @@ int IsIPV4Address(char *name)
 
 /*****************************************************************************/
 
+/* TODO thread-safe */
 const char *Hostname2IPString(const char *hostname)
 {
-    static char ipbuffer[CF_SMALLBUF];
+    static char ipbuffer[CF_MAX_IP_LEN];
 
 #if defined(HAVE_GETADDRINFO)
     int err;
@@ -166,22 +164,25 @@ const char *Hostname2IPString(const char *hostname)
     query.ai_family = AF_UNSPEC;
     query.ai_socktype = SOCK_STREAM;
 
-    memset(ipbuffer, 0, CF_SMALLBUF - 1);
-
     if ((err = getaddrinfo(hostname, NULL, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to lookup hostname (%s) or cfengine service: %s", hostname, gai_strerror(err));
+        CfOut(OUTPUT_LEVEL_INFORM, "",
+              "Unable to lookup hostname (%s) or cfengine service: %s",
+              hostname, gai_strerror(err));
         return hostname;
     }
 
+    memset(ipbuffer, 0, sizeof(ipbuffer));
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        strncpy(ipbuffer, sockaddr_ntop(ap->ai_addr), 64);
+        getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                    ipbuffer, sizeof(ipbuffer),
+                    NULL, 0, NI_NUMERICHOST);
         CfDebug("Found address (%s) for host %s\n", ipbuffer, hostname);
 
         if (strlen(ipbuffer) == 0)
         {
-            snprintf(ipbuffer, CF_SMALLBUF - 1, "Empty IP result for %s", hostname);
+            snprintf(ipbuffer, sizeof(ipbuffer), "Empty IP result for %s", hostname);
         }
 
         freeaddrinfo(response);
@@ -193,18 +194,20 @@ const char *Hostname2IPString(const char *hostname)
 
     memset(&cin, 0, sizeof(cin));
 
-    memset(ipbuffer, 0, CF_SMALLBUF - 1);
+    memset(ipbuffer, 0, sizeof(ipbuffer));
 
     if ((hp = gethostbyname(hostname)) != NULL)
     {
         cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-        strncpy(ipbuffer, inet_ntoa(cin.sin_addr), CF_SMALLBUF - 1);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found address (%s) for host %s\n", ipbuffer, hostname);
+        strncpy(ipbuffer, inet_ntoa(cin.sin_addr), sizeof(ipbuffer));
+        ipbuffer[sizeof(ipbuffer)-1] = '\0';
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found address (%s) for host %s\n",
+              ipbuffer, hostname);
         return ipbuffer;
     }
 #endif
 
-    snprintf(ipbuffer, CF_SMALLBUF - 1, "Unknown IP %s", hostname);
+    snprintf(ipbuffer, sizeof(ipbuffer), "Unknown IP %s", hostname);
     return ipbuffer;
 }
 

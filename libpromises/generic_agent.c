@@ -55,6 +55,7 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "syslog_client.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

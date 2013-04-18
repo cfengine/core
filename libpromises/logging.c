@@ -326,22 +326,6 @@ void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, Promise
 
 /************************************************************************/
 
-void FatalError(const EvalContext *ctx, char *s, ...)
-{
-    if (s)
-    {
-        va_list ap;
-        char buf[CF_BUFSIZE] = "";
-
-        va_start(ap, s);
-        vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
-        va_end(ap);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
-    }
-
-    EndAudit(ctx, 0);
-    exit(1);
-}
 
 static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
 {

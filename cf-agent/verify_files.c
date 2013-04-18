@@ -53,6 +53,7 @@
 #include "fncall.h"
 #include "promiser_regex_resolver.h"
 #include "ornaments.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

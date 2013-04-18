@@ -140,3 +140,20 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
         LogTotalCompliance(sp, background_tasks);
     }
 }
+
+void FatalError(const EvalContext *ctx, char *s, ...)
+{
+    if (s)
+    {
+        va_list ap;
+        char buf[CF_BUFSIZE] = "";
+
+        va_start(ap, s);
+        vsnprintf(buf, CF_BUFSIZE - 1, s, ap);
+        va_end(ap);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
+    }
+
+    EndAudit(ctx, 0);
+    exit(1);
+}

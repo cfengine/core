@@ -40,6 +40,7 @@
 #include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "audit.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>

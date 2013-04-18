@@ -56,6 +56,7 @@
 #include "policy.h"
 #include "misc_lib.h"
 #include "fncall.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

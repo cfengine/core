@@ -44,6 +44,7 @@
 #include "rlist.h"
 #include "misc_lib.h"
 #include "cf-serverd-enterprise-stubs.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

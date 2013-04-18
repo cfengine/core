@@ -58,6 +58,7 @@
 #include "misc_lib.h"
 #include "abstract_dir.h"
 #include "verify_files_hashes.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

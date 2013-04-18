@@ -43,6 +43,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "files_hashes.h"
+#include "audit.h"
 
 #include <assert.h>
 

@@ -39,6 +39,7 @@
 #include "syntax.h"
 #include "policy.h"
 #include "env_context.h"
+#include "audit.h"
 
 #include <assert.h>
 

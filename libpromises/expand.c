@@ -51,6 +51,7 @@
 #include "iteration.h"
 #include "buffer.h"
 #include "string_lib.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

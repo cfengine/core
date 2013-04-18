@@ -40,5 +40,10 @@ void UpdatePromiseCounters(PromiseResult status, TransactionContext tc);
 
 void EndAudit(const EvalContext *ctx, int background_tasks);
 
+/*
+ * FatalError causes EndAudit, so don't call it from the low-memory or corrupted stack situations.
+ */
+void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
+
 #endif
 

@@ -43,6 +43,7 @@
 #include "rlist.h"
 #include "scope.h"
 #include "policy.h"
+#include "audit.h"
 
 typedef enum
 {

@@ -36,6 +36,7 @@
 #include "evalfunction.h"
 #include "misc_lib.h"
 #include "scope.h"
+#include "audit.h"
 
 /******************************************************************/
 /* Argument propagation                                           */

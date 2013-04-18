@@ -9,7 +9,7 @@ commands:
 
              args => "@var{more args}",
              contain => @var{contain_body},
-             module => @var{true/false};
+             module => @var{"true"/"false"};
 
 @end smallexample
 @end cartouche

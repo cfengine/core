@@ -207,7 +207,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", PublicKeyFile());
+        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", PublicKeyFile(GetWorkDir()));
         return false;
     }
 

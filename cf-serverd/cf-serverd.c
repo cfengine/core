@@ -26,7 +26,6 @@
 
 #include "server_transform.h"
 #include "cfstream.h"
-#include "logging.h"
 
 int main(int argc, char *argv[])
 {

@@ -39,7 +39,6 @@
 #include "pipes.h"
 #include "signals.h"
 #include "mutex.h"
-#include "logging.h"
 #include "net.h"
 #include "rlist.h"
 #include "misc_lib.h"

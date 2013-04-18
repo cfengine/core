@@ -30,7 +30,6 @@
 #include "files_interfaces.h"
 #include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
 
 /* Globals */
 

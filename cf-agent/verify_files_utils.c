@@ -38,7 +38,6 @@
 #include "files_operators.h"
 #include "item_lib.h"
 #include "client_code.h"
-#include "logging.h"
 #include "files_hashes.h"
 #include "files_repository.h"
 #include "files_select.h"

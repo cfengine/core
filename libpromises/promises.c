@@ -34,7 +34,6 @@
 #include "cfstream.h"
 #include "args.h"
 #include "locks.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "fncall.h"
 #include "env_context.h"

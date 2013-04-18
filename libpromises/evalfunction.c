@@ -51,7 +51,6 @@
 #include "communication.h"
 #include "net.h"
 #include "pipes.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "policy.h"
 #include "misc_lib.h"

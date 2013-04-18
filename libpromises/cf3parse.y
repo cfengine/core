@@ -30,7 +30,6 @@
 
 #include "env_context.h"
 #include "fncall.h"
-#include "logging.h"
 #include "rlist.h"
 #include "item_lib.h"
 #include "policy.h"

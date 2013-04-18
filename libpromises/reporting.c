@@ -33,7 +33,6 @@
 #include "hashes.h"
 #include "vars.h"
 #include "cfstream.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "evalfunction.h"
 #include "misc_lib.h"

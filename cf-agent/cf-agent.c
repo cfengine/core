@@ -58,7 +58,6 @@
 #include "cfstream.h"
 #include "communication.h"
 #include "signals.h"
-#include "logging.h"
 #include "nfs.h"
 #include "processes_select.h"
 #include "list.h"

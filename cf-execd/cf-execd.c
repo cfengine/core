@@ -40,7 +40,6 @@
 #include "string_lib.h"
 #include "signals.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "processes_select.h"

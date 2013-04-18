@@ -34,7 +34,6 @@
 #include "files_hashes.h"
 #include "item_lib.h"
 #include "files_names.h"
-#include "logging.h"
 #include "rlist.h"
 #include "process_lib.h"
 #include "fncall.h"

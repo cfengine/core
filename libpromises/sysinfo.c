@@ -37,7 +37,6 @@
 #include "unix.h"
 #include "cfstream.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "audit.h"

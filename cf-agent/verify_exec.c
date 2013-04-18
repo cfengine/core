@@ -35,7 +35,6 @@
 #include "cfstream.h"
 #include "pipes.h"
 #include "locks.h"
-#include "logging.h"
 #include "evalfunction.h"
 #include "exec_tools.h"
 #include "misc_lib.h"

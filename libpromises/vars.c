@@ -33,7 +33,6 @@
 #include "hashes.h"
 #include "unix.h"
 #include "cfstream.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"

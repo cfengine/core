@@ -31,7 +31,6 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "cfstream.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"

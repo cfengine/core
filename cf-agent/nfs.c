@@ -35,7 +35,6 @@
 #include "cfstream.h"
 #include "string_lib.h"
 #include "pipes.h"
-#include "logging.h"
 #include "nfs.h"
 #include "misc_lib.h"
 #include "rlist.h"

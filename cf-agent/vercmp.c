@@ -33,7 +33,6 @@
 #include "vars.h"
 #include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
 #include "misc_lib.h"
 
 static VersionCmpResult InvertResult(VersionCmpResult result)

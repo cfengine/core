@@ -36,7 +36,6 @@
 #include "cfstream.h"
 #include "locks.h"
 #include "nfs.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "verify_files.h"

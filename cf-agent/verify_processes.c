@@ -35,7 +35,6 @@
 #include "cfstream.h"
 #include "locks.h"
 #include "exec_tools.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"

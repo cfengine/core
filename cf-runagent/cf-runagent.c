@@ -38,7 +38,6 @@
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"

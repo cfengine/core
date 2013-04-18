@@ -47,7 +47,6 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "args.h"
-#include "logging.h"
 #include "iteration.h"
 #include "buffer.h"
 #include "string_lib.h"

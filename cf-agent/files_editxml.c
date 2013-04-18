@@ -40,7 +40,6 @@
 #include "attributes.h"
 #include "cfstream.h"
 #include "locks.h"
-#include "logging.h"
 #include "policy.h"
 #include "ornaments.h"
 

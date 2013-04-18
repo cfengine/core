@@ -33,7 +33,6 @@
 #include "string_lib.h"
 #include "locks.h"
 #include "cf_sql.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "cf-agent-enterprise-stubs.h"

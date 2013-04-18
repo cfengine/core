@@ -32,7 +32,6 @@
 #include "cfstream.h"
 #include "pipes.h"
 #include "mutex.h"
-#include "logging.h"
 
 static void RandomSeed(void);
 

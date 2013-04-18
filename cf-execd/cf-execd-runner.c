@@ -32,7 +32,6 @@
 #include "pipes.h"
 #include "unix.h"
 #include "mutex.h"
-#include "logging.h"
 #include "exec_tools.h"
 
 #ifdef HAVE_NOVA

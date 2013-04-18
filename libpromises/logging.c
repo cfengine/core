@@ -23,7 +23,6 @@
   included file COSL.txt.
 */
 
-#include "logging.h"
 
 #include "env_context.h"
 #include "dbm_api.h"

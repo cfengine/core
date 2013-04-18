@@ -42,7 +42,6 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "rlist.h"
 #include "misc_lib.h"
 #include "assoc.h"

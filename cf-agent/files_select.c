@@ -34,7 +34,6 @@
 #include "string_lib.h"
 #include "pipes.h"
 #include "promises.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "chflags.h"
 

@@ -32,7 +32,6 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "mutex.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "conversion.h"

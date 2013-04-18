@@ -31,7 +31,6 @@
 #include "cfstream.h"
 #include "fncall.h"
 #include "locks.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"

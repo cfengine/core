@@ -40,7 +40,6 @@
 #include "cfstream.h"
 #include "locks.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"

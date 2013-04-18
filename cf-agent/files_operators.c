@@ -45,7 +45,6 @@
 #include "client_code.h"
 #include "pipes.h"
 #include "locks.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "files_repository.h"
 #include "files_lib.h"

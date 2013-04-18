@@ -25,7 +25,6 @@
 #include "dir.h"
 #include "dir_priv.h"
 
-#include "logging.h"
 
 struct Dir_
 {

@@ -32,7 +32,6 @@
 #include "vars.h"
 #include "cfstream.h"
 #include "fncall.h"
-#include "logging.h"
 #include "evalfunction.h"
 #include "misc_lib.h"
 #include "scope.h"

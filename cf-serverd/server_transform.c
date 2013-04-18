@@ -34,7 +34,6 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
-#include "logging.h"
 #include "scope.h"
 #include "vars.h"
 #include "attributes.h"

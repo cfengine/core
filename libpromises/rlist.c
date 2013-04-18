@@ -34,7 +34,6 @@
 #include "fncall.h"
 #include "string_lib.h"
 #include "mutex.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "assoc.h"
 #include "env_context.h"

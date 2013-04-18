@@ -31,7 +31,6 @@
 #include "signals.h"
 #include "mutex.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "unix.h"
 

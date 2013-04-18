@@ -359,14 +359,6 @@ const char *ConstraintContext(const Constraint *cp);
 Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints);
 
 /**
- * @brief Replace the rval of a scalar constraint (copies rval)
- * @param conlist
- * @param lval
- * @param rval
- */
-void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
-
-/**
  * @brief Get the Rval value of the first effective constraint that matches the given type
  * @param lval
  * @param promise

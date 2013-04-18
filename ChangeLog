@@ -6,6 +6,9 @@
        Changes:
        - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
 
+       - "outputs" promise type is retired. Their semantics was not clear, and the functionality
+         is better suited for control body setting, not a promise.
+
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)
 

@@ -535,9 +535,10 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
         line[0] = '\0';
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            if (strlen(line))
+            if (errno != 0)
             {
                 UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, name);
+                break;
             }
         }
         ++linenumber;

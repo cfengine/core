@@ -148,9 +148,10 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
         buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
         {
-            if (strlen(buffer))
+            if (errno != 0)
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
         }
         CfOut(OUTPUT_LEVEL_ERROR, "", "R: %s", buffer);

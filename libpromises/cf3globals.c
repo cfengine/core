@@ -60,7 +60,6 @@ Item *DONELIST = NULL;
 
 char *CBUNDLESEQUENCE_STR;
 
-int EDIT_MODEL = false;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/

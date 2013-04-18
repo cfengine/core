@@ -98,7 +98,6 @@ extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
 
 extern Rlist *CF_STCK;
-extern int EDIT_MODEL;
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;

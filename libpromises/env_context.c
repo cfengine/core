@@ -1991,7 +1991,8 @@ void SystemLog(Item *mess, OutputLevel level);
 void LogListStdout(const Item *messages, bool has_prefix);
 const char *GetErrorStr(void);
 
-static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
+static const char *NO_STATUS_TYPES[] =
+    { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 static const char *NO_LOG_TYPES[] =
     { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 
@@ -2358,7 +2359,7 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
 
 static void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
-    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
+    if (!IsPromiseValuableForStatus(pp))
     {
 #ifdef HAVE_NOVA
         TrackTotalCompliance(status, pp);

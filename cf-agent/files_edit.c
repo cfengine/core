@@ -82,7 +82,6 @@ EditContext *NewEditContext(char *filename, Attributes a)
         ec->file_start = NULL;
     }
 
-    EDIT_MODEL = true;
     return ec;
 }
 
@@ -90,8 +89,6 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
 void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
 {
-    EDIT_MODEL = false;
-
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))

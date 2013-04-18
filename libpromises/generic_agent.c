@@ -182,11 +182,6 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
 {
     bool check_policy = false;
 
-    if (SHOWREPORTS)
-    {
-        check_policy = true;
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Reports mode is enabled, force-validating policy");
-    }
     if (IsFileOutsideDefaultRepository(config->input_file))
     {
         check_policy = true;

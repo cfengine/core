@@ -2197,14 +2197,14 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
 #if defined(__CYGWIN__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+static const char *GetDefaultWorkDir(void)
 {
     return WORKDIR;
 }
 
 #elif defined(__ANDROID__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+static const char *GetDefaultWorkDir(void)
 {
     /* getpwuid() on Android returns /data, so use compile-time default instead */
     return WORKDIR;
@@ -2212,22 +2212,21 @@ static const char *GetDefaultWorkDir(EvalContext *ctx)
 
 #elif !defined(__MINGW32__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+#define MAX_WORKDIR_LENGTH (CF_BUFSIZE / 2)
+
+static const char *GetDefaultWorkDir(void)
 {
     if (getuid() > 0)
     {
-        static char workdir[CF_BUFSIZE];
+        static char workdir[MAX_WORKDIR_LENGTH];
 
         if (!*workdir)
         {
             struct passwd *mpw = getpwuid(getuid());
 
-            strncpy(workdir, mpw->pw_dir, CF_BUFSIZE - 10);
-            strcat(workdir, "/.cfagent");
-
-            if (strlen(workdir) > CF_BUFSIZE / 2)
+            if (snprintf(workdir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
             {
-                FatalError(ctx, "Suspicious looking home directory. The path is too long and will lead to problems.");
+                return NULL;
             }
         }
         return workdir;
@@ -2242,11 +2241,11 @@ static const char *GetDefaultWorkDir(EvalContext *ctx)
 
 /******************************************************************/
 
-const char *GetWorkDir(EvalContext *ctx)
+const char *GetWorkDir(void)
 {
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    return workdir == NULL ? GetDefaultWorkDir(ctx) : workdir;
+    return workdir == NULL ? GetDefaultWorkDir() : workdir;
 }
 
 /******************************************************************/

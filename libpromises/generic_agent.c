@@ -520,10 +520,16 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
 /* Define trusted directories */
 
-    strcpy(CFWORKDIR, GetWorkDir(ctx));
-    MapName(CFWORKDIR);
+    {
+        const char *workdir = GetWorkDir();
+        if (!workdir)
+        {
+            FatalError(ctx, "Error determining working directory");
+        }
 
-    CfDebug("Setting CFWORKDIR=%s\n", CFWORKDIR);
+        strcpy(CFWORKDIR, workdir);
+        MapName(CFWORKDIR);
+    }
 
 /* On windows, use 'binary mode' as default for files */
 

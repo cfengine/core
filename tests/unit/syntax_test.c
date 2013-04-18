@@ -41,6 +41,36 @@ static void test_lookup_constraint_edit_xml_set_attribute_attribute_value(void)
     assert_string_equal("attribute_value", x->lval);
 }
 
+static void test_lookup_body_classes(void)
+{
+    const ConstraintSyntax *x = BodySyntaxLookup("classes");
+    assert_true(x);
+
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "promise_repaired");
+    assert_true(y);
+    assert_string_equal("promise_repaired", y->lval);
+}
+
+static void test_lookup_body_process_count(void)
+{
+    const ConstraintSyntax *x = BodySyntaxLookup("process_count");
+    assert_true(x);
+
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "match_range");
+    assert_true(y);
+    assert_string_equal("match_range", y->lval);
+}
+
+static void test_lookup_body_delete_select(void)
+{
+    const ConstraintSyntax *x = BodySyntaxLookup("delete_select");
+    assert_true(x);
+
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "delete_if_startwith_from_list");
+    assert_true(y);
+    assert_string_equal("delete_if_startwith_from_list", y->lval);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -50,6 +80,10 @@ int main()
         unit_test(test_lookup_promise_type_common_vars),
         unit_test(test_lookup_promise_type_edit_xml_build_xpath),
         unit_test(test_lookup_promise_type_edit_line_delete_lines),
+
+        unit_test(test_lookup_body_classes),
+        unit_test(test_lookup_body_process_count),
+        unit_test(test_lookup_body_delete_select),
 
         unit_test(test_lookup_constraint_edit_xml_set_attribute_attribute_value)
     };

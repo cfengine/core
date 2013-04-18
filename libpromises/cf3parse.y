@@ -706,9 +706,11 @@ selection_id:          IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses, P.currentid);
 
-                           if (!SelectionTypeCheck(P.currenttype, P.currentid))
+                           const ConstraintSyntax *body_syntax = BodySyntaxLookup(P.currentbody->type);
+
+                           if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax, P.currentid))
                            {
-                               ParseError("Unknown selection:%s for body type: %s", P.currentid, P.currenttype);
+                               ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
                                INSTALL_SKIP=true;
                            }
 

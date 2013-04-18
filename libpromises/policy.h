@@ -413,14 +413,4 @@ char *QualifiedNameScopeComponent(const char *qualified_name);
  */
 bool BundleTypeCheck(const char *name);
 
-/**
- * @brief Check whether the constraint id is valid one for promise type
- */
-bool ConstraintTypeCheck(const char *promise_type, const char *constraint_id);
-
-/**
- * @brief Check whether the selection id is valid one for body type
- */
-bool SelectionTypeCheck(const char *body_type, const char *selection_id);
-
 #endif

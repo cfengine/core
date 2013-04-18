@@ -105,7 +105,7 @@ static const ConstraintSyntax *GetCommonConstraint(const char *lval)
     return NULL;
 }
 
-static const ConstraintSyntax *GetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval)
+const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval)
 {
     for (int j = 0; body_syntax[j].lval; j++)
     {
@@ -130,7 +130,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     const ConstraintSyntax *constraint_syntax = NULL;
     if (strcmp("edit_line", promise_type_syntax->bundle_type) == 0)
     {
-        constraint_syntax = GetConstraintSyntax(CF_COMMON_EDITBODIES, lval);
+        constraint_syntax = BodySyntaxGetConstraintSyntax(CF_COMMON_EDITBODIES, lval);
         if (constraint_syntax)
         {
             return constraint_syntax;
@@ -138,7 +138,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     }
     else if (strcmp("edit_xml", promise_type_syntax->bundle_type) == 0)
     {
-        constraint_syntax = GetConstraintSyntax(CF_COMMON_XMLBODIES, lval);
+        constraint_syntax = BodySyntaxGetConstraintSyntax(CF_COMMON_XMLBODIES, lval);
         if (constraint_syntax)
         {
             return constraint_syntax;

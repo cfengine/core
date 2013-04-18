@@ -85,9 +85,10 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
  * @return NULL if not found
  */
 const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
+const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
 
 
-
+const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
 
 
 #define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL }

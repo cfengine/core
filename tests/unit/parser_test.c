@@ -144,13 +144,9 @@ void test_body_selection_forgot_semicolon(void)
     assert_false(LoadPolicy("body_selection_forgot_semicolon.cf"));
 }
 
-
 void test_body_selection_unknown_selection_id(void)
 {
-    /* 
-     * FIXME function to test this is not yet implemented
-    */
-    assert_true(LoadPolicy("body_selection_unknown_selection_id.cf"));
+    assert_false(LoadPolicy("body_selection_unknown_selection_id.cf"));
 }
 
 int main()

@@ -2905,15 +2905,3 @@ bool BundleTypeCheck(const char *name)
 
     return false;
 }
-
-/* FIXME: alway true */
-bool ConstraintTypeCheck(ARG_UNUSED const char *promise_type, ARG_UNUSED const char *constraint_id)
-{
-    return true;
-}
-
-/* FIXME: alway true */
-bool SelectionTypeCheck(ARG_UNUSED const char *body_type, ARG_UNUSED const char *selection_id)
-{
-    return true;
-}

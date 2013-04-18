@@ -26,7 +26,9 @@
 #ifndef CFENGINE_CLIENT_CODE_H
 #define CFENGINE_CLIENT_CODE_H
 
-#include "cf3.defs.h"
+#include "platform.h"
+#include "communication.h"
+
 
 void DetermineCfenginePort(void);
 /**
@@ -43,5 +45,9 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc);
 Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
 const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
+
+/* Mark connection as free */
+void ServerNotBusy(AgentConnection *conn);
+
 
 #endif

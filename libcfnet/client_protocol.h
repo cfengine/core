@@ -25,6 +25,9 @@
 #ifndef CFENGINE_CLIENT_PROTOCOL_H
 #define CFENGINE_CLIENT_PROTOCOL_H
 
+#include "cfnet.h"
+
+
 int IdentifyAgent(int sd, char *localip, int family);
 int AuthenticateAgent(AgentConnection *conn, bool trust_key);
 int BadProtoReply(char *buf);

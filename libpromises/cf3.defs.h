@@ -60,7 +60,7 @@
 #define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
-#define CF_MAX_IP_LEN 64        /* numerical ip length */
+#define CF_MAX_IP_LEN 64        /* TODO INET6_ADDRSTRLEN */
 #define CF_PROCCOLS 16
 #define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
@@ -71,7 +71,6 @@
 #define CF_SAME_GROUP ((gid_t)-1)
 #define CF_UNKNOWN_GROUP ((gid_t)-2)
 #define CF_INFINITY ((int)999999999)
-#define SOCKET_INVALID -1
 #define CF_MONDAY_MORNING 345600
 
 #define MINUTES_PER_HOUR 60
@@ -91,7 +90,6 @@
 #define CF_INDEX_FIELD_LEN 7
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
-#define MAXIP4CHARLEN 16
 #define MAX_MONTH_NAME 9
 
 #define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
@@ -119,9 +117,6 @@
 #define CFD_TRUE "CFD_TRUE"
 #define CFD_FALSE "CFD_FALSE"
 #define CF_ANYCLASS "any"
-#define CF_RSA_PROTO_OFFSET 24
-#define CF_PROTO_OFFSET 16
-#define CF_INBAND_OFFSET 8
 #define CF_SMALL_OFFSET 2
 
 /* digest sizes */
@@ -208,45 +203,6 @@ typedef struct
 #endif /* !__MINGW32__ */
 
 #define CF_WORDSIZE 8           /* Number of bytes in a word */
-
-/*******************************************************************/
-
-typedef enum
-{
-    FILE_TYPE_REGULAR,
-    FILE_TYPE_LINK,
-    FILE_TYPE_DIR,
-    FILE_TYPE_FIFO,
-    FILE_TYPE_BLOCK,
-    FILE_TYPE_CHAR_, /* Conflict with winbase.h */
-    FILE_TYPE_SOCK
-} FileType;
-
-/*******************************************************************/
-
-typedef struct Stat_ Stat;
-
-struct Stat_
-{
-    char *cf_filename;          /* What file are we statting? */
-    char *cf_server;            /* Which server did this come from? */
-    FileType cf_type;           /* enum filetype */
-    mode_t cf_lmode;            /* Mode of link, if link */
-    mode_t cf_mode;             /* Mode of remote file, not link */
-    uid_t cf_uid;               /* User ID of the file's owner */
-    gid_t cf_gid;               /* Group ID of the file's group */
-    off_t cf_size;              /* File size in bytes */
-    time_t cf_atime;            /* Time of last access */
-    time_t cf_mtime;            /* Time of last data modification */
-    time_t cf_ctime;            /* Time of last file status change */
-    char cf_makeholes;          /* what we need to know from blksize and blks */
-    char *cf_readlink;          /* link value or NULL */
-    int cf_failed;              /* stat returned -1 */
-    int cf_nlink;               /* Number of hard links */
-    int cf_ino;                 /* inode number on server */
-    dev_t cf_dev;               /* device number */
-    Stat *next;
-};
 
 /*******************************************************************/
 
@@ -374,26 +330,6 @@ enum observables
     ob_ipp_out,
     ob_spare
 };
-
-/*******************************************************************/
-
-typedef struct
-{
-    int sd;
-    int trust;                  /* true if key being accepted on trust */
-    int authenticated;
-    int protoversion;
-    int family;                 /* AF_INET or AF_INET6 */
-    char username[CF_SMALLBUF];
-    char localip[CF_MAX_IP_LEN];
-    char remoteip[CF_MAX_IP_LEN];
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    unsigned char *session_key;
-    char encryption_type;
-    short error;
-    char *this_server;
-    Stat *cache; /* Cache for network connection (READDIR result) */
-} AgentConnection;
 
 /*******************************************************************/
 

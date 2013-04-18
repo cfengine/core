@@ -1364,15 +1364,16 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        ThreadLock(cft_getaddr);
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                    txtaddr, sizeof(txtaddr),
+                    NULL, 0, NI_NUMERICHOST);
 
-        if (strcmp(MapAddress(conn->ipaddr), sockaddr_ntop(ap->ai_addr)) == 0)
+        if (strcmp(MapAddress(conn->ipaddr), txtaddr) == 0)
         {
             CfDebug("Found match\n");
             matched = true;
         }
-
-        ThreadUnlock(cft_getaddr);
     }
 
     if (response != NULL)
@@ -1403,9 +1404,14 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
             CfOut(OUTPUT_LEVEL_ERROR, "getpeername", "Couldn't get socket address\n");
             matched = false;
         }
+        if (raddr.sin_family != AF_INET)
+            ProgrammingError("Address family not IPv4 in IPv4-specific code!");
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking through hostnames on socket with IPv4 %s\n",
-              sockaddr_ntop((struct sockaddr *) &raddr));
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        inet_ntop(AF_INET, &raddr.sin_addr, txtaddr, sizeof(txtaddr));
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Looking through hostnames on socket with IPv4 %s\n", txtaddr);
 
         for (i = 0; hp->h_addr_list[i]; i++)
         {
@@ -1435,8 +1441,9 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
             if ((hp->h_addr_list[i] != NULL) && (hp->h_aliases[j] != NULL))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Reverse hostname lookup failed, host claiming to be %s was %s\n", buf,
-                      sockaddr_ntop((struct sockaddr *) &raddr));
+                CfOut(OUTPUT_LEVEL_INFORM, "",
+                      "Reverse hostname lookup failed, host claiming to be %s was %s\n",
+                      buf, txtaddr);
                 matched = false;
             }
             else

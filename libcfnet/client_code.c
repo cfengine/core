@@ -1083,7 +1083,12 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
         for (ap = response; ap != NULL; ap = ap->ai_next)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to %s = %s on port %s\n", host, sockaddr_ntop(ap->ai_addr), strport);
+            char txtaddr[CF_MAX_IP_LEN] = "";
+            getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                        txtaddr, sizeof(txtaddr),
+                        NULL, 0, NI_NUMERICHOST);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to %s = %s on port %s\n",
+                  host, txtaddr, strport);
 
             if ((conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == SOCKET_INVALID)
             {
@@ -1133,7 +1138,9 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         if (connected)
         {
             conn->family = ap->ai_family;
-            snprintf(conn->remoteip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop(ap->ai_addr));
+            getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                        conn->remoteip, CF_MAX_IP_LEN,
+                        NULL, 0, NI_NUMERICHOST);
         }
         else
         {

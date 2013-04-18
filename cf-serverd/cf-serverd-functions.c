@@ -386,12 +386,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
-                char ipaddr[CF_MAXVARSIZE];
-
-                memset(ipaddr, 0, CF_MAXVARSIZE);
-                ThreadLock(cft_getaddr);
-                snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
-                ThreadUnlock(cft_getaddr);
+                char ipaddr[CF_MAX_IP_LEN] = "";
+                sockaddr_ntop((struct sockaddr *) &cin, ipaddr, sizeof(ipaddr));
 
                 ServerEntryPoint(ctx, sd_reply, ipaddr);
             }
@@ -488,10 +484,12 @@ int OpenReceiverChannel(void)
         {
             if (DEBUG)
             {
-                ThreadLock(cft_getaddr);
-                printf("Bound to address %s on %s=%d\n", sockaddr_ntop(ap->ai_addr), CLASSTEXT[VSYSTEMHARDCLASS],
-                       VSYSTEMHARDCLASS);
-                ThreadUnlock(cft_getaddr);
+                char txtaddr[CF_MAX_IP_LEN] = "";
+                getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                            txtaddr, sizeof(txtaddr),
+                            NULL, 0, NI_NUMERICHOST);
+                printf("Bound to address %s on %s=%d\n", txtaddr,
+                       CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
             }
 
 #if defined(__MINGW32__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)

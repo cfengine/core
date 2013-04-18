@@ -24,6 +24,7 @@
 
 #include "syslog_client.h"
 
+#include "cfnet.h"                                         /* sockaddr_ntop */
 #include "logging.h"
 
 static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";
@@ -71,8 +72,11 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to syslog %s = %s on port %s\n", SYSLOG_HOST, sockaddr_ntop(ap->ai_addr),
-              strport);
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        sockaddr_ntop(ap->ai_addr, txtaddr, sizeof(txtaddr));
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              " -> Connect to syslog %s = %s on port %s\n",
+              SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {

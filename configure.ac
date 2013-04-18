@@ -665,6 +665,9 @@ AC_CHECK_FUNCS(setsockopt)
 AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
 
+AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
+AC_REPLACE_FUNCS(inet_ntop inet_pton)
+
 AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))

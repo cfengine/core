@@ -357,6 +357,12 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
     }
 
+    // mac address on a loopback interface doesn't make sense
+    if (ifr->ifr_flags & IFF_LOOPBACK)
+    {
+      return;
+    }
+
 # if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     char hw_mac[CF_MAXVARSIZE];
 
@@ -371,7 +377,8 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],
              (unsigned char) ifr->ifr_hwaddr.sa_data[2],
              (unsigned char) ifr->ifr_hwaddr.sa_data[3],
-             (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
+             (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
+             (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
@@ -404,14 +411,6 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                 sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                 m = (char *) LLADDR(sdl);
                 
-                // Skip zeroed mac addresses (loopback interfaces, ...)
-                if (m[0] == 0 && m[1] == 0 
-                    && m[2] == 0 && m[3] == 0 
-                    && m[4] == 0 && m[5] == 0)
-                {
-                    continue;
-                }
-
                 snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
                     (unsigned char) m[0],
                     (unsigned char) m[1],
@@ -562,12 +561,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Interface %d: %s\n", j + 1, ifp->ifr_name);
         }
 
-        // Ignore the loopback
-
-        if (strcmp(ifp->ifr_name, "lo") == 0)
-        {
-            continue;
-        }
 
         if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
         {
@@ -602,7 +595,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
               GetInterfaceFlags(ctx, ag, &ifr, &flags);
             }
 
-            if ((ifr.ifr_flags & IFF_UP) && (!(ifr.ifr_flags & IFF_LOOPBACK)))
+            if (ifr.ifr_flags & IFF_UP)
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 

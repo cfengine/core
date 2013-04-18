@@ -144,10 +144,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-    if (AM_NOVA)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFE Nova\n");
-    }
+#ifdef HAVE_NOVA
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFEngine Enterprise\n");
+#endif
 
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);

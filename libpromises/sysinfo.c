@@ -689,9 +689,10 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
 
         if (fgets(context, CF_BUFSIZE, fp) == NULL)
         {
-            if (strlen(context))
+            if (errno != 0)
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
         }
 
@@ -1533,9 +1534,10 @@ static int Linux_Suse_Version(EvalContext *ctx)
         vbuf[0] = '\0';
         if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
         {
-            if (strlen(vbuf))
+            if (errno != 0)
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
         }
 

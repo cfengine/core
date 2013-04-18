@@ -746,15 +746,11 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
         buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
         {
-            if (strlen(buffer))
+            if (errno != 0)
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            break;
         }
 
         if (strcasestr(buffer, "inet6"))

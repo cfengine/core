@@ -681,24 +681,22 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         return;
     }
 
-    while (!feof(fp))
+    for(;;)
     {
-        context[0] = '\0';
         name[0] = '\0';
         value[0] = '\0';
 
         if (fgets(context, CF_BUFSIZE, fp) == NULL)
         {
-            if (errno != 0)
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
                 break;
             }
-        }
-
-        if (feof(fp))
-        {
-            break;
+            else /* feof */
+            {
+                break;
+            }
         }
 
 
@@ -1529,14 +1527,17 @@ static int Linux_Suse_Version(EvalContext *ctx)
     strversion[0] = '\0';
     strpatch[0] = '\0';
 
-    while (!feof(fp))
+    for(;;)
     {
-        vbuf[0] = '\0';
         if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
         {
-            if (errno != 0)
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
                 break;
             }
         }

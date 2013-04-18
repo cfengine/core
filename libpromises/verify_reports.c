@@ -143,14 +143,17 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
         return;
     }
 
-    while ((!feof(fp)) && (lines < a.report.numlines))
+    while ((lines < a.report.numlines))
     {
-        buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
         {
-            if (errno != 0)
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
                 break;
             }
         }

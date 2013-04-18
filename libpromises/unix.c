@@ -741,14 +741,17 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
 
-    while (!feof(pp))
+    for(;;)
     {
-        buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
         {
-            if (errno != 0)
+            if (ferror(pp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
                 break;
             }
         }

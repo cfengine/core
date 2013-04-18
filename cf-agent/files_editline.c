@@ -183,14 +183,17 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
         size_t level = 0;
         char buffer[CF_BUFSIZE];
 
-        while(!feof(fp))
+        for (;;)
         {
-            buffer[0] = '\0';
             if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
             {
-                if (errno != 0)
+                if (ferror(fp))
                 {
                     UnexpectedError("Failed to read line from stream");
+                    break;
+                }
+                else /* feof */
+                {
                     break;
                 }
             }
@@ -1231,18 +1234,21 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
     
     loc = location;
 
-    while (!feof(fin))
+    for(;;)
     {
-        buf[0] = '\0';
         if (fgets(buf, CF_BUFSIZE, fin) == NULL)
         {
-            if (errno == EISDIR) {
+            if (ferror(fin) == EISDIR) {
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "Could not read file %s: Is a directory", pp->promiser);
                 break;
             }
-            else if (errno != 0)
+            else if (ferror(fin))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
                 break;
             }
         }

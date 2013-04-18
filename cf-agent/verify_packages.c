@@ -530,14 +530,17 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(CommandArg0(manager->manager)));
 
     int linenumber = 0;
-    while (!feof(fin))
+    for(;;)
     {
-        line[0] = '\0';
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            if (errno != 0)
+            if (ferror(fin))
             {
                 UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, name);
+                break;
+            }
+            else /* feof */
+            {
                 break;
             }
         }

@@ -45,6 +45,8 @@
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
+static Item *DONELIST = NULL;
+
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
 static bool WriteLockData(CF_DB *dbp, const char *lock_id, LockData *lock_data)

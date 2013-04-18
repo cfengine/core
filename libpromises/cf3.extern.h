@@ -92,7 +92,6 @@ extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern Scope *VSCOPE;
-extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
 

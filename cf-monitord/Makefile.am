@@ -1,6 +1,9 @@
 sbin_PROGRAMS = cf-monitord
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ \
+	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libpromises \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA

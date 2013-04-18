@@ -27,6 +27,7 @@
 #define CFENGINE_SERVER_H
 
 #include "cf3.defs.h"
+#include "cfnet.h"                                       /* AgentConnection */
 
 #include "generic_agent.h"
 

@@ -22,10 +22,13 @@
   included file COSL.txt.
 */
 
+/* Low Level networking routines. */
+
 #ifndef CFENGINE_NET_H
 #define CFENGINE_NET_H
 
-#include "cf3.defs.h"
+#include "cfnet.h"
+
 
 int SendTransaction(int sd, char *buffer, int len, char status);
 int ReceiveTransaction(int sd, char *buffer, int *more);

@@ -90,7 +90,6 @@ libpromises_la_SOURCES = \
         rlist.c rlist.h \
         scope.c scope.h \
         signals.c signals.h \
-        sockaddr.c \
         sort.c sort.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \

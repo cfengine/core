@@ -42,6 +42,7 @@
 #include "locks.h"
 #include "logging.h"
 #include "policy.h"
+#include "ornaments.h"
 
 enum editxmltypesequence
 {

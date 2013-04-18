@@ -45,6 +45,7 @@
 #include "policy.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "ornaments.h"
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"

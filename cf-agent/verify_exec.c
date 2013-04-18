@@ -43,6 +43,7 @@
 #include "policy.h"
 #include "string_lib.h"
 #include "scope.h"
+#include "ornaments.h"
 
 typedef enum
 {

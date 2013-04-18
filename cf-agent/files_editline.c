@@ -44,6 +44,7 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
+#include "ornaments.h"
 
 #include <assert.h>
 

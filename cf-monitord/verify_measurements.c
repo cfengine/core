@@ -33,6 +33,7 @@
 #include "policy.h"
 #include "cf-monitord-enterprise-stubs.h"
 #include "env_context.h"
+#include "ornaments.h"
 
 #ifdef HAVE_NOVA
 #include "history.h"

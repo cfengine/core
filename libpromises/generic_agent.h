@@ -95,7 +95,6 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
 void BannerBundle(Bundle *bp, Rlist *args);
-void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
 void WarnAboutDeprecatedFeatures(EvalContext *ctx);
 void CheckForPolicyHub(EvalContext *ctx);

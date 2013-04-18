@@ -40,6 +40,7 @@
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 #include "rlist.h"
+#include "ornaments.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     

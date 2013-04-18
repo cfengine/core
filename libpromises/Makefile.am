@@ -81,6 +81,7 @@ libpromises_la_SOURCES = \
         modes.c \
         mutex.c mutex.h \
         net.c net.h \
+        ornaments.c ornaments.h \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \

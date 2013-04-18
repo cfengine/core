@@ -38,6 +38,7 @@
 #include "policy.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "env_context.h"
+#include "ornaments.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);

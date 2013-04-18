@@ -39,6 +39,7 @@
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

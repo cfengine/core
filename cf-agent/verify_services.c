@@ -36,6 +36,7 @@
 #include "policy.h"
 #include "scope.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "ornaments.h"
 
 #ifdef __MINGW32__
 #include "cf.nova.h"

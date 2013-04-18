@@ -41,6 +41,7 @@
 #include "policy.h"
 #include "verify_files.h"
 #include "promiser_regex_resolver.h"
+#include "ornaments.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

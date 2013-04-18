@@ -20,16 +20,19 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_LOGGING_H
-#define CFENGINE_LOGGING_H
+#ifndef CFENGINE_ORNAMENTS_H
+#define CFENGINE_ORNAMENTS_H
+
+/*
+ * Various ornaments in output
+ */
 
 #include "cf3.defs.h"
+#include "policy.h"
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
-void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
+void PromiseBanner(const Promise *pp);
+void BannerSubBundle(const Bundle *bp, const Rlist *params);
 
 #endif

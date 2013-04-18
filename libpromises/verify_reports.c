@@ -40,6 +40,7 @@
 #include "misc_lib.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
 

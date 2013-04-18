@@ -364,7 +364,8 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                     if (IsQualifiedVariable(exp->item))
                     {
                         absscope[0] = '\0';
-                        sscanf(exp->item, "%[^.].%s", absscope, var);
+                        sscanf(exp->item, "%[^.].", absscope);
+                        strncpy(var, exp->item + strlen(absscope) + 1, CF_BUFSIZE - 1);
                         snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
                         qualified = true;
                     }
@@ -967,7 +968,7 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
     Rval retval;
     char format[CF_SMALLBUF];
 
-    snprintf(format, CF_SMALLBUF, "%%[^%c]%c%%s", CF_MAPPEDLIST, CF_MAPPEDLIST);
+    snprintf(format, CF_SMALLBUF, "%%[^%c]%c", CF_MAPPEDLIST, CF_MAPPEDLIST);
 
     for (const Rlist *rp = listvars; rp != NULL; rp = rp->next)
     {
@@ -977,7 +978,8 @@ static void CopyLocalizedIteratorsToThisScope(EvalContext *ctx, const char *scop
         {
             char orgscope[CF_MAXVARSIZE], orgname[CF_MAXVARSIZE];
 
-            sscanf(rp->item, format, orgscope, orgname);
+            sscanf(rp->item, format, orgscope);
+            strncpy(orgname, rp->item + strlen(orgscope) + 1, CF_MAXVARSIZE);
 
             if (EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL))
             {
@@ -996,7 +998,7 @@ static void CopyLocalizedScalarsToThisScope(EvalContext *ctx, const char *scope,
     Rval retval;
     char format[CF_SMALLBUF];
 
-    snprintf(format, CF_SMALLBUF, "%%[^%c]%c%%s", CF_MAPPEDLIST, CF_MAPPEDLIST);
+    snprintf(format, CF_SMALLBUF, "%%[^%c]%c", CF_MAPPEDLIST, CF_MAPPEDLIST);
 
     for (const Rlist *rp = scalars; rp != NULL; rp = rp->next)
     {
@@ -1004,7 +1006,8 @@ static void CopyLocalizedScalarsToThisScope(EvalContext *ctx, const char *scope,
         {
             char orgscope[CF_MAXVARSIZE], orgname[CF_MAXVARSIZE];
 
-            sscanf(rp->item, format, orgscope, orgname);
+            sscanf(rp->item, format, orgscope);
+            strncpy(orgname, rp->item + strlen(orgscope) + 1, CF_MAXVARSIZE);
 
             if (EvalContextVariableGet(ctx, (VarRef) { NULL, orgscope, orgname }, &retval, NULL))
             {

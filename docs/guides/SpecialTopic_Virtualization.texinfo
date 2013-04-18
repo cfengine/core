@@ -387,7 +387,6 @@ convergently.
 body common control
 {
 bundlesequence => {"my_vm_cloud"};
-host_licenses_paid => "2";
 }
 
 #######################################################
@@ -459,7 +458,6 @@ env_cpus => "2";
 body common control
 {
 bundlesequence => {"my_vm_cloud"};
-host_licenses_paid => "2";
 }
 
 #####################################################

@@ -28,29 +28,33 @@
 
 #include "cf3.defs.h"
 
-/**
- * @brief Sets CONTEXTID = id
- * @param id
- */
-void ScopeSet(char *id);
+#include "var_expressions.h"
+#include "assoc.h"
 
 /**
- * @brief NewScope; SetScope;
- * @param id
+ * @deprecated
  */
-void ScopeSetNew(char *id);
+Scope *ScopeNew(const char *name);
+
+void ScopePutMatch(int index, const char *value);
+
+bool ScopeExists(const char *name);
 
 /**
- * @brief alloc a Scope, idempotent prepend to VSCOPE
+ * @deprecated
+ */
+void ScopeSetCurrent(const char *name);
+
+/**
+ * @deprecated
+ */
+Scope *ScopeGetCurrent(void);
+
+/**
+ * @brief Clears all variables from a scope
  * @param name
  */
-void ScopeNew(const char *name);
-
-/**
- * @brief remove a Scope from VSCOPE, and dealloc it. removes only the first it finds in the list.
- * @param name
- */
-void ScopeDelete(char *name);
+void ScopeClear(const char *name);
 
 /**
  * @brief find a Scope in VSCOPE
@@ -64,7 +68,7 @@ Scope *ScopeGet(const char *scope);
  * @param new_scopename
  * @param old_scopename
  */
-void ScopeCopy(const char *new_scopename, const char *old_scopename);
+void ScopeCopy(const char *new_scopename, const Scope *old_scope);
 
 /**
  * @brief clear VSCOPE
@@ -76,7 +80,7 @@ void ScopeDeleteAll(void);
  *        in addition to copying them in, also attempts to do one-pass resolution of variables,
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
-void ScopeAugment(EvalContext *ctx, char *scope, char *ns, Rlist *lvals, Rlist *rvals);
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments);
 
 /**
  * @brief prepend GetScope("this") to CF_STCK
@@ -90,21 +94,22 @@ void ScopePopThis(void);
 
 
 void ScopeToList(Scope *sp, Rlist **list);
-void ScopeNewScalar(const char *scope, const char *lval, const char *rval, DataType dt);
-void ScopeDeleteScalar(const char *scope, const char *lval);
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt);
-/*
- * Do not modify returned Rval, its contents may be constant and statically
- * allocated.
- */
-DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv);
-void ScopeDeleteVariable(const char *scope, const char *id);
-bool ScopeVariableExistsInThis(const char *name);
+void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt);
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *scope, const char *lval, const char *rval, DataType dt);
+void ScopeDeleteScalar(VarRef lval);
+void ScopeDeleteSpecialScalar(const char *scope, const char *lval);
+void ScopeNewList(EvalContext *ctx, VarRef lval, void *rval, DataType dt);
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt);
+bool ScopeIsReserved(const char *scope);
 
-int ScopeAddVariableHash(const char *scope, const char *lval, Rval rval, DataType dtype, const char *fname, int no);
+void ScopeDeleteVariable(const char *scope, const char *id);
+
 void ScopeDeRefListsInHashtable(char *scope, Rlist *list, Rlist *reflist);
 
 int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const Rlist *take);
+
+int CompareVariableValue(Rval rval, CfAssoc *ap);
+bool UnresolvedVariables(const CfAssoc *ap, RvalType rtype);
 
 // TODO: namespacing utility functions. there are probably a lot of these floating around, but probably best
 // leave them until we get a proper symbol table

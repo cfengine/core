@@ -25,35 +25,37 @@
 
 #include "communication.h"
 
-#include "cfstream.h"
+#include "logging.h"
 
 /*********************************************************************/
 
-AgentConnection *NewAgentConn()
+AgentConnection *NewAgentConn(const char *server_name)
 {
-    AgentConnection *ap;
-
-    ap = xcalloc(1, sizeof(AgentConnection));
+    AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
 
     CfDebug("New server connection...\n");
-    ap->sd = SOCKET_INVALID;
-    ap->family = AF_INET;
-    ap->trust = false;
-    ap->encryption_type = 'c';
-    return ap;
+    conn->sd = SOCKET_INVALID;
+    conn->family = AF_INET;
+    conn->trust = false;
+    conn->encryption_type = 'c';
+    conn->this_server = xstrdup(server_name);
+    return conn;
 };
 
-/*********************************************************************/
-
-void DeleteAgentConn(AgentConnection *ap)
+void DeleteAgentConn(AgentConnection *conn)
 {
-    if (ap->session_key != NULL)
+    Stat *sp = conn->cache;
+
+    while (sp != NULL)
     {
-        free(ap->session_key);
+        Stat *sps = sp;
+        sp = sp->next;
+        free(sps);
     }
 
-    free(ap);
-    ap = NULL;
+    free(conn->session_key);
+    free(conn->this_server);
+    free(conn);
 }
 
 int IsIPV6Address(char *name)

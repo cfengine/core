@@ -22,34 +22,34 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "mod_measurement.h"
 
-static const BodySyntax CF_MATCHVALUE_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_MATCHVALUE_BODY[] =
 {
     /* Row models */
-    {"select_line_matching", DATA_TYPE_STRING, CF_ANYSTRING, "Regular expression for matching line location"},
-    {"select_line_number", DATA_TYPE_INT, CF_VALRANGE, "Read from the n-th line of the output (fixed format)"},
-    {"extraction_regex", DATA_TYPE_STRING, "",
-     "Regular expression that should contain a single backreference for extracting a value"},
-    {"track_growing_file", DATA_TYPE_OPTION, CF_BOOL,
-     "If true, cfengine remembers the position to which is last read when opening the file, and resets to the start if the file has since been truncated"},
-    {"select_multiline_policy", DATA_TYPE_OPTION, "average,sum,first,last", "Regular expression for matching line location"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching line location", NULL),
+    ConstraintSyntaxNewInt("select_line_number", CF_VALRANGE, "Read from the n-th line of the output (fixed format)", NULL),
+    ConstraintSyntaxNewString("extraction_regex", "",
+     "Regular expression that should contain a single backreference for extracting a value", NULL),
+    ConstraintSyntaxNewBool("track_growing_file", "If true, cfengine remembers the position to which is last read when opening the file, and resets to the start if the file has since been truncated", NULL),
+    ConstraintSyntaxNewOption("select_multiline_policy", "average,sum,first,last", "Regular expression for matching line location", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_MEASURE_BODIES[] =
+static const ConstraintSyntax CF_MEASURE_BODIES[] =
 {
-    {"stream_type", DATA_TYPE_OPTION, "pipe,file", "The datatype being collected."},
-    {"data_type", DATA_TYPE_OPTION, "counter,int,real,string,slist", "The datatype being collected."},
-    {"history_type", DATA_TYPE_OPTION, "weekly,scalar,static,log",
-     "Whether the data can be seen as a time-series or just an isolated value"},
-    {"units", DATA_TYPE_STRING, "", "The engineering dimensions of this value or a note about its intent used in plots"},
-    {"match_value", DATA_TYPE_BODY, CF_MATCHVALUE_BODY, "Criteria for extracting the measurement from a datastream"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("stream_type", "pipe,file", "The datatype being collected.", NULL),
+    ConstraintSyntaxNewOption("data_type", "counter,int,real,string,slist", "The datatype being collected.", NULL),
+    ConstraintSyntaxNewOption("history_type", "weekly,scalar,static,log", "Whether the data can be seen as a time-series or just an isolated value", NULL),
+    ConstraintSyntaxNewString("units", "", "The engineering dimensions of this value or a note about its intent used in plots", NULL),
+    ConstraintSyntaxNewBody("match_value", CF_MATCHVALUE_BODY, "Criteria for extracting the measurement from a datastream"),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[] =
+const PromiseTypeSyntax CF_MEASUREMENT_PROMISE_TYPES[] =
 {
-    {"monitor", "measurements", CF_MEASURE_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("monitor", "measurements", ConstraintSetSyntaxNew(CF_MEASURE_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

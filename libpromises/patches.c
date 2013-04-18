@@ -33,7 +33,8 @@
 
 #include "cf3.defs.h"
 
-#include "cfstream.h"
+#include "logging.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -108,7 +109,7 @@ char *MapName(char *s)
 
     if (strlcpy(s, ret, MAX_FILENAME) >= MAX_FILENAME)
     {
-        FatalError("Expanded path (%s) is longer than MAX_FILENAME ("
+        FatalError(ctx, "Expanded path (%s) is longer than MAX_FILENAME ("
                    TOSTRING(MAX_FILENAME) ") characters",
                    ret);
     }
@@ -411,19 +412,6 @@ int cf_closesocket(int sd)
 
     return res;
 }
-
-/*******************************************************************/
-
-int cf_mkdir(const char *path, mode_t mode)
-{
-#ifdef __MINGW32__
-    return NovaWin_mkdir(path, mode);
-#else
-    return mkdir(path, mode);
-#endif
-}
-
-/*******************************************************************/
 
 int cf_chmod(const char *path, mode_t mode)
 {

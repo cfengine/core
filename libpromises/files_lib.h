@@ -33,16 +33,21 @@ ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
 ssize_t FileReadMax(char **output, char *filename, size_t size_max);
 bool FileWriteOver(char *filename, char *contents);
 
-int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp);
+int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
 int MakeParentDirectory(char *parentandchild, int force);
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
-int FileSanityChecks(char *path, Attributes a, Promise *pp);
-
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp);
+/*
+ * Deletes directory #path recursively. Symlinks are not followed.
+ *
+ * @returns true if directory was deleted succesfully, false if one or more files were not deleted.
+ */
+bool DeleteDirectoryTree(const char *path);
+
+#include "file_lib.h"
 
 #endif

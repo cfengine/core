@@ -34,16 +34,19 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
-#include "transaction.h"
 #include "scope.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "cf-serverd-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "generic_agent.h" // HashControls
+
+#include <assert.h>
 
 typedef enum
 {
@@ -86,15 +89,16 @@ typedef enum
     SERVER_CONTROL_NONE
 } ServerControl;
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp);
-static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop);
+static void KeepContextBundles(EvalContext *ctx, Policy *policy);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static Auth *GetAuthPath(const char *path, Auth *list);
 
-extern const BodySyntax CFS_CONTROLBODY[];
-extern const BodySyntax CF_REMROLE_BODIES[];
+extern const ConstraintSyntax CFS_CONTROLBODY[];
+extern const ConstraintSyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
 extern bool SERVER_LISTEN;
@@ -103,17 +107,12 @@ extern bool SERVER_LISTEN;
 /* GLOBAL VARIABLES                                                */
 /*******************************************************************/
 
-extern int CLOCK_DRIFT;
 extern int CFD_MAXPROCESSES;
 extern int NO_FORK;
-extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern Item *CONNECTIONLIST;
-extern Auth *ROLES;
-extern Auth *ROLESTOP;
 
 /*******************************************************************/
 
@@ -125,11 +124,12 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type);
 /* Level                                                           */
 /*******************************************************************/
 
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
-    KeepContextBundles(ctx, policy, report_context);
+    KeepContextBundles(ctx, policy);
     KeepControlPromises(ctx, policy, config);
-    KeepPromiseBundles(ctx, policy, report_context);
+    KeepPromiseBundles(ctx, policy);
 }
 
 /*******************************************************************/
@@ -143,7 +143,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to paths :\n");
 
-    for (ptr = VADMIT; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
@@ -159,7 +159,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to paths :\n");
 
-    for (ptr = VDENY; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Path: %s\n", ptr->path);
 
@@ -171,7 +171,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Granted access to literal/variable/query data :\n");
 
-    for (ptr = VARADMIT; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
 
@@ -187,7 +187,7 @@ void Summarize()
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Denied access to literal/variable/query data :\n");
 
-    for (ptr = VARDENY; ptr != NULL; ptr = ptr->next)
+    for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Object: %s\n", ptr->path);
 
@@ -252,7 +252,6 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     CFD_MAXPROCESSES = 30;
     MAXTRIES = 5;
-    CFD_INTERVAL = 0;
     DENYBADCLOCKS = true;
     CFRUNCOMMAND[0] = '\0';
     SetChecksumUpdates(true);
@@ -272,12 +271,12 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
 
-            if (ScopeGetVariable("control_server", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_server", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in server control body", cp->lval);
                 continue;
@@ -306,7 +305,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
                 SV.logconns = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET LOGCONNS = %d\n", LOGCONNS);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET logconns = %d\n", SV.logconns);
                 continue;
             }
 
@@ -475,23 +474,23 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
         SetSyslogHost(Hostname2IPString(retval.item));
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
     {
         SetSyslogPort(IntFromString(retval.item));
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
@@ -499,44 +498,45 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
 /*********************************************************************/
 
-static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 {
-    char *scope;
-
 /* Dial up the generic promise expansion with a callback */
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        scope = bp->name;
-        ScopeSetNew(bp->name);
-
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            EvalContextStackFrameClear(ctx);        // Each time we change bundle
+            if (RlistLen(bp->args) > 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                continue;
+            }
 
             BannerBundle(bp, NULL);
-            scope = bp->name;
 
-            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->promise_types, j);
 
                 if ((strcmp(sp->name, "vars") != 0) && (strcmp(sp->name, "classes") != 0))
                 {
                     continue;
                 }
 
-                BannerSubType(scope, sp->name, 0);
-                ScopeSet(scope);
-                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
+                BannerPromiseType(bp->name, sp->name, 0);
+
+                EvalContextStackPushBundleFrame(ctx, bp, false);
+                ScopeAugment(ctx, bp, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
+
+                EvalContextStackPopFrame(ctx);
             }
         }
     }
@@ -544,44 +544,45 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy, const ReportCon
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 {
-    char *scope;
-
 /* Dial up the generic promise expansion with a callback */
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
 
-        scope = bp->name;
-        ScopeSetNew(bp->name);
-
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_SERVER]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            EvalContextStackFrameClear(ctx);        // Each time we change bundle
+            if (RlistLen(bp->args) > 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot implicitly evaluate bundle %s %s, as this bundle takes arguments.", bp->type, bp->name);
+                continue;
+            }
 
             BannerBundle(bp, NULL);
-            scope = bp->name;
 
-            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->promise_types, j);
 
                 if ((strcmp(sp->name, "access") != 0) && (strcmp(sp->name, "roles") != 0))
                 {
                     continue;
                 }
 
-                BannerSubType(scope, sp->name, 0);
-                ScopeSet(scope);
-                ScopeAugment(ctx, scope, bp->ns, NULL, NULL);
+                BannerPromiseType(bp->name, sp->name, 0);
+
+                EvalContextStackPushBundleFrame(ctx, bp, false);
+                ScopeAugment(ctx, bp, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_SERVER, scope, pp, KeepServerPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
+
+                EvalContextStackPopFrame(ctx);
             }
         }
     }
@@ -591,11 +592,13 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, const ReportCon
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    assert(param == NULL);
+
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole promise, as context is %s\n", pp->classes);
         return;
@@ -611,33 +614,33 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "classes") == 0)
+    if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 
     sp = (char *) ConstraintGetRvalValue(ctx, "resource_type", pp, RVAL_TYPE_SCALAR);
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
+    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "literal") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "literal");
         return;
     }
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
+    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "variable") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "variable");
         return;
     }
     
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "query") == 0))
+    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(ctx, pp, "query");
         return;
     }
 
-    if ((strcmp(pp->agentsubtype, "access") == 0) && sp && (strcmp(sp, "context") == 0))
+    if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "context") == 0))
     {
         KeepLiteralAccessPromise(ctx, pp, "context");
         return;
@@ -645,13 +648,13 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
 /* Default behaviour is file access */
 
-    if (strcmp(pp->agentsubtype, "access") == 0)
+    if (strcmp(pp->parent_promise_type->name, "access") == 0)
     {
         KeepFileAccessPromise(ctx, pp);
         return;
     }
 
-    if (strcmp(pp->agentsubtype, "roles") == 0)
+    if (strcmp(pp->parent_promise_type->name, "roles") == 0)
     {
         KeepServerRolePromise(ctx, pp);
         return;
@@ -670,24 +673,24 @@ void KeepFileAccessPromise(EvalContext *ctx, Promise *pp)
         DeleteSlash(pp->promiser);
     }
 
-    if (!GetAuthPath(pp->promiser, VADMIT))
+    if (!GetAuthPath(pp->promiser, SV.admit))
     {
-        InstallServerAuthPath(pp->promiser, &VADMIT, &VADMITTOP);
+        InstallServerAuthPath(pp->promiser, &SV.admit, &SV.admittop);
     }
 
-    if (!GetAuthPath(pp->promiser, VDENY))
+    if (!GetAuthPath(pp->promiser, SV.deny))
     {
-        InstallServerAuthPath(pp->promiser, &VDENY, &VDENYTOP);
+        InstallServerAuthPath(pp->promiser, &SV.deny, &SV.denytop);
     }
 
-    ap = GetAuthPath(pp->promiser, VADMIT);
-    dp = GetAuthPath(pp->promiser, VDENY);
+    ap = GetAuthPath(pp->promiser, SV.admit);
+    dp = GetAuthPath(pp->promiser, SV.deny);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -740,7 +743,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
 {
     Rlist *rp;
     Auth *ap = NULL, *dp = NULL;
-    char *handle = ConstraintGetRvalValue(ctx, "handle", pp, RVAL_TYPE_SCALAR);
+    const char *handle = PromiseGetHandle(pp);
 
     if ((handle == NULL) && (strcmp(type,"literal") == 0))
     {
@@ -752,47 +755,47 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
 
-        if (!GetAuthPath(handle, VARADMIT))
+        if (!GetAuthPath(handle, SV.varadmit))
         {
-            InstallServerAuthPath(handle, &VARADMIT, &VARADMITTOP);
+            InstallServerAuthPath(handle, &SV.varadmit, &SV.varadmittop);
         }
 
-        if (!GetAuthPath(handle, VARDENY))
+        if (!GetAuthPath(handle, SV.vardeny))
         {
-            InstallServerAuthPath(handle, &VARDENY, &VARDENYTOP);
+            InstallServerAuthPath(handle, &SV.vardeny, &SV.vardenytop);
         }
 
-        RegisterLiteralServerData(handle, pp);
-        ap = GetAuthPath(handle, VARADMIT);
-        dp = GetAuthPath(handle, VARDENY);
+        RegisterLiteralServerData(ctx, handle, pp);
+        ap = GetAuthPath(handle, SV.varadmit);
+        dp = GetAuthPath(handle, SV.vardeny);
         ap->literal = true;
     }
     else
     {
         CfOut(OUTPUT_LEVEL_VERBOSE,""," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
-        if (!GetAuthPath(pp->promiser, VARADMIT))
+        if (!GetAuthPath(pp->promiser, SV.varadmit))
         {
-            InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+            InstallServerAuthPath(pp->promiser, &SV.varadmittop, &SV.varadmittop);
         }
 
-        if (!GetAuthPath(pp->promiser, VARDENY))
+        if (!GetAuthPath(pp->promiser, SV.vardeny))
         {
-            InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+            InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
         }
 
 
         if (strcmp(type, "context") == 0)
         {
-            ap = GetAuthPath(pp->promiser, VARADMIT);
-            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap = GetAuthPath(pp->promiser, SV.varadmit);
+            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->classpattern = true;
         }
 
         if (strcmp(type, "variable") == 0)
         {
-            ap = GetAuthPath(pp->promiser, VARADMIT); // Allow the promiser (preferred) as well as handle as variable name
-            dp = GetAuthPath(pp->promiser, VARDENY);
+            ap = GetAuthPath(pp->promiser, SV.varadmit); // Allow the promiser (preferred) as well as handle as variable name
+            dp = GetAuthPath(pp->promiser, SV.vardeny);
             ap->variable = true;
         }
     }
@@ -801,7 +804,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -855,20 +858,20 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     Rlist *rp;
     Auth *ap, *dp;
 
-    if (!GetAuthPath(pp->promiser, VARADMIT))
+    if (!GetAuthPath(pp->promiser, SV.varadmit))
     {
-        InstallServerAuthPath(pp->promiser, &VARADMIT, &VARADMITTOP);
+        InstallServerAuthPath(pp->promiser, &SV.varadmit, &SV.varadmittop);
     }
 
-    RegisterLiteralServerData(pp->promiser, pp);
+    RegisterLiteralServerData(ctx, pp->promiser, pp);
 
-    if (!GetAuthPath(pp->promiser, VARDENY))
+    if (!GetAuthPath(pp->promiser, SV.vardeny))
     {
-        InstallServerAuthPath(pp->promiser, &VARDENY, &VARDENYTOP);
+        InstallServerAuthPath(pp->promiser, &SV.vardeny, &SV.vardenytop);
     }
 
-    ap = GetAuthPath(pp->promiser, VARADMIT);
-    dp = GetAuthPath(pp->promiser, VARDENY);
+    ap = GetAuthPath(pp->promiser, SV.varadmit);
+    dp = GetAuthPath(pp->promiser, SV.vardeny);
 
     if (strcmp(type, "query") == 0)
     {
@@ -879,7 +882,7 @@ void KeepQueryAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -933,18 +936,18 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
     Rlist *rp;
     Auth *ap;
 
-    if (!GetAuthPath(pp->promiser, ROLES))
+    if (!GetAuthPath(pp->promiser, SV.roles))
     {
-        InstallServerAuthPath(pp->promiser, &ROLES, &ROLESTOP);
+        InstallServerAuthPath(pp->promiser, &SV.roles, &SV.rolestop);
     }
 
-    ap = GetAuthPath(pp->promiser, ROLES);
+    ap = GetAuthPath(pp->promiser, SV.roles);
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
-        if (!IsDefinedClass(ctx, cp->classes, pp->ns))
+        if (!IsDefinedClass(ctx, cp->classes, PromiseGetNamespace(pp)))
         {
             continue;
         }
@@ -985,18 +988,9 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
 /* Level                                                               */
 /***********************************************************************/
 
-static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
+static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop)
 {
     Auth *ptr;
-
-#ifdef __MINGW32__
-    int i;
-
-    for (i = 0; path[i] != '\0'; i++)
-    {
-        path[i] = ToLower(path[i]);
-    }
-#endif /* __MINGW32__ */
 
     ptr = xcalloc(1, sizeof(Auth));
 
@@ -1009,7 +1003,18 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
         (*listtop)->next = ptr;
     }
 
-    ptr->path = xstrdup(path);
+    char *path_dup = xstrdup(path);
+
+#ifdef __MINGW32__
+    int i;
+
+    for (i = 0; path_dup[i] != '\0'; i++)
+    {
+        path_dup[i] = ToLower(path_dup[i]);
+    }
+#endif /* __MINGW32__ */
+
+    ptr->path = path_dup;
     *listtop = ptr;
 }
 
@@ -1017,32 +1022,36 @@ static void InstallServerAuthPath(char *path, Auth **list, Auth **listtop)
 /* Level                                                               */
 /***********************************************************************/
 
-Auth *GetAuthPath(char *path, Auth *list)
+static Auth *GetAuthPath(const char *path, Auth *list)
 {
     Auth *ap;
+
+    char *unslashed_path = xstrdup(path);
 
 #ifdef __MINGW32__
     int i;
 
-    for (i = 0; path[i] != '\0'; i++)
+    for (i = 0; unslashed_path[i] != '\0'; i++)
     {
-        path[i] = ToLower(path[i]);
+        unslashed_path[i] = ToLower(unslashed_path[i]);
     }
-#endif /* __MINGW32__ */
+#endif /* __MINGW32__ */    
 
-    if (strlen(path) != 1)
+    if (strlen(unslashed_path) != 1)
     {
-        DeleteSlash(path);
+        DeleteSlash(unslashed_path);
     }
 
     for (ap = list; ap != NULL; ap = ap->next)
     {
-        if (strcmp(ap->path, path) == 0)
+        if (strcmp(ap->path, unslashed_path) == 0)
         {
+            free(unslashed_path);
             return ap;
         }
     }
 
+    free(unslashed_path);
     return NULL;
 }
 

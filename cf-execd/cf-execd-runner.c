@@ -27,13 +27,18 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "unix.h"
-#include "transaction.h"
-#include "logging.h"
+#include "mutex.h"
 #include "exec_tools.h"
+
+#ifdef HAVE_NOVA
+# if defined(__MINGW32__)
+#  include "win_execd_pipe.h"
+# endif
+#endif
 
 /*******************************************************************/
 
@@ -104,6 +109,45 @@ static void ConstructFailsafeCommand(bool scheduled_run, char *buffer)
              CFWORKDIR, twin_exists ? TwinFilename() : AgentFilename(),
              CFWORKDIR, AgentFilename(), scheduled_run ? ":scheduled_run" : "");
 }
+
+#ifndef __MINGW32__
+
+static bool IsReadReady(int fd, int timeout_sec)
+{
+    fd_set  rset;
+    FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+
+    struct timeval tv = {
+        .tv_sec = timeout_sec,
+        .tv_usec = 0,
+    };
+
+    int ret = select(fd + 1, &rset, NULL, NULL, &tv);
+
+    if(ret < 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
+        return false;
+    }
+
+    if(FD_ISSET(fd, &rset))
+    {
+        return true;
+    }
+
+    if(ret == 0)  // timeout
+    {
+        return false;
+    }
+
+    // can we get here?
+    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+
+    return false;
+}
+
+#endif  /* __MINGW32__ */
 
 void LocalExec(const ExecConfig *config)
 {
@@ -181,7 +225,7 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is executing...%s\n", esc_command);
 
-    while (!feof(pp))
+    for (;;)
     {
         if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
         {
@@ -207,27 +251,18 @@ void LocalExec(const ExecConfig *config)
             break;
         }
 
-        {
-            ssize_t num_read = CfReadLine(line, CF_BUFSIZE, pp);
-            if (num_read == -1)
-            {
-                FatalError("Cannot continue on CfReadLine error");
-            }
-            else if (num_read == 0)
-            {
-                break;
-            }
-        }
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
 
-        if(!CfReadLine(line, CF_BUFSIZE, pp))
+        if (res == 0)
         {
             break;
         }
 
-        if (ferror(pp))
+        if (res == -1)
         {
-            fflush(pp);
-            break;
+            CfOut(OUTPUT_LEVEL_ERROR, "cfread", "Unable to read output from command %s", cmd);
+            cf_pclose(pp);
+            return;
         }
 
         print = false;
@@ -554,12 +589,12 @@ static void MailResult(const ExecConfig *config, char *file)
 
     if (anomaly)
     {
-        sprintf(vbuff, "Subject: %s **!! [%s/%s]\r\n", MailSubject(), config->fq_name, config->ip_address);
+        sprintf(vbuff, "Subject: **!! [%s/%s]\r\n", config->fq_name, config->ip_address);
         CfDebug("%s", vbuff);
     }
     else
     {
-        sprintf(vbuff, "Subject: %s [%s/%s]\r\n", MailSubject(), config->fq_name, config->ip_address);
+        sprintf(vbuff, "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
         CfDebug("%s", vbuff);
     }
 

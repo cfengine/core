@@ -30,10 +30,13 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "signals.h"
 #include "scope.h"
 
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 typedef enum
 {
@@ -45,8 +48,8 @@ typedef enum
 } MonitorControl;
 
 static void ThisAgentInit(EvalContext *ctx);
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
-static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context);
+static GenericAgentConfig *CheckOpts(int argc, char **argv);
+static void KeepPromises(EvalContext *ctx, Policy *policy);
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -54,7 +57,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *
 
 extern int NO_FORK;
 
-extern const BodySyntax CFM_CONTROLBODY[];
+extern const ConstraintSyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -105,20 +108,21 @@ static const char *HINTS[14] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
+    GenericAgentConfigApply(ctx, config);
 
-    CheckLicenses(ctx);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
+
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit(ctx);
-    KeepPromises(ctx, policy, report_context);
+    KeepPromises(ctx, policy);
 
-    MonitorStartServer(policy, report_context);
+    MonitorStartServer(ctx, policy);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -126,7 +130,7 @@ int main(int argc, char *argv[])
 
 /*******************************************************************/
 
-static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+static GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     int optindex = 0;
@@ -143,8 +147,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
-            DEBUG = true;
+            config->debug_mode = true;
             NO_FORK = true;
             break;
 
@@ -173,7 +176,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-monitord");
+            PrintVersion();
             exit(0);
 
         case 'h':
@@ -201,7 +204,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 /*****************************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy)
 {
     Rval retval;
 
@@ -212,12 +215,12 @@ static void KeepPromises(EvalContext *ctx, Policy *policy, const ReportContext *
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
 
-            if (ScopeGetVariable("control_monitor", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in monitor control body", cp->lval);
                 continue;

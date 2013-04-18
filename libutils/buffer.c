@@ -424,7 +424,7 @@ int BufferSet(Buffer *buffer, char *bytes, unsigned int length)
     return buffer->used;
 }
 
-int BufferAppend(Buffer *buffer, char *bytes, unsigned int length)
+int BufferAppend(Buffer *buffer, const char *bytes, unsigned int length)
 {
     if (!buffer || !bytes)
     {
@@ -766,6 +766,7 @@ void BufferZero(Buffer *buffer)
         RefCountAttach(buffer->ref_count, buffer);
     }
     buffer->used = 0;
+	buffer->buffer[0] = '\0';
 }
 
 unsigned int BufferSize(Buffer *buffer)

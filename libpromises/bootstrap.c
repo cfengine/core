@@ -30,10 +30,10 @@
 #include "files_names.h"
 #include "scope.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -58,8 +58,6 @@ During commercial bootstrap:
 
 /*****************************************************************************/
 
-static void CreateFailSafe(char *name);
-
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
 static bool BootstrapAllowed(void)
@@ -82,11 +80,11 @@ void CheckAutoBootstrap(EvalContext *ctx)
 {
     struct stat sb;
     char name[CF_BUFSIZE];
-    int repaired = false, have_policy = false, am_appliance = false;
+    int have_policy = false, am_appliance = false;
 
     CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
 
-    PrintVersionBanner("CFEngine");
+    PrintVersion();
     printf("\n");
 
     printf(" -> This host is: %s\n", VSYSNAME.nodename);
@@ -97,17 +95,13 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     if (!BootstrapAllowed())
     {
-        FatalError(" !! Not enough privileges to bootstrap CFEngine");
+        FatalError(ctx, " !! Not enough privileges to bootstrap CFEngine");
     }
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
-    {
-        CreateFailSafe(name);
-        repaired = true;
-    }
+    CreateFailSafe(name);
 
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
@@ -134,7 +128,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_CMDOUT, "",
                   " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
-        else if (repaired)
+        else
         {
             CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
         }
@@ -156,11 +150,9 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     if (am_appliance)
     {
-        HardClass(ctx, "am_policy_hub");
+        EvalContextHeapAddHard(ctx, "am_policy_hub");
         printf
-            (" ** This host recognizes itself as a CFEngine Policy Hub, with policy distribution and knowledge base.\n");
-        printf
-            (" -> The system is now converging. Full initialisation and self-analysis could take up to 30 minutes\n\n");
+            (" ** This host recognizes itself as a CFEngine policy server, with policy distribution from %s/masterfiles.\n", WORKDIR);
         creat(name, 0600);
     }
     else
@@ -172,7 +164,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
 /********************************************************************/
 
-void SetPolicyServer(char *name)
+void SetPolicyServer(EvalContext *ctx, char *name)
 /* 
  * If name contains a string, it's written to file,
  * if not, name is filled with the contents of file.
@@ -216,11 +208,11 @@ void SetPolicyServer(char *name)
     {
         // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
         // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
-        ScopeNewScalar("sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
     else
     {
-        ScopeNewScalar("sys", "policy_hub", name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", name, DATA_TYPE_STRING);
     }
 
 // Get the timestamp on policy update
@@ -238,12 +230,45 @@ void SetPolicyServer(char *name)
     char timebuf[26];
     cf_strtimestamp_local(sb.st_mtime, timebuf);
     
-    ScopeNewScalar("sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
+}
+
+char *GetPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
+    char contents[CF_BUFSIZE] = { 0 };
+
+    FILE *fp = fopen(path, "r");
+    if (fp)
+    {
+        if (fscanf(fp, "%4095s", contents) != 1)
+        {
+            fclose(fp);
+            return NULL;
+        }
+        fclose(fp);
+        return xstrdup(contents);
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+bool GetAmPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);
+    MapName(path);
+
+    struct stat sb;
+    return cfstat(path, &sb) == 0;
 }
 
 /********************************************************************/
 
-static void CreateFailSafe(char *name)
+void CreateFailSafe(char *name)
 {
     FILE *fout;
 
@@ -266,7 +291,6 @@ static void CreateFailSafe(char *name)
             "\nbody common control\n"
             "{\n"
             " bundlesequence => { \"cfe_internal_update\" };\n"
-            " host_licenses_paid => \"25\";\n"
             "}\n\n"
             "################################################################################\n"
             "\nbody agent control\n"
@@ -300,7 +324,7 @@ static void CreateFailSafe(char *name)
             "         copy_from => u_scp(\"%s/masterfiles\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
-            "           classes => success(\"got_policy\");\n"
+            "           classes => repaired(\"got_policy\");\n"
             "\n"
             "  windows::\n"
             "   \"$(sys.workdir)\\inputs\" \n"
@@ -311,7 +335,7 @@ static void CreateFailSafe(char *name)
             "         copy_from => u_scp(\"%s/masterfiles\"),\n"
 #endif /* !__MINGW32__ */
             "      depth_search => u_recurse(\"inf\"),\n"
-            "           classes => success(\"got_policy\");\n\n"
+            "           classes => repaired(\"got_policy\");\n\n"
             "   \"$(sys.workdir)\\bin-twin\\.\"\n"
             "            handle => \"cfe_internal_bootstrap_update_files_sys_workdir_bin_twin_windows\",\n"
             "           comment => \"Make sure we maintain a clone of the binaries and libraries for updating\",\n"
@@ -330,12 +354,12 @@ static void CreateFailSafe(char *name)
             "  start_exec.!windows::\n"
             "   \"$(sys.cf_execd)\"\n"
             "       handle => \"cfe_internal_bootstrap_update_commands_check_sys_cf_execd_start\",\n"
-            "      classes => outcome(\"executor\");\n"
+            "      classes => repaired(\"executor_started\");\n"
             "  start_server::\n"
             "   \"$(sys.cf_serverd)\"\n"
             "       handle => \"cfe_internal_bootstrap_update_commands_check_sys_cf_serverd_start\",\n"
             "       action => ifwin_bg,\n"
-            "      classes => outcome(\"server\");\n"
+            "      classes => repaired(\"server_started\");\n"
             "\n#\n\n"
             " services:\n\n"
             "  windows.got_policy::\n"
@@ -343,46 +367,41 @@ static void CreateFailSafe(char *name)
             "              handle => \"cfe_internal_bootstrap_update_services_windows_executor\",\n"
             "      service_policy => \"start\",\n"
             "      service_method => bootstart,\n"
-            "             classes => outcome(\"executor\");\n"
+            "             classes => repaired(\"executor_started\");\n"
             "\n#\n\n"
             " reports:\n\n"
             "  bootstrap_mode.am_policy_hub::\n"
-            "   \"This host assumes the role of policy distribution host\",\n"
+            "   \"This host assumes the role of policy distribution host\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_policy_hub\";\n"
             "  bootstrap_mode.!am_policy_hub::\n"
-            "   \"This autonomous node assumes the role of voluntary client\",\n"
+            "   \"This autonomous node assumes the role of voluntary client\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_voluntary_client\";\n"
             "  got_policy::\n"
-            "   \" -> Updated local policy from policy server\",\n"
+            "   \" -> Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to pull policy from policy server\",\n"
+            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
-            "  server_ok::\n"
-            "   \" -> Started the server\",\n"
+            "  server_started::\n"
+            "   \" -> Started the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
-            "  am_policy_hub.!server_ok.!have_promises_cf::\n"
-            "   \" !! Failed to start the server\",\n"
+            "  am_policy_hub.!server_started.!have_promises_cf::\n"
+            "   \" !! Failed to start the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
-            "  executor_ok::\n"
-            "   \" -> Started the scheduler\",\n"
+            "  executor_started::\n"
+            "   \" -> Started the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
-            "  !executor_ok.!have_promises_cf::\n"
-            "   \" !! Did not start the scheduler\",\n"
+            "  !executor_started.!have_promises_cf::\n"
+            "   \" !! Did not start the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
-            "  !executor_ok.have_promises_cf::\n"
+            "  !executor_started.have_promises_cf::\n"
             "   \" -> You are running a hard-coded failsafe. Please use the following command instead.\n"
             "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
-            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\",\n"
+            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"
-            "body classes outcome(x)\n"
-            "{\n"
-            "promise_repaired => {\"$(x)_ok\"};\n"
-            "}\n"
-            "############################################\n"
-            "body classes success(x)\n"
+            "body classes repaired(x)\n"
             "{\n"
             "promise_repaired => {\"$(x)\"};\n"
             "}\n"

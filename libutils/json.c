@@ -428,7 +428,7 @@ void JsonObjectAppendElement(JsonElement *object, const char *key, JsonElement *
     SeqAppend(object->container.children, element);
 }
 
-static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, void *_user_data)
+static int JsonElementHasProperty(const void *propertyName, const void *jsonElement, ARG_UNUSED void *user_data)
 {
     assert(propertyName);
 
@@ -443,7 +443,7 @@ static int JsonElementHasProperty(const void *propertyName, const void *jsonElem
     return -1;
 }
 
-static int CompareKeyToPropertyName(const void *a, const void *b, void *_user_data)
+static int CompareKeyToPropertyName(const void *a, const void *b, ARG_UNUSED void *user_data)
 {
     return StringSafeCompare((char*)a, ((JsonElement*)b)->propertyName);
 }

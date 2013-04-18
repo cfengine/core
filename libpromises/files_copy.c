@@ -28,47 +28,90 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "instrumentation.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "policy.h"
+#include "files_lib.h"
+#include "string_lib.h"
 
-/*****************************************************************************/
-/* Local low level                                                           */
-/*****************************************************************************/
-
-void CheckForFileHoles(struct stat *sstat, Promise *pp)
-/* Need a transparent way of getting this into CopyReg() */
-/* Use a public member in struct Image                   */
+/*
+ * Copy data jumping over areas filled by '\0', so files automatically become sparse if possible.
+ */
+static bool CopyData(const char *source, int sd, const char *destination, int dd, char *buf, size_t buf_size)
 {
-    if (pp == NULL)
-    {
-        return;
-    }
+    off_t n_read_total = 0;
 
-#if !defined(__MINGW32__)
-    if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
-#else
-# ifdef HAVE_ST_BLOCKS
-    if (sstat->st_size > sstat->st_blocks * DEV_BSIZE)
-# else
-    if (sstat->st_size > ST_NBLOCKS((*sstat)) * DEV_BSIZE)
-# endif
-#endif
+    while (true)
     {
-        pp->makeholes = 1;      /* must have a hole to get checksum right */
-    }
+        ssize_t n_read = read(sd, buf, buf_size);
 
-    pp->makeholes = 0;
+        if (n_read == -1)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+
+            CfOut(OUTPUT_LEVEL_ERROR, "read", "Unable to read source file while doing %s to %s", source, destination);
+            return false;
+        }
+
+        if (n_read == 0)
+        {
+            /*
+             * As the tail of file may contain of bytes '\0' (and hence
+             * lseek(2)ed on destination instead of being written), do a
+             * ftruncate(2) here to ensure the whole file is written to the
+             * disc.
+             */
+            if (ftruncate(dd, n_read_total) < 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "ftruncate", "Copy failed (no space?) while doing %s to %s", source, destination);
+                return false;
+            }
+
+            return true;
+        }
+
+        n_read_total += n_read;
+
+        /* Copy/seek */
+
+        void *cur = buf;
+        void *end = buf + n_read;
+
+        while (cur < end)
+        {
+            void *skip_span = MemSpan(cur, 0, end - cur);
+            if (skip_span > cur)
+            {
+                if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "lseek", "Copy failed (no space?) while doing %s to %s", source, destination);
+                    return false;
+                }
+
+                cur = skip_span;
+            }
+
+
+            void *copy_span = MemSpanInverse(cur, 0, end - cur);
+            if (copy_span > cur)
+            {
+                if (FullWrite(dd, cur, copy_span - cur) < 0)
+                {
+                    CfOut(OUTPUT_LEVEL_ERROR, "write", "Copy failed (no space?) while doing %s to %s", source, destination);
+                    return false;
+                }
+
+                cur = copy_span;
+            }
+        }
+    }
 }
 
-/*********************************************************************/
-
-bool CopyRegularFileDisk(const char *source, const char *destination, bool make_holes)
+bool CopyRegularFileDisk(const char *source, const char *destination)
 {
-    int sd, dd, buf_size;
-    char *buf, *cp;
-    int n_read, *intp;
-    long n_read_total = 0;
-    int last_write_made_hole = 0;
+    int sd, dd;
 
     if ((sd = open(source, O_RDONLY | O_BINARY)) == -1)
     {
@@ -92,119 +135,24 @@ bool CopyRegularFileDisk(const char *source, const char *destination, bool make_
 
     if ((dd = open(destination, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, statbuf.st_mode)) == -1)
     {
+        CfOut(OUTPUT_LEVEL_INFORM, "open", "Unable to open destination file while doing %s to %s", source, destination);
         close(sd);
         unlink(destination);
         return false;
     }
 
-    buf_size = ST_BLKSIZE(dstat);
-    buf = xmalloc(buf_size + sizeof(int));
+    int buf_size = ST_BLKSIZE(dstat);
+    char *buf = xmalloc(buf_size);
 
-    while (true)
+    bool result = CopyData(source, sd, destination, dd, buf, buf_size);
+
+    if (!result)
     {
-        if ((n_read = read(sd, buf, buf_size)) == -1)
-        {
-            if (errno == EINTR)
-            {
-                continue;
-            }
-
-            close(sd);
-            close(dd);
-            free(buf);
-            return false;
-        }
-
-        if (n_read == 0)
-        {
-            break;
-        }
-
-        n_read_total += n_read;
-
-        intp = 0;
-
-        if (make_holes)
-        {
-            buf[n_read] = 1;    /* Sentinel to stop loop.  */
-
-            /* Find first non-zero *word*, or the word with the sentinel.  */
-
-            intp = (int *) buf;
-
-            while (*intp++ == 0)
-            {
-            }
-
-            /* Find the first non-zero *byte*, or the sentinel.  */
-
-            cp = (char *) (intp - 1);
-
-            while (*cp++ == 0)
-            {
-            }
-
-            /* If we found the sentinel, the whole input block was zero,
-               and we can make a hole.  */
-
-            if (cp > buf + n_read)
-            {
-                /* Make a hole.  */
-                if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
-                {
-                    CfOut(OUTPUT_LEVEL_ERROR, "lseek", "Copy failed (no space?) while doing %s to %s\n", source, destination);
-                    free(buf);
-                    unlink(destination);
-                    close(dd);
-                    close(sd);
-                    return false;
-                }
-                last_write_made_hole = 1;
-            }
-            else
-            {
-                /* Clear to indicate that a normal write is needed. */
-                intp = 0;
-            }
-        }
-
-        if (intp == 0)
-        {
-            if (FullWrite(dd, buf, n_read) < 0)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Copy failed (no space?) while doing %s to %s\n", source, destination);
-                close(sd);
-                close(dd);
-                free(buf);
-                unlink(destination);
-                return false;
-            }
-            last_write_made_hole = 0;
-        }
-    }
-
-    /* If the file ends with a `hole', something needs to be written at
-       the end.  Otherwise the kernel would truncate the file at the end
-       of the last write operation.  */
-
-    if (last_write_made_hole)
-    {
-        /* Write a null character and truncate it again.  */
-
-        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "write", "cfengine: full_write or ftruncate error in CopyReg\n");
-            free(buf);
-            unlink(destination);
-            close(sd);
-            close(dd);
-            return false;
-        }
+        unlink(destination);
     }
 
     close(sd);
     close(dd);
-
     free(buf);
-    return true;
+    return result;
 }

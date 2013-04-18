@@ -10,8 +10,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 bundle common g
@@ -48,7 +46,7 @@ bundle agent test
 {
 vars:
     "mode" string => execresult(
-    "/usr/bin/stat --printf=%a $(g.source)",
+	"/usr/bin/perl -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
     "noshell");
 
 files:

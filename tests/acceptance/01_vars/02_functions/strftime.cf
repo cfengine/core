@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test strftime()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      # we don't use locale-sensitive formats!
+      "results" slist => { "1973-03-03 09:46:40",
+                           "124 1 18 200000000",
+                           $(dow)
+      };
+
+    Monday::
+      "dow" string => "1";
+    Tuesday::
+      "dow" string => "2";
+    Wednesday::
+      "dow" string => "3";
+    Thursday::
+      "dow" string => "4";
+    Friday::
+      "dow" string => "5";
+    Saturday::
+      "dow" string => "6";
+    Sunday::
+      "dow" string => "7";
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_line => init_insert;
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "vals" slist => {
+                        strftime('gmtime', '%F %T', 100000000),
+                        strftime('localtime', '%j %w %W %s', 200000000),
+                        strftime('localtime', '%w', now()),
+      };
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "$(test.vals)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

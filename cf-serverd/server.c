@@ -34,15 +34,20 @@
 #include "dir.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "signals.h"
-#include "transaction.h"
-#include "logging.h"
+#include "mutex.h"
 #include "net.h"
 #include "rlist.h"
 #include "misc_lib.h"
+#include "cf-serverd-enterprise-stubs.h"
+#include "audit.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 typedef enum
 {
@@ -77,30 +82,15 @@ int CLOCK_DRIFT = 3600;  /* 1hr */
 int ACTIVE_THREADS;
 
 int CFD_MAXPROCESSES = 0;
-int CFD_INTERVAL = 0;
 int DENYBADCLOCKS = true;
 
 int MAXTRIES = 5;
-int LOGCONNS = false;
 int LOGENCRYPT = false;
 int COLLECT_INTERVAL = 0;
 int COLLECT_WINDOW = 10;
 bool SERVER_LISTEN = true;
 
-Auth *ROLES = NULL;
-Auth *ROLESTOP = NULL;
-
 ServerAccess SV;
-
-Auth *VADMIT = NULL;
-Auth *VADMITTOP = NULL;
-Auth *VDENY = NULL;
-Auth *VDENYTOP = NULL;
-
-Auth *VARADMIT = NULL;
-Auth *VARADMITTOP = NULL;
-Auth *VARDENY = NULL;
-Auth *VARDENYTOP = NULL;
 
 char CFRUNCOMMAND[CF_BUFSIZE] = { 0 };
 
@@ -115,35 +105,34 @@ static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr);
 static void *HandleConnection(ServerConnectionState *conn);
 static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn);
 static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn);
-static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args);
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args);
 static ProtocolCommand GetCommand(char *str);
 static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE]);
-static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg);
-static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny);
-static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted, Item *classes);
+static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg);
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt);
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt);
+static void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes);
 static int CheckStoreKey(ServerConnectionState *conn, RSA *key);
 static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilename);
 static void CfGetFile(ServerFileGetState *args);
 static void CfEncryptGetFile(ServerFileGetState *args);
 static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
-static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
-static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer);
+static void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted);
+static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer);
 static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *oldDirname);
 static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *dirname);
 static void Terminate(int sd);
 static int AllowedUser(char *user);
 static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *args);
-static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb);
-static void AbortTransfer(int sd, char *sendbuffer, char *filename);
-static void FailedTransfer(int sd, char *sendbuffer, char *filename);
+static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb);
+static void AbortTransfer(int sd, char *filename);
+static void FailedTransfer(int sd);
 static void ReplyNothing(ServerConnectionState *conn);
 static ServerConnectionState *NewConn(EvalContext *ctx, int sd);
 static void DeleteConn(ServerConnectionState *conn);
 static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3);
 static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer, int recvlen);
-static int SafeOpen(char *filename);
 static int OptionFound(char *args, char *pos, char *word);
 
 //******************************************************************/
@@ -179,7 +168,7 @@ static int TRIES = 0;
 
 /*******************************************************************/
 
-void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv)
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
 
 {
     char intime[64];
@@ -187,14 +176,14 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
     
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
     
-    if ((sv.nonattackerlist) && (!IsMatchItemIn(sv.nonattackerlist, MapAddress(ipaddr))))
+    if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Not allowing connection from non-authorized IP %s\n", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
-    if (IsMatchItemIn(sv.attackerlist, MapAddress(ipaddr)))
+    if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Denying connection from non-authorized IP %s\n", ipaddr);
         cf_closesocket(sd_reply);
@@ -206,16 +195,16 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
        now = 0;
        }
     
-    PurgeOldConnections(&sv.connectionlist, now);
+    PurgeOldConnections(&SV.connectionlist, now);
     
-    if (!IsMatchItemIn(sv.multiconnlist, MapAddress(ipaddr)))
+    if (!IsMatchItemIn(SV.multiconnlist, MapAddress(ipaddr)))
     {
         if (!ThreadLock(cft_count))
         {
             return;
         }
 
-        if (IsItemIn(sv.connectionlist, MapAddress(ipaddr)))
+        if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
             CfOut(OUTPUT_LEVEL_ERROR, "", "Denying repeated connection from \"%s\"\n", ipaddr);
@@ -226,7 +215,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
         ThreadUnlock(cft_count);
     }
     
-    if (sv.logconns)
+    if (SV.logconns)
     {
         CfOut(OUTPUT_LEVEL_LOG, "", "Accepting connection from \"%s\"\n", ipaddr);
     }
@@ -242,7 +231,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess
         return;
     }
     
-    PrependItem(&sv.connectionlist, MapAddress(ipaddr), intime);
+    PrependItem(&SV.connectionlist, MapAddress(ipaddr), intime);
     
     if (!ThreadUnlock(cft_count))
     {
@@ -372,7 +361,7 @@ static void *HandleConnection(ServerConnectionState *conn)
         if (TRIES++ > MAXTRIES) /* When to say we're hung / apoptosis threshold */
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Server seems to be paralyzed. DOS attack? Committing apoptosis...");
-            FatalError("Terminating");
+            FatalError(conn->ctx, "Terminating");
         }
 
         if (!ThreadUnlock(cft_server_children))
@@ -395,7 +384,7 @@ static void *HandleConnection(ServerConnectionState *conn)
     DisableSendDelays(conn->sd_reply);
 
     struct timeval tv = {
-        .tv_sec = CONNTIMEOUT,
+        .tv_sec = CONNTIMEOUT * 20,
     };
 
     SetReceiveTimeout(conn->sd_reply, &tv);
@@ -463,28 +452,28 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to incorrect identity\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AllowedUser(conn->username))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to non-allowed user\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!conn->rsa_auth)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to no RSA authentication\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Server refusal due to denied access to requested object\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -495,7 +484,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        DoExec(ctx, conn, sendbuffer, args);
+        DoExec(ctx, conn, args);
         Terminate(conn->sd_reply);
         return false;
 
@@ -504,7 +493,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
         }
 
         snprintf(conn->output, CF_BUFSIZE, "OK: %s", Version());
@@ -518,7 +507,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
         }
 
         return conn->id_verified;       /* are we finished yet ? */
@@ -528,14 +517,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AuthenticationDialogue(conn, recvbuffer, received))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Auth dialogue error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -549,21 +538,21 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "GET buffer out of bounds\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, false, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, false))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access denied to get object\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -591,7 +580,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (received != len + CF_PROTO_OFFSET)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Protocol error SGET\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -602,14 +591,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strcmp(check, "GET") != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "SGET/GET problem\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
         if ((get_args.buf_size < 0) || (get_args.buf_size > 8192))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "SGET bounding error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -624,14 +613,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -653,14 +642,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Protocol error OPENDIR: %d\n", len);
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (conn->session_key == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "No session key\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -671,7 +660,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "OPENDIR", 7) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Opendir failed to decrypt\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -681,14 +670,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -703,14 +692,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))        /* opendir don't care about privacy */
+        if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "DIR access error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -725,14 +714,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Protocol error SSYNCH: %d\n", len);
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (conn->session_key == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Bad session key\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -749,7 +738,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "SYNCH", 5) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "No synch\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -760,7 +749,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -784,10 +773,10 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         drift = (int) (tloc - trem);
 
-        if (!AccessControl(ctx, filename, conn, true, VADMIT, VDENY))
+        if (!AccessControl(ctx, filename, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Access control in sync\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -813,7 +802,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Decryption error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -823,7 +812,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "MD5", 3) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "MD5 protocol error\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
@@ -834,7 +823,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
@@ -848,7 +837,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Decrypt error SVAR\n");
-            RefuseAccess(conn, sendbuffer, 0, "decrypt error SVAR");
+            RefuseAccess(conn, 0, "decrypt error SVAR");
             return true;
         }
 
@@ -859,7 +848,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "VAR", 3) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "VAR protocol defect\n");
-            RefuseAccess(conn, sendbuffer, 0, "decryption failure");
+            RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
 
@@ -870,18 +859,18 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Literal access failure\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        GetServerLiteral(conn, sendbuffer, recvbuffer, encrypted);
+        GetServerLiteral(ctx, conn, sendbuffer, recvbuffer, encrypted);
         return true;
 
     case PROTOCOL_COMMAND_CONTEXT_SECURE:
@@ -891,7 +880,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Decrypt error SCONTEXT, len,received = %d,%d\n", len, received);
-            RefuseAccess(conn, sendbuffer, 0, "decrypt error SCONTEXT");
+            RefuseAccess(conn, 0, "decrypt error SCONTEXT");
             return true;
         }
 
@@ -902,7 +891,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "CONTEXT", 7) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "CONTEXT protocol defect...\n");
-            RefuseAccess(conn, sendbuffer, 0, "Decryption failed?");
+            RefuseAccess(conn, 0, "Decryption failed?");
             return false;
         }
 
@@ -913,18 +902,18 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, "Context probe");
+            RefuseAccess(conn, 0, "Context probe");
             return true;
         }
 
-        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted, VARADMIT, VARDENY)) == NULL)
+        if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Context access failure on %s\n", recvbuffer);
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        ReplyServerContext(conn, sendbuffer, recvbuffer, encrypted, classes);
+        ReplyServerContext(conn, encrypted, classes);
         return true;
 
     case PROTOCOL_COMMAND_QUERY_SECURE:
@@ -934,7 +923,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Decrypt error SQUERY\n");
-            RefuseAccess(conn, sendbuffer, 0, "decrypt error SQUERY");
+            RefuseAccess(conn, 0, "decrypt error SQUERY");
             return true;
         }
 
@@ -944,25 +933,25 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "QUERY", 5) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "QUERY protocol defect\n");
-            RefuseAccess(conn, sendbuffer, 0, "decryption failure");
+            RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
 
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
-        if (GetServerQuery(conn, sendbuffer, recvbuffer))
+        if (GetServerQuery(conn, recvbuffer))
         {
             return true;
         }
@@ -976,7 +965,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Decrypt error CALL_ME_BACK\n");
-            RefuseAccess(conn, sendbuffer, 0, "decrypt error CALL_ME_BACK");
+            RefuseAccess(conn, 0, "decrypt error CALL_ME_BACK");
             return true;
         }
 
@@ -986,25 +975,25 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "CALL_ME_BACK protocol defect\n");
-            RefuseAccess(conn, sendbuffer, 0, "decryption failure");
+            RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
 
         if (!conn->id_verified)
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "ID not verified\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
-        if (!LiteralAccessControl(ctx, recvbuffer, conn, true, VARADMIT, VARDENY))
+        if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Query access failure\n");
-            RefuseAccess(conn, sendbuffer, 0, recvbuffer);
+            RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
         
-        if (ReceiveCollectCall(ctx, conn, sendbuffer))
+        if (ReceiveCollectCall(conn))
         {
             return true;
         }
@@ -1101,7 +1090,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
 /******************************************************************/
 
-static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *args)
+static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 {
     char ebuff[CF_EXPANDSIZE], line[CF_BUFSIZE], *sp;
     int print = false, i;
@@ -1115,7 +1104,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     if (strlen(CFRUNCOMMAND) == 0)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd exec request: no cfruncommand defined\n");
-        sprintf(sendbuffer, "Exec request: no cfruncommand defined\n");
+        char sendbuffer[CF_BUFSIZE];
+        strlcpy(sendbuffer, "Exec request: no cfruncommand defined\n", CF_BUFSIZE);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
     }
@@ -1126,7 +1116,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     {
         if ((*sp == ';') || (*sp == '&') || (*sp == '|'))
         {
-            sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+            char sendbuffer[CF_BUFSIZE];
+            snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
             SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
             return;
         }
@@ -1156,7 +1147,8 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
             if (!AuthorizeRoles(ctx, conn, sp))
             {
-                sprintf(sendbuffer, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
+                char sendbuffer[CF_BUFSIZE];
+                snprintf(sendbuffer, CF_BUFSIZE, "You are not authorized to activate these classes/roles on host %s\n", VFQNAME);
                 SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
                 return;
             }
@@ -1167,6 +1159,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
     if (strlen(ebuff) + strlen(args) + 6 > CF_BUFSIZE)
     {
+        char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Command line too long with args: %s\n", ebuff);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
@@ -1175,6 +1168,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     {
         if ((args != NULL) && (strlen(args) > 0))
         {
+            char sendbuffer[CF_BUFSIZE];
             strcat(ebuff, " ");
             strncat(ebuff, args, CF_BUFSIZE - strlen(ebuff));
             snprintf(sendbuffer, CF_BUFSIZE, "cf-serverd Executing %s\n", ebuff);
@@ -1187,27 +1181,24 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
     if ((pp = cf_popen_sh(ebuff, "r")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "pipe", "Couldn't open pipe to command %s\n", ebuff);
+        char sendbuffer[CF_BUFSIZE];
         snprintf(sendbuffer, CF_BUFSIZE, "Unable to run %s\n", ebuff);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            fflush(pp);
             break;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))
-        {
-            fflush(pp);
+            fflush(pp); /* FIXME: is it necessary? */
             break;
         }
 
@@ -1224,6 +1215,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *sendbuff
 
         if (print)
         {
+            char sendbuffer[CF_BUFSIZE];
             snprintf(sendbuffer, CF_BUFSIZE, "%s\n", line);
             if (SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE) == -1)
             {
@@ -1286,14 +1278,10 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     CfDebug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n", ipstring, fqname, username, conn->ipaddr);
 
-    ThreadLock(cft_system);
-
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
     ToLowerStrInplace(dns_assert);
 
     strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
-
-    ThreadUnlock(cft_system);
 
 /* It only makes sense to check DNS by reverse lookup if the key had to be accepted
    on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
@@ -1566,7 +1554,7 @@ bool ResolveFilename(const char *req_path, char *res_path)
 
 /**************************************************************/
 
-static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1599,7 +1587,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     CfDebug("AccessControl, match(%s,%s) encrypt request=%d\n", transrequest, conn->hostname, encrypt);
 
-    if (vadmit == NULL)
+    if (SV.admit == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd access list is empty, no files are visible\n");
         return false;
@@ -1607,7 +1595,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     conn->maproot = false;
 
-    for (ap = vadmit; ap != NULL; ap = ap->next)
+    for (ap = SV.admit; ap != NULL; ap = ap->next)
     {
         int res = false;
 
@@ -1674,7 +1662,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     if (strncmp(transpath, transrequest, strlen(transpath)) == 0)
     {
-        for (ap = vdeny; ap != NULL; ap = ap->next)
+        for (ap = SV.deny; ap != NULL; ap = ap->next)
         {
             if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
             {
@@ -1711,7 +1699,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
 /**************************************************************/
 
-static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1736,7 +1724,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
     conn->maproot = false;
 
-    for (ap = vadmit; ap != NULL; ap = ap->next)
+    for (ap = SV.varadmit; ap != NULL; ap = ap->next)
     {
         int res = false;
 
@@ -1790,7 +1778,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
         }
     }
 
-    for (ap = vdeny; ap != NULL; ap = ap->next)
+    for (ap = SV.vardeny; ap != NULL; ap = ap->next)
     {
         if (strcmp(ap->path, name) == 0)
         {
@@ -1830,7 +1818,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
 /**************************************************************/
 
-static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt, Auth *vadmit, Auth *vdeny)
+static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionState *conn, int encrypt)
 {
     Auth *ap;
     int access = false;
@@ -1861,7 +1849,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         return NULL;
     }
 
-    while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+    while (NextDB(dbcp, &key, &ksize, &value, &vsize))
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
@@ -1880,12 +1868,12 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
         }
     }
 
-    DeleteDBCursor(dbp, dbcp);
+    DeleteDBCursor(dbcp);
     CloseDB(dbp);
 
     for (ip = candidates; ip != NULL; ip = ip->next)
     {
-        for (ap = vadmit; ap != NULL; ap = ap->next)
+        for (ap = SV.varadmit; ap != NULL; ap = ap->next)
         {
             int res = false;
 
@@ -1938,7 +1926,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
             }
         }
 
-        for (ap = vdeny; ap != NULL; ap = ap->next)
+        for (ap = SV.vardeny; ap != NULL; ap = ap->next)
         {
             if (strcmp(ap->path, ip->name) == 0)
             {
@@ -2010,7 +1998,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying %s\n", RlistScalarValue(rp));
 
-        for (ap = ROLES; ap != NULL; ap = ap->next)
+        for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
             if (FullTextMatch(ap->path, rp->item))
             {
@@ -2121,12 +2109,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     CfDebug("Challenge encryption = %c, nonce = %d, buf = %d\n", iscrypt, nonce_len, crypt_len);
 
-    ThreadLock(cft_system);
 
     decrypted_nonce = xmalloc(crypt_len);
 
     if (iscrypt == 'y')
     {
+        ThreadLock(cft_system);
+
         if (RSA_private_decrypt
             (crypt_len, recvbuffer + CF_RSA_PROTO_OFFSET, decrypted_nonce, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
@@ -2137,12 +2126,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             free(decrypted_nonce);
             return false;
         }
+
+        ThreadUnlock(cft_system);
     }
     else
     {
         if (nonce_len > crypt_len)
         {
-            ThreadUnlock(cft_system);
             CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal challenge\n");
             free(decrypted_nonce);
             return false;
@@ -2150,8 +2140,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
         memcpy(decrypted_nonce, recvbuffer + CF_RSA_PROTO_OFFSET, nonce_len);
     }
-
-    ThreadUnlock(cft_system);
 
 /* Client's ID is now established by key or trusted, reply with digest */
 
@@ -2352,8 +2340,6 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    ThreadLock(cft_system);
-
     session_size = CfSessionKeySize(enterprise_field);
     conn->session_key = xmalloc(session_size);
     conn->encryption_type = enterprise_field;
@@ -2370,6 +2356,8 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         /* New protocol encrypted */
 
+        ThreadLock(cft_system);
+
         if (RSA_private_decrypt(keylen, in, out, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
         {
             ThreadUnlock(cft_system);
@@ -2378,11 +2366,10 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             return false;
         }
 
+        ThreadUnlock(cft_system);
+
         memcpy(conn->session_key, out, session_size);
     }
-
-    ThreadUnlock(cft_system);
-
 
     BN_free(counter_challenge);
     free(out);
@@ -2587,16 +2574,16 @@ static void CfGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, sd, args, sendbuffer, &sb))
+    if (!TransferRights(filename, args, &sb))
     {
-        RefuseAccess(args->connect, sendbuffer, args->buf_size, "");
+        RefuseAccess(args->connect, args->buf_size, "");
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
         SendSocketStream(sd, sendbuffer, args->buf_size, 0);
     }
 
 /* File transfer */
 
-    if ((fd = SafeOpen(filename)) == -1)
+    if ((fd = open(filename, O_RDONLY)) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "open", "Open error of file [%s]\n", filename);
         snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
@@ -2710,18 +2697,18 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
 /* Now check to see if we have remote permission */
 
-    if (!TransferRights(filename, sd, args, sendbuffer, &sb))
+    if (!TransferRights(filename, args, &sb))
     {
-        RefuseAccess(args->connect, sendbuffer, args->buf_size, "");
-        FailedTransfer(sd, sendbuffer, filename);
+        RefuseAccess(args->connect, args->buf_size, "");
+        FailedTransfer(sd);
     }
 
     EVP_CIPHER_CTX_init(&ctx);
 
-    if ((fd = SafeOpen(filename)) == -1)
+    if ((fd = open(filename, O_RDONLY)) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "open", "Open error of file [%s]\n", filename);
-        FailedTransfer(sd, sendbuffer, filename);
+        FailedTransfer(sd);
     }
     else
     {
@@ -2757,7 +2744,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             if (sb.st_size != savedlen)
             {
-                AbortTransfer(sd, sendbuffer, filename);
+                AbortTransfer(sd, filename);
                 break;
             }
 
@@ -2769,7 +2756,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
                 if (!EVP_EncryptUpdate(&ctx, out, &cipherlen, sendbuffer, n_read))
                 {
-                    FailedTransfer(sd, sendbuffer, filename);
+                    FailedTransfer(sd);
                     EVP_CIPHER_CTX_cleanup(&ctx);
                     close(fd);
                     return;
@@ -2777,7 +2764,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
                 if (!EVP_EncryptFinal_ex(&ctx, out + cipherlen, &finlen))
                 {
-                    FailedTransfer(sd, sendbuffer, filename);
+                    FailedTransfer(sd);
                     EVP_CIPHER_CTX_cleanup(&ctx);
                     close(fd);
                     return;
@@ -2854,14 +2841,14 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
 
 /**************************************************************/
 
-static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
+static void GetServerLiteral(EvalContext *ctx, ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted)
 {
     char handle[CF_BUFSIZE], out[CF_BUFSIZE];
     int cipherlen;
 
     sscanf(recvbuffer, "VAR %255[^\n]", handle);
 
-    if (ReturnLiteralData(handle, out))
+    if (ReturnLiteralData(ctx, handle, out))
     {
         memset(sendbuffer, 0, CF_BUFSIZE);
         snprintf(sendbuffer, CF_BUFSIZE - 1, "%s", out);
@@ -2885,7 +2872,7 @@ static void GetServerLiteral(ServerConnectionState *conn, char *sendbuffer, char
 
 /********************************************************************/
 
-static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer)
+static int GetServerQuery(ServerConnectionState *conn, char *recvbuffer)
 {
     char query[CF_BUFSIZE];
 
@@ -2896,23 +2883,19 @@ static int GetServerQuery(ServerConnectionState *conn, char *sendbuffer, char *r
     {
         return false;
     }
-    
-#ifdef HAVE_NOVA
-    return Nova_ReturnQueryData(conn, query);
-#else
-    return false;
-#endif
+
+    return ReturnQueryData(conn, query);
 }
 
 /**************************************************************/
 
-static void ReplyServerContext(ServerConnectionState *conn, char *sendbuffer, char *recvbuffer, int encrypted,
-                               Item *classes)
+static void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item *classes)
 {
     char out[CF_BUFSIZE];
     int cipherlen;
     Item *ip;
 
+    char sendbuffer[CF_BUFSIZE];
     memset(sendbuffer, 0, CF_BUFSIZE);
 
     for (ip = classes; ip != NULL; ip = ip->next)
@@ -2962,7 +2945,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
         return -1;
     }
 
-    if ((dirh = OpenDirLocal(dirname)) == NULL)
+    if ((dirh = DirOpen(dirname)) == NULL)
     {
         CfDebug("cfengine, couldn't open dir %s\n", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
@@ -2976,7 +2959,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     offset = 0;
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
@@ -2992,7 +2975,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
     SendTransaction(conn->sd_reply, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
     CfDebug("END CfOpenDirectory(%s)\n", dirname);
-    CloseDir(dirh);
+    DirClose(dirh);
     return 0;
 }
 
@@ -3015,7 +2998,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
         return -1;
     }
 
-    if ((dirh = OpenDirLocal(dirname)) == NULL)
+    if ((dirh = DirOpen(dirname)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Couldn't open dir %s\n", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
@@ -3030,7 +3013,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
 
     offset = 0;
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (strlen(dirp->d_name) + 1 + offset >= CF_BUFSIZE - CF_MAXLINKSIZE)
         {
@@ -3052,7 +3035,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
         EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, offset + 2 + strlen(CFD_TERMINATOR));
     SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
     CfDebug("END CfSecOpenDirectory(%s)\n", dirname);
-    CloseDir(dirh);
+    DirClose(dirh);
     return 0;
 }
 
@@ -3137,7 +3120,7 @@ static int OptionFound(char *args, char *pos, char *word)
 
 /**************************************************************/
 
-static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size, char *errmesg)
+static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
 {
     char *hostname, *username, *ipaddr;
     char *def = "?";
@@ -3169,6 +3152,7 @@ static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size
         ipaddr = conn->ipaddr;
     }
 
+    char sendbuffer[CF_BUFSIZE];
     snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
     SendTransaction(conn->sd_reply, sendbuffer, size, CF_DONE);
 
@@ -3176,7 +3160,7 @@ static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size
 
     if (strlen(errmesg) > 0)
     {
-        if (LOGCONNS)
+        if (SV.logconns)
         {
             CfOut(OUTPUT_LEVEL_LOG, "", "REFUSAL of request from connecting host: (%s)", errmesg);
         }
@@ -3189,7 +3173,7 @@ static void RefuseAccess(ServerConnectionState *conn, char *sendbuffer, int size
 
 /***************************************************************/
 
-static int TransferRights(char *filename, int sd, ServerFileGetState *args, char *sendbuffer, struct stat *sb)
+static int TransferRights(char *filename, ServerFileGetState *args, struct stat *sb)
 {
 #ifdef __MINGW32__
     SECURITY_DESCRIPTOR *secDesc;
@@ -3262,10 +3246,11 @@ static int TransferRights(char *filename, int sd, ServerFileGetState *args, char
 
 /***************************************************************/
 
-static void AbortTransfer(int sd, char *sendbuffer, char *filename)
+static void AbortTransfer(int sd, char *filename)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Aborting transfer of file due to source changes\n");
 
+    char sendbuffer[CF_BUFSIZE];
     snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
 
     if (SendTransaction(sd, sendbuffer, 0, CF_DONE) == -1)
@@ -3276,9 +3261,11 @@ static void AbortTransfer(int sd, char *sendbuffer, char *filename)
 
 /***************************************************************/
 
-static void FailedTransfer(int sd, char *sendbuffer, char *filename)
+static void FailedTransfer(int sd)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Transfer failure\n");
+
+    char sendbuffer[CF_BUFSIZE];
 
     snprintf(sendbuffer, CF_BUFSIZE, "%s", CF_FAILEDSTR);
 
@@ -3363,11 +3350,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
        return NULL;
        }
     
-    ThreadLock(cft_system);
-
     conn = xmalloc(sizeof(ServerConnectionState));
-
-    ThreadUnlock(cft_system);
 
     conn->ctx = ctx;
     conn->sd_reply = sd;
@@ -3415,24 +3398,6 @@ static void DeleteConn(ServerConnectionState *conn)
 
     free((char *) conn);
 }
-
-/***************************************************************/
-/* ERS                                                         */
-/***************************************************************/
-
-static int SafeOpen(char *filename)
-{
-    int fd;
-
-    ThreadLock(cft_system);
-
-    fd = open(filename, O_RDONLY);
-
-    ThreadUnlock(cft_system);
-    return fd;
-}
-
-/***************************************************************/
 
 static int cfscanf(char *in, int len1, int len2, char *out1, char *out2, char *out3)
 {

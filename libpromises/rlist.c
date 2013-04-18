@@ -30,13 +30,13 @@
 #include "expand.h"
 #include "matching.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "fncall.h"
 #include "string_lib.h"
-#include "transaction.h"
-#include "logging.h"
+#include "mutex.h"
 #include "misc_lib.h"
 #include "assoc.h"
+#include "env_context.h"
 
 #include <assert.h>
 
@@ -241,47 +241,10 @@ static Rval RvalCopyList(Rval rval)
     Rlist *start = NULL;
     for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
     {
-        char naked[CF_BUFSIZE] = "";
-
-        if (IsNakedVar(rp->item, '@'))
-        {
-            GetNaked(naked, rp->item);
-
-            Rval rv = { NULL, RVAL_TYPE_SCALAR };  /* FIXME: why it needs to be initialized? */
-            if (ScopeGetVariable(CONTEXTID, naked, &rv) != DATA_TYPE_NONE)
-            {
-                switch (rv.type)
-                {
-                case RVAL_TYPE_LIST:
-                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
-                    {
-                        RlistAppend(&start, srp->item, srp->type);
-                    }
-                    break;
-
-                default:
-                    RlistAppend(&start, rp->item, rp->type);
-                    break;
-                }
-            }
-            else
-            {
-                RlistAppend(&start, rp->item, rp->type);
-            }
-        }
-        else
-        {
-            RlistAppend(&start, rp->item, rp->type);
-        }
+        RlistAppend(&start, rp->item, rp->type);
     }
 
     return (Rval) {start, RVAL_TYPE_LIST};
-}
-
-static Rval RvalCopyAssoc(Rval rval)
-{
-    assert(rval.type == RVAL_TYPE_ASSOC);
-    return (Rval) {CopyAssoc((CfAssoc *) rval.item), RVAL_TYPE_ASSOC };
 }
 
 static Rval RvalCopyFnCall(Rval rval)
@@ -296,9 +259,6 @@ Rval RvalCopy(Rval rval)
     {
     case RVAL_TYPE_SCALAR:
         return RvalCopyScalar(rval);
-
-    case RVAL_TYPE_ASSOC:
-        return RvalCopyAssoc(rval);
 
     case RVAL_TYPE_FNCALL:
         return RvalCopyFnCall(rval);
@@ -480,10 +440,6 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_SCALAR:
         return RlistAppendScalar(start, item);
 
-    case RVAL_TYPE_ASSOC:
-        CfDebug("Appending assoc to rval-list [%s]\n", (char *) item);
-        break;
-
     case RVAL_TYPE_FNCALL:
         CfDebug("Appending function to rval-list function call: ");
         fp = (FnCall *) item;
@@ -549,11 +505,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
 
 static Rlist *RlistPrependRval(Rlist **start, Rval rval)
 {
-    ThreadLock(cft_system);
-
     Rlist *rp = xmalloc(sizeof(Rlist));
-
-    ThreadUnlock(cft_system);
 
     rp->next = *start;
     rp->item = rval.item;
@@ -601,11 +553,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
         return NULL;
     }
 
-    ThreadLock(cft_system);
-
     rp = xmalloc(sizeof(Rlist));
-
-    ThreadUnlock(cft_system);
 
     rp->next = *start;
     rp->item = RvalCopy((Rval) { (void *)item, type}).item;
@@ -687,10 +635,6 @@ void RvalDestroy(Rval rval)
         ThreadLock(cft_lock);
         free((char *) rval.item);
         ThreadUnlock(cft_lock);
-        break;
-
-    case RVAL_TYPE_ASSOC:             /* What? */
-        DeleteAssoc((CfAssoc *) rval.item);
         break;
 
     case RVAL_TYPE_LIST:
@@ -806,58 +750,6 @@ Rlist *RlistPrependAlien(Rlist **start, void *item)
     rp->item = item;
     rp->type = RVAL_TYPE_SCALAR;
     return rp;
-}
-
-/*******************************************************************/
-/* Stack                                                           */
-/*******************************************************************/
-
-/*
-char *sp1 = xstrdup("String 1\n");
-char *sp2 = xstrdup("String 2\n");
-char *sp3 = xstrdup("String 3\n");
-
-PushStack(&stack,(void *)sp1);
-PopStack(&stack,(void *)&sp,sizeof(sp));
-*/
-
-void RlistPushStack(Rlist **liststart, void *item)
-{
-    Rlist *rp;
-
-/* Have to keep track of types personally */
-
-    rp = xmalloc(sizeof(Rlist));
-
-    rp->next = *liststart;
-    rp->item = item;
-    rp->type = CF_STACK;
-    *liststart = rp;
-}
-
-/*******************************************************************/
-
-void RlistPopStack(Rlist **liststart, void **item, size_t size)
-{
-    Rlist *rp = *liststart;
-
-    if (*liststart == NULL)
-    {
-        ProgrammingError("Attempt to pop from empty stack");
-    }
-
-    *item = rp->item;
-
-    if (rp->next == NULL)       /* only one left */
-    {
-        *liststart = (void *) NULL;
-    }
-    else
-    {
-        *liststart = rp->next;
-    }
-
-    free((char *) rp);
 }
 
 /*******************************************************************/
@@ -1143,9 +1035,8 @@ void RvalWrite(Writer *writer, Rval rval)
         WriterWrite(writer, "(no-one)");
         break;
 
-    case RVAL_TYPE_ASSOC:
-        // TODO: do something here, but not handled previously
-        break;
+    default:
+        ProgrammingError("Unknown rval type %c", rval.type);
     }
 }
 
@@ -1244,5 +1135,42 @@ JsonElement *RvalToJson(Rval rval)
     default:
         assert(false && "Invalid rval type");
         return JsonStringCreate("");
+    }
+}
+
+void RlistFlatten(EvalContext *ctx, Rlist **list)
+{
+    for (Rlist *rp = *list; rp != NULL; rp = rp->next)
+    {
+        if (rp->type != RVAL_TYPE_SCALAR)
+        {
+            continue;
+        }
+
+        char naked[CF_BUFSIZE] = "";
+        if (IsNakedVar(rp->item, '@'))
+        {
+            GetNaked(naked, rp->item);
+
+            Rval rv;
+            if (EvalContextVariableGet(ctx, (VarRef) { NULL, ScopeGetCurrent()->scope, naked }, &rv, NULL))
+            {
+                switch (rv.type)
+                {
+                case RVAL_TYPE_LIST:
+                    for (const Rlist *srp = rv.item; srp != NULL; srp = srp->next)
+                    {
+                        RlistAppend(list, srp->item, srp->type);
+                    }
+                    RlistDestroyEntry(list, rp);
+                    break;
+
+                default:
+                    ProgrammingError("List variable does not resolve to a list");
+                    RlistAppend(list, rp->item, rp->type);
+                    break;
+                }
+            }
+        }
     }
 }

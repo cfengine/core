@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_ENVIRON_H
 #define CFENGINE_MOD_ENVIRON_H
 
-extern const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[];
+#include "cf3.defs.h"
+
+extern const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[];
 
 #endif

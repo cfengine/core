@@ -29,7 +29,7 @@
 
 int SendTransaction(int sd, char *buffer, int len, char status);
 int ReceiveTransaction(int sd, char *buffer, int *more);
-int RecvSocketStream(int sd, char *buffer, int toget, int nothing);
+int RecvSocketStream(int sd, char *buffer, int toget);
 int SendSocketStream(int sd, char *buffer, int toget, int flags);
 
 int SetReceiveTimeout(int sd, const struct timeval *timeout);

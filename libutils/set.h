@@ -33,12 +33,13 @@ typedef MapIterator SetIterator;
 Set *SetNew(MapHashFn element_hash_fn,
             MapKeyEqualFn element_equal_fn,
             MapDestroyDataFn element_destroy_fn);
-void SetDestroy(void *set);
+void SetDestroy(Set *set);
 
 void SetAdd(Set *set, void *element);
 bool SetContains(const Set *set, const void *element);
 bool SetRemove(Set *set, const void *element);
 void SetClear(Set *set);
+size_t SetSize(const Set *set);
 
 void SetUnion(Set *set, const Set *other);
 
@@ -58,6 +59,7 @@ void *SetIteratorNext(SetIterator *i);
     bool Prefix##SetContains(const Prefix##Set *Set, const ElementType element);  \
     bool Prefix##SetRemove(const Prefix##Set *Set, const ElementType element);  \
     void Prefix##SetClear(Prefix##Set *set);                            \
+    size_t Prefix##SetSize(const Prefix##Set *set);                     \
     void Prefix##SetDestroy(Prefix##Set *set);                          \
     Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set);      \
     ElementType Prefix##SetIteratorNext(Prefix##SetIterator *iter);     \
@@ -73,7 +75,7 @@ void *SetIteratorNext(SetIterator *i);
                                                                         \
     void Prefix##SetAdd(const Prefix##Set *set, ElementType element)    \
     {                                                                   \
-        SetAdd(set->impl, element);                                     \
+        SetAdd(set->impl, (void *)element);                             \
     }                                                                   \
                                                                         \
     bool Prefix##SetContains(const Prefix##Set *set, const ElementType element)   \
@@ -91,10 +93,18 @@ void *SetIteratorNext(SetIterator *i);
         return SetClear(set->impl);                                     \
     }                                                                   \
                                                                         \
+    size_t Prefix##SetSize(const Prefix##Set *set)                      \
+    {                                                                   \
+        return SetSize(set->impl);                                      \
+    }                                                                   \
+                                                                        \
     void Prefix##SetDestroy(Prefix##Set *set)                           \
     {                                                                   \
-        SetDestroy(set->impl);                                          \
-        free(set);                                                      \
+        if (set)                                                        \
+        {                                                               \
+            SetDestroy(set->impl);                                      \
+            free(set);                                                  \
+        }                                                               \
     }                                                                   \
                                                                         \
     Prefix##SetIterator Prefix##SetIteratorInit(Prefix##Set *set)       \
@@ -109,5 +119,7 @@ void *SetIteratorNext(SetIterator *i);
 
 
 TYPED_SET_DECLARE(String, char *)
+
+StringSet *StringSetFromString(const char *str, char delimiter);
 
 #endif

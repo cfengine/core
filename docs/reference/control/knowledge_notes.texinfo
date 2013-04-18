@@ -1,6 +1,0 @@
-
-Settings describing the details of the fixed behavioural promises made by
-@code{cf-know}.
-These parameters control the way in which knowledge data are stored
-and retrieved from a relational database and the output format
-of the queries. 

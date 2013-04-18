@@ -52,6 +52,12 @@ typedef enum
     VARREF
 } StringOp;
 
+typedef enum
+{
+    VAR_REF_TYPE_SCALAR,
+    VAR_REF_TYPE_LIST
+} VarRefType;
+
 typedef struct StringExpression_ StringExpression;
 
 struct StringExpression_
@@ -73,6 +79,7 @@ struct StringExpression_
         struct
         {
             StringExpression *name;
+            VarRefType type;
         } varref;
     } val;
 };
@@ -101,7 +108,7 @@ StringParseResult ParseStringExpression(const char *expr, int start, int end);
  * evaluation will be aborted and NULL will be returned from
  * EvalStringExpression.
  */
-typedef char *(*VarRefEvaluator) (const char *varname, void *param);
+typedef char *(*VarRefEvaluator) (const char *varname, VarRefType type, void *param);
 
 /*
  * Result is heap-allocated. In case evalfn() returns NULL whole

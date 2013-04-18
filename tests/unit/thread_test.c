@@ -11,7 +11,7 @@ static void increment_shared_var(void);
 int SHARED_VAR;
 pthread_mutex_t shared_var_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void test_init_destroy(void **p)
+void test_init_destroy(void)
 {
     pthread_mutex_t mutex_dynamic;
  
@@ -41,7 +41,7 @@ void test_trylock_impl(pthread_mutex_t *mutex)
 }
 
 
-void test_trylock_dynamic(void **p)
+void test_trylock_dynamic(void)
 {
     pthread_mutex_t mutex_dynamic;
 
@@ -55,7 +55,7 @@ void test_trylock_dynamic(void **p)
 }
 
 
-void test_trylock_static(void **p)
+void test_trylock_static(void)
 {
     pthread_mutex_t mutex_static = PTHREAD_MUTEX_INITIALIZER;
     
@@ -63,7 +63,7 @@ void test_trylock_static(void **p)
 }
 
 
-void test_trylock_static_errorcheck(void **p)
+void test_trylock_static_errorcheck(void)
 {
     pthread_mutex_t mutex_static_errorcheck = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
@@ -71,7 +71,7 @@ void test_trylock_static_errorcheck(void **p)
 }
 
 
-void test_create(void **p)
+void test_create(void)
 {
     SHARED_VAR = 0;
 
@@ -108,7 +108,7 @@ static void increment_shared_var(void)
 }
 
 
-void test_lock(void **p)
+void test_lock(void)
 {
     SHARED_VAR = 0;
     

@@ -28,10 +28,8 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "files_properties.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 
 /* Globals */
 
@@ -41,7 +39,7 @@ static bool LMSENSORS;
 /* Prototypes */
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this);
+static bool GetAcpi(double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -53,12 +51,13 @@ static bool GetLMSensors(double *cf_this);
  * temperature is generally available. Several temperatures exist too ...
  ******************************************************************************/
 
-void MonTempGatherData(EvalContext *ctx, double *cf_this)
+#if defined(__linux__)
+
+void MonTempGatherData(double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
-#if defined(__linux__)
-    if (ACPI && GetAcpi(ctx, cf_this))
+    if (ACPI && GetAcpi(cf_this))
     {
         return;
     }
@@ -67,8 +66,15 @@ void MonTempGatherData(EvalContext *ctx, double *cf_this)
     {
         return;
     }
-#endif
 }
+
+#else
+
+void MonTempGatherData(ARG_UNUSED double *cf_this)
+{
+}
+
+#endif
 
 /******************************************************************************/
 
@@ -95,7 +101,7 @@ void MonTempInit(void)
 /******************************************************************************/
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this)
+static bool GetAcpi(double *cf_this)
 {
     Dir *dirh;
     FILE *fp;
@@ -103,22 +109,18 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
     int count = 0;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
-    Attributes attr;
-
-    memset(&attr, 0, sizeof(attr));
-    attr.transaction.audit = false;
 
     CfDebug("ACPI temperature\n");
 
-    if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
+    if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {
             continue;
         }
@@ -168,7 +170,7 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
         fclose(fp);
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return true;
 }
 
@@ -188,22 +190,34 @@ static bool GetLMSensors(double *cf_this)
     cf_this[ob_temp2] = 0.0;
     cf_this[ob_temp3] = 0.0;
 
-    if ((pp = cf_popen("/usr/bin/sensors", "r")) == NULL)
+    if ((pp = cf_popen("/usr/bin/sensors", "r", true)) == NULL)
     {
         LMSENSORS = false;      /* Broken */
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        FatalError("Error in CfReadLine");
+        /* FIXME: do we need to log anything here? */
+        cf_pclose(pp);
+        return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: Do we need to log anything here? */
+            cf_pclose(pp);
+            return false;
         }
 
         if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))

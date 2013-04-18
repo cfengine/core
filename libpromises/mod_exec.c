@@ -22,33 +22,34 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_exec.h"
 
-static const BodySyntax CF_EXECCONTAIN_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_EXECCONTAIN_BODY[] =
 {
-    {"useshell", DATA_TYPE_OPTION, CF_BOOL, "true/false embed the command in a shell environment", "false"},
-    {"umask", DATA_TYPE_OPTION, "0,77,22,27,72,077,022,027,072", "The umask value for the child process"},
-    {"exec_owner", DATA_TYPE_STRING, "", "The user name or id under which to run the process"},
-    {"exec_group", DATA_TYPE_STRING, "", "The group name or id under which to run the process"},
-    {"exec_timeout", DATA_TYPE_INT, "1,3600", "Timeout in seconds for command completion"},
-    {"chdir", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Directory for setting current/base directory for the process"},
-    {"chroot", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Directory of root sandbox for process"},
-    {"preview", DATA_TYPE_OPTION, CF_BOOL, "true/false preview command when running in dry-run mode (with -n)", "false"},
-    {"no_output", DATA_TYPE_OPTION, CF_BOOL, "true/false discard all output from the command", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBool("useshell", "true/false embed the command in a shell environment", "false"),
+    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,022,027,072", "The umask value for the child process", NULL),
+    ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the process", NULL),
+    ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the process", NULL),
+    ConstraintSyntaxNewInt("exec_timeout", "1,3600", "Timeout in seconds for command completion", NULL),
+    ConstraintSyntaxNewString("chdir", CF_ABSPATHRANGE, "Directory for setting current/base directory for the process", NULL),
+    ConstraintSyntaxNewString("chroot", CF_ABSPATHRANGE, "Directory of root sandbox for process", NULL),
+    ConstraintSyntaxNewBool("preview", "true/false preview command when running in dry-run mode (with -n)", "false"),
+    ConstraintSyntaxNewBool("no_output", "true/false discard all output from the command", "false"),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_EXEC_BODIES[] =
+static const ConstraintSyntax CF_EXEC_BODIES[] =
 {
-    {"args", DATA_TYPE_STRING, "", "Alternative string of arguments for the command (concatenated with promiser string)"},
-    {"contain", DATA_TYPE_BODY, CF_EXECCONTAIN_BODY, "Containment options for the execution process"},
-    {"module", DATA_TYPE_OPTION, CF_BOOL, "true/false whether to expect the cfengine module protocol", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("args", "", "Alternative string of arguments for the command (concatenated with promiser string)", NULL),
+    ConstraintSyntaxNewBody("contain", CF_EXECCONTAIN_BODY, "Containment options for the execution process"),
+    ConstraintSyntaxNewBool("module", "true/false whether to expect the cfengine module protocol", "false"),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_EXEC_SUBTYPES[] =
+const PromiseTypeSyntax CF_EXEC_PROMISE_TYPES[] =
 {
-    {"agent", "commands", CF_EXEC_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "commands", ConstraintSetSyntaxNew(CF_EXEC_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull(),
 };

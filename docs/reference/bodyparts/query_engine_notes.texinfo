@@ -1,5 +1,0 @@
-
-When displaying topic maps in HTML format, @code{cf-know} will render
-each topic as a link to this URL with the new topic as an argument.
-Thus it is possible to make a dynamic web query by embedding CFEngine
-in the web page as system call and passing the argument to it.

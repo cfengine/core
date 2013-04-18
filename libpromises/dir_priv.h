@@ -25,22 +25,8 @@
 #ifndef CFENGINE_DIR_IMPL_H
 #define CFENGINE_DIR_IMPL_H
 
-struct Dir_
-{
-    /* Local directories */
-    void *dirh;                 /* DIR* or HANDLE */
-    struct dirent *entrybuf;
-
-    /* Remote directories */
-    Item *list;
-    Item *listpos;              /* current pos */
-};
-
-const struct dirent *ReadDirLocal(Dir *dir);
-void CloseDirLocal(Dir *dir);
+#include "cf3.defs.h"
 
 struct dirent *AllocateDirentForFilename(const char *filename);
-
-Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp);
 
 #endif

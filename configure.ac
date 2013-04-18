@@ -25,7 +25,7 @@ dnl The version in the next line is the only one to set
 dnl
 
 _AM_SET_OPTION([tar-ustar])
-AM_INIT_AUTOMAKE(cfengine, 3.5.0b1.revision)
+AM_INIT_AUTOMAKE(cfengine, 3.5.0b2.revision)
 AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
@@ -94,7 +94,7 @@ AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 # Don't add if cross-compiling (setting host), to avoid using native libs.
 #
 if test "x$cross_compiling" = "xno"; then
-  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include	
+  for x in /usr/local/include /usr/local/gnu/include /opt/dce/include /sw/include /usr/pkg/include /usr/X11R7/include
   do
     if test -d "$x"; then
       y=`expr " $CPPFLAGS " : ".* -I$x "`
@@ -286,7 +286,8 @@ if test x"$with_openssl" = xno ; then
 fi
 
 CF3_WITH_LIBRARY(openssl, [
-   AC_CHECK_LIB(crypto, RSA_generate_key, [], [AC_MSG_ERROR(Cannot find OpenSSL)])
+   AC_CHECK_LIB(crypto, RSA_generate_key_ex, [], [])
+   AC_CHECK_LIB(crypto, RSA_generate_key, [], [])
    AC_CHECK_HEADERS([openssl/opensslv.h], [], [AC_MSG_ERROR(Cannot find OpenSSL)])
 
    AC_MSG_CHECKING(for OpenSSL version)
@@ -298,6 +299,15 @@ CF3_WITH_LIBRARY(openssl, [
    #This OpenSSL is too old
    #endif
    ]])],[AC_MSG_RESULT(OK)],[AC_MSG_ERROR(This release of CFEngine requires OpenSSL >= 0.9.7)])
+
+   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xyes" ; then
+      AC_DEFINE(OPENSSL_NO_DEPRECATED, 1, [Define if non deprecated API is available.])
+   fi
+
+   if test "x$ac_cv_lib_crypto_RSA_generate_key_ex" = "xno" && \
+      test "x$ac_cv_lib_crypto_RSA_generate_key" = "xno" ; then
+      AC_MSG_ERROR(Cannot find OpenSSL)
+   fi
 ])
 
 dnl PCRE
@@ -367,6 +377,8 @@ if test "x$with_libxml2" != xno; then
     ])
 fi
 
+AM_CONDITIONAL([HAVE_LIBXML2], [test "x$with_libxml2" != "xno" && test "x$ac_cv_lib_xml2_xmlFirstElementChild" = xyes])
+
 dnl avahi
 
 AC_CHECK_HEADERS(avahi-client/client.h, AM_CONDITIONAL(HAVE_AVAHI_CLIENT, true), AM_CONDITIONAL(HAVE_AVAHI_CLIENT, false), [])
@@ -388,6 +400,9 @@ AC_CHECK_HEADERS(sys/mount.h, [], [], [AC_INCLUDES_DEFAULT
 #endif
 ])
 
+# Required on BSD to get struct sockaddr_dl (for retrieving MAC addresses from getifaddrs())
+AC_CHECK_HEADERS(net/if_dl.h)
+
 AC_CHECK_HEADERS(utime.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(sys/time.h)
@@ -405,7 +420,7 @@ AC_CHECK_HEADERS(winsock2.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
-AC_CHECK_HEADERS(sys/mpctl.h)	dnl For HP-UX $(sys.cpus) - Mantis #1069
+AC_CHECK_HEADERS(sys/mpctl.h) dnl For HP-UX $(sys.cpus) - Mantis #1069
 AC_CHECK_HEADERS(sys/jail.h, [], [], [AC_INCLUDES_DEFAULT
 #ifdef HAVE_SYS_PARAM_H
 # include <sys/param.h>
@@ -555,11 +570,33 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+CF3_CHECK_PROPER_FUNC([mkdir],
+  [[#include <sys/stat.h>
+    #include <sys/types.h>]],
+  [[int mkdir(const char *pathname, mode_t mode);]])
+
+dnl AC_CHECK_FUNC([mkdir], [], [AC_MSG_ERROR([Unable to find mkdir function])])
+
+dnl AC_CACHE_CHECK([whether mkdir accepts two parameters],
+dnl   [hw_cv_func_mkdir_posix],
+dnl   [AC_COMPILE_IFELSE(
+dnl     [AC_LANG_PROGRAM([[#include <sys/stat.h>
+dnl                        #include <sys/types.h>]],
+dnl                      [[int mkdir(const char *pathname, mode_t mode);]])],
+dnl     [hw_cv_func_mkdir_posix=yes],
+dnl     [hw_cv_func_mkdir_posix=no])])
+
+dnl AS_IF([test "$hw_cv_func_mkdir_posix" = yes],
+dnl   [AC_DEFINE([HAVE_MKDIR_POSIX], [1], [Define to 1 if you have POSIX-compliant `mkdir' function])],
+dnl   [post_macros="$post_macros
+dnl #define mkdir rpl_mkdir"
+dnl    AC_LIBOBJ([rpl_mkdir])])
+
 AC_CHECK_DECLS(mkdtemp)
-AC_CHECK_FUNCS(mkdtemp)
+AC_REPLACE_FUNCS(mkdtemp)
 
 AC_CHECK_DECLS(strrstr)
-AC_CHECK_FUNCS(strrstr)
+AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
@@ -627,6 +664,8 @@ AC_CHECK_FUNCS(socket)
 AC_CHECK_FUNCS(setsockopt)
 AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
+
+AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
 
@@ -717,7 +756,7 @@ case "$target_os" in
         CPPFLAGS="$CPPFLAGS -w"
         ;;
    linux*)
-	AC_CHECK_LIB(nss_nis, yp_get_default_domain)
+        AC_CHECK_LIB(nss_nis, yp_get_default_domain)
         ;;
    freebsd*|dragonfly*)
         ;;
@@ -744,7 +783,7 @@ case "$target_os" in
    darwin*)
         ;;
    *)
-	AC_MSG_ERROR(Unknown system type $target_os)
+        AC_MSG_ERROR(Unknown system type $target_os)
         ;;
 esac
 
@@ -771,12 +810,12 @@ dnl Configure LOCKDIR and LOGDIR
 dnl #####################################################################
 
 AC_ARG_WITH(workdir,
-	[  --with-workdir=WORKDIR  default internal for trusted cache ],
-	[
-		if test x$withval != x ; then
-			WORKDIR=$withval
-		fi
-	],
+    [  --with-workdir=WORKDIR  default internal for trusted cache ],
+    [
+        if test x$withval != x ; then
+            WORKDIR=$withval
+        fi
+    ],
 )
 
 dnl Expand ${prefix} and whatnot in WORKDIR
@@ -813,27 +852,35 @@ HP_UX_AC=yes])
 
 AC_MSG_CHECKING(for GCC specific compile flags)
 if test x"$GCC" = "xyes" && test x"$HP_UX_AC" != x"yes"; then
-	CFLAGS="$CFLAGS -g -Wall"
-	CPPFLAGS="$CPPFLAGS -std=gnu99"
-	AC_MSG_RESULT(yes)
+    CFLAGS="$CFLAGS -g -Wall"
+    CPPFLAGS="$CPPFLAGS -std=gnu99"
+    AC_MSG_RESULT(yes)
 
-        save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS -Wno-pointer-sign"
-        AC_MSG_CHECKING(for -Wno-pointer-sign)
-        AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)],
-          [AC_MSG_RESULT(no)
-           CFLAGS="$save_CFLAGS"])
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -Wno-pointer-sign"
+    AC_MSG_CHECKING(for -Wno-pointer-sign)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+     [AC_MSG_RESULT(yes)],
+     [AC_MSG_RESULT(no)
+     CFLAGS="$save_CFLAGS"])
 
-        save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
-        AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
-        AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
-          [AC_MSG_RESULT(yes)],
-          [AC_MSG_RESULT(no)
-           CFLAGS="$save_CFLAGS"])
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -Werror=implicit-function-declaration"
+    AC_MSG_CHECKING(for -Werror=implicit-function-declaration)
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+     [AC_MSG_RESULT(yes)],
+     [AC_MSG_RESULT(no)
+     CFLAGS="$save_CFLAGS"])
+
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -Wunused-parameter"
+    AC_MSG_CHECKING(for -Wunused-parameter")
+    AC_COMPILE_IFELSE([AC_LANG_SOURCE([int main() {}])],
+     [AC_MSG_RESULT(yes)],
+     [AC_MSG_RESULT(no)
+     CFLAGS="$save_CFLAGS"])
 else 
-	AC_MSG_RESULT(no)
+    AC_MSG_RESULT(no)
 fi
 
 dnl #####################################################################
@@ -852,18 +899,17 @@ dnl #####################################################################
 
 AC_MSG_CHECKING(for Xen cpuid-based HVM detection)
 if test x"$GCC" = "xyes"; then
-	case $host_cpu in
-		i[[3456]]86*|x86_64*)
-			AC_DEFINE(XEN_CPUID_SUPPORT, 1, [Define if XEN cpuid-based HVM detection is available.])
-
-			AC_MSG_RESULT(yes)
-			;;
-		*)
-			AC_MSG_RESULT(no)
-			;;
-	esac
+    case $host_cpu in
+        i[[3456]]86*|x86_64*)
+            AC_DEFINE(XEN_CPUID_SUPPORT, 1, [Define if XEN cpuid-based HVM detection is available.])
+            AC_MSG_RESULT(yes)
+            ;;
+        *)
+            AC_MSG_RESULT(no)
+            ;;
+    esac
 else 
-	AC_MSG_RESULT(no)
+    AC_MSG_RESULT(no)
 fi
 
 dnl
@@ -930,6 +976,10 @@ fi
 AM_CONDITIONAL(HTML_DOCS, test "x$use_docs" = "xhtml" || test "x$use_docs" = "xall")
 AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall")
 
+#
+# Populate contents of config.post.h
+#
+AC_SUBST(post_macros)
 
 dnl ######################################################################
 dnl Summarize
@@ -995,34 +1045,34 @@ dnl Now make the Makefiles
 dnl ######################################################################
 
 AC_CONFIG_FILES([Makefile
-	libcompat/Makefile
-	libutils/Makefile
-	libpromises/Makefile
-	cf-agent/Makefile
-	cf-promises/Makefile
-	cf-execd/Makefile
-	cf-gendoc/Makefile
-	cf-key/Makefile
-	cf-monitord/Makefile
-	cf-runagent/Makefile
-	cf-serverd/Makefile
-	ext/Makefile
-	docs/Makefile
-	docs/guides/Makefile
-	docs/manpages/Makefile
-	docs/reference/Makefile
-	docs/tools/Makefile
-	docs/tex-include/Makefile
-	examples/Makefile
-	masterfiles/Makefile
-	tests/Makefile
-	tests/acceptance/Makefile
-	tests/unit/Makefile
-	tests/load/Makefile])
+    libcompat/Makefile
+    libutils/Makefile
+    libutils/config.post.h
+    libpromises/Makefile
+    cf-agent/Makefile
+    cf-promises/Makefile
+    cf-execd/Makefile
+    cf-gendoc/Makefile
+    cf-key/Makefile
+    cf-monitord/Makefile
+    cf-runagent/Makefile
+    cf-serverd/Makefile
+    ext/Makefile
+    docs/Makefile
+    docs/guides/Makefile
+    docs/manpages/Makefile
+    docs/reference/Makefile
+    docs/tools/Makefile
+    docs/tex-include/Makefile
+    examples/Makefile
+    masterfiles/Makefile
+    tests/Makefile
+    tests/acceptance/Makefile
+    tests/unit/Makefile
+    tests/load/Makefile])
 
 m4_indir(incstart[]incend, [nova/output.m4])
 
 AC_OUTPUT
 
 AC_MSG_RESULT(DONE: Configuration done. Run make/gmake to build CFEngine.)
-

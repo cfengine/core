@@ -6,7 +6,7 @@ AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
 	$(POSTGRESQL_CPPFLAGS) \
 	$(MYSQL_CPPFLAGS) \
 	$(LIBACL_CPPFLAGS) \
-	$(LIBXML_CPPFLAGS)
+	$(LIBXML2_CPPFLAGS)
 
 if HAVE_NOVA
 AM_CPPFLAGS += -I$(abs_top_srcdir)/nova/libcfagent
@@ -38,32 +38,41 @@ LDADD += ../nova/libcfagent/libcfagent.la
 endif
 
 cf_agent_SOURCES = \
+        agent-diagnostics.c agent-diagnostics.h \
+        abstract_dir.c abstract_dir.h \
         cf-agent.c \
         cf_acl.c cf_acl.h \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
-        verify_files.c \
+        promiser_regex_resolver.c promiser_regex_resolver.h \
+        verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
+        verify_files_hashes.c verify_files_hashes.h \
         verify_storage.c verify_storage.h \
         verify_exec.c verify_exec.h \
         verify_methods.c verify_methods.h \
-        verify_interfaces.c \
         verify_databases.c verify_databases.h \
         verify_outputs.c verify_outputs.h \
+        verify_processes.c verify_processes.h \
         verify_services.c verify_services.h \
         verify_environments.c verify_environments.h \
         files_edit.c files_edit.h \
-        files_editline.c \
-        files_editxml.c \
+        files_editline.c files_editline.h \
+        files_editxml.c files_editxml.h \
         files_links.c files_links.h \
         files_operators.c files_operators.h \
+        files_properties.c files_properties.h \
         files_repository.c files_repository.h \
-        files_select.c \
+        files_select.c files_select.h \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
+
+if !HAVE_NOVA
+cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h
+endif
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

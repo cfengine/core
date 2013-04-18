@@ -22,43 +22,40 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_environ.h"
 
-static const BodySyntax CF_RESOURCE_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_RESOURCE_BODY[] =
 {
-    {"env_cpus", DATA_TYPE_INT, CF_VALRANGE, "Number of virtual CPUs in the environment"},
-    {"env_memory", DATA_TYPE_INT, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
-    {"env_disk", DATA_TYPE_INT, CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"},
-    {"env_baseline", DATA_TYPE_STRING, CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"},
-    {"env_spec", DATA_TYPE_STRING, CF_ANYSTRING,
-     "A string containing a technology specific set of promises for the virtual instance"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", NULL),
+    ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", NULL),
+    ConstraintSyntaxNewInt("env_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)", NULL),
+    ConstraintSyntaxNewString("env_baseline", CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment", NULL),
+    ConstraintSyntaxNewString("env_spec", CF_ANYSTRING, "A string containing a technology specific set of promises for the virtual instance", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_DESIGNATION_BODY[] =
+static const ConstraintSyntax CF_DESIGNATION_BODY[] =
 {
-    {"env_addresses", DATA_TYPE_STRING_LIST, "", "The IP addresses of the environment's network interfaces"},
-    {"env_name", DATA_TYPE_STRING, "", "The hostname of the virtual environment"},
-    {"env_network", DATA_TYPE_STRING, "", "The hostname of the virtual network"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("env_addresses", "", "The IP addresses of the environment's network interfaces"),
+    ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment", NULL),
+    ConstraintSyntaxNewString("env_network", "", "The hostname of the virtual network", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_ENVIRON_BODIES[] =
+static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {
-    {"environment_host", DATA_TYPE_STRING, "[a-zA-Z0-9_]+",
-     "A class indicating which physical node will execute this guest machine"},
-    {"environment_interface", DATA_TYPE_BODY, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
-    {"environment_resources", DATA_TYPE_BODY, CF_RESOURCE_BODY, "Virtual environment resource description"},
-    {"environment_state", DATA_TYPE_OPTION, "create,delete,running,suspended,down",
-     "The desired dynamical state of the specified environment"},
-    {"environment_type", DATA_TYPE_OPTION, "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
-     "Virtual environment type"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine", NULL),
+    ConstraintSyntaxNewBody("environment_interface", CF_DESIGNATION_BODY, "Virtual environment outward identity and location"),
+    ConstraintSyntaxNewBody("environment_resources", CF_RESOURCE_BODY, "Virtual environment resource description"),
+    ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", NULL),
+    ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
+const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[] =
 {
-    {"agent", "guest_environments", CF_ENVIRON_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "guest_environments", ConstraintSetSyntaxNew(CF_ENVIRON_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

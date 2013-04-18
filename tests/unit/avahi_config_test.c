@@ -29,7 +29,7 @@ static void generateTestFile()
     fclose(fp);
 }
 
-static void test_generateAvahiConfig()
+static void test_generateAvahiConfig(void)
 {
     generateTestFile();
     assert_int_equal(GenerateAvahiConfig("/tmp/avahi_config"), 0);

@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_SERVICES_H
 #define CFENGINE_MOD_SERVICES_H
 
-extern const SubTypeSyntax CF_SERVICES_SUBTYPES[];
+#include "cf3.defs.h"
+
+extern const PromiseTypeSyntax CF_SERVICES_PROMISE_TYPES[];
 
 #endif

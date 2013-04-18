@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_METHODS_H
 #define CFENGINE_MOD_METHODS_H
 
-extern const SubTypeSyntax CF_METHOD_SUBTYPES[];
+#include "cf3.defs.h"
+
+extern const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[];
 
 #endif

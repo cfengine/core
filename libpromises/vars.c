@@ -32,57 +32,21 @@
 #include "matching.h"
 #include "hashes.h"
 #include "unix.h"
-#include "cfstream.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
 
 static int IsCf3Scalar(char *str);
 
-void LoadSystemConstants()
+void LoadSystemConstants(EvalContext *ctx)
 {
-    ScopeNewScalar("const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "n", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "r", "\r", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "t", "\t", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
-}
-
-/*******************************************************************/
-
-int UnresolvedVariables(CfAssoc *ap, char rtype)
-{
-    Rlist *list, *rp;
-
-    if (ap == NULL)
-    {
-        return false;
-    }
-
-    switch (rtype)
-    {
-    case RVAL_TYPE_SCALAR:
-        return IsCf3VarString(ap->rval.item);
-
-    case RVAL_TYPE_LIST:
-        list = (Rlist *) ap->rval.item;
-
-        for (rp = list; rp != NULL; rp = rp->next)
-        {
-            if (IsCf3VarString(rp->item))
-            {
-                return true;
-            }
-        }
-
-        return false;
-
-    default:
-        return false;
-    }
 }
 
 /*******************************************************************/
@@ -100,9 +64,12 @@ int UnresolvedArgs(Rlist *args)
 
         if (IsCf3Scalar(rp->item))
         {
-            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}"))
+            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}") ||
+                strstr(rp->item, "$(this.k)") || strstr(rp->item, "${this.k}") ||
+                strstr(rp->item, "$(this.v)") || strstr(rp->item, "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
+                // We should allow this.k and this.v in function args for substitution in maparray() etc
             }
             else
             {
@@ -359,13 +326,13 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             break;
 
         default:
-            if (isalnum((int) *sp) || strchr("_[]$.:-", *sp))
+            if (isalnum((int) *sp) || strchr("_[]$.:-# ", *sp))
             {
             }
             else
             {
                 CfDebug("Illegal character found: '%c'\n", *sp);
-                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion", str);
+                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
             }
         }
 

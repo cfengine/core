@@ -1,0 +1,9 @@
+
+The regular expression is matched against the current list of defined
+classes (hard, then soft, then local to the current bundle).  This
+regular expression does not need to be anchored.
+
+@xref{Anchored vs. unanchored regular expressions}.
+
+This function replaces the @code{allclasses.txt} static file available
+in older versions of CFEngine.

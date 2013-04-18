@@ -22,32 +22,30 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_services.h"
 
-static const BodySyntax CF_SERVMETHOD_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_SERVMETHOD_BODY[] =
 {
-    {"service_args", DATA_TYPE_STRING, "", "Parameters for starting the service as command"},
-    {"service_autostart_policy", DATA_TYPE_OPTION, "none,boot_time,on_demand",
-     "Should the service be started automatically by the OS"},
-    {"service_bundle", DATA_TYPE_BUNDLE, CF_BUNDLE,
-     "A bundle reference with two arguments (service_name,args) used if the service type is generic"},
-    {"service_dependence_chain", DATA_TYPE_OPTION, "ignore,start_parent_services,stop_child_services,all_related",
-     "How to handle dependencies and dependent services"},
-    {"service_type", DATA_TYPE_OPTION, "windows,generic", "Service abstraction type"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("service_args", "", "Parameters for starting the service as command", NULL),
+    ConstraintSyntaxNewOption("service_autostart_policy", "none,boot_time,on_demand", "Should the service be started automatically by the OS", NULL),
+    ConstraintSyntaxNewBundle("service_bundle", "A bundle reference with two arguments (service_name,args) used if the service type is generic"),
+    ConstraintSyntaxNewOption("service_dependence_chain", "ignore,start_parent_services,stop_child_services,all_related", "How to handle dependencies and dependent services", NULL),
+    ConstraintSyntaxNewOption("service_type", "windows,generic", "Service abstraction type", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_SERVICES_BODIES[] =
+static const ConstraintSyntax CF_SERVICES_BODIES[] =
 {
-    {"service_policy", DATA_TYPE_OPTION, "start,stop,disable,restart,reload", "Policy for cfengine service status"},
-    {"service_dependencies", DATA_TYPE_STRING_LIST, CF_IDRANGE, "A list of services on which the named service abstraction depends"},
-    {"service_method", DATA_TYPE_BODY, CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewOption("service_policy", "start,stop,disable,restart,reload", "Policy for cfengine service status", NULL),
+    ConstraintSyntaxNewStringList("service_dependencies", CF_IDRANGE, "A list of services on which the named service abstraction depends"),
+    ConstraintSyntaxNewBody("service_method", CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_SERVICES_SUBTYPES[] =
+const PromiseTypeSyntax CF_SERVICES_PROMISE_TYPES[] =
 {
-    {"agent", "services", CF_SERVICES_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "services", ConstraintSetSyntaxNew(CF_SERVICES_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

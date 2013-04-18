@@ -60,8 +60,6 @@ bool RlistIsStringIn(const Rlist *list, const char *s);
 bool RlistIsIntIn(const Rlist *list, int i);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
-void RlistPopStack(Rlist **liststart, void **item, size_t size);
-void RlistPushStack(Rlist **liststart, void *item);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 
 Rlist *RlistAppendAlien(Rlist **start, void *item);
@@ -84,5 +82,10 @@ void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
+
+/**
+ * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.
+ */
+void RlistFlatten(EvalContext *ctx, Rlist **list);
 
 #endif

@@ -23,7 +23,7 @@
 body common control
 {
 bundlesequence  => { "mycopy" };
-inputs => { "cfengine_stdlib.cf" };
+inputs => { "libraries/cfengine_stdlib.cf" };
 }
 
 bundle agent mycopy

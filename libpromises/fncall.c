@@ -29,7 +29,7 @@
 #include "files_names.h"
 #include "expand.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "args.h"
 #include "evalfunction.h"
 #include "policy.h"
@@ -96,26 +96,18 @@ void FnCallDestroy(FnCall *fp)
 {
     if (fp)
     {
-        if (fp->name)
-        {
-            free(fp->name);
-        }
-
-        if (fp->args)
-        {
-            RlistDestroy(fp->args);
-        }
-
-        free(fp);
+        free(fp->name);
+        RlistDestroy(fp->args);
     }
+    free(fp);
 }
 
 /*********************************************************************/
 
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked)
+FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
 {
     CfDebug("ExpandFnCall()\n");
-    return FnCallNew(f->name, ExpandList(contextid, f->args, false));
+    return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
 }
 
 
@@ -148,12 +140,12 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     Rlist *expargs;
-    const FnCallType *this = FnCallTypeGet(fp->name);
+    const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
-    if (this)
+    if (fp_type)
     {
         if (DEBUG)
         {
@@ -164,10 +156,10 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
     }
     else
     {
-        if (pp)
+        if (caller)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
-                  fp->name, pp->audit->filename, pp->offset.line);
+                  fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
@@ -179,12 +171,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, pp->ns))
+    if ((caller != NULL) && !IsDefinedClass(ctx, caller->classes, PromiseGetNamespace(caller)))
     {
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    expargs = NewExpArgs(ctx, fp, pp);
+    expargs = NewExpArgs(ctx, fp, caller);
 
     if (UnresolvedArgs(expargs))
     {
@@ -192,16 +184,9 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    if (pp != NULL)
-    {
-        fp->ns = pp->ns;
-    }
-    else
-    {
-        fp->ns = "default";
-    }
-    
-    FnCallResult result = CallFunction(ctx, this, fp, expargs);
+    fp->caller = caller;
+
+    FnCallResult result = CallFunction(ctx, fp_type, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

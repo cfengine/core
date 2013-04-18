@@ -25,7 +25,7 @@
 
 #include "cf_sql.h"
 
-#include "cfstream.h"
+#include "logging.h"
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>
@@ -150,25 +150,25 @@ static void CfDeleteMysqlQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectMysqlDB(const char *host, const char *user, const char *password, const char *database)
+static void *CfConnectMysqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
 {
     CfOut(OUTPUT_LEVEL_INFORM, "", "There is no MySQL support compiled into this version");
     return NULL;
 }
 
-static void CfCloseMysqlDB(void *c)
+static void CfCloseMysqlDB(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryMysqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchMysqlRow(CfdbConn *c)
+static void CfFetchMysqlRow(ARG_UNUSED CfdbConn *c)
 {
 }
 
-static void CfDeleteMysqlQuery(CfdbConn *c)
+static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *c)
 {
 }
 
@@ -295,25 +295,25 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectPostgresqlDB(const char *host, const char *user, const char *password, const char *database)
+static void *CfConnectPostgresqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
 {
     CfOut(OUTPUT_LEVEL_INFORM, "", "There is no PostgreSQL support compiled into this version");
     return NULL;
 }
 
-static void CfClosePostgresqlDb(void *c)
+static void CfClosePostgresqlDb(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryPostgresqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchPostgresqlRow(CfdbConn *c)
+static void CfFetchPostgresqlRow(ARG_UNUSED CfdbConn *c)
 {
 }
 
-static void CfDeletePostgresqlQuery(CfdbConn *c)
+static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *c)
 {
 }
 

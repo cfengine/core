@@ -68,12 +68,10 @@ starred components are new to CFEngine 3:
 @menu
 * cf-agent::
 * cf-execd::
-* cf-know::
 * cf-monitord::
 * cf-promises::
 * cf-runagent::
 * cf-serverd::
-* cf-report::
 * cf-key::
 * cf-hub::
 @end menu
@@ -103,16 +101,6 @@ EXECUTOR
 @code{cf-execd} keeps the promises made in @ref{Bundles for common, ,common}
 bundles, and is affected by
 @ref{control common, , common} and @ref{control executor, ,executor}
-control bodies.
-
-@node cf-know
-@subsection cf-know*
-Knowledge modelling agent -- responsible for building and analysing a
-       semantic knowledge network.
-
-@code{cf-know} keeps the promises made in @ref{Bundles for common, ,common}
-and @ref{Bundles for knowledge, ,knowledge} bundles, and is affected by
-@ref{control common, , common} and @ref{control knowledge, ,knowledge}
 control bodies.
 
 @node cf-monitord
@@ -152,16 +140,6 @@ Server -- used to distribute policy and/or data files to clients requesting
 @code{cf-serverd} keeps the promises made in @ref{Bundles for common, ,common}
 and @ref{Bundles for server, ,server} bundles, and is affected by
 @ref{control common, , common} and @ref{control server, ,server}
-control bodies.
-
-@node cf-report
-@subsection cf-report
-Self-knowledge extractor -- takes data stored in CFEngine's embedded
-    databases and converts them to human readable form
-
-@code{cf-report} keeps the promises made in @ref{Bundles for common, ,common}
-bundles, and is affected by
-@ref{control common, , common} and @ref{control reporter, ,reporter}
 control bodies.
 
 @node cf-key
@@ -855,7 +833,7 @@ bundle agent test
 {
 reports:
 
- Yr2009::
+ cfengine::
     "Hello world";
 }
 
@@ -937,7 +915,6 @@ reports:
 body contain standard
 
 {
-exec_owner => "mark";
 useshell => "true";
 }
 
@@ -1034,9 +1011,7 @@ by the type "common". You can view this output file in a suitable web browser
 to see exactly what CFEngine has understood by the configuration.
 
 
-Now that you have verified it, you can execute it. To run this example you need
-to change the username `mark' to your own, or obtain root privileges to change
-to another user. 
+Now that you have verified it, you can execute it. 
 The non-verbose output of the script when run in the CFEngine 3
 directory looks something like this:
 
@@ -1920,6 +1895,11 @@ vars:
 Array variables are written with @samp{[} and @samp{]} brackets, e.g.
 
 @verbatim
+body common control
+
+{ 
+  bundlesequence => { "example" }; 
+}
 
 bundle agent example
 
@@ -1951,6 +1931,11 @@ Thus one could have written the example above in the form of the
 following example. Note, too, that the use of @code{getindices} avoids the earlier poor practice of repeating the enumeration of key names, and instead uses the better strategy of automatically deriving them.
 
 @verbatim
+body common control
+
+{ 
+  bundlesequence => { "example" }; 
+}
 
 bundle agent example
 
@@ -1959,7 +1944,7 @@ vars:
 
   "array[cf-monitord]" string => "The monitor";
   "array[cf-serverd]" string => "The server";
-  "array[cf-exced]" string => "The executor, not executioner";
+  "array[cf-execd]" string => "The executor, not executioner";
 
   "component" slist => getindices("array");
 
@@ -2082,7 +2067,6 @@ promise.
 * Agent normal ordering::       
 * Server normal ordering::      
 * Monitor normal ordering::     
-* Knowledge normal ordering::   
 @end menu
 
 @node Agent normal ordering
@@ -2194,26 +2178,6 @@ Within a monitor bundle, the normal ordering is:
    measurements
    reports
 @end verbatim
-
-@node Knowledge normal ordering
-@subsection Knowledge normal ordering
-
-As with the agent, common bundles are executed before any knowledge bundles;
-following this @i{all} knowledge bundles are executed (the @code{bundlesequence}
-is only used for @code{cf-agent}).
-Variables and classes are resolved in the same way as the agent.
-
-Within a knowledge bundle, the normal ordering is:
-
-@verbatim
-   vars
-   classes
-   topics
-   occurrences
-   inferences
-   reports
-@end verbatim
-
 
 @c -----------------------------------------------------------------------
 @node Loops and lists in CFEngine 3
@@ -2401,6 +2365,30 @@ so in the @samp{C_comment} body, they do not refer to the filename components,
 but instead to the hash-commented line in the @samp{replace_patterns} promise.
 
 @verbatim
+###########################################################
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+
+bundle agent example
+
+{
+vars:
+
+  "file" string => "/tmp/test.cfengine3";
+
+files:
+  "${file}"
+    create    => "true",
+    edit_line => myedit("test_parameter");
+} 
+
 
 bundle edit_line myedit(parameter)
   {
@@ -2445,7 +2433,7 @@ select_end => "\[.*\]";
 
 @end verbatim
 
-Try this example on the file
+Put this example in the file /tmp/test.cfengine3
 @verbatim
 [First section]
 
@@ -2484,7 +2472,7 @@ six
 seven
 eleven
 
-private edit variable is second backref: test
+private edit variable is test_parameter
 @end verbatim
 
 @menu
@@ -2544,7 +2532,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/comment_test"
+  "/tmp/comment_test"
 
        create    => "true",
        edit_line => comment_lines_matching;
@@ -2575,6 +2563,22 @@ replace_value => "$(c) $(match.1)";
 occurrences => "all";
 }
 
+@end verbatim
+
+Put this example in /tmp/comment_test
+@begin verbatim
+one $
+two #
+three &
+four *
+@end verbatim
+
+@noindent The resulting file is edited like this:
+@begin verbatim
+#  one $
+#  two #
+three &
+#  four *
 @end verbatim
 
 @node Regular expressions in paths

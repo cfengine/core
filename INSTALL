@@ -83,6 +83,13 @@ $ ./configure --help
 or
 $ ./autogen.sh --help
 
+BUILDING DOCUMENTATION
+----------------------
+
+Specify --enable-docs=all (or =pdf or =html) to build the documentation as well during compilation.
+
+The necessary tools will be checked by the configure script.
+
 INSTALLATION INSTRUCTIONS
 -------------------------
 

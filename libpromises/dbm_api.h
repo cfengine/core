@@ -79,9 +79,9 @@ bool DeleteDB(CF_DB *dbp, const char *key);
  * key.
  */
 bool NewDBCursor(CF_DB *dbp, CF_DBC **dbcp);
-bool NextDB(CF_DB *dbp, CF_DBC *dbcp, char **key, int *ksize, void **value, int *vsize);
+bool NextDB(CF_DBC *dbcp, char **key, int *ksize, void **value, int *vsize);
 bool DBCursorDeleteEntry(CF_DBC *cursor);
 bool DBCursorWriteEntry(CF_DBC *cursor, const void *value, int value_size);
-bool DeleteDBCursor(CF_DB *dbp, CF_DBC *dbcp);
+bool DeleteDBCursor(CF_DBC *dbcp);
 
 #endif  /* NOT CFENGINE_DBM_API_H */

@@ -37,7 +37,7 @@ Set *SetNew(MapHashFn element_hash_fn,
     return MapNew(element_hash_fn, element_equal_fn, element_destroy_fn, NULL);
 }
 
-void SetDestroy(void *set)
+void SetDestroy(Set *set)
 {
     MapDestroy(set);
 }
@@ -62,6 +62,11 @@ void SetClear(Set *set)
     MapClear(set);
 }
 
+size_t SetSize(const Set *set)
+{
+    return MapSize(set);
+}
+
 SetIterator SetIteratorInit(Set *set)
 {
     return MapIteratorInit(set);
@@ -71,4 +76,23 @@ void *SetIteratorNext(SetIterator *i)
 {
     MapKeyValue *kv = MapIteratorNext(i);
     return kv ? kv->key : NULL;
+}
+
+StringSet *StringSetFromString(const char *str, char delimiter)
+{
+    StringSet *set = StringSetNew();
+
+    char delimiters[2] = { 0 };
+    delimiters[0] = delimiter;
+
+    char *copy = xstrdup(str);
+    char *curr = NULL;
+
+    while ((curr = strsep(&copy, delimiters)))
+    {
+        StringSetAdd(set, xstrdup(curr));
+    }
+
+    free(copy);
+    return set;
 }

@@ -32,6 +32,11 @@
 
 #include <stdio.h>
 
+/*
+ * WARNING: This file is in need of serious cleanup.
+ */
+
+
 typedef enum
 {
     SYNTAX_TYPE_MATCH_OK,
@@ -67,10 +72,53 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
 int CheckParseVariableName(const char *name);
 SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
-DataType StringDataType(const char *scopeid, const char *string);
+DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
-SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
+const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name);
+
+const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
+
+/**
+ * @brief An array of ConstraintSyntax for the given body_type
+ * @param body_type Type of body, e.g. 'contain'
+ * @return NULL if not found
+ */
+const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
+const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
+
+
+const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
+
+
+#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL }
+#define ConstraintSyntaxNewBool(lval, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, default_value }
+
+#define ConstraintSyntaxNewOption(lval, options, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description, default_value }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, NULL }
+
+#define ConstraintSyntaxNewString(lval, regex, description, default_value) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description, default_value }
+#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, NULL }
+
+#define ConstraintSyntaxNewInt(lval, int_range, description, default_value) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description, default_value }
+#define ConstraintSyntaxNewIntRange(lval, int_range, description, default_value ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, default_value }
+#define ConstraintSyntaxNewIntList(lval, description) { lval, DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description }
+
+#define ConstraintSyntaxNewReal(lval, real_range, description, default_value) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description, default_value }
+#define ConstraintSyntaxNewRealList(lval, description) { lval, DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description }
+
+#define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description }
+#define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, default_value }
+
+#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description }
+#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description }
+
+
+#define ConstraintSetSyntaxNew(constraints, validation_fn) { constraints, validation_fn }
+
+
+#define PromiseTypeSyntaxNew(agent_type, promise_type, constraint_set) { agent_type, promise_type, constraint_set }
+#define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, ConstraintSetSyntaxNew(NULL, NULL))
 
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);

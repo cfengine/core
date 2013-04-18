@@ -37,7 +37,6 @@ typedef struct
 
 CfAssoc *NewAssoc(const char *lval, Rval rval, DataType dt);
 void DeleteAssoc(CfAssoc *ap);
-CfAssoc *CopyAssoc(CfAssoc *old);
 
 /* - hashtable operations - */
 
@@ -55,9 +54,6 @@ CfAssoc *HashLookupElement(AssocHashTable *hashtable, const char *element);
 
 /* Copies all elements of old hash table to new one. */
 void HashCopy(AssocHashTable *newhash, AssocHashTable *oldhash);
-
-/* Clear whole hash table */
-void HashClear(AssocHashTable *hashtable);
 
 /* Destroy hash table */
 void HashFree(AssocHashTable *hashtable);

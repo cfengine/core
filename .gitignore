@@ -88,6 +88,7 @@ libpromises/cf3parse.h
 cf3parse.output
 libutils/config.h
 libutils/config.h.in
+libutils/config.post.h
 
 # acceptance tests
 
@@ -96,14 +97,18 @@ tests/acceptance/.succeeded
 tests/acceptance/workdir
 tests/acceptance/mock-package-manager
 tests/acceptance/mock-package-manager.exe
+tests/acceptance/xml-c14nize
+tests/acceptance//xml-c14nize.exe
 tests/acceptance/dnswrapper.so
 tests/*/*.xml
 tests/*/xml.tmp
 tests/*/xml_tmp_*
+tests/*/*.trs
 
 # unit tests
 
 tests/unit/*_test
+tests/unit/exec-config-test
 
 # load tests
 

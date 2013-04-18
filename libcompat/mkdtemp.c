@@ -23,17 +23,8 @@
 
 */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#if !HAVE_DECL_MKDTEMP
-char *mkdtemp(char *template);
-#endif
-
-#if !HAVE_DECL_STRRSTR
-char *strrstr(const char *haystack, const char *needle);
-#endif
+#include "platform.h"
+#include "compiler.h"
 
 #define MAXTRY 999999
 

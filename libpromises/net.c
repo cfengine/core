@@ -24,8 +24,8 @@
 
 #include "net.h"
 
-#include "cfstream.h"
 #include "logging.h"
+#include "misc_lib.h"
 
 /*************************************************************************/
 
@@ -67,7 +67,7 @@ int SendTransaction(int sd, char *buffer, int len, char status)
     if (wlen > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
-        FatalError("SendTransaction software failure");
+        ProgrammingError("SendTransaction software failure");
     }
 
     snprintf(work, CF_INBAND_OFFSET, "%c %d", status, wlen);
@@ -94,7 +94,7 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     memset(proto, 0, CF_INBAND_OFFSET + 1);
 
-    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET, 0) == -1) /* Get control channel */
+    if (RecvSocketStream(sd, proto, CF_INBAND_OFFSET) == -1) /* Get control channel */
     {
         return -1;
     }
@@ -127,12 +127,12 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
         }
     }
 
-    return RecvSocketStream(sd, buffer, len, 0);
+    return RecvSocketStream(sd, buffer, len);
 }
 
 /*************************************************************************/
 
-int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget, int nothing)
+int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
 
@@ -210,24 +210,29 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
     return already;
 }
 
-/*************************************************************************/
+/*
+  NB: recv() timeout interpretation differs under Windows: setting tv_sec to
+  50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
+  50 seconds on Linux.
+*/
+
+#ifdef __linux__
 
 int SetReceiveTimeout(int fd, const struct timeval *tv)
 {
-    /*
-      NB: recv() timeout interpretation differs under Windows: setting tv_sec to
-      50 (and tv_usec to 0) results in a timeout of 0.5 seconds on Windows, but
-      50 seconds on Linux.
-    */
-
-# ifdef __linux__
-
     if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (char*)tv, sizeof(struct timeval)))
     {
         return -1;
     }
 
-#endif
-
     return 0;
 }
+
+#else
+
+int SetReceiveTimeout(ARG_UNUSED int fd, ARG_UNUSED const struct timeval *tv)
+{
+    return 0;
+}
+
+#endif

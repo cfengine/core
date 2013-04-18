@@ -22,44 +22,40 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_storage.h"
 
-static const BodySyntax CF_CHECKVOL_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_CHECKVOL_BODY[] =
 {
-    {"check_foreign", DATA_TYPE_OPTION, CF_BOOL, "true/false verify storage that is mounted from a foreign system on this host",
-     "false"},
-    {"freespace", DATA_TYPE_STRING, "[0-9]+[MBkKgGmb%]",
-     "Absolute or percentage minimum disk space that should be available before warning"},
-    {"sensible_size", DATA_TYPE_INT, CF_VALRANGE,
-     "Minimum size in bytes that should be used on a sensible-looking storage device"},
-    {"sensible_count", DATA_TYPE_INT, CF_VALRANGE,
-     "Minimum number of files that should be defined on a sensible-looking storage device"},
-    {"scan_arrivals", DATA_TYPE_OPTION, CF_BOOL, "true/false generate pseudo-periodic disk change arrival distribution",
-     "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBool("check_foreign", "true/false verify storage that is mounted from a foreign system on this host", "false"),
+    ConstraintSyntaxNewString("freespace", "[0-9]+[MBkKgGmb%]", "Absolute or percentage minimum disk space that should be available before warning", NULL),
+    ConstraintSyntaxNewInt("sensible_size", CF_VALRANGE, "Minimum size in bytes that should be used on a sensible-looking storage device", NULL),
+    ConstraintSyntaxNewInt("sensible_count", CF_VALRANGE, "Minimum number of files that should be defined on a sensible-looking storage device", NULL),
+    ConstraintSyntaxNewBool("scan_arrivals", "true/false generate pseudo-periodic disk change arrival distribution", "false"),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_MOUNT_BODY[] =
+static const ConstraintSyntax CF_MOUNT_BODY[] =
 {
-    {"edit_fstab", DATA_TYPE_OPTION, CF_BOOL, "true/false add or remove entries to the file system table (\"fstab\")", "false"},
-    {"mount_type", DATA_TYPE_OPTION, "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system"},
-    {"mount_source", DATA_TYPE_STRING, CF_ABSPATHRANGE, "Path of remote file system to mount"},
-    {"mount_server", DATA_TYPE_STRING, "", "Hostname or IP or remote file system server"},
-    {"mount_options", DATA_TYPE_STRING_LIST, "", "List of option strings to add to the file system table (\"fstab\")"},
-    {"unmount", DATA_TYPE_OPTION, CF_BOOL, "true/false unmount a previously mounted filesystem", "false"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\")", "false"),
+    ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", NULL),
+    ConstraintSyntaxNewString("mount_source", CF_ABSPATHRANGE, "Path of remote file system to mount", NULL),
+    ConstraintSyntaxNewString("mount_server", "", "Hostname or IP or remote file system server", NULL),
+    ConstraintSyntaxNewStringList("mount_options", "", "List of option strings to add to the file system table (\"fstab\")"),
+    ConstraintSyntaxNewBool("unmount", "true/false unmount a previously mounted filesystem", "false"),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_STORAGE_BODIES[] =
+static const ConstraintSyntax CF_STORAGE_BODIES[] =
 {
-    {"mount", DATA_TYPE_BODY, CF_MOUNT_BODY, "Criteria for mounting foreign file systems"},
-    {"volume", DATA_TYPE_BODY, CF_CHECKVOL_BODY, "Criteria for monitoring/probing mounted volumes"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBody("mount", CF_MOUNT_BODY, "Criteria for mounting foreign file systems"),
+    ConstraintSyntaxNewBody("volume", CF_CHECKVOL_BODY, "Criteria for monitoring/probing mounted volumes"),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_STORAGE_SUBTYPES[] =
+const PromiseTypeSyntax CF_STORAGE_PROMISE_TYPES[] =
 {
-    {"agent", "storage", CF_STORAGE_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "storage", ConstraintSetSyntaxNew(CF_STORAGE_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

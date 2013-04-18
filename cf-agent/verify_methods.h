@@ -28,7 +28,7 @@
 
 #include "cf3.defs.h"
 
-void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, const ReportContext *report_context);
+void VerifyMethodsPromise(EvalContext *ctx, Promise *pp);
+int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp);
 
 #endif

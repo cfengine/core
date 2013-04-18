@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-sql_database => "cfengine_knowledge_db";
-}
-
-@end verbatim

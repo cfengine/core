@@ -28,7 +28,6 @@
 #include "files_names.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "promises.h"
 #include "matching.h"
@@ -41,12 +40,6 @@
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #endif
-
-static Item *NextItem(const Item *ip);
-static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int report, Attributes a, const Promise *pp);
-static bool DeleteDirectoryTree(const char *path);
-
-/*********************************************************************/
 
 bool FileCanOpen(const char *path, const char *modes)
 {
@@ -125,124 +118,6 @@ int RawSaveItemList(const Item *liststart, const char *file)
     return true;
 }
 
-/*********************************************************************/
-
-int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp)
-/* returns true if file on disk is identical to file in memory */
-{
-    struct stat statbuf;
-    Item *cmplist = NULL;
-
-    CfDebug("CompareToFile(%s)\n", file);
-
-    if (cfstat(file, &statbuf) == -1)
-    {
-        return false;
-    }
-
-    if ((liststart == NULL) && (statbuf.st_size == 0))
-    {
-        return true;
-    }
-
-    if (liststart == NULL)
-    {
-        return false;
-    }
-
-    if (!LoadFileAsItemList(ctx, &cmplist, file, a, pp))
-    {
-        return false;
-    }
-
-    if (!ItemListsEqual(ctx, cmplist, liststart, (a.transaction.action == cfa_warn), a, pp))
-    {
-        DeleteItemList(cmplist);
-        return false;
-    }
-
-    DeleteItemList(cmplist);
-    return (true);
-}
-
-/*********************************************************************/
-
-static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2, int warnings, Attributes a, const Promise *pp)
-// Some complex logic here to enable warnings of diffs to be given
-{
-    int retval = true;
-
-    const Item *ip1 = list1;
-    const Item *ip2 = list2;
-
-    while (true)
-    {
-        if ((ip1 == NULL) && (ip2 == NULL))
-        {
-            return retval;
-        }
-
-        if ((ip1 == NULL) || (ip2 == NULL))
-        {
-            if (warnings)
-            {
-                if ((ip1 == list1) || (ip2 == list2))
-                {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a,
-                         " ! File content wants to change from from/to full/empty but only a warning promised");
-                }
-                else
-                {
-                    if (ip1 != NULL)
-                    {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
-                             ip1->name);
-                    }
-
-                    if (ip2 != NULL)
-                    {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
-                    }
-                }
-            }
-
-            if (warnings)
-            {
-                if (ip1 || ip2)
-                {
-                    retval = false;
-                    ip1 = NextItem(ip1);
-                    ip2 = NextItem(ip2);
-                    continue;
-                }
-            }
-
-            return false;
-        }
-
-        if (strcmp(ip1->name, ip2->name) != 0)
-        {
-            if (!warnings)
-            {
-                // No need to wait
-                return false;
-            }
-            else
-            {
-                // If we want to see warnings, we need to scan the whole file
-
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
-                retval = false;
-            }
-        }
-
-        ip1 = NextItem(ip1);
-        ip2 = NextItem(ip2);
-    }
-
-    return retval;
-}
 
 /*********************************************************************/
 
@@ -338,22 +213,6 @@ ssize_t FileReadMax(char **output, char *filename, size_t size_max)
     return bytes_read;
 }
 
-/*********************************************************************/
-/* helpers                                                           */
-/*********************************************************************/
-
-static Item *NextItem(const Item *ip)
-{
-    if (ip)
-    {
-        return ip->next;
-    }
-    else
-    {
-        return NULL;
-    }
-}
-
 /**
  * Like MakeParentDirectory, but honours warn-only and dry-run mode.
  * We should eventually migrate to this function to avoid making changes
@@ -369,11 +228,16 @@ int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise)
 
     char *parent_dir = GetParentDirectoryCopy(parentandchild);
 
-    bool parent_exists = IsDir(parent_dir);
-
-    free(parent_dir);
-
-    return parent_exists;
+    if (parent_dir)
+    {
+        bool parent_exists = IsDir(parent_dir);
+        free(parent_dir);
+        return parent_exists;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 /**
@@ -525,9 +389,9 @@ int MakeParentDirectory(char *parentandchild, int force)
                 {
                     mask = umask(0);
 
-                    if (cf_mkdir(currentpath, DEFAULTMODE) == -1)
+                    if (mkdir(currentpath, DEFAULTMODE) == -1)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "cf_mkdir", "Unable to make directories to %s\n", parentandchild);
+                        CfOut(OUTPUT_LEVEL_ERROR, "mkdir", "Unable to make directories to %s\n", parentandchild);
                         umask(mask);
                         return (false);
                     }
@@ -574,7 +438,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     return (true);
 }
 
-int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp)
+int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 {
     FILE *fp;
     struct stat statbuf;
@@ -587,36 +451,44 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
         return false;
     }
 
-    if (a.edits.maxfilesize != 0 && statbuf.st_size > a.edits.maxfilesize)
+    if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
-              (intmax_t) statbuf.st_size, a.edits.maxfilesize);
+              (intmax_t) statbuf.st_size, edits.maxfilesize);
         return (false);
     }
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "%s is not a plain file\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "%s is not a plain file\n", file);
         return false;
     }
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "fopen", pp, a, "Couldn't read file %s for editing\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't read file %s for editing\n", file);
         return false;
     }
 
     memset(line, 0, CF_BUFSIZE);
     memset(concat, 0, CF_BUFSIZE);
 
-    while (!feof(fp))
+    for (;;)
     {
-        if (CfReadLine(line, CF_BUFSIZE - 1, fp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, fp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
         }
 
-        if (a.edits.joinlines && *(line + strlen(line) - 1) == '\\')
+        if (res == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read contents of %s", file);
+            fclose(fp);
+            return false;
+        }
+
+        if (edits.joinlines && *(line + strlen(line) - 1) == '\\')
         {
             join = true;
         }
@@ -647,146 +519,30 @@ int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Att
     }
 
     fclose(fp);
-    return (true);
-}
-
-int FileSanityChecks(char *path, Attributes a, Promise *pp)
-{
-    if ((a.havelink) && (a.havecopy))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
-              " !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havelink) && (!a.link.source))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise to establish a link at %s has no source", path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-/* We can't do this verification during parsing as we did not yet read the body,
- * so we can't distinguish between link and copy source. In post-verification
- * all bodies are already expanded, so we don't have the information either */
-
-    if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
-    {
-        /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Bailing out");
-    }
-
-    if ((a.haveeditline) && (a.haveeditxml))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",
-              path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havedepthsearch) && (a.haveedit))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Recursive depth_searches are not compatible with general file editing");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
-              " !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
-              " !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
-              path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.haveselect) && (!a.select.result))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File select constraint body promised no result (check body definition)");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havedelete) && (a.haverename))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File %s cannot promise both deletion and renaming", path);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "",
-              " !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
-              pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_INFORM, pp);
-    }
-
-    if ((a.transaction.background) && (a.transaction.audit))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Auditing cannot be performed on backgrounded promises (this might change).");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if (((a.havecopy) || (a.havelink)) && (a.transformer))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! File object(s) %s cannot both be a copy of source and transformed simultaneously",
-              pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.haveselect) && (a.select.result == NULL))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Missing file_result attribute in file_select body");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
-    if ((a.havedepthsearch) && (a.change.report_diffs))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Difference reporting is not allowed during a depth_search");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return false;
-    }
-
     return true;
 }
 
 static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
 {
-    Dir *dirh = OpenDirLocal(path);
+    Dir *dirh = DirOpen(path);
     const struct dirent *dirp;
     bool failed = false;
 
     if (dirh == NULL)
     {
+        if (errno == ENOENT)
+        {
+            /* Directory disappeared on its own */
+            return true;
+        }
+
         CfOut(OUTPUT_LEVEL_INFORM, "opendir",
               "Unable to open directory %s during purge of directory tree %s",
               path, basepath);
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
         if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {
@@ -799,6 +555,12 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
         struct stat lsb;
         if (lstat(subpath, &lsb) == -1)
         {
+            if (errno == ENOENT)
+            {
+                /* File disappeared on its own */
+                continue;
+            }
+
             CfOut(OUTPUT_LEVEL_VERBOSE, "lstat",
                   "Unable to stat file %s during purge of directory tree %s", path, basepath);
             failed = true;
@@ -812,22 +574,42 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
                     failed = true;
                 }
             }
-
-            if (unlink(subpath) == 1)
+            else
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "unlink",
-                      "Unable to remove file %s during purge of directory tree %s",
-                      subpath, basepath);
+                if (unlink(subpath) == -1)
+                {
+                    if (errno == ENOENT)
+                    {
+                        /* File disappeared on its own */
+                        continue;
+                    }
+
+                    CfOut(OUTPUT_LEVEL_VERBOSE, "unlink",
+                          "Unable to remove file %s during purge of directory tree %s",
+                          subpath, basepath);
+                    failed = true;
+                }
+            }
+        }
+    }
+
+    DirClose(dirh);
+
+    if (!failed)
+    {
+        if (rmdir(path) == -1)
+        {
+            if (errno != ENOENT)
+            {
                 failed = true;
             }
         }
     }
 
-    CloseDir(dirh);
     return failed;
 }
 
-static bool DeleteDirectoryTree(const char *path)
+bool DeleteDirectoryTree(const char *path)
 {
     return DeleteDirectoryTreeInternal(path, path);
 }
@@ -896,7 +678,7 @@ void RotateFiles(char *name, int number)
 
     snprintf(to, CF_BUFSIZE, "%s.1", name);
 
-    if (CopyRegularFileDisk(name, to, false) == false)
+    if (CopyRegularFileDisk(name, to) == false)
     {
         CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;
@@ -948,69 +730,4 @@ void CreateEmptyFile(char *name)
 
 #endif
 
-static char FileStateToChar(EvalContext *ctx, FileState status)
-{
-    switch(status)
-    {
-    case FILE_STATE_NEW:
-        return 'N';
 
-    case FILE_STATE_REMOVED:
-        return 'R';
-
-    case FILE_STATE_CONTENT_CHANGED:
-        return 'C';
-
-    case FILE_STATE_STATS_CHANGED:
-        return 'S';
-
-    default:
-        FatalError("Invalid Filechange status supplied");
-    }
-}
-
-void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp)
-{
-    FILE *fp;
-    char fname[CF_BUFSIZE];
-    time_t now = time(NULL);
-    mode_t perm = 0600;
-    static char prevFile[CF_MAXVARSIZE] = { 0 };
-
-// we might get called twice..
-    if (strcmp(file, prevFile) == 0)
-    {
-        return;
-    }
-
-    strlcpy(prevFile, file, CF_MAXVARSIZE);
-
-/* This is inefficient but we don't want to lose any data */
-
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
-    MapName(fname);
-
-#ifndef __MINGW32__
-    struct stat sb;
-    if (cfstat(fname, &sb) != -1)
-    {
-        if (sb.st_mode & (S_IWGRP | S_IWOTH))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
-        }
-    }
-#endif /* !__MINGW32__ */
-
-    if ((fp = fopen(fname, "a")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not write to the hash change log");
-        return;
-    }
-
-    const char *handle = PromiseID(ctx, pp);
-
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(ctx, status), msg);
-    fclose(fp);
-
-    cf_chmod(fname, perm);
-}

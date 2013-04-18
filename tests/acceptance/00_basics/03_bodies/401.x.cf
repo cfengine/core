@@ -1,0 +1,41 @@
+#######################################################
+#
+# Test handling of duplicate handles
+# Should error, was crashing in Issue 2267
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+vars:
+  "dummy" string => "dummy";
+}
+
+bundle agent test
+{
+vars:
+    "firstvar"
+        handle => "dupehandle",
+        string => "Some item with a handle";
+    "secondvar"
+        handle => "dupehandle",
+        string => "Another variable with an intentionally duplicated handle";
+}
+
+bundle agent check
+{
+reports:
+    DEBUG::
+        "Expected to return an error";
+    !ok::
+        "$(this.promise_filename) Pass";
+    ok::
+        "$(this.promise_filename) FAIL";
+}

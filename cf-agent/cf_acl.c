@@ -27,10 +27,14 @@
 #include "acl_posix.h"
 #include "files_names.h"
 #include "promises.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
+#include "env_context.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 /*****************************************************************************/
 
@@ -52,7 +56,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 {
     if (!CheckACLSyntax(file, a.acl, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Syntax error in access control list for \"%s\"", file);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return;
     }
@@ -68,7 +72,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
 #if defined(__linux__)
         CheckPosixLinuxACL(ctx, file, a.acl, a, pp);
 #elif defined(__MINGW32__)
-        Nova_CheckNtACL(file, a.acl, a, pp);
+        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
 #else
         CfOut(OUTPUT_LEVEL_INFORM, "", "!! ACLs are not yet supported on this system.");
 #endif
@@ -86,7 +90,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
     case ACL_TYPE_NTFS_:
 
 #if defined(__MINGW32__)
-        Nova_CheckNtACL(file, a.acl, a, pp);
+        Nova_CheckNtACL(ctx, file, a.acl, a, pp);
 #else
         CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are not supported on this system");
 #endif

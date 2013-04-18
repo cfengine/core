@@ -1,0 +1,28 @@
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+  vars:
+      "time" int => now();
+      "now" string => strftime("localtime", "%F %T", now());
+      "then" string => strftime("localtime", "%F %T", 0);
+
+      "gmt_now" string => strftime("gmtime", "%F %T", now());
+      "gmt_then" string => strftime("gmtime", "%F %T", 0);
+
+  reports:
+      "time $(time); now $(now); then $(then)";
+      "time $(time); GMT now $(now); GMT then $(then)";
+}
+
+@end verbatim

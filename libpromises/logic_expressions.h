@@ -115,13 +115,13 @@ typedef enum ExpressionValue
  * later case evaluation will be aborted and ERROR will be returned from
  * EvalExpression.
  */
-typedef ExpressionValue(*NameEvaluator) (EvalContext *ctx, const char *name, void *param);
+typedef ExpressionValue(*NameEvaluator) (const char *name, void *param);
 
 /*
  * Result is heap-allocated. In case evalfn() returns ERROR whole
  * EvalExpression returns ERROR as well.
  */
-ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
+ExpressionValue EvalExpression(const Expression *expr,
                                NameEvaluator nameevalfn, VarRefEvaluator varrefevalfn, void *param);
 
 /*

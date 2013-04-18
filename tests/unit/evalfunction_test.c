@@ -45,7 +45,7 @@ int getnetgrent(char **hostp, char **userp, char **domainp)
     }
 }
 
-static void test_hostinnetgroup_found(void **state)
+static void test_hostinnetgroup_found(void)
 {
     EvalContext *ctx = EvalContextNew();
 
@@ -60,7 +60,7 @@ static void test_hostinnetgroup_found(void **state)
     EvalContextDestroy(ctx);
 }
 
-static void test_hostinnetgroup_not_found(void **state)
+static void test_hostinnetgroup_not_found(void)
 {
     EvalContext *ctx = EvalContextNew();
 

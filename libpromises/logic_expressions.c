@@ -27,7 +27,6 @@
 #include "cf3.defs.h"
 #include "bool.h"
 #include "logic_expressions.h"
-#include "logging.h"
 #include "misc_lib.h"
 
 #include <stdlib.h>
@@ -190,7 +189,7 @@ ParseResult ParseExpression(const char *expr, int start, int end)
 
 /* Evaluation */
 
-ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
+ExpressionValue EvalExpression(const Expression *expr,
                                NameEvaluator nameevalfn, VarRefEvaluator varrefevalfn, void *param)
 {
     switch (expr->op)
@@ -200,13 +199,13 @@ ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
     {
         ExpressionValue lhs = EXP_ERROR, rhs = EXP_ERROR;
 
-        lhs = EvalExpression(ctx, expr->val.andor.lhs, nameevalfn, varrefevalfn, param);
+        lhs = EvalExpression(expr->val.andor.lhs, nameevalfn, varrefevalfn, param);
         if (lhs == EXP_ERROR)
         {
             return EXP_ERROR;
         }
 
-        rhs = EvalExpression(ctx, expr->val.andor.rhs, nameevalfn, varrefevalfn, param);
+        rhs = EvalExpression(expr->val.andor.rhs, nameevalfn, varrefevalfn, param);
 
         if (rhs == EXP_ERROR)
         {
@@ -225,8 +224,7 @@ ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
 
     case NOT:
     {
-        ExpressionValue arg = EvalExpression(ctx,
-                                             expr->val.not.arg,
+        ExpressionValue arg = EvalExpression(expr->val.not.arg,
                                              nameevalfn,
                                              varrefevalfn,
                                              param);
@@ -253,7 +251,7 @@ ExpressionValue EvalExpression(EvalContext *ctx, const Expression *expr,
             return EXP_ERROR;
         }
 
-        ret = (*nameevalfn) (ctx, name, param);
+        ret = (*nameevalfn) (name, param);
         free(name);
         return ret;
     }

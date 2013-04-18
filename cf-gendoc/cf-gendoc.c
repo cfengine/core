@@ -33,11 +33,10 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "expand.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "misc_lib.h"
 
-static void GenerateManual(void);
+static void GenerateManual(EvalContext *ctx);
 static void GenerateXml(void);
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
@@ -72,10 +71,11 @@ static const char *HINTS[] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
-    GenericAgentConfig *config = CheckOpts(argc, argv);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
+    GenericAgentConfigApply(ctx, config);
+
+    GenericAgentDiscoverContext(ctx, config);
 
     if (GENERATE_XML)
     {
@@ -83,10 +83,9 @@ int main(int argc, char *argv[])
     }
     else
     {
-        GenerateManual();
+        GenerateManual(ctx);
     }
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -132,15 +131,15 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
     }
 
     return config;
 }
 
-static void GenerateManual(void)
+static void GenerateManual(EvalContext *ctx)
 {
-    TexinfoManual(SOURCE_DIR, OUTPUT_FILE);
+    TexinfoManual(ctx, SOURCE_DIR, OUTPUT_FILE);
 }
 
 static void GenerateXml(void)
@@ -148,7 +147,8 @@ static void GenerateXml(void)
     if (OUTPUT_FILE == NULL)
     {
         /* Reconsider this once agents do not output any error messages to stdout */
-        FatalError("Please specify output file");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Please specify output file");
+        exit(EXIT_FAILURE);
     }
     else
     {
@@ -156,7 +156,8 @@ static void GenerateXml(void)
 
         if (out == NULL)
         {
-            FatalError("Unable to open %s for writing\n", OUTPUT_FILE);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open %s for writing\n", OUTPUT_FILE);
+            exit(EXIT_FAILURE);
         }
         XmlManual(SOURCE_DIR, out);
     }

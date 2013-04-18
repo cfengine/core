@@ -26,7 +26,8 @@
 #include "cf3.defs.h"
 
 #include "env_context.h"
-#include "cfstream.h"
+#include "logging.h"
+#include "process_lib.h"
 
 /* Prototypes */
 
@@ -51,7 +52,7 @@ void TimeOut()
     if (ALARM_PID != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out of process %jd\n", (intmax_t)ALARM_PID);
-        GracefulTerminate(ALARM_PID);
+        GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
     }
     else
     {
@@ -226,18 +227,18 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
 /* Lifecycle */
 
     snprintf(buf, CF_BUFSIZE, "Lcycle_%d", ((parsed_time.tm_year + 1900) % 3));
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* Year */
 
     snprintf(VYEAR, CF_BUFSIZE, "%04d", parsed_time.tm_year + 1900);
     snprintf(buf, CF_BUFSIZE, "Yr%04d", parsed_time.tm_year + 1900);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* Month */
 
     strlcpy(VMONTH, MONTH_TEXT[parsed_time.tm_mon], 4);
-    HardClass(ctx, MONTH_TEXT[parsed_time.tm_mon]);
+    EvalContextHeapAddHard(ctx, MONTH_TEXT[parsed_time.tm_mon]);
 
 /* Day of week */
 
@@ -246,87 +247,46 @@ static void AddTimeClass(EvalContext *ctx, time_t time)
    ...
    Sunday  is 0 in tm_wday, 6 in DAY_TEXT */
     day_text_index = (parsed_time.tm_wday + 6) % 7;
-    HardClass(ctx, DAY_TEXT[day_text_index]);
+    EvalContextHeapAddHard(ctx, DAY_TEXT[day_text_index]);
 
 /* Day */
 
     snprintf(VDAY, CF_BUFSIZE, "%d", parsed_time.tm_mday);
     snprintf(buf, CF_BUFSIZE, "Day%d", parsed_time.tm_mday);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* Shift */
 
     strcpy(VSHIFT, SHIFT_TEXT[parsed_time.tm_hour / 6]);
-    HardClass(ctx, VSHIFT);
+    EvalContextHeapAddHard(ctx, VSHIFT);
 
 /* Hour */
 
     snprintf(buf, CF_BUFSIZE, "Hr%02d", parsed_time.tm_hour);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* GMT hour */
 
     snprintf(buf, CF_BUFSIZE, "GMT_Hr%d\n", gmt_parsed_time.tm_hour);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* Quarter */
 
     quarter = parsed_time.tm_min / 15 + 1;
 
     snprintf(buf, CF_BUFSIZE, "Q%d", quarter);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
     snprintf(buf, CF_BUFSIZE, "Hr%02d_Q%d", parsed_time.tm_hour, quarter);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
 /* Minute */
 
     snprintf(buf, CF_BUFSIZE, "Min%02d", parsed_time.tm_min);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 
     interval_start = (parsed_time.tm_min / 5) * 5;
     interval_end = (interval_start + 5) % 60;
 
     snprintf(buf, CF_BUFSIZE, "Min%02d_%02d", interval_start, interval_end);
-    HardClass(ctx, buf);
+    EvalContextHeapAddHard(ctx, buf);
 }
-
-/*********************************************************************/
-
-#ifndef __MINGW32__
-
-bool IsReadReady(int fd, int timeout_sec)
-{
-    fd_set  rset;
-    FD_ZERO(&rset);
-    FD_SET(fd, &rset);
-
-    struct timeval tv = {
-        .tv_sec = timeout_sec,
-        .tv_usec = 0,
-    };
-
-    int ret = select(fd + 1, &rset, NULL, NULL, &tv);
-
-    if(ret < 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
-        return false;
-    }
-
-    if(FD_ISSET(fd, &rset))
-    {
-        return true;
-    }
-
-    if(ret == 0)  // timeout
-    {
-        return false;
-    }
-
-    // can we get here?
-    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
-
-    return false;
-}
-
-#endif  /* __MINGW32__ */

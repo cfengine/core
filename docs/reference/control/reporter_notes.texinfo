@@ -1,7 +1,0 @@
-
-Determines a list of reports to write into the build directory. The
-format may be in text, html or xml format. The reporter agent
-@code{cf-report} replaces both @code{cfshow} and @code{cfenvgraph}. It
-no longer produces output to the console.
-
-Some reports are only available in enterprise level versions of CFEngine.

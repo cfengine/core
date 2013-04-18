@@ -34,15 +34,16 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "cfstream.h"
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
+#include "sysinfo.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
 #endif
 
+#include "cf-key-functions.h"
 
 int SHOWHOSTS = false;
 bool REMOVEKEYS = false;
@@ -51,20 +52,9 @@ char LICENSE_SOURCE[MAX_FILENAME];
 const char *remove_keys_host;
 static char *print_digest_arg = NULL;
 static char *trust_key_arg = NULL;
-
 static char *KEY_PATH;
 
 static GenericAgentConfig *CheckOpts(int argc, char **argv);
-
-static int PrintDigest(const char* pubkey);
-static int TrustKey(const char* pubkey);
-static void ShowLastSeenHosts(void);
-static int RemoveKeys(const char *host);
-static void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
-
-#ifndef HAVE_NOVA
-bool LicenseInstall(char *path_source);
-#endif
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -107,12 +97,11 @@ static const char *HINTS[17] =
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
+
     GenericAgentConfig *config = CheckOpts(argc, argv);
+    GenericAgentConfigApply(ctx, config);
 
-    THIS_AGENT_TYPE = config->agent_type;
-
-    ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     if (SHOWHOSTS)
     {
@@ -150,8 +139,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        public_key_file = xstrdup(PublicKeyFile());
-        private_key_file = xstrdup(PrivateKeyFile());
+        public_key_file = xstrdup(PublicKeyFile(GetWorkDir()));
+        private_key_file = xstrdup(PrivateKeyFile(GetWorkDir()));
     }
 
     KeepKeyPromises(public_key_file, private_key_file);
@@ -159,7 +148,6 @@ int main(int argc, char *argv[])
     free(public_key_file);
     free(private_key_file);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -189,7 +177,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-key");
+            PrintVersion();
             exit(0);
 
         case 'v':
@@ -235,265 +223,3 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     return config;
 }
-
-static RSA* LoadPublicKey(const char* filename)
-{
-    unsigned long err;
-    FILE* fp;
-    RSA* key;
-    static char *passphrase = "Cfengine passphrase";
-
-    fp = fopen(filename, "r");
-    if (fp == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Cannot open file '%s'.\n", filename);
-        return NULL;
-    };
-
-    if ((key = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read_RSAPublicKey", "Error reading public key = %s\n", ERR_reason_error_string(err));
-        fclose(fp);
-        return NULL;
-    };
-
-    fclose(fp);
-
-    if (BN_num_bits(key->e) < 2 || !BN_is_odd(key->e))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "BN_num_bits", "ERROR: RSA Exponent in key %s too small or not odd\n", filename);
-        return NULL;
-    };
-
-    return key;
-}
-
-/** Return a string with the printed digest of the given key file,
-    or NULL if an error occurred. */
-static char* GetPubkeyDigest(const char* pubkey)
-{
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    RSA* key = NULL;
-    char* buffer = xmalloc(EVP_MAX_MD_SIZE * 4);
-
-    key = LoadPublicKey(pubkey);
-    if (NULL == key)
-    {
-        return NULL;
-    }
-
-    HashPubKey(key, digest, CF_DEFAULT_DIGEST);
-    HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer);
-    return buffer;
-}
-
-/*****************************************************************************/
-
-/** Print digest of the specified public key file.
-    Return 0 on success and 1 on error. */
-static int PrintDigest(const char* pubkey)
-{
-    char *digeststr = GetPubkeyDigest(pubkey);
-
-    if (NULL == digeststr)
-    {
-        return 1; /* ERROR exitcode */
-    }
-
-    fprintf(stdout, "%s\n", digeststr);
-    free(digeststr);
-    return 0; /* OK exitcode */
-}
-
-static int TrustKey(const char* pubkey)
-{
-    char *digeststr = GetPubkeyDigest(pubkey);
-    char outfilename[CF_BUFSIZE];
-    bool ok;
-
-    if (NULL == digeststr)
-        return 1; /* ERROR exitcode */
-
-    snprintf(outfilename, CF_BUFSIZE, "%s/ppkeys/root-%s.pub", CFWORKDIR, digeststr);
-    free(digeststr);
-
-    ok = CopyRegularFileDisk(pubkey, outfilename, false);
-
-    return (ok? 0 : 1);
-}
-
-static bool ShowHost(const char *hostkey, const char *address, bool incoming,
-                     const KeyHostSeen *quality, void *ctx)
-{
-    int *count = ctx;
-    char timebuf[26];
-
-    char hostname[CF_BUFSIZE];
-    strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
-
-    (*count)++;
-    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", incoming ? "Incoming" : "Outgoing",
-           address, hostname, cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
-
-    return true;
-}
-
-static void ShowLastSeenHosts()
-{
-    int count = 0;
-
-    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", "Direction", "IP", "Name", "Last connection", "Key");
-
-    if (!ScanLastSeenQuality(ShowHost, &count))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to show lastseen database");
-        return;
-    }
-
-    printf("Total Entries: %d\n", count);
-}
-
-
-static int RemoveKeys(const char *host)
-{
-    char ip[CF_BUFSIZE];
-    char digest[CF_BUFSIZE];
-
-    strcpy(ip, Hostname2IPString(host));
-    Address2Hostkey(ip, digest);
-
-    RemoveHostFromLastSeen(digest);
-
-    int removed_by_ip = RemovePublicKey(ip);
-    int removed_by_digest = RemovePublicKey(digest);
-
-    if ((removed_by_ip == -1) || (removed_by_digest == -1))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to remove keys for the host %s",
-              remove_keys_host);
-        return 255;
-    }
-    else if (removed_by_ip + removed_by_digest == 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "No keys for host %s were found", remove_keys_host);
-        return 1;
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Removed %d key(s) for host %s",
-              removed_by_ip + removed_by_digest, remove_keys_host);
-        return 0;
-    }
-}
-
-
-static void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
-{
-    unsigned long err;
-    RSA *pair;
-    FILE *fp;
-    struct stat statbuf;
-    int fd;
-    static char *passphrase = "Cfengine passphrase";
-    const EVP_CIPHER *cipher;
-    char vbuff[CF_BUFSIZE];
-
-    ScopeNew("common");
-
-    cipher = EVP_des_ede3_cbc();
-
-    if (cfstat(public_key_file, &statbuf) != -1)
-    {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", public_key_file);
-        return;
-    }
-
-    if (cfstat(private_key_file, &statbuf) != -1)
-    {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", private_key_file);
-        return;
-    }
-
-    printf("Making a key pair for cfengine, please wait, this could take a minute...\n");
-
-    pair = RSA_generate_key(2048, 35, NULL, NULL);
-
-    if (pair == NULL)
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to generate key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, pair, 0);
-    }
-
-    fd = open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-
-    if (fd < 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Open %s failed: %s.", private_key_file, strerror(errno));
-        return;
-    }
-
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Couldn't open private key %s.", private_key_file);
-        close(fd);
-        return;
-    }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing private key to %s\n", private_key_file);
-
-    if (!PEM_write_RSAPrivateKey(fp, pair, cipher, passphrase, strlen(passphrase), NULL, NULL))
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't write private key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    fclose(fp);
-
-    fd = open(public_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
-
-    if (fd < 0)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Unable to open public key %s.", public_key_file);
-        return;
-    }
-
-    if ((fp = fdopen(fd, "w")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fdopen", "Open %s failed.", public_key_file);
-        close(fd);
-        return;
-    }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Writing public key to %s\n", public_key_file);
-
-    if (!PEM_write_RSAPublicKey(fp, pair))
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write public key: %s\n", ERR_reason_error_string(err));
-        return;
-    }
-
-    fclose(fp);
-
-    snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
-    RAND_write_file(vbuff);
-    cf_chmod(vbuff, 0644);
-}
-
-
-#ifndef HAVE_NOVA
-bool LicenseInstall(char *path_source)
-{
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! License installation only applies to CFEngine Enterprise");
-
-    return false;
-}
-#endif  /* HAVE_NOVA */

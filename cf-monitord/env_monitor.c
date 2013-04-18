@@ -22,7 +22,7 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
+#include "env_monitor.h"
 
 #include "env_context.h"
 #include "mon.h"
@@ -36,14 +36,15 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "signals.h"
-#include "transaction.h"
+#include "locks.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // WritePID
 #include "files_lib.h"
 #include "unix.h"
 #include "verify_measurements.h"
+#include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -51,10 +52,7 @@
 #endif
 
 #include <math.h>
-
-#ifndef HAVE_NOVA
-static void HistoryUpdate(EvalContext *ctx, Averages newvals);
-#endif
+#include <assert.h>
 
 /*****************************************************************************/
 /* Globals                                                                   */
@@ -102,10 +100,10 @@ int NO_FORK = false;
 
 static void GetDatabaseAge(void);
 static void LoadHistogram(void);
-static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+static void GetQ(EvalContext *ctx, const Policy *policy);
 static Averages EvalAvQ(EvalContext *ctx, char *timekey);
 static void ArmClasses(Averages newvals, char *timekey);
-static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context);
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy);
 
 static void LeapDetection(void);
 static Averages *GetCurrentAverages(char *timekey);
@@ -117,7 +115,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp);
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
 
 /****************************************************************/
 
@@ -264,12 +262,21 @@ static void LoadHistogram(void)
 
 /*********************************************************************/
 
-void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 {
     char timekey[CF_SMALLBUF];
     Averages averages;
-    Promise *pp = NewPromise("monitor_cfengine", "the monitor daemon");
-    Attributes dummyattr;
+
+    Policy *monitor_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(monitor_cfengine_policy, NamespaceDefault(), "monitor_cfengine_bundle", "agent", NULL, NULL);
+        PromiseType *tp = BundleAppendPromiseType(bp, "monitor_cfengine");
+
+        pp = PromiseTypeAppendPromise(tp, "the monitor daemon", (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
     CfLock thislock;
 
 #ifdef __MINGW32__
@@ -294,14 +301,16 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
 #endif /* !__MINGW32__ */
 
-    memset(&dummyattr, 0, sizeof(dummyattr));
-    dummyattr.transaction.ifelapsed = 0;
-    dummyattr.transaction.expireafter = 0;
+    TransactionContext tc = {
+        .ifelapsed = 0,
+        .expireafter = 0,
+    };
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(monitor_cfengine_policy);
         return;
     }
 
@@ -311,7 +320,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
     while (!IsPendingTermination())
     {
-        GetQ(ctx, policy, report_context);
+        GetQ(ctx, policy);
         snprintf(timekey, sizeof(timekey), "%s", GenTimeKey(time(NULL)));
         averages = EvalAvQ(ctx, timekey);
         LeapDetection();
@@ -323,11 +332,13 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy, const ReportCont
 
         ITER++;
     }
+
+    PolicyDestroy(monitor_cfengine_policy);
 }
 
 /*********************************************************************/
 
-static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+static void GetQ(EvalContext *ctx, const Policy *policy)
 {
     CfDebug("========================= GET Q ==============================\n");
 
@@ -341,11 +352,11 @@ static void GetQ(EvalContext *ctx, const Policy *policy, const ReportContext *re
     MonLoadGatherData(CF_THIS);
     MonDiskGatherData(CF_THIS);
     MonNetworkGatherData(CF_THIS);
-    MonNetworkSnifferGatherData(CF_THIS);
-    MonTempGatherData(ctx, CF_THIS);
+    MonNetworkSnifferGatherData();
+    MonTempGatherData(CF_THIS);
 #endif /* !__MINGW32__ */
     MonOtherGatherData(CF_THIS);
-    GatherPromisedMeasures(ctx, policy, report_context);
+    GatherPromisedMeasures(ctx, policy);
 }
 
 /*********************************************************************/
@@ -644,7 +655,7 @@ static void ArmClasses(Averages av, char *timekey)
             }
 
             AppendItem(&classlist, buff, "2");
-            NewPersistentContext(buff, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buff, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
         else
         {
@@ -954,7 +965,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_microanomaly");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         return sig;             /* Granularity makes this silly */
@@ -1001,7 +1012,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_dev2");
             AppendItem(classlist, buffer2, "2");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         if (dev > 3.0 * sqrt(2.0))
@@ -1009,7 +1020,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
             strcpy(buffer2, buffer);
             strcat(buffer2, "_anomaly");
             AppendItem(classlist, buffer2, "3");
-            NewPersistentContext(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
+            EvalContextHeapPersistentSave(buffer2, "measurements", CF_PERSISTENCE, CONTEXT_STATE_POLICY_PRESERVE);
         }
 
         return sig;
@@ -1112,41 +1123,34 @@ static double RejectAnomaly(double new, double average, double variance, double 
 /* Level 5                                                     */
 /***************************************************************/
 
-static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const ReportContext *report_context)
+static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 {
-    char *scope;
-
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         const Bundle *bp = SeqAt(policy->bundles, i);
-
-        scope = bp->name;
-        ScopeSetNew(bp->name);
+        EvalContextStackPushBundleFrame(ctx, bp, false);
 
         if ((strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_MONITOR]) == 0) || (strcmp(bp->type, CF_AGENTTYPES[AGENT_TYPE_COMMON]) == 0))
         {
-            for (size_t j = 0; j < SeqLength(bp->subtypes); j++)
+            for (size_t j = 0; j < SeqLength(bp->promise_types); j++)
             {
-                SubType *sp = SeqAt(bp->subtypes, j);
+                PromiseType *sp = SeqAt(bp->promise_types, j);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, AGENT_TYPE_MONITOR, scope, pp, KeepMonitorPromise, report_context);
+                    ExpandPromise(ctx, pp, KeepMonitorPromise, NULL);
                 }
             }
         }
+
+        EvalContextStackPopFrame(ctx);
     }
 
     ScopeDeleteAll();
-    ScopeNew("const");
-    ScopeNew("control_monitor");
-    ScopeNew("control_common");
-    ScopeNew("mon");
-    ScopeNew("sys");
-    GetNameInfo3(ctx);
+    GetNameInfo3(ctx, AGENT_TYPE_MONITOR);
     GetInterfacesInfo(ctx, AGENT_TYPE_MONITOR);
-    Get3Environment(ctx);
+    Get3Environment(ctx, AGENT_TYPE_MONITOR);
     OSClasses(ctx);
     BuiltinClasses(ctx);
 }
@@ -1155,11 +1159,13 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy, const
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     char *sp = NULL;
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
@@ -1179,40 +1185,17 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        KeepClassContextPromise(ctx, pp, NULL);
         return;
     }
 
-    if (strcmp("measurements", pp->agentsubtype) == 0)
+    if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
-        *pp->donep = false;
+        /* FIXME: Verify why this explicit promise status change is done */
+        EvalContextMarkPromiseNotDone(ctx, pp);
         return;
     }
 }
-
-/*****************************************************************************/
-
-void MonOtherInit(void)
-{
-#ifdef HAVE_NOVA
-    Nova_MonOtherInit();
-#endif
-}
-
-/*********************************************************************/
-
-void MonOtherGatherData(double *cf_this)
-{
-#ifdef HAVE_NOVA
-    Nova_MonOtherGatherData(cf_this);
-#endif
-}
-
-#ifndef HAVE_NOVA
-static void HistoryUpdate(EvalContext *ctx, Averages newvals)
-{
-}
-#endif

@@ -1,4 +1,0 @@
-
-Use to disambiguate indentifiers for a successful merging of topic maps,
-especially in Linear Topic Map (LTM) format using third party tools such
-as Ontopia's Omnigator.

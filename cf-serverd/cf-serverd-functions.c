@@ -27,12 +27,14 @@
 #include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"
-#include "cfstream.h"
-#include "signals.h"
-#include "transaction.h"
 #include "logging.h"
+#include "signals.h"
+#include "mutex.h"
+#include "locks.h"
 #include "exec_tools.h"
 #include "unix.h"
+
+#include <assert.h>
 
 static const size_t QUEUESIZE = 50;
 int NO_FORK = false;
@@ -103,16 +105,17 @@ static void KeepHardClasses(EvalContext *ctx)
 
             if (stat(name, &sb) != -1)
             {
-                HardClass(ctx, "am_policy_hub");
+                EvalContextHeapAddHard(ctx, "am_policy_hub");
             }
         }
     }
 
+    /* FIXME: why is it not in generic_agent?! */
 #if defined HAVE_NOVA
-    HardClass(ctx, "nova_edition");
-    HardClass(ctx, "enterprise_edition");
+    EvalContextHeapAddHard(ctx, "nova_edition");
+    EvalContextHeapAddHard(ctx, "enterprise_edition");
 #else
-    HardClass(ctx, "community_edition");
+    EvalContextHeapAddHard(ctx, "community_edition");
 #endif
 }
 
@@ -122,7 +125,7 @@ static int GenerateAvahiConfig(const char *path);
 #endif
 #endif
 
-GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
+GenericAgentConfig *CheckOpts(int argc, char **argv)
 {
     extern char *optarg;
     char ld_library_path[CF_BUFSIZE];
@@ -138,7 +141,8 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
             GenericAgentConfigSetInputFile(config, optarg);
@@ -146,7 +150,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            DEBUG = true;
+            config->debug_mode = true;
             NO_FORK = true;
 
         case 'K':
@@ -154,11 +158,11 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(ctx, optarg);
+            config->heap_soft = StringSetFromString(optarg, ',');
             break;
 
         case 'N':
-            NegateClassesFromString(ctx, optarg);
+            config->heap_negated = StringSetFromString(optarg, ',');
             break;
 
         case 'I':
@@ -181,7 +185,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-serverd");
+            PrintVersion();
             exit(0);
 
         case 'h':
@@ -203,7 +207,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             {
                 exit(1);
             }
-            cf_popen("/etc/init.d/avahi-daemon restart", "r");
+            cf_popen("/etc/init.d/avahi-daemon restart", "r", true);
             printf("Avahi configuration file generated successfuly.\n");
             exit(0);
 #else
@@ -220,8 +224,8 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
-        FatalError("Aborted");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        exit(EXIT_FAILURE);
     }
 
     CfDebug("Set debugging\n");
@@ -233,20 +237,17 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
 void ThisAgentInit(void)
 {
-    ScopeNew("remote_access");
     umask(077);
 }
 
 /*******************************************************************/
 
-void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     int sd = -1, sd_reply;
     fd_set rset;
     struct timeval timeout;
     int ret_val;
-    Promise *pp = NewPromise("server_cfengine", config->input_file);
-    Attributes dummyattr = { {0} };
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
 
@@ -258,8 +259,6 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
     struct sockaddr_in cin;
 #endif
 
-    memset(&dummyattr, 0, sizeof(dummyattr));
-
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
     signal(SIGHUP, SIG_IGN);
@@ -269,13 +268,26 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
 
     sd = SetServerListenState(ctx, QUEUESIZE);
 
-    dummyattr.transaction.ifelapsed = 0;
-    dummyattr.transaction.expireafter = 1;
+    TransactionContext tc = {
+        .ifelapsed = 0,
+        .expireafter = 1,
+    };
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, dummyattr, pp, false);
+    Policy *server_cfengine_policy = PolicyNew();
+    Promise *pp = NULL;
+    {
+        Bundle *bp = PolicyAppendBundle(server_cfengine_policy, NamespaceDefault(), "server_cfengine_bundle", "agent", NULL, NULL);
+        PromiseType *tp = BundleAppendPromiseType(bp, "server_cfengine");
+
+        pp = PromiseTypeAppendPromise(tp, config->input_file, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, NULL);
+    }
+    assert(pp);
+
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {
+        PolicyDestroy(server_cfengine_policy);
         return;
     }
 
@@ -325,7 +337,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
         {
             if (ACTIVE_THREADS == 0)
             {
-                CheckFileChanges(ctx, &policy, config, report_context);
+                CheckFileChanges(ctx, &policy, config);
             }
             ThreadUnlock(cft_server_children);
         }
@@ -382,10 +394,12 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, c
                 snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
                 ThreadUnlock(cft_getaddr);
 
-                ServerEntryPoint(ctx, sd_reply, ipaddr, SV);
+                ServerEntryPoint(ctx, sd_reply, ipaddr);
             }
         }
     }
+
+    PolicyDestroy(server_cfengine_policy);
 }
 
 /*********************************************************************/
@@ -509,7 +523,10 @@ int OpenReceiverChannel(void)
 
     if (BINDINTERFACE[0] != '\0')
     {
-        sin.sin_addr.s_addr = GetInetAddr(BINDINTERFACE);
+         if (GetInetAddr(BINDINTERFACE, &sin.sin_addr.s_addr))
+         {
+             exit(EXIT_FAILURE); // TODO: should we return -1 here?
+         }
     }
     else
     {
@@ -552,13 +569,8 @@ int OpenReceiverChannel(void)
 /* Level 3                                                           */
 /*********************************************************************/
 
-void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, const ReportContext *report_context)
+void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    if (EnterpriseExpiry(ctx))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
-    }
-
     CfDebug("Checking file updates on %s\n", config->input_file);
 
     if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
@@ -572,7 +584,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             /* Free & reload -- lock this to avoid access errors during reload */
             
             EvalContextHeapClear(ctx);
-            EvalContextStackFrameClear(ctx);
 
             DeleteItemList(IPADDRESSES);
             IPADDRESSES = NULL;
@@ -583,13 +594,13 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             DeleteItemList(SV.nonattackerlist);
             DeleteItemList(SV.multiconnlist);
 
-            DeleteAuthList(VADMIT);
-            DeleteAuthList(VDENY);
+            DeleteAuthList(SV.admit);
+            DeleteAuthList(SV.deny);
 
-            DeleteAuthList(VARADMIT);
-            DeleteAuthList(VARDENY);
+            DeleteAuthList(SV.varadmit);
+            DeleteAuthList(SV.vardeny);
 
-            DeleteAuthList(ROLES);
+            DeleteAuthList(SV.roles);
 
             //DeleteRlist(VINPUTLIST); This is just a pointer, cannot free it
 
@@ -598,13 +609,20 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             strcpy(VDOMAIN, "undefined.domain");
             POLICY_SERVER[0] = '\0';
 
-            VADMIT = VADMITTOP = NULL;
-            VDENY = VDENYTOP = NULL;
+            SV.admit = NULL;
+            SV.admittop = NULL;
 
-            VARADMIT = VARADMITTOP = NULL;
-            VARDENY = VARDENYTOP = NULL;
+            SV.varadmit = NULL;
+            SV.varadmittop = NULL;
 
-            ROLES = ROLESTOP = NULL;
+            SV.deny = NULL;
+            SV.denytop = NULL;
+
+            SV.vardeny = NULL;
+            SV.vardenytop = NULL;
+
+            SV.roles = NULL;
+            SV.rolestop = NULL;
 
             SV.trustkeylist = NULL;
             SV.skipverify = NULL;
@@ -615,37 +633,21 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             PolicyDestroy(*policy);
             *policy = NULL;
 
-            ERRORCOUNT = 0;
+            SetPolicyServer(ctx, POLICY_SERVER);
+            ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
-            ScopeNew("sys");
-
-            SetPolicyServer(POLICY_SERVER);
-            ScopeNewScalar("sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
-
-            if (EnterpriseExpiry(ctx))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
-                      "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-            }
-
-            ScopeNew("const");
-            ScopeNew("this");
-            ScopeNew("control_server");
-            ScopeNew("control_common");
-            ScopeNew("mon");
-            ScopeNew("remote_access");
-            GetNameInfo3(ctx);
+            GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
-            Get3Environment(ctx);
+            Get3Environment(ctx, AGENT_TYPE_SERVER);
             BuiltinClasses(ctx);
             OSClasses(ctx);
             KeepHardClasses(ctx);
 
-            HardClass(ctx, CF_AGENTTYPES[THIS_AGENT_TYPE]);
+            EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
             SetReferenceTime(ctx, true);
-            *policy = GenericAgentLoadPolicy(ctx, AGENT_TYPE_SERVER, config, report_context);
-            KeepPromises(ctx, *policy, config, report_context);
+            *policy = GenericAgentLoadPolicy(ctx, config);
+            KeepPromises(ctx, *policy, config);
             Summarize();
 
         }
@@ -662,7 +664,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 }
 
 #if !defined(HAVE_GETADDRINFO)
-in_addr_t GetInetAddr(char *host)
+bool GetInetAddr(char *host, in_addr_t *address_out)
 {
     struct in_addr addr;
     struct hostent *hp;
@@ -673,23 +675,27 @@ in_addr_t GetInetAddr(char *host)
     {
         if ((hp = gethostbyname(host)) == 0)
         {
-            FatalError("host not found: %s", host);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "host not found: %s", host);
+            return false;
         }
 
         if (hp->h_addrtype != AF_INET)
         {
-            FatalError("unexpected address family: %d\n", hp->h_addrtype);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address family: %d\n", hp->h_addrtype);
+            return false;
         }
 
         if (hp->h_length != sizeof(addr))
         {
-            FatalError("unexpected address length %d\n", hp->h_length);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address length %d\n", hp->h_length);
+            return false;
         }
 
         memcpy((char *) &addr, hp->h_addr, hp->h_length);
     }
 
-    return (addr.s_addr);
+    *address_out = addr.s_addr;
+    return true;
 }
 #endif
 
@@ -710,6 +716,7 @@ static int GenerateAvahiConfig(const char *path)
     fprintf(fout, "<!DOCTYPE service-group SYSTEM \"avahi-service.dtd\">\n");
     XmlComment(writer, "This file has been automatically generated by cf-serverd.");
     XmlStartTag(writer, "service-group", 0);
+    /* FIXME: make it function */
 #ifdef HAVE_NOVA
     fprintf(fout,"<name replace-wildcards=\"yes\" >CFEngine Enterprise %s Policy Hub on %s </name>\n", Version(), "%h");
 #else

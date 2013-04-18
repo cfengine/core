@@ -37,8 +37,11 @@ static void ParserStateReset(ParserState *p)
 {
     p->policy = NULL;
 
+    free(p->current_line);
+    p->current_line = NULL;
     p->line_no = 1;
     p->line_pos = 1;
+    p->error_count = 0;
     p->list_nesting = 0;
     p->arg_nesting = 0;
 
@@ -83,6 +86,12 @@ Policy *ParserParseFile(const char *path)
     }
 
     fclose(yyin);
+
+    if (P.error_count > 0)
+    {
+        PolicyDestroy(P.policy);
+        return NULL;
+    }
 
     return P.policy;
 }

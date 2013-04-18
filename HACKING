@@ -1,3 +1,33 @@
+How to contribute
+-----------------
+
+Thanks for considering contributing to the CFEngine! We take pull-requests on GitHub at
+http://github.com/cfengine, and we have a public Redmine bug-tracker at http://cfengine.com
+
+Normally, bug fixes have a higher chance of getting accepted than new features, but we certainly
+welcome feature contributions. If you have an idea for a new feature, it might be a good
+idea to open up a feature ticket in Redmine first to get discussion going.
+
+
+Top reasons pull-requests are rejected or delayed
+-------------------------------------------------
+
+* Code does not follow style guidlines.
+
+* Pull request addresses several disperate issues. In general, smaller pull-requests are better
+because they are easier to review and stay mergable longer.
+
+* Messy commit log. Tidy up the commit log by squashing commits. Write good commit messages:
+One line summary at the top, followed by an optional detailing paragraphs. Please reference
+Redmine tickets, e.g. "Close #1234"
+
+* Code is out-of-date, does not compile, or does not pass all tests. Again, focused and small
+pull-requests are better.
+
+* No attached test case. Normally, all new code needs test cases. This means a functional test
+runnable with 'make check'.
+
+
 Emacs users
 -----------
 

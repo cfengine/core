@@ -30,18 +30,21 @@
 
 #include "reporting.h"
 
-void ExpandPromise(EvalContext *ctx, AgentType ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
-void ExpandPromiseAndDo(EvalContext *ctx, AgentType ag, const char *scope, Promise *p, Rlist *scalarvars, Rlist *listvars,
-                        void (*fnptr) (), const ReportContext *report_context);
+typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
+
+void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
+
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
+
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
 
 int IsExpandable(const char *str);
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(const char *contextid, Rval rval);
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
+
+bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
+Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
 int IsNakedVar(const char *str, char vtype);
 /**
@@ -60,7 +63,6 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int checkdup);
-int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
+void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

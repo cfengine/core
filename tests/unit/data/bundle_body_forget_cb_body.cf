@@ -1,0 +1,14 @@
+bundle agent foo
+{
+
+vars:
+
+    debian::
+        "bas"  string => "van der vlies",
+            comment => "lastname";
+
+
+body classes repaired(x)
+{
+    promise_repaired => { "$(x)_repaired" };
+}

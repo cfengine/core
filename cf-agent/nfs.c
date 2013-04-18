@@ -32,21 +32,21 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "pipes.h"
-#include "logging.h"
 #include "nfs.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
+
+#ifndef __MINGW32__
 
 /* seconds */
 #define RPCTIMEOUT 60
 
-int FSTAB_EDITS;
-Item *FSTABLIST = NULL;
-
-#ifndef __MINGW32__
+static int FSTAB_EDITS;
+static Item *FSTABLIST = NULL;
 
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
@@ -115,7 +115,7 @@ static const char *VMOUNTOPTS[PLATFORM_CONTEXT_MAX] =
     "defaults",                 /* vmstate */
 };
 
-int LoadMountInfo(Rlist **list)
+bool LoadMountInfo(Rlist **list)
 /* This is, in fact, the most portable way to read the mount info! */
 /* Depressing, isn't it? */
 {
@@ -133,30 +133,27 @@ int LoadMountInfo(Rlist **list)
 
     SetTimeOut(RPCTIMEOUT);
 
-    if ((pp = cf_popen(buf1, "r")) == NULL)
+    if ((pp = cf_popen(buf1, "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Can't open %s\n", buf1);
         return false;
     }
 
-    do
+    for (;;)
     {
         vbuff[0] = buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
 
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error getting mount info\n");
-            break;
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read list of mounted filesystems");
+            cf_pclose(pp);
+            return false;
         }
 
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error getting mount info\n");
             break;
         }
 
@@ -256,7 +253,6 @@ int LoadMountInfo(Rlist **list)
             AugmentMountInfo(list, host, source, mounton, NULL);
         }
     }
-    while (!feof(pp));
 
     alarm(0);
     signal(SIGALRM, SIG_DFL);
@@ -339,7 +335,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -395,7 +391,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         AppendItem(&FSTABLIST, fstab, NULL);
         FSTAB_EDITS++;
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Adding file system %s:%s seems to %s.\n", host, rmountpt,
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "Adding file system %s:%s seems to %s.\n", host, rmountpt,
              VFSTAB[VSYSTEMHARDCLASS]);
     }
 
@@ -414,7 +410,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
     if (!FSTABLIST)
     {
-        if (!LoadFileAsItemList(ctx, &FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, pp))
+        if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
@@ -447,17 +443,26 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
             snprintf(aixcomm, CF_BUFSIZE, "/usr/sbin/rmnfsmnt -f %s", mountpt);
 
-            if ((pfp = cf_popen(aixcomm, "r")) == NULL)
+            if ((pfp = cf_popen(aixcomm, "r", true)) == NULL)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Failed to invoke /usr/sbin/rmnfsmnt to edit fstab");
                 return 0;
             }
 
-            while (!feof(pfp))
+            for (;;)
             {
-                if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+                ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+                if (res == -1)
                 {
-                    FatalError("Error in CfReadLine");
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fread", pp, a, "Unable to read output of /bin/rmnfsmnt");
+                    cf_pclose(pfp);
+                    return 0;
+                }
+
+                if (res == 0)
+                {
+                    break;
                 }
 
                 if (line[0] == '#')
@@ -467,7 +472,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
                 if (strstr(line, "busy"))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, "The device under %s cannot be removed from %s\n",
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, "The device under %s cannot be removed from %s\n",
                          mountpt, VFSTAB[VSYSTEMHARDCLASS]);
                     return 0;
                 }
@@ -483,7 +488,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
             {
                 if (FullTextMatch(regex, ip->name))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "Deleting file system mounted on %s.\n", host);
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "Deleting file system mounted on %s.\n", host);
                     // Check host name matches too?
                     DeleteThisItem(&FSTABLIST, ip);
                     FSTAB_EDITS++;
@@ -527,20 +532,24 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         snprintf(comm, CF_BUFSIZE, "%s -o %s %s:%s %s", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]), opts, host, rmountpt, mountpt);
 
-        if ((pfp = cf_popen(comm, "r")) == NULL)
+        if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of mount command");
+            cf_pclose(pfp);
+            return 0;
         }
 
-        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
+        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The device under %s cannot be mounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -551,7 +560,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Mounting %s to keep promise\n", mountpt);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Mounting %s to keep promise\n", mountpt);
     return 0;
 }
 
@@ -569,20 +578,24 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         snprintf(comm, CF_BUFSIZE, "%s %s", VUNMOUNTCOMM[VSYSTEMHARDCLASS], mountpt);
 
-        if ((pfp = cf_popen(comm, "r")) == NULL)
+        if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
             return 0;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pfp) == -1)
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
+
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of unmount command");
+            cf_pclose(pfp);
+            return 0;
         }
 
-        if ((strstr(line, "busy")) || (strstr(line, "Busy")))
+        if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -590,7 +603,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
         cf_pclose(pfp);
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Unmounting %s to keep promise\n", mountpt);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Unmounting %s to keep promise\n", mountpt);
     return 0;
 }
 
@@ -657,28 +670,24 @@ void MountAll()
 
     SetTimeOut(RPCTIMEOUT);
 
-    if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r")) == NULL)
+    if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r", true)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Failed to open pipe from %s\n", VMOUNTCOMM[VSYSTEMHARDCLASS]);
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error mounting filesystems\n");
             break;
         }
 
-        if (CfReadLine(line, CF_BUFSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "ferror", "Error mounting filesystems\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error reading list of mounted filesystems");
             break;
         }
 
@@ -741,6 +750,23 @@ static void DeleteThisItem(Item **liststart, Item *entry)
         }
 
         free((char *) entry);
+    }
+}
+
+void CleanupNFS(void)
+{
+    Attributes a = { {0} };
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+
+    if (FSTAB_EDITS && FSTABLIST && !DONTDO)
+    {
+        if (FSTABLIST)
+        {
+            SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a);
+            DeleteItemList(FSTABLIST);
+            FSTABLIST = NULL;
+        }
+        FSTAB_EDITS = 0;
     }
 }
 

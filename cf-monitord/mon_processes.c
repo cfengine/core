@@ -27,14 +27,17 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 /* Prototypes */
 
 #ifndef __MINGW32__
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
 #endif
 
 /* Implementation */
@@ -68,7 +71,7 @@ void MonProcessesGatherData(double *cf_this)
 
 #ifndef __MINGW32__
 
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
     FILE *pp;
     char pscomm[CF_BUFSIZE];
@@ -77,22 +80,36 @@ static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProc
 
     snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
 
-    if ((pp = cf_popen(pscomm, "r")) == NULL)
+    if ((pp = cf_popen(pscomm, "r", true)) == NULL)
     {
+        /* FIXME: no logging */
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    /* Ignore first line -- header */
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        FatalError("Error in CfReadLine");
+        /* FIXME: no logging */
+        cf_pclose(pp);
+        return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
         }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
+            cf_pclose(pp);
+            return false;
+        }
+
         sscanf(vbuff, "%s", user);
 
         if (strcmp(user, "USER") == 0)

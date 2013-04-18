@@ -1,0 +1,9 @@
+bundle agent foo
+{
+
+reports:
+
+    "This is a test",
+       comment => "will report an error";
+
+}

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-sql_server => "localhost";
-}
-
-@end verbatim

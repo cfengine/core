@@ -32,10 +32,9 @@
 #include "conversion.h"
 #include "instrumentation.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "pipes.h"
-#include "transaction.h"
 #include "logging.h"
+#include "pipes.h"
+#include "locks.h"
 #include "evalfunction.h"
 #include "exec_tools.h"
 #include "misc_lib.h"
@@ -43,6 +42,8 @@
 #include "policy.h"
 #include "string_lib.h"
 #include "scope.h"
+#include "ornaments.h"
+#include "env_context.h"
 
 typedef enum
 {
@@ -64,47 +65,47 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
 
     a = GetExecAttributes(ctx, pp);
 
-    ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
     if (!SyntaxCheckExec(a, pp))
     {
-        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, "");
-        ScopeDeleteScalar("this", "promiser");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "");
+        ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
 
     if (PromiseKeptExec(a, pp))
     {
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "");
-        ScopeDeleteScalar("this", "promiser");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "");
+        ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
 
     char *lock_name = GetLockNameExec(a, pp);
-    CfLock thislock = AcquireLock(lock_name, VUQNAME, CFSTARTTIME, a, pp, false);
+    CfLock thislock = AcquireLock(ctx, lock_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
     free(lock_name);
 
     if (thislock.lock == NULL)
     {
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
-        ScopeDeleteScalar("this", "promiser");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, "");
+        ScopeDeleteSpecialScalar("this", "promiser");
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     switch (RepairExec(ctx, a, pp))
     {
     case ACTION_RESULT_OK:
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "");
         break;
 
     case ACTION_RESULT_TIMEOUT:
-        // cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_TIMEX, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_TIMEOUT, "", pp, a, "");
         break;
 
     case ACTION_RESULT_FAILED:
-        // cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, "");
+        // cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, "");
         break;
 
     default:
@@ -112,7 +113,7 @@ void VerifyExecPromise(EvalContext *ctx, Promise *pp)
     }
 
     YieldCurrentLock(thislock);
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteSpecialScalar("this", "promiser");
 }
 
 /*****************************************************************************/
@@ -159,7 +160,7 @@ static bool SyntaxCheckExec(Attributes a, Promise *pp)
     return true;
 }
 
-static bool PromiseKeptExec(Attributes a, Promise *pp)
+static bool PromiseKeptExec(ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     return false;
 }
@@ -303,30 +304,25 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
                 return ACTION_RESULT_FAILED;
             }
 
-            while (!feof(pfp))
+            for (;;)
             {
-                if (ferror(pfp))        /* abortable */
+                ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, pfp);
+
+                if (res == 0)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "ferror", "!! Command pipe %s\n", cmdline);
-                    cf_pclose(pfp);
-                    return ACTION_RESULT_TIMEOUT;
+                    break;
                 }
 
-                if (CfReadLine(line, CF_BUFSIZE - 1, pfp) == -1)
+                if (res == -1)
                 {
-                    FatalError("Error in CfReadLine");
+                    CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output from command %s", cmdline);
+                    cf_pclose(pfp);
+                    return ACTION_RESULT_FAILED;
                 }
 
                 if (strstr(line, "cfengine-die"))
                 {
                     break;
-                }
-
-                if (ferror(pfp))        /* abortable */
-                {
-                    CfOut(OUTPUT_LEVEL_ERROR, "ferror", "!! Command pipe %s\n", cmdline);
-                    cf_pclose(pfp);
-                    return ACTION_RESULT_TIMEOUT;
                 }
 
                 if (a.contain.preview)
@@ -336,7 +332,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
 
                 if (a.module)
                 {
-                    ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, pp->ns);
+                    ModuleProtocol(ctx, cmdline, line, !a.contain.nooutput, PromiseGetNamespace(pp));
                 }
                 else if ((!a.contain.nooutput) && (!EmptyString(line)))
                 {
@@ -367,7 +363,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
             }
             else
             {
-                cf_pclose_def(pfp, a, pp);
+                cf_pclose_def(ctx, pfp, a, pp);
             }
 #else /* !__MINGW32__ */
             cf_pclose_def(ctx, pfp, a, pp);
@@ -423,7 +419,7 @@ void PreviewProtocolLine(char *line, char *comm)
      */
 
     char *prefixes[] =
-{
+    {
         ":silent:",
         ":inform:",
         ":verbose:",

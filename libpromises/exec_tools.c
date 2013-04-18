@@ -27,16 +27,15 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "generic_agent.h" // CloseLog
 
 /********************************************************************/
 
-int GetExecOutput(const char *command, char *buffer, int useshell)
+bool GetExecOutput(const char *command, char *buffer, bool useshell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
@@ -51,7 +50,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
     }
     else
     {
-        pp = cf_popen(command, "r");
+        pp = cf_popen(command, "r", true);
     }
 
     if (pp == NULL)
@@ -62,23 +61,19 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
 
     memset(buffer, 0, CF_EXPANDSIZE);
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_EXPANDSIZE, pp);
+        if (res == 0)
         {
-            fflush(pp);
             break;
         }
 
-        if (CfReadLine(line, CF_EXPANDSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            fflush(pp);
-            break;
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of command %s", command);
+            cf_pclose(pp);
+            return false;
         }
 
         if (strlen(line) + offset > CF_EXPANDSIZE - 10)

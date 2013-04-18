@@ -26,7 +26,7 @@
 
 #include "keyring.h"
 #include "dir.h"
-#include "cfstream.h"
+#include "logging.h"
 
 /***************************************************************/
 
@@ -60,7 +60,7 @@ int RemovePublicKey(const char *id)
     snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
     MapName(keysdir);
 
-    if ((dirh = OpenDirLocal(keysdir)) == NULL)
+    if ((dirh = DirOpen(keysdir)) == NULL)
     {
         if (errno == ENOENT)
         {
@@ -75,7 +75,7 @@ int RemovePublicKey(const char *id)
 
     snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
 
-    while ((dirp = ReadDir(dirh)) != NULL)
+    while ((dirp = DirRead(dirh)) != NULL)
     {
         char *c = strstr(dirp->d_name, suffix);
 
@@ -91,7 +91,7 @@ int RemovePublicKey(const char *id)
                 if (errno != ENOENT)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "unlink", "Unable to remove key file %s", dirp->d_name);
-                    CloseDir(dirh);
+                    DirClose(dirh);
                     return -1;
                 }
             }
@@ -105,11 +105,11 @@ int RemovePublicKey(const char *id)
     if (errno)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "ReadDir", "Unable to enumerate files in keys directory");
-        CloseDir(dirh);
+        DirClose(dirh);
         return -1;
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return removed;
 }
 /***************************************************************/

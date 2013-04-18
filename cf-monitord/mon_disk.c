@@ -26,7 +26,7 @@
 
 #include "mon.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
+#include "logging.h"
 
 /* Globals */
 

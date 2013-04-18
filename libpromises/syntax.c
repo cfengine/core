@@ -36,10 +36,10 @@
 #include "scope.h"
 #include "fncall.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "vars.h"
+#include "env_context.h"
 
 #include <assert.h>
 
@@ -53,29 +53,131 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name)
+const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
-        const SubTypeSyntax *syntax = NULL;
+        const PromiseTypeSyntax *syntax = NULL;
 
-        if ((syntax = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((syntax = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
 
         for (int j = 0; syntax[j].bundle_type != NULL; j++)
         {
-            if (StringSafeEqual(subtype_name, syntax[j].subtype) &&
-                    (StringSafeEqual(bundle_type, syntax[j].bundle_type) ||
-                     StringSafeEqual("*", syntax[j].bundle_type)))
+            if (strcmp(bundle_type, syntax[j].bundle_type) == 0)
             {
-                return syntax[j];
+                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
+                {
+                    return &syntax[j];
+                }
+            }
+            else if (strcmp("*", syntax[j].bundle_type) == 0)
+            {
+                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
+                {
+                    return &syntax[j];
+                }
             }
         }
     }
 
-    return (SubTypeSyntax) { NULL, NULL, NULL };
+    return NULL;
+}
+
+static const ConstraintSyntax *GetCommonConstraint(const char *lval)
+{
+    for (int i = 0; CF_COMMON_PROMISE_TYPES[i].promise_type; i++)
+    {
+        const PromiseTypeSyntax promise_type_syntax = CF_COMMON_PROMISE_TYPES[i];
+
+        for (int j = 0; promise_type_syntax.constraint_set.constraints[j].lval; j++)
+        {
+            if (strcmp(promise_type_syntax.constraint_set.constraints[j].lval, lval) == 0)
+            {
+                return &promise_type_syntax.constraint_set.constraints[j];
+            }
+        }
+    }
+
+    return NULL;
+}
+
+const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval)
+{
+    for (int j = 0; body_syntax[j].lval; j++)
+    {
+        if (strcmp(body_syntax[j].lval, lval) == 0)
+        {
+            return &body_syntax[j];
+        }
+    }
+    return NULL;
+}
+
+const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval)
+{
+    for (int i = 0; promise_type_syntax->constraint_set.constraints[i].lval; i++)
+    {
+        if (strcmp(promise_type_syntax->constraint_set.constraints[i].lval, lval) == 0)
+        {
+            return &promise_type_syntax->constraint_set.constraints[i];
+        }
+    }
+
+    const ConstraintSyntax *constraint_syntax = NULL;
+    if (strcmp("edit_line", promise_type_syntax->bundle_type) == 0)
+    {
+        constraint_syntax = BodySyntaxGetConstraintSyntax(CF_COMMON_EDITBODIES, lval);
+        if (constraint_syntax)
+        {
+            return constraint_syntax;
+        }
+    }
+    else if (strcmp("edit_xml", promise_type_syntax->bundle_type) == 0)
+    {
+        constraint_syntax = BodySyntaxGetConstraintSyntax(CF_COMMON_XMLBODIES, lval);
+        if (constraint_syntax)
+        {
+            return constraint_syntax;
+        }
+    }
+
+    return GetCommonConstraint(lval);
+}
+
+const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
+{
+    for (int i = 0; i < CF3_MODULES; i++)
+    {
+        const PromiseTypeSyntax *promise_type_syntax = CF_ALL_PROMISE_TYPES[i];
+
+        for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
+        {
+            for (int z = 0; promise_type_syntax[k].constraint_set.constraints[z].lval != NULL; z++)
+            {
+                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].constraint_set.constraints[z];
+
+                if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
+                {
+                    return constraint_syntax.range.body_type_syntax;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
+    {
+        const PromiseTypeSyntax promise_type_syntax = CONTROL_BODIES[i];
+
+        if (strcmp(body_type, promise_type_syntax.bundle_type) == 0)
+        {
+            return promise_type_syntax.constraint_set.constraints;
+        }
+    }
+
+    return NULL;
 }
 
 /****************************************************************************/
@@ -83,24 +185,24 @@ SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_n
 DataType ExpectedDataType(const char *lvalname)
 {
     int i, j, k, l;
-    const BodySyntax *bs, *bs2;
-    const SubTypeSyntax *ss;
+    const ConstraintSyntax *bs, *bs2;
+    const PromiseTypeSyntax *ss;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        if ((ss = CF_ALL_SUBTYPES[i]) == NULL)
+        if ((ss = CF_ALL_PROMISE_TYPES[i]) == NULL)
         {
             continue;
         }
 
-        for (j = 0; ss[j].subtype != NULL; j++)
+        for (j = 0; ss[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].bs) == NULL)
+            if ((bs = ss[j].constraint_set.constraints) == NULL)
             {
                 continue;
             }
 
-            for (k = 0; bs[k].range != NULL; k++)
+            for (k = 0; bs[k].lval != NULL; k++)
             {
                 if (strcmp(lvalname, bs[k].lval) == 0)
                 {
@@ -108,11 +210,11 @@ DataType ExpectedDataType(const char *lvalname)
                 }
             }
 
-            for (k = 0; bs[k].range != NULL; k++)
+            for (k = 0; bs[k].lval != NULL; k++)
             {
                 if (bs[k].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = (const BodySyntax *) (bs[k].range);
+                    bs2 = bs[k].range.body_type_syntax;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -150,8 +252,8 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result)
         [SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED] = "Cannot check unexpanded value",
         [SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED] = "Real range specification should not be enclosed in brackets - just \"a,b\"",
         [SYNTAX_TYPE_MATCH_ERROR_RANGE_MULTIPLE_ITEMS] = "Range format specifier should be of form \"a,b\" but got multiple items",
-        [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attampted to give a scalar to a non-scalar type",
-        [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attampted to give a list to a non-list type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_SCALAR] = "Attempted to give a scalar to a non-scalar type",
+        [SYNTAX_TYPE_MATCH_ERROR_GOT_LIST] = "Attempted to give a list to a non-list type",
 
         [SYNTAX_TYPE_MATCH_ERROR_STRING_UNIX_PERMISSION] = "Error parsing Unix permission string",
 
@@ -311,7 +413,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
 /****************************************************************************/
 
-DataType StringDataType(const char *scopeid, const char *string)
+DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string)
 {
     DataType dtype;
     Rval rval;
@@ -338,7 +440,7 @@ vars:
     {
         if (ExtractInnerCf3VarString(string, var))
         {
-            if ((dtype = ScopeGetVariable(scopeid, var, &rval)) != DATA_TYPE_NONE)
+            if (EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, var }, &rval, &dtype))
             {
                 if (rval.type == RVAL_TYPE_LIST)
                 {
@@ -602,7 +704,10 @@ static SyntaxTypeMatch CheckParseReal(const char *lval, const char *s, const cha
         ProgrammingError("Could not parse format specifier for int rvalues for lval %s", lval);
     }
 
-    val = DoubleFromString(s);
+    if (!DoubleFromString(s, &val))
+    {
+        return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
+    }
 
     if (val > max || val < min)
     {
@@ -664,7 +769,10 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
 
     for (ip = rangep; ip != NULL; ip = ip->next)
     {
-        val = DoubleFromString(ip->name);
+        if (!DoubleFromString(ip->name, &val))
+        {
+            return SYNTAX_TYPE_MATCH_ERROR_REAL_OUT_OF_RANGE;
+        }
 
         if (val > max || val < min)
         {
@@ -868,7 +976,7 @@ static char *PCREStringToJsonString(const char *pcre)
 
 /****************************************************************************/
 
-static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
+static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attributes[])
 {
     JsonElement *json = JsonObjectCreate(10);
     int i = 0;
@@ -880,14 +988,14 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 
     for (i = 0; attributes[i].lval != NULL; i++)
     {
-        if (attributes[i].range == CF_BUNDLE)
+        if (attributes[i].range.validation_string == CF_BUNDLE)
         {
             /* TODO: must handle edit_line somehow */
             continue;
         }
         else if (attributes[i].dtype == DATA_TYPE_BODY)
         {
-            JsonElement *json_attributes = ExportAttributesSyntaxAsJson((const BodySyntax *) attributes[i].range);
+            JsonElement *json_attributes = ExportAttributesSyntaxAsJson(attributes[i].range.body_type_syntax);
 
             JsonObjectAppendObject(json, attributes[i].lval, json_attributes);
         }
@@ -897,7 +1005,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 
             JsonObjectAppendString(attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
 
-            if (strlen(attributes[i].range) == 0)
+            if (strlen(attributes[i].range.validation_string) == 0)
             {
                 JsonObjectAppendString(attribute, "pcre-range", ".*");
             }
@@ -907,7 +1015,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
                 char options_buffer[CF_BUFSIZE];
                 char *option = NULL;
 
-                strcpy(options_buffer, attributes[i].range);
+                strcpy(options_buffer, attributes[i].range.validation_string);
                 for (option = strtok(options_buffer, ","); option != NULL; option = strtok(NULL, ","))
                 {
                     JsonArrayAppendString(options, option);
@@ -917,7 +1025,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
             }
             else
             {
-                char *pcre_range = PCREStringToJsonString(attributes[i].range);
+                char *pcre_range = PCREStringToJsonString(attributes[i].range.validation_string);
 
                 JsonObjectAppendString(attribute, "pcre-range", pcre_range);
             }
@@ -934,20 +1042,20 @@ static JsonElement *ExportAttributesSyntaxAsJson(const BodySyntax attributes[])
 static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
 {
     JsonElement *json = JsonObjectCreate(10);
-    const SubTypeSyntax *st;
+    const PromiseTypeSyntax *st;
     int i = 0, j = 0;
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = CF_ALL_SUBTYPES[i];
+        st = CF_ALL_PROMISE_TYPES[i];
 
         for (j = 0; st[j].bundle_type != NULL; j++)
         {
             if (strcmp(bundle_type, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
-                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].bs);
+                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].constraint_set.constraints);
 
-                JsonObjectAppendObject(json, st[j].subtype, attributes);
+                JsonObjectAppendObject(json, st[j].promise_type, attributes);
             }
         }
     }
@@ -962,11 +1070,11 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
     JsonElement *control_bodies = JsonObjectCreate(10);
     int i = 0;
 
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        JsonElement *attributes = ExportAttributesSyntaxAsJson(CF_ALL_BODIES[i].bs);
+        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].constraint_set.constraints);
 
-        JsonObjectAppendObject(control_bodies, CF_ALL_BODIES[i].bundle_type, attributes);
+        JsonObjectAppendObject(control_bodies, CONTROL_BODIES[i].bundle_type, attributes);
     }
 
     return control_bodies;
@@ -988,11 +1096,11 @@ void SyntaxPrintAsJson(Writer *writer)
         JsonElement *bundle_types = JsonObjectCreate(10);
         int i = 0;
 
-        for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+        for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
         {
-            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CF_ALL_BODIES[i].bundle_type);
+            JsonElement *bundle_type = ExportBundleTypeSyntaxAsJson(CONTROL_BODIES[i].bundle_type);
 
-            JsonObjectAppendObject(bundle_types, CF_ALL_BODIES[i].bundle_type, bundle_type);
+            JsonObjectAppendObject(bundle_types, CONTROL_BODIES[i].bundle_type, bundle_type);
         }
 
         JsonObjectAppendObject(syntax_tree, "bundle-types", bundle_types);

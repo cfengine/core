@@ -1,10 +1,10 @@
 ############################################################################
 #  Copyright (C) Cfengine AS
-# 
+#
 #  This program is free software; you can redistribute it and/or modify it
 #  under the terms of the GNU Lesser General Public License LGPL as published by the
 #  Free Software Foundation; version 3.
-#   
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -39,8 +39,7 @@
 # the online docs
 #
 
-# Subversion : $Rev$
-# For Cfengine Core: 3.1.0
+# For Cfengine Core: 3.5.0
 
 ###################################################
 # If you find Cfengine useful, please consider    #
@@ -79,7 +78,7 @@ bundle edit_line comment_lines_matching(regex,comment)
 {
 replace_patterns:
 
- "^($(regex))$" 
+ "^($(regex))$"
 
      replace_with => comment("$(comment)"),
           comment => "Search and replace string";
@@ -94,8 +93,8 @@ bundle edit_line uncomment_lines_matching(regex,comment)
 
 {
 replace_patterns:
- 
- "^$(comment)\s?($(regex))$" 
+
+ "^$(comment)\s?($(regex))$"
 
        replace_with => uncomment,
             comment => "Uncomment lines matching a regular expression";
@@ -109,8 +108,8 @@ bundle edit_line comment_lines_containing(regex,comment)
 
 {
 replace_patterns:
- 
- "^(.*$(regex).*)$" 
+
+ "^(.*$(regex).*)$"
 
      replace_with => comment("$(comment)"),
           comment => "Comment out lines in a file";
@@ -125,8 +124,8 @@ bundle edit_line uncomment_lines_containing(regex,comment)
 
 {
 replace_patterns:
- 
- "^$(comment)\s?(.*$(regex).*)$" 
+
+ "^$(comment)\s?(.*$(regex).*)$"
 
     replace_with => uncomment,
          comment => "Uncomment a line containing a fragment";
@@ -149,7 +148,7 @@ bundle edit_line warn_lines_matching(regex)
 {
 delete_lines:
 
-  "$(regex)"  
+  "$(regex)"
 
    comment => "Warn about lines in a file",
     action => warn_only;
@@ -185,7 +184,7 @@ bundle edit_line replace_line_end(start,end)
 # whitespaces will be left unmodified.
 # For example, replace_line_end("ftp", "2121/tcp") would replace
 # "ftp             21/tcp"
-# with 
+# with
 # "ftp             2121/tcp"
 {
 field_edits:
@@ -203,7 +202,7 @@ bundle edit_line append_to_line_end(start,end)
 # will get appended with "$(end)", whitespaces will be left unmodified.
 # For example, append_to_line_end("kernel", "vga=791") would replace
 # "kernel /boot/vmlinuz root=/dev/sda7"
-# with 
+# with
 # "kernel /boot/vmlinuz root=/dev/sda7 resume=/dev/sda9 vga=791"
 #
 # WARNING: Be careful not to have multiple promises matching the same line,
@@ -260,7 +259,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
  # The argument is an associative array containing tab[SectionName][LHS]="RHS"
  # don't change value when the RHS is dontchange
 
- # Based on set_variable_values_ini 
+ # Based on set_variable_values_ini
  # Added delete lines section to empty out undefined variable values for INI section
 
  # CAUTION : for it to work nicely, you should use Cfengine with the commit n°3229
@@ -280,7 +279,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
  #         edit_line   => manage_variable_values_ini("context.array", "SectionName"),
  #         create => "true",
  #         comment     => "Set the variale values only in the specified ini region";
- # 
+ #
 
 {
     vars:
@@ -291,7 +290,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
 
     classes:
         "edit_$(cindex[$(index)])"     not => strcmp("$($(tab)[$(sectionName)][$(index)])","dontchange"),
-                                   comment => "Create conditions to make changes"; 
+                                   comment => "Create conditions to make changes";
 
     field_edits:
 
@@ -318,7 +317,7 @@ bundle edit_line manage_variable_values_ini(tab, sectionName)
                 location => start,
                  comment => "Insert lines";
 
-        "$(index)=$($(tab)[$(sectionName)][$(index)])",
+        "$(index)=$($(tab)[$(sectionName)][$(index)])"
                 select_region => INI_section("$(sectionName)"),
                 ifvarclass => "!manage_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
 
@@ -355,7 +354,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
  #         edit_line   => set_variable_values_ini("context.array", "SectionName"),
  #         create => "true",
  #         comment     => "Set the variale values only in the specified ini region";
- # 
+ #
 
 {
     vars:
@@ -388,7 +387,7 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
                 location => start,
                  comment => "Insert lines";
 
-        "$(index)=$($(tab)[$(sectionName)][$(index)])",
+        "$(index)=$($(tab)[$(sectionName)][$(index)])"
                 select_region => INI_section("$(sectionName)"),
                 ifvarclass => "!set_variable_values_ini_not_$(cindex[$(index)]).edit_$(cindex[$(index)])";
 
@@ -431,7 +430,7 @@ field_edits:
 
 insert_lines:
 
-  "$(index)=$($(v)[$(index)])",
+  "$(index)=$($(v)[$(index)])"
 
          comment => "Insert a variable definition",
       ifvarclass => "!$(cv)_$(cindex[$(index)])_in_file";
@@ -528,7 +527,7 @@ bundle edit_line maintain_key_values(v,sep)
       replace_with => value("$(match.1)$($(v)[$(index)])");
 
   insert_lines:
-    "$(index)$(sep)$($(v)[$(index)])",
+    "$(index)$(sep)$($(v)[$(index)])"
       comment => "Insert definition of $(index)",
       ifvarclass => "!$(cindex[$(index)])_key_in_file";
 }
@@ -552,7 +551,7 @@ classes:
 
 insert_lines:
 
-  "$($(v)[$(index)])",
+  "$($(v)[$(index)])"
 
          comment => "Append users into a password file format",
       ifvarclass => "add_$(index)";
@@ -577,7 +576,7 @@ classes:
 
 insert_lines:
 
-  "$($(v)[$(index)])",
+  "$($(v)[$(index)])"
 
          comment => "Append users into a group file format",
       ifvarclass => "add_$(index)";
@@ -664,9 +663,10 @@ bundle edit_line replace_or_add(pattern,line)
 {
 vars:
   "cline" string => canonify("$(line)");
+  "eline" string => escape("$(line)");
 
 replace_patterns:
-  "^(?!$(line)$)$(pattern)$"
+  "^(?!$(eline)$)$(pattern)$"
           comment => "Replace a pattern here",
      replace_with => value("$(line)"),
           classes => always("replace_done_$(cline)");
@@ -690,18 +690,20 @@ vars:
    "crontab" string => "/var/spool/cron/tabs";
   redhat|fedora::
    "crontab" string => "/var/spool/cron";
- !(SuSE|redhat|fedora)::
-    "crontab" string => "/var/spool/cron/crontabs"; 
+  freebsd::
+   "crontab" string => "/var/cron/tabs";
+ !(SuSE|redhat|fedora|freebsd)::
+    "crontab" string => "/var/spool/cron/crontabs";
 
 files:
 
 !windows::
-  "$(crontab)/$(user)" 
+  "$(crontab)/$(user)"
 
     comment => "A user's regular batch jobs are added to this file",
      create => "true",
   edit_line => append_if_no_line("$(mins) $(hours) * * * $(commands)"),
-      perms => mo("644","$(user)"),
+      perms => mo("600","$(user)"),
     classes => if_repaired("changed_crontab");
 
 processes:
@@ -1040,6 +1042,25 @@ chdir => "$(dir)";
 chroot => "$(root)";
 }
 
+##
+
+body contain setuid_umask(uid, umask)
+###################################################
+#       | Files               | Directories       #
+###################################################
+# Umask | Octal   Symbolic    | Octal   Symbolic  #
+########+#####################+###################+
+# 000   | 666     (rw-rw-rw-) | 777     (rwxrwxrwx)
+# 002   | 664     (rw-rw-r--) | 775     (rwxrwxr-x)
+# 022   | 644     (rw-r--r--) | 755     (rwxr-xr-x)
+# 027   | 640     (rw-r-----) | 750     (rwxr-x---)
+# 077   | 600     (rw-------) | 700     (rwx------)
+# 277   | 400     (r--------) | 500     (r-x------)
+{
+exec_owner => "$(uid)";
+umask => "$(umask)";
+}
+
 
 ##-------------------------------------------------------
 ## classes
@@ -1109,6 +1130,27 @@ repaired_returncodes => { "$(code)" };
 promise_repaired => { "$(cl)" };
 }
 
+body classes classes_generic(x)
+# Define x prefixed/suffixed with promise outcome
+{
+  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
+body classes scoped_classes_generic(scope, x)
+# Define x prefixed/suffixed with promise outcome
+{
+  scope => "$(scope)";
+  promise_repaired => { "promise_repaired_$(x)", "$(x)_repaired", "$(x)_ok", "$(x)_reached" };
+  repair_failed => { "repair_failed_$(x)", "$(x)_failed", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_denied => { "repair_denied_$(x)", "$(x)_denied", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  repair_timeout => { "repair_timeout_$(x)", "$(x)_timeout", "$(x)_not_ok", "$(x)_not_kept", "$(x)_not_repaired", "$(x)_reached" };
+  promise_kept => { "promise_kept_$(x)", "$(x)_kept", "$(x)_ok", "$(x)_not_repaired", "$(x)_reached" };
+}
+
 ##-------------------------------------------------------
 ## Persistent classes
 ##-------------------------------------------------------
@@ -1124,7 +1166,7 @@ persist_time => "10";
 body classes enumerate(x)
 
 #
-# This is used by commercial editions to count 
+# This is used by commercial editions to count
 # instances of jobs in a cluster
 #
 
@@ -1437,8 +1479,8 @@ newname => "$(file)";
 body file_select name_age(name,days)
 {
 leaf_name   => { "$(name)" };
-mtime       => irange(0,ago(0,0,"$(days)",0,0,0));  
-file_result => "mtime.leaf_name"; 
+mtime       => irange(0,ago(0,0,"$(days)",0,0,0));
+file_result => "mtime.leaf_name";
 }
 
 ##
@@ -1542,12 +1584,42 @@ update_hashes  => "yes";
 
 ##
 
+body changes detect_all_change_using(hash)
+
+# Detect all changes using a configurable hashing algorithm
+# for times when you care about both content and file stats e.g. mtime
+# hash - supported hashing algorithm (md5, sha1, sha224, sha256, sha384,
+#   sha512, best)
+
+{
+hash           => "$(hash)";
+report_changes => "all";
+update_hashes  => "yes";
+}
+
+##
+
 body changes detect_content
 
 # This is a cheaper alternative
 
 {
 hash           => "md5";
+report_changes => "content";
+update_hashes  => "yes";
+}
+
+##
+
+body changes detect_content_using(hash)
+
+# Detect content changes using a configurable hashing algorithm
+# for times when you only care about content, not file stats e.g. mtime
+# hash - supported hashing algorithm (md5, sha1, sha224, sha256, sha384,
+#   sha512, best)
+
+{
+hash           => "$(hash)";
 report_changes => "content";
 update_hashes  => "yes";
 }
@@ -1652,7 +1724,7 @@ have_aptitude::
 
    package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
-   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*"; 
+   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 !have_aptitude::
    package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
@@ -1696,7 +1768,7 @@ debian.i686::
 have_aptitude::
    package_patch_list_command => "/usr/bin/aptitude --assume-yes --simulate --verbose full-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
-   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*"; 
+   package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 !have_aptitude::
    package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
@@ -1767,7 +1839,7 @@ package_changes => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
- 
+
 package_name_convention => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
@@ -1790,7 +1862,7 @@ package_changes => "individual";
 package_file_repositories => { "$(repo)" };
 
 package_installed_regex => ".*";
- 
+
 package_name_convention => "$(name)-$(version)-$(arch).msi";
 package_delete_convention => "$(firstrepo)$(name)-$(version)-$(arch).msi";
 
@@ -1837,14 +1909,45 @@ package_verify_command => "/bin/rpm -V";
 body package_method yum_rpm
 
 # Contributed by Trond Hasle Amundsen
+# More efficient package method for RPM-based systems - uses rpm
+# instead of yum to list installed packages
 
-# More efficient package method for RedHat - uses rpm to list instead of yum
-# Notes:
-# - using $(name).$(arch) instead of $(name) for package_name_convention
-#   causes uninstallation to fail.
-# - using allmatches to remove for all architectures
-#
+{
+  package_changes => "bulk";
+  package_list_command => "/bin/rpm -qa --qf '%{name}.%{arch} %{version}-%{release}\n'";
+  package_patch_list_command => "/usr/bin/yum --quiet check-update";
 
+  package_list_name_regex    => "([^.]+).*";
+  package_list_version_regex => "[^\s]\s+([^\s]+).*";
+  package_list_arch_regex    => "[^.]+\.([^\s]+).*";
+
+  package_installed_regex => ".*";
+  package_name_convention => "$(name)-$(version).$(arch)";
+
+  # set it to "0" to avoid caching of list during upgrade
+  package_list_update_command => "/usr/bin/yum --quiet check-update";
+  package_list_update_ifelapsed => "240";
+
+  package_patch_installed_regex => "^\s.*";
+  package_patch_name_regex    => "([^.]+).*";
+  package_patch_version_regex => "[^\s]\s+([^\s]+).*";
+  package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
+
+  package_add_command    => "/usr/bin/yum -y install";
+  package_update_command => "/usr/bin/yum -y update";
+  package_patch_command  => "/usr/bin/yum -y update";
+  package_delete_command => "/bin/rpm -e --nodeps";
+  package_verify_command => "/bin/rpm -V";
+}
+
+##
+
+body package_method yum_rpm_enable_repo(repoid)
+
+# based on yum_rpm with addition to enable a repository for the install
+# Sometimes repositories are configured but disabled by default. For example
+# this pacakge_method could be used when installing a package that exists in
+# the EPEL, which normally you do not want to install packages from.
 {
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
@@ -1866,11 +1969,68 @@ body package_method yum_rpm
   package_patch_version_regex => "[^\s]\s+([^\s]+).*";
   package_patch_arch_regex    => "[^.]+\.([^\s]+).*";
 
-  package_add_command    => "/usr/bin/yum -y install";
-  package_update_command => "/usr/bin/yum -y update";
+  package_add_command    => "/usr/bin/yum --enablerepo=$(repoid) -y install";
+  package_update_command => "/usr/bin/yum --enablerepo=$(repoid) -y update";
   package_patch_command => "/usr/bin/yum -y update";
   package_delete_command => "/bin/rpm -e --nodeps --allmatches";
   package_verify_command => "/bin/rpm -V";
+}
+
+##
+
+body package_method yum_group
+
+# Makes use of the "groups of packages" feature of Yum possible. (yum groupinstall, groupremove)
+#
+# Groups must be specified by their groupids, available through yum grouplist -v (between parentheses)
+# $ yum grouplist -v|grep Networking|head -n 1
+#   Networking Tools (network-tools)       <--- network-tools is the groupid
+#
+# Policies examples:
+#
+# -Install "web-server" group:
+# ----------------------------
+#
+# packages:
+#   "web-server"
+#     package_policy   =>  "add",
+#     package_method   =>  yum_group;
+#
+# -Remove "debugging" and "php" groups:
+# -------------------------------------
+#
+# vars:
+#   "groups"  slist  => { "debugging", "php" };
+#
+# packages:
+#   "$(groups)"
+#      package_policy   =>   "delete",
+#      package_method   =>   yum_group;
+#
+
+{ 
+  package_add_command             =>  "/usr/bin/yum groupinstall -y";
+  package_changes                 =>  "bulk";
+  package_delete_command          =>  "/usr/bin/yum groupremove -y";
+  package_delete_convention       =>  "$(name)";
+  package_installed_regex         =>  "^i.*";
+
+  # Generate a dpkg -l like listing, "i" means installed, "a" available, and a dummy version 1
+  package_list_command            =>
+                                      "/usr/bin/yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\" || h==\"a\" {print h\" \"$0\" 1\"}'";
+
+  package_list_name_regex         =>  "a|i ([^\s]+) 1";
+  package_list_update_command     =>  "/usr/bin/yum --quiet check-update";
+  package_list_update_ifelapsed   =>  "240";
+  package_list_version_regex      =>  "(1)";
+  package_name_convention         =>  "$(name)";
+  package_name_regex              =>  "(.*)";
+  package_noverify_returncode     =>  "0";
+  package_update_command          =>  "/usr/bin/yum groupupdate";
+
+  # grep -x to only get full line matching
+  package_verify_command          =>
+                                      "yum grouplist -v|awk '$0 ~ /^Done$/ {next} {sub(/.*\(/, \"\");sub(/\).*/, \"\")} /Available/ {h=\"a\";next} /Installed/ {h=\"i\";next} h==\"i\"|grep -qx";
 }
 
 ##
@@ -1881,7 +2041,7 @@ body package_method rpm_filebased(path)
 # Based on yum_rpm body in COPBL by Trond Hasle Amundsen.
 # Purpose: install packages from local filesystem-based package repository.
 # Note: Specify the path to the local package repository in the argument.
-  
+
 # Example of how to use it:
 #
 # {{{
@@ -1896,18 +2056,18 @@ body package_method rpm_filebased(path)
 {
   package_file_repositories => { "$(path)" };
   # the above is an addition to Trond's yum_rpm body
-  
+
   package_add_command => "/bin/rpm -ihv ";
   # The above is a change from Trond's yum_rpm body, this makes the commands rpm only.
   # The reason I changed the install command from yum to rpm is yum will be default
   # refuse to install the epel-release RPM as it does not have the EPEL GPG key,
   # but rpm goes ahead and installs the epel-release RPM and the EPEL GPG key.
-  
+
   package_name_convention => "$(name)-$(version).$(arch).rpm";
   # The above is a change from Tron's yum_rpm body. When package_file_repositories is in play,
   # package_name_convention has to match the file name, not the package name, per the
   # CFEngine 3 Reference Manual
- 
+
   # set it to "0" to avoid caching of list during upgrade
   package_list_update_command => "/usr/bin/yum --quiet check-update";
   package_list_update_ifelapsed => "240";
@@ -1915,13 +2075,13 @@ body package_method rpm_filebased(path)
   # The rest is unchanged from Trond's yum_rpm body
   package_changes => "bulk";
   package_list_command => "/bin/rpm -qa --qf '%{name} %{version}-%{release} %{arch}\n'";
-  
+
   package_list_name_regex => "^(\S+?)\s\S+?\s\S+$";
   package_list_version_regex => "^\S+?\s(\S+?)\s\S+$";
   package_list_arch_regex => "^\S+?\s\S+?\s(\S+)$";
-  
+
   package_installed_regex => ".*";
-  
+
 
   package_delete_command => "/bin/rpm -e --allmatches";
   package_verify_command => "/bin/rpm -V";
@@ -1931,21 +2091,43 @@ body package_method rpm_filebased(path)
 
 # OpenSolaris based systems (Solaris 11, Illumos, etc) use the much better
 # Image Package System.
+#
+# A note about Solaris 11.1 versioning format:
+#
+# $ pkg list -v --no-refresh zsh
+# FMRI                                                                         IFO
+# pkg://solaris/shell/zsh@4.3.17,5.11-0.175.1.0.0.24.0:20120904T174236Z        i--
+# name--------- |<----->| |/________________________\|
+# version---------------- |\                        /|
+#
+# Notice that the publisher and timestamp aren't used. And that the package
+# version then must have the commas replaced by underscores.
+#
+# Thus,
+#     4.3.17,5.11-0.175.1.0.0.24.0
+# Becomes:
+#     4.3.17_5.11-0.175.1.0.0.24.0
+#
+# Therefore, a properly formatted package promise looks like this:
+#    "shell/zsh"
+#      package_policy  => "addupdate",
+#      package_method  => ips,
+#      package_select  => ">=",
+#      package_version => "4.3.17_5.11-0.175.1.0.0.24.0";
 
-body package_method ips 
+body package_method ips
 {
   package_changes => "bulk";
   package_list_command => "/usr/bin/pkg list -v --no-refresh";
-  package_list_name_regex    => "pkg://.+?/([^\s]+)@.*$";
-  package_list_version_regex => "[^\s]+@([^\s]+).*";
+  package_list_name_regex    => "pkg://.+?(?<=/)([^\s]+)@.*$";
+  package_list_version_regex => "[^\s]+@([^\s]+):.*";
   package_installed_regex => ".*(i..)"; # all reported are installed
 
   # set it to "0" to avoid caching of list during upgrade
-  package_list_update_command => "/bin/true";  # Fixme later
+  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_list_update_ifelapsed => "240";
 
   package_add_command => "/usr/bin/pkg install --accept ";
-  package_list_update_command => "/usr/bin/pkg refresh --full";
   package_delete_command => "/usr/bin/pkg uninstall";
   package_update_command =>  "/usr/bin/pkg install --accept";
   package_patch_command =>  "/usr/bin/pkg install --accept";
@@ -1975,6 +2157,25 @@ body package_method smartos
   package_update_command =>  "/opt/local/bin/pkgin upgrade";
 }
 
+# OpenCSW (Solaris software packages)
+
+body package_method opencsw
+{
+  package_changes => "bulk";
+  package_list_command => "/opt/csw/bin/pkgutil -c";
+  package_list_name_regex    => "CSW(.*?)\s.*";
+  package_list_version_regex => ".*?\s+(.*),.*";
+
+  package_installed_regex => ".*"; # all reported are installed
+
+  package_list_update_command => "/opt/csw/bin/pkgutil -U";
+  package_list_update_ifelapsed => "240";
+
+  package_add_command => "/opt/csw/bin/pkgutil -yi";
+
+  package_delete_command => "/opt/csw/bin/pkgutil -yr";
+  package_update_command =>  "/opt/csw/bin/pkgutil -yu";
+}
 
 # The older solaris package system is poorly designed, with too many different
 # names to track. See the example in tests/units/unit_package_solaris.cf
@@ -2019,7 +2220,7 @@ networkretries=3
 authentication=quit
 keystore=/var/sadm/security
 proxy=
-basedir=default",
+basedir=default"
       comment => "Insert contents of Solaris admin file (automatically install packages)";
 }
 
@@ -2077,7 +2278,7 @@ body package_method emerge
  package_list_update_command => "/bin/true";               # I prefer manual syncing
  #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
-    
+
  package_add_command => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
@@ -2241,7 +2442,7 @@ gentoo::
  package_list_update_command => "/bin/true";               # I prefer manual syncing
  #package_list_update_command => "/usr/bin/emerge --sync"; # if you like automatic
  package_list_update_ifelapsed => "240";                   # should happen every 4 hours
-    
+
  package_add_command => "/usr/bin/emerge -q --quiet-build";
  package_delete_command => "/usr/bin/emerge --depclean";
  package_update_command => "/usr/bin/emerge --update";
@@ -2367,7 +2568,7 @@ windows::
 
 bundle agent standard_services(service,state)
 {
- # DATA, 
+ # DATA,
 
 vars:
 
@@ -2377,7 +2578,7 @@ vars:
   "stakeholders[acpid]" slist => { "cpu", "cpu0", "cpu1", "cpu2", "cpu3" };
   "stakeholders[mongod]" slist => { "mongo_in" };
   "stakeholders[postfix]" slist => { "smtp_in" };
-  "stakeholders[sendmail]" slist => { "smtp_in" };       
+  "stakeholders[sendmail]" slist => { "smtp_in" };
   "stakeholders[www]" slist => { "www_in", "wwws_in", "www_alt_in" };
   "stakeholders[ssh]" slist => { "ssh_in" };
   "stakeholders[mysql]" slist => { "mysql_in" };
@@ -2772,14 +2973,14 @@ processes:
 
   start::
 
-    "$(pattern[$(service)])" ->  { "@(stakeholders[$(service)])" } ,
+    "$(pattern[$(service)])" ->  { "@(stakeholders[$(service)])" }
 
              comment => "Verify that the service appears in the process table",
        restart_class => "restart_$(service)";
 
   stop::
 
-    "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" },
+    "$(pattern[$(service)])" -> { "@(stakeholders[$(service)])" }
 
             comment => "Verify that the service does not appear in the process",
        process_stop => "$(stopcommand[$(service)])",
@@ -2787,10 +2988,10 @@ processes:
 
   commands:
 
-   "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" },
+   "$(startcommand[$(service)])" -> { "@(stakeholders[$(service)])" }
 
             comment => "Execute command to restart the $(service) service",
-         ifvarclass => "restart_$(service)";
+         ifvarclass => canonify("restart_$(service)");
 }
 
 
@@ -2901,8 +3102,9 @@ expireafter => "10";
 
 
 bundle common paths
-# When adding new paths, please remember to add them to the all_paths list
-# the all_paths list is used to define a context class for each path defined
+# In addition to defining common paths, this bundle also defines context
+# classes for paths that are defined (_stdlib_has_path_xxx) and paths that
+# exist (_stdlib_path_exists_xxx)
 {
   vars:
 
@@ -2912,230 +3114,227 @@ bundle common paths
 
     aix::
 
-      "awk"      string => "/usr/bin/awk";
-      "bc"       string => "/usr/bin/bc";
-      "cat"      string => "/bin/cat";
-      "cksum"    string => "/usr/bin/cksum";
-      "crontabs" string => "/var/spool/cron/crontabs";
-      "cut"      string => "/usr/bin/cut";
-      "dc"       string => "/usr/bin/dc";
-      "df"       string => "/usr/bin/df";
-      "diff"     string => "/usr/bin/diff";
-      "dig"      string => "/usr/bin/dig";
-      "echo"     string => "/usr/bin/echo";
-      "egrep"    string => "/usr/bin/egrep";
-      "find"     string => "/usr/bin/find";
-      "grep"     string => "/usr/bin/grep";
-      "ls"       string => "/usr/bin/ls";
-      "netstat"  string => "/usr/bin/netstat";
-      "ping"     string => "/usr/bin/ping";
-      "printf"   string => "/usr/bin/printf";
-      "sed"      string => "/usr/bin/sed";
-      "sort"     string => "/usr/bin/sort";
-      "tr"       string => "/usr/bin/tr";
+      "path[awk]"      string => "/usr/bin/awk";
+      "path[bc]"       string => "/usr/bin/bc";
+      "path[cat]"      string => "/bin/cat";
+      "path[cksum]"    string => "/usr/bin/cksum";
+      "path[crontabs]" string => "/var/spool/cron/crontabs";
+      "path[cut]"      string => "/usr/bin/cut";
+      "path[dc]"       string => "/usr/bin/dc";
+      "path[df]"       string => "/usr/bin/df";
+      "path[diff]"     string => "/usr/bin/diff";
+      "path[dig]"      string => "/usr/bin/dig";
+      "path[echo]"     string => "/usr/bin/echo";
+      "path[egrep]"    string => "/usr/bin/egrep";
+      "path[find]"     string => "/usr/bin/find";
+      "path[grep]"     string => "/usr/bin/grep";
+      "path[ls]"       string => "/usr/bin/ls";
+      "path[netstat]"  string => "/usr/bin/netstat";
+      "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
+      "path[printf]"   string => "/usr/bin/printf";
+      "path[sed]"      string => "/usr/bin/sed";
+      "path[sort]"     string => "/usr/bin/sort";
+      "path[tr]"       string => "/usr/bin/tr";
 
     freebsd|netbsd::
 
-      "awk"      string => "/usr/bin/awk";
-      "bc"       string => "/usr/bin/bc";
-      "cat"      string => "/bin/cat";
-      "cksum"    string => "/usr/bin/cksum";
-      "crontabs" string => "/var/cron/tabs";
-      "cut"      string => "/usr/bin/cut";
-      "dc"       string => "/usr/bin/dc";
-      "df"       string => "/bin/df";
-      "diff"     string => "/usr/bin/diff";
-      "dig"      string => "/usr/bin/dig";
-      "echo"     string => "/bin/echo";
-      "egrep"    string => "/usr/bin/egrep";
-      "find"     string => "/usr/bin/find";
-      "grep"     string => "/usr/bin/grep";
-      "ls"       string => "/bin/ls";
-      "netstat"  string => "/usr/bin/netstat";
-      "ping"     string => "/usr/bin/ping";
-      "printf"   string => "/usr/bin/printf";
-      "sed"      string => "/usr/bin/sed";
-      "sort"     string => "/usr/bin/sort";
-      "tr"       string => "/usr/bin/tr";
+      "path[awk]"      string => "/usr/bin/awk";
+      "path[bc]"       string => "/usr/bin/bc";
+      "path[cat]"      string => "/bin/cat";
+      "path[cksum]"    string => "/usr/bin/cksum";
+      "path[crontabs]" string => "/var/cron/tabs";
+      "path[cut]"      string => "/usr/bin/cut";
+      "path[dc]"       string => "/usr/bin/dc";
+      "path[df]"       string => "/bin/df";
+      "path[diff]"     string => "/usr/bin/diff";
+      "path[dig]"      string => "/usr/bin/dig";
+      "path[echo]"     string => "/bin/echo";
+      "path[egrep]"    string => "/usr/bin/egrep";
+      "path[find]"     string => "/usr/bin/find";
+      "path[grep]"     string => "/usr/bin/grep";
+      "path[ls]"       string => "/bin/ls";
+      "path[netstat]"  string => "/usr/bin/netstat";
+      "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
+      "path[printf]"   string => "/usr/bin/printf";
+      "path[sed]"      string => "/usr/bin/sed";
+      "path[sort]"     string => "/usr/bin/sort";
+      "path[tr]"       string => "/usr/bin/tr";
 
     openbsd::
 
-      "awk"      string => "/usr/bin/awk";
-      "bc"       string => "/usr/bin/bc";
-      "cat"      string => "/bin/cat";
-      "cksum"    string => "/bin/cksum";
-      "crontabs" string => "/var/cron/tabs";
-      "cut"      string => "/usr/bin/cut";
-      "dc"       string => "/usr/bin/dc";
-      "df"       string => "/bin/df";
-      "diff"     string => "/usr/bin/diff";
-      "dig"      string => "/usr/sbin/dig";
-      "echo"     string => "/bin/echo";
-      "egrep"    string => "/usr/bin/egrep";
-      "find"     string => "/usr/bin/find";
-      "grep"     string => "/usr/bin/grep";
-      "ls"       string => "/bin/ls";
-      "netstat"  string => "/usr/bin/netstat";
-      "ping"     string => "/usr/bin/ping";
-      "printf"   string => "/usr/bin/printf";
-      "sed"      string => "/usr/bin/sed";
-      "sort"     string => "/usr/bin/sort";
-      "tr"       string => "/usr/bin/tr";
+      "path[awk]"      string => "/usr/bin/awk";
+      "path[bc]"       string => "/usr/bin/bc";
+      "path[cat]"      string => "/bin/cat";
+      "path[cksum]"    string => "/bin/cksum";
+      "path[crontabs]" string => "/var/cron/tabs";
+      "path[cut]"      string => "/usr/bin/cut";
+      "path[dc]"       string => "/usr/bin/dc";
+      "path[df]"       string => "/bin/df";
+      "path[diff]"     string => "/usr/bin/diff";
+      "path[dig]"      string => "/usr/sbin/dig";
+      "path[echo]"     string => "/bin/echo";
+      "path[egrep]"    string => "/usr/bin/egrep";
+      "path[find]"     string => "/usr/bin/find";
+      "path[grep]"     string => "/usr/bin/grep";
+      "path[ls]"       string => "/bin/ls";
+      "path[netstat]"  string => "/usr/bin/netstat";
+      "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
+      "path[printf]"   string => "/usr/bin/printf";
+      "path[sed]"      string => "/usr/bin/sed";
+      "path[sort]"     string => "/usr/bin/sort";
+      "path[tr]"       string => "/usr/bin/tr";
 
     solaris::
 
-      "awk"      string => "/usr/bin/awk";
-      "bc"       string => "/usr/bin/bc";
-      "cat"      string => "/usr/bin/cat";
-      "cksum"    string => "/usr/bin/cksum";
-      "crontabs" string => "/var/spool/cron/crontabs";
-      "cut"      string => "/usr/bin/cut";
-      "dc"       string => "/usr/bin/dc";
-      "df"       string => "/usr/bin/df";
-      "diff"     string => "/usr/bin/diff";
-      "dig"      string => "/usr/sbin/dig";
-      "echo"     string => "/usr/bin/echo";
-      "egrep"    string => "/usr/bin/egrep";
-      "find"     string => "/usr/bin/find";
-      "grep"     string => "/usr/bin/grep";
-      "ls"       string => "/usr/bin/ls";
-      "netstat"  string => "/usr/bin/netstat";
-      "ping"     string => "/usr/bin/ping";
-      "printf"   string => "/usr/bin/printf";
-      "sed"      string => "/usr/bin/sed";
-      "sort"     string => "/usr/bin/sort";
-      "tr"       string => "/usr/bin/tr";
+      "path[awk]"      string => "/usr/bin/awk";
+      "path[bc]"       string => "/usr/bin/bc";
+      "path[cat]"      string => "/usr/bin/cat";
+      "path[cksum]"    string => "/usr/bin/cksum";
+      "path[crontabs]" string => "/var/spool/cron/crontabs";
+      "path[cut]"      string => "/usr/bin/cut";
+      "path[dc]"       string => "/usr/bin/dc";
+      "path[df]"       string => "/usr/bin/df";
+      "path[diff]"     string => "/usr/bin/diff";
+      "path[dig]"      string => "/usr/sbin/dig";
+      "path[echo]"     string => "/usr/bin/echo";
+      "path[egrep]"    string => "/usr/bin/egrep";
+      "path[find]"     string => "/usr/bin/find";
+      "path[grep]"     string => "/usr/bin/grep";
+      "path[ls]"       string => "/usr/bin/ls";
+      "path[netstat]"  string => "/usr/bin/netstat";
+      "path[ping]"     string => "/usr/bin/ping";
+      "path[perl]"     string => "/usr/bin/perl";
+      "path[printf]"   string => "/usr/bin/printf";
+      "path[sed]"      string => "/usr/bin/sed";
+      "path[sort]"     string => "/usr/bin/sort";
+      "path[tr]"       string => "/usr/bin/tr";
       #
-      "svcs"     string => "/usr/bin/svcs";
-      "svcadm"   string => "/usr/sbin/svcadm";
+      "path[svcs]"     string => "/usr/bin/svcs";
+      "path[svcadm]"   string => "/usr/sbin/svcadm";
 
     redhat::
 
-      "awk"      string => "/bin/awk";
-      "bc"       string => "/usr/bin/bc";
-      "cat"      string => "/bin/cat";
-      "cksum"    string => "/usr/bin/cksum";
-      "crontabs" string => "/var/spool/cron";
-      "cut"      string => "/bin/cut";
-      "dc"       string => "/usr/bin/dc";
-      "df"       string => "/bin/df";
-      "diff"     string => "/usr/bin/diff";
-      "dig"      string => "/usr/bin/dig";
-      "echo"     string => "/bin/echo";
-      "egrep"    string => "/bin/egrep";
-      "find"     string => "/usr/bin/find";
-      "grep"     string => "/bin/grep";
-      "ls"       string => "/bin/ls";
-      "netstat"  string => "/bin/netstat";
-      "ping"     string => "/usr/bin/ping";
-      "printf"   string => "/usr/bin/printf";
-      "sed"      string => "/bin/sed";
-      "sort"     string => "/bin/sort";
-      "tr"       string => "/usr/bin/tr";
+      "path[awk]"           string => "/bin/awk";
+      "path[bc]"            string => "/usr/bin/bc";
+      "path[cat]"           string => "/bin/cat";
+      "path[cksum]"         string => "/usr/bin/cksum";
+      "path[createrepo]"    string => "/usr/bin/createrepo";
+      "path[crontab]"       string => "/usr/bin/crontab";
+      "path[crontabs]"      string => "/var/spool/cron";
+      "path[cut]"           string => "/bin/cut";
+      "path[dc]"            string => "/usr/bin/dc";
+      "path[df]"            string => "/bin/df";
+      "path[diff]"          string => "/usr/bin/diff";
+      "path[dig]"           string => "/usr/bin/dig";
+      "path[domainname]"    string => "/bin/domainname";
+      "path[echo]"          string => "/bin/echo";
+      "path[egrep]"         string => "/bin/egrep";
+      "path[find]"          string => "/usr/bin/find";
+      "path[grep]"          string => "/bin/grep";
+      "path[hostname]"      string => "/bin/hostname";
+      "path[iptables]"      string => "/sbin/iptables";
+      "path[iptables_save]" string => "/sbin/iptables-save";
+      "path[ls]"            string => "/bin/ls";
+      "path[netstat]"       string => "/bin/netstat";
+      "path[ping]"          string => "/usr/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
+      "path[printf]"        string => "/usr/bin/printf";
+      "path[sed]"           string => "/bin/sed";
+      "path[sort]"          string => "/bin/sort";
+      "path[sysctl]"        string => "/sbin/sysctl";
+      "path[test]"          string => "/usr/bin/test";
+      "path[tr]"            string => "/usr/bin/tr";
 
       #
-      "chkconfig" string => "/sbin/chkconfig";
-      "groupadd"  string => "/usr/sbin/groupadd";
-      "groupdel"  string => "/usr/sbin/groupdel";
-      "ifconfig"  string => "/sbin/ifconfig";
-      "ip"        string => "/sbin/ip";
-      "rpm"       string => "/bin/rpm";
-      "service"   string => "/sbin/service";
-      "svc"       string => "/sbin/service";
-      "useradd"   string => "/usr/sbin/useradd";
-      "userdel"   string => "/usr/sbin/userdel";
-      "yum"       string => "/usr/bin/yum";
+      "path[chkconfig]" string => "/sbin/chkconfig";
+      "path[groupadd]"  string => "/usr/sbin/groupadd";
+      "path[groupdel]"  string => "/usr/sbin/groupdel";
+      "path[ifconfig]"  string => "/sbin/ifconfig";
+      "path[ip]"        string => "/sbin/ip";
+      "path[rpm]"       string => "/bin/rpm";
+      "path[service]"   string => "/sbin/service";
+      "path[svc]"       string => "/sbin/service";
+      "path[useradd]"   string => "/usr/sbin/useradd";
+      "path[userdel]"   string => "/usr/sbin/userdel";
+      "path[yum]"       string => "/usr/bin/yum";
 
     debian::
-      "awk"       string => "/usr/bin/awk";
-      "bc"        string => "/usr/bin/bc";
-      "cat"       string => "/bin/cat";
-      "cksum"     string => "/usr/bin/cksum";
-      "crontabs"  string => "/var/spool/cron";
-      "cut"       string => "/usr/bin/cut";
-      "dc"        string => "/usr/bin/dc";
-      "df"        string => "/bin/df";
-      "diff"      string => "/usr/bin/diff";
-      "dig"       string => "/usr/bin/dig";
-      "dmidecode" string => "/usr/sbin/dmidecode";
-      "echo"      string => "/bin/echo";
-      "egrep"     string => "/bin/egrep";
-      "find"      string => "/usr/bin/find";
-      "grep"      string => "/bin/grep";
-      "ls"        string => "/bin/ls";
-      "netstat"   string => "/bin/netstat";
-      "ping"      string => "/bin/ping";
-      "printf"    string => "/usr/bin/printf";
-      "sed"       string => "/bin/sed";
-      "sort"      string => "/usr/bin/sort";
-      "tr"        string => "/usr/bin/tr";
+
+      "path[awk]"           string => "/usr/bin/awk";
+      "path[bc]"            string => "/usr/bin/bc";
+      "path[cat]"           string => "/bin/cat";
+      "path[chkconfig]"     string => "/sbin/chkconfig";
+      "path[cksum]"         string => "/usr/bin/cksum";
+      "path[createrepo]"    string => "/usr/bin/createrepo";
+      "path[crontab]"       string => "/usr/bin/crontab";
+      "path[crontabs]"      string => "/var/spool/cron/crontabs";
+      "path[cut]"           string => "/usr/bin/cut";
+      "path[dc]"            string => "/usr/bin/dc";
+      "path[df]"            string => "/bin/df";
+      "path[diff]"          string => "/usr/bin/diff";
+      "path[dig]"           string => "/usr/bin/dig";
+      "path[dmidecode]"     string => "/usr/sbin/dmidecode";
+      "path[domainname]"    string => "/bin/domainname";
+      "path[echo]"          string => "/bin/echo";
+      "path[egrep]"         string => "/bin/egrep";
+      "path[find]"          string => "/usr/bin/find";
+      "path[grep]"          string => "/bin/grep";
+      "path[hostname]"      string => "/bin/hostname";
+      "path[ls]"            string => "/bin/ls";
+      "path[iptables]"      string => "/sbin/iptables";
+      "path[iptables_save]" string => "/sbin/iptables-save";
+      "path[netstat]"       string => "/bin/netstat";
+      "path[ping]"          string => "/bin/ping";
+      "path[perl]"          string => "/usr/bin/perl";
+      "path[printf]"        string => "/usr/bin/printf";
+      "path[sed]"           string => "/bin/sed";
+      "path[sort]"          string => "/usr/bin/sort";
+      "path[sysctl]"        string => "/sbin/sysctl";
+      "path[test]"          string => "/usr/bin/test";
+      "path[tr]"            string => "/usr/bin/tr";
 
       #
-      "apt_cache"           string => "/usr/bin/apt-cache";
-      "apt_config"          string => "/usr/bin/apt-config";
-      "apt_get"             string => "/usr/bin/apt-get";
-      "apt_key"             string => "/usr/bin/apt-key";
-      "aptitude"            string => "/usr/bin/aptitude";
-      "dpkg"                string => "/usr/bin/dpkg";
-      "groupadd"            string => "/usr/sbin/groupadd";
-      "ifconfig"            string => "/sbin/ifconfig";
-      "ip"                  string => "/sbin/ip";
-      "service"             string => "/usr/sbin/service";
-      "svc"                 string => "/usr/sbin/service";
-      "update_alternatives" string => "/usr/bin/update-alternatives";
-      "update_rc_d"         string => "/usr/sbin/update-rc.d";
-      "useradd"             string => "/usr/sbin/useradd";
+      "path[apt_cache]"           string => "/usr/bin/apt-cache";
+      "path[apt_config]"          string => "/usr/bin/apt-config";
+      "path[apt_get]"             string => "/usr/bin/apt-get";
+      "path[apt_key]"             string => "/usr/bin/apt-key";
+      "path[aptitude]"            string => "/usr/bin/aptitude";
+      "path[dpkg]"                string => "/usr/bin/dpkg";
+      "path[groupadd]"            string => "/usr/sbin/groupadd";
+      "path[ifconfig]"            string => "/sbin/ifconfig";
+      "path[ip]"                  string => "/sbin/ip";
+      "path[service]"             string => "/usr/sbin/service";
+      "path[svc]"                 string => "/usr/sbin/service";
+      "path[update_alternatives]" string => "/usr/bin/update-alternatives";
+      "path[update_rc_d]"         string => "/usr/sbin/update-rc.d";
+      "path[useradd]"             string => "/usr/sbin/useradd";
 
 
-    all::
-      "all_paths" slist => { 
-                                "apt_cache",
-                                "apt_config",
-                                "apt_get",
-                                "apt_key",
-                                "aptitude",
-                                "awk",
-                                "bc",
-                                "cat",
-                                "chkconfig",
-                                "cksum",
-                                "crontabs",
-                                "cut",
-                                "dc",
-                                "df",
-                                "diff",
-                                "dig",
-                                "dmidecode",
-                                "dpkg",
-                                "echo",
-                                "egrep",
-                                "find",
-                                "grep",
-                                "groupadd",
-                                "groupdel",
-                                "ifconfig",
-                                "ip",
-                                "ls",
-                                "netstat",
-                                "ping",
-                                "printf",
-                                "rpm",
-                                "sed",
-                                "service",
-                                "sort",
-                                "svc",
-                                "svcadm",
-                                "svcs",
-                                "tr",
-                                "update_alternatives",
-                                "update_rc_d",
-                                "useradd",
-                                "userdel",
-                                "yum",
-                              };
+    any::
+      "all_paths"     slist => getindices("path");
+      "$(all_paths)" string => "$(path[$(all_paths)])";
 
   classes:
-    "_stdlib_has_path_$(all_paths)"    expression => isvariable("$(all_paths)");
-    "_stdlib_path_exists_$(all_paths)" expression => fileexists("$(all_paths)");
+    "_stdlib_has_path_$(all_paths)"
+      expression => isvariable("$(all_paths)"),
+      comment    => "It's useful to know if a given path is defined";
 
+    "_stdlib_path_exists_$(all_paths)"
+      expression => fileexists("$(path[$(all_paths)])"),
+      comment    => "It's useful to know if $(all_paths) exists on the filesystem as defined";
+}
+
+bundle agent fileinfo(f)
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+
+      "stat[$(f)][$(fields)]" string => filestat($(f), $(fields));
+
+  reports:
+    verbose_mode::
+      "$(this.bundle): file $(f) has $(fields) = $(stat[$(f)][$(fields)])";
 }

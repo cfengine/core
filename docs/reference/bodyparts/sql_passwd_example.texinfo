@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-sql_passwd => "";
-}
-
-@end verbatim

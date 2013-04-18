@@ -1,3 +1,0 @@
-
-The directory where all auto-generated textual output is placed by @code{cf-report}.
-This includes manual generation, ontology and topic map data.

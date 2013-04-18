@@ -62,11 +62,11 @@ static char *MANUAL_DIRECTORY;
 
 static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
-static void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st);
-static void XmlExportControl(Writer *writer, SubTypeSyntax body);
-static void XmlExportConstraint(Writer *writer, const BodySyntax *bs);
-static void XmlExportConstraints(Writer *writer, const BodySyntax *bs);
-static void XmlExportType(Writer *writer, DataType dtype, const void *range);
+static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
+static void XmlExportControl(Writer *writer, PromiseTypeSyntax body);
+static void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs);
+static void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs);
+static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax);
 
 /*****************************************************************************/
 
@@ -74,7 +74,7 @@ void XmlManual(const char *mandir, FILE *fout)
 {
     Writer *writer = NULL;
     int i;
-    const SubTypeSyntax *st = NULL;
+    const PromiseTypeSyntax *st = NULL;
 
     MANUAL_DIRECTORY = (char *) mandir;
     AddSlash(MANUAL_DIRECTORY);
@@ -108,9 +108,9 @@ void XmlManual(const char *mandir, FILE *fout)
 
 /* CONTROL */
     XmlStartTag(writer, XMLTAG_CONTROLS_ROOT, 0);
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        XmlExportControl(writer, CF_ALL_BODIES[i]);
+        XmlExportControl(writer, CONTROL_BODIES[i]);
     }
     XmlEndTag(writer, XMLTAG_CONTROLS_ROOT);
 
@@ -118,7 +118,7 @@ void XmlManual(const char *mandir, FILE *fout)
     XmlStartTag(writer, XMLTAG_PROMISETYPES_ROOT, 0);
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = CF_ALL_SUBTYPES[i];
+        st = CF_ALL_PROMISE_TYPES[i];
         XmlExportPromiseType(writer, st);
     }
     XmlEndTag(writer, XMLTAG_PROMISETYPES_ROOT);
@@ -221,7 +221,7 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
 
 /*****************************************************************************/
 
-static void XmlExportControl(Writer *writer, SubTypeSyntax type)
+static void XmlExportControl(Writer *writer, PromiseTypeSyntax type)
 {
     char *filebuffer = NULL;
 
@@ -240,7 +240,7 @@ static void XmlExportControl(Writer *writer, SubTypeSyntax type)
     free(filebuffer);
 
 /* XML ELEMENT -- CONSTRAINTS */
-    XmlExportConstraints(writer, type.bs);
+    XmlExportConstraints(writer, type.constraint_set.constraints);
 
 /* END XML ELEMENT -- CONTROL */
     XmlEndTag(writer, XMLTAG_CONTROL);
@@ -248,7 +248,7 @@ static void XmlExportControl(Writer *writer, SubTypeSyntax type)
 
 /*****************************************************************************/
 
-void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
+void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
 {
     int i;
     char *filebuffer = NULL;
@@ -261,8 +261,8 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
     for (i = 0; st[i].bundle_type != NULL; i++)
     {
         /* START XML ELEMENT -- PROMISE TYPE */
-        XmlAttribute promise_name_attr = { "name", st[i].subtype };
-        if (strcmp(st[i].subtype, "*") != 0)
+        XmlAttribute promise_name_attr = { "name", st[i].promise_type };
+        if (strcmp(st[i].promise_type, "*") != 0)
         {
             XmlAttribute promise_agenttype_attr = { "agent-type", NULL };
             if (strcmp(st[i].bundle_type, "*") == 0)
@@ -287,7 +287,7 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
         }
         else
         {
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_intro.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_intro.texinfo", st[i].promise_type);
         }
         XmlTag(writer, XMLTAG_INTRO, filebuffer, 0);
         free(filebuffer);
@@ -295,18 +295,18 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
         if (strcmp("*", st[i].bundle_type) != 0)
         {
             /* XML ELEMENT -- LONG DESCRIPTION */
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_notes.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_notes.texinfo", st[i].promise_type);
             XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
             free(filebuffer);
 
             /* XML ELEMENT -- EXAMPLE */
-            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_example.texinfo", st[i].subtype);
+            filebuffer = ReadTexinfoFileF(MANUAL_DIRECTORY, "promises/%s_example.texinfo", st[i].promise_type);
             XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
             free(filebuffer);
         }
 
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, st[i].bs);
+        XmlExportConstraints(writer, st[i].constraint_set.constraints);
 
         /* END XML ELEMENT -- PROMISE TYPE */
         XmlEndTag(writer, XMLTAG_PROMISETYPE);
@@ -315,7 +315,7 @@ void XmlExportPromiseType(Writer *writer, const SubTypeSyntax *st)
 
 /*****************************************************************************/
 
-void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
+void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs)
 {
     int i;
 
@@ -328,7 +328,7 @@ void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
     XmlStartTag(writer, XMLTAG_CONSTRAINTS_ROOT, 0);
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        XmlExportConstraint(writer, (const BodySyntax *) &bs[i]);
+        XmlExportConstraint(writer, (const ConstraintSyntax *) &bs[i]);
     }
 /* END XML ELEMENT -- CONSTRAINTS */
     XmlEndTag(writer, XMLTAG_CONSTRAINTS_ROOT);
@@ -336,7 +336,7 @@ void XmlExportConstraints(Writer *writer, const BodySyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
+void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 {
     char *filebuffer = NULL;
 
@@ -350,7 +350,7 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
     XmlStartTag(writer, XMLTAG_CONSTRAINT, 1, constraint_name_attr);
 
 /* EXPORT TYPE */
-    XmlExportType(writer, bs->dtype, bs->range);
+    XmlExportType(writer, bs);
 
 /* XML ELEMENT -- DEFAULT-VALUE */
     if (bs->default_value != NULL)
@@ -388,20 +388,20 @@ void XmlExportConstraint(Writer *writer, const BodySyntax *bs)
 
 /*****************************************************************************/
 
-void XmlExportType(Writer *writer, DataType dtype, const void *range)
+static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax)
 {
     Rlist *list = NULL;
     Rlist *rp = NULL;
 
 /* START XML ELEMENT -- TYPE */
-    XmlAttribute type_name_attr = { "name", CF_DATATYPES[dtype] };
+    XmlAttribute type_name_attr = { "name", CF_DATATYPES[constraint_syntax->dtype] };
     XmlStartTag(writer, XMLTAG_TYPE, 1, type_name_attr);
 
-    switch (dtype)
+    switch (constraint_syntax->dtype)
     {
     case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, (BodySyntax *) range);
+        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax);
         break;
 
     case DATA_TYPE_INT:
@@ -410,7 +410,7 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
     case DATA_TYPE_REAL_LIST:
     case DATA_TYPE_INT_RANGE:
     case DATA_TYPE_REAL_RANGE:
-        if (range != NULL)
+        if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- RANGE */
             XmlStartTag(writer, XMLTAG_RANGE, 0);
@@ -418,7 +418,7 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
             /* XML ELEMENT -- MIN/MAX */
             int i = 0;
 
-            list = RlistFromSplitString((char *) range, ',');
+            list = RlistFromSplitString(constraint_syntax->range.validation_string, ',');
             for (rp = list; rp != NULL; rp = rp->next, i++)
             {
                 if (i == 0)
@@ -440,13 +440,13 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
 
     case DATA_TYPE_OPTION:
     case DATA_TYPE_OPTION_LIST:
-        if (range != NULL)
+        if (constraint_syntax->range.validation_string != NULL)
         {
             /* START XML ELEMENT -- OPTIONS */
             XmlStartTag(writer, XMLTAG_OPTIONS, 0);
 
             /* XML ELEMENT -- VALUE */
-            list = RlistFromSplitString((char *) range, ',');
+            list = RlistFromSplitString(constraint_syntax->range.validation_string, ',');
             for (rp = list; rp != NULL; rp = rp->next)
             {
                 XmlTag(writer, XMLTAG_VALUE, RlistScalarValue(rp), 0);
@@ -464,13 +464,13 @@ void XmlExportType(Writer *writer, DataType dtype, const void *range)
     case DATA_TYPE_CONTEXT:
     case DATA_TYPE_CONTEXT_LIST:
         /* XML ELEMENT -- ACCEPTED-VALUES */
-        if (strlen((char *) range) == 0)
+        if (strlen(constraint_syntax->range.validation_string) == 0)
         {
             XmlTag(writer, XMLTAG_ACCEPTEDVALS, "arbitrary string", 0);
         }
         else
         {
-            XmlTag(writer, XMLTAG_ACCEPTEDVALS, (char *) range, 0);
+            XmlTag(writer, XMLTAG_ACCEPTEDVALS, constraint_syntax->range.validation_string, 0);
         }
 
         break;

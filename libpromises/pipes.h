@@ -28,7 +28,7 @@
 
 #include "cf3.defs.h"
 
-FILE *cf_popen(const char *command, char *type);
+FILE *cf_popen(const char *command, char *type, bool capture_stderr);
 FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);
 FILE *cf_popen_sh(const char *command, char *type);
 FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background);

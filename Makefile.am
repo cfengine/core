@@ -10,17 +10,17 @@ DIST_SUBDIRS = libcompat libutils libpromises cf-agent cf-execd cf-gendoc cf-key
 
 # Set explicitly to avoid picking up {nova}/*.m4
 
-DIST_COMMON = README Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
+DIST_COMMON = README.md Makefile.am Makefile.in configure AUTHORS aclocal.m4 \
         ChangeLog INSTALL config.guess config.sub depcomp install-sh \
         ltmain.sh missing ylwrap m4/acinclude.m4 m4/libtool.m4 m4/ltoptions.m4 \
         m4/ltsugar.m4 m4/ltversion.m4 m4/lt~obsolete.m4 m4/cf3_with_library.m4 \
         m4/snprintf.m4 m4/old-autoconf.m4 m4/adl_recursive_eval.m4 configure.ac \
         autogen.sh compile
 
-EXTRA_DIST = ChangeLog INSTALL README LICENSE
+EXTRA_DIST = ChangeLog INSTALL README.md LICENSE
 
 docsdir = $(projdocdir)
-docs_DATA = README ChangeLog
+docs_DATA = README.md ChangeLog
 
 #
 # Some basic clean ups

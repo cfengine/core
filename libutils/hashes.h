@@ -28,9 +28,6 @@
 
 #include "platform.h"
 
-int RefHash(char *name, unsigned int max);
-int ElfHash(char *key, unsigned int max);
 int OatHash(const char *key, unsigned int max);
-int GetHash(const char *key, unsigned int max);
 
 #endif

@@ -25,7 +25,7 @@
 #include "cf3.defs.h"
 
 #include "mon.h"
-#include "cfstream.h"
+#include "logging.h"
 
 #if !defined(__MINGW32__)
 

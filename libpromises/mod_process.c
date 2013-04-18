@@ -22,52 +22,52 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_process.h"
 
-static const BodySyntax CF_MATCHCLASS_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax CF_MATCHCLASS_BODY[] =
 {
-    {"in_range_define", DATA_TYPE_STRING_LIST, "", "List of classes to define if the matches are in range"},
-    {"match_range", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Integer range for acceptable number of matches for this process"},
-    {"out_of_range_define", DATA_TYPE_STRING_LIST, "", "List of classes to define if the matches are out of range"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("in_range_define", "", "List of classes to define if the matches are in range"),
+    ConstraintSyntaxNewIntRange("match_range", CF_VALRANGE, "Integer range for acceptable number of matches for this process", NULL),
+    ConstraintSyntaxNewStringList("out_of_range_define", "", "List of classes to define if the matches are out of range"),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_PROCFILTER_BODY[] =
+static const ConstraintSyntax CF_PROCFILTER_BODY[] =
 {
-    {"command", DATA_TYPE_STRING, "", "Regular expression matching the command/cmd field of a process"},
-    {"pid", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the process id of a process"},
-    {"pgid", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the parent group id of a process"},
-    {"ppid", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the parent process id of a process"},
-    {"priority", DATA_TYPE_INT_RANGE, "-20,+20", "Range of integers matching the priority field (PRI/NI) of a process"},
-    {"process_owner", DATA_TYPE_STRING_LIST, "", "List of regexes matching the user of a process"},
-    {"process_result", DATA_TYPE_STRING,
+    ConstraintSyntaxNewString("command", "", "Regular expression matching the command/cmd field of a process", NULL),
+    ConstraintSyntaxNewIntRange("pid", CF_VALRANGE, "Range of integers matching the process id of a process", NULL),
+    ConstraintSyntaxNewIntRange("pgid", CF_VALRANGE, "Range of integers matching the parent group id of a process", NULL),
+    ConstraintSyntaxNewIntRange("ppid", CF_VALRANGE, "Range of integers matching the parent process id of a process", NULL),
+    ConstraintSyntaxNewIntRange("priority", "-20,+20", "Range of integers matching the priority field (PRI/NI) of a process", NULL),
+    ConstraintSyntaxNewStringList("process_owner", "", "List of regexes matching the user of a process"),
+    ConstraintSyntaxNewString("process_result",
      "[(process_owner|pid|ppid||pgid|rsize|vsize|status|command|ttime|stime|tty|priority|threads)[|&!.]*]*",
-     "Boolean class expression returning the logical combination of classes set by a process selection test"},
-    {"rsize", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the resident memory size of a process, in kilobytes"},
-    {"status", DATA_TYPE_STRING, "", "Regular expression matching the status field of a process"},
-    {"stime_range", DATA_TYPE_INT_RANGE, CF_TIMERANGE, "Range of integers matching the start time of a process"},
-    {"ttime_range", DATA_TYPE_INT_RANGE, CF_TIMERANGE, "Range of integers matching the total elapsed time of a process"},
-    {"tty", DATA_TYPE_STRING, "", "Regular expression matching the tty field of a process"},
-    {"threads", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the threads (NLWP) field of a process"},
-    {"vsize", DATA_TYPE_INT_RANGE, CF_VALRANGE, "Range of integers matching the virtual memory size of a process, in kilobytes"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+     "Boolean class expression returning the logical combination of classes set by a process selection test", NULL),
+    ConstraintSyntaxNewIntRange("rsize", CF_VALRANGE, "Range of integers matching the resident memory size of a process, in kilobytes", NULL),
+    ConstraintSyntaxNewString("status", "", "Regular expression matching the status field of a process", NULL),
+    ConstraintSyntaxNewIntRange("stime_range", CF_TIMERANGE, "Range of integers matching the start time of a process", NULL),
+    ConstraintSyntaxNewIntRange("ttime_range", CF_TIMERANGE, "Range of integers matching the total elapsed time of a process", NULL),
+    ConstraintSyntaxNewString("tty", "", "Regular expression matching the tty field of a process", NULL),
+    ConstraintSyntaxNewIntRange("threads", CF_VALRANGE, "Range of integers matching the threads (NLWP) field of a process", NULL),
+    ConstraintSyntaxNewIntRange("vsize", CF_VALRANGE, "Range of integers matching the virtual memory size of a process, in kilobytes", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_PROCESS_BODIES[] =
+static const ConstraintSyntax CF_PROCESS_BODIES[] =
 {
-    {"process_count", DATA_TYPE_BODY, CF_MATCHCLASS_BODY,
-     "Criteria for constraining the number of processes matching other criteria"},
-    {"process_select", DATA_TYPE_BODY, CF_PROCFILTER_BODY, "Criteria for matching processes in the system process table"},
-    {"process_stop", DATA_TYPE_STRING, CF_ABSPATHRANGE, "A command used to stop a running process"},
-    {"restart_class", DATA_TYPE_STRING, CF_IDRANGE,
-     "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process"},
-    {"signals", DATA_TYPE_OPTION_LIST, CF_SIGNALRANGE, "A list of menu options representing signals to be sent to a process"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewBody("process_count", CF_MATCHCLASS_BODY, "Criteria for constraining the number of processes matching other criteria"),
+    ConstraintSyntaxNewBody("process_select", CF_PROCFILTER_BODY, "Criteria for matching processes in the system process table"),
+    ConstraintSyntaxNewString("process_stop", CF_ABSPATHRANGE, "A command used to stop a running process", NULL),
+    ConstraintSyntaxNewString("restart_class", CF_IDRANGE,
+     "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process", NULL),
+    ConstraintSyntaxNewOptionList("signals", CF_SIGNALRANGE, "A list of menu options representing signals to be sent to a process"),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_PROCESS_SUBTYPES[] =
+const PromiseTypeSyntax CF_PROCESS_PROMISE_TYPES[] =
 {
-    {"agent", "processes", CF_PROCESS_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "processes", ConstraintSetSyntaxNew(CF_PROCESS_BODIES, NULL)),
+    PromiseTypeSyntaxNewNull()
 };

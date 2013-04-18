@@ -31,12 +31,11 @@
 #include "promises.h"
 #include "lastseen.h"
 #include "crypto.h"
-#include "cfstream.h"
-#include "files_hashes.h"
 #include "logging.h"
+#include "files_hashes.h"
 #include "policy.h"
 
-static void SetSessionKey(AgentConnection *conn);
+static bool SetSessionKey(AgentConnection *conn);
 
 /*********************************************************************/
 
@@ -195,7 +194,7 @@ int IdentifyAgent(int sd, char *localip, int family)
 
 /*********************************************************************/
 
-int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, Promise *pp)
+int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 {
     char sendbuffer[CF_EXPANDSIZE], in[CF_BUFSIZE], *out, *decrypted_cchall;
     BIGNUM *nonce_challenge, *bn = NULL;
@@ -208,7 +207,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if ((PUBKEY == NULL) || (PRIVKEY == NULL))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", PublicKeyFile());
+        CfOut(OUTPUT_LEVEL_ERROR, "", "No public/private key pair found at %s\n", PublicKeyFile(GetWorkDir()));
         return false;
     }
 
@@ -261,7 +260,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if (RSA_public_encrypt(nonce_len, in, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Public encryption failed = %s\n", ERR_reason_error_string(err));
             free(out);
             RSA_free(server_pubkey);
             return false;
@@ -306,7 +305,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (1)");
+        CfOut(OUTPUT_LEVEL_ERROR, "recv", "Protocol transaction broken off (1)");
         RSA_free(server_pubkey);
         return false;
     }
@@ -325,7 +324,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
     if (ReceiveTransaction(conn->sd, in, NULL) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Protocol transaction broken off (2)");
+        CfOut(OUTPUT_LEVEL_ERROR, "recv", "Protocol transaction broken off (2)");
         RSA_free(server_pubkey);
         return false;
     }
@@ -335,20 +334,19 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if (implicitly_trust_server == false)        /* challenge reply was correct */
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", ".....................[.h.a.i.l.].................................\n");
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Strong authentication of server=%s connection confirmed\n", pp->this_server);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Strong authentication of server=%s connection confirmed\n", conn->this_server);
         }
         else
         {
-            if (attr.copy.trustkey)
+            if (trust_key)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trusting server identity, promise to accept key from %s=%s", pp->this_server,
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trusting server identity, promise to accept key from %s=%s", conn->this_server,
                       conn->remoteip);
             }
             else
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", " !! Not authorized to trust the server=%s's public key (trustkey=false)\n",
-                      pp->this_server);
-                PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
+                      conn->this_server);
                 RSA_free(server_pubkey);
                 return false;
             }
@@ -356,7 +354,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Challenge response from server %s/%s was incorrect!", pp->this_server,
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Challenge response from server %s/%s was incorrect!", conn->this_server,
              conn->remoteip);
         RSA_free(server_pubkey);
         return false;
@@ -382,7 +380,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     if (RSA_private_decrypt(encrypted_len, in, decrypted_cchall, PRIVKEY, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private decrypt failed = %s, abandoning\n",
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Private decrypt failed = %s, abandoning\n",
              ERR_reason_error_string(err));
         RSA_free(server_pubkey);
         return false;
@@ -422,14 +420,14 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         /* proposition S4 - conditional */
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol error in RSA authentation from IP %s\n", pp->this_server);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Protocol error in RSA authentation from IP %s\n", conn->this_server);
             return false;
         }
 
         if ((newkey->n = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Private key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -438,8 +436,8 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Protocol error in RSA authentation from IP %s\n",
-                 pp->this_server);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Protocol error in RSA authentation from IP %s\n",
+                 conn->this_server);
             RSA_free(newkey);
             return false;
         }
@@ -447,7 +445,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
         if ((newkey->e = BN_mpi2bn(in, len, NULL)) == NULL)
         {
             err = ERR_get_error();
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Public key decrypt failed = %s\n", ERR_reason_error_string(err));
             RSA_free(newkey);
             return false;
         }
@@ -458,7 +456,11 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 
 /* proposition C5 */
 
-    SetSessionKey(conn);
+    if (!SetSessionKey(conn))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to set session key");
+        return false;
+    }
 
     if (conn->session_key == NULL)
     {
@@ -476,7 +478,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Public encryption failed = %s\n", ERR_reason_error_string(err));
         free(out);
         RSA_free(server_pubkey);
         return false;
@@ -504,7 +506,7 @@ int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, 
 /* Level                                                             */
 /*********************************************************************/
 
-static void SetSessionKey(AgentConnection *conn)
+static bool SetSessionKey(AgentConnection *conn)
 {
     BIGNUM *bp;
     int session_size = CfSessionKeySize(conn->encryption_type);
@@ -513,16 +515,20 @@ static void SetSessionKey(AgentConnection *conn)
 
     if (bp == NULL)
     {
-        FatalError("Could not allocate session key");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Could not allocate session key");
+        return false;
     }
 
-// session_size is in bytes
+    // session_size is in bytes
     if (!BN_rand(bp, session_size * 8, -1, 0))
     {
-        FatalError("Can't generate cryptographic key");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Can't generate cryptographic key");
+        BN_clear_free(bp);
+        return false;
     }
 
     conn->session_key = (unsigned char *) bp->d;
+    return true;
 }
 
 /*********************************************************************/

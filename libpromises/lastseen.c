@@ -26,9 +26,9 @@
 
 #include "lastseen.h"
 #include "conversion.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "files_hashes.h"
-#include "transaction.h"
+#include "locks.h"
 
 void UpdateLastSawHost(const char *hostkey, const char *address,
                        bool incoming, time_t timestamp);
@@ -275,7 +275,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
     void *value;
     int ksize, vsize;
 
-    while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+    while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         /* Only look for "keyhost" entries */
         if (key[0] != 'k')
@@ -311,7 +311,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
         }
     }
 
-    DeleteDBCursor(db, cursor);
+    DeleteDBCursor(cursor);
     CloseDB(db);
 
     return true;
@@ -336,7 +336,7 @@ int LastSeenHostKeyCount(void)
 
         if (NewDBCursor(dbp, &dbcp))
         {
-            while (NextDB(dbp, dbcp, &key, &ksize, &value, &vsize))
+            while (NextDB(dbcp, &key, &ksize, &value, &vsize))
             {
                 /* Only look for valid "hostkey" entries */
 
@@ -348,7 +348,7 @@ int LastSeenHostKeyCount(void)
                 count++;
             }
 
-            DeleteDBCursor(dbp, dbcp);
+            DeleteDBCursor(dbcp);
         }
 
         CloseDB(dbp);

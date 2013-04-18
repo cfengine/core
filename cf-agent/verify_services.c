@@ -28,21 +28,27 @@
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "fncall.h"
-#include "transaction.h"
 #include "logging.h"
+#include "fncall.h"
+#include "locks.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
+#include "cf-agent-enterprise-stubs.h"
+#include "ornaments.h"
+#include "env_context.h"
+
+#ifdef __MINGW32__
+#include "cf.nova.h"
+#endif
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context);
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
 
 /*****************************************************************************/
 
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void VerifyServicesPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
@@ -52,7 +58,7 @@ void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *r
 
     if (ServicesSanityChecks(a, pp))
     {
-        VerifyServices(ctx, a, pp, report_context);
+        VerifyServices(ctx, a, pp);
     }
 }
 
@@ -149,29 +155,19 @@ static void SetServiceDefaults(Attributes *a)
 /* Level                                                                     */
 /*****************************************************************************/
 
-void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
-    // allow to start Cfengine windows executor without license
-#ifdef __MINGW32__
-
-    if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
-    {
-        return;
-    }
-
-#endif
-
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
         return;
     }
 
-    ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
-    PromiseBanner(ctx, pp);
+    ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
+    PromiseBanner(pp);
 
     if (strcmp(a.service.service_type, "windows") == 0)
     {
@@ -179,10 +175,10 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
     }
     else
     {
-        DoVerifyServices(ctx, a, pp, report_context);
+        DoVerifyServices(ctx, a, pp);
     }
 
-    ScopeDeleteScalar("this", "promiser");
+    ScopeDeleteSpecialScalar("this", "promiser");
     YieldCurrentLock(thislock);
 }
 
@@ -190,7 +186,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportCon
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const ReportContext *report_context)
+static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     FnCall *default_bundle = NULL;
     Rlist *args = NULL;
@@ -236,21 +232,21 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const 
     switch (a.service.service_policy)
     {
     case SERVICE_POLICY_START:
-        ScopeNewScalar("this", "service_policy", "start", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "start", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RESTART:
-        ScopeNewScalar("this", "service_policy", "restart", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "restart", DATA_TYPE_STRING);
         break;
 
     case SERVICE_POLICY_RELOAD:
-        ScopeNewScalar("this", "service_policy", "reload", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "reload", DATA_TYPE_STRING);
         break;
         
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
     default:
-        ScopeNewScalar("this", "service_policy", "stop", DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "this", "service_policy", "stop", DATA_TYPE_STRING);
         break;
     }
 
@@ -262,12 +258,12 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp, const 
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)
     {
-        VerifyMethod(ctx, "service_bundle", a, pp, report_context);  // Send list of classes to set privately?
+        VerifyMethod(ctx, "service_bundle", a, pp);  // Send list of classes to set privately?
     }
 }
 

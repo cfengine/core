@@ -22,19 +22,62 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_methods.h"
 
-static const BodySyntax CF_METHOD_BODIES[] =
+#include "syntax.h"
+#include "policy.h"
+#include "string_lib.h"
+#include "fncall.h"
+#include "rlist.h"
+
+static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in calling bundle %s, expected %d arguments, %d given";
+
+static const ConstraintSyntax CF_METHOD_BODIES[] =
 {
-    {"inherit", DATA_TYPE_OPTION, CF_BOOL, "If true this causes the sub-bundle to inherit the private classes of its parent"},
-    {"usebundle", DATA_TYPE_BUNDLE, CF_BUNDLE, "Specify the name of a bundle to run as a parameterized method"},
-    {"useresult", DATA_TYPE_STRING, CF_IDRANGE, "Specify the name of a local variable to contain any result/return value from the child"},    
-    {NULL, DATA_TYPE_NONE, NULL}
+    ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent", NULL),
+    ConstraintSyntaxNewBundle("usebundle", "Specify the name of a bundle to run as a parameterized method"),
+    ConstraintSyntaxNewString("useresult", CF_IDRANGE, "Specify the name of a local variable to contain any result/return value from the child", NULL),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_METHOD_SUBTYPES[] =
+static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
 {
-    {"agent", "methods", CF_METHOD_BODIES},
-    {NULL, NULL, NULL},
+    bool success = true;
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        const Constraint *cp = SeqAt(pp->conlist, i);
+
+        // ensure: if call and callee are resolved, then they have matching arity
+        if (StringSafeEqual(cp->lval, "usebundle"))
+        {
+            if (cp->rval.type == RVAL_TYPE_FNCALL)
+            {
+                const FnCall *call = (const FnCall *)cp->rval.item;
+                const Bundle *callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "agent", call->name);
+                if (!callee)
+                {
+                    callee = PolicyGetBundle(PolicyFromPromise(pp), NULL, "common", call->name);
+                }
+
+                if (callee)
+                {
+                    if (RlistLen(call->args) != RlistLen(callee->args))
+                    {
+                        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                                         POLICY_ERROR_METHODS_BUNDLE_ARITY,
+                                                         call->name, RlistLen(callee->args), RlistLen(call->args)));
+                        success = false;
+                    }
+                }
+            }
+        }
+    }
+    return success;
+}
+
+const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[] =
+{
+    PromiseTypeSyntaxNew("agent", "methods", ConstraintSetSyntaxNew(CF_METHOD_BODIES, &MethodsParseTreeCheck)),
+    PromiseTypeSyntaxNewNull()
 };

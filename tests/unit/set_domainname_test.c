@@ -18,7 +18,11 @@ static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };
 
+#ifdef SOLARIS
+int gethostname(char *name, int len)
+#else
 int gethostname(char *name, size_t len)
+#endif
 {
     strcpy(name, "laptop.intra");
     return 0;
@@ -45,7 +49,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void HardClass(EvalContext *ctx, const char *classname)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *classname)
 {
     int i;
 
@@ -75,7 +79,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewScalar(const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
@@ -95,7 +99,12 @@ void ScopeNewScalar(const char *ns, const char *varname, const char *value, Data
     fail();                     /* LCOV_EXCL_LINE */
 }
 
-static void test_set_names(void **state)
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+{
+    ScopeNewScalar(ctx, ns, varname, value, type);
+}
+
+static void test_set_names(void)
 {
     int i = 0;
 
@@ -254,7 +263,7 @@ char *Constellation_Version(void)
     fail();
 }
 
-void LoadSlowlyVaryingObservations(void)
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     fail();
 }
@@ -294,7 +303,12 @@ ssize_t CfReadLine(char *buff, int size, FILE *fp)
     fail();
 }
 
-bool IsDefinedClass(EvalContext *ctx, const char *class, const char *ns)
+bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
+{
+    fail();
+}
+
+void ScopeDeleteSpecialScalar(const char *scope, const char *id)
 {
     fail();
 }
@@ -304,12 +318,18 @@ void ScopeDeleteVariable(const char *scope, const char *id)
     fail();
 }
 
+
 Rlist *RlistParseShown(char *string)
 {
     fail();
 }
 
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
+{
+    fail();
+}
+
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }

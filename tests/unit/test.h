@@ -7,6 +7,8 @@
 #include <cmockery.h>
 #include <stdio.h>
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 char *file_read_string(FILE *in);
 
 void assert_file_equal(FILE *a, FILE *b);

@@ -9,8 +9,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 #######################################################
@@ -39,7 +37,7 @@ classes:
         "ok" not => fileexists("$(G.testdir)/shouldnotexist");
 reports:
     DEBUG::
-        "Expected to crash - illegal body contstraint name";
+        "This test should fail";
     ok::
         "$(this.promise_filename) Pass";
     !ok::

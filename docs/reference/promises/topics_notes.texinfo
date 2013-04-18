@@ -1,5 +1,0 @@
-
-Topics are basically identifiers, where the comment field here is a
-long form of the subject string. Associations form semantic links
-between topics. Topics can appear multiple times in order to form
-multiple associations.

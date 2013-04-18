@@ -33,6 +33,8 @@
 #include <libxml/xpathInternals.h>
 #endif
 
+#include "sequence.h"
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -77,6 +79,7 @@
 #define SECONDS_PER_HOUR (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY (24 * SECONDS_PER_HOUR)
 #define SECONDS_PER_WEEK (7 * SECONDS_PER_DAY)
+#define SECONDS_PER_YEAR (365 * SECONDS_PER_DAY)
 
 /* Long-term monitoring constants */
 
@@ -140,16 +143,16 @@
 
 /* Auditing key */
 
-#define CF_NOP      'n'
-#define CF_CHG      'c'
-#define CF_WARN     'w'         /* something wrong but nothing done */
-#define CF_FAIL     'f'
-#define CF_DENIED   'd'
-#define CF_TIMEX    't'
-#define CF_INTERPT  'i'
-#define CF_REGULAR  'r'
-#define CF_REPORT   'R'
-#define CF_UNKNOWN  'u'
+typedef enum
+{
+    PROMISE_RESULT_NOOP = 'n',
+    PROMISE_RESULT_CHANGE = 'c',
+    PROMISE_RESULT_WARN = 'w', // something wrong but nothing done
+    PROMISE_RESULT_FAIL = 'f',
+    PROMISE_RESULT_DENIED = 'd',
+    PROMISE_RESULT_TIMEOUT = 't',
+    PROMISE_RESULT_INTERRUPTED = 'i',
+} PromiseResult;
 
 /*****************************************************************************/
 
@@ -191,6 +194,7 @@ typedef struct
 {
     pid_t pid;
     time_t time;
+    time_t process_start_time;
 } LockData;
 
 /*****************************************************************************/
@@ -387,24 +391,13 @@ typedef struct
     unsigned char *session_key;
     char encryption_type;
     short error;
+    char *this_server;
+    Stat *cache; /* Cache for network connection (READDIR result) */
 } AgentConnection;
 
 /*******************************************************************/
 
 typedef struct CompressedArray_ CompressedArray;
-
-/*******************************************************************/
-
-typedef struct Audit_ Audit;
-
-struct Audit_
-{
-    char *version;
-    char *filename;
-    char *date;
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    Audit *next;
-};
 
 /*******************************************************************/
 
@@ -431,21 +424,6 @@ struct GidList_
     GidList *next;
 };
 
-/*******************************************************************/
-
-typedef struct Auth_ Auth;
-
-struct Auth_
-{
-    char *path;
-    Item *accesslist;
-    Item *maproot;              /* which hosts should have root read access */
-    int encrypt;                /* which files HAVE to be transmitted securely */
-    int literal;
-    int classpattern;
-    int variable;
-    Auth *next;
-};
 
 /*******************************************************************/
 /* Checksum database structures                                    */
@@ -481,7 +459,6 @@ typedef struct
 #define CF_MAPPEDLIST '#'
 
 #define CF_UNDEFINED -1
-#define CF_NODOUBLE -123.45
 #define CF_NOINT    -678L
 #define CF_UNDEFINED_ITEM (void *)0x1234
 #define CF_VARARGS 99
@@ -510,7 +487,7 @@ typedef struct Policy_ Policy;
 typedef struct Bundle_ Bundle;
 typedef struct Body_ Body;
 typedef struct Promise_ Promise;
-typedef struct SubType_ SubType;
+typedef struct PromiseType_ PromiseType;
 typedef struct FnCall_ FnCall;
 
 /*************************************************************************/
@@ -723,7 +700,6 @@ typedef enum
     RVAL_TYPE_SCALAR = 's',
     RVAL_TYPE_LIST = 'l',
     RVAL_TYPE_FNCALL = 'f',
-    RVAL_TYPE_ASSOC = 'a',
     RVAL_TYPE_NOPROMISEE = 'X' // TODO: must be another hack
 } RvalType;
 
@@ -735,35 +711,50 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
-typedef enum
-{
-    REPORT_OUTPUT_TYPE_TEXT,
-    REPORT_OUTPUT_TYPE_KNOWLEDGE,
+typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
 
-    REPORT_OUTPUT_TYPE_MAX
-} ReportOutputType;
-
-typedef struct ReportContext_ ReportContext;
-
-/*************************************************************************/
-
-typedef struct
+typedef struct ConstraintSyntax_
 {
     const char *lval;
     const DataType dtype;
-    const void *range;          /* either char or BodySyntax * */
+    union
+    {
+        const char *validation_string;
+        const struct ConstraintSyntax_ *body_type_syntax;
+    } range;
     const char *description;
     const char *default_value;
-} BodySyntax;
+} ConstraintSyntax;
 
-/*************************************************************************/
+/*
+ * Promise type may optionally provide parse-tree check function, called after
+ * parsing to do a preliminary syntax/semantic checking of unexpanded promises.
+ *
+ * This check function should populate #errors sequence with errors it finds and
+ * return false in case it has found at least one error.
+ *
+ * If the check function has not found any errors, it should return true.
+ */
+typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
+
+struct ConstraintSetSyntax_
+{
+    const ConstraintSyntax *constraints;
+    ParseTreeCheckFn parse_tree_check;
+};
 
 typedef struct
 {
     const char *bundle_type;
-    const char *subtype;
-    const BodySyntax *bs;
-} SubTypeSyntax;
+    const char *promise_type;
+    ConstraintSetSyntax constraint_set;
+} PromiseTypeSyntax;
+
+typedef struct
+{
+    const char *body_type;
+    ConstraintSetSyntax constraint_set;
+} BodyTypeSyntax;
 
 /*************************************************************************/
 
@@ -798,9 +789,7 @@ typedef struct
 {
     char *filename;
     Item *file_start;
-    Item *file_classes;
     int num_edits;
-    int empty_first;
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif
@@ -974,26 +963,6 @@ typedef enum
     PACKAGE_ACTION_POLICY_BULK,
     PACKAGE_ACTION_POLICY_NONE
 } PackageActionPolicy;
-
-/*
-Adding new mutex:
-- add declaration here,
-- define in cf3globals.c.
-*/
-
-extern pthread_mutex_t *cft_system;
-extern pthread_mutex_t *cft_count;
-extern pthread_mutex_t *cft_getaddr;
-extern pthread_mutex_t *cft_lock;
-extern pthread_mutex_t *cft_output;
-extern pthread_mutex_t *cft_dbhandle;
-extern pthread_mutex_t *cft_policy;
-extern pthread_mutex_t *cft_report;
-extern pthread_mutex_t *cft_vscope;
-extern pthread_mutex_t *cft_server_keyseen;
-extern pthread_mutex_t *cft_server_children;
-
-/************************************************************************************/
 
 typedef enum
 {
@@ -1402,6 +1371,7 @@ typedef struct
 typedef struct
 {
     Constraint *expression;
+    ContextScope scope;
     int nconstraints;
     int persistent;
 } ContextConstraint;
@@ -1585,16 +1555,6 @@ typedef struct
     int growing;
 } Measurement;
 
-/*************************************************************************/
-
-typedef struct
-{
-    char *ipv4_address;
-    char *ipv4_netmask;
-} TcpIp;
-
-/*************************************************************************/
-
 typedef struct
 {
     char *db_server_owner;
@@ -1715,7 +1675,6 @@ typedef struct
     StorageMount mount;
     StorageVolume volume;
 
-    TcpIp tcpip;
     int havedepthsearch;
     int haveselect;
     int haverename;
@@ -1734,7 +1693,6 @@ typedef struct
     int havemount;
     int havevolume;
     int havebundle;
-    int havetcpip;
     int havepackages;
 
     /* editline */
@@ -1765,21 +1723,22 @@ typedef struct
 #define BEGINSWITH(str,start) (strncmp(str,start,strlen(start)) == 0)
 
 #include "dbm_api.h"
+#include "sequence.h"
 #include "prototypes3.h"
 #include "alloc.h"
 #include "cf3.extern.h"
 
-extern const BodySyntax CF_COMMON_BODIES[];
-extern const BodySyntax CF_VARBODY[];
-extern const SubTypeSyntax *CF_ALL_SUBTYPES[];
-extern const BodySyntax CFG_CONTROLBODY[];
+extern const ConstraintSyntax CF_COMMON_BODIES[];
+extern const ConstraintSyntax CF_VARBODY[];
+extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
+extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const SubTypeSyntax CF_ALL_BODIES[];
-extern const BodySyntax CFH_CONTROLBODY[];
-extern const SubTypeSyntax CF_COMMON_SUBTYPES[];
-extern const BodySyntax CF_CLASSBODY[];
-extern const BodySyntax CFA_CONTROLBODY[];
-extern const BodySyntax CFEX_CONTROLBODY[];
+extern const PromiseTypeSyntax CONTROL_BODIES[];
+extern const ConstraintSyntax CFH_CONTROLBODY[];
+extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
+extern const ConstraintSyntax CF_CLASSBODY[];
+extern const ConstraintSyntax CFA_CONTROLBODY[];
+extern const ConstraintSyntax CFEX_CONTROLBODY[];
 
 #endif
 

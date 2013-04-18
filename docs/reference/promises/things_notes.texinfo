@@ -1,7 +1,0 @@
-
-Things promises are in every way equivalent to the more general topics
-promises. Things can be extended as topics. The contexts are
-interchangeable between things and topics.  The only purpose of things
-is to make plainer a description of the `physical' configurations of
-regular worldly things.
-

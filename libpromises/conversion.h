@@ -56,21 +56,20 @@ long Months2Seconds(int m);
 int Day2Number(const char *datestring);
 void TimeToDateStr(time_t t, char *outStr, int outStrSz);
 int Month2Int(const char *string);
-int MonthLen2Int(const char *string, int len);
 long TimeAbs2Int(const char *s);
 
 
 // Evalaution conversion
 bool BooleanFromString(const char *val);
 long IntFromString(const char *s);
-double DoubleFromString(const char *s);
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp);
-int IsRealNumber(const char *s);
+bool DoubleFromString(const char *s, double *value_out);
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out);
+bool IsRealNumber(const char *s);
 
 
 // Misc.
 char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval);
 char *MapAddress(char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);

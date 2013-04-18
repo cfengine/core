@@ -1,4 +1,0 @@
-
-Part of the credentials for connecting to the database server.
-This is system dependent. If the server host is localhost a password
-might not be required.

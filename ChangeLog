@@ -1,6 +1,20 @@
+3.5.0 - Beta 2
+
+       New features:
+       - classes promises now take an optional scope constraint.
+
+       Changes:
+       - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
+
+       Bugfixes:
+       - bundles are allowed to be empty (Redmine #2411)
+
+3.5.0 - Beta 1
+
 3.5.0 - Alpha 2
 
        New features:
+       - new built-in functions: classesmatching, strftime, filestat, ifelse, maparray
        - cf-promises flag --parse-tree is replaced by --policy-output-format=, requiring the
           user to specify the output format (none, cf, json)
        - cf-promises allows partial check of policy (without body common control) without integrity check;
@@ -12,7 +26,10 @@
        - add scope attribute for body classes (Redmine #2013) 
 
        Changes:
-
+       - action_policy => "warn" causes not_kept classes to be set on promise needing repair.
+       - command line option version (-V) now prints a shorter parsable version without graphic
+       - implicit execution of server and common bundles taking arguments is skipped in cf-serverd.
+       - WARNING: option --policy-server removed, require option to --bootstrap instead
        - process promises don't log if processes are out of range unless you 
          run in verbose mode
        - reports promises are now allowed in any context (Redmine #2005)
@@ -20,7 +37,7 @@
        - cf-execd: --once implies --no-fork
 
        Bugfixes:
-
+       - ifvarclass checked from classes promises in common bundles
        - do not wait for splaytime when executing only once
        - disable xml editing functionality when libxml2 doesn't provide necessary APIs (Redmine #1937)
 

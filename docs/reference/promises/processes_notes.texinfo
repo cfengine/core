@@ -90,7 +90,7 @@ bundlesequence => { Update, @(globals.all_services)  };
 
 The bundle for this can look like this:
 @verbatim
-bundle agent Service(service")
+bundle agent Service(service)
 {
 processes:
 
@@ -111,6 +111,11 @@ commands:
 An alternative would be self-contained:
 
 @verbatim
+body common control
+{
+      bundlesequence => { "Service" };
+}
+
 bundle agent Service
 {
 vars:
@@ -136,11 +141,11 @@ commands:
 # Parameterized body
 ######################
 
-body process_count up("$(s)")
+body process_count up(s)
 
 {
-match_range => "[0,10]";
-out_of_range_define => "$(s)_up";
+match_range         => "0,10";
+out_of_range_define => { "$(s)_up" };
 }
 
 @end verbatim

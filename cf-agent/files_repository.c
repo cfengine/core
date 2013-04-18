@@ -30,8 +30,8 @@
 #include "files_lib.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
-#include "transaction.h"
+#include "logging.h"
+#include "mutex.h"
 #include "policy.h"
 
 /*********************************************************************/
@@ -93,7 +93,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
+int ArchiveToRepository(const char *file, Attributes attr)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -137,9 +137,7 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
 
     cfstat(destination, &dsb);
 
-    CheckForFileHoles(&sb, pp);
-
-    if (pp && CopyRegularFileDisk(file, destination, pp->makeholes))
+    if (CopyRegularFileDisk(file, destination))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "Moved %s to repository location %s\n", file, destination);
         return true;

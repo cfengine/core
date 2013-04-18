@@ -25,11 +25,12 @@
 
 #include "pipes.h"
 
-#include "cfstream.h"
-#include "transaction.h"
+#include "logging.h"
+#include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "policy.h"
+#include "env_context.h"
 
 #ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);
@@ -48,7 +49,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -57,7 +58,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a,
                  "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
                  retcode);
             result = true;
@@ -66,7 +67,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
                  "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
                  retcode);
             result = false;
@@ -85,13 +86,13 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
     {
         if (retcode == 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
                  pp->promiser);
             result = true;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
                  " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
                  retcode);
             result = false;
@@ -204,7 +205,7 @@ static pid_t CreatePipeAndFork(char *type, int *pd)
 
 /*****************************************************************************/
 
-FILE *cf_popen(const char *command, char *type)
+FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 {
     int pd[2];
     char **argv;
@@ -229,7 +230,18 @@ FILE *cf_popen(const char *command, char *type)
             if (pd[1] != 1)
             {
                 dup2(pd[1], 1); /* Attach pp=pd[1] to our stdout */
-                dup2(pd[1], 2); /* Merge stdout/stderr */
+
+                if (capture_stderr)
+                {
+                    dup2(pd[1], 2); /* Merge stdout/stderr */
+                }
+                else
+                {
+                    int nullfd = open(NULLFILE, O_WRONLY);
+                    dup2(nullfd, 2);
+                    close(nullfd);
+                }
+
                 close(pd[1]);
             }
 
@@ -753,7 +765,7 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 
     if (!WIFEXITED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 
@@ -774,13 +786,13 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 
     if (WIFSIGNALED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
         return -1;
     }
 
     if (!WIFEXITED(status))
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
         return -1;
     }
 

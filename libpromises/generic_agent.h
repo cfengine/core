@@ -28,6 +28,7 @@
 #include "cf3.defs.h"
 
 #include "policy.h"
+#include "set.h"
 
 typedef struct
 {
@@ -37,6 +38,11 @@ typedef struct
     char *input_file;
     bool check_not_writable_by_others;
     bool check_runnable;
+    bool debug_mode;
+
+    StringSet *heap_soft;
+    StringSet *heap_negated;
+
     bool tty_interactive; // agent is running interactively, via tty/terminal interface
 
     // change to evaluation behavior from the policy itself
@@ -59,19 +65,21 @@ typedef struct
 } GenericAgentConfig;
 
 const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
-void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context);
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
 void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
-void PrintVersionBanner(const char *component);
+void PrintVersion(void);
 int CheckPromises(const char *input_file);
-Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);
 int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
-void CompilationReport(EvalContext *ctx, Policy *policy, char *fname);
-void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context);
+
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle);
+void PolicyHashVariables(EvalContext *ctx, Policy *policy);
+
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
@@ -86,21 +94,15 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
-void PromiseBanner(EvalContext *ctx, Promise *pp);
 void BannerBundle(Bundle *bp, Rlist *args);
-void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
-ReportContext *OpenCompilationReportFiles(const char *fname);
-void CheckLicenses(EvalContext *ctx);
+void WarnAboutDeprecatedFeatures(EvalContext *ctx);
+void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
-
-ReportContext *OpenReports(AgentType agent_type);
-void CloseReports(const char *agents, ReportContext *report_context);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
-
-const char *AgentTypeToString(AgentType agent_type);
+void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);

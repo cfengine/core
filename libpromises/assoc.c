@@ -60,18 +60,6 @@ void DeleteAssoc(CfAssoc *ap)
 
 }
 
-/*******************************************************************/
-
-CfAssoc *CopyAssoc(CfAssoc *old)
-{
-    if (old == NULL)
-    {
-        return NULL;
-    }
-
-    return NewAssoc(old->lval, old->rval, old->dtype);
-}
-
 /*
  * This associative array implementation uses array with linear search up to
  * TINY_LIMIT elements, and then converts into full-fledged hash table with open
@@ -134,7 +122,7 @@ static void HashConvertToHuge(AssocHashTable *hashtable)
         /* This is a stripped down HugeHashInsertElement: it will fail on duplicate
          * elements or nearly-full hash table, or table with HASH_ENTRY_DELETED */
         CfAssoc *assoc = hashtable->array.values[i];
-        int bucket = GetHash(assoc->lval, CF_HASHTABLESIZE);
+        int bucket = OatHash(assoc->lval, CF_HASHTABLESIZE);
 
         for (;;)
         {
@@ -155,7 +143,7 @@ static void HashConvertToHuge(AssocHashTable *hashtable)
 
 static bool HugeHashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval, DataType dtype)
 {
-    int bucket = GetHash(element, CF_HASHTABLESIZE);
+    int bucket = OatHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do
@@ -201,14 +189,6 @@ static bool TinyHashInsertElement(AssocHashTable *hashtable, const char *element
         }
     }
 
-    /* Do not inline NewAssoc into a assignment -- NewAssoc calls CopyRvalItem,
-       which can call GetVariable (OMG), which calls HashLookupElement, so we
-       need to be sure hash table is in consistent state while calling
-       NewAssoc. If NewAssoc is in the right-hand side of the assignment, then
-       compiler is free to choose the order of increment and NewAssoc call, so
-       HashLookupElement might end up reading values by NULL pointer. Long-term
-       solution is to fix CopyRvalItem. */
-
     CfAssoc *a = NewAssoc(element, rval, dtype);
 
     hashtable->array.values[hashtable->array.size++] = a;
@@ -233,7 +213,7 @@ bool HashInsertElement(AssocHashTable *hashtable, const char *element, Rval rval
 
 static bool HugeHashDeleteElement(AssocHashTable *hashtable, const char *element)
 {
-    int bucket = GetHash(element, CF_HASHTABLESIZE);
+    int bucket = OatHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do
@@ -309,7 +289,7 @@ bool HashDeleteElement(AssocHashTable *hashtable, const char *element)
 
 static CfAssoc *HugeHashLookupElement(AssocHashTable *hashtable, const char *element)
 {
-    int bucket = GetHash(element, CF_HASHTABLESIZE);
+    int bucket = OatHash(element, CF_HASHTABLESIZE);
     int i = bucket;
 
     do
@@ -395,9 +375,7 @@ static void HugeHashClear(AssocHashTable *hashtable)
     memset(hashtable->buckets, 0, sizeof(CfAssoc *) * CF_HASHTABLESIZE);
 }
 
-/*******************************************************************/
-
-void HashClear(AssocHashTable *hashtable)
+void HashFree(AssocHashTable *hashtable)
 {
     if (hashtable->huge)
     {
@@ -408,13 +386,6 @@ void HashClear(AssocHashTable *hashtable)
     {
         TinyHashClear(hashtable);
     }
-}
-
-/*******************************************************************/
-
-void HashFree(AssocHashTable *hashtable)
-{
-    HashClear(hashtable);
     free(hashtable);
 }
 

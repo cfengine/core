@@ -27,7 +27,7 @@
 
 /* Compiler-specific options/defines */
 
-#if defined(__GNUC__) && (__GNUC__ * 100 >= 3)
+#if defined(__GNUC__) && (__GNUC__ >= 3)
 # define FUNC_ATTR_NORETURN  __attribute__((noreturn))
 #else /* not gcc >= 3.0 */
 # define FUNC_ATTR_NORETURN
@@ -50,6 +50,19 @@
     __attribute__((deprecated))
 #else
 #  define FUNC_DEPRECATED(warning_text)
+#endif
+
+#if defined(__GNUC__) && ((__GNUC__ * 100 +  __GNUC_MINOR__ * 10) >= 240)
+# define ARG_UNUSED __attribute__((unused))
+#else
+# define ARG_UNUSED
+#endif
+
+#if defined(__GNUC__)
+#  define FUNC_WARN_UNUSED_RESULT \
+    __attribute__((warn_unused_result))
+#else
+#  define FUNC_WARN_UNUSED_RESULT
 #endif
 
 #endif

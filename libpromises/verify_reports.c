@@ -32,20 +32,18 @@
 #include "vars.h"
 #include "sort.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "communication.h"
-#include "transaction.h"
-#include "string_lib.h"
 #include "logging.h"
+#include "communication.h"
+#include "locks.h"
+#include "string_lib.h"
 #include "misc_lib.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
+#include "env_context.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
-
-/*******************************************************************/
-/* Agent reporting                                                 */
-/*******************************************************************/
+static void ReportToFile(const char *logfile, const char *message);
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 {
@@ -56,7 +54,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     a = GetReportsAttributes(ctx, pp);
 
     snprintf(unique_name, CF_EXPANDSIZE - 1, "%s_%zu", pp->promiser, pp->offset.line);
-    thislock = AcquireLock(unique_name, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, unique_name, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     // Handle return values before locks, as we always do this
 
@@ -72,7 +70,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
             snprintf(unique_name, CF_BUFSIZE, "last-result");
         }
 
-        ScopeNewScalar(pp->bundle, unique_name, pp->promiser, DATA_TYPE_STRING);
+        ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, unique_name }, pp->promiser, DATA_TYPE_STRING);
         return;
     }
        
@@ -83,13 +81,20 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, "Report: %s", pp->promiser);
+    if (a.transaction.action == cfa_warn)
+    {
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, "", pp, a, "Need to repair reports promise: %s", pp->promiser);
+        YieldCurrentLock(thislock);
+        return;
+    }
+
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
-        CfFOut(a.report.to_file, OUTPUT_LEVEL_ERROR, "", "%s", pp->promiser);
+        ReportToFile(a.report.to_file, pp->promiser);
     }
     else
     {
@@ -114,9 +119,20 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     YieldCurrentLock(thislock);
 }
 
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
+static void ReportToFile(const char *logfile, const char *message)
+{
+    FILE *fp = fopen(logfile, "a");
+    if (fp == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
+        printf("%s\n", message);
+    }
+    else
+    {
+        fprintf(fp, "%s\n", message);
+        fclose(fp);
+    }
+}
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 {
@@ -132,18 +148,22 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
         return;
     }
 
-    while ((!feof(fp)) && (lines < a.report.numlines))
+    while ((lines < a.report.numlines))
     {
-        buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
         {
-            if (strlen(buffer))
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
+                break;
             }
         }
         CfOut(OUTPUT_LEVEL_ERROR, "", "R: %s", buffer);

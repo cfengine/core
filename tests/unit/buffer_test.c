@@ -5,7 +5,7 @@
 #include "cmockery.h"
 #include "buffer.h"
 
-static void test_createBuffer(void **state)
+static void test_createBuffer(void)
 {
     Buffer *buffer = BufferNew();
     assert_true(buffer != NULL);
@@ -20,7 +20,7 @@ static void test_createBuffer(void **state)
     assert_int_equal(0, BufferDestroy(&buffer));
 }
 
-static void test_createBufferFrom(void **state)
+static void test_createBufferFrom(void)
 {
     const char data[] = "this is some data";
     unsigned int dataLength = strlen(data);
@@ -38,7 +38,7 @@ static void test_createBufferFrom(void **state)
     assert_int_equal(0, BufferDestroy(&buffer));
 }
 
-static void test_destroyBuffer(void **state)
+static void test_destroyBuffer(void)
 {
     Buffer *buffer = BufferNew();
     assert_int_equal(0, BufferDestroy(&buffer));
@@ -46,14 +46,12 @@ static void test_destroyBuffer(void **state)
     assert_int_equal(0, BufferDestroy(NULL));
 }
 
-static void test_setBuffer(void **state)
+static void test_setBuffer(void)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
-    const char *element0pointer = NULL;
     char element1[2 * DEFAULT_BUFFER_SIZE + 2];
     unsigned int element1size = 2 * DEFAULT_BUFFER_SIZE + 1;
-    const char *element1pointer = NULL;
     char element2[DEFAULT_MEMORY_CAP * 2];
     unsigned int element2size = 2 * DEFAULT_MEMORY_CAP;
 
@@ -61,7 +59,6 @@ static void test_setBuffer(void **state)
     assert_true(buffer != NULL);
     // Smaller than the allocated buffer
     assert_int_equal(element0size, BufferSet(buffer, element0, element0size));
-    element0pointer = buffer->buffer;
     assert_int_equal(element0size, buffer->used);
     assert_int_equal(element0size, BufferSize(buffer));
     assert_string_equal(element0, buffer->buffer);
@@ -73,8 +70,6 @@ static void test_setBuffer(void **state)
         element1[i] = 'a';
     element1[element1size] = '\0';
     assert_int_equal(element1size, BufferSet(buffer, element1, element1size));
-    element1pointer = buffer->buffer;
-    assert_true(element0pointer != element1pointer);
     assert_int_equal(element1size, buffer->used);
     assert_string_equal(element1, buffer->buffer);
     assert_string_equal(element1, BufferData(buffer));
@@ -137,7 +132,7 @@ static void test_setBuffer(void **state)
     assert_true(buffer == NULL);
 }
 
-static void test_zeroBuffer(void **state)
+static void test_zeroBuffer(void)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
@@ -152,12 +147,14 @@ static void test_zeroBuffer(void **state)
     assert_int_equal(DEFAULT_BUFFER_SIZE, buffer->capacity);
     assert_int_equal(0, buffer->used);
     assert_int_equal(0, BufferSize(buffer));
+	const char *data = BufferData(buffer);
+	assert_string_equal(data, "");
     assert_true(element0pointer == buffer->buffer);
     BufferZero(NULL);
     assert_int_equal(0, BufferDestroy(&buffer));
 }
 
-static void test_copyCompareBuffer(void **state)
+static void test_copyCompareBuffer(void)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
@@ -199,7 +196,7 @@ static void test_copyCompareBuffer(void **state)
     assert_int_equal(0, BufferDestroy(&buffer2));
 }
 
-static void test_appendBuffer(void **state)
+static void test_appendBuffer(void)
 {
     char element0[] = "element0";
     unsigned int element0size = strlen(element0);
@@ -320,7 +317,7 @@ static void test_appendBuffer(void **state)
     assert_true(buffer == NULL);
 }
 
-static void test_printf(void **state)
+static void test_printf(void)
 {
     char char0[] = "char0";
     unsigned int char0size = strlen(char0);
@@ -472,7 +469,7 @@ static int test_vprintf_helper(Buffer *buffer, char *fmt, ...)
     return result;
 }
 
-static void test_vprintf(void **state)
+static void test_vprintf(void)
 {
     char char0[] = "char0";
     unsigned int char0size = strlen(char0);

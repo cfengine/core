@@ -30,14 +30,14 @@
 void CryptoInitialize(void);
 
 void DebugBinOut(char *buffer, int len, char *com);
-void LoadSecretKeys(void);
+bool LoadSecretKeys(void);
 int EncryptString(char type, char *in, char *out, unsigned char *key, int len);
 int DecryptString(char type, char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey(char *username, char *ipaddress, char *digest);
 RSA *HavePublicKeyByIP(char *username, char *ipaddress);
 void SavePublicKey(char *username, char *ipaddress, char *digest, RSA *key);
 
-const char *PublicKeyFile(void);
-const char *PrivateKeyFile(void);
+const char *PublicKeyFile(const char *workdir);
+const char *PrivateKeyFile(const char *workdir);
 
 #endif

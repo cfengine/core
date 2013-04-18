@@ -31,7 +31,7 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-static void test_newentry(void **context)
+static void test_newentry(void)
 {
     setup();
 
@@ -62,7 +62,7 @@ static void test_newentry(void **context)
     CloseDB(db);
 }
 
-static void test_update(void **context)
+static void test_update(void)
 {
     setup();
 
@@ -84,7 +84,7 @@ static void test_update(void **context)
     CloseDB(db);
 }
 
-static void test_reverse_missing(void **context)
+static void test_reverse_missing(void)
 {
     setup();
 
@@ -93,7 +93,7 @@ static void test_reverse_missing(void **context)
     assert_int_equal(Address2Hostkey("127.0.0.64", result), false);
 }
 
-static void test_reverse_conflict(void **context)
+static void test_reverse_conflict(void)
 {
     setup();
 
@@ -114,7 +114,7 @@ static void test_reverse_conflict(void **context)
     CloseDB(db);
 }
 
-static void test_reverse_missing_forward(void **context)
+static void test_reverse_missing_forward(void)
 {
     setup();
 
@@ -135,7 +135,7 @@ static void test_reverse_missing_forward(void **context)
     CloseDB(db);
 }
 
-static void test_remove(void **context)
+static void test_remove(void)
 {
     setup();
 

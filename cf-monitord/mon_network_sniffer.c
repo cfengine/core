@@ -29,12 +29,16 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "communication.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 typedef enum
 {
@@ -108,7 +112,7 @@ void MonNetworkSnifferOpen(void)
 
         if (cfstat(buffer, &statbuf) != -1)
         {
-            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r")) == NULL)
+            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r", true)) == NULL)
             {
                 TCPDUMP = false;
             }
@@ -139,7 +143,7 @@ void MonNetworkSnifferEnable(bool enable)
 
 /******************************************************************************/
 
-static void CfenvTimeOut(int signum)
+static void CfenvTimeOut(ARG_UNUSED int signum)
 {
     alarm(0);
     TCPPAUSE = true;
@@ -447,7 +451,7 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
 /******************************************************************************/
 
-void MonNetworkSnifferGatherData(double *cf_this)
+void MonNetworkSnifferGatherData(void)
 {
     int i;
     char vbuff[CF_BUFSIZE];

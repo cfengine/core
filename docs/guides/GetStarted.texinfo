@@ -206,24 +206,19 @@ on the hub @b{before continuing} ***. See more details for the software licensin
 @item The remaining steps apply to all hosts, but you should @b{install the hub or policy server first}.
 Find the hostname or IP address of the hub (policy server), here we assume @samp{123.456.789.123} is the address.
 @verbatim
- hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+ hub # /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 Use the same command on all hosts, i.e. *** do not bootstrap the policy server with a localhost address *** 
 If you mistype the address of the hub, we recommend doing the following steps to re-boostrap.
 @verbatim
- hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.124
+ hub # /var/cfengine/bin/cf-agent --bootstrap 123.456.789.124
  hub # killall cf-execd cf-serverd cf-monoitord cf-hub
  hub # rm -rf /var/cfengine/inputs/*
  hub # rm -f /var/cfengine/policy_server.dat
- hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+ hub # /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 
 @item The software should now be running.
-
-@item CFE Nova users: To complete licensing setup, you should make a promise to accept the license
-terms by editing @file{/var/cfengine/masterfiles/promises.cf}
-on the hub (policy server), changing the line @samp{host_licenses_paid => "1";}
-in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
 
 @end enumerate
 
@@ -380,7 +375,7 @@ Four steps need to be followed to correct this minor issue.
 @end verbatim
 @item bootstrap the policy hub
 @verbatim
- hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+ hub # /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 @end enumerate
 
@@ -482,11 +477,9 @@ Here we go:
 @item Copy the license file to: @code{"/var/cfengine/masterfiles/license.dat"}
 @item Bootstrap the hub:
 @verbatim
- hub # /var/cfengine/bin/cf-agent --bootstrap --policy-server <ip address of the hub>
+ hub # /var/cfengine/bin/cf-agent --bootstrap <ip address of the hub>
   *** Warning: do not use 127.0.0.1 as the ip address ***
 @end verbatim
-@item Open @code{"/var/cfengine/masterfiles/promises.cf"}, and change 
-@code{'host_licenses_paid => "<Number of licenses subscribed>";'}
 @end enumerate
 @item @b{Clients}
 @enumerate
@@ -498,7 +491,7 @@ Here we go:
 @end verbatim
 @item Bootstrap the Client to the hub:
 @verbatim
- client # /var/cfengine/bin/cf-agent --bootstrap --policy-server <ip address of the hub>
+ client # /var/cfengine/bin/cf-agent --bootstrap <ip address of the hub>
 @end verbatim
 @end enumerate
 @end itemize

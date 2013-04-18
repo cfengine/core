@@ -28,6 +28,11 @@
 #include "cf3.defs.h"
 
 void CheckAutoBootstrap(EvalContext *ctx);
-void SetPolicyServer(char *name);
+void SetPolicyServer(EvalContext *ctx, char *name);
+char *GetPolicyServer(const char *workdir);
+bool GetAmPolicyServer(const char *workdir);
+void CreateFailSafe(char *name);
+
+
 
 #endif

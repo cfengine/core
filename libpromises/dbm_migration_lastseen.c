@@ -25,7 +25,7 @@
 #include "dbm_migration.h"
 
 #include "lastseen.h"
-#include "cfstream.h"
+#include "logging.h"
 
 typedef struct
 {
@@ -60,7 +60,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
     void *value;
     int ksize, vsize;
 
-    while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+    while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         if (ksize == 0)
         {
@@ -167,7 +167,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
         }
     }
 
-    if (DeleteDBCursor(db, cursor) == false)
+    if (DeleteDBCursor(cursor) == false)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "LastseenMigrationVersion0: Unable to close cursor");
         errors = true;

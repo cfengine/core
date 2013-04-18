@@ -26,7 +26,9 @@ reserved names, CFEngine will issue a warning (and you can reference your
 variable by qualifying it with the bundle name in which it is declared).
 
 @menu
+* Variable this.bundle::
 * Variable this.handle::
+* Variable this.namespace::
 * Variable this.promise_filename::
 * Variable this.promise_linenumber::
 * Variable this.promiser::
@@ -34,11 +36,21 @@ variable by qualifying it with the bundle name in which it is declared).
 * Variable this.this::
 @end menu
 
+@node Variable this.bundle
+@subsection Variable this.bundle
+
+This variable contains the current bundle name.
+
 @node Variable this.handle
 @subsection Variable this.handle
 
 This variable points to the promise handle of the currently handled promise;
  it is useful for referring to the intention in log messages.
+
+@node Variable this.namespace
+@subsection Variable this.namespace
+
+This variable contains the current namespace.
 
 @node Variable this.promise_filename
 @subsection Variable this.promise_filename

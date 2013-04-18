@@ -34,19 +34,15 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"
-
-#ifdef HAVE_NOVA
-#include "runagent.h"
-#endif
-
+#include "policy.h"
+#include "audit.h"
 
 typedef enum
 {
@@ -67,10 +63,9 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
+static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
-static Promise *MakeDefaultRunAgentPromise(void);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
 static FILE *NewStream(char *name);
 static void DeleteStream(FILE *fp);
@@ -105,7 +100,6 @@ static const struct option OPTIONS[17] =
     {"diagnostic", no_argument, 0, 'x'},
     {"hail", required_argument, 0, 'H'},
     {"interactive", no_argument, 0, 'i'},
-    {"query", optional_argument, 0, 'q'},
     {"timeout", required_argument, 0, 't'},
     {NULL, 0, 0, '\0'}
 };
@@ -126,12 +120,11 @@ static const char *HINTS[17] =
     "Activate internal diagnostics (developers only)",
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
-    "Query a server for a knowledge menu",
     "Connection timeout, seconds",
     NULL
 };
 
-extern const BodySyntax CFR_CONTROLBODY[];
+extern const ConstraintSyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
@@ -144,14 +137,12 @@ Attributes RUNATTR = { {0} };
 Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];
-char MENU[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
 int main(int argc, char *argv[])
 {
     Rlist *rp;
-    Promise *pp;
 #if !defined(__MINGW32__)
     int count = 0;
     int status;
@@ -159,13 +150,15 @@ int main(int argc, char *argv[])
 #endif
 
     EvalContext *ctx = EvalContextNew();
+
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
-    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericAgentConfigApply(ctx, config);
 
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    CheckLicenses(ctx);
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
@@ -175,8 +168,6 @@ int main(int argc, char *argv[])
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot specify background mode and interactive mode together");
         exit(1);
     }
-
-    pp = MakeDefaultRunAgentPromise();
 
 /* HvB */
     if (HOSTLIST)
@@ -200,7 +191,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, rp->item, RUNATTR, pp);
+                        HailServer(ctx, rp->item);
                         exit(0);
                     }
                     else        /* parent process */
@@ -219,7 +210,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, rp->item, RUNATTR, pp);
+                HailServer(ctx, rp->item);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -238,10 +229,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    PromiseDestroy(pp);
-
     GenericAgentConfigDestroy(config);
-    ReportContextDestroy(report_context);
 
     return 0;
 }
@@ -276,21 +264,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
-            DEBUG = true;
-            break;
-
-        case 'q':
-
-            if (optarg == NULL)
-            {
-                strcpy(MENU, "delta");
-            }
-            else
-            {
-                strncpy(MENU, optarg, CF_MAXVARSIZE);
-            }
-
+            config->debug_mode = true;
             break;
 
         case 'K':
@@ -302,7 +276,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -311,7 +286,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -338,7 +314,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'n':
             DONTDO = true;
             IGNORELOCK = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 't':
@@ -346,7 +322,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-runagent");
+            PrintVersion();
             exit(0);
 
         case 'h':
@@ -389,7 +365,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
+static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
@@ -397,7 +373,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
     bool gotkey;
     char reply[8];
 
-    a.copy.portnumber = (short) ParseHostname(host, peer);
+    FileCopy fc = {
+        .portnumber = (short) ParseHostname(host, peer),
+    };
 
     snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
     Address2Hostkey(ipv4, digest);
@@ -423,7 +401,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
             {
                 if (fgets(reply, 8, stdin) == NULL)
                 {
-                    FatalError("EOF trying to read answer from terminal");
+                    FatalError(ctx, "EOF trying to read answer from terminal");
                 }
 
                 if (Chop(reply, CF_EXPANDSIZE) == -1)
@@ -434,13 +412,13 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
                 if (strcmp(reply, "yes") == 0)
                 {
                     printf(" -> Will trust the key...\n");
-                    a.copy.trustkey = true;
+                    fc.trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
                     printf(" -> Will not trust the key...\n");
-                    a.copy.trustkey = false;
+                    fc.trustkey = false;
                     break;
                 }
                 else
@@ -456,7 +434,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 #ifdef __MINGW32__
 
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
           REMOTE_AGENT_OPTIONS);
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
 
@@ -464,34 +442,34 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
     if (BACKGROUND)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
     }
 
 #endif /* !__MINGW32__ */
 
-    a.copy.servers = RlistFromSplitString(peer, '*');
+    fc.servers = RlistFromSplitString(peer, '*');
 
-    if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "No hosts are registered to connect to");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "No hosts are registered to connect to");
         return false;
     }
     else
     {
         int err = 0;
-        conn = NewServerConnection(ctx, a, pp, &err);
+        conn = NewServerConnection(fc, false, &err);
 
         if (conn == NULL)
         {
-            RlistDestroy(a.copy.servers);
+            RlistDestroy(fc.servers);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No suitable server responded to hail\n");
             return false;
         }
@@ -499,25 +477,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
 /* Check trust interaction*/
 
-    pp->cache = NULL;
+    HailExec(conn, peer, recvbuffer, sendbuffer);
 
-    if (strlen(MENU) > 0)
-    {
-#if defined(HAVE_NOVA)
-        if (!ExecuteRunagent(conn, MENU))
-        {
-            DisconnectServer(conn);
-            RlistDestroy(a.copy.servers);
-            return false;
-        }
-#endif
-    }
-    else
-    {
-        HailExec(conn, peer, recvbuffer, sendbuffer);
-    }
-
-    RlistDestroy(a.copy.servers);
+    RlistDestroy(fc.servers);
 
     return true;
 }
@@ -544,12 +506,12 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         {
             Constraint *cp = SeqAt(constraints, i);
 
-            if (IsExcluded(ctx, cp->classes, NULL))
+            if (!IsDefinedClass(ctx, cp->classes, NULL))
             {
                 continue;
             }
 
-            if (ScopeGetVariable("control_runagent", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_runagent", cp->lval }, &retval, NULL))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in runagent control body", cp->lval);
                 continue;
@@ -641,29 +603,11 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-}
-
-/********************************************************************/
-
-static Promise *MakeDefaultRunAgentPromise()
-{
-    // TODO: ad-hoc promise
-/* The default promise here is to hail associates */
-
-    Promise *pp = xcalloc(1, sizeof(Promise));
-
-    pp->bundle = xstrdup("implicit internal bundle for runagent");
-    pp->promiser = xstrdup("runagent");
-    pp->promisee = (Rval) {NULL, RVAL_TYPE_NOPROMISEE };
-    pp->donep = &(pp->done);
-    pp->conlist = SeqNew(10, ConstraintDestroy);
-
-    return pp;
 }
 
 /********************************************************************/

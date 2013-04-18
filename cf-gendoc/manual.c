@@ -37,7 +37,7 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "assoc.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "rlist.h"
 
 #ifdef HAVE_NOVA
@@ -48,11 +48,11 @@ extern char BUILD_DIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context);
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs);
-static void TexinfoShowRange(FILE *fout, char *s, DataType type);
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context);
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs);
+static void TexinfoShowRange(FILE *fout, const char *s, DataType type);
 static void IncludeManualFile(const char *source_dir, FILE *fout, char *filename);
-static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const SubTypeSyntax *st);
+static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st);
 static void TexinfoSpecialFunction(const char *source_dir, FILE *fout, FnCallType fn);
 static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope);
 static char *TexInfoEscape(char *s);
@@ -60,10 +60,10 @@ static void PrintPattern(FILE *fout, const char *pattern);
 
 /*****************************************************************************/
 
-void TexinfoManual(const char *source_dir, const char *output_file)
+void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file)
 {
     char filename[CF_BUFSIZE];
-    const SubTypeSyntax *st;
+    const PromiseTypeSyntax *st;
     Item *done = NULL;
     FILE *fout;
     int i;
@@ -95,32 +95,32 @@ void TexinfoManual(const char *source_dir, const char *output_file)
     IncludeManualFile(source_dir, fout, "reference_control_intro.texinfo");
 
     fprintf(fout, "@menu\n");
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; ++i)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; ++i)
     {
-        fprintf(fout, "* control %s::\n", CF_ALL_BODIES[i].bundle_type);
+        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].bundle_type);
     }
     fprintf(fout, "@end menu\n");
 
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CF_ALL_BODIES[i].bundle_type,
-                CF_ALL_BODIES[i].bundle_type);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CF_ALL_BODIES[i].bundle_type);
+        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].bundle_type,
+                CONTROL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].bundle_type);
         IncludeManualFile(source_dir, fout, filename);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CF_ALL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].bundle_type);
         IncludeManualFile(source_dir, fout, filename);
 
-        TexinfoBodyParts(source_dir, fout, CF_ALL_BODIES[i].bs, CF_ALL_BODIES[i].bundle_type);
+        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraint_set.constraints, CONTROL_BODIES[i].bundle_type);
     }
 
 /* Components */
 
     for (i = 0; i < CF3_MODULES; i++)
     {
-        st = (CF_ALL_SUBTYPES[i]);
+        st = (CF_ALL_PROMISE_TYPES[i]);
 
-        if ((st == CF_COMMON_SUBTYPES) || (st == CF_EXEC_SUBTYPES) || (st == CF_REMACCESS_SUBTYPES)
-            || (st == CF_MEASUREMENT_SUBTYPES))
+        if ((st == CF_COMMON_PROMISE_TYPES) || (st == CF_EXEC_PROMISE_TYPES) || (st == CF_REMACCESS_PROMISE_TYPES)
+            || (st == CF_MEASUREMENT_PROMISE_TYPES))
 
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Dealing with chapter / bundle type %s\n", st->bundle_type);
@@ -158,29 +158,29 @@ void TexinfoManual(const char *source_dir, const char *output_file)
             fprintf(fout, "@menu\n");
             for (int k = 0; k < CF3_MODULES; ++k)
             {
-                for (int j = 0; CF_ALL_SUBTYPES[k][j].bundle_type != NULL; ++j)
+                for (int j = 0; CF_ALL_PROMISE_TYPES[k][j].bundle_type != NULL; ++j)
                 {
                     const char *constraint_type_name;
-                    if (strcmp(CF_ALL_SUBTYPES[k][j].subtype, "*") == 0)
+                    if (strcmp(CF_ALL_PROMISE_TYPES[k][j].promise_type, "*") == 0)
                     {
                         constraint_type_name = "Miscellaneous";
                     }
                     else
                     {
-                        constraint_type_name = CF_ALL_SUBTYPES[k][j].subtype;
+                        constraint_type_name = CF_ALL_PROMISE_TYPES[k][j].promise_type;
                     }
 
                     const char *bundle_type_name;
-                    if (strcmp(CF_ALL_SUBTYPES[k][j].bundle_type, "*") == 0)
+                    if (strcmp(CF_ALL_PROMISE_TYPES[k][j].bundle_type, "*") == 0)
                     {
                         bundle_type_name = "common";
                     }
                     else
                     {
-                        bundle_type_name = CF_ALL_SUBTYPES[k][j].bundle_type;
+                        bundle_type_name = CF_ALL_PROMISE_TYPES[k][j].bundle_type;
                     }
 
-                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_SUBTYPES[k][j].subtype,
+                    fprintf(fout, "* %s in %s promises: %s in %s promises\n", CF_ALL_PROMISE_TYPES[k][j].promise_type,
                             bundle_type_name,
                             constraint_type_name,
                             bundle_type_name);
@@ -250,11 +250,9 @@ void TexinfoManual(const char *source_dir, const char *output_file)
 
 // scopes const and sys
 
-    ScopeNew("edit");
-    ScopeNewScalar("edit", "filename", "x", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "edit", "filename", "x", DATA_TYPE_STRING);
 
-    ScopeNew("match");
-    ScopeNewScalar("match", "0", "x", DATA_TYPE_STRING);
+    ScopePutMatch(0, "x");
 
     for (const char **s = scopes; *s != NULL; ++s)
     {
@@ -392,7 +390,7 @@ static void TexinfoFooter(FILE *fout)
 
 /*****************************************************************************/
 
-static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const SubTypeSyntax *st)
+static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st)
 {
     int j;
     char filename[CF_BUFSIZE];
@@ -401,15 +399,15 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
 
     for (j = 0; st[j].bundle_type != NULL; j++)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Dealing with promise type %s\n", st[j].subtype);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Dealing with promise type %s\n", st[j].promise_type);
 
-        if ((strcmp("*", st[j].subtype) == 0) && (strcmp("*", st[j].bundle_type) == 0))
+        if ((strcmp("*", st[j].promise_type) == 0) && (strcmp("*", st[j].bundle_type) == 0))
         {
             fprintf(fout, "\n\n@node Miscellaneous in common promises\n@section @code{%s} promises\n\n", 
-                    st[j].subtype);
+                    st[j].promise_type);
             snprintf(filename, CF_BUFSIZE - 1, "promise_common_intro.texinfo");
         }
-        else if ((strcmp("*", st[j].subtype) == 0) && ((strcmp("edit_line", st[j].bundle_type) == 0) || (strcmp("edit_xml", st[j].bundle_type) == 0)))
+        else if ((strcmp("*", st[j].promise_type) == 0) && ((strcmp("edit_line", st[j].bundle_type) == 0) || (strcmp("edit_xml", st[j].bundle_type) == 0)))
         {
             fprintf(fout, "\n\n@node Miscellaneous in %s promises\n@section Miscelleneous in @code{%s} promises\n\n", st[j].bundle_type, st[j].bundle_type);
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", st[j].bundle_type);
@@ -419,33 +417,33 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
         {
             if (strcmp("*", st[j].bundle_type) == 0)
             {
-                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
-                    st[j].subtype, st[j].bundle_type);            
+                fprintf(fout, "\n\n@node %s in common promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].promise_type,
+                    st[j].promise_type, st[j].bundle_type);            
             }
             else
             {
-                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].subtype,
-                    st[j].bundle_type, st[j].subtype, st[j].bundle_type);
+                fprintf(fout, "\n\n@node %s in %s promises\n@section @code{%s} promises in @samp{%s}\n\n", st[j].promise_type,
+                    st[j].bundle_type, st[j].promise_type, st[j].bundle_type);
             }
 
-            char subtype_filename[CF_BUFSIZE];
-            if (strcmp("*", st[j].subtype))
+            char promise_type_filename[CF_BUFSIZE];
+            if (strcmp("*", st[j].promise_type))
             {
-                strcpy(subtype_filename, "common");
+                strcpy(promise_type_filename, "common");
             }
             else
             {
-                strlcpy(subtype_filename, st[j].subtype, CF_BUFSIZE);
+                strlcpy(promise_type_filename, st[j].promise_type, CF_BUFSIZE);
             }
 
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_intro.texinfo", promise_type_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_example.texinfo", promise_type_filename);
             IncludeManualFile(source_dir, fout, filename);
-            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", subtype_filename);
+            snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", promise_type_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
-        TexinfoBodyParts(source_dir, fout, st[j].bs, st[j].subtype);
+        TexinfoBodyParts(source_dir, fout, st[j].constraint_set.constraints, st[j].promise_type);
     }
 }
 
@@ -453,7 +451,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Sub
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context)
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -479,7 +477,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " - -  Dealing with body type %s\n", bs[i].lval);
 
-        if (bs[i].range == (void *) CF_BUNDLE)
+        if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n", bs[i].lval,
                     context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
@@ -488,7 +486,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
         }
         else
         {
@@ -496,7 +494,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
 
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n", bs[i].lval, context,
                     bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoShowRange(fout, (char *) bs[i].range, bs[i].dtype);
+            TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
 
             if (res)
             {
@@ -613,7 +611,7 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
 /* Level                                                           */
 /*******************************************************************/
 
-static void TexinfoShowRange(FILE *fout, char *s, DataType type)
+static void TexinfoShowRange(FILE *fout, const char *s, DataType type)
 {
     Rlist *list = NULL, *rp;
 
@@ -638,13 +636,16 @@ static void TexinfoShowRange(FILE *fout, char *s, DataType type)
     }
     else
     {
-        fprintf(fout, "@noindent @b{Allowed input range}: @code{%s}\n\n", TexInfoEscape(s));
+        char *escaped = xstrdup(s);
+        TexInfoEscape(escaped);
+        fprintf(fout, "@noindent @b{Allowed input range}: @code{%s}\n\n", escaped);
+        free(escaped);
     }
 }
 
 /*****************************************************************************/
 
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs)
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -658,7 +659,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *
 
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        if (bs[i].range == (void *) CF_BUNDLE)
+        if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n (Separate Bundle) \n\n", bs[i].lval,
                     CF_DATATYPES[bs[i].dtype]);
@@ -666,14 +667,14 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
         }
         else
         {
             const char *res = bs[i].default_value;
 
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoShowRange(fout, (char *) bs[i].range, bs[i].dtype);
+            TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
 
             if (res)

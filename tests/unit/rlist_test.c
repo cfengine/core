@@ -6,6 +6,7 @@
 #include "rlist.h"
 
 #include "assoc.h"
+#include "env_context.h"
 
 /* Stubs */
 
@@ -17,7 +18,7 @@ void FatalError(char *s, ...)
 
 /* Test cases */
 
-static void test_prepend_scalar(void **state)
+static void test_prepend_scalar(void)
 {
     Rlist *list = NULL;
 
@@ -29,7 +30,7 @@ static void test_prepend_scalar(void **state)
     RlistDestroy(list);
 }
 
-static void test_length(void **state)
+static void test_length(void)
 {
     Rlist *list = NULL;
 
@@ -44,7 +45,7 @@ static void test_length(void **state)
     RlistDestroy(list);
 }
 
-static void test_prepend_scalar_idempotent(void **state)
+static void test_prepend_scalar_idempotent(void)
 {
     Rlist *list = NULL;
 
@@ -57,7 +58,7 @@ static void test_prepend_scalar_idempotent(void **state)
     RlistDestroy(list);
 }
 
-static void test_copy(void **state)
+static void test_copy(void)
 {
     Rlist *list = NULL, *copy = NULL;
 
@@ -73,43 +74,43 @@ static void test_copy(void **state)
     RlistDestroy(copy);
 }
 
-static void test_rval_to_scalar(void **state)
+static void test_rval_to_scalar(void)
 {
     Rval rval = { "abc", RVAL_TYPE_SCALAR };
     assert_string_equal("abc", RvalScalarValue(rval));
 }
 
-static void test_rval_to_scalar2(void **state)
+static void test_rval_to_scalar2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
     expect_assert_failure(RvalScalarValue(rval));
 }
 
-static void test_rval_to_list(void **state)
+static void test_rval_to_list(void)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
     expect_assert_failure(RvalRlistValue(rval));
 }
 
-static void test_rval_to_list2(void **state)
+static void test_rval_to_list2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_LIST };
     assert_false(RvalRlistValue(rval));
 }
 
-static void test_rval_to_fncall(void **state)
+static void test_rval_to_fncall(void)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
     expect_assert_failure(RvalFnCallValue(rval));
 }
 
-static void test_rval_to_fncall2(void **state)
+static void test_rval_to_fncall2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
     assert_false(RvalFnCallValue(rval));
 }
 
-static void test_last(void **state)
+static void test_last(void)
 {
     Rlist *l = NULL;
     assert_true(RlistLast(l) == NULL);
@@ -128,7 +129,7 @@ static bool is_even(void *item, void *data)
     return *i % 2 == *d;
 }
 
-static void test_filter(void **state)
+static void test_filter(void)
 {
     Rlist *list = NULL;
     for (int i = 0; i < 10; i++)
@@ -157,7 +158,7 @@ static void test_filter(void **state)
     RlistDestroy(list);
 }
 
-static void test_filter_everything(void **state)
+static void test_filter_everything(void)
 {
     Rlist *list = NULL;
     for (int i = 1; i < 10; i += 2)
@@ -212,8 +213,17 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+{
+    fail();
+}
+
+Scope *ScopeGetCurrent(void)
+{
+    fail();
+}
+
 pthread_mutex_t *cft_lock;
-pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
 {
     return true;

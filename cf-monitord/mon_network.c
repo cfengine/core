@@ -29,9 +29,8 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
-#include "cfstream.h"
-#include "pipes.h"
 #include "logging.h"
+#include "pipes.h"
 
 /* Globals */
 
@@ -197,19 +196,29 @@ void MonNetworkGatherData(double *cf_this)
 
     strcat(comm, " -an");
 
-    if ((pp = cf_popen(comm, "r")) == NULL)
+    if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
+        /* FIXME: no logging */
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
         memset(local, 0, CF_BUFSIZE);
         memset(remote, 0, CF_BUFSIZE);
 
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        size_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
+            cf_pclose(pp);
+            return;
         }
 
         if (strstr(vbuff, "UNIX"))

@@ -28,7 +28,7 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "policy.h"
 
@@ -62,7 +62,7 @@ void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp)
 
     if (mid)
     {
-        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->agentsubtype, pp->promiser);
+        snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_promise_type->name, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
@@ -259,6 +259,13 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
         }
     }
 
+    CloseDB(dbp);
+
+    if (!OpenDB(&dbp, dbid_classes))
+    {
+        return;
+    }
+
 /* Then update with zero the ones we know about that are not active */
 
     if (purge)
@@ -276,7 +283,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         memset(&entry, 0, sizeof(entry));
 
-        while (NextDB(dbp, dbcp, &key, &ksize, &stored, &vsize))
+        while (NextDB(dbcp, &key, &ksize, &stored, &vsize))
         {
             time_t then;
             char eventname[CF_BUFSIZE];
@@ -316,7 +323,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
             }
         }
 
-        DeleteDBCursor(dbp, dbcp);
+        DeleteDBCursor(dbcp);
     }
 
     CloseDB(dbp);

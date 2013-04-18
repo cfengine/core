@@ -3,7 +3,7 @@
 #include "cf3.defs.h"
 #include "cf3.extern.h"
 
-#include "transaction.h"
+#include "syslog_client.h"
 
 static struct sockaddr *got_address;
 
@@ -13,7 +13,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct 
     return len;
 }
 
-static void test_set_port(void **state)
+static void test_set_port(void)
 {
     SetSyslogPort(5678);
     RemoteSysLog(LOG_EMERG, "Test string");
@@ -30,7 +30,7 @@ static void test_set_port(void **state)
     free(got_address);
 }
 
-static void test_set_host(void **state)
+static void test_set_host(void)
 {
     SetSyslogHost("127.0.0.55");
     RemoteSysLog(LOG_EMERG, "Test string");

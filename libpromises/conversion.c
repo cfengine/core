@@ -30,7 +30,6 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "reporting.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "rlist.h"
 
@@ -255,11 +254,11 @@ DataType DataTypeFromString(const char *name)
 }
 
 
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval)
 {
     int i = 0;
 
-    for (i = 0; body_syntax[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].lval != NULL; i++)
     {
         if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {
@@ -516,26 +515,27 @@ int Day2Number(const char *datestring)
 
 /****************************************************************************/
 
-double DoubleFromString(const char *s)
+bool DoubleFromString(const char *s, double *value_out)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+
+    double a = NO_DOUBLE;
     char remainder[CF_BUFSIZE];
-    char output[CF_BUFSIZE];
     char c = 'X';
 
     if (s == NULL)
     {
-        return CF_NODOUBLE;
+        return false;
     }
 
     remainder[0] = '\0';
 
     sscanf(s, "%lf%c%s", &a, &c, remainder);
 
-    if ((a == CF_NODOUBLE) || (!IsSpace(remainder)))
+    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {
-        snprintf(output, CF_BUFSIZE, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
-        ReportError(output);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
+        return false;
     }
     else
     {
@@ -563,7 +563,7 @@ double DoubleFromString(const char *s)
             if ((a < 0) || (a > 100))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
-                return CF_NOINT;
+                return false;
             }
             else
             {
@@ -580,12 +580,16 @@ double DoubleFromString(const char *s)
         }
     }
 
-    return a;
+    *value_out = a;
+    return true;
 }
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
+/**
+ * @return true if successful
+ */
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
 {
     Item *split;
     long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
@@ -594,9 +598,9 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if (intrange == NULL)
     {
-        *min = CF_NOINT;
-        *max = CF_NOINT;
-        return;
+        *min_out = CF_NOINT;
+        *max_out = CF_NOINT;
+        return true;
     }
 
     split = SplitString(intrange, ',');
@@ -616,12 +620,12 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", intrange);
+        return false;
     }
 
-    *min = lmin;
-    *max = lmax;
+    *min_out = lmin;
+    *max_out = lmax;
+    return true;
 }
 
 AclMethod AclMethodFromString(const char *string)
@@ -725,18 +729,7 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
 int Month2Int(const char *string)
-{
-    return MonthLen2Int(string, MAX_MONTH_NAME);
-}
-
-/*************************************************************/
-
-int MonthLen2Int(const char *string, int len)
 {
     int i;
 
@@ -847,13 +840,14 @@ static int IsSpace(char *remainder)
 
 /*******************************************************************/
 
-int IsRealNumber(const char *s)
+bool IsRealNumber(const char *s)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+    double a = NO_DOUBLE;
 
     sscanf(s, "%lf", &a);
 
-    if (a == CF_NODOUBLE)
+    if (a == NO_DOUBLE)
     {
         return false;
     }

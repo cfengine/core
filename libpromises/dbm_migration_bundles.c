@@ -24,7 +24,7 @@
 
 #include "dbm_migration.h"
 
-#include "cfstream.h"
+#include "logging.h"
 #include "string_lib.h"
 
 static bool BundlesMigrationVersion0(DBHandle *db)
@@ -41,7 +41,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
     void *value;
     int ksize, vsize;
 
-    while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+    while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         if (ksize == 0)
         {
@@ -69,7 +69,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
         }
     }
 
-    if (DeleteDBCursor(db, cursor) == false)
+    if (DeleteDBCursor(cursor) == false)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "BundlesMigrationVersion0: Unable to close cursor");
         errors = true;

@@ -27,8 +27,8 @@
 
 #include "cf3.defs.h"
 
-void GetNameInfo3(EvalContext *ctx);
-void Get3Environment(EvalContext *ctx);
+void GetNameInfo3(EvalContext *ctx, AgentType agent_type);
+void Get3Environment(EvalContext *ctx, AgentType agent_type);
 void BuiltinClasses(EvalContext *ctx);
 void OSClasses(EvalContext *ctx);
 bool IsInterfaceAddress(const char *adr);

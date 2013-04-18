@@ -27,6 +27,7 @@
 
 #include "cf3.defs.h"
 
-void VerifyServicesPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp);
+void VerifyServicesPromise(EvalContext *ctx, Promise *pp);
 
 #endif

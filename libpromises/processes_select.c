@@ -29,13 +29,11 @@
 #include "conversion.h"
 #include "reporting.h"
 #include "matching.h"
-#include "cfstream.h"
-#include "verify_processes.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "item_lib.h"
 #include "pipes.h"
 #include "files_interfaces.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 
@@ -54,7 +52,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end);
 
 /***************************************************************************/
 
-static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *start, int *end, ProcessSelect a)
+static int SelectProcess(char *procentry, char **names, int *start, int *end, ProcessSelect a)
 {
     int result = true, i;
     char *column[CF_PROCCOLS];
@@ -111,8 +109,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(proc_attr, xstrdup("rsize"));
     }
 
-    if (SelectProcTimeCounterRangeMatch
-        ("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
+    if (SelectProcTimeCounterRangeMatch("TIME", "TIME", a.min_ttime, a.max_ttime, names, column))
     {
         StringSetAdd(proc_attr, xstrdup("ttime"));
     }
@@ -148,7 +145,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
         StringSetAdd(proc_attr, xstrdup("tty"));
     }
 
-    result = EvalProcessResult(ctx, a.process_result, proc_attr);
+    result = EvalProcessResult(a.process_result, proc_attr);
 
     StringSetDestroy(proc_attr);
 
@@ -160,7 +157,7 @@ static int SelectProcess(EvalContext *ctx, char *procentry, char **names, int *s
     return result;
 }
 
-Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
+Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSelect a, bool attrselect)
 {
     Item *result = NULL;
 
@@ -186,7 +183,7 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
                 continue;
             }
 
-            if (attrselect && !SelectProcess(ctx, ip->name, names, start, end, a))
+            if (attrselect && !SelectProcess(ip->name, names, start, end, a))
             {
                 continue;
             }
@@ -211,77 +208,6 @@ Item *SelectProcesses(EvalContext *ctx, const Item *processes, const char *proce
 
     return result;
 }
-
-int FindPidMatches(EvalContext *ctx, Item *procdata, Item **killlist, Attributes a, Promise *pp)
-{
-    int matches = 0;
-    pid_t cfengine_pid = getpid();
-
-    Item *matched = SelectProcesses(ctx, procdata, pp->promiser, a.process_select, a.haveselect);
-
-    for (Item *ip = matched; ip != NULL; ip = ip->next)
-    {
-        CF_OCCUR++;
-
-        if (a.transaction.action == cfa_warn)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Matched: %s\n", ip->name);
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Matched: %s\n", ip->name);
-        }
-
-        pid_t pid = ip->counter;
-
-        if (pid == 1)
-        {
-            if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "(Okay to send only HUP to init)\n");
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        if ((pid < 4) && (a.signals))
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
-                  pp->promiser);
-            continue;
-        }
-
-        bool promised_zero = (a.process_count.min_range == 0) && (a.process_count.max_range == 0);
-
-        if ((a.transaction.action == cfa_warn) && promised_zero)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", procdata->name);     /* legend */
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Process alert: %s\n", ip->name);
-            continue;
-        }
-
-        if ((pid == cfengine_pid) && (a.signals))
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! cf-agent will not signal itself!\n");
-            continue;
-        }
-
-        PrependItem(killlist, ip->name, "");
-        (*killlist)->counter = pid;
-        matches++;
-    }
-
-    DeleteItemList(matched);
-
-    return matches;
-}
-
-
-/***************************************************************************/
-/* Level                                                                   */
-/***************************************************************************/
 
 static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char **names, char **line)
 {
@@ -334,7 +260,7 @@ static long TimeCounter2Int(const char *s)
         if (sscanf(s, "%ld-%ld:%ld", &d, &h, &m) != 3)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected dd-hh:mm, got '%s'", s);
-            FatalError("%s", output);
+            return CF_NOINT;
         }
     }
     else
@@ -342,7 +268,7 @@ static long TimeCounter2Int(const char *s)
         if (sscanf(s, "%ld:%ld", &h, &m) != 2)
         {
             snprintf(output, CF_BUFSIZE, "Unable to parse TIME 'ps' field, expected hH:mm, got '%s'", s);
-            FatalError("%s", output);
+            return CF_NOINT;
         }
     }
 
@@ -699,6 +625,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
     }
 }
 
+#ifndef __MINGW32__
 static const char *GetProcessOptions(void)
 {
 # ifdef HAVE_GETZONEID
@@ -727,6 +654,7 @@ static const char *GetProcessOptions(void)
 
     return VPSOPTS[VSYSTEMHARDCLASS];
 }
+#endif
 
 static int ExtractPid(char *psentry, char **names, int *start, int *end)
 {
@@ -773,6 +701,7 @@ static int ExtractPid(char *psentry, char **names, int *start, int *end)
     return pid;
 }
 
+#ifndef __MINGW32__
 static int ForeignZone(char *s)
 {
 // We want to keep the banner
@@ -810,6 +739,7 @@ static int ForeignZone(char *s)
 # endif
     return false;
 }
+#endif
 
 #ifndef __MINGW32__
 int LoadProcessTable(Item **procdata)
@@ -831,18 +761,25 @@ int LoadProcessTable(Item **procdata)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Observe process table with %s\n", pscomm);
 
-    if ((prp = cf_popen(pscomm, "r")) == NULL)
+    if ((prp = cf_popen(pscomm, "r", false)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "popen", "Couldn't open the process list with command %s\n", pscomm);
         return false;
     }
 
-    while (!feof(prp))
+    for (;;)
     {
-        memset(vbuff, 0, CF_BUFSIZE);
-        if (CfReadLine(vbuff, CF_BUFSIZE, prp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, prp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read process list with command %s", pscomm);
+            cf_pclose(prp);
+            return false;
         }
 
         for (sp = vbuff + strlen(vbuff) - 1; (sp > vbuff) && (isspace((int)*sp)); sp--)

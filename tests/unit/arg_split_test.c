@@ -6,7 +6,7 @@
 #include "conversion.h"
 #include "exec_tools.h"
 
-static void test_split_empty(void **state)
+static void test_split_empty(void)
 {
     char **s = ArgSplitCommand("");
 
@@ -15,7 +15,7 @@ static void test_split_empty(void **state)
     ArgFree(s);
 }
 
-static void test_split_easy(void **state)
+static void test_split_easy(void)
 {
     char **s = ArgSplitCommand("zero one two");
 
@@ -27,7 +27,7 @@ static void test_split_easy(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_beginning(void **state)
+static void test_split_quoted_beginning(void)
 {
     char **s = ArgSplitCommand("\"quoted string\" atbeginning");
 
@@ -37,7 +37,7 @@ static void test_split_quoted_beginning(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_end(void **state)
+static void test_split_quoted_end(void)
 {
     char **s = ArgSplitCommand("atend 'quoted string'");
 
@@ -47,7 +47,7 @@ static void test_split_quoted_end(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_middle(void **state)
+static void test_split_quoted_middle(void)
 {
     char **s = ArgSplitCommand("at `quoted string` middle");
 
@@ -58,7 +58,7 @@ static void test_split_quoted_middle(void **state)
     ArgFree(s);
 }
 
-static void test_complex_quoting(void **state)
+static void test_complex_quoting(void)
 {
     char **s = ArgSplitCommand("\"foo`'bar\"");
 
@@ -67,7 +67,7 @@ static void test_complex_quoting(void **state)
     ArgFree(s);
 }
 
-static void test_arguments_resize_for_null(void **state)
+static void test_arguments_resize_for_null(void)
 {
 /* This test checks that extending returned argument list for NULL terminator
  * works correctly */
@@ -78,7 +78,7 @@ static void test_arguments_resize_for_null(void **state)
     ArgFree(s);
 }
 
-static void test_arguments_resize(void **state)
+static void test_arguments_resize(void)
 {
     char **s = ArgSplitCommand("0 1 2 3 4 5 6 7 8");
 
@@ -88,7 +88,7 @@ static void test_arguments_resize(void **state)
     ArgFree(s);
 }
 
-static void test_command_promiser(void **state)
+static void test_command_promiser(void)
 {
     char *t1 = "/bin/echo";
     assert_string_equal(CommandArg0(t1), "/bin/echo");

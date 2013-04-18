@@ -1,2 +1,0 @@
-
-For formatting the HTML generated output of @code{cf-know}.

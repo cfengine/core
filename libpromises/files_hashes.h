@@ -28,17 +28,13 @@
 
 #include "cf3.defs.h"
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, HashMethod type,
-                    Attributes attr, Promise *pp);
-void PurgeHashes(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
-int CompareFileHashes(EvalContext *ctx, char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
-int CompareBinaryFiles(EvalContext *ctx, char *file1, char *file2, struct stat *sstat, struct stat *dstat, Attributes attr, Promise *pp);
 void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest2[EVP_MAX_MD_SIZE + 1],
                 HashMethod type);
 char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4]);
 char *SkipHashType(char *hash);
+int FileHashSize(HashMethod id);
 const char *FileHashName(HashMethod id);
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 HashMethod HashMethodFromString(char *typestr);

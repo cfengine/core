@@ -1,4 +1,0 @@
-
-When searching a local file system for document occurrences, the @code{path_root}
-points to the local file system's name for the document root. This will be
-translated into the URL prefix defined by @code{web_root}, @xref{web_root in occurrences}.

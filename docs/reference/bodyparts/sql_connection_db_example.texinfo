@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-sql_connection_db => "mysql";
-}
-
-@end verbatim

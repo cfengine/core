@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_OUTPUTS_H
 #define CFENGINE_MOD_OUTPUTS_H
 
-extern const SubTypeSyntax CF_OUTPUTS_SUBTYPES[];
+#include "cf3.defs.h"
+
+extern const PromiseTypeSyntax CF_OUTPUTS_PROMISE_TYPES[];
 
 #endif

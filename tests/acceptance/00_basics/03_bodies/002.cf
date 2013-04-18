@@ -1,0 +1,44 @@
+# Test that log_failed and log_kept set to the same value do not cause stack overflow (Redmine #2317)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init
+{
+files:
+  "$(G.testfile).src"
+    create => "yes";
+  "$(G.testfile).dest"
+    create => "yes";
+}
+
+bundle agent test
+{
+files:
+  "$(G.testfile).dest"
+    link_from => hard("$(G.testfile).src"),
+    action => log;
+}
+
+body action log
+{
+  log_failed => "$(G.testfile).action.log";
+  log_kept => "$(G.testfile).action.log";
+}
+
+body link_from hard(from)
+{
+  source => "$(from)";
+  link_type => "hardlink";
+}
+
+bundle agent check
+{
+reports:
+  cfengine_3::
+    "$(this.promise_filename) Pass";
+}

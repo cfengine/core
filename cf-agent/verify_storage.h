@@ -31,7 +31,9 @@
 extern Rlist *MOUNTEDFSLIST;
 extern int CF_MOUNTALL;
 
-void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
-void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context);
+void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp);
+void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp);
+
+void DeleteStorageContext(void);
 
 #endif

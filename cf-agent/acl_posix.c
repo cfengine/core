@@ -28,10 +28,10 @@
 #include "acl_posix.h"
 #include "promises.h"
 #include "files_names.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 #ifdef HAVE_ACL_H
 # include <acl.h>
@@ -66,7 +66,7 @@ int CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a,
 {
     if (!CheckPosixLinuxAccessACEs(ctx, acl.acl_entries, acl.acl_method, file_path, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Failed checking access ACL on %s", file_path);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Failed checking access ACL on %s", file_path);
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
         return false;
     }
@@ -75,7 +75,7 @@ int CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a,
     {
         if (!CheckPosixLinuxInheritACEs(ctx, acl.acl_inherit_entries, acl.acl_method, acl.acl_directory_inherit, file_path, a, pp))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Failed checking inheritance ACL on %s", file_path);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Failed checking inheritance ACL on %s", file_path);
             PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             return false;
         }
@@ -326,7 +326,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
         {
         case cfa_warn:
 
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " !! %s ACL on file '%s' needs to be updated", acl_type_str, file_path);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " !! %s ACL on file '%s' needs to be updated", acl_type_str, file_path);
             break;
 
         case cfa_fix:
@@ -344,7 +344,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
                 }
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "-> %s ACL on \"%s\" successfully changed.", acl_type_str, file_path);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> %s ACL on \"%s\" successfully changed.", acl_type_str, file_path);
 
             break;
 
@@ -355,7 +355,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "-> %s ACL on \"%s\" needs no modification.", acl_type_str, file_path);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "-> %s ACL on \"%s\" needs no modification.", acl_type_str, file_path);
     }
 
     acl_free((void *) acl_existing);
@@ -400,7 +400,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
     switch (equals)
     {
     case 0:                    // they equal, as desired
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "-> Default ACL on \"%s\" needs no modification.", file_path);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "-> Default ACL on \"%s\" needs no modification.", file_path);
         result = true;
         break;
 
@@ -410,7 +410,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
         {
         case cfa_warn:
 
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " !! Default ACL on \"%s\" needs to be copied from access ACL.",
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " !! Default ACL on \"%s\" needs to be copied from access ACL.",
                  file_path);
             break;
 
@@ -427,7 +427,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
                 }
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "-> Default ACL on \"%s\" successfully copied from access ACL.",
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Default ACL on \"%s\" successfully copied from access ACL.",
                  file_path);
             result = true;
 
@@ -481,7 +481,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
         break;
 
     case 0:                    // no entries, as desired
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "-> Default ACL on \"%s\" needs no modification.", file_path);
+        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "-> Default ACL on \"%s\" needs no modification.", file_path);
         result = true;
         break;
 
@@ -498,7 +498,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
         {
         case cfa_warn:
 
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_WARN, "", pp, a, " !! Default ACL on \"%s\" needs to be cleared", file_path);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " !! Default ACL on \"%s\" needs to be cleared", file_path);
             break;
 
         case cfa_fix:
@@ -513,7 +513,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
                 }
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, "-> Default ACL on \"%s\" successfully cleared", file_path);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Default ACL on \"%s\" successfully cleared", file_path);
             result = true;
 
             break;
@@ -1097,9 +1097,9 @@ static int ParseModePosixLinux(char *mode, acl_permset_t perms)
 
 #else /* HAVE_LIBACL */
 
-int CheckPosixLinuxACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp)
+int CheckPosixLinuxACL(EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, Attributes a, Promise *pp)
 {
-    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
          "!! Posix ACLs are not supported on this Linux system - install the Posix acl library");
     PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     return true;

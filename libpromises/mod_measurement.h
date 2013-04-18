@@ -25,6 +25,8 @@
 #ifndef CFENGINE_MOD_MEASUREMENT_H
 #define CFENGINE_MOD_MEASUREMENT_H
 
-extern const SubTypeSyntax CF_MEASUREMENT_SUBTYPES[];
+#include "cf3.defs.h"
+
+extern const PromiseTypeSyntax CF_MEASUREMENT_PROMISE_TYPES[];
 
 #endif

@@ -1,0 +1,84 @@
+#######################################################
+#
+# Test ifelse()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => { 1, "single string parameter",
+                           "hardclass OK", "bundle class OK",
+                           "5 parameters OK"
+     };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  classes:
+      "myclass" expression => "any";
+      "myclass2" expression => "any";
+      "secondpass" expression => "any";
+  vars:
+    secondpass::
+      "vals" slist => {
+                        ifelse(1),
+                        ifelse("single string parameter"),
+                        ifelse("cfengine", "hardclass OK", "hardclass broken"),
+                        ifelse("myclass.myclass2", "bundle class OK", "bundle class broken"),
+                        ifelse("this is not true", "5 parameters broken",
+                               "this is also not true", "5 parameters broken 2",
+                               "5 parameters OK"),
+      };
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_defaults => empty,
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "$(test.vals)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

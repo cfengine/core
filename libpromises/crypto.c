@@ -29,10 +29,10 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "hashes.h"
-#include "cfstream.h"
-#include "pipes.h"
-#include "transaction.h"
 #include "logging.h"
+#include "pipes.h"
+#include "mutex.h"
+#include "sysinfo.h"
 
 static void RandomSeed(void);
 
@@ -52,12 +52,10 @@ void CryptoInitialize()
         ERR_load_crypto_strings();
 
         RandomSeed();
-        unsigned char s[16] = { 0 };
-        int seed = 0;
-        RAND_bytes(s, 16);
-        s[15] = '\0';
-        seed = ElfHash(s, CF_HASHTABLESIZE);
-        srand48((long) seed);
+
+        long seed = 0;
+        RAND_bytes((unsigned char *)&seed, sizeof(seed));
+        srand48(seed);
 
         crypto_initialized = true;
     }
@@ -90,7 +88,10 @@ static void RandomSeed(void)
 
 /*********************************************************************/
 
-void LoadSecretKeys()
+/**
+ * @return true if successful
+ */
+bool LoadSecretKeys(void)
 {
     FILE *fp;
     static char *passphrase = "Cfengine passphrase", name[CF_BUFSIZE], source[CF_BUFSIZE];
@@ -99,10 +100,10 @@ void LoadSecretKeys()
     unsigned long err;
     struct stat sb;
 
-    if ((fp = fopen(PrivateKeyFile(), "r")) == NULL)
+    if ((fp = fopen(PrivateKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile());
-        return;
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile(GetWorkDir()));
+        return true; // TODO: return true?
     }
 
     if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
@@ -111,17 +112,17 @@ void LoadSecretKeys()
         CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
         PRIVKEY = NULL;
         fclose(fp);
-        return;
+        return true; // TODO: return true?
     }
 
     fclose(fp);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile());
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile(GetWorkDir()));
 
-    if ((fp = fopen(PublicKeyFile(), "r")) == NULL)
+    if ((fp = fopen(PublicKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile());
-        return;
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile(GetWorkDir()));
+        return true; // TODO: return true?
     }
 
     if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
@@ -130,15 +131,16 @@ void LoadSecretKeys()
         CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
         PUBKEY = NULL;
         fclose(fp);
-        return;
+        return true; // TODO: return true?
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile());
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile(GetWorkDir()));
     fclose(fp);
 
     if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
     {
-        FatalError("RSA Exponent too small or not odd");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        return false;
     }
 
     if (NULL_OR_EMPTY(POLICY_SERVER))
@@ -184,6 +186,7 @@ void LoadSecretKeys()
         }
     }
 
+    return true;
 }
 
 /*********************************************************************/
@@ -266,7 +269,9 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
     if ((BN_num_bits(newkey->e) < 2) || (!BN_is_odd(newkey->e)))
     {
-        FatalError("RSA Exponent too small or not odd");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        RSA_free(newkey);
+        return NULL;
     }
 
     return newkey;
@@ -400,22 +405,22 @@ void DebugBinOut(char *buffer, int len, char *comment)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
 }
 
-const char *PublicKeyFile(void)
+const char *PublicKeyFile(const char *workdir)
 {
     if (!CFPUBKEYFILE)
     {
         xasprintf(&CFPUBKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", CFWORKDIR);
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", workdir);
     }
     return CFPUBKEYFILE;
 }
 
-const char *PrivateKeyFile(void)
+const char *PrivateKeyFile(const char *workdir)
 {
     if (!CFPRIVKEYFILE)
     {
         xasprintf(&CFPRIVKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", CFWORKDIR);
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
     }
     return CFPRIVKEYFILE;
 }

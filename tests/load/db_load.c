@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
-#include "cfstream.h"
-#include "logging.h"
 
 #include <assert.h>
 
@@ -35,6 +33,8 @@ static bool ReadWriteDataIsValid(char *data);
 static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
+
+void CfOut(OutputLevel level, const char *function, const char *fmt, ...);
 
 void *contend(void *param)
 {
@@ -133,8 +133,9 @@ static void TestCursorIteration(CF_DB *db)
 
     if(!NewDBCursor(db, &dbc))
     {
-        FatalError("Test: could not create cursor");
+        fprintf(stderr, "Test: could not create cursor");
         pthread_exit((void*)STATUS_ERROR);
+        exit(1);
     }
 
     char *key;
@@ -142,7 +143,7 @@ static void TestCursorIteration(CF_DB *db)
     int key_sz, value_sz;
 
     int count = 0;
-    while(NextDB(db, dbc, &key, &key_sz, &value, &value_sz))
+    while(NextDB(dbc, &key, &key_sz, &value, &value_sz))
     {
         int key_num = *(int *)key;
         int value_num = *(int *)value;
@@ -177,9 +178,10 @@ static void TestCursorIteration(CF_DB *db)
         printf("Error: During iteration count was %d (expected %d)\n", count, RECORD_COUNT_TOTAL);
     }
 
-    if(!DeleteDBCursor(db, dbc))
+    if(!DeleteDBCursor(dbc))
     {
-        FatalError("Test: could not delete cursor");
+        fprintf(stderr, "Test: could not delete cursor");
+        exit(1);
     }
 
 }
@@ -308,7 +310,7 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     printf("CfOut: %s\n", buf);
 }
 
-void FatalError(char *fmt, ...)
+void FatalError(const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {
@@ -337,7 +339,7 @@ int ThreadLock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not lock mutex");
+        fprintf(stderr, "Could not lock mutex");
     }
 
     return true;
@@ -349,7 +351,7 @@ int ThreadUnlock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not unlock mutex");
+        fprintf(stderr, "Could not unlock mutex");
     }
 
     return true;

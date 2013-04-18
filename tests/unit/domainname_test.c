@@ -8,7 +8,7 @@ char domain[CF_BUFSIZE];
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
 
-static void test_fqname(void **state)
+static void test_fqname(void)
 {
     const char nodename[] = "mylaptop.example.com";
     const char dnsname[] = "mylaptop.example.com";
@@ -20,7 +20,7 @@ static void test_fqname(void **state)
     assert_string_equal(domain, "example.com");
 }
 
-static void test_uqname(void **state)
+static void test_uqname(void)
 {
     CalculateDomainName("mylaptop", "mylaptop.example.com", fqname, uqname, domain);
 
@@ -29,7 +29,7 @@ static void test_uqname(void **state)
     assert_string_equal(domain, "example.com");
 }
 
-static void test_uqname2(void **state)
+static void test_uqname2(void)
 {
     CalculateDomainName("user.laptop", "user.laptop.example.com", fqname, uqname, domain);
 
@@ -38,7 +38,7 @@ static void test_uqname2(void **state)
     assert_string_equal(domain, "example.com");
 }
 
-static void test_fqname_not_really_fq(void **state)
+static void test_fqname_not_really_fq(void)
 {
     CalculateDomainName("user.laptop", "user.laptop", fqname, uqname, domain);
 
@@ -47,7 +47,7 @@ static void test_fqname_not_really_fq(void **state)
     assert_string_equal(domain, "laptop");
 }
 
-static void test_fqname_not_really_fq2(void **state)
+static void test_fqname_not_really_fq2(void)
 {
     CalculateDomainName("laptop", "laptop", fqname, uqname, domain);
 
@@ -56,7 +56,7 @@ static void test_fqname_not_really_fq2(void **state)
     assert_string_equal(domain, "");
 }
 
-static void test_fqname_unresolvable(void **state)
+static void test_fqname_unresolvable(void)
 {
     CalculateDomainName("laptop", "", fqname, uqname, domain);
 
@@ -65,7 +65,7 @@ static void test_fqname_unresolvable(void **state)
     assert_string_equal(domain, "");
 }
 
-static void test_no_names(void **state)
+static void test_no_names(void)
 {
     CalculateDomainName("", "", fqname, uqname, domain);
 
@@ -74,7 +74,7 @@ static void test_no_names(void **state)
     assert_string_equal(domain, "");
 }
 
-static void test_wrong_fqname(void **state)
+static void test_wrong_fqname(void)
 {
     CalculateDomainName("laptop", "a1006.cfengine.com", fqname, uqname, domain);
 

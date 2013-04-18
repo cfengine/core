@@ -31,7 +31,7 @@
 #include "rlist.h"
 
 Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp);
-void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
+void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rlist *finalargs);
 void DeleteExpArgs(Rlist *args);
 
 #endif

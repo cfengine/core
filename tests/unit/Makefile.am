@@ -2,7 +2,7 @@
 EXTRA_DIST = data
 
 AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
-	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent
+	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
@@ -16,7 +16,7 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_lib.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
@@ -27,6 +27,7 @@ check_PROGRAMS = \
 	item_test \
 	rlist_test \
 	domainname_test \
+	set_test \
 	set_domainname_test \
 	str_test \
 	json_test \
@@ -44,10 +45,11 @@ check_PROGRAMS = \
 	misc_lib_test \
 	crypto_symmetric_test \
 	persistent_lock_test  \
-        thread_test \
+	thread_test \
 	package_versions_compare_test \
 	files_lib_test \
 	map_test \
+	parser_test \
 	policy_test \
 	sort_test \
 	file_name_test \
@@ -59,8 +61,15 @@ check_PROGRAMS = \
 	refcount_test \
 	list_test \
 	buffer_test \
-	timeout_test \
-	connection_management_test
+	cf_key_functions_test \
+	connection_management_test \
+	expand_test \
+	string_expressions_test \
+	var_expressions_test \
+	process_terminate_unix_test \
+	exec-config-test \
+	generic_agent_test \
+	syntax_test
 
 #	ipaddress_test
 
@@ -87,10 +96,6 @@ csv_writer_test_LDADD = libtest.la libstr.la
 
 conversion_test_SOURCES = conversion_test.c ../../libpromises/conversion.c
 
-rlist_test_SOURCES = rlist_test.c \
-	../../libpromises/rlist.c
-rlist_test_LDADD = libtest.la libstr.la
-
 set_domainname_test_SOURCES = set_domainname_test.c \
 	../../libpromises/sysinfo.c
 set_domainname_test_LDADD = libstr.la ../../libutils/libutils.la
@@ -107,6 +112,8 @@ refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
 
+cf_key_functions_test_SOURCES = cf_key_functions_test.c
+
 #ipaddress_test_SOURCES = ipaddress_test.c 
 
 if HAVE_AVAHI_CLIENT
@@ -115,10 +122,10 @@ if HAVE_AVAHI_COMMON
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
 if HAVE_NOVA
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
 avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
 else
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 
@@ -131,7 +138,7 @@ endif
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libstr.la
-file_writer_test_LDLFAGS =
+file_writer_test_LDFLAGS =
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
@@ -162,3 +169,51 @@ sort_test_LDADD = libtest.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la
+
+rlist_test_SOURCES = rlist_test.c \
+       ../../libpromises/rlist.c
+rlist_test_LDADD = libtest.la libstr.la
+
+if LINUX
+
+check_PROGRAMS += linux_process_test
+
+linux_process_test_SOURCES = linux_process_test.c \
+	../../libpromises/process_unix.c \
+	../../libpromises/process_linux.c \
+	../../libutils/file_lib.c
+linux_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+if AIX
+
+check_PROGRAMS += aix_process_test
+
+aix_process_test_SOURCES = aix_process_test.c \
+	../../libpromises/process_unix.c \
+	../../libpromises/process_aix.c \
+	../../libutils/file_lib.c
+aix_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+if SOLARIS
+
+check_PROGRAMS += solaris_process_test
+
+solaris_process_test_SOURCES = solaris_process_test.c \
+	../../libpromises/process_unix.c \
+	../../libpromises/process_solaris.c \
+	../../libutils/file_lib.c
+solaris_process_test_LDADD = libtest.la ../../libutils/libutils.la
+
+endif
+
+process_terminate_unix_test_SOURCES = process_terminate_unix_test.c \
+	../../libpromises/process_unix.c
+process_terminate_unix_test_LDADD = libtest.la ../../libutils/libutils.la
+
+exec_config_test_SOURCES = exec-config-test.c \
+	../../cf-execd/exec-config.c
+exec_config_test_LDADD = libtest.la ../../libpromises/libpromises.la

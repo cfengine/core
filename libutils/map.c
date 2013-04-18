@@ -51,7 +51,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }
@@ -61,7 +61,7 @@ static bool IdentityEqualFn(const void *p1, const void *p2)
     return p1 == p2;
 }
 
-static void NopDestroyFn(void *p1)
+static void NopDestroyFn(ARG_UNUSED void *p1)
 {
 }
 
@@ -104,6 +104,26 @@ Map *MapNew(MapHashFn hash_fn,
     map->arraymap = ArrayMapNew(equal_fn, destroy_key_fn, destroy_value_fn);
     map->hash_fn = hash_fn;
     return map;
+}
+
+size_t MapSize(const Map *map)
+{
+    if (IsArrayMap(map))
+    {
+        return map->arraymap->size;
+    }
+    else
+    {
+        MapIterator i = MapIteratorInit((Map*)map);
+        size_t size = 0;
+
+        while (MapIteratorNext(&i))
+        {
+            size++;
+        }
+
+        return size;
+    }
 }
 
 static void ConvertToHashMap(Map *map)
@@ -200,15 +220,18 @@ void MapClear(Map *map)
 
 void MapDestroy(Map *map)
 {
-    if (IsArrayMap(map))
+    if (map)
     {
-        ArrayMapDestroy(map->arraymap);
+        if (IsArrayMap(map))
+        {
+            ArrayMapDestroy(map->arraymap);
+        }
+        else
+        {
+            HashMapDestroy(map->hashmap);
+        }
+        free(map);
     }
-    else
-    {
-        HashMapDestroy(map->hashmap);
-    }
-    free(map);
 }
 
 /******************************************************************************/

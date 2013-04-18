@@ -26,9 +26,11 @@
 #ifndef CFENGINE_EXEC_TOOLS_H
 #define CFENGINE_EXEC_TOOLS_H
 
+#include "platform.h"
+
 int IsExecutable(const char *file);
-int ShellCommandReturnsZero(const char *comm, int useshell);
-int GetExecOutput(const char *command, char *buffer, int useshell);
+bool ShellCommandReturnsZero(const char *command, bool useshell);
+bool GetExecOutput(const char *command, char *buffer, bool useshell);
 void ActAsDaemon(int preserve);
 char **ArgSplitCommand(const char *comm);
 void ArgFree(char **args);

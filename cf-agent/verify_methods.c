@@ -33,31 +33,31 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "transaction.h"
 #include "logging.h"
+#include "locks.h"
 #include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 #include "rlist.h"
+#include "ornaments.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
     
 /*****************************************************************************/
 
-void VerifyMethodsPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
     a = GetMethodAttributes(ctx, pp);
 
-    VerifyMethod(ctx, "usebundle", a, pp, report_context);
-    ScopeDeleteScalar("this", "promiser");
+    VerifyMethod(ctx, "usebundle", a, pp);
+    ScopeDeleteSpecialScalar("this", "promiser");
 }
 
 /*****************************************************************************/
 
-int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, const ReportContext *report_context)
+int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 {
     Bundle *bp;
     void *vp;
@@ -73,12 +73,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_FNCALL)))
         {
             fp = (FnCall *) vp;
-            ExpandScalar(fp->name, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, fp->name, method_name);
             params = fp->args;
         }
         else if ((vp = ConstraintGetRvalValue(ctx, attrname, pp, RVAL_TYPE_SCALAR)))
         {
-            ExpandScalar((char *) vp, method_name);
+            ExpandScalar(ctx, PromiseGetBundle(pp)->name, (char *) vp, method_name);
             params = NULL;
         }
         else
@@ -89,22 +89,22 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
     GetLockName(lockname, "method", pp->promiser, params);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
         return false;
     }
 
-    PromiseBanner(ctx, pp);
+    PromiseBanner(pp);
 
     if (strncmp(method_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
     {
         method_deref = strchr(method_name, CF_NS) + 1;
     }
-    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(pp->ns, "default") != 0))
+    else if ((strchr(method_name, CF_NS) == NULL) && (strcmp(PromiseGetNamespace(pp), "default") != 0))
     {
-        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", pp->ns, CF_NS, method_name);
+        snprintf(qualified_method, CF_BUFSIZE, "%s%c%s", PromiseGetNamespace(pp), CF_NS, method_name);
         method_deref = qualified_method;
     }
     else
@@ -120,46 +120,36 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
 
     if (bp)
     {
-        const char *bp_stack = THIS_BUNDLE;
-
         BannerSubBundle(bp, params);
 
-        ScopeDelete(bp->name);
-        ScopeNew(bp->name);
-        HashVariables(ctx, PolicyFromPromise(pp), bp->name, report_context);
+        EvalContextStackPushBundleFrame(ctx, bp, a.inherit);
 
-        char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
-        ScopeNew(ns);
+        ScopeClear(bp->name);
+        BundleHashVariables(ctx, bp);
+
         SetBundleOutputs(bp->name);
 
-        ScopeAugment(ctx, method_deref, pp->ns, bp->args, params);
+        ScopeAugment(ctx, bp, params);
 
-        THIS_BUNDLE = bp->name;
-
-        EvalContextStackPushFrame(ctx, a.inherit);
-
-        retval = ScheduleAgentOperations(ctx, bp, report_context);
+        retval = ScheduleAgentOperations(ctx, bp);
 
         GetReturnValue(ctx, bp->name, pp);
         ResetBundleOutputs(bp->name);
 
         EvalContextStackPopFrame(ctx);
 
-        THIS_BUNDLE = bp_stack;
-
         switch (retval)
         {
-        case CF_FAIL:
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
+        case PROMISE_RESULT_FAIL:
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Method failed in some repairs or aborted\n");
             break;
 
-        case CF_CHG:
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " !! Method invoked repairs\n");
+        case PROMISE_RESULT_CHANGE:
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " !! Method invoked repairs\n");
             break;
 
         default:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Method verified\n");
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> Method verified\n");
             break;
 
         }
@@ -167,7 +157,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         for (const Rlist *rp = bp->args; rp; rp = rp->next)
         {
             const char *lval = rp->item;
-            ScopeDeleteScalar(bp->name, lval);
+            ScopeDeleteScalar((VarRef) { NULL, bp->name, lval });
         }
     }
     else
@@ -179,11 +169,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp, co
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
                  " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }
@@ -243,7 +233,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
                     snprintf(newname, CF_BUFSIZE, "%s", result);
                 }
 
-                ScopeNewScalar(pp->bundle, newname, assoc->rval.item, DATA_TYPE_STRING);           
+                ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(pp)->name, newname }, assoc->rval.item, DATA_TYPE_STRING);
             }
         }
         

@@ -30,100 +30,151 @@
 #include "writer.h"
 #include "set.h"
 #include "sequence.h"
+#include "var_expressions.h"
+
+typedef enum
+{
+    STACK_FRAME_TYPE_BUNDLE,
+    STACK_FRAME_TYPE_PROMISE,
+    STACK_FRAME_TYPE_PROMISE_ITERATION,
+    STACK_FRAME_TYPE_BODY
+} StackFrameType;
 
 typedef struct
 {
+    const Bundle *owner;
+
     StringSet *contexts;
     StringSet *contexts_negated;
+} StackFrameBundle;
 
+typedef struct
+{
+    const Body *owner;
+} StackFrameBody;
+
+typedef struct
+{
+    const Promise *owner;
+
+    AssocHashTable *variables; // TODO: change to map
+} StackFramePromise;
+
+typedef struct
+{
+    const Promise *owner;
+} StackFramePromiseIteration;
+
+typedef struct
+{
+    StackFrameType type;
     bool inherits_previous; // whether or not this frame inherits context from the previous frame
+
+    union
+    {
+        StackFrameBundle bundle;
+        StackFrameBody body;
+        StackFramePromise promise;
+        StackFramePromiseIteration promise_iteration;
+    } data;
 } StackFrame;
+
+TYPED_SET_DECLARE(Promise, const Promise *)
 
 struct EvalContext_
 {
     StringSet *heap_soft;
     StringSet *heap_hard;
     StringSet *heap_negated;
+    Item *heap_abort;
+    Item *heap_abort_current_bundle;
 
     Seq *stack;
 
     StringSet *dependency_handles;
+
+    PromiseSet *promises_done;
 };
-
-/**
-  List of classes that, if defined by a bundle, will cause the bundle to abort
-  */
-extern Item *ABORTBUNDLEHEAP;
-
 
 EvalContext *EvalContextNew(void);
 void EvalContextDestroy(EvalContext *ctx);
 
-void EvalContextHeapAddSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns);
 void EvalContextHeapAddHard(EvalContext *ctx, const char *context);
 void EvalContextHeapAddNegated(EvalContext *ctx, const char *context);
+void EvalContextHeapAddAbort(EvalContext *ctx, const char *context, const char *activated_on_context);
+void EvalContextHeapAddAbortCurrentBundle(EvalContext *ctx, const char *context, const char *activated_on_context);
 void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context);
 void EvalContextStackFrameAddNegated(EvalContext *ctx, const char *context);
 
-bool EvalContextHeapContainsSoft(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsHard(EvalContext *ctx, const char *context);
-bool EvalContextHeapContainsNegated(EvalContext *ctx, const char *context);
-bool EvalContextStackFrameContainsSoft(EvalContext *ctx, const char *context);
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
+void EvalContextHeapPersistentRemove(const char *context);
+void EvalContextHeapPersistentLoadAll(EvalContext *ctx);
+
+bool EvalContextHeapContainsSoft(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsHard(const EvalContext *ctx, const char *context);
+bool EvalContextHeapContainsNegated(const EvalContext *ctx, const char *context);
+bool EvalContextStackFrameContainsSoft(const EvalContext *ctx, const char *context);
 
 bool EvalContextHeapRemoveSoft(EvalContext *ctx, const char *context);
 bool EvalContextHeapRemoveHard(EvalContext *ctx, const char *context);
 void EvalContextStackFrameRemoveSoft(EvalContext *ctx, const char *context);
 
 void EvalContextHeapClear(EvalContext *ctx);
-void EvalContextStackFrameClear(EvalContext *ctx); // TODO: this should probably not exists
 
 size_t EvalContextHeapMatchCountSoft(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextHeapMatchCountHard(const EvalContext *ctx, const char *context_regex);
 size_t EvalContextStackFrameMatchCountSoft(const EvalContext *ctx, const char *context_regex);
+
+StringSet* EvalContextHeapAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextHeapAddMatchingHard(const EvalContext *ctx, StringSet* base, const char *context_regex);
+StringSet* EvalContextStackFrameAddMatchingSoft(const EvalContext *ctx, StringSet* base, const char *context_regex);
 
 StringSetIterator EvalContextHeapIteratorSoft(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorHard(const EvalContext *ctx);
 StringSetIterator EvalContextHeapIteratorNegated(const EvalContext *ctx);
 StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx);
 
-
-void EvalContextStackPushFrame(EvalContext *ctx, bool inherits_previous);
+void EvalContextStackPushBundleFrame(EvalContext *ctx, const Bundle *owner, bool inherits_previous);
+void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
+void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
+void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
+
+/**
+ * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
+ */
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+
+bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
+
+bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out);
 
 /* - Parsing/evaluating expressions - */
 void ValidateClassSyntax(const char *str);
-bool IsDefinedClass(EvalContext *ctx, const char *context, const char *ns);
-bool IsExcluded(EvalContext *ctx, const char *exception, const char *ns);
+bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns);
 
-bool EvalProcessResult(EvalContext *ctx, const char *process_result, StringSet *proc_attr);
-bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_attr);
+bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
+bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 
+/* - Promise status */
+bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp);
 
-// Add new contexts
-void NewPersistentContext(char *name, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy);
-void AddAbortClass(const char *name, const char *classes);
-void NewClass(EvalContext *ctx, const char *oclass, const char *ns);      /* Copies oclass */
-void NewBundleClass(EvalContext *ctx, const char *oclass, const char *bundle, const char *ns);
-void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope);
-void HardClass(EvalContext *ctx, const char *oclass);
-void NewClassesFromString(EvalContext *ctx, const char *classlist);
-void AddEphemeralClasses(EvalContext *ctx, const Rlist *classlist, const char *ns);
-void NegateClassesFromString(EvalContext *ctx, const char *classlist);
-void LoadPersistentContext(EvalContext *ctx);
-
-// Remove contexts
-void DeleteClass(EvalContext *ctx, const char *oclass, const char *ns);
-void DeleteAllClasses(EvalContext *ctx, const Rlist *list);
-void DeletePersistentContext(const char *name);
+/* Those two functions are compromises: there are pieces of code which
+ * manipulate promise 'doneness', and it's not simple to figure out how to
+ * properly reimplement it. So for the time being, let particular pieces of code
+ * continue to manipulate the state.
+ */
+void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
+void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
 
 /* - Rest - */
 int Abort(void);
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
+void KeepClassContextPromise(EvalContext *ctx, Promise *pp, void *param);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
-bool IsSoftClass(EvalContext *ctx, const char *sp);
-bool IsTimeClass(const char *sp);
-void SaveClassEnvironment(EvalContext *ctx);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
 
 #endif

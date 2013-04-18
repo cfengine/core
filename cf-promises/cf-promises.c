@@ -28,15 +28,11 @@
 #include "env_context.h"
 #include "conversion.h"
 #include "reporting.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
 
-/*******************************************************************/
-
-static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 /*******************************************************************/
@@ -93,17 +89,23 @@ int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
-    ReportContext *report_context = OpenReports(config->agent_type);
-    
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentConfigApply(ctx, config);
+
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    if (!policy)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Input files contain errors.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (SHOWREPORTS)
     {
-        CompilationReport(ctx, policy, config->input_file);
+        ShowPromises(policy->bundles, policy->bodies);
     }
 
-    CheckLicenses(ctx);
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     switch (config->agent_specific.common.policy_output_format)
     {
@@ -133,22 +135,8 @@ int main(int argc, char *argv[])
         break;
     }
 
-    ThisAgentInit();
-
     GenericAgentConfigDestroy(config);
-    CloseReports("commmon", report_context);
     EvalContextDestroy(ctx);
-
-    if (ERRORCOUNT > 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
-        exit(1);
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
-        exit(0);
-    }
 }
 
 /*******************************************************************/
@@ -174,7 +162,8 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
             GenericAgentConfigSetInputFile(config, optarg);
@@ -182,8 +171,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            HardClass(ctx, "opt_debug");
-            DEBUG = true;
+            config->debug_mode = true;
             break;
 
         case 'b':
@@ -221,11 +209,11 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'D':
-            NewClassesFromString(ctx, optarg);
+            config->heap_soft = StringSetFromString(optarg, ',');
             break;
 
         case 'N':
-            NegateClassesFromString(ctx, optarg);
+            config->heap_negated = StringSetFromString(optarg, ',');
             break;
 
         case 'I':
@@ -240,11 +228,11 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             DONTDO = true;
             IGNORELOCK = true;
             LOOKUP = true;
-            HardClass(ctx, "opt_dry_run");
+            EvalContextHeapAddHard(ctx, "opt_dry_run");
             break;
 
         case 'V':
-            PrintVersionBanner("cf-promises");
+            PrintVersion();
             exit(0);
 
         case 'h':
@@ -272,19 +260,10 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
     }
 
     CfDebug("Set debugging\n");
 
     return config;
 }
-
-/*******************************************************************/
-
-static void ThisAgentInit(void)
-{
-    SHOWREPORTS = false;
-}
-
-/* EOF */

@@ -26,7 +26,7 @@
 #define CFENGINE_CLIENT_PROTOCOL_H
 
 int IdentifyAgent(int sd, char *localip, int family);
-int AuthenticateAgent(EvalContext *ctx, AgentConnection *conn, Attributes attr, Promise *pp);
+int AuthenticateAgent(AgentConnection *conn, bool trust_key);
 int BadProtoReply(char *buf);
 int OKProtoReply(char *buf);
 int FailedProtoReply(char *buf);

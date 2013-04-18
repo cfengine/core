@@ -33,22 +33,29 @@
 #include "files_links.h"
 #include "files_properties.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "transaction.h"
-#include "nfs.h"
 #include "logging.h"
+#include "locks.h"
+#include "nfs.h"
 #include "rlist.h"
 #include "policy.h"
+#include "verify_files.h"
+#include "promiser_regex_resolver.h"
+#include "ornaments.h"
+#include "env_context.h"
+
+#ifdef HAVE_NOVA
+#include "cf.nova.h"
+#endif
 
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
 
-static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp);
 static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise *pp);
 static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp);
+static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
@@ -58,33 +65,31 @@ static int VerifyMountPromise(EvalContext *ctx, char *file, Attributes a, Promis
 
 /*****************************************************************************/
 
-void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+void *FindAndVerifyStoragePromises(EvalContext *ctx, Promise *pp)
 {
-    PromiseBanner(ctx, pp);
-    FindStoragePromiserObjects(ctx, pp, report_context);
+    PromiseBanner(pp);
+    FindStoragePromiserObjects(ctx, pp);
 
     return (void *) NULL;
 }
 
 /*****************************************************************************/
 
-static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp)
 {
 /* Check if we are searching over a regular expression */
 
-    LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyStoragePromise, report_context);
+    LocateFilePromiserGroup(ctx, pp->promiser, pp, VerifyStoragePromise);
 }
 
 /*****************************************************************************/
 
-void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, const ReportContext *report_context) /* FIXME: unused param */
+void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 {
     Attributes a = { {0} };
     CfLock thislock;
 
     a = GetStorageAttributes(ctx, pp);
-
-    CF_OCCUR++;
 
 #ifdef __MINGW32__
     if (!a.havemount)
@@ -115,7 +120,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp, const Repor
         }
     }
 
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -186,15 +191,15 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
     if (S_ISDIR(statbuf.st_mode))
     {
-        if ((dirh = OpenDirLocal(name)) == NULL)
+        if ((dirh = DirOpen(name)) == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Can't open directory %s which checking required/disk\n", name);
             return false;
         }
 
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, name, a, pp))
+            if (!ConsiderLocalFile(dirp->d_name, name))
             {
                 continue;
             }
@@ -225,7 +230,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
             sizeinbytes += localstat.st_size;
         }
 
-        CloseDir(dirh);
+        DirClose(dirh);
 
         if (sizeinbytes < 0)
         {
@@ -235,20 +240,20 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         if (sizeinbytes < a.volume.sensible_size)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! File system %s is suspiciously small! (%jd bytes)\n", name,
                  (intmax_t) sizeinbytes);
             return (false);
         }
 
         if (filecount < a.volume.sensible_count)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Filesystem %s has only %ld files/directories.\n", name,
                  filecount);
             return (false);
         }
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
+    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, " -> Filesystem %s's content seems to be sensible as promised\n", name);
     return (true);
 }
 
@@ -289,7 +294,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
         if (free_percentage < threshold_percentage)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
                  " !! Free disk space is under %d%% for volume containing %s (%d%% free)\n",
                  threshold_percentage, file, free_percentage);
             return false;
@@ -302,7 +307,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
         if (free_bytes < threshold)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Disk space under %jd kB for volume containing %s (%jd kB free)\n",
                  (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
@@ -313,7 +318,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
 /*******************************************************************/
 
-static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
+static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Scan arrival sequence . not yet implemented\n");
 }
@@ -325,7 +330,7 @@ static void VolumeScanArrivals(char *file, Attributes a, Promise *pp)
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a, Promise *pp)
+static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a)
 {
     Rlist *rp;
     Mount *mp;
@@ -439,13 +444,13 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 
     if (!IsPrivileged())
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, a, "Only root can mount filesystems.\n");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "Only root can mount filesystems.\n");
         return false;
     }
 
     options = Rlist2String(a.mount.mount_options, ",");
 
-    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, options, a, pp))
+    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, options, a))
     {
         if (!a.mount.unmount)
         {
@@ -459,7 +464,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
             }
             else
             {
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a,
+                cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
                      " -> Filesystem %s was not mounted as promised, and no edits were promised in %s\n", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 // Mount explicitly
@@ -491,7 +496,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
+            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, " -> Filesystem %s seems to be mounted as promised\n", name);
         }
     }
 
@@ -500,3 +505,16 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 }
 
 #endif /* !__MINGW32__ */
+
+void DeleteStorageContext(void)
+{
+#ifndef __MINGW32__
+    CleanupNFS();
+
+    if (!DONTDO && CF_MOUNTALL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
+        MountAll();
+    }
+#endif /* !__MINGW32__ */
+}

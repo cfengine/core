@@ -25,43 +25,42 @@
 #include "cf-serverd-functions.h"
 
 #include "server_transform.h"
-#include "cfstream.h"
 #include "logging.h"
 
 int main(int argc, char *argv[])
 {
     EvalContext *ctx = EvalContextNew();
-    GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
+    GenericAgentConfig *config = CheckOpts(argc, argv);
+    GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
     if (GenericAgentCheckPolicy(ctx, config, false))
     {
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
     else if (config->tty_interactive)
     {
-        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+        exit(EXIT_FAILURE);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
-        HardClass(ctx, "failsafe_fallback");
+        EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    WarnAboutDeprecatedFeatures(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
-    KeepPromises(ctx, policy, config, report_context);
+    KeepPromises(ctx, policy, config);
     Summarize();
 
-    StartServer(ctx, policy, config, report_context);
+    StartServer(ctx, policy, config);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
 

@@ -33,14 +33,15 @@
 #include "dir_priv.h"
 #include "client_protocol.h"
 #include "crypto.h"
-#include "cfstream.h"
+#include "logging.h"
 #include "files_hashes.h"
 #include "files_copy.h"
-#include "transaction.h"
-#include "logging.h"
+#include "mutex.h"
 #include "rlist.h"
 #include "policy.h"
 #include "item_lib.h"
+#include "files_lib.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -62,17 +63,17 @@ typedef struct
 
 Rlist *SERVERLIST = NULL;
 
-static void NewClientCache(Stat *data, Promise *pp);
+static void NewClientCache(Stat *data, AgentConnection *conn);
 static void CacheServerConnection(AgentConnection *conn, const char *server);
 static void MarkServerOffline(const char *server);
 static AgentConnection *GetIdleConnectionToServer(const char *server);
 static bool ServerOffline(const char *server);
 static void FlushFileStream(int sd, int toget);
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Attributes attr, Promise *pp);
+static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn);
 /**
   @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
   */
-static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attributes attr, Promise *pp, int *err);
+static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err);
 
 #if !defined(__MINGW32__)
 static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
@@ -80,65 +81,36 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
 /*********************************************************************/
 
-static int FSWrite(char *new, int dd, char *buf, int towrite, int *last_write_made_hole, int n_read, Attributes attr,
-                   Promise *pp)
+static int FSWrite(const char *destination, int dd, const char *buf, size_t n_write)
 {
-    int *intp;
-    char *cp;
+    const void *cur = buf;
+    const void *end = buf + n_write;
 
-    intp = 0;
-
-    if (pp && (pp->makeholes))
+    while (cur < end)
     {
-        buf[n_read] = 1;        /* Sentinel to stop loop.  */
-
-        /* Find first non-zero *word*, or the word with the sentinel.  */
-        intp = (int *) buf;
-
-        while (*intp++ == 0)
+        const void *skip_span = MemSpan(cur, 0, end - cur);
+        if (skip_span > cur)
         {
-        }
-
-        /* Find the first non-zero *byte*, or the sentinel.  */
-
-        cp = (char *) (intp - 1);
-
-        while (*cp++ == 0)
-        {
-        }
-
-        /* If we found the sentinel, the whole input block was zero,
-           and we can make a hole.  */
-
-        if (cp > buf + n_read)
-        {
-            /* Make a hole.  */
-
-            if (lseek(dd, (off_t) n_read, SEEK_CUR) < 0L)
+            if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "lseek", "lseek in EmbeddedWrite, dest=%s\n", new);
+                CfOut(OUTPUT_LEVEL_ERROR, "lseek", "Copy failed (no space?) while copying to %s from network", destination);
                 return false;
             }
 
-            *last_write_made_hole = 1;
-        }
-        else
-        {
-            /* Clear to indicate that a normal write is needed. */
-            intp = 0;
-        }
-    }
-
-    if (intp == 0)
-    {
-        if (FullWrite(dd, buf, towrite) < 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "write", "Local disk write(%.256s) failed\n", new);
-            pp->conn->error = true;
-            return false;
+            cur = skip_span;
         }
 
-        *last_write_made_hole = 0;
+        const void *copy_span = MemSpanInverse(cur, 0, end - cur);
+        if (copy_span > cur)
+        {
+            if (FullWrite(dd, cur, copy_span - cur) < 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "write", "Copy failed (no space?) while copying to %s from network", destination);
+                return false;
+            }
+
+            cur = copy_span;
+        }
     }
 
     return true;
@@ -173,7 +145,7 @@ void DetermineCfenginePort()
 
 /*********************************************************************/
 
-AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise *pp, int *err)
+AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
 {
     AgentConnection *conn;
     Rlist *rp;
@@ -183,26 +155,24 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
     // We never close a non-background connection until end
     // mark serial connections as such
 
-    for (rp = attr.copy.servers; rp != NULL; rp = rp->next)
+    for (rp = fc.servers; rp != NULL; rp = rp->next)
     {
-        if (ServerOffline(rp->item))
+        if (ServerOffline(RlistScalarValue(rp)))
         {
             continue;
         }
 
-        pp->this_server = rp->item;
-
-        if (attr.transaction.background)
+        if (background)
         {
             if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
             {
-                conn = ServerConnection(ctx, rp->item, attr, pp, err);
+                conn = ServerConnection(RlistScalarValue(rp), fc, err);
                 return conn;
             }
         }
         else
         {
-            if ((conn = GetIdleConnectionToServer(rp->item)))
+            if ((conn = GetIdleConnectionToServer(RlistScalarValue(rp))))
             {
                 *err = 0;
                 return conn;
@@ -210,28 +180,27 @@ AgentConnection *NewServerConnection(EvalContext *ctx, Attributes attr, Promise 
 
             /* This is first usage, need to open */
 
-            conn = ServerConnection(ctx, rp->item, attr, pp, err);
+            conn = ServerConnection(RlistScalarValue(rp), fc, err);
 
             if (conn == NULL)
             {
-                cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, attr, "Unable to establish connection with %s\n", RlistScalarValue(rp));
-                MarkServerOffline(rp->item);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to establish connection with %s\n", RlistScalarValue(rp));
+                MarkServerOffline(RlistScalarValue(rp));
             }
             else
             {
-                CacheServerConnection(conn, rp->item);
+                CacheServerConnection(conn, RlistScalarValue(rp));
                 return conn;
             }
         }
     }
 
-    pp->this_server = NULL;
     return NULL;
 }
 
 /*****************************************************************************/
 
-static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attributes attr, Promise *pp, int *err)
+static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err)
 {
     AgentConnection *conn;
     *err = 0;
@@ -247,7 +216,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
     pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 #endif
 
-    conn = NewAgentConn();
+    conn = NewAgentConn(server);
 
     if (strcmp(server, "localhost") == 0)
     {
@@ -270,7 +239,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
     {
         CfDebug("Opening server connection to %s\n", server);
 
-        if (!ServerConnect(ctx, conn, server, attr, pp))
+        if (!ServerConnect(conn, server, fc))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", " !! No server is responding on this port");
 
@@ -300,7 +269,7 @@ static AgentConnection *ServerConnection(EvalContext *ctx, char *server, Attribu
             return NULL;
         }
 
-        if (!AuthenticateAgent(ctx, conn, attr, pp))
+        if (!AuthenticateAgent(conn, fc.trustkey))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Authentication dialogue with %s failed\n", server);
             errno = EPERM;
@@ -339,14 +308,13 @@ void DisconnectServer(AgentConnection *conn)
 
 /*********************************************************************/
 
-int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattype, Attributes attr, Promise *pp)
+int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn)
 /* If a link, this reads readlink and sends it back in the same
    package. It then caches the value for each copy command */
 {
     char sendbuffer[CF_BUFSIZE];
     char recvbuffer[CF_BUFSIZE];
     char in[CF_BUFSIZE], out[CF_BUFSIZE];
-    AgentConnection *conn = pp->conn;
     int ret, tosend, cipherlen;
     time_t tloc;
 
@@ -359,7 +327,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
         return -1;
     }
 
-    ret = CacheStat(file, buf, stattype, attr, pp);
+    ret = CacheStat(file, buf, stattype, conn);
 
     if (ret != 0)
     {
@@ -373,11 +341,11 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
     sendbuffer[0] = '\0';
 
-    if (attr.copy.encrypt)
+    if (encrypt)
     {
         if (conn->session_key == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Cannot do encrypted copy without keys (use cf-key)");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Cannot do encrypted copy without keys (use cf-key)");
             return -1;
         }
 
@@ -395,8 +363,8 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
     if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "send", pp, attr, "Transmission failed/refused talking to %.255s:%.255s in stat",
-             pp->this_server, file);
+        CfOut(OUTPUT_LEVEL_INFORM, "send", "Transmission failed/refused talking to %.255s:%.255s in stat",
+             conn->this_server, file);
         return -1;
     }
 
@@ -456,7 +424,6 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
         cfst.cf_mtime = (time_t) d8;
         cfst.cf_ctime = (time_t) d9;
         cfst.cf_makeholes = (char) d10;
-        pp->makeholes = (char) d10;
         cfst.cf_ino = d11;
         cfst.cf_nlink = d12;
         cfst.cf_dev = (dev_t)d13;
@@ -514,13 +481,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
         }
 
         cfst.cf_filename = xstrdup(file);
-        cfst.cf_server = xstrdup(pp->this_server);
-
-        if ((cfst.cf_filename == NULL) || (cfst.cf_server == NULL))
-        {
-            FatalError("Memory allocation in cf_rstat");
-        }
-
+        cfst.cf_server = xstrdup(conn->this_server);
         cfst.cf_failed = false;
 
         if (cfst.cf_lmode != 0)
@@ -528,7 +489,7 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
             cfst.cf_lmode |= (mode_t) S_IFLNK;
         }
 
-        NewClientCache(&cfst, pp);
+        NewClientCache(&cfst, conn);
 
         if ((cfst.cf_lmode != 0) && (strcmp(stattype, "link") == 0))
         {
@@ -559,19 +520,18 @@ int cf_remote_stat(EvalContext *ctx, char *file, struct stat *buf, char *stattyp
 
 /*********************************************************************/
 
-Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promise *pp)
+Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 {
-    AgentConnection *conn = pp->conn;
     char sendbuffer[CF_BUFSIZE];
     char recvbuffer[CF_BUFSIZE];
     char in[CF_BUFSIZE];
     char out[CF_BUFSIZE];
     int n, cipherlen = 0, tosend;
-    Dir *cfdirh;
     char *sp;
     Item *files = NULL;
+    Item *ret = NULL;
 
-    CfDebug("CfOpenDir(%s:%s)\n", pp->this_server, dirname);
+    CfDebug("CfOpenDir(%s:%s)\n", conn->this_server, dirname);
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
@@ -579,15 +539,12 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
         return NULL;
     }
 
-    cfdirh = xcalloc(1, sizeof(Dir));
-
-    if (attr.copy.encrypt)
+    if (encrypt)
     {
         if (conn->session_key == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, " !! Cannot do encrypted copy without keys (use cf-key)");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Cannot do encrypted copy without keys (use cf-key)");
             return NULL;
-            free(cfdirh);
         }
 
         snprintf(in, CF_BUFSIZE, "OPENDIR %s", dirname);
@@ -604,7 +561,6 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
     if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
     {
-        free((char *) cfdirh);
         return NULL;
     }
 
@@ -612,7 +568,6 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
     {
         if ((n = ReceiveTransaction(conn->sd, recvbuffer, NULL)) == -1)
         {
-            free((char *) cfdirh);
             return NULL;
         }
 
@@ -621,7 +576,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
             break;
         }
 
-        if (attr.copy.encrypt)
+        if (encrypt)
         {
             memcpy(in, recvbuffer, n);
             DecryptString(conn->encryption_type, in, recvbuffer, conn->session_key, n);
@@ -629,15 +584,13 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
         if (FailedProtoReply(recvbuffer))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, dirname);
-            free((char *) cfdirh);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Network access to %s:%s denied\n", conn->this_server, dirname);
             return NULL;
         }
 
         if (BadProtoReply(recvbuffer))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "%s\n", recvbuffer + 4);
-            free((char *) cfdirh);
             return NULL;
         }
 
@@ -647,8 +600,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
             if (strncmp(sp, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)       /* End transmission */
             {
-                cfdirh->listpos = cfdirh->list;
-                return cfdirh;
+                return ret;
             }
 
             ip = xcalloc(1, sizeof(Item));
@@ -656,7 +608,7 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
 
             if (files == NULL)  /* First element */
             {
-                cfdirh->list = ip;
+                ret = ip;
                 files = ip;
             }
             else
@@ -672,54 +624,38 @@ Dir *OpenDirRemote(EvalContext *ctx, const char *dirname, Attributes attr, Promi
         }
     }
 
-    cfdirh->listpos = cfdirh->list;
-    return cfdirh;
+    return ret;
 }
 
 /*********************************************************************/
 
-static void NewClientCache(Stat *data, Promise *pp)
+static void NewClientCache(Stat *data, AgentConnection *conn)
 {
-    Stat *sp;
-
     CfDebug("NewClientCache\n");
 
-    sp = xmalloc(sizeof(Stat));
-
-    memcpy(sp, data, sizeof(Stat));
-
-    sp->next = pp->cache;
-    pp->cache = sp;
+    Stat *sp = xmemdup(data, sizeof(Stat));
+    sp->next = conn->cache;
+    conn->cache = sp;
 }
 
-/*********************************************************************/
-
-void DeleteClientCache(Attributes attr, Promise *pp)
+const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name)
 {
-    Stat *sp, *sps;
-
-    CfDebug("DeleteClientCache\n");
-
-    sp = pp->cache;
-
-    while (sp != NULL)
+    for (const Stat *sp = conn->cache; sp != NULL; sp = sp->next)
     {
-        sps = sp;
-        sp = sp->next;
-        free((char *) sps);
+        if (strcmp(server_name, sp->cf_server) == 0 && strcmp(file_name, sp->cf_filename) == 0)
+        {
+            return sp;
+        }
     }
 
-    pp->cache = NULL;
+    return NULL;
 }
 
-/*********************************************************************/
-
-int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, Promise *pp)
+int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn)
 {
     static unsigned char d[EVP_MAX_MD_SIZE + 1];
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
     int i, tosend, cipherlen;
-    AgentConnection *conn = pp->conn;
     char buffer[EVP_MAX_MD_SIZE * 4];
 
     HashFile(file2, d, CF_DEFAULT_DIGEST);
@@ -727,7 +663,7 @@ int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, 
 
     memset(recvbuffer, 0, CF_BUFSIZE);
 
-    if (attr.copy.encrypt)
+    if (encrypt)
     {
         snprintf(in, CF_BUFSIZE, "MD5 %s", file1);
 
@@ -760,13 +696,13 @@ int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, 
 
     if (SendTransaction(conn->sd, sendbuffer, tosend, CF_DONE) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "send", pp, attr, "Failed send");
+        CfOut(OUTPUT_LEVEL_ERROR, "send", "Failed send");
         return false;
     }
 
     if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "recv", pp, attr, "Failed send");
+        CfOut(OUTPUT_LEVEL_ERROR, "recv", "Failed send");
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "No answer from host, assuming checksum ok to avoid remote copy for now...\n");
         return false;
     }
@@ -787,21 +723,20 @@ int CompareHashNet(EvalContext *ctx, char *file1, char *file2, Attributes attr, 
 
 /*********************************************************************/
 
-int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp)
+int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
 {
     int dd, buf_size, n_read = 0, toget, towrite;
-    int last_write_made_hole = 0, done = false, tosend, value;
+    int done = false, tosend, value;
     char *buf, workbuf[CF_BUFSIZE], cfchangedstr[265];
 
     off_t n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
-    AgentConnection *conn = pp->conn;
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
     if ((strlen(new) > CF_BUFSIZE - 20))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Filename too long");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Filename too long");
         return false;
     }
 
@@ -809,9 +744,9 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
     if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "open", pp, attr,
+        CfOut(OUTPUT_LEVEL_ERROR, "open",
              " !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",
-             pp->this_server, new);
+             conn->this_server, new);
         unlink(new);
         return false;
     }
@@ -827,7 +762,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
     if (SendTransaction(conn->sd, workbuf, tosend, CF_DONE) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Couldn't send data");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't send data");
         close(dd);
         return false;
     }
@@ -836,7 +771,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
     n_read_total = 0;
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Copying remote file %s:%s, expecting %jd bytes",
-          pp->this_server, source, (intmax_t)size);
+          conn->this_server, source, (intmax_t)size);
 
     while (!done)
     {
@@ -856,12 +791,12 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
         /* Stage C1 - receive */
 
-        if ((n_read = RecvSocketStream(conn->sd, buf, toget, 0)) == -1)
+        if ((n_read = RecvSocketStream(conn->sd, buf, toget)) == -1)
         {
             /* This may happen on race conditions,
              * where the file has shrunk since we asked for its size in SYNCH ... STAT source */
 
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Error in client-server stream (has %s:%s shrunk?)", pp->this_server, source);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Error in client-server stream (has %s:%s shrunk?)", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -871,7 +806,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
         if ((n_read_total == 0) && (strncmp(buf, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, source);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Network access to %s:%s denied\n", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -879,7 +814,7 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
         if (strncmp(buf, cfchangedstr, strlen(cfchangedstr)) == 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Source %s:%s changed while copying\n", pp->this_server, source);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Source %s:%s changed while copying\n", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -893,17 +828,19 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
         if ((value > 0) && (strncmp(buf + CF_INBAND_OFFSET, "BAD: ", 5) == 0))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Network access to cleartext %s:%s denied\n", pp->this_server,
-                 source);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Network access to cleartext %s:%s denied\n", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
         }
 
-        if (!FSWrite(new, dd, buf, towrite, &last_write_made_hole, n_read, attr, pp))
+        if (!FSWrite(new, dd, buf, n_read))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Local disk write failed copying %s:%s to %s\n", pp->this_server,
-                 source, new);
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Local disk write failed copying %s:%s to %s\n", conn->this_server, source, new);
+            if (conn)
+            {
+                conn->error = true;
+            }
             free(buf);
             unlink(new);
             close(dd);
@@ -925,17 +862,14 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
        of the last write operation. Write a null character and truncate
        it again.  */
 
-    if (last_write_made_hole)
+    if (ftruncate(dd, n_read_total) < 0)
     {
-        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "FullWrite or ftruncate error in CopyReg, source %s\n", source);
-            free(buf);
-            unlink(new);
-            close(dd);
-            FlushFileStream(conn->sd, size - n_read_total);
-            return false;
-        }
+        CfOut(OUTPUT_LEVEL_ERROR, "ftruncate", "Copy failed (no space?) while copying %s from network", new);
+        free(buf);
+        unlink(new);
+        close(dd);
+        FlushFileStream(conn->sd, size - n_read_total);
+        return false;
     }
 
     CfDebug("End of CopyNetReg\n");
@@ -946,22 +880,21 @@ int CopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, At
 
 /*********************************************************************/
 
-int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t size, Attributes attr, Promise *pp)
+int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn)
 {
     int dd, blocksize = 2048, n_read = 0, towrite, plainlen, more = true, finlen, cnt = 0;
-    int last_write_made_hole = 0, tosend, cipherlen = 0;
+    int tosend, cipherlen = 0;
     char *buf, in[CF_BUFSIZE], out[CF_BUFSIZE], workbuf[CF_BUFSIZE], cfchangedstr[265];
     unsigned char iv[32] =
         { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
     long n_read_total = 0;
     EVP_CIPHER_CTX crypto_ctx;
-    AgentConnection *conn = pp->conn;
 
     snprintf(cfchangedstr, 255, "%s%s", CF_CHANGEDSTR1, CF_CHANGEDSTR2);
 
     if ((strlen(new) > CF_BUFSIZE - 20))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Filename too long");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Filename too long");
         return false;
     }
 
@@ -969,9 +902,9 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
     if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "open", pp, attr,
+        CfOut(OUTPUT_LEVEL_ERROR, "open",
              " !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied)\n",
-             pp->this_server, new);
+             conn->this_server, new);
         unlink(new);
         return false;
     }
@@ -996,7 +929,7 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
     if (SendTransaction(conn->sd, workbuf, tosend, CF_DONE) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "", pp, attr, "Couldn't send data");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't send data");
         close(dd);
         return false;
     }
@@ -1019,7 +952,7 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
         if ((n_read_total == 0) && (strncmp(buf + CF_INBAND_OFFSET, CF_FAILEDSTR, strlen(CF_FAILEDSTR)) == 0))
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Network access to %s:%s denied\n", pp->this_server, source);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Network access to %s:%s denied\n", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1027,7 +960,7 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
         if (strncmp(buf + CF_INBAND_OFFSET, cfchangedstr, strlen(cfchangedstr)) == 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, "Source %s:%s changed while copying\n", pp->this_server, source);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Source %s:%s changed while copying\n", conn->this_server, source);
             close(dd);
             free(buf);
             return false;
@@ -1055,10 +988,14 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 
         n_read_total += n_read;
 
-        if (!FSWrite(new, dd, workbuf, towrite, &last_write_made_hole, n_read, attr, pp))
+        if (!FSWrite(new, dd, workbuf, towrite))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Local disk write failed copying %s:%s to %s\n", pp->this_server,
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Local disk write failed copying %s:%s to %s\n", conn->this_server,
                  source, new);
+            if (conn)
+            {
+                conn->error = true;
+            }
             free(buf);
             unlink(new);
             close(dd);
@@ -1072,17 +1009,14 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
        of the last write operation. Write a null character and truncate
        it again.  */
 
-    if (last_write_made_hole)
+    if (ftruncate(dd, n_read_total) < 0)
     {
-        if ((FullWrite(dd, "", 1) < 0) || (ftruncate(dd, n_read_total) < 0))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, "FullWrite or ftruncate error in CopyReg, source %s\n", source);
-            free(buf);
-            unlink(new);
-            close(dd);
-            EVP_CIPHER_CTX_cleanup(&crypto_ctx);
-            return false;
-        }
+        CfOut(OUTPUT_LEVEL_ERROR, "ftruncate", "Copy failed (no space?) while copying %s from network", new);
+        free(buf);
+        unlink(new);
+        close(dd);
+        EVP_CIPHER_CTX_cleanup(&crypto_ctx);
+        return false;
     }
 
     close(dd);
@@ -1095,33 +1029,33 @@ int EncryptCopyRegularFileNet(EvalContext *ctx, char *source, char *new, off_t s
 /* Level 2                                                           */
 /*********************************************************************/
 
-int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attributes attr, Promise *pp)
+int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 {
     short shortport;
     char strport[CF_MAXVARSIZE] = { 0 };
     struct sockaddr_in cin = { 0 };
     struct timeval tv = { 0 };
 
-    if (attr.copy.portnumber == (short) CF_NOINT)
+    if (fc.portnumber == (short) CF_NOINT)
     {
         shortport = SHORT_CFENGINEPORT;
         strncpy(strport, STR_CFENGINEPORT, CF_MAXVARSIZE);
     }
     else
     {
-        shortport = htons(attr.copy.portnumber);
-        snprintf(strport, CF_MAXVARSIZE, "%u", (int) attr.copy.portnumber);
+        shortport = htons(fc.portnumber);
+        snprintf(strport, CF_MAXVARSIZE, "%u", (int) fc.portnumber);
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set cfengine port number to %s = %u\n", strport, (int) ntohs(shortport));
 
-    if ((attr.copy.timeout == (short) CF_NOINT) || (attr.copy.timeout <= 0))
+    if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
     {
         tv.tv_sec = CONNTIMEOUT;
     }
     else
     {
-        tv.tv_sec = attr.copy.timeout;
+        tv.tv_sec = fc.timeout;
     }
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set connection timeout to %jd\n", (intmax_t) tv.tv_sec);
@@ -1130,7 +1064,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
 #if defined(HAVE_GETADDRINFO)
 
-    if (!attr.copy.force_ipv4)
+    if (!fc.force_ipv4)
     {
         struct addrinfo query = { 0 }, *response, *ap;
         struct addrinfo query2 = { 0 }, *response2, *ap2;
@@ -1142,7 +1076,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_INTERPT, "", pp, attr, " !! Unable to find host or service: (%s/%s) %s", host, strport,
+            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to find host or service: (%s/%s) %s", host, strport,
                  gai_strerror(err));
             return false;
         }
@@ -1165,7 +1099,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
                 if ((err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2)) != 0)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, attr, " !! Unable to lookup hostname or cfengine service: %s",
+                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Unable to lookup hostname or cfengine service: %s",
                          gai_strerror(err));
                     cf_closesocket(conn->sd);
                     conn->sd = SOCKET_INVALID;
@@ -1217,11 +1151,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if (!connected)
         {
-            if (pp)
-            {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "connect", pp, attr, " !! Unable to connect to server %s", host);
-            }
-
+            CfOut(OUTPUT_LEVEL_VERBOSE, "connect", " !! Unable to connect to server %s", host);
             return false;
         }
 
@@ -1251,7 +1181,7 @@ int ServerConnect(EvalContext *ctx, AgentConnection *conn, char *host, Attribute
 
         if ((conn->sd = socket(AF_INET, SOCK_STREAM, 0)) == SOCKET_INVALID)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_INTERPT, "socket", pp, attr, "Couldn't open a socket");
+            CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open a socket");
             return false;
         }
 
@@ -1402,7 +1332,7 @@ static void MarkServerOffline(const char *server)
     free(rp->item);
     rp->item = svp;
 
-    svp->conn = NewAgentConn();
+    svp->conn = NewAgentConn(ipname);
 
     svp->busy = false;
 
@@ -1438,15 +1368,15 @@ static void CacheServerConnection(AgentConnection *conn, const char *server)
 
 /*********************************************************************/
 
-static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, Attributes attr, Promise *pp)
+static int CacheStat(const char *file, struct stat *statbuf, const char *stattype, AgentConnection *conn)
 {
     Stat *sp;
 
     CfDebug("CacheStat(%s)\n", file);
 
-    for (sp = pp->cache; sp != NULL; sp = sp->next)
+    for (sp = conn->cache; sp != NULL; sp = sp->next)
     {
-        if ((strcmp(pp->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
+        if ((strcmp(conn->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
         {
             if (sp->cf_failed)  /* cached failure from cfopendir */
             {

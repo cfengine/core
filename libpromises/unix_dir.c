@@ -25,53 +25,45 @@
 #include "dir.h"
 #include "dir_priv.h"
 
-#include "logging.h"
 
-/*********************************************************************/
+struct Dir_
+{
+    DIR *dirh;
+    struct dirent *entrybuf;
+};
 
 static size_t GetNameMax(DIR *dirp);
 static size_t GetDirentBufferSize(size_t path_len);
 
-/*********************************************************************/
-
-Dir *OpenDirLocal(const char *dirname)
+Dir *DirOpen(const char *dirname)
 {
     Dir *ret = xcalloc(1, sizeof(Dir));
-    DIR *dirh = NULL;
-    size_t dirent_buf_size = -1;
 
-    ret->dirh = dirh = opendir(dirname);
-    if (dirh == NULL)
+    ret->dirh = opendir(dirname);
+    if (ret->dirh == NULL)
     {
         free(ret);
         return NULL;
     }
 
-    dirent_buf_size = GetDirentBufferSize(GetNameMax(dirh));
-    if (dirent_buf_size == (size_t) -1)
-    {
-        FatalError("Unable to determine directory entry buffer size for directory %s", dirname);
-    }
+    size_t dirent_buf_size = GetDirentBufferSize(GetNameMax(ret->dirh));
 
     ret->entrybuf = xcalloc(1, dirent_buf_size);
 
     return ret;
 }
 
-/*********************************************************************/
-
 /*
  * Returns NULL on EOF or error.
  *
  * Sets errno to 0 for EOF and non-0 for error.
  */
-const struct dirent *ReadDirLocal(Dir *dir)
+const struct dirent *DirRead(Dir *dir)
 {
-    int err;
-    struct dirent *ret;
-
     errno = 0;
-    err = readdir_r((DIR *) dir->dirh, dir->entrybuf, &ret);
+
+    struct dirent *ret;
+    int err = readdir_r((DIR *) dir->dirh, dir->entrybuf, &ret);
 
     if (err != 0)
     {
@@ -87,16 +79,12 @@ const struct dirent *ReadDirLocal(Dir *dir)
     return ret;
 }
 
-/*********************************************************************/
-
-void CloseDirLocal(Dir *dir)
+void DirClose(Dir *dir)
 {
     closedir((DIR *) dir->dirh);
     free(dir->entrybuf);
     free(dir);
 }
-
-/*********************************************************************/
 
 /*
  * Taken from http://womble.decadent.org.uk/readdir_r-advisory.html
@@ -164,8 +152,6 @@ static size_t GetNameMax(DIR *dirp)
 
 #endif /* FPATHCONF && _PC_NAME_MAX */
 
-/*********************************************************************/
-
 /*
  * Returns size of memory enough to hold path name_len bytes long.
  */
@@ -175,8 +161,6 @@ static size_t GetDirentBufferSize(size_t name_len)
 
     return (name_end > sizeof(struct dirent) ? name_end : sizeof(struct dirent));
 }
-
-/*********************************************************************/
 
 struct dirent *AllocateDirentForFilename(const char *filename)
 {

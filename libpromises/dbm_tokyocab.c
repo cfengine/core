@@ -30,8 +30,7 @@
 #include "cf3.defs.h"
 
 #include "dbm_priv.h"
-#include "dbm_lib.h"
-#include "cfstream.h"
+#include "logging.h"
 
 #ifdef TCDB
 
@@ -119,6 +118,12 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
+    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    {
+        tchdbclose(*hdb);
+        return false;
+    }
+
     return true;
 }
 
@@ -142,16 +147,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
         tchdbdel(db->hdb);
 
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Database \"%s\" is broken, recreating...", dbpath);
-
-        DBPathMoveBroken(dbpath);
-
-        if (!OpenTokyoDatabase(dbpath, &db->hdb))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not open database %s after recreate: %s",
-                  dbpath, ErrorMessage(db->hdb));
-            goto err;
-        }
+        return DB_PRIV_DATABASE_BROKEN;
     }
 
     return db;

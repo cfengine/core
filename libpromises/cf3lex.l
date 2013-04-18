@@ -29,13 +29,13 @@
 /*                                                                 */
 /*******************************************************************/
 
-#include "cf3.defs.h"
-#include "cf3parse.h"
+#include "platform.h"
 
-#include "env_context.h"
+#include "cf3parse.h"
 #include "parser_state.h"
-#include "files_names.h"
-#include "vars.h"
+
+#include "env_context.h" /* TODO: remove, for class syntax */
+
 
 /* yyinput/input are generated and unused */
 
@@ -50,6 +50,8 @@
 #undef realloc
 #define malloc xmalloc
 #define realloc xrealloc
+
+#define ParserDebug if (DEBUG) printf
 
 static int DeEscapeQuotedString(const char *from, char *to);
 
@@ -73,6 +75,8 @@ space      [ \t]+
 
 newline    ([\n]|[\xd][\xa])
 
+line       ^.*$
+
 comment    #[^\n]*
 
 promises   bundle
@@ -88,6 +92,14 @@ blockid    [a-zA-Z0-9_\200-\377]+[:][a-zA-Z0-9_\200-\377]+
 assign     =>
 
 arrow      ->
+
+op         [(]
+
+cp         [)]
+
+ob         [{]
+
+cb         [}]
 
 /*
  * Three types of quoted strings:
@@ -111,13 +123,20 @@ arrow      ->
  *
  */
 
-qstring    \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
+qstring        \"((\\(.|\n))|[^"\\])*\"|\'((\\(.|\n))|[^'\\])*\'|`[^`]*`
 
-class      [.|&!()a-zA-Z0-9_\200-\377:]+::
+class          [.|&!()a-zA-Z0-9_\200-\377:]+::
 
-category   [a-zA-Z_]+:
+promise_type   [a-zA-Z_]+:
 
 %%
+
+{line}                {
+                          free(P.current_line);
+                          P.current_line = xstrdup(yytext);
+                          ParserDebug("L:line %s\n", P.current_line);
+                          REJECT;
+                      }
 
 {newline}             {
                           P.line_no++;
@@ -132,7 +151,8 @@ category   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:bundle %d\n", P.line_pos);
                           return BUNDLE;
                       }
 
@@ -144,15 +164,16 @@ category   [a-zA-Z_]+:
                               free(P.currentclasses);
                               P.currentclasses = NULL;
                           }
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:body %d\n", P.line_pos);
                           return BODY;
                       }
 
 {id}                  {
-                          size_t token_length = strlen(yytext);
-                          P.offsets.last_id = P.offsets.current - token_length;
-                          P.line_pos += token_length;
-                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          P.offsets.last_id = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:id %s %d\n", yytext, P.line_pos);
+                          if (yyleng  > CF_MAXVARSIZE-1)
                           {
                               yyerror("identifier too long");
                           }
@@ -162,10 +183,10 @@ category   [a-zA-Z_]+:
 
 
 {blockid}             {
-                          size_t token_length = strlen(yytext);
-                          P.offsets.last_id = P.offsets.current - token_length;
-                          P.line_pos += token_length;
-                          if (strlen(yytext) > CF_MAXVARSIZE-1)
+                          P.offsets.last_id = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:blockid %s %d\n", yytext, P.line_pos);
+                          if (yyleng > CF_MAXVARSIZE-1)
                           {
                               yyerror("qualified identifier too long");
                           }
@@ -175,35 +196,51 @@ category   [a-zA-Z_]+:
 
 
 {assign}              {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:assign %d\n", P.line_pos);
                           return ASSIGN;
                       }
 
 {arrow}               {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:arrow %d\n", P.line_pos);
                           return ARROW;
                       }
 
 {class}               {
-                          P.line_pos += strlen(yytext);
+                          char *tmp = NULL;
+                        
+                          tmp = xmalloc(yyleng + 1);
+
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:class %s %d\n", yytext, P.line_pos);
+
+                          tmp = xstrdup(yytext);
+                          tmp[yyleng-2] = '\0';
 
                           if (P.currentclasses != NULL)
                           {
                               free(P.currentclasses);
                           }
 
-                          yytext[strlen(yytext)-2] = '\0';
-                          ValidateClassSyntax(yytext);
-                          P.currentclasses = xstrdup(yytext);
+                          ValidateClassSyntax(tmp);
+                          P.currentclasses = xstrdup(tmp);
+
+                          free(tmp);
                           return CLASS;
                       }
 
-{category}            {
-                          size_t token_size = strlen(yytext);
-                          P.line_pos += token_size;
-                          P.offsets.last_subtype_id = P.offsets.current - token_size;
-                          yytext[token_size - 1] = '\0';
-                          strncpy(P.currenttype, yytext, CF_MAXVARSIZE);
+{promise_type}        {
+                          char *tmp = NULL;
+
+                          tmp = xmalloc(yyleng + 1);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:promise_type %s %d\n", yytext, P.line_pos);
+                          P.offsets.last_promise_type_id = P.offsets.current - yyleng;
+
+                          tmp = xstrdup(yytext);
+                          tmp[yyleng - 1] = '\0';
+                          strncpy(P.currenttype, tmp, CF_MAXVARSIZE);
 
                           if (P.currentclasses != NULL)
                           {
@@ -211,16 +248,17 @@ category   [a-zA-Z_]+:
                               P.currentclasses = NULL;
                           }
 
-                          return CATEGORY;
+                          free(tmp);
+                          return PROMISE_TYPE;
                       }
 
 {qstring}             {
                           char *tmp = NULL;
                           int less = 0;
-                          size_t token_length = strlen(yytext);
 
-                          P.offsets.last_string = P.offsets.current - token_length;
-                          P.line_pos += token_length;
+                          P.offsets.last_string = P.offsets.current - yyleng;
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL:qstring %s %d\n", yytext, P.line_pos);
 
                           for (char *c = yytext; *c; ++c)
                           {
@@ -230,7 +268,7 @@ category   [a-zA-Z_]+:
                               }
                           }
 
-                          tmp = xmalloc(token_length + 1);
+                          tmp = xmalloc(yyleng + 1);
 
                           if ((less = DeEscapeQuotedString(yytext,tmp)) > 0)
                           {
@@ -245,25 +283,45 @@ category   [a-zA-Z_]+:
 
                           P.currentstring = xstrdup(tmp);
 
-                          if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
-                          {
-                              IsCf3VarString(tmp);
-                          }
-
                           free(tmp);
                           return QSTRING;
                       }
 
 
 {nakedvar}            {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
                           P.currentstring = xstrdup(yytext);
                           return NAKEDVAR;
                       }
 
+{op}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return OP;
+                      }
+
+{cp}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return CP;
+                      }
+
+{ob}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return OB;
+                      }
+
+{cb}                  {
+                          P.line_pos += yyleng;
+                          ParserDebug("\tL: %s %d\n", yytext, P.line_pos);
+                          return CB;
+                      }
+
 
 {space}+              {
-                          P.line_pos += strlen(yytext);
+                          P.line_pos += yyleng;
                       }
 
 {comment}             {

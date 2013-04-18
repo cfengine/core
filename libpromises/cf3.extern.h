@@ -32,10 +32,6 @@ extern RSA *PRIVKEY, *PUBKEY;
 extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 
-extern Audit *AUDITPTR;
-extern Audit *VAUDIT;
-
-extern char CONTEXTID[];
 extern Item *IPADDRESSES;
 
 extern char STR_CFENGINEPORT[16];
@@ -56,7 +52,6 @@ extern char VSHIFT[];
 extern const char *CLASSTEXT[];
 extern int AUDIT;
 
-extern int ERRORCOUNT;
 extern time_t CFSTARTTIME;
 extern time_t CFINITSTARTTIME;
 
@@ -70,8 +65,6 @@ extern char VFQNAME[];
 extern char VUQNAME[];
 
 extern int DEBUG;
-
-extern int PARSING;
 
 extern int VERBOSE;
 extern int INFORM;
@@ -93,25 +86,16 @@ extern const char *OBS[CF_OBSERVABLES][2];
 extern int FIPS_MODE;
 extern char POLICY_SERVER[CF_BUFSIZE];
 extern int LICENSES;
-extern int AM_NOVA;
 extern char EXPIRY[CF_SMALLBUF];
 extern char LICENSE_COMPANY[CF_SMALLBUF];
-extern int CF_TOPICS;
-extern int CF_OCCUR;
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern Scope *VSCOPE;
-extern Audit *AUDITPTR;
-extern Audit *VAUDIT;
-extern Item *DONELIST;
 extern char *CBUNDLESEQUENCE_STR;
 extern Item *ROTATED;
 
 extern Rlist *CF_STCK;
-extern int EDIT_MODEL;
-extern int CF_STCKFRAME;
-extern int AM_BACKGROUND_PROCESS;
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;
@@ -120,7 +104,6 @@ extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;
-extern const char *THIS_BUNDLE;
 extern AgentType THIS_AGENT_TYPE;
 extern int SHOWREPORTS;
 extern time_t PROMISETIME;

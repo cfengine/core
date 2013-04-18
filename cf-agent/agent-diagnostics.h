@@ -20,7 +20,10 @@ typedef struct
 void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[], Writer *output);
 
 // Checks
-AgentDiagnosticsResult AgentDiagosticsCheckHavePrivateKey(const char *workdir);
+AgentDiagnosticsResult AgentDiagnosticsCheckHavePrivateKey(const char *workdir);
+AgentDiagnosticsResult AgentDiagnosticsCheckHavePublicKey(const char *workdir);
+AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir);
+AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir);
 
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message);

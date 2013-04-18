@@ -233,6 +233,39 @@ void SetPolicyServer(EvalContext *ctx, char *name)
     ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
+char *GetPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
+    char contents[CF_BUFSIZE] = { 0 };
+
+    FILE *fp = fopen(path, "r");
+    if (fp)
+    {
+        if (fscanf(fp, "%4095s", contents) != 1)
+        {
+            fclose(fp);
+            return NULL;
+        }
+        fclose(fp);
+        return xstrdup(contents);
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+bool GetAmPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);
+    MapName(path);
+
+    struct stat sb;
+    return cfstat(path, &sb) == 0;
+}
+
 /********************************************************************/
 
 void CreateFailSafe(char *name)

@@ -37,6 +37,7 @@
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
+#include "sysinfo.h"
 
 #ifdef HAVE_NOVA
 #include "license.h"
@@ -138,8 +139,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        public_key_file = xstrdup(PublicKeyFile());
-        private_key_file = xstrdup(PrivateKeyFile());
+        public_key_file = xstrdup(PublicKeyFile(GetWorkDir()));
+        private_key_file = xstrdup(PrivateKeyFile(GetWorkDir()));
     }
 
     KeepKeyPromises(public_key_file, private_key_file);

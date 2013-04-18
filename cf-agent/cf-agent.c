@@ -63,6 +63,8 @@
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "agent-diagnostics.h"
+#include "sysinfo.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "syslog_client.h"
 
@@ -182,7 +184,7 @@ static const struct option OPTIONS[15] =
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"define", required_argument, 0, 'D'},
-    {"diagnostic", optional_argument, 0, 'x'},
+    {"self-diagnostics", optional_argument, 0, 'x'},
     {"dry-run", no_argument, 0, 'n'},
     {"file", required_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
@@ -200,7 +202,7 @@ static const char *HINTS[15] =
     "Set or override bundlesequence from command line",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
-    "Do internal diagnostic (developers only) level in optional argument",
+    "Run checks to diagnose a CFEngine agent installation",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Specify an alternative input file than the default",
     "Print the help message",
@@ -322,7 +324,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
 
-    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -448,7 +450,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired");
+            {
+                Writer *out = FileWriter(stdout);
+                AgentDiagnosticsRun(GetWorkDir(), AgentDiagosticsAllChecks(), out);
+                FileWriterDetach(out);
+            }
             exit(0);
 
         default:

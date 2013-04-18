@@ -328,7 +328,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             break;
 
         default:
-            if (isalnum((int) *sp) || strchr("_[]$.:-#", *sp))
+            if (isalnum((int) *sp) || strchr("_[]$.:-# ", *sp))
             {
             }
             else

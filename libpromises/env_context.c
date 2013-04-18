@@ -1861,7 +1861,8 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
     if (IsQualifiedVariable(sval))
     {
         scopeid[0] = '\0';
-        sscanf(sval, "%[^.].%s", scopeid, vlval);
+        sscanf(sval, "%[^.].", scopeid);
+        strlcpy(vlval, sval + strlen(scopeid) + 1, sizeof(vlval));
         CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
         ptr = ScopeGet(scopeid);
     }

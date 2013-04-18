@@ -2532,7 +2532,7 @@ bundle agent testbundle
 {
 files:
 
-  "/home/mark/tmp/comment_test"
+  "/tmp/comment_test"
 
        create    => "true",
        edit_line => comment_lines_matching;
@@ -2563,6 +2563,22 @@ replace_value => "$(c) $(match.1)";
 occurrences => "all";
 }
 
+@end verbatim
+
+Put this example in /tmp/comment_test
+@begin verbatim
+one $
+two #
+three &
+four *
+@end verbatim
+
+@noindent The resulting file is edited like this:
+@begin verbatim
+#  one $
+#  two #
+three &
+#  four *
 @end verbatim
 
 @node Regular expressions in paths

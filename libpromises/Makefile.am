@@ -18,6 +18,7 @@ libpromises_la_SOURCES = \
         addr_lib.c addr_lib.h \
         args.c args.h \
         assoc.c assoc.h \
+        audit.c audit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
         cf.events.h \

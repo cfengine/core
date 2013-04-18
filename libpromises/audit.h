@@ -23,21 +23,22 @@
 
 */
 
-#ifndef CFENGINE_LOGGING_H
-#define CFENGINE_LOGGING_H
+#ifndef CFENGINE_AUDIT_H
+#define CFENGINE_AUDIT_H
+
+/*
+ * This module keeps track of amount and value of promises kept/repaired/not-kept
+ */
 
 #include "cf3.defs.h"
+#include "policy.h"
+#include "env_context.h"
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
-void PromiseLog(char *s);
-void PromiseBanner(Promise *pp);
-void BannerSubBundle(Bundle *bp, Rlist *params);
-void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
+void BeginAudit(void);
 
-void SetSyslogHost(const char *host);
-void SetSyslogPort(uint16_t port);
-void SetSyslogFacility(int facility);
-void RemoteSysLog(int log_priority, const char *log_string);
+void UpdatePromiseCounters(PromiseResult status, TransactionContext tc);
+
+void EndAudit(const EvalContext *ctx, int background_tasks);
 
 #endif
+

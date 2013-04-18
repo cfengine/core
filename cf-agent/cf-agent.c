@@ -25,6 +25,7 @@
 
 #include "generic_agent.h"
 
+#include "audit.h"
 #include "env_context.h"
 #include "verify_databases.h"
 #include "verify_environments.h"

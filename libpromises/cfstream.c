@@ -25,6 +25,7 @@
 
 #include "cfstream.h"
 
+#include "audit.h"
 #include "files_names.h"
 #include "policy.h"
 #include "item_lib.h"

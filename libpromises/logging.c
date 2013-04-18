@@ -38,28 +38,17 @@
 #include "syntax.h"
 #include "expand.h"
 #include "misc_lib.h"
+#include "audit.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #endif
-
-#define CF_VALUE_LOG      "cf_value.log"
 
 static const char *NO_STATUS_TYPES[] = { "vars", "classes", NULL };
 static const char *NO_LOG_TYPES[] =
     { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
 
 /*****************************************************************************/
-
-static double VAL_KEPT;
-static double VAL_REPAIRED;
-static double VAL_NOTKEPT;
-
-int PR_KEPT;
-int PR_REPAIRED;
-int PR_NOTKEPT;
-
-static bool END_AUDIT_REQUIRED = false;
 
 static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";
 static uint16_t SYSLOG_PORT = 514;
@@ -70,80 +59,6 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
 
 /*****************************************************************************/
 
-void BeginAudit()
-{
-    END_AUDIT_REQUIRED = true;
-}
-
-/*****************************************************************************/
-
-void EndAudit(const EvalContext *ctx, int background_tasks)
-{
-    if (!END_AUDIT_REQUIRED)
-    {
-        return;
-    }
-
-    char *sp, string[CF_BUFSIZE];
-    Rval retval = { 0 };
-
-    {
-        Rval track_value_rval = { 0 };
-        bool track_value = false;
-        if (EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", CFA_CONTROLBODY[AGENT_CONTROL_TRACK_VALUE].lval }, &track_value_rval, NULL))
-        {
-            track_value = BooleanFromString(track_value_rval.item);
-        }
-
-        if (track_value)
-        {
-            FILE *fout;
-            char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
-            time_t now = time(NULL);
-
-            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
-
-            snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
-            snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
-
-            if ((fout = fopen(name, "a")) == NULL)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to write to the value log %s\n", name);
-                return;
-            }
-
-            if (Chop(datestr, CF_EXPANDSIZE) == -1)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-            }
-            fprintf(fout, "%s,%.4lf,%.4lf,%.4lf\n", datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-            TrackValue(datestr, VAL_KEPT, VAL_REPAIRED, VAL_NOTKEPT);
-            fclose(fout);
-        }
-    }
-
-    double total = (double) (PR_KEPT + PR_NOTKEPT + PR_REPAIRED) / 100.0;
-
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
-    {
-        sp = (char *) retval.item;
-    }
-    else
-    {
-        sp = "(not specified)";
-    }
-
-    if (total == 0)
-    {
-        *string = '\0';
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Outcome of version %s: No checks were scheduled\n", sp);
-        return;
-    }
-    else
-    {
-        LogTotalCompliance(sp, background_tasks);
-    }
-}
 
 /*****************************************************************************/
 
@@ -246,11 +161,6 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 #ifdef HAVE_NOVA
 static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
 {
-    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
-    {
-        return;
-    }
-
     char nova_status;
 
     switch (status)
@@ -279,37 +189,6 @@ static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
 }
 #endif
 
-static void UpdatePromiseCounters(PromiseResult status, const Promise *pp, TransactionContext tc)
-{
-    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
-    {
-        return;
-    }
-
-    switch (status)
-    {
-    case PROMISE_RESULT_CHANGE:
-        PR_REPAIRED++;
-        VAL_REPAIRED += tc.value_repaired;
-        break;
-
-    case PROMISE_RESULT_NOOP:
-        PR_KEPT++;
-        VAL_KEPT += tc.value_kept;
-
-    case PROMISE_RESULT_WARN:
-    case PROMISE_RESULT_TIMEOUT:
-    case PROMISE_RESULT_FAIL:
-    case PROMISE_RESULT_DENIED:
-    case PROMISE_RESULT_INTERRUPTED:
-        PR_NOTKEPT++;
-        VAL_NOTKEPT += tc.value_notkept;
-        break;
-
-    default:
-        ProgrammingError("Unexpected status '%c' has been passed to UpdatePromiseCounters", status);
-    }
-}
 
 static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
 {
@@ -442,10 +321,14 @@ static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const
 
 void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
+    if (!IsPromiseValuableForStatus(pp) || EDIT_MODEL)
+    {
 #ifdef HAVE_NOVA
-    TrackTotalCompliance(status, pp);
+        TrackTotalCompliance(status, pp);
 #endif
-    UpdatePromiseCounters(status, pp, attr.transaction);
+        UpdatePromiseCounters(status, attr.transaction);
+    }
+
     SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
     NotifyDependantPromises(status, ctx, pp);
     DoSummarizeTransaction(ctx, status, pp, attr.transaction);

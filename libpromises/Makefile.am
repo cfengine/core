@@ -100,6 +100,7 @@ libpromises_la_SOURCES = \
         string_expressions.c string_expressions.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
+        syslog_client.c syslog_client.h \
         timeout.c \
         unix.c unix.h \
         var_expressions.c var_expressions.h \

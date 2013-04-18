@@ -65,6 +65,7 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "mod_common.h"
 

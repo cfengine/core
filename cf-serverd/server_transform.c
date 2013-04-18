@@ -43,6 +43,7 @@
 #include "string_lib.h"
 #include "rlist.h"
 #include "cf-serverd-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "generic_agent.h" // HashControls
 

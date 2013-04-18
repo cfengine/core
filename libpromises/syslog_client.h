@@ -20,19 +20,21 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_LOGGING_H
-#define CFENGINE_LOGGING_H
+#ifndef CFENGINE_SYSLOG_CLIENT_H
+#define CFENGINE_SYSLOG_CLIENT_H
 
-#include "cf3.defs.h"
+#include "platform.h"
 
-void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
-void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason);
-void PromiseLog(char *s);
-void PromiseBanner(Promise *pp);
-void BannerSubBundle(Bundle *bp, Rlist *params);
-void FatalError(const EvalContext *ctx, char *s, ...) FUNC_ATTR_NORETURN FUNC_ATTR_PRINTF(2, 3);
+/*
+ * This module provides implementation of UDP syslog protocol
+ */
+
+void SetSyslogHost(const char *host);
+void SetSyslogPort(uint16_t port);
+void SetSyslogFacility(int facility);
+
+void RemoteSysLog(int log_priority, const char *log_string);
 
 #endif

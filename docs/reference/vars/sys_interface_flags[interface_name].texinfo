@@ -1,0 +1,31 @@
+
+@i{History}: Was introduced in XXXX, Nova XXXX (2013)
+
+Contains a space separated list of the flags of the named interface. e.g.
+
+@verbatim
+
+  reports:
+
+    cfengine::
+
+    "eth0 flags: $(sys.interface_flags[eth0])";
+@end verbatim
+
+@verbatim
+
+R: eth0 flags: up broadcast running multicast
+@end verbatim
+
+The following device flags are supported: 
+-up
+-broadcast
+-debug
+-loopback
+-pointopoint
+-notrailers
+-running
+-noarp
+-promisc
+-allmulti
+-multicast

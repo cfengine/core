@@ -440,6 +440,49 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
 /******************************************************************/
 
+void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **flags)
+{
+    char name[CF_MAXVARSIZE];
+    char buffer[CF_BUFSIZE] = "";
+    char *fp = NULL;
+
+    if (ag != AGENT_TYPE_GENDOC)
+    {
+        snprintf(name, CF_MAXVARSIZE, "interface_flags[%s]", ifr->ifr_name);
+    }
+    else
+    {
+        snprintf(name, CF_MAXVARSIZE, "interface_flags[interface_name]");
+    }
+
+    if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
+    if (ifr->ifr_flags & IFF_BROADCAST) strcat(buffer, " broadcast");
+    if (ifr->ifr_flags & IFF_DEBUG) strcat(buffer, " debug");
+    if (ifr->ifr_flags & IFF_LOOPBACK) strcat(buffer, " loopback");
+    if (ifr->ifr_flags & IFF_POINTOPOINT) strcat(buffer, " pointopoint");
+
+#ifdef IFF_NOTRAILERS
+    if (ifr->ifr_flags & IFF_NOTRAILERS) strcat(buffer, " notrailers");
+#endif
+
+    if (ifr->ifr_flags & IFF_RUNNING) strcat(buffer, " running");
+    if (ifr->ifr_flags & IFF_NOARP) strcat(buffer, " noarp");
+    if (ifr->ifr_flags & IFF_PROMISC) strcat(buffer, " promisc");
+    if (ifr->ifr_flags & IFF_ALLMULTI) strcat(buffer, " allmulti");
+    if (ifr->ifr_flags & IFF_MULTICAST) strcat(buffer, " multicast");
+
+    // If a least 1 flag is found
+    if (strlen(buffer) > 1)
+    {
+      // Skip leading space
+      fp = buffer + 1;
+      ScopeNewSpecialScalar(ctx, "sys", name, fp, DATA_TYPE_STRING);
+      RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
+    }
+}
+
+/******************************************************************/
+
 void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 {
     int fd, len, i, j, first_address = false, ipdefault = false;
@@ -451,7 +494,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
     char last_name[CF_BUFSIZE];
-    Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
+    Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
     CfDebug("GetInterfacesInfo()\n");
 
@@ -553,6 +596,10 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "No such network device");
                 continue;
+            }
+            else
+            {
+              GetInterfaceFlags(ctx, ag, &ifr, &flags);
             }
 
             if ((ifr.ifr_flags & IFF_UP) && (!(ifr.ifr_flags & IFF_LOOPBACK)))
@@ -694,10 +741,12 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
     ScopeNewSpecialList(ctx, "sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
     ScopeNewSpecialList(ctx, "sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecialList(ctx, "sys", "hardware_flags", flags, DATA_TYPE_STRING_LIST);
     ScopeNewSpecialList(ctx, "sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);
+    RlistDestroy(flags);
     RlistDestroy(ips);
 
     FindV6InterfacesInfo(ctx);

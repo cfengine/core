@@ -43,10 +43,7 @@
 #include "ornaments.h"
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp);
-
-/*******************************************************************/
-/* Agent reporting                                                 */
-/*******************************************************************/
+static void ReportToFile(const char *logfile, const char *message);
 
 void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 {
@@ -122,9 +119,20 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     YieldCurrentLock(thislock);
 }
 
-/*******************************************************************/
-/* Level                                                           */
-/*******************************************************************/
+static void ReportToFile(const char *logfile, const char *message)
+{
+    FILE *fp = fopen(logfile, "a");
+    if (fp == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
+        printf("%s\n", message);
+    }
+    else
+    {
+        fprintf(fp, "%s\n", message);
+        fclose(fp);
+    }
+}
 
 static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 {

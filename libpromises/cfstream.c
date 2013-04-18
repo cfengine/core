@@ -56,21 +56,6 @@ static const char *GetErrorStr(void);
 
 /*****************************************************************************/
 
-void ReportToFile(const char *logfile, const char *message)
-{
-    FILE *fp = fopen(logfile, "a");
-    if (fp == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
-        printf("%s\n", message);
-    }
-    else
-    {
-        fprintf(fp, "%s\n", message);
-        fclose(fp);
-    }
-}
-
 static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list args)
 {
     char buffer[CF_BUFSIZE], output[CF_BUFSIZE];

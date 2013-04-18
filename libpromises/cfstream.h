@@ -31,7 +31,4 @@
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
 
-/* reports.report_to_file */
-void ReportToFile(const char *logfile, const char *report);
-
 #endif

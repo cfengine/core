@@ -1238,14 +1238,17 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
     {
         if (fgets(buf, CF_BUFSIZE, fin) == NULL)
         {
-            if (ferror(fin) == EISDIR) {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "Could not read file %s: Is a directory", pp->promiser);
-                break;
-            }
-            else if (ferror(fin))
-            {
-                UnexpectedError("Failed to read line from stream");
-                break;
+            if (ferror(fin)) {
+                if (errno == EISDIR)
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "Could not read file %s: Is a directory", pp->promiser);
+                    break;
+                }
+                else
+                {
+                    UnexpectedError("Failed to read line from stream");
+                    break;
+                }
             }
             else /* feof */
             {

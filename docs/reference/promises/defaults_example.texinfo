@@ -42,6 +42,12 @@ reports:
 @noindent Another example:
 
 @verbatim
+body common control
+{
+  bundlesequence => { "example" };
+}
+
+#########################################################
 
 bundle agent example
 
@@ -63,7 +69,7 @@ reports:
    "The default value of Y is $(Y)";
 }
 
-###########################################################
+#########################################################
 
 bundle agent mymethod(a,b)
 

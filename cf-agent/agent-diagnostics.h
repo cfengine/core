@@ -28,6 +28,6 @@ AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir);
 
 AgentDiagnosticsResult AgentDiagnosticsResultNew(bool success, char *message);
 
-const AgentDiagnosticCheck *AgentDiagosticsAllChecks(void);
+const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void);
 
 #endif

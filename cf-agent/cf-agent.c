@@ -100,6 +100,7 @@ typedef enum
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #include "agent_reports.h"
+#include "nova-agent-diagnostics.h"
 #else
 #include "reporting.h"
 #endif
@@ -451,8 +452,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'x':
             {
+                const char *workdir = GetWorkDir();
                 Writer *out = FileWriter(stdout);
-                AgentDiagnosticsRun(GetWorkDir(), AgentDiagosticsAllChecks(), out);
+                WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
+
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
+#ifdef HAVE_NOVA
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecksNova(), out);
+#endif
                 FileWriterDetach(out);
             }
             exit(0);

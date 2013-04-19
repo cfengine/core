@@ -987,7 +987,6 @@ useshell => "true";
 body contain in_shell_bg
 {
 useshell => "true";
-background => "true";
 }
 
 ##

@@ -354,7 +354,7 @@ char *DBPrivDiagnose(const char *dbpath)
     FILE *fp = fopen(dbpath, "r");
     if(!fp)
     {
-        return StringFormat("Error opening file: %s", strerror(errno));
+        return StringFormat("Error opening file '%s': %s", dbpath, strerror(errno));
     }
 
     if(fseek(fp, 0, SEEK_END) != 0)

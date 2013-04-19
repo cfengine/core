@@ -101,6 +101,41 @@ AgentDiagnosticsResult AgentDiagnosticsCheckDBPersistentClasses(const char *work
     return AgentDiagnosticsCheckDB(workdir, dbid_state);
 }
 
+AgentDiagnosticsResult AgentDiagnosticsCheckDBChecksums(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_checksums);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBClasses(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_classes);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBLastSeen(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_lastseen);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBObservations(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_observations);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBFileStats(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_filestats);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBLocks(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_locks);
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBPerformance(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_performance);
+}
+
 const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
 {
     static const AgentDiagnosticCheck checks[] =
@@ -111,6 +146,12 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
         { "Check that public key exists", &AgentDiagnosticsCheckHavePublicKey },
 
         { "Check persistent classes DB", &AgentDiagnosticsCheckDBPersistentClasses },
+        { "Check checksums DB", &AgentDiagnosticsCheckDBChecksums },
+        { "Check classes DB", &AgentDiagnosticsCheckDBClasses },
+        { "Check observations DB", &AgentDiagnosticsCheckDBObservations },
+        { "Check file stats DB", &AgentDiagnosticsCheckDBFileStats },
+        { "Check locks DB", &AgentDiagnosticsCheckDBLocks },
+        { "Check performance DB", &AgentDiagnosticsCheckDBPerformance },
 
         { NULL, NULL }
     };

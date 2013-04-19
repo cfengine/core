@@ -39,9 +39,7 @@ void ShowLastSeenHosts();
 int RemoveKeys(const char *host);
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
 
-#ifndef HAVE_NOVA
 bool LicenseInstall(char *path_source);
-#endif  /* HAVE_NOVA */
 
 
 #endif // CFKEYFUNCTIONS_H

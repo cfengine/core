@@ -624,11 +624,13 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-        if (!IsEnterprise() && cfstat(vbuff, &statbuf) == -1)
+#ifndef HAVE_NOVA
+        if (cfstat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, "failsafe.cf");
         }
         else
+#endif
         {
             GenericAgentConfigSetInputFile(config, vbuff);
         }

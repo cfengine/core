@@ -57,7 +57,6 @@ void SetSkipIdentify(bool enabled);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
-int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
 const char *GetConsolePrefix(void);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);

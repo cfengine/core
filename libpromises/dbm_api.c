@@ -97,13 +97,13 @@ static const char *DB_PATHS[] = {
 
 /******************************************************************************/
 
-static char *DBIdToPath(dbid id)
+char *DBIdToPath(const char *workdir, dbid id)
 {
     assert(DB_PATHS[id] != NULL);
 
     char *filename;
     if (xasprintf(&filename, "%s/%s.%s",
-                  CFWORKDIR, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
+                  workdir, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
     {
         ProgrammingError("Unable to construct database filename for file %s", DB_PATHS[id]);
     }
@@ -122,7 +122,7 @@ static DBHandle *DBHandleGet(int id)
 
     if (db_handles[id].filename == NULL)
     {
-        db_handles[id].filename = DBIdToPath(id);
+        db_handles[id].filename = DBIdToPath(CFWORKDIR, id);
         pthread_mutex_init(&db_handles[id].lock, NULL);
     }
 

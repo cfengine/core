@@ -972,13 +972,33 @@ gaitem:                IDSYNTAX
                            P.currentstring = NULL;
                        }
 
+                     | list
+                       {
+                           ParserDebug("\tP:%s:%s:%s:%s function %s, list arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.lval);
+
+                           printf("FIXME list arg adding fo function not yet implemented\n");
+
+/*
+                           if (RlistLen(P.currentRlist) == 0)
+                           {
+                               RlistAppendScalar(&P.currentRlist, CF_NULL_VALUE);
+                           }
+                           P.rval = (Rval) { RlistCopy(P.currentRlist), RVAL_TYPE_LIST };
+                           RlistAppendScalar(&P.giveargs[P.arg_nesting],P.currentstring);
+                           RlistDestroy(P.currentRlist);
+                           P.currentRlist = NULL;
+                           P.references_body = false;
+                           */
+
+                       }
+
                      | usefunction
                        {
                            /* Careful about recursion */
                            ParserDebug("\tP:%s:%s:%s:%s function %s, nakedvar arg = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentfnid[P.arg_nesting], P.currentstring);
                            RlistAppendFnCall(&P.giveargs[P.arg_nesting],(void *)P.currentfncall[P.arg_nesting+1]);
                            RvalDestroy((Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL });
-                       };
+                       }
 
 %%
 

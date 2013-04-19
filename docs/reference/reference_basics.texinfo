@@ -2996,16 +2996,6 @@ exec_command => "$(sys.workdir)/bin/cf-agent -f failsafe.cf && $(sys.workdir)/bi
 
 #######################################################
 
-body reporter control
-
-{
-reports => { "performance", "last_seen", "monitor_history" };
-build_directory => "/tmp/nerves";
-report_output => "html";
-}
-
-#######################################################
-
 body runagent control
 {
 hosts => {

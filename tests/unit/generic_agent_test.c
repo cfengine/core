@@ -7,9 +7,23 @@ void test_load_masterfiles(void)
 {
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
-
     MINUSF = true;
-    GenericAgentConfigSetInputFile(config, "../../masterfiles/promises.cf");
+
+    char *promises_subpath = "../../masterfiles/promises.cf";
+    char *srcdir = getenv("SRCDIR");
+    if (srcdir == NULL)
+    {
+        srcdir = ".";
+        fprintf(stderr,
+                "WARNING: no SRCDIR env variable, assuming source is in \".\" dir\n");
+    }
+
+    char promises_cf_path[strlen(srcdir) + strlen(promises_subpath) + 2];
+    strcpy(promises_cf_path, srcdir);
+    strcat(promises_cf_path, "/");
+    strcat(promises_cf_path, promises_subpath);
+
+    GenericAgentConfigSetInputFile(config, promises_cf_path);
 
     Policy *masterfiles = GenericAgentLoadPolicy(ctx, config);
     assert_true(masterfiles);

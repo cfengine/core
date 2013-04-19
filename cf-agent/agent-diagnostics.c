@@ -20,6 +20,23 @@ static void AgentDiagnosticsResultDestroy(AgentDiagnosticsResult result)
 
 void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[], Writer *output)
 {
+    {
+        char diagnostics_path[CF_BUFSIZE] = { 0 };
+        snprintf(diagnostics_path, CF_BUFSIZE, "%s/diagnostics", workdir);
+        MapName(diagnostics_path);
+
+        struct stat sb;
+        if (cfstat(diagnostics_path, &sb) != 0)
+        {
+            if (mkdir(diagnostics_path, DEFAULTMODE) != 0)
+            {
+                WriterWriteF(output, "Cannot create diagnostics output directory '%s'", diagnostics_path);
+                return;
+            }
+        }
+    }
+
+
     for (int i = 0; checks[i].description; i++)
     {
         AgentDiagnosticsResult result = checks[i].check(workdir);

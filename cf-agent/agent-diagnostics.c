@@ -5,6 +5,8 @@
 #include "files_interfaces.h"
 #include "string_lib.h"
 #include "bootstrap.h"
+#include "dbm_api.h"
+#include "dbm_priv.h"
 
 #include <assert.h>
 
@@ -78,6 +80,27 @@ AgentDiagnosticsResult AgentDiagnosticsCheckHavePublicKey(const char *workdir)
     return AgentDiagnosticsResultNew((cfstat(path, &sb) == 0), xstrdup(path));
 }
 
+static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid id)
+{
+    char *dbpath = DBIdToPath(workdir, id);
+    char *error = DBPrivDiagnose(dbpath);
+    free(dbpath);
+
+    if (error)
+    {
+        return AgentDiagnosticsResultNew(false, error);
+    }
+    else
+    {
+        return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+    }
+}
+
+AgentDiagnosticsResult AgentDiagnosticsCheckDBPersistentClasses(const char *workdir)
+{
+    return AgentDiagnosticsCheckDB(workdir, dbid_state);
+}
+
 const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
 {
     static const AgentDiagnosticCheck checks[] =
@@ -86,6 +109,8 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
         { "Check if agent is acting as a policy server", &AgentDiagnosticsCheckAmPolicyServer },
         { "Check that private key exists", &AgentDiagnosticsCheckHavePrivateKey },
         { "Check that public key exists", &AgentDiagnosticsCheckHavePublicKey },
+
+        { "Check persistent classes DB", &AgentDiagnosticsCheckDBPersistentClasses },
 
         { NULL, NULL }
     };

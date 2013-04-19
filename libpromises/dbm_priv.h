@@ -68,4 +68,11 @@ bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor);
 bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_size);
 void DBPrivCloseCursor(DBCursorPriv *cursor);
 
+/**
+ * @brief Check a database file for consistency
+ * @param dbpath Path to database file
+ * @return NULL if successful, else an error string that must be freed
+ */
+char *DBPrivDiagnose(const char *dbpath);
+
 #endif

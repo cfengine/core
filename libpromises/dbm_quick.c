@@ -353,4 +353,9 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
     UnlockCursor(db);
 }
 
+char *DBPrivDiagnose(const char *dbpath)
+{
+    return StringFormat("Unable to diagnose QuickDB file (not implemented) for '%s'", dbpath);
+}
+
 #endif

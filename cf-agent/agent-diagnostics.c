@@ -20,7 +20,6 @@ static void AgentDiagnosticsResultDestroy(AgentDiagnosticsResult result)
 
 void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[], Writer *output)
 {
-    WriterWriteF(output, "self-diagnostics for agent using workdir '%s'\n", workdir);
     for (int i = 0; checks[i].description; i++)
     {
         AgentDiagnosticsResult result = checks[i].check(workdir);
@@ -62,7 +61,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckHavePublicKey(const char *workdir)
     return AgentDiagnosticsResultNew((cfstat(path, &sb) == 0), xstrdup(path));
 }
 
-const AgentDiagnosticCheck *AgentDiagosticsAllChecks(void)
+const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
 {
     static const AgentDiagnosticCheck checks[] =
     {

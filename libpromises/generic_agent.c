@@ -416,6 +416,11 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
             {
                 main_policy = PolicyMerge(main_policy, aux_policy);
             }
+            else
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in policy files included from the main policy");
+                exit(EXIT_FAILURE); // TODO: do not exit
+            }
 
             if (config->check_runnable)
             {
@@ -423,6 +428,11 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
                 PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
             }
         }
+    }
+    else
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in the main policy file");
+        exit(EXIT_FAILURE); // TODO: do not exit
     }
 
     if (SeqLength(errors) > 0)
@@ -640,6 +650,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors)
 {
     Policy *policy = PolicyNew();
+    bool contains_parse_errors = false;
 
     for (const Rlist *rp = inputs; rp; rp = rp->next)
     {
@@ -680,6 +691,10 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             {
                 policy = PolicyMerge(policy, aux_policy);
             }
+            else
+            {
+                contains_parse_errors = true;
+            }
 
             RvalDestroy(returnval);
         }
@@ -690,7 +705,15 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
 
     PolicyHashVariables(ctx, policy);
 
-    return policy;
+    if (contains_parse_errors)
+    {
+        PolicyDestroy(policy);
+        return NULL;
+    }
+    else
+    {
+        return policy;
+    }
 }
 
 /*******************************************************************/

@@ -337,20 +337,22 @@ static int DBPathLock(const char *filename)
 
     int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
 
-    free(filename_lock);
-
     if(fd == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file '%s'", filename_lock);
+        free(filename_lock);
         return -1;
     }
 
     if (ExclusiveLockFile(fd) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file '%s'", filename_lock);
+        free(filename_lock);
         close(fd);
         return -1;
     }
+
+    free(filename_lock);
 
     return fd;
 }

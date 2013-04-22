@@ -69,8 +69,8 @@ static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors);
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body);
 static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
@@ -247,8 +247,14 @@ int CheckPromises(const GenericAgentConfig *config)
             return false;
         }
 
-        // If we are cf-agent, check syntax before attempting to run
-        snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
+        if (config->bundlesequence)
+        {
+            snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
+        }
+        else
+        {
+            snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
+        }
     }
 
     bool outside_repository = IsFileOutsideDefaultRepository(config->input_file);
@@ -407,8 +413,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
     PROMISETIME = time(NULL);
 
-    Seq *errors = SeqNew(100, PolicyErrorDestroy);
-    Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
+    Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
     if (main_policy)
     {
@@ -417,42 +422,49 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
         if (PolicyIsRunnable(main_policy))
         {
-            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors);
+            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy));
             if (aux_policy)
             {
                 main_policy = PolicyMerge(main_policy, aux_policy);
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in policy files included from the main policy");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax errors were found in policy files included from the main policy");
                 exit(EXIT_FAILURE); // TODO: do not exit
-            }
-
-            if (config->check_runnable)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
             }
         }
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in the main policy file");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax errors were found in the main policy file");
         exit(EXIT_FAILURE); // TODO: do not exit
     }
 
-    if (SeqLength(errors) > 0)
     {
-        Writer *writer = FileWriter(stderr);
-        for (size_t i = 0; i < errors->length; i++)
-        {
-            PolicyErrorWrite(writer, errors->data[i]);
-        }
-        WriterClose(writer);
-        exit(EXIT_FAILURE); // TODO: do not exit
-    }
+        Seq *errors = SeqNew(100, PolicyErrorDestroy);
 
-    SeqDestroy(errors);
+        if (PolicyCheckPartial(main_policy, errors))
+        {
+            if (!config->bundlesequence && (PolicyIsRunnable(main_policy) || config->check_runnable))
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
+                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            }
+        }
+
+        if (SeqLength(errors) > 0)
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+            exit(EXIT_FAILURE); // TODO: do not exit
+        }
+
+        SeqDestroy(errors);
+    }
 
     if (VERBOSE || DEBUG)
     {
@@ -655,7 +667,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors)
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs)
 {
     Policy *policy = PolicyNew();
     bool contains_parse_errors = false;
@@ -683,11 +695,11 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             switch (returnval.type)
             {
             case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(config, returnval.item, errors);
+                aux_policy = Cf3ParseFile(config, returnval.item);
                 break;
 
             case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(ctx, config, returnval.item, errors);
+                aux_policy = Cf3ParseFiles(ctx, config, returnval.item);
                 break;
 
             default:
@@ -892,7 +904,7 @@ int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *i
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors)
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -956,7 +968,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         policy = ParserParseFile(wfilename);
     }
 
-    return (policy && PolicyCheckPartial(policy, errors)) ? policy : NULL;
+    return policy;
 }
 
 /*******************************************************************/

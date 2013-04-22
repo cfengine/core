@@ -69,8 +69,8 @@ static char PIDFILE[CF_BUFSIZE];
 
 static void VerifyPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void CheckWorkingDirectories(EvalContext *ctx);
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors);
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors);
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename);
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs);
 static bool MissingInputFile(const char *input_file);
 static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, const Body *control_body);
 static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises);
@@ -206,7 +206,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     {
         if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(config->input_file);
+            bool policy_check_ok = CheckPromises(config);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
@@ -229,49 +229,61 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(const char *input_file)
+int CheckPromises(const GenericAgentConfig *config)
 {
-    char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
-    char filename[CF_MAXVARSIZE];
-    struct stat sb;
-    int fd;
-    bool outsideRepo = false;
+    char cmd[CF_BUFSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying the syntax of the inputs...\n");
-
-    snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-             EXEC_SUFFIX);
-
-    if (cfstat(cfpromises, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
-              EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
-        return false;
+        char cfpromises[CF_MAXVARSIZE];
+        snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                 EXEC_SUFFIX);
+
+        struct stat sb;
+        if (cfstat(cfpromises, &sb) == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
+                  EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
+            return false;
+        }
+
+        if (config->bundlesequence)
+        {
+            snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
+        }
+        else
+        {
+            snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
+        }
     }
 
-/* If we are cf-agent, check syntax before attempting to run */
-
-    snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
-
-    outsideRepo = IsFileOutsideDefaultRepository(input_file);
-
-    if (outsideRepo)
+    bool outside_repository = IsFileOutsideDefaultRepository(config->input_file);
+    if (outside_repository)
     {
-        strlcat(cmd, input_file, CF_BUFSIZE);
+        strlcat(cmd, config->input_file, CF_BUFSIZE);
     }
     else
     {
         strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
         strlcat(cmd, FILE_SEPARATOR_STR "inputs" FILE_SEPARATOR_STR, CF_BUFSIZE);
-        strlcat(cmd, input_file, CF_BUFSIZE);
+        strlcat(cmd, config->input_file, CF_BUFSIZE);
     }
 
     strlcat(cmd, "\"", CF_BUFSIZE);
 
-    if (CBUNDLESEQUENCE_STR)
+    if (config->bundlesequence)
     {
         strlcat(cmd, " -b \"", CF_BUFSIZE);
-        strlcat(cmd, CBUNDLESEQUENCE_STR, CF_BUFSIZE);
+        for (const Rlist *rp = config->bundlesequence; rp; rp = rp->next)
+        {
+            const char *bundle_ref = rp->item;
+            strlcat(cmd, bundle_ref, CF_BUFSIZE);
+
+            if (rp->next)
+            {
+                strlcat(cmd, ",", CF_BUFSIZE);
+            }
+        }
         strlcat(cmd, "\"", CF_BUFSIZE);
     }
 
@@ -281,18 +293,17 @@ int CheckPromises(const char *input_file)
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
     }
 
-/* Check if reloading policy will succeed */
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking policy with command \"%s\"", cmd);
 
     if (ShellCommandReturnsZero(cmd, true))
     {
-
-        if (!outsideRepo)
+        if (!outside_repository)
         {
+            char filename[CF_MAXVARSIZE];
+
             if (MINUSF)
             {
-                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(input_file));
+                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->input_file));
                 MapName(filename);
             }
             else
@@ -303,7 +314,8 @@ int CheckPromises(const char *input_file)
 
             MakeParentDirectory(filename, true);
 
-            if ((fd = creat(filename, 0600)) != -1)
+            int fd = creat(filename, 0600);
+            if (fd != -1)
             {
                 FILE *fp = fdopen(fd, "w");
                 time_t now = time(NULL);
@@ -401,8 +413,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 {
     PROMISETIME = time(NULL);
 
-    Seq *errors = SeqNew(100, PolicyErrorDestroy);
-    Policy *main_policy = Cf3ParseFile(config, config->input_file, errors);
+    Policy *main_policy = Cf3ParseFile(config, config->input_file);
 
     if (main_policy)
     {
@@ -411,42 +422,49 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
 
         if (PolicyIsRunnable(main_policy))
         {
-            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy), errors);
+            Policy *aux_policy = Cf3ParseFiles(ctx, config, InputFiles(ctx, main_policy));
             if (aux_policy)
             {
                 main_policy = PolicyMerge(main_policy, aux_policy);
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in policy files included from the main policy");
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax errors were found in policy files included from the main policy");
                 exit(EXIT_FAILURE); // TODO: do not exit
-            }
-
-            if (config->check_runnable)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
-                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
             }
         }
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Errors were found in the main policy file");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax errors were found in the main policy file");
         exit(EXIT_FAILURE); // TODO: do not exit
     }
 
-    if (SeqLength(errors) > 0)
     {
-        Writer *writer = FileWriter(stderr);
-        for (size_t i = 0; i < errors->length; i++)
-        {
-            PolicyErrorWrite(writer, errors->data[i]);
-        }
-        WriterClose(writer);
-        exit(EXIT_FAILURE); // TODO: do not exit
-    }
+        Seq *errors = SeqNew(100, PolicyErrorDestroy);
 
-    SeqDestroy(errors);
+        if (PolicyCheckPartial(main_policy, errors))
+        {
+            if (!config->bundlesequence && (PolicyIsRunnable(main_policy) || config->check_runnable))
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Running full policy integrity checks");
+                PolicyCheckRunnable(ctx, main_policy, errors, config->ignore_missing_bundles);
+            }
+        }
+
+        if (SeqLength(errors) > 0)
+        {
+            Writer *writer = FileWriter(stderr);
+            for (size_t i = 0; i < errors->length; i++)
+            {
+                PolicyErrorWrite(writer, errors->data[i]);
+            }
+            WriterClose(writer);
+            exit(EXIT_FAILURE); // TODO: do not exit
+        }
+
+        SeqDestroy(errors);
+    }
 
     if (VERBOSE || DEBUG)
     {
@@ -649,7 +667,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
 /*******************************************************************/
 
-static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs, Seq *errors)
+static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const Rlist *inputs)
 {
     Policy *policy = PolicyNew();
     bool contains_parse_errors = false;
@@ -677,11 +695,11 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
             switch (returnval.type)
             {
             case RVAL_TYPE_SCALAR:
-                aux_policy = Cf3ParseFile(config, returnval.item, errors);
+                aux_policy = Cf3ParseFile(config, returnval.item);
                 break;
 
             case RVAL_TYPE_LIST:
-                aux_policy = Cf3ParseFiles(ctx, config, returnval.item, errors);
+                aux_policy = Cf3ParseFiles(ctx, config, returnval.item);
                 break;
 
             default:
@@ -886,7 +904,7 @@ int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *i
  * The difference between filename and input_input file is that the latter is the file specified by -f or
  * equivalently the file containing body common control. This will hopefully be squashed in later refactoring.
  */
-static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename, Seq *errors)
+static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filename)
 {
     struct stat statbuf;
     char wfilename[CF_BUFSIZE];
@@ -950,7 +968,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *filena
         policy = ParserParseFile(wfilename);
     }
 
-    return (policy && PolicyCheckPartial(policy, errors)) ? policy : NULL;
+    return policy;
 }
 
 /*******************************************************************/

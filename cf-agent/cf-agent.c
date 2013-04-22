@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     }
 
     // only note class usage when default policy is run
-    if (!config->input_file)
+    if (!MINUSF)
     {
         StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
         NoteClassUsage(soft_iter, true);
@@ -343,8 +343,9 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'b':
             if (optarg)
             {
-                config->bundlesequence = RlistFromSplitString(optarg, ',');
-                CBUNDLESEQUENCE_STR = optarg;
+                Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
+                GenericAgentConfigSetBundleSequence(config, bundlesequence);
+                RlistDestroy(bundlesequence);
             }
             break;
 

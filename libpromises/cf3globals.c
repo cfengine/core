@@ -51,8 +51,6 @@ time_t PROMISETIME = 0;
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
 
-char *CBUNDLESEQUENCE_STR;
-
 int BOOTSTRAP = false;
 
 /*****************************************************************************/

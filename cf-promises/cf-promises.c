@@ -180,7 +180,6 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
                 GenericAgentConfigSetBundleSequence(config, bundlesequence);
                 RlistDestroy(bundlesequence);
-                CBUNDLESEQUENCE_STR = optarg; // TODO: wtf is this
             }
             break;
 

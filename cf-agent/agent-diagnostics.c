@@ -64,20 +64,47 @@ AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir)
                                      am_policy_server ? xstrdup("Acting as a policy server") : xstrdup("Not acting as a policy server"));
 }
 
-AgentDiagnosticsResult AgentDiagnosticsCheckHavePrivateKey(const char *workdir)
+AgentDiagnosticsResult AgentDiagnosticsCheckPrivateKey(const char *workdir)
 {
     const char *path = PrivateKeyFile(workdir);
     assert(path);
     struct stat sb;
-    return AgentDiagnosticsResultNew((cfstat(path, &sb) == 0), xstrdup(path));
+
+    if (cfstat(path, &sb) != 0)
+    {
+        return AgentDiagnosticsResultNew(false, StringFormat("No private key found at '%s'", path));
+    }
+
+    if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
+    {
+        return AgentDiagnosticsResultNew(false, StringFormat("Private key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
+    }
+
+    return AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
 }
 
-AgentDiagnosticsResult AgentDiagnosticsCheckHavePublicKey(const char *workdir)
+AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
 {
     const char *path = PublicKeyFile(workdir);
     assert(path);
     struct stat sb;
-    return AgentDiagnosticsResultNew((cfstat(path, &sb) == 0), xstrdup(path));
+
+    if (cfstat(path, &sb) != 0)
+    {
+        return AgentDiagnosticsResultNew(false, StringFormat("No public key found at '%s'", path));
+    }
+
+    if (sb.st_mode != (S_IFREG | S_IWUSR | S_IRUSR))
+    {
+        return AgentDiagnosticsResultNew(false, StringFormat("Public key found at '%s', but had incorrect permissions '%o'", path, sb.st_mode));
+    }
+
+    if (sb.st_size != 426)
+    {
+        return AgentDiagnosticsResultNew(false, StringFormat("Public key at '%s' had size %zd bytes, expected 426 bytes", path, sb.st_size));
+    }
+
+    return AgentDiagnosticsResultNew(true, StringFormat("OK at '%s'", path));
 }
 
 static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid id)
@@ -142,8 +169,8 @@ const AgentDiagnosticCheck *AgentDiagnosticsAllChecks(void)
     {
         { "Check that agent is bootstrapped", &AgentDiagnosticsCheckIsBootstrapped },
         { "Check if agent is acting as a policy server", &AgentDiagnosticsCheckAmPolicyServer },
-        { "Check that private key exists", &AgentDiagnosticsCheckHavePrivateKey },
-        { "Check that public key exists", &AgentDiagnosticsCheckHavePublicKey },
+        { "Check private key", &AgentDiagnosticsCheckPrivateKey },
+        { "Check public key", &AgentDiagnosticsCheckPublicKey },
 
         { "Check persistent classes DB", &AgentDiagnosticsCheckDBPersistentClasses },
         { "Check checksums DB", &AgentDiagnosticsCheckDBChecksums },

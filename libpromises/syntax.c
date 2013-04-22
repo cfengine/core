@@ -161,7 +161,7 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
                 if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
                 {
-                    return constraint_syntax.range.body_type_syntax;
+                    return constraint_syntax.range.body_type_syntax->constraint_set.constraints;
                 }
             }
         }
@@ -214,7 +214,7 @@ DataType ExpectedDataType(const char *lvalname)
             {
                 if (bs[k].dtype == DATA_TYPE_BODY)
                 {
-                    bs2 = bs[k].range.body_type_syntax;
+                    bs2 = bs[k].range.body_type_syntax->constraint_set.constraints;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {
@@ -995,7 +995,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
         }
         else if (attributes[i].dtype == DATA_TYPE_BODY)
         {
-            JsonElement *json_attributes = ExportAttributesSyntaxAsJson(attributes[i].range.body_type_syntax);
+            JsonElement *json_attributes = ExportAttributesSyntaxAsJson(attributes[i].range.body_type_syntax->constraint_set.constraints);
 
             JsonObjectAppendObject(json, attributes[i].lval, json_attributes);
         }

@@ -49,7 +49,7 @@ static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises can
 static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
 static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
 
-static const ConstraintSyntax CF_TRANSACTION_BODY[] =
+static const ConstraintSyntax action_constraints[] =
 {
     ConstraintSyntaxNewOption("action_policy", "fix,warn,nop", "Whether to repair or report about non-kept promises", NULL),
     ConstraintSyntaxNewInt("ifelapsed", CF_VALRANGE, "Number of minutes before next allowed assessment of promise","control body value"),
@@ -70,7 +70,9 @@ static const ConstraintSyntax CF_TRANSACTION_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
+static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", ConstraintSetSyntaxNew(action_constraints, NULL));
+
+static const ConstraintSyntax classes_constraints[] =
 {
     ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the contexts set by this body", NULL),
     ConstraintSyntaxNewStringList("promise_repaired", CF_IDRANGE, "A list of classes to be defined globally"),
@@ -88,6 +90,8 @@ static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
     ConstraintSyntaxNewOption("timer_policy", "absolute,reset", "Whether a persistent class restarts its counter when rediscovered", "reset"),
     ConstraintSyntaxNewNull()
 };
+
+static const BodyTypeSyntax classes_body = BodyTypeSyntaxNew("classes", ConstraintSetSyntaxNew(classes_constraints, NULL));
 
 const ConstraintSyntax CF_VARBODY[] =
 {
@@ -371,8 +375,8 @@ const PromiseTypeSyntax CONTROL_BODIES[] =
 
 const ConstraintSyntax CF_COMMON_BODIES[] =
 {
-    ConstraintSyntaxNewBody(CF_TRANSACTION, CF_TRANSACTION_BODY, "Output behaviour"),
-    ConstraintSyntaxNewBody(CF_DEFINECLASSES, CF_DEFINECLASS_BODY, "Signalling behaviour"),
+    ConstraintSyntaxNewBody("action", &action_body, "Output behaviour"),
+    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour"),
     ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", NULL),
     ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"),
     ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", NULL),

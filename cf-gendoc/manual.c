@@ -486,7 +486,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraint_set.constraints);
         }
         else
         {
@@ -667,7 +667,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const Constr
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraint_set.constraints);
         }
         else
         {

@@ -115,6 +115,7 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 
 
 #define ConstraintSetSyntaxNew(constraints, validation_fn) { constraints, validation_fn }
+#define BodyTypeSyntaxNew(body_type, constraint_set) { body_type, constraint_set }
 
 
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraint_set) { agent_type, promise_type, constraint_set }

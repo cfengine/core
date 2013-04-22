@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_PKGMETHOD_BODY[] =
+static const ConstraintSyntax package_method_constraints[] =
 {
     ConstraintSyntaxNewString("package_add_command", CF_PATHRANGE, "Command to install a package to the system", NULL),
     ConstraintSyntaxNewString("package_arch_regex", "", "Regular expression with one backreference to extract package architecture string", NULL),
@@ -62,10 +62,12 @@ static const ConstraintSyntax CF_PKGMETHOD_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_PACKAGES_BODIES[] =
+static const BodyTypeSyntax package_method_body = BodyTypeSyntaxNew("package_method", ConstraintSetSyntaxNew(package_method_constraints, NULL));
+
+static const ConstraintSyntax packages_constraints[] =
 {
     ConstraintSyntaxNewStringList("package_architectures", "", "Select the architecture for package selection"),
-    ConstraintSyntaxNewBody("package_method", CF_PKGMETHOD_BODY, "Criteria for installation and verification"),
+    ConstraintSyntaxNewBody("package_method", &package_method_body, "Criteria for installation and verification"),
     ConstraintSyntaxNewOption("package_policy", "add,delete,reinstall,update,addupdate,patch,verify", "Criteria for package installation/upgrade on the current system", "verify"),
     ConstraintSyntaxNewOption("package_select", ">,<,==,!=,>=,<=", "A criterion for first acceptable match relative to \"package_version\"", NULL),
     ConstraintSyntaxNewString("package_version", "", "Version reference point for determining promised version", NULL),
@@ -74,6 +76,6 @@ static const ConstraintSyntax CF_PACKAGES_BODIES[] =
 
 const PromiseTypeSyntax CF_PACKAGES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "packages", ConstraintSetSyntaxNew(CF_PACKAGES_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "packages", ConstraintSetSyntaxNew(packages_constraints, NULL)),
     PromiseTypeSyntaxNewNull(),
 };

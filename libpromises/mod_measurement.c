@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_MATCHVALUE_BODY[] =
+static const ConstraintSyntax match_value_constraints[] =
 {
     /* Row models */
     ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching line location", NULL),
@@ -38,13 +38,15 @@ static const ConstraintSyntax CF_MATCHVALUE_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
+static const BodyTypeSyntax match_value_body = BodyTypeSyntaxNew("match_value", ConstraintSetSyntaxNew(match_value_constraints, NULL));
+
 static const ConstraintSyntax CF_MEASURE_BODIES[] =
 {
     ConstraintSyntaxNewOption("stream_type", "pipe,file", "The datatype being collected.", NULL),
     ConstraintSyntaxNewOption("data_type", "counter,int,real,string,slist", "The datatype being collected.", NULL),
     ConstraintSyntaxNewOption("history_type", "weekly,scalar,static,log", "Whether the data can be seen as a time-series or just an isolated value", NULL),
     ConstraintSyntaxNewString("units", "", "The engineering dimensions of this value or a note about its intent used in plots", NULL),
-    ConstraintSyntaxNewBody("match_value", CF_MATCHVALUE_BODY, "Criteria for extracting the measurement from a datastream"),
+    ConstraintSyntaxNewBody("match_value", &match_value_body, "Criteria for extracting the measurement from a datastream"),
     ConstraintSyntaxNewNull()
 };
 

@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_MATCHCLASS_BODY[] =
+static const ConstraintSyntax process_count_constraints[] =
 {
     ConstraintSyntaxNewStringList("in_range_define", "", "List of classes to define if the matches are in range"),
     ConstraintSyntaxNewIntRange("match_range", CF_VALRANGE, "Integer range for acceptable number of matches for this process", NULL),
@@ -34,7 +34,9 @@ static const ConstraintSyntax CF_MATCHCLASS_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_PROCFILTER_BODY[] =
+static const BodyTypeSyntax process_count_body = BodyTypeSyntaxNew("process_count", ConstraintSetSyntaxNew(process_count_constraints, NULL));
+
+static const ConstraintSyntax process_select_constraints[] =
 {
     ConstraintSyntaxNewString("command", "", "Regular expression matching the command/cmd field of a process", NULL),
     ConstraintSyntaxNewIntRange("pid", CF_VALRANGE, "Range of integers matching the process id of a process", NULL),
@@ -55,10 +57,12 @@ static const ConstraintSyntax CF_PROCFILTER_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_PROCESS_BODIES[] =
+static const BodyTypeSyntax process_select_body = BodyTypeSyntaxNew("process_select", ConstraintSetSyntaxNew(process_select_constraints, NULL));
+
+static const ConstraintSyntax processes_constraints[] =
 {
-    ConstraintSyntaxNewBody("process_count", CF_MATCHCLASS_BODY, "Criteria for constraining the number of processes matching other criteria"),
-    ConstraintSyntaxNewBody("process_select", CF_PROCFILTER_BODY, "Criteria for matching processes in the system process table"),
+    ConstraintSyntaxNewBody("process_count", &process_count_body, "Criteria for constraining the number of processes matching other criteria"),
+    ConstraintSyntaxNewBody("process_select", &process_select_body, "Criteria for matching processes in the system process table"),
     ConstraintSyntaxNewString("process_stop", CF_ABSPATHRANGE, "A command used to stop a running process", NULL),
     ConstraintSyntaxNewString("restart_class", CF_IDRANGE,
      "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process", NULL),
@@ -68,6 +72,6 @@ static const ConstraintSyntax CF_PROCESS_BODIES[] =
 
 const PromiseTypeSyntax CF_PROCESS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "processes", ConstraintSetSyntaxNew(CF_PROCESS_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "processes", ConstraintSetSyntaxNew(processes_constraints, NULL)),
     PromiseTypeSyntaxNewNull()
 };

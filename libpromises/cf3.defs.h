@@ -711,20 +711,9 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
+typedef struct ConstraintSyntax_ ConstraintSyntax;
 typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
-
-typedef struct ConstraintSyntax_
-{
-    const char *lval;
-    const DataType dtype;
-    union
-    {
-        const char *validation_string;
-        const struct ConstraintSyntax_ *body_type_syntax;
-    } range;
-    const char *description;
-    const char *default_value;
-} ConstraintSyntax;
+typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 
 /*
  * Promise type may optionally provide parse-tree check function, called after
@@ -740,7 +729,27 @@ typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 struct ConstraintSetSyntax_
 {
     const ConstraintSyntax *constraints;
-    ParseTreeCheckFn parse_tree_check;
+    const ParseTreeCheckFn parse_tree_check;
+};
+
+
+struct ConstraintSyntax_
+{
+    const char *lval;
+    const DataType dtype;
+    union
+    {
+        const char *validation_string;
+        const BodyTypeSyntax *body_type_syntax;
+    } range;
+    const char *description;
+    const char *default_value;
+};
+
+struct BodyTypeSyntax_
+{
+    const char *body_type;
+    const ConstraintSetSyntax constraint_set;
 };
 
 typedef struct
@@ -749,12 +758,6 @@ typedef struct
     const char *promise_type;
     const ConstraintSetSyntax constraint_set;
 } PromiseTypeSyntax;
-
-typedef struct
-{
-    const char *body_type;
-    ConstraintSetSyntax constraint_set;
-} BodyTypeSyntax;
 
 /*************************************************************************/
 

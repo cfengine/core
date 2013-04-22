@@ -1164,7 +1164,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
             {
                 if (bs[l].dtype == DATA_TYPE_BODY)
                 {
-                    const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax;
+                    const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraint_set.constraints;
 
                     if (bs2 == NULL || bs2 == (void *) CF_BUNDLE)
                     {

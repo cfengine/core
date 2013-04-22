@@ -2769,7 +2769,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                             }
                             else if (bs[l].dtype == DATA_TYPE_BODY)
                             {
-                                const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax;
+                                const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraint_set.constraints;
 
                                 for (size_t m = 0; bs2[m].lval != NULL; m++)
                                 {

@@ -58,11 +58,6 @@ const char *GetConsolePrefix(void)
     return "cf3";
 }
 
-int IsEnterprise(void)
-{
-    return false;
-}
-
 
 /* all agents: sysinfo.c */
 

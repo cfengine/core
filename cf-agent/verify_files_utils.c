@@ -591,9 +591,9 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Path name is too long in PurgeLocalFiles");
             }
 
-            if (DONTDO)
+            if (DONTDO || attr.transaction.action == cfa_warn)
             {
-                printf(" !! Need to purge %s from copy dest directory\n", filename);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Need to purge %s from copy dest directory\n", filename);
             }
             else
             {

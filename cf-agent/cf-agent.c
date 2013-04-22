@@ -343,8 +343,9 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         case 'b':
             if (optarg)
             {
-                config->bundlesequence = RlistFromSplitString(optarg, ',');
-                CBUNDLESEQUENCE_STR = optarg;
+                Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
+                GenericAgentConfigSetBundleSequence(config, bundlesequence);
+                RlistDestroy(bundlesequence);
             }
             break;
 

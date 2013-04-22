@@ -265,10 +265,19 @@ int CheckPromises(const GenericAgentConfig *config)
 
     strlcat(cmd, "\"", CF_BUFSIZE);
 
-    if (CBUNDLESEQUENCE_STR)
+    if (config->bundlesequence)
     {
         strlcat(cmd, " -b \"", CF_BUFSIZE);
-        strlcat(cmd, CBUNDLESEQUENCE_STR, CF_BUFSIZE);
+        for (const Rlist *rp = config->bundlesequence; rp; rp = rp->next)
+        {
+            const char *bundle_ref = rp->item;
+            strlcat(cmd, bundle_ref, CF_BUFSIZE);
+
+            if (rp->next)
+            {
+                strlcat(cmd, ",", CF_BUFSIZE);
+            }
+        }
         strlcat(cmd, "\"", CF_BUFSIZE);
     }
 

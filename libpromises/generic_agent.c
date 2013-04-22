@@ -206,7 +206,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
     {
         if (IsPolicyPrecheckNeeded(ctx, config, force_validation))
         {
-            bool policy_check_ok = CheckPromises(config->input_file);
+            bool policy_check_ok = CheckPromises(config);
 
             if (BOOTSTRAP && !policy_check_ok)
             {
@@ -229,41 +229,38 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 /* Level                                                                     */
 /*****************************************************************************/
 
-int CheckPromises(const char *input_file)
+int CheckPromises(const GenericAgentConfig *config)
 {
-    char cmd[CF_BUFSIZE], cfpromises[CF_MAXVARSIZE];
-    char filename[CF_MAXVARSIZE];
-    struct stat sb;
-    int fd;
-    bool outsideRepo = false;
+    char cmd[CF_BUFSIZE];
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying the syntax of the inputs...\n");
-
-    snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
-             EXEC_SUFFIX);
-
-    if (cfstat(cfpromises, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
-              EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
-        return false;
+        char cfpromises[CF_MAXVARSIZE];
+        snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
+                 EXEC_SUFFIX);
+
+        struct stat sb;
+        if (cfstat(cfpromises, &sb) == -1)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
+                  EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
+            return false;
+        }
+
+        // If we are cf-agent, check syntax before attempting to run
+        snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
     }
 
-/* If we are cf-agent, check syntax before attempting to run */
-
-    snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
-
-    outsideRepo = IsFileOutsideDefaultRepository(input_file);
-
-    if (outsideRepo)
+    bool outside_repository = IsFileOutsideDefaultRepository(config->input_file);
+    if (outside_repository)
     {
-        strlcat(cmd, input_file, CF_BUFSIZE);
+        strlcat(cmd, config->input_file, CF_BUFSIZE);
     }
     else
     {
         strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
         strlcat(cmd, FILE_SEPARATOR_STR "inputs" FILE_SEPARATOR_STR, CF_BUFSIZE);
-        strlcat(cmd, input_file, CF_BUFSIZE);
+        strlcat(cmd, config->input_file, CF_BUFSIZE);
     }
 
     strlcat(cmd, "\"", CF_BUFSIZE);
@@ -281,18 +278,17 @@ int CheckPromises(const char *input_file)
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
     }
 
-/* Check if reloading policy will succeed */
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking policy with command \"%s\"", cmd);
 
     if (ShellCommandReturnsZero(cmd, true))
     {
-
-        if (!outsideRepo)
+        if (!outside_repository)
         {
+            char filename[CF_MAXVARSIZE];
+
             if (MINUSF)
             {
-                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(input_file));
+                snprintf(filename, CF_MAXVARSIZE, "%s/state/validated_%s", CFWORKDIR, CanonifyName(config->input_file));
                 MapName(filename);
             }
             else
@@ -303,7 +299,8 @@ int CheckPromises(const char *input_file)
 
             MakeParentDirectory(filename, true);
 
-            if ((fd = creat(filename, 0600)) != -1)
+            int fd = creat(filename, 0600);
+            if (fd != -1)
             {
                 FILE *fp = fdopen(fd, "w");
                 time_t now = time(NULL);

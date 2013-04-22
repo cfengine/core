@@ -32,6 +32,7 @@
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #ifdef QDB
 # include <depot.h>
@@ -351,6 +352,11 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
     Unlock(db);
     /* Cursor lock was obtained in DBPrivOpenCursor */
     UnlockCursor(db);
+}
+
+char *DBPrivDiagnose(const char *dbpath)
+{
+    return StringFormat("Unable to diagnose QuickDB file (not implemented) for '%s'", dbpath);
 }
 
 #endif

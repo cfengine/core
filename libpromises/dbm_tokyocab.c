@@ -31,6 +31,7 @@
 
 #include "dbm_priv.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #ifdef TCDB
 
@@ -341,6 +342,85 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 
     /* Cursor lock was obtained in DBPrivOpenCursor */
     UnlockCursor(db);
+}
+
+
+char *DBPrivDiagnose(const char *dbpath)
+{
+#define SWAB64(num) \
+    ( \
+        ((num & 0x00000000000000ffULL) << 56) | \
+        ((num & 0x000000000000ff00ULL) << 40) | \
+        ((num & 0x0000000000ff0000ULL) << 24) | \
+        ((num & 0x00000000ff000000ULL) << 8) | \
+        ((num & 0x000000ff00000000ULL) >> 8) | \
+        ((num & 0x0000ff0000000000ULL) >> 24) | \
+        ((num & 0x00ff000000000000ULL) >> 40) | \
+        ((num & 0xff00000000000000ULL) >> 56) \
+    )
+
+    static const char *MAGIC="ToKyO CaBiNeT";
+
+    FILE *fp = fopen(dbpath, "r");
+    if(!fp)
+    {
+        return StringFormat("Error opening file '%s': %s", dbpath, strerror(errno));
+    }
+
+    if(fseek(fp, 0, SEEK_END) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Error seeking to end: %s\n", strerror(errno));
+    }
+
+    uint64_t size = ftell(fp);
+    if(size < 256)
+    {
+        fclose(fp);
+        return StringFormat("Seek-to-end size less than minimum required: %zd", size);
+    }
+
+    char hbuf[256];
+    memset(hbuf, 0, (size_t)256);
+
+    if(fseek(fp, 0, SEEK_SET) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Error seeking to offset 256: %s", strerror(errno));
+    }
+
+    if(fread(&hbuf, 256, 1, fp) != 1)
+    {
+        fclose(fp);
+        return StringFormat("Error reading 256 bytes: %s\n", strerror(errno));
+    }
+
+    if(strncmp(hbuf, MAGIC, strlen(MAGIC)) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Magic string mismatch");
+    }
+
+    uint64_t declared_size = 0;
+    memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
+    if(declared_size == size)
+    {
+        return NULL; // all is well
+    }
+    else
+    {
+        declared_size = SWAB64(declared_size);
+        if(declared_size == size)
+        {
+            fclose(fp);
+            return StringFormat("Endianness mismatch, declared size SWAB64 '%zd' equals seek-to-end size '%zd'", declared_size, size);
+        }
+        else
+        {
+            fclose(fp);
+            return StringFormat("Size mismatch, declared size SWAB64 '%zd', seek-to-end-size '%zd'", declared_size, size);
+        }
+    }
 }
 
 #endif

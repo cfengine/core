@@ -404,7 +404,6 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     ScopeNewSpecialScalar(ctx, "sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecialScalar(ctx, "sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecialScalar(ctx, "sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "expires", EXPIRY, DATA_TYPE_STRING);
 /* FIXME: type conversion */
     ScopeNewSpecialScalar(ctx, "sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 

@@ -39,11 +39,15 @@
 #include "env_context.h"
 #include "crypto.h"
 
+#include "cf-key-functions.h"
+
 #ifdef HAVE_NOVA
 #include "license.h"
 #endif
 
-#include "cf-key-functions.h"
+#ifdef HAVE_NOVA
+static bool LicensePublicKeyPath(char path_public_key[MAX_FILENAME], char *path_license);
+#endif
 
 RSA* LoadPublicKey(const char* filename)
 {
@@ -313,5 +317,68 @@ bool LicenseInstall(ARG_UNUSED char *path_source)
 
     return false;
 }
-#endif  /* HAVE_NOVA */
 
+#else  /* HAVE_NOVA */
+bool LicenseInstall(char *path_source)
+{
+    struct stat sb;
+
+    if(cfstat(path_source, &sb) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "cfstat", "!! Can not stat input license file %s", path_source);
+        return false;
+    }
+
+    char path_destination[MAX_FILENAME];
+    snprintf(path_destination, sizeof(path_destination), "%s/inputs/license.dat", CFWORKDIR);
+    MapName(path_destination);
+
+    if(cfstat(path_destination, &sb) == 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! A license file is already installed in %s -- please move it out of the way and try again", path_destination);
+        return false;
+    }
+
+    char path_public_key[MAX_FILENAME];
+
+    if(!LicensePublicKeyPath(path_public_key, path_source))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not find path to public key -- license parse error?");
+    }
+
+    if(cfstat(path_public_key, &sb) != 0)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! The licensed public key is not installed -- please copy it to %s and try again", path_public_key);
+        return false;
+    }
+
+
+    bool success = CopyRegularFileDisk(path_source, path_destination);
+
+    if(success)
+    {
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Installed license at %s", path_destination);
+    }
+    else
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed copying license from %s to %s", path_source, path_destination);
+    }
+
+    return success;
+}
+
+static bool LicensePublicKeyPath(char path_public_key[MAX_FILENAME], char *path_license)
+{
+    EnterpriseLicense license;
+
+    if(!LicenseFileParse(&license, path_license))
+    {
+        return false;
+    }
+
+    snprintf(path_public_key, MAX_FILENAME, "%s/ppkeys/root-SHA=%s.pub", CFWORKDIR, license.public_key_digest);
+    MapName(path_public_key);
+
+    return true;
+}
+#endif  /* HAVE_NOVA */

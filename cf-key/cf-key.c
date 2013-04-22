@@ -38,10 +38,7 @@
 #include "env_context.h"
 #include "crypto.h"
 #include "sysinfo.h"
-
-#ifdef HAVE_NOVA
-#include "license.h"
-#endif
+#include "logging.h"
 
 #include "cf-key-functions.h"
 

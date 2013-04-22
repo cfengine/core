@@ -7,6 +7,7 @@
 #include "bootstrap.h"
 #include "dbm_api.h"
 #include "dbm_priv.h"
+#include "tokyo_check.h"
 
 #include <assert.h>
 
@@ -111,15 +112,21 @@ static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid 
 {
     char *dbpath = DBIdToPath(workdir, id);
     char *error = DBPrivDiagnose(dbpath);
-    free(dbpath);
 
     if (error)
     {
+        free(dbpath);
         return AgentDiagnosticsResultNew(false, error);
     }
     else
     {
-        return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+        int ret = CheckTokyoDBCoherence(dbpath);
+        free(dbpath);
+        if(ret) {
+          return AgentDiagnosticsResultNew(false, xstrdup("Internal DB coherence problem"));
+        } else {
+          return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+        }
     }
 }
 

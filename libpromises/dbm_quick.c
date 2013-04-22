@@ -32,6 +32,7 @@
 #include "dbm_api.h"
 #include "dbm_priv.h"
 #include "logging.h"
+#include "string_lib.h"
 
 #ifdef QDB
 # include <depot.h>

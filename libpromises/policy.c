@@ -2569,72 +2569,6 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
     return retval;
 }
 
-/*****************************************************************************/
-
-static int VerifyConstraintName(const char *lval)
-{
-    PromiseTypeSyntax ss;
-    int i, j, l, m;
-    const ConstraintSyntax *bs, *bs2;
-    const PromiseTypeSyntax *ssp;
-
-    CfDebug("  Verify Constrant name %s\n", lval);
-
-    for (i = 0; i < CF3_MODULES; i++)
-    {
-        if ((ssp = CF_ALL_PROMISE_TYPES[i]) == NULL)
-        {
-            continue;
-        }
-
-        for (j = 0; ssp[j].bundle_type != NULL; j++)
-        {
-            ss = ssp[j];
-
-            if (ss.promise_type != NULL)
-            {
-                bs = ss.constraint_set.constraints;
-
-                for (l = 0; bs[l].lval != NULL; l++)
-                {
-                    if (bs[l].dtype == DATA_TYPE_BUNDLE)
-                    {
-                    }
-                    else if (bs[l].dtype == DATA_TYPE_BODY)
-                    {
-                        bs2 = bs[l].range.body_type_syntax;
-
-                        for (m = 0; bs2[m].lval != NULL; m++)
-                        {
-                            if (strcmp(lval, bs2[m].lval) == 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (strcmp(lval, bs[l].lval) == 0)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-/* Now check the functional modules - extra level of indirection */
-
-    for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
-    {
-        if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
@@ -2642,11 +2576,6 @@ Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, cons
     if (pp == NULL)
     {
         return NULL;
-    }
-
-    if (!VerifyConstraintName(lval))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n", lval);
     }
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)

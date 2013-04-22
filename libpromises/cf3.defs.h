@@ -747,7 +747,7 @@ typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
-    ConstraintSetSyntax constraint_set;
+    const ConstraintSetSyntax constraint_set;
 } PromiseTypeSyntax;
 
 typedef struct

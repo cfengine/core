@@ -49,7 +49,25 @@ static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises can
 static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
 static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
 
-static const ConstraintSyntax CF_TRANSACTION_BODY[] =
+static bool ActionCheck(const Body *body, Seq *errors)
+{
+    bool success = true;
+
+    if (BodyHasConstraint(body, "log_kept")
+        || BodyHasConstraint(body, "log_repaired")
+        || BodyHasConstraint(body, "log_failed"))
+    {
+        if (!BodyHasConstraint(body, "log_string"))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body, "An action body with log_kept, log_repaired or log_failed is required to have a log_string attribute"));
+            success = false;
+        }
+    }
+
+    return success;
+}
+
+static const ConstraintSyntax action_constraints[] =
 {
     ConstraintSyntaxNewOption("action_policy", "fix,warn,nop", "Whether to repair or report about non-kept promises", NULL),
     ConstraintSyntaxNewInt("ifelapsed", CF_VALRANGE, "Number of minutes before next allowed assessment of promise","control body value"),
@@ -70,7 +88,9 @@ static const ConstraintSyntax CF_TRANSACTION_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
+static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", action_constraints, ActionCheck);
+
+static const ConstraintSyntax classes_constraints[] =
 {
     ConstraintSyntaxNewOption("scope", "namespace,bundle", "Scope of the contexts set by this body", NULL),
     ConstraintSyntaxNewStringList("promise_repaired", CF_IDRANGE, "A list of classes to be defined globally"),
@@ -88,6 +108,8 @@ static const ConstraintSyntax CF_DEFINECLASS_BODY[] =
     ConstraintSyntaxNewOption("timer_policy", "absolute,reset", "Whether a persistent class restarts its counter when rediscovered", "reset"),
     ConstraintSyntaxNewNull()
 };
+
+static const BodyTypeSyntax classes_body = BodyTypeSyntaxNew("classes", classes_constraints, NULL);
 
 const ConstraintSyntax CF_VARBODY[] =
 {
@@ -343,20 +365,20 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 /* This list is for checking free standing body lval => rval bindings */
 
-const PromiseTypeSyntax CONTROL_BODIES[] =
+const BodyTypeSyntax CONTROL_BODIES[] =
 {
-    PromiseTypeSyntaxNew(CF_COMMONC, "control", ConstraintSetSyntaxNew(CFG_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_AGENTC, "control", ConstraintSetSyntaxNew(CFA_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_SERVERC, "control", ConstraintSetSyntaxNew(CFS_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_MONITORC, "control", ConstraintSetSyntaxNew(CFM_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_RUNC, "control", ConstraintSetSyntaxNew(CFR_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_EXECC, "control", ConstraintSetSyntaxNew(CFEX_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew(CF_HUBC, "control", ConstraintSetSyntaxNew(CFH_CONTROLBODY, NULL)),
-    PromiseTypeSyntaxNew("file", "control", ConstraintSetSyntaxNew(CFFILE_CONTROLBODY, NULL)),
+    BodyTypeSyntaxNew(CF_COMMONC, CFG_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_AGENTC, CFA_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_SERVERC, CFS_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_MONITORC, CFM_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew("file", CFFILE_CONTROLBODY, NULL),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
-    PromiseTypeSyntaxNewNull()
+    BodyTypeSyntaxNewNull()
 };
 
 /*********************************************************/
@@ -371,8 +393,8 @@ const PromiseTypeSyntax CONTROL_BODIES[] =
 
 const ConstraintSyntax CF_COMMON_BODIES[] =
 {
-    ConstraintSyntaxNewBody(CF_TRANSACTION, CF_TRANSACTION_BODY, "Output behaviour"),
-    ConstraintSyntaxNewBody(CF_DEFINECLASSES, CF_DEFINECLASS_BODY, "Signalling behaviour"),
+    ConstraintSyntaxNewBody("action", &action_body, "Output behaviour"),
+    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour"),
     ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", NULL),
     ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"),
     ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", NULL),
@@ -387,12 +409,12 @@ const ConstraintSyntax CF_COMMON_BODIES[] =
 const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[] =
 {
 
-    PromiseTypeSyntaxNew("*", "classes", ConstraintSetSyntaxNew(CF_CLASSBODY, &ClassesParseTreeCheck)),
-    PromiseTypeSyntaxNew("*", "defaults", ConstraintSetSyntaxNew(CF_DEFAULTSBODY, NULL)),
-    PromiseTypeSyntaxNew("*", "meta", ConstraintSetSyntaxNew(CF_METABODY, NULL)),
-    PromiseTypeSyntaxNew("*", "reports", ConstraintSetSyntaxNew(CF_REPORT_BODIES, NULL)),
-    PromiseTypeSyntaxNew("*", "vars", ConstraintSetSyntaxNew(CF_VARBODY, &VarsParseTreeCheck)),
-    PromiseTypeSyntaxNew("*", "*", ConstraintSetSyntaxNew(CF_COMMON_BODIES, NULL)),
+    PromiseTypeSyntaxNew("*", "classes", CF_CLASSBODY, &ClassesParseTreeCheck),
+    PromiseTypeSyntaxNew("*", "defaults", CF_DEFAULTSBODY, NULL),
+    PromiseTypeSyntaxNew("*", "meta", CF_METABODY, NULL),
+    PromiseTypeSyntaxNew("*", "reports", CF_REPORT_BODIES, NULL),
+    PromiseTypeSyntaxNew("*", "vars", CF_VARBODY, &VarsParseTreeCheck),
+    PromiseTypeSyntaxNew("*", "*", CF_COMMON_BODIES, NULL),
     PromiseTypeSyntaxNewNull()
 };
 

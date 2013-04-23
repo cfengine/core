@@ -63,7 +63,7 @@ static char *MANUAL_DIRECTORY;
 static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
 static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
-static void XmlExportControl(Writer *writer, PromiseTypeSyntax body);
+static void XmlExportControl(Writer *writer, BodyTypeSyntax body);
 static void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax);
@@ -108,7 +108,7 @@ void XmlManual(const char *mandir, FILE *fout)
 
 /* CONTROL */
     XmlStartTag(writer, XMLTAG_CONTROLS_ROOT, 0);
-    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
         XmlExportControl(writer, CONTROL_BODIES[i]);
     }
@@ -221,26 +221,26 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
 
 /*****************************************************************************/
 
-static void XmlExportControl(Writer *writer, PromiseTypeSyntax type)
+static void XmlExportControl(Writer *writer, BodyTypeSyntax type)
 {
     char *filebuffer = NULL;
 
 /* START XML ELEMENT -- CONTROL */
-    XmlAttribute control_name_attr = { "name", type.bundle_type };
+    XmlAttribute control_name_attr = { "name", type.body_type };
     XmlStartTag(writer, XMLTAG_CONTROL, 1, control_name_attr);
 
 /* XML ELEMENT -- LONG-DESCRIPTION */
-    filebuffer = ReadTexinfoFileF("control/%s_notes.texinfo", type.bundle_type);
+    filebuffer = ReadTexinfoFileF("control/%s_notes.texinfo", type.body_type);
     XmlTag(writer, XMLTAG_LONGDESCRIPTION, filebuffer, 0);
     free(filebuffer);
 
 /* XML ELEMENT -- EXAMPLE */
-    filebuffer = ReadTexinfoFileF("control/%s_example.texinfo", type.bundle_type);
+    filebuffer = ReadTexinfoFileF("control/%s_example.texinfo", type.body_type);
     XmlTag(writer, XMLTAG_EXAMPLE, filebuffer, 0);
     free(filebuffer);
 
 /* XML ELEMENT -- CONSTRAINTS */
-    XmlExportConstraints(writer, type.constraint_set.constraints);
+    XmlExportConstraints(writer, type.constraints);
 
 /* END XML ELEMENT -- CONTROL */
     XmlEndTag(writer, XMLTAG_CONTROL);
@@ -306,7 +306,7 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
         }
 
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, st[i].constraint_set.constraints);
+        XmlExportConstraints(writer, st[i].constraints);
 
         /* END XML ELEMENT -- PROMISE TYPE */
         XmlEndTag(writer, XMLTAG_PROMISETYPE);
@@ -401,7 +401,7 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
     {
     case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax);
+        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax->constraints);
         break;
 
     case DATA_TYPE_INT:

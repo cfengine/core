@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_CHECKVOL_BODY[] =
+static const ConstraintSyntax volume_constraints[] =
 {
     ConstraintSyntaxNewBool("check_foreign", "true/false verify storage that is mounted from a foreign system on this host", "false"),
     ConstraintSyntaxNewString("freespace", "[0-9]+[MBkKgGmb%]", "Absolute or percentage minimum disk space that should be available before warning", NULL),
@@ -36,7 +36,9 @@ static const ConstraintSyntax CF_CHECKVOL_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_MOUNT_BODY[] =
+static const BodyTypeSyntax volume_body = BodyTypeSyntaxNew("volume_method", volume_constraints, NULL);
+
+static const ConstraintSyntax mount_constraints[] =
 {
     ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\")", "false"),
     ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", NULL),
@@ -47,15 +49,17 @@ static const ConstraintSyntax CF_MOUNT_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_STORAGE_BODIES[] =
+static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", mount_constraints, NULL);
+
+static const ConstraintSyntax storage_constraints[] =
 {
-    ConstraintSyntaxNewBody("mount", CF_MOUNT_BODY, "Criteria for mounting foreign file systems"),
-    ConstraintSyntaxNewBody("volume", CF_CHECKVOL_BODY, "Criteria for monitoring/probing mounted volumes"),
+    ConstraintSyntaxNewBody("mount", &mount_body, "Criteria for mounting foreign file systems"),
+    ConstraintSyntaxNewBody("volume", &volume_body, "Criteria for monitoring/probing mounted volumes"),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_STORAGE_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "storage", ConstraintSetSyntaxNew(CF_STORAGE_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "storage", storage_constraints, NULL),
     PromiseTypeSyntaxNewNull()
 };

@@ -41,6 +41,28 @@ static Seq *LoadAndCheck(const char *filename)
     return errs;
 }
 
+static Seq *LoadAndCheckString(const char *policy_code)
+{
+    const char *tmp = tempnam(NULL, "cfengine_test");
+
+    {
+        FILE *out = fopen(tmp, "w");
+        Writer *w = FileWriter(out);
+        WriterWrite(w, policy_code);
+
+        WriterClose(w);
+    }
+
+    Policy *p = ParserParseFile(tmp);
+    assert_true(p);
+
+    Seq *errs = SeqNew(10, PolicyErrorDestroy);
+    PolicyCheckPartial(p, errs);
+
+    unlink(tmp);
+    return errs;
+}
+
 static void test_failsafe(void)
 {
     char *tmp = tempnam(NULL, "cfengine_test");
@@ -335,6 +357,26 @@ static void test_constraint_comment_nonscalar(void)
     SeqDestroy(errs);
 }
 
+// TODO: consider moving this into a mod_common_test
+static void test_body_action_with_log_repaired_needs_log_string(void)
+{
+    {
+        Seq *errs = LoadAndCheckString("body action foo {"
+                                       "  log_repaired => '/tmp/abc';"
+                                       "}");
+        assert_int_equal(1, errs->length);
+        SeqDestroy(errs);
+    }
+
+    {
+        Seq *errs = LoadAndCheckString("body action foo {"
+                                       "  log_repaired => '/tmp/abc';"
+                                       "  log_string => 'stuff';"
+                                       "}");
+        assert_int_equal(0, errs->length);
+        SeqDestroy(errs);
+    }
+}
 
 int main()
 {
@@ -357,7 +399,9 @@ int main()
 
         unit_test(test_constraint_comment_nonscalar),
 
-        unit_test(test_promiser_empty_varref)
+        unit_test(test_promiser_empty_varref),
+
+        unit_test(test_body_action_with_log_repaired_needs_log_string),
     };
 
     return run_tests(tests);

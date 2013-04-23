@@ -24,6 +24,7 @@ files:
 body action log
 {
   log_failed => "stdout";
+  log_string => "";
 }
 
 bundle agent check

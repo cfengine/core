@@ -95,22 +95,22 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
     IncludeManualFile(source_dir, fout, "reference_control_intro.texinfo");
 
     fprintf(fout, "@menu\n");
-    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; ++i)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; ++i)
     {
-        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].bundle_type);
+        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].body_type);
     }
     fprintf(fout, "@end menu\n");
 
-    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
-        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].bundle_type,
-                CONTROL_BODIES[i].bundle_type);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].bundle_type);
+        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].body_type,
+                CONTROL_BODIES[i].body_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
 
-        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraint_set.constraints, CONTROL_BODIES[i].bundle_type);
+        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraints, CONTROL_BODIES[i].body_type);
     }
 
 /* Components */
@@ -443,7 +443,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", promise_type_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
-        TexinfoBodyParts(source_dir, fout, st[j].constraint_set.constraints, st[j].promise_type);
+        TexinfoBodyParts(source_dir, fout, st[j].constraints, st[j].promise_type);
     }
 }
 
@@ -486,7 +486,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {
@@ -667,7 +667,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const Constr
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {

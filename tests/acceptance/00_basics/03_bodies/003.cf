@@ -25,6 +25,7 @@ body action log
   log_repaired => "$(G.testfile).action.log";
   log_failed => "$(G.testfile).action.log";
   log_kept => "$(G.testfile).action.log";
+  log_string => "";
 }
 
 bundle agent check

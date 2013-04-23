@@ -43,30 +43,30 @@ static void test_lookup_constraint_edit_xml_set_attribute_attribute_value(void)
 
 static void test_lookup_body_classes(void)
 {
-    const ConstraintSyntax *x = BodySyntaxLookup("classes");
+    const BodyTypeSyntax *x = BodySyntaxLookup("classes");
     assert_true(x);
 
-    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "promise_repaired");
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "promise_repaired");
     assert_true(y);
     assert_string_equal("promise_repaired", y->lval);
 }
 
 static void test_lookup_body_process_count(void)
 {
-    const ConstraintSyntax *x = BodySyntaxLookup("process_count");
+    const BodyTypeSyntax *x = BodySyntaxLookup("process_count");
     assert_true(x);
 
-    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "match_range");
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "match_range");
     assert_true(y);
     assert_string_equal("match_range", y->lval);
 }
 
 static void test_lookup_body_delete_select(void)
 {
-    const ConstraintSyntax *x = BodySyntaxLookup("delete_select");
+    const BodyTypeSyntax *x = BodySyntaxLookup("delete_select");
     assert_true(x);
 
-    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x, "delete_if_startwith_from_list");
+    const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "delete_if_startwith_from_list");
     assert_true(y);
     assert_string_equal("delete_if_startwith_from_list", y->lval);
 }

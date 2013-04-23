@@ -304,9 +304,9 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
     const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
-    for (size_t i = 0; promise_type_syntax->constraint_set.constraints[i].lval != NULL; i++)
+    for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraint_set.constraints[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             if (!RvalTypeCheckDataType(constraint->rval.type, body_syntax->dtype))
@@ -420,6 +420,33 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
     return success;
 }
 
+static bool PolicyCheckBody(const Body *body, Seq *errors)
+{
+    bool success = true;
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        SyntaxTypeMatch err = ConstraintCheckType(cp);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                             POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH,
+                                             cp->lval));
+            success = false;
+        }
+    }
+
+    const BodyTypeSyntax *body_syntax = BodySyntaxLookup(body->type);
+    assert(body_syntax && "Should have been checked at parse time");
+    if (body_syntax->check_body)
+    {
+        success &= body_syntax->check_body(body, errors);
+    }
+
+    return success;
+}
+
 /*************************************************************************/
 
 /* Get the syntax of a constraint according to its promise_type and lvalue.
@@ -439,9 +466,9 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
-    for (size_t i = 0; promise_type_syntax->constraint_set.constraints[i].lval != NULL; i++)
+    for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraint_set.constraints[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return body_syntax;
@@ -820,20 +847,9 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
 
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
-        const Body *bp = SeqAt(policy->bodies, i);
+        const Body *body = SeqAt(policy->bodies, i);
+        success &= PolicyCheckBody(body, errors);
 
-        for (size_t j = 0; j < SeqLength(bp->conlist); j++)
-        {
-            Constraint *cp = SeqAt(bp->conlist, j);
-            SyntaxTypeMatch err = ConstraintCheckType(cp);
-            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-            {
-                SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                 POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH,
-                                                 cp->lval));
-                success = false;
-            }
-        }
     }
 
     success &= PolicyCheckDuplicateHandles(policy, errors);
@@ -2018,6 +2034,20 @@ Seq *BodyGetConstraint(Body *body, const char *lval)
     return matches;
 }
 
+bool BodyHasConstraint(const Body *body, const char *lval)
+{
+    for (int i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        if (strcmp(lval, cp->lval) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 const char *ConstraintContext(const Constraint *cp)
 {
     switch (cp->type)
@@ -2254,9 +2284,9 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
                                                            pp->parent_promise_type->name);
 
-    if (pts->constraint_set.parse_tree_check)
+    if (pts->check_promise)
     {
-        success &= pts->constraint_set.parse_tree_check(pp, errors);
+        success &= pts->check_promise(pp, errors);
     }
 
     return success;
@@ -2569,72 +2599,6 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
     return retval;
 }
 
-/*****************************************************************************/
-
-static int VerifyConstraintName(const char *lval)
-{
-    PromiseTypeSyntax ss;
-    int i, j, l, m;
-    const ConstraintSyntax *bs, *bs2;
-    const PromiseTypeSyntax *ssp;
-
-    CfDebug("  Verify Constrant name %s\n", lval);
-
-    for (i = 0; i < CF3_MODULES; i++)
-    {
-        if ((ssp = CF_ALL_PROMISE_TYPES[i]) == NULL)
-        {
-            continue;
-        }
-
-        for (j = 0; ssp[j].bundle_type != NULL; j++)
-        {
-            ss = ssp[j];
-
-            if (ss.promise_type != NULL)
-            {
-                bs = ss.constraint_set.constraints;
-
-                for (l = 0; bs[l].lval != NULL; l++)
-                {
-                    if (bs[l].dtype == DATA_TYPE_BUNDLE)
-                    {
-                    }
-                    else if (bs[l].dtype == DATA_TYPE_BODY)
-                    {
-                        bs2 = bs[l].range.body_type_syntax;
-
-                        for (m = 0; bs2[m].lval != NULL; m++)
-                        {
-                            if (strcmp(lval, bs2[m].lval) == 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-
-                    if (strcmp(lval, bs[l].lval) == 0)
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-
-/* Now check the functional modules - extra level of indirection */
-
-    for (i = 0; CF_COMMON_BODIES[i].lval != NULL; i++)
-    {
-        if (strcmp(lval, CF_COMMON_BODIES[i].lval) == 0)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, const char *lval)
 {
     Constraint *retval = NULL;
@@ -2642,11 +2606,6 @@ Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, cons
     if (pp == NULL)
     {
         return NULL;
-    }
-
-    if (!VerifyConstraintName(lval))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Self-diagnostic: Constraint type \"%s\" is not a registered type\n", lval);
     }
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
@@ -2831,7 +2790,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                 {
                     if (strcmp(ss.promise_type, promise_type->name) == 0)
                     {
-                        const ConstraintSyntax *bs = ss.constraint_set.constraints;
+                        const ConstraintSyntax *bs = ss.constraints;
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {
@@ -2840,7 +2799,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                             }
                             else if (bs[l].dtype == DATA_TYPE_BODY)
                             {
-                                const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax;
+                                const ConstraintSyntax *bs2 = bs[l].range.body_type_syntax->constraints;
 
                                 for (size_t m = 0; bs2[m].lval != NULL; m++)
                                 {

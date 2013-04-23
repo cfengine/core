@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_SERVMETHOD_BODY[] =
+static const ConstraintSyntax service_method_constraints[] =
 {
     ConstraintSyntaxNewString("service_args", "", "Parameters for starting the service as command", NULL),
     ConstraintSyntaxNewOption("service_autostart_policy", "none,boot_time,on_demand", "Should the service be started automatically by the OS", NULL),
@@ -36,16 +36,18 @@ static const ConstraintSyntax CF_SERVMETHOD_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_SERVICES_BODIES[] =
+static const BodyTypeSyntax service_method_body = BodyTypeSyntaxNew("service_method", service_method_constraints, NULL);
+
+static const ConstraintSyntax services_constraints[] =
 {
     ConstraintSyntaxNewOption("service_policy", "start,stop,disable,restart,reload", "Policy for cfengine service status", NULL),
     ConstraintSyntaxNewStringList("service_dependencies", CF_IDRANGE, "A list of services on which the named service abstraction depends"),
-    ConstraintSyntaxNewBody("service_method", CF_SERVMETHOD_BODY, "Details of promise body for the service abtraction feature"),
+    ConstraintSyntaxNewBody("service_method", &service_method_body, "Details of promise body for the service abtraction feature"),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_SERVICES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "services", ConstraintSetSyntaxNew(CF_SERVICES_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "services", services_constraints, NULL),
     PromiseTypeSyntaxNewNull()
 };

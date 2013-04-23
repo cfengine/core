@@ -26,7 +26,7 @@
 
 #include "syntax.h"
 
-static const ConstraintSyntax CF_RESOURCE_BODY[] =
+static const ConstraintSyntax environment_resources_constraints[] =
 {
     ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", NULL),
     ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", NULL),
@@ -36,7 +36,9 @@ static const ConstraintSyntax CF_RESOURCE_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
-static const ConstraintSyntax CF_DESIGNATION_BODY[] =
+static const BodyTypeSyntax environment_resources_body = BodyTypeSyntaxNew("environment_resources", environment_resources_constraints, NULL);
+
+static const ConstraintSyntax environment_interface_constraints[] =
 {
     ConstraintSyntaxNewStringList("env_addresses", "", "The IP addresses of the environment's network interfaces"),
     ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment", NULL),
@@ -44,11 +46,13 @@ static const ConstraintSyntax CF_DESIGNATION_BODY[] =
     ConstraintSyntaxNewNull()
 };
 
+static const BodyTypeSyntax environment_interface_body = BodyTypeSyntaxNew("environment_interface", environment_interface_constraints, NULL);
+
 static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {
     ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine", NULL),
-    ConstraintSyntaxNewBody("environment_interface", CF_DESIGNATION_BODY, "Virtual environment outward identity and location"),
-    ConstraintSyntaxNewBody("environment_resources", CF_RESOURCE_BODY, "Virtual environment resource description"),
+    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location"),
+    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description"),
     ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", NULL),
     ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", NULL),
     ConstraintSyntaxNewNull()
@@ -56,6 +60,6 @@ static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 
 const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "guest_environments", ConstraintSetSyntaxNew(CF_ENVIRON_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "guest_environments", CF_ENVIRON_BODIES, NULL),
     PromiseTypeSyntaxNewNull()
 };

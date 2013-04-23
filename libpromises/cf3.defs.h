@@ -711,20 +711,9 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
+typedef struct ConstraintSyntax_ ConstraintSyntax;
 typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
-
-typedef struct ConstraintSyntax_
-{
-    const char *lval;
-    const DataType dtype;
-    union
-    {
-        const char *validation_string;
-        const struct ConstraintSyntax_ *body_type_syntax;
-    } range;
-    const char *description;
-    const char *default_value;
-} ConstraintSyntax;
+typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 
 /*
  * Promise type may optionally provide parse-tree check function, called after
@@ -735,26 +724,45 @@ typedef struct ConstraintSyntax_
  *
  * If the check function has not found any errors, it should return true.
  */
+
 typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
+
+typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
 
 struct ConstraintSetSyntax_
 {
     const ConstraintSyntax *constraints;
-    ParseTreeCheckFn parse_tree_check;
+    const ParseTreeCheckFn parse_tree_check;
+};
+
+
+struct ConstraintSyntax_
+{
+    const char *lval;
+    const DataType dtype;
+    union
+    {
+        const char *validation_string;
+        const BodyTypeSyntax *body_type_syntax;
+    } range;
+    const char *description;
+    const char *default_value;
+};
+
+struct BodyTypeSyntax_
+{
+    const char *body_type;
+    const ConstraintSyntax *constraints;
+    BodyCheckFn check_body;
 };
 
 typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
-    ConstraintSetSyntax constraint_set;
+    const ConstraintSyntax *constraints;
+    const ParseTreeCheckFn check_promise;
 } PromiseTypeSyntax;
-
-typedef struct
-{
-    const char *body_type;
-    ConstraintSetSyntax constraint_set;
-} BodyTypeSyntax;
 
 /*************************************************************************/
 
@@ -1733,7 +1741,7 @@ extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const PromiseTypeSyntax CONTROL_BODIES[];
+extern const BodyTypeSyntax CONTROL_BODIES[];
 extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_CLASSBODY[];

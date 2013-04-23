@@ -95,22 +95,22 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
     IncludeManualFile(source_dir, fout, "reference_control_intro.texinfo");
 
     fprintf(fout, "@menu\n");
-    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; ++i)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; ++i)
     {
-        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].bundle_type);
+        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].body_type);
     }
     fprintf(fout, "@end menu\n");
 
-    for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
-        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].bundle_type,
-                CONTROL_BODIES[i].bundle_type);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].bundle_type);
+        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].body_type,
+                CONTROL_BODIES[i].body_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
 
-        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraints, CONTROL_BODIES[i].bundle_type);
+        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraints, CONTROL_BODIES[i].body_type);
     }
 
 /* Components */

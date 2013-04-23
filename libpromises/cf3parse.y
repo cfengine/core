@@ -1106,37 +1106,40 @@ static bool LvalWantsBody(char *stype, char *lval)
 static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const char *lval, Rval rval)
 {
     // Check internal control bodies etc
-    for (int i = 0; CONTROL_BODIES[i].promise_type != NULL; i++)
+    if (strcmp("control", name) == 0)
     {
-        if (strcmp(CONTROL_BODIES[i].promise_type, name) == 0 && strcmp(type, CONTROL_BODIES[i].bundle_type) == 0)
+        for (int i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
         {
-            CfDebug("Found matching a body matching (%s,%s)\n", type, name);
-
-            const ConstraintSyntax *bs = CONTROL_BODIES[i].constraints;
-
-            for (int l = 0; bs[l].lval != NULL; l++)
+            if (strcmp(type, CONTROL_BODIES[i].body_type) == 0)
             {
-                if (strcmp(lval, bs[l].lval) == 0)
-                {
-                    CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
+                CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
-                    if (bs[l].dtype == DATA_TYPE_BODY)
+                const ConstraintSyntax *bs = CONTROL_BODIES[i].constraints;
+
+                for (int l = 0; bs[l].lval != NULL; l++)
+                {
+                    if (strcmp(lval, bs[l].lval) == 0)
                     {
-                        CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
-                        return SYNTAX_TYPE_MATCH_OK;
-                    }
-                    else if (bs[l].dtype == DATA_TYPE_BUNDLE)
-                    {
-                        CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
-                        return SYNTAX_TYPE_MATCH_OK;
-                    }
-                    else
-                    {
-                        return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, bs[l].range.validation_string, 0);
+                        CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
+
+                        if (bs[l].dtype == DATA_TYPE_BODY)
+                        {
+                            CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
+                            return SYNTAX_TYPE_MATCH_OK;
+                        }
+                        else if (bs[l].dtype == DATA_TYPE_BUNDLE)
+                        {
+                            CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
+                            return SYNTAX_TYPE_MATCH_OK;
+                        }
+                        else
+                        {
+                            return CheckConstraintTypeMatch(lval, rval, bs[l].dtype, bs[l].range.validation_string, 0);
+                        }
                     }
                 }
-            }
 
+            }
         }
     }
 

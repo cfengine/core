@@ -1355,7 +1355,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     {
         body_syntax = CONTROL_BODIES[i].constraints;
 
-        if (strcmp(control_body->type, CONTROL_BODIES[i].bundle_type) == 0)
+        if (strcmp(control_body->type, CONTROL_BODIES[i].body_type) == 0)
         {
             break;
         }

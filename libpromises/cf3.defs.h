@@ -1739,7 +1739,7 @@ extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const PromiseTypeSyntax CONTROL_BODIES[];
+extern const BodyTypeSyntax CONTROL_BODIES[];
 extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_CLASSBODY[];

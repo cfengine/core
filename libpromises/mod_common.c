@@ -347,20 +347,20 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 /* This list is for checking free standing body lval => rval bindings */
 
-const PromiseTypeSyntax CONTROL_BODIES[] =
+const BodyTypeSyntax CONTROL_BODIES[] =
 {
-    PromiseTypeSyntaxNew(CF_COMMONC, "control", CFG_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_AGENTC, "control", CFA_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_SERVERC, "control", CFS_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_MONITORC, "control", CFM_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_RUNC, "control", CFR_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_EXECC, "control", CFEX_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew(CF_HUBC, "control", CFH_CONTROLBODY, NULL),
-    PromiseTypeSyntaxNew("file", "control", CFFILE_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_COMMONC, CFG_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_AGENTC, CFA_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_SERVERC, CFS_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_MONITORC, CFM_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL),
+    BodyTypeSyntaxNew("file", CFFILE_CONTROLBODY, NULL),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
-    PromiseTypeSyntaxNewNull()
+    BodyTypeSyntaxNewNull()
 };
 
 /*********************************************************/

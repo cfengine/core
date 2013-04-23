@@ -46,10 +46,10 @@ static const int INF_LINES = -2;
 
 /*******************************************************************/
 
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-static int CompareResult(char *filename, char *prev_file);
-static void MailResult(const ExecConfig *config, char *file);
-static int Dialogue(int sd, char *s);
+static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
+static int CompareResult(const char *filename, const char *prev_file);
+static void MailResult(const ExecConfig *config, const char *file);
+static int Dialogue(int sd, const char *s);
 
 /******************************************************************************/
 
@@ -331,7 +331,7 @@ void LocalExec(const ExecConfig *config)
     }
 }
 
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
     FILE *file;
     EVP_MD_CTX context;
@@ -371,7 +371,7 @@ static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1
     return 0;
 }
 
-static int CompareResult(char *filename, char *prev_file)
+static int CompareResult(const char *filename, const char *prev_file)
 {
     int i;
     unsigned char digest1[EVP_MAX_MD_SIZE + 1];
@@ -431,7 +431,7 @@ static int CompareResult(char *filename, char *prev_file)
     return (rtn);
 }
 
-static void MailResult(const ExecConfig *config, char *file)
+static void MailResult(const ExecConfig *config, const char *file)
 {
     int sd, count = 0, anomaly = false;
     char prev_file[CF_BUFSIZE], vbuff[CF_BUFSIZE];
@@ -677,7 +677,7 @@ static void MailResult(const ExecConfig *config, char *file)
     CfOut(OUTPUT_LEVEL_LOG, "", "Cannot mail to %s.", config->mail_to_address);
 }
 
-static int Dialogue(int sd, char *s)
+static int Dialogue(int sd, const char *s)
 {
     int sent;
     char ch, f = '\0';

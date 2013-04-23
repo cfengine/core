@@ -333,22 +333,17 @@ void LocalExec(const ExecConfig *config)
 
 static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
-    FILE *file;
-    EVP_MD_CTX context;
-    int len;
-    unsigned int md_len;
-    unsigned char buffer[1024];
-    const EVP_MD *md = NULL;
-
     CfDebug("FileChecksum(%s)\n", filename);
 
-    if ((file = fopen(filename, "rb")) == NULL)
+    FILE *file = fopen(filename, "rb");
+    if (!file)
     {
         printf("%s can't be opened\n", filename);
+        return 0;
     }
     else
     {
-        md = EVP_get_digestbyname("md5");
+        const EVP_MD *md = EVP_get_digestbyname("md5");
 
         if (!md)
         {
@@ -356,19 +351,22 @@ static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SI
             return 0;
         }
 
+        EVP_MD_CTX context;
         EVP_DigestInit(&context, md);
 
+        int len = 0;
+        unsigned char buffer[1024];
         while ((len = fread(buffer, 1, 1024, file)))
         {
             EVP_DigestUpdate(&context, buffer, len);
         }
 
+        unsigned int md_len = 0;
         EVP_DigestFinal(&context, digest, &md_len);
         fclose(file);
-        return (md_len);
-    }
 
-    return 0;
+        return md_len;
+    }
 }
 
 static int CompareResult(const char *filename, const char *prev_file)

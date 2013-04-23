@@ -151,26 +151,22 @@ static bool IsReadReady(int fd, int timeout_sec)
 
 void LocalExec(const ExecConfig *config)
 {
-    FILE *pp;
-    char line[CF_BUFSIZE], line_escaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
-    char cmd[CF_BUFSIZE], esc_command[CF_BUFSIZE];
-    int print, count = 0;
-    void *thread_name;
     time_t starttime = time(NULL);
-    char starttime_str[64];
-    FILE *fp;
-    char canonified_fq_name[CF_BUFSIZE];
 
-    thread_name = ThreadUniqueName();
+    void *thread_name = ThreadUniqueName();
 
-    cf_strtimestamp_local(starttime, starttime_str);
+    {
+        char starttime_str[64];
+        cf_strtimestamp_local(starttime, starttime_str);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n");
+    }
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
+    char cmd[CF_BUFSIZE];
     if (strlen(config->exec_command) > 0)
     {
         strncpy(cmd, config->exec_command, CF_BUFSIZE - 1);
@@ -185,19 +181,29 @@ void LocalExec(const ExecConfig *config)
         ConstructFailsafeCommand(config->scheduled_run, cmd);
     }
 
+    char esc_command[CF_BUFSIZE];
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
+    char line[CF_BUFSIZE];
     snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
 
-    strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
-    CanonifyNameInPlace(canonified_fq_name);
+    char filename[CF_BUFSIZE];
+    {
+        char canonified_fq_name[CF_BUFSIZE];
 
-    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
-    MapName(filename);
+        strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
+        CanonifyNameInPlace(canonified_fq_name);
+
+
+        snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
+        MapName(filename);
+    }
+
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
-    if ((fp = fopen(filename, "w")) == NULL)
+    FILE *fp = fopen(filename, "w");
+    if (!fp)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "fopen", "!! Couldn't open \"%s\" - aborting exec\n", filename);
         return;
@@ -216,7 +222,8 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command => %s\n", cmd);
 
-    if ((pp = cf_popen_sh(esc_command, "r")) == NULL)
+    FILE *pp = cf_popen_sh(esc_command, "r");
+    if (!pp)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "!! Couldn't open pipe to command \"%s\"\n", cmd);
         fclose(fp);
@@ -225,6 +232,7 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is executing...%s\n", esc_command);
 
+    int count = 0;
     for (;;)
     {
         if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
@@ -265,9 +273,9 @@ void LocalExec(const ExecConfig *config)
             return;
         }
 
-        print = false;
+        bool print = false;
 
-        for (sp = line; *sp != '\0'; sp++)
+        for (const char *sp = line; *sp != '\0'; sp++)
         {
             if (!isspace((int) *sp))
             {
@@ -278,6 +286,8 @@ void LocalExec(const ExecConfig *config)
 
         if (print)
         {
+            char line_escaped[sizeof(line) * 2];
+
             // we must escape print format chars (%) from output
 
             ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");

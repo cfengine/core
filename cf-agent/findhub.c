@@ -114,13 +114,13 @@ void PrintList(List *list)
     {
         HostProperties *hostprop = (HostProperties *)ListIteratorData(i);
 
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "\nCFEngine Policy Server:\n"
-                                "Hostname: %s\n"
-                                "IP Address: %s\n"
-                                "Port: %d\n",
-                                hostprop->Hostname,
-                                hostprop->IPAddress,
-                                hostprop->Port);
+        printf("\nCFEngine Policy Server:\n"
+               "Hostname: %s\n"
+               "IP Address: %s\n"
+               "Port: %d\n",
+               hostprop->Hostname,
+               hostprop->IPAddress,
+               hostprop->Port);
     } while (ListIteratorNext(i) != -1);
 
     ListIteratorDestroy(&i);

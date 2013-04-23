@@ -1451,7 +1451,6 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
 {
     char comm[CF_EXPANDSIZE], line[CF_BUFSIZE];
     FILE *pop = NULL;
-    int print = false;
     int transRetcode = 0;
 
     if (attr.transformer == NULL || file == NULL)
@@ -1466,11 +1465,6 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, attr, "I: Transformer %s %s failed", attr.transformer, file);
         return false;
-    }
-
-    if (strncmp(comm, "/bin/echo", strlen("/bin/echo")) == 0)
-    {
-        print = true;
     }
 
     if (!DONTDO)
@@ -1506,14 +1500,7 @@ static int TransformFile(EvalContext *ctx, char *file, Attributes attr, Promise 
                 return false;
             }
 
-            if (print)
-            {
-                CfOut(OUTPUT_LEVEL_REPORTING, "", "%s", line);
-            }
-            else
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "%s", line);
-            }
+            CfOut(OUTPUT_LEVEL_INFORM, "", "%s", line);
         }
 
         transRetcode = cf_pclose(pop);

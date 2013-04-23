@@ -2286,7 +2286,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            CfOut(OUTPUT_LEVEL_REPORTING, "", "L: %s\n", buffer);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "L: %s\n", buffer);
         }
         else
         {

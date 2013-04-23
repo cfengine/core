@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "logging.h"
+#include "hashes.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "unix.h"
@@ -46,7 +47,6 @@ static const int INF_LINES = -2;
 
 /*******************************************************************/
 
-static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 static int CompareResult(const char *filename, const char *prev_file);
 static void MailResult(const ExecConfig *config, const char *file);
 static int Dialogue(int sd, const char *s);
@@ -328,44 +328,6 @@ void LocalExec(const ExecConfig *config)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No output\n");
         unlink(filename);
-    }
-}
-
-static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
-{
-    CfDebug("FileChecksum(%s)\n", filename);
-
-    FILE *file = fopen(filename, "rb");
-    if (!file)
-    {
-        printf("%s can't be opened\n", filename);
-        return 0;
-    }
-    else
-    {
-        const EVP_MD *md = EVP_get_digestbyname("md5");
-
-        if (!md)
-        {
-            fclose(file);
-            return 0;
-        }
-
-        EVP_MD_CTX context;
-        EVP_DigestInit(&context, md);
-
-        int len = 0;
-        unsigned char buffer[1024];
-        while ((len = fread(buffer, 1, 1024, file)))
-        {
-            EVP_DigestUpdate(&context, buffer, len);
-        }
-
-        unsigned int md_len = 0;
-        EVP_DigestFinal(&context, digest, &md_len);
-        fclose(file);
-
-        return md_len;
     }
 }
 

@@ -1258,16 +1258,6 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
 
-#if defined(HAVE_GETADDRINFO)
-    struct addrinfo query, *response = NULL, *ap;
-    int err;
-#else
-    struct sockaddr_in raddr;
-    int i, j;
-    socklen_t len = sizeof(struct sockaddr_in);
-    struct hostent *hp = NULL;
-#endif
-
     CfDebug("Connecting host identifies itself as %s\n", buf);
 
     memset(ipstring, 0, CF_MAXVARSIZE);
@@ -1276,36 +1266,44 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     sscanf(buf, "%255s %255s %255s", ipstring, fqname, username);
 
-    CfDebug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n", ipstring, fqname, username, conn->ipaddr);
+    CfDebug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",
+            ipstring, fqname, username, conn->ipaddr);
 
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
     ToLowerStrInplace(dns_assert);
 
     strncpy(ip_assert, ipstring, CF_MAXVARSIZE - 1);
 
-/* It only makes sense to check DNS by reverse lookup if the key had to be accepted
-   on trust. Once we have a positive key ID, the IP address is irrelevant fr authentication...
+/* It only makes sense to check DNS by reverse lookup if the key had to be
+   accepted on trust. Once we have a positive key ID, the IP address is
+   irrelevant fr authentication...
    We can save a lot of time by not looking this up ... */
 
-    if ((conn->trust == false) || (IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr))))
+    if ((conn->trust == false) ||
+        (IsMatchItemIn(SV.skipverify, MapAddress(conn->ipaddr))))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Allowing %s to connect without (re)checking ID\n", ip_assert);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Allowing %s to connect without (re)checking ID\n", ip_assert);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Non-verified Host ID is %s (Using skipverify)\n", dns_assert);
         strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Non-verified User ID seems to be %s (Using skipverify)\n", username);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "Non-verified User ID seems to be %s (Using skipverify)\n",
+              username);
         strncpy(conn->username, username, CF_MAXVARSIZE);
 
-#ifdef __MINGW32__                    /* NT uses security identifier instead of uid */
+#ifdef __MINGW32__            /* NT uses security identifier instead of uid */
 
-        if (!NovaWin_UserNameToSid(username, (SID *) conn->sid, CF_MAXSIDSIZE, false))
+        if (!NovaWin_UserNameToSid(username, (SID *) conn->sid,
+                                   CF_MAXSIDSIZE, false))
         {
-            memset(conn->sid, 0, CF_MAXSIDSIZE);        /* is invalid sid - discarded */
+            memset(conn->sid, 0, CF_MAXSIDSIZE); /* is invalid sid - discarded */
         }
 
 #else /* !__MINGW32__ */
 
         struct passwd *pw;
-        if ((pw = getpwnam(username)) == NULL)  /* Keep this inside mutex */
+        if ((pw = getpwnam(username)) == NULL)    /* Keep this inside mutex */
         {
             conn->uid = -2;
         }
@@ -1321,137 +1319,71 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     if (strcmp(ip_assert, MapAddress(conn->ipaddr)) != 0)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              "IP address mismatch between client's assertion (%s) and socket (%s) - untrustworthy connection\n",
+              "IP address mismatch between client's assertion (%s) "
+              "and socket (%s) - untrustworthy connection\n",
               ip_assert, conn->ipaddr);
         return false;
     }
 
     if (strlen(dns_assert) == 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "DNS asserted name was empty - untrustworthy connection\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "DNS asserted name was empty - untrustworthy connection\n");
         return false;
     }
 
     if (strcmp(dns_assert, "skipident") == 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "DNS asserted name was withheld before key exchange - untrustworthy connection\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              "DNS asserted name was withheld before key exchange"
+              " - untrustworthy connection\n");
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Socket caller address appears honest (%s matches %s)\n", ip_assert,
-          MapAddress(conn->ipaddr));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+          "Socket caller address appears honest (%s matches %s)\n",
+          ip_assert, MapAddress(conn->ipaddr));
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Socket originates from %s=%s\n", ip_assert, dns_assert);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Socket originates from %s=%s\n",
+          ip_assert, dns_assert);
 
-    CfDebug("Attempting to verify honesty by looking up hostname (%s)\n", dns_assert);
+    CfDebug("Attempting to verify honesty by looking up hostname (%s)\n",
+            dns_assert);
 
 /* Do a reverse DNS lookup, like tcp wrappers to see if hostname matches IP */
+    struct addrinfo *response, *ap;
+    struct addrinfo query = {
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM
+    };
+    int err;
 
-#if defined(HAVE_GETADDRINFO)
-
-    CfDebug("Using v6 compatible lookup...\n");
-
-    memset(&query, 0, sizeof(struct addrinfo));
-
-    query.ai_family = AF_UNSPEC;
-    query.ai_socktype = SOCK_STREAM;
-    query.ai_flags = AI_PASSIVE;
-
-    if ((err = getaddrinfo(dns_assert, NULL, &query, &response)) != 0)
+    err = getaddrinfo(dns_assert, NULL, &query, &response);
+    if (err != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to lookup %s (%s)", dns_assert, gai_strerror(err));
-    }
-
-    for (ap = response; ap != NULL; ap = ap->ai_next)
-    {
-        ThreadLock(cft_getaddr);
-
-        if (strcmp(MapAddress(conn->ipaddr), sockaddr_ntop(ap->ai_addr)) == 0)
-        {
-            CfDebug("Found match\n");
-            matched = true;
-        }
-
-        ThreadUnlock(cft_getaddr);
-    }
-
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
-
-#else
-
-    CfDebug("IPV4 hostnname lookup on %s\n", dns_assert);
-
-    ThreadLock(cft_getaddr);
-
-    if ((hp = gethostbyname(dns_assert)) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd Couldn't look up name %s\n", fqname);
-        CfOut(OUTPUT_LEVEL_LOG, "gethostbyname", "DNS lookup of %s failed", dns_assert);
-        matched = false;
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              "VerifyConnection: Unable to lookup (%s): %s",
+              dns_assert, gai_strerror(err));
     }
     else
     {
-        matched = true;
-
-        CfDebug("Looking for the peername of our socket...\n");
-
-        if (getpeername(conn->sd_reply, (struct sockaddr *) &raddr, &len) == -1)
+        for (ap = response; ap != NULL; ap = ap->ai_next)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "getpeername", "Couldn't get socket address\n");
-            matched = false;
-        }
+            /* No lookup, just convert ai_addr to string. */
+            char txtaddr[CF_MAX_IP_LEN] = "";
+            getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                        txtaddr, sizeof(txtaddr),
+                        NULL, 0, NI_NUMERICHOST);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking through hostnames on socket with IPv4 %s\n",
-              sockaddr_ntop((struct sockaddr *) &raddr));
-
-        for (i = 0; hp->h_addr_list[i]; i++)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reverse lookup address found: %d\n", i);
-            if (memcmp(hp->h_addr_list[i], (char *) &(raddr.sin_addr), sizeof(raddr.sin_addr)) == 0)
+            if (strcmp(MapAddress(conn->ipaddr), txtaddr) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Canonical name matched host's assertion - id confirmed as %s\n", dns_assert);
-                break;
+                CfDebug("Found match\n");
+                matched = true;
             }
         }
-
-        if (hp->h_addr_list[0] != NULL)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking address number %d for non-canonical names (aliases)\n", i);
-
-            for (j = 0; hp->h_aliases[j] != NULL; j++)
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Comparing [%s][%s]\n", hp->h_aliases[j], ip_assert);
-
-                if (strcmp(hp->h_aliases[j], ip_assert) == 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Non-canonical name (alias) matched host's assertion - id confirmed as %s\n",
-                          dns_assert);
-                    break;
-                }
-            }
-
-            if ((hp->h_addr_list[i] != NULL) && (hp->h_aliases[j] != NULL))
-            {
-                CfOut(OUTPUT_LEVEL_LOG, "", "Reverse hostname lookup failed, host claiming to be %s was %s\n", buf,
-                      sockaddr_ntop((struct sockaddr *) &raddr));
-                matched = false;
-            }
-            else
-            {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reverse lookup succeeded\n");
-            }
-        }
-        else
-        {
-            CfOut(OUTPUT_LEVEL_LOG, "", "No name was registered in DNS for %s - reverse lookup failed\n", dns_assert);
-            matched = false;
-        }
+        freeaddrinfo(response);
     }
 
-    ThreadUnlock(cft_getaddr);
 
 # ifdef __MINGW32__                   /* NT uses security identifier instead of uid */
     if (!NovaWin_UserNameToSid(username, (SID *) conn->sid, CF_MAXSIDSIZE, false))
@@ -1460,6 +1392,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     }
 
 # else/* !__MINGW32__ */
+    struct passwd *pw;
     if ((pw = getpwnam(username)) == NULL)      /* Keep this inside mutex */
     {
         conn->uid = -2;
@@ -1470,11 +1403,10 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     }
 # endif/* !__MINGW32__ */
 
-#endif
-
     if (!matched)
     {
-        CfOut(OUTPUT_LEVEL_LOG, "gethostbyname", "Failed on DNS reverse lookup of %s\n", dns_assert);
+        CfOut(OUTPUT_LEVEL_LOG, "gethostbyname",
+              "Failed on DNS reverse lookup of %s\n", dns_assert);
         CfOut(OUTPUT_LEVEL_LOG, "", "Client sent: %s", buf);
         return false;
     }

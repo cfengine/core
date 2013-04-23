@@ -30,7 +30,6 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "logging.h"
-#include "communication.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"

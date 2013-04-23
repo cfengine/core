@@ -22,18 +22,20 @@
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "client_protocol.h"
 
 #include "communication.h"
 #include "net.h"
-#include "sysinfo.h"
-#include "promises.h"
-#include "lastseen.h"
-#include "crypto.h"
-#include "logging.h"
-#include "files_hashes.h"
-#include "policy.h"
+
+/* TODO remove all includes from libpromises. */
+extern char VIPADDRESS[];
+extern char VDOMAIN[];
+extern char VFQNAME[];
+#include "sysinfo.h"                           /* GetCurrentUsername */
+#include "lastseen.h"                          /* LastSaw */
+#include "crypto.h"                            /* PublicKeyFile */
+#include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
+
 
 static bool SetSessionKey(AgentConnection *conn);
 
@@ -50,19 +52,12 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(int sd, char *localip, int family)
+int IdentifyAgent(int sd, char *localip)
 {
     char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE], dnsname[CF_BUFSIZE];
-    socklen_t len;
-
-#if defined(HAVE_GETADDRINFO)
-    int err;
-    char myaddr[256] = {0};           /* Compilation trick for systems that don't know ipv6 */
-#else    
-    struct sockaddr_in myaddr = {0};
-    struct in_addr *iaddr;
-    struct hostent *hp;
-#endif
+    struct sockaddr_storage myaddr = {0};
+    socklen_t myaddr_len = sizeof(myaddr);
+    int ret;
 
     memset(sendbuff, 0, CF_BUFSIZE);
     memset(dnsname, 0, CF_BUFSIZE);
@@ -75,65 +70,36 @@ int IdentifyAgent(int sd, char *localip, int family)
 
     if (!SKIPIDENTIFY)
     {
-/* First we need to find out the IP address and DNS name of the socket
-   we are sending from. This is not necessarily the same as VFQNAME if
-   the machine has a different uname from its IP name (!) This can
-   happen on poorly set up machines or on hosts with multiple
-   interfaces, with different names on each interface ... */
+        /* First we need to find out the IP address and DNS name of the socket
+           we are sending from. This is not necessarily the same as VFQNAME if
+           the machine has a different uname from its IP name (!) This can
+           happen on poorly set up machines or on hosts with multiple
+           interfaces, with different names on each interface ... */
 
-        switch (family)
+        if (getsockname(sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
-        case AF_INET:
-            len = sizeof(struct sockaddr_in);
-            break;
-#if defined(HAVE_GETADDRINFO)
-        case AF_INET6:
-            len = sizeof(struct sockaddr_in6);
-            break;
-#endif
-        default:
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Software error in IdentifyForVerification, family = %d", family);
+            CfOut(OUTPUT_LEVEL_ERROR, "getsockname",
+                  "Couldn't get socket address\n");
             return false;
         }
 
-        if (getsockname(sd, (struct sockaddr *) &myaddr, &len) == -1)
+        /* No lookup, just convert the bound address to string. */
+        getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
+                    localip, CF_MAX_IP_LEN,
+                    NULL, 0, NI_NUMERICHOST);
+        CfDebug("Identifying this agent as %s i.e. %s, with signature %d\n",
+                localip, VFQNAME, 0);
+
+        /* dnsname: Reverse lookup of the bound IP address. */
+        ret = getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
+                          dnsname, CF_MAXVARSIZE, NULL, 0, 0);
+        if (ret != 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "getsockname", "Couldn't get socket address\n");
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "Couldn't look up address for %s: %s\n",
+                  dnsname, gai_strerror(ret));
             return false;
         }
-
-        snprintf(localip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop((struct sockaddr *) &myaddr));
-
-        CfDebug("Identifying this agent as %s i.e. %s, with signature %d, family %d\n", localip, VFQNAME, 0, family);
-
-#if defined(HAVE_GETADDRINFO)
-
-        if ((err = getnameinfo((struct sockaddr *) &myaddr, len, dnsname, CF_MAXVARSIZE, NULL, 0, 0)) != 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't look up address v6 for %s: %s\n", dnsname, gai_strerror(err));
-            return false;
-        }
-
-#else
-
-        iaddr = &(myaddr.sin_addr);
-
-        hp = gethostbyaddr((void *) iaddr, sizeof(myaddr.sin_addr), family);
-
-        if ((hp == NULL) || (hp->h_name == NULL))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "gethostbyaddr", "Couldn't lookup IP address\n");
-            return false;
-        }
-
-        strncpy(dnsname, hp->h_name, CF_MAXVARSIZE);
-
-        if ((strstr(hp->h_name, ".") == 0) && (strlen(VDOMAIN) > 0))
-        {
-            strcat(dnsname, ".");
-            strcat(dnsname, VDOMAIN);
-        }
-#endif
     }
     else
     {
@@ -170,7 +136,8 @@ int IdentifyAgent(int sd, char *localip, int family)
 
     if (strncmp(dnsname, localip, strlen(localip)) == 0)
     {
-        /* Seems to be a bug in some resolvers that adds garbage, when it just returns the input */
+        /* Seems to be a bug in some resolvers that adds garbage, when it just
+         * returns the input */
         strcpy(dnsname, localip);
     }
 
@@ -179,11 +146,13 @@ int IdentifyAgent(int sd, char *localip, int family)
         strcpy(dnsname, localip);
     }
 
-    snprintf(sendbuff, CF_BUFSIZE - 1, "CAUTH %s %s %s %d", localip, dnsname, uname, 0);
+    snprintf(sendbuff, CF_BUFSIZE - 1, "CAUTH %s %s %s %d",
+             localip, dnsname, uname, 0);
 
     if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! IdentifyAgent: Could not send auth response");
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+              "!! IdentifyAgent: Could not send auth response");
         return false;
     }
 

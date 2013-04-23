@@ -1,7 +1,7 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
 	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd
 
 LDADD = ../../libpromises/libpromises.la libtest.la
@@ -84,10 +84,9 @@ endif
 
 TESTS = $(check_PROGRAMS)
 
-#
+TESTS_ENVIRONMENT = SRCDIR=$(srcdir)
 # OS X uses real system calls instead of our stubs unless this option is used
-#
-TESTS_ENVIRONMENT = DYLD_FORCE_FLAT_NAMESPACE=yes
+TESTS_ENVIRONMENT += DYLD_FORCE_FLAT_NAMESPACE=yes
 
 atexit_test_SOURCES = atexit_test.c
 atexit_test_LDADD = libtest.la libdb.la

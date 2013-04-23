@@ -20,28 +20,21 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifndef CFENGINE_CLIENT_CODE_H
-#define CFENGINE_CLIENT_CODE_H
+/* Low Level networking routines. */
 
-#include "cf3.defs.h"
+#ifndef CFENGINE_NET_H
+#define CFENGINE_NET_H
 
-void DetermineCfenginePort(void);
-/**
-  @param err Set to 0 on success, -1 no server responce, -2 authentication failure.
-  */
-AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err);
-void DisconnectServer(AgentConnection *conn);
-int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, AgentConnection *conn);
-int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn);
-int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
-int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *conn);
-int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc);
+#include "cfnet.h"
 
-Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn);
 
-const Stat *ClientCacheLookup(AgentConnection *conn, const char *server_name, const char *file_name);
+int SendTransaction(int sd, char *buffer, int len, char status);
+int ReceiveTransaction(int sd, char *buffer, int *more);
+int RecvSocketStream(int sd, char *buffer, int toget);
+int SendSocketStream(int sd, char *buffer, int toget, int flags);
+
+int SetReceiveTimeout(int sd, const struct timeval *timeout);
 
 #endif

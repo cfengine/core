@@ -89,7 +89,6 @@ static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list
 
     case OUTPUT_LEVEL_ERROR:
     case OUTPUT_LEVEL_REPORTING:
-    case OUTPUT_LEVEL_CMDOUT:
 
         LogListStdout(mess, VERBOSE);
         SystemLog(mess, level);
@@ -153,7 +152,6 @@ void SystemLog(Item *mess, OutputLevel level)
         {
         case OUTPUT_LEVEL_INFORM:
         case OUTPUT_LEVEL_REPORTING:
-        case OUTPUT_LEVEL_CMDOUT:
             syslog(LOG_NOTICE, " %s", ip->name);
             break;
 

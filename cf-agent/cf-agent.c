@@ -1725,7 +1725,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+    printf("-> Bootstrap to %s completed successfully\n", POLICY_SERVER);
 
     return true;
 }

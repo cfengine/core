@@ -664,7 +664,7 @@ static void MailResult(const ExecConfig *config, char *file)
 
     fclose(fp);
     cf_closesocket(sd);
-    CfOut(OUTPUT_LEVEL_LOG, "", "Cannot mail to %s.", config->mail_to_address);
+    CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot mail to %s.", config->mail_to_address);
 }
 
 static int Dialogue(int sd, char *s)

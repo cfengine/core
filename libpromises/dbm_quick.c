@@ -128,7 +128,7 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
         if (dprepair(filename))
         {
-            CfOut(OUTPUT_LEVEL_LOG, "", "Successfully repaired database \"%s\"", filename);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Successfully repaired database \"%s\"", filename);
         }
         else
         {

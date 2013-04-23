@@ -95,15 +95,6 @@ static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list
         SystemLog(mess, level);
         break;
 
-    case OUTPUT_LEVEL_LOG:
-
-        if (VERBOSE || DEBUG)
-        {
-            LogListStdout(mess, VERBOSE);
-        }
-        SystemLog(mess, OUTPUT_LEVEL_VERBOSE);
-        break;
-
     default:
 
         ProgrammingError("Report level unknown");

@@ -88,7 +88,6 @@ static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list
         break;
 
     case OUTPUT_LEVEL_ERROR:
-    case OUTPUT_LEVEL_REPORTING:
 
         LogListStdout(mess, VERBOSE);
         SystemLog(mess, level);
@@ -151,7 +150,6 @@ void SystemLog(Item *mess, OutputLevel level)
         switch (level)
         {
         case OUTPUT_LEVEL_INFORM:
-        case OUTPUT_LEVEL_REPORTING:
             syslog(LOG_NOTICE, " %s", ip->name);
             break;
 
@@ -176,3 +174,14 @@ const char *GetErrorStr(void)
     return strerror(errno);
 }
 #endif
+
+void ReportMessage(const char *message)
+{
+    Item *msg = NULL;
+    AppendItem(&msg, StringFormat("R: %s", message), NULL);
+
+    LogListStdout(msg, VERBOSE);
+    SystemLog(msg, OUTPUT_LEVEL_INFORM);
+
+    DeleteItemList(msg);
+}

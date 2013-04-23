@@ -633,7 +633,6 @@ typedef enum
     OUTPUT_LEVEL_INFORM,
     OUTPUT_LEVEL_VERBOSE,
     OUTPUT_LEVEL_ERROR,
-    OUTPUT_LEVEL_REPORTING,
 } OutputLevel;
 
 typedef enum

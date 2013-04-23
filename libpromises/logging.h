@@ -30,4 +30,9 @@
 
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
 
+/*
+ * Report to standard output and to system log (reports promise type)
+ */
+void ReportMessage(const char *message);
+
 #endif

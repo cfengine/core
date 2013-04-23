@@ -98,7 +98,7 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "R: %s", pp->promiser);
+        ReportMessage(pp->promiser);
     }
 
     if (a.report.haveprintfile)

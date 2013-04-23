@@ -240,7 +240,7 @@ static void XmlExportControl(Writer *writer, PromiseTypeSyntax type)
     free(filebuffer);
 
 /* XML ELEMENT -- CONSTRAINTS */
-    XmlExportConstraints(writer, type.constraint_set.constraints);
+    XmlExportConstraints(writer, type.constraints);
 
 /* END XML ELEMENT -- CONTROL */
     XmlEndTag(writer, XMLTAG_CONTROL);
@@ -306,7 +306,7 @@ void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st)
         }
 
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, st[i].constraint_set.constraints);
+        XmlExportConstraints(writer, st[i].constraints);
 
         /* END XML ELEMENT -- PROMISE TYPE */
         XmlEndTag(writer, XMLTAG_PROMISETYPE);

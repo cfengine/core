@@ -1072,7 +1072,7 @@ static bool LvalWantsBody(char *stype, char *lval)
 
         for (int j = 0; promise_type_syntax[j].promise_type != NULL; j++)
         {
-            const ConstraintSyntax *bs = promise_type_syntax[j].constraint_set.constraints;
+            const ConstraintSyntax *bs = promise_type_syntax[j].constraints;
             if (!bs)
             {
                 continue;
@@ -1112,7 +1112,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
         {
             CfDebug("Found matching a body matching (%s,%s)\n", type, name);
 
-            const ConstraintSyntax *bs = CONTROL_BODIES[i].constraint_set.constraints;
+            const ConstraintSyntax *bs = CONTROL_BODIES[i].constraints;
 
             for (int l = 0; bs[l].lval != NULL; l++)
             {
@@ -1153,7 +1153,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 
         for (int j = 0; promise_type_syntax[j].promise_type != NULL; j++)
         {
-            const ConstraintSyntax *bs = bs = promise_type_syntax[j].constraint_set.constraints;
+            const ConstraintSyntax *bs = bs = promise_type_syntax[j].constraints;
 
             if (!bs)
             {
@@ -1209,7 +1209,7 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
     {
         if (strcmp(promise_type_syntax->promise_type, type) == 0)
         {
-            const ConstraintSyntax *bs = promise_type_syntax->constraint_set.constraints;
+            const ConstraintSyntax *bs = promise_type_syntax->constraints;
 
             for (int l = 0; bs[l].lval != NULL; l++)
             {

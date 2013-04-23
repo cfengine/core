@@ -52,6 +52,6 @@ static const ConstraintSyntax databases_constraints[] =
 
 const PromiseTypeSyntax CF_DATABASES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "databases", ConstraintSetSyntaxNew(databases_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "databases", databases_constraints, NULL),
     PromiseTypeSyntaxNewNull(),
 };

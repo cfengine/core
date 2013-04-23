@@ -60,6 +60,6 @@ static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 
 const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "guest_environments", ConstraintSetSyntaxNew(CF_ENVIRON_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "guest_environments", CF_ENVIRON_BODIES, NULL),
     PromiseTypeSyntaxNewNull()
 };

@@ -51,6 +51,6 @@ const PromiseTypeSyntax CF_REPORT_PROMISE_TYPES[] =
 {
     /* Body lists belonging to "reports:" type in Agent */
 
-    PromiseTypeSyntaxNew("agent", "reports", ConstraintSetSyntaxNew(CF_REPORT_BODIES, NULL)),
+    PromiseTypeSyntaxNew("agent", "reports", CF_REPORT_BODIES, NULL),
     PromiseTypeSyntaxNewNull()
 };

@@ -72,6 +72,6 @@ static const ConstraintSyntax processes_constraints[] =
 
 const PromiseTypeSyntax CF_PROCESS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "processes", ConstraintSetSyntaxNew(processes_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "processes", processes_constraints, NULL),
     PromiseTypeSyntaxNewNull()
 };

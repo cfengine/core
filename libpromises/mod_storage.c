@@ -60,6 +60,6 @@ static const ConstraintSyntax storage_constraints[] =
 
 const PromiseTypeSyntax CF_STORAGE_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "storage", ConstraintSetSyntaxNew(storage_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "storage", storage_constraints, NULL),
     PromiseTypeSyntaxNewNull()
 };

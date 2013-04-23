@@ -52,6 +52,6 @@ static const ConstraintSyntax commands_constraints[] =
 
 const PromiseTypeSyntax CF_EXEC_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "commands", ConstraintSetSyntaxNew(commands_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "commands", commands_constraints, NULL),
     PromiseTypeSyntaxNewNull(),
 };

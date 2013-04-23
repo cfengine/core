@@ -76,6 +76,6 @@ static const ConstraintSyntax packages_constraints[] =
 
 const PromiseTypeSyntax CF_PACKAGES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "packages", ConstraintSetSyntaxNew(packages_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "packages", packages_constraints, NULL),
     PromiseTypeSyntaxNewNull(),
 };

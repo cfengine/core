@@ -304,9 +304,9 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
     const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
-    for (size_t i = 0; promise_type_syntax->constraint_set.constraints[i].lval != NULL; i++)
+    for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraint_set.constraints[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             if (!RvalTypeCheckDataType(constraint->rval.type, body_syntax->dtype))
@@ -439,9 +439,9 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
-    for (size_t i = 0; promise_type_syntax->constraint_set.constraints[i].lval != NULL; i++)
+    for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
-        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraint_set.constraints[i];
+        const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
         if (strcmp(body_syntax->lval, constraint->lval) == 0)
         {
             return body_syntax;
@@ -2254,9 +2254,9 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
     const PromiseTypeSyntax *pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
                                                            pp->parent_promise_type->name);
 
-    if (pts->constraint_set.parse_tree_check)
+    if (pts->check_promise)
     {
-        success &= pts->constraint_set.parse_tree_check(pp, errors);
+        success &= pts->check_promise(pp, errors);
     }
 
     return success;
@@ -2760,7 +2760,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
                 {
                     if (strcmp(ss.promise_type, promise_type->name) == 0)
                     {
-                        const ConstraintSyntax *bs = ss.constraint_set.constraints;
+                        const ConstraintSyntax *bs = ss.constraints;
 
                         for (size_t l = 0; bs[l].lval != NULL; l++)
                         {

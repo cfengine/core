@@ -724,6 +724,7 @@ typedef struct BodyTypeSyntax_ BodyTypeSyntax;
  *
  * If the check function has not found any errors, it should return true.
  */
+
 typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
 struct ConstraintSetSyntax_
@@ -756,7 +757,8 @@ typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
-    const ConstraintSetSyntax constraint_set;
+    const ConstraintSyntax *constraints;
+    const ParseTreeCheckFn check_promise;
 } PromiseTypeSyntax;
 
 /*************************************************************************/

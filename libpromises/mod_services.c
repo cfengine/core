@@ -48,6 +48,6 @@ static const ConstraintSyntax services_constraints[] =
 
 const PromiseTypeSyntax CF_SERVICES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "services", ConstraintSetSyntaxNew(services_constraints, NULL)),
+    PromiseTypeSyntaxNew("agent", "services", services_constraints, NULL),
     PromiseTypeSyntaxNewNull()
 };

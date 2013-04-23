@@ -1351,9 +1351,9 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     CfDebug("CheckControlPromises(%s)\n", control_body->type);
     assert(strcmp(control_body->name, "control") == 0);
 
-    for (int i = 0; CONTROL_BODIES[i].constraint_set.constraints != NULL; i++)
+    for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
     {
-        body_syntax = CONTROL_BODIES[i].constraint_set.constraints;
+        body_syntax = CONTROL_BODIES[i].constraints;
 
         if (strcmp(control_body->type, CONTROL_BODIES[i].bundle_type) == 0)
         {

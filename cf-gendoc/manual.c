@@ -110,7 +110,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
         snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].bundle_type);
         IncludeManualFile(source_dir, fout, filename);
 
-        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraint_set.constraints, CONTROL_BODIES[i].bundle_type);
+        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraints, CONTROL_BODIES[i].bundle_type);
     }
 
 /* Components */
@@ -443,7 +443,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", promise_type_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
-        TexinfoBodyParts(source_dir, fout, st[j].constraint_set.constraints, st[j].promise_type);
+        TexinfoBodyParts(source_dir, fout, st[j].constraints, st[j].promise_type);
     }
 }
 

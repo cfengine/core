@@ -92,11 +92,11 @@ static const ConstraintSyntax *GetCommonConstraint(const char *lval)
     {
         const PromiseTypeSyntax promise_type_syntax = CF_COMMON_PROMISE_TYPES[i];
 
-        for (int j = 0; promise_type_syntax.constraint_set.constraints[j].lval; j++)
+        for (int j = 0; promise_type_syntax.constraints[j].lval; j++)
         {
-            if (strcmp(promise_type_syntax.constraint_set.constraints[j].lval, lval) == 0)
+            if (strcmp(promise_type_syntax.constraints[j].lval, lval) == 0)
             {
-                return &promise_type_syntax.constraint_set.constraints[j];
+                return &promise_type_syntax.constraints[j];
             }
         }
     }
@@ -118,11 +118,11 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval)
 {
-    for (int i = 0; promise_type_syntax->constraint_set.constraints[i].lval; i++)
+    for (int i = 0; promise_type_syntax->constraints[i].lval; i++)
     {
-        if (strcmp(promise_type_syntax->constraint_set.constraints[i].lval, lval) == 0)
+        if (strcmp(promise_type_syntax->constraints[i].lval, lval) == 0)
         {
-            return &promise_type_syntax->constraint_set.constraints[i];
+            return &promise_type_syntax->constraints[i];
         }
     }
 
@@ -155,9 +155,9 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
         for (int k = 0; promise_type_syntax[k].bundle_type != NULL; k++)
         {
-            for (int z = 0; promise_type_syntax[k].constraint_set.constraints[z].lval != NULL; z++)
+            for (int z = 0; promise_type_syntax[k].constraints[z].lval != NULL; z++)
             {
-                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].constraint_set.constraints[z];
+                const ConstraintSyntax constraint_syntax = promise_type_syntax[k].constraints[z];
 
                 if (constraint_syntax.dtype == DATA_TYPE_BODY && strcmp(body_type, constraint_syntax.lval) == 0)
                 {
@@ -173,7 +173,7 @@ const ConstraintSyntax *BodySyntaxLookup(const char *body_type)
 
         if (strcmp(body_type, promise_type_syntax.bundle_type) == 0)
         {
-            return promise_type_syntax.constraint_set.constraints;
+            return promise_type_syntax.constraints;
         }
     }
 
@@ -197,7 +197,7 @@ DataType ExpectedDataType(const char *lvalname)
 
         for (j = 0; ss[j].promise_type != NULL; j++)
         {
-            if ((bs = ss[j].constraint_set.constraints) == NULL)
+            if ((bs = ss[j].constraints) == NULL)
             {
                 continue;
             }
@@ -1053,7 +1053,7 @@ static JsonElement *ExportBundleTypeSyntaxAsJson(const char *bundle_type)
         {
             if (strcmp(bundle_type, st[j].bundle_type) == 0 || strcmp("*", st[j].bundle_type) == 0)
             {
-                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].constraint_set.constraints);
+                JsonElement *attributes = ExportAttributesSyntaxAsJson(st[j].constraints);
 
                 JsonObjectAppendObject(json, st[j].promise_type, attributes);
             }
@@ -1072,7 +1072,7 @@ static JsonElement *ExportControlBodiesSyntaxAsJson()
 
     for (i = 0; CONTROL_BODIES[i].bundle_type != NULL; i++)
     {
-        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].constraint_set.constraints);
+        JsonElement *attributes = ExportAttributesSyntaxAsJson(CONTROL_BODIES[i].constraints);
 
         JsonObjectAppendObject(control_bodies, CONTROL_BODIES[i].bundle_type, attributes);
     }

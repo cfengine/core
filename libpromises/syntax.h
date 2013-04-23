@@ -118,8 +118,8 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 #define BodyTypeSyntaxNew(body_type, constraint_set) { body_type, constraint_set }
 
 
-#define PromiseTypeSyntaxNew(agent_type, promise_type, constraint_set) { agent_type, promise_type, constraint_set }
-#define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, ConstraintSetSyntaxNew(NULL, NULL))
+#define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn) { agent_type, promise_type, constraints, check_fn }
+#define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL)
 
 /* print a specification of the CFEngine language */
 void SyntaxPrintAsJson(Writer *writer);

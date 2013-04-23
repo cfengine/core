@@ -65,7 +65,7 @@ const ConstraintSyntax CF_REMROLE_BODIES[] =
 
 const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("server", "access", ConstraintSetSyntaxNew(CF_REMACCESS_BODIES, NULL)),
-    PromiseTypeSyntaxNew("server", "roles", ConstraintSetSyntaxNew(CF_REMROLE_BODIES, NULL)),
+    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, NULL),
+    PromiseTypeSyntaxNew("server", "roles", CF_REMROLE_BODIES, NULL),
     PromiseTypeSyntaxNewNull(),
 };

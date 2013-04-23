@@ -199,7 +199,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
         }
     }
 
-#if defined(HAVE_GETADDRINFO)
     if (isv6)
     {
         int i;
@@ -281,7 +280,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
             return 0;
         }
     }
-#endif
 
     return -1;
 }

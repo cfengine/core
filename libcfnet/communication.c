@@ -154,9 +154,6 @@ int IsIPV4Address(char *name)
 /* TODO thread-safe */
 const char *Hostname2IPString(const char *hostname)
 {
-    static char ipbuffer[CF_MAX_IP_LEN];
-
-#if defined(HAVE_GETADDRINFO)
     int err;
     struct addrinfo query, *response, *ap;
 
@@ -172,41 +169,21 @@ const char *Hostname2IPString(const char *hostname)
         return hostname;
     }
 
-    memset(ipbuffer, 0, sizeof(ipbuffer));
+    static char ipbuffer[CF_MAX_IP_LEN] = {0};
+
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
+        /* Convert numeric IP to string. */
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     ipbuffer, sizeof(ipbuffer),
                     NULL, 0, NI_NUMERICHOST);
         CfDebug("Found address (%s) for host %s\n", ipbuffer, hostname);
 
-        if (strlen(ipbuffer) == 0)
-        {
-            snprintf(ipbuffer, sizeof(ipbuffer), "Empty IP result for %s", hostname);
-        }
-
         freeaddrinfo(response);
         return ipbuffer;
     }
-#else
-    struct hostent *hp;
-    struct sockaddr_in cin;
 
-    memset(&cin, 0, sizeof(cin));
-
-    memset(ipbuffer, 0, sizeof(ipbuffer));
-
-    if ((hp = gethostbyname(hostname)) != NULL)
-    {
-        cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-        strncpy(ipbuffer, inet_ntoa(cin.sin_addr), sizeof(ipbuffer));
-        ipbuffer[sizeof(ipbuffer)-1] = '\0';
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found address (%s) for host %s\n",
-              ipbuffer, hostname);
-        return ipbuffer;
-    }
-#endif
-
+    /* TODO return NULL? Must signify resolving failed? */
     snprintf(ipbuffer, sizeof(ipbuffer), "Unknown IP %s", hostname);
     return ipbuffer;
 }
@@ -217,66 +194,41 @@ char *IPString2Hostname(const char *ipaddress)
 {
     static char hostbuffer[MAXHOSTNAMELEN];
 
-#if defined(HAVE_GETADDRINFO)
     int err;
     struct addrinfo query, *response, *ap;
 
     memset(&query, 0, sizeof(query));
-    memset(&response, 0, sizeof(response));
-
-    query.ai_flags = AI_CANONNAME;
-
     memset(hostbuffer, 0, MAXHOSTNAMELEN);
 
+    /* First convert ipaddress string to struct sockaddr, with no DNS query. */
+    query.ai_flags = AI_NUMERICHOST;
     if ((err = getaddrinfo(ipaddress, NULL, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to lookup IP address (%s): %s", ipaddress, gai_strerror(err));
+        CfOut(OUTPUT_LEVEL_INFORM, "",
+              "getaddrinfo: Unable to convert IP address (%s): %s",
+              ipaddress, gai_strerror(err));
         strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
+        /* TODO return NULL? Must signify error somehow. */
         return hostbuffer;
     }
 
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        if ((err = getnameinfo(ap->ai_addr, ap->ai_addrlen, hostbuffer, MAXHOSTNAMELEN, 0, 0, 0)) != 0)
+        /* Reverse DNS lookup. */
+        if ((err = getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                               hostbuffer, MAXHOSTNAMELEN,
+                               NULL, 0, 0)) != 0)
         {
-            strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
-            freeaddrinfo(response);
-            return hostbuffer;
+            break;
         }
-
         CfDebug("Found address (%s) for host %s\n", hostbuffer, ipaddress);
         freeaddrinfo(response);
         return hostbuffer;
     }
 
+    /* TODO return NULL to signify unsuccessful reverse query. */
+    freeaddrinfo(response);
     strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
-
-#else
-
-    struct hostent *hp;
-    struct in_addr iaddr;
-
-    memset(hostbuffer, 0, MAXHOSTNAMELEN);
-
-    if ((iaddr.s_addr = inet_addr(ipaddress)) != -1)
-    {
-        hp = gethostbyaddr((void *) &iaddr, sizeof(struct sockaddr_in), AF_INET);
-
-        if ((hp == NULL) || (hp->h_name == NULL))
-        {
-            strcpy(hostbuffer, ipaddress);
-            return hostbuffer;
-        }
-
-        strncpy(hostbuffer, hp->h_name, MAXHOSTNAMELEN - 1);
-    }
-    else
-    {
-        strcpy(hostbuffer, "(non registered IP)");
-    }
-
-#endif
-
     return hostbuffer;
 }
 

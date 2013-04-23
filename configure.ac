@@ -417,6 +417,7 @@ AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(winsock2.h)
+AC_CHECK_HEADERS(ws2tcpip.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
@@ -646,8 +647,29 @@ AC_SEARCH_LIBS(gethostent, nsl)
 
 AC_CHECK_FUNCS(socket)
 AC_CHECK_FUNCS(setsockopt)
-AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
+
+AC_CHECK_TYPES(struct sockaddr_storage, [], [], [[
+#if HAVE_WINSOCK2_H
+    #include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+    #include <ws2tcpip.h>
+#else
+    #include <sys/socket.h>
+    #include <netdb.h>
+#endif]])
+AC_CHECK_DECLS(getaddrinfo, [], [], [[
+#if HAVE_WINSOCK2_H
+    #include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+    #include <ws2tcpip.h>
+#else
+    #include <sys/socket.h>
+    #include <netdb.h>
+#endif]])
+AC_REPLACE_FUNCS(getaddrinfo)
 
 AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
 AC_REPLACE_FUNCS(inet_ntop inet_pton)

@@ -250,13 +250,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
 
-#if defined(HAVE_GETADDRINFO)
-    socklen_t addrlen = sizeof(struct sockaddr_in6);
-    struct sockaddr_in6 cin;
-#else
-    socklen_t addrlen = sizeof(struct sockaddr_in);
-    struct sockaddr_in cin;
-#endif
+    struct sockaddr_storage cin;
+    socklen_t addrlen = sizeof(cin);
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
@@ -386,8 +381,11 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
+                /* Just convert IP address to string, no DNS lookup. */
                 char ipaddr[CF_MAX_IP_LEN] = "";
-                sockaddr_ntop((struct sockaddr *) &cin, ipaddr, sizeof(ipaddr));
+                getnameinfo((struct sockaddr *) &cin, addrlen,
+                            ipaddr, sizeof(ipaddr),
+                            NULL, 0, NI_NUMERICHOST);
 
                 ServerEntryPoint(ctx, sd_reply, ipaddr);
             }
@@ -422,45 +420,28 @@ int InitServer(size_t queue_size)
 
 int OpenReceiverChannel(void)
 {
-    int sd;
-    int yes = 1;
+    struct addrinfo *response, *ap;
+    struct addrinfo query = {
+        .ai_flags = AI_PASSIVE,
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM
+    };
 
-    struct linger cflinger;
-
-#if defined(HAVE_GETADDRINFO)
-    struct addrinfo query, *response, *ap;
-#else
-    struct sockaddr_in sin;
-#endif
-
-    cflinger.l_onoff = 1;
-    cflinger.l_linger = 60;
-
-#if defined(HAVE_GETADDRINFO)
+    /* Listen to INADDR(6)_ANY if BINDINTERFACE unset. */
     char *ptr = NULL;
-
-    memset(&query, 0, sizeof(struct addrinfo));
-
-    query.ai_flags = AI_PASSIVE;
-    query.ai_family = AF_UNSPEC;
-    query.ai_socktype = SOCK_STREAM;
-
-/*
- * HvB : Bas van der Vlies
-*/
     if (BINDINTERFACE[0] != '\0')
     {
         ptr = BINDINTERFACE;
     }
 
+    /* Resolve listening interface. */
     if (getaddrinfo(ptr, STR_CFENGINEPORT, &query, &response) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "getaddrinfo", "DNS/service lookup failure");
         return -1;
     }
 
-    sd = -1;
-
+    int sd = -1;
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
         if ((sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == -1)
@@ -468,22 +449,32 @@ int OpenReceiverChannel(void)
             continue;
         }
 
-        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
+        int yes = 1;
+        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
+                       &yes, sizeof(yes)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
+                  "Socket option SO_REUSEADDR was not accepted");
             exit(1);
         }
 
-        if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
+        struct linger cflinger = {
+            .l_onoff = 1,
+            .l_linger = 60
+        };
+        if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
+                       &cflinger, sizeof(cflinger)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
+                  "Socket option SO_LINGER was not accepted");
             exit(1);
         }
 
-        if (bind(sd, ap->ai_addr, ap->ai_addrlen) == 0)
+        if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
         {
             if (DEBUG)
             {
+                /* Convert IP address to string, no DNS lookup performed. */
                 char txtaddr[CF_MAX_IP_LEN] = "";
                 getnameinfo(ap->ai_addr, ap->ai_addrlen,
                             txtaddr, sizeof(txtaddr),
@@ -491,74 +482,22 @@ int OpenReceiverChannel(void)
                 printf("Bound to address %s on %s=%d\n", txtaddr,
                        CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
             }
-
-#if defined(__MINGW32__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
-            continue;       /* *bsd doesn't map ipv6 addresses */
-#else
             break;
-#endif
         }
-
-        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
-        cf_closesocket(sd);
-        sd = -1;
+        else
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
+            cf_closesocket(sd);
+        }
     }
 
     if (sd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open bind an open socket\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open/bind a socket\n");
         exit(1);
     }
 
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
-#else
-
-    memset(&sin, 0, sizeof(sin));
-
-    if (BINDINTERFACE[0] != '\0')
-    {
-         if (GetInetAddr(BINDINTERFACE, &sin.sin_addr.s_addr))
-         {
-             exit(EXIT_FAILURE); // TODO: should we return -1 here?
-         }
-    }
-    else
-    {
-        sin.sin_addr.s_addr = INADDR_ANY;
-    }
-
-    sin.sin_port = (unsigned short) SHORT_CFENGINEPORT;
-    sin.sin_family = AF_INET;
-
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open socket");
-        exit(1);
-    }
-
-    if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
-        exit(1);
-    }
-
-    if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
-        exit(1);
-    }
-
-    if (bind(sd, (struct sockaddr *) &sin, sizeof(sin)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Couldn't bind to socket");
-        exit(1);
-    }
-
-#endif
-
+    freeaddrinfo(response);
     return sd;
 }
 
@@ -659,42 +598,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         CfDebug(" -> No new promises found\n");
     }
 }
-
-#if !defined(HAVE_GETADDRINFO)
-bool GetInetAddr(char *host, in_addr_t *address_out)
-{
-    struct in_addr addr;
-    struct hostent *hp;
-
-    addr.s_addr = inet_addr(host);
-
-    if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
-    {
-        if ((hp = gethostbyname(host)) == 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "host not found: %s", host);
-            return false;
-        }
-
-        if (hp->h_addrtype != AF_INET)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address family: %d\n", hp->h_addrtype);
-            return false;
-        }
-
-        if (hp->h_length != sizeof(addr))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address length %d\n", hp->h_length);
-            return false;
-        }
-
-        memcpy((char *) &addr, hp->h_addr, hp->h_length);
-    }
-
-    *address_out = addr.s_addr;
-    return true;
-}
-#endif
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H

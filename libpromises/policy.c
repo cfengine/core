@@ -1109,7 +1109,7 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
     if (!type)
     {
-        ProgrammingError("Attempt to add a promise without a type\n");
+        ProgrammingError("Attempt to add a promise without a type");
     }
 
 /* Check here for broken promises - or later with more info? */

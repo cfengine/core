@@ -854,7 +854,7 @@ static const char *PackageAction2String(PackageAction pa)
     case PACKAGE_ACTION_VERIFY:
         return "verifying";
     default:
-        ProgrammingError("Cfengine: internal error: illegal package action\n");
+        ProgrammingError("Cfengine: internal error: illegal package action");
     }
 }
 
@@ -878,7 +878,7 @@ static void AddPackageToSchedule(EvalContext *ctx, const Attributes *a, char *mg
         break;
 
     default:
-        ProgrammingError("Cfengine: internal error: illegal file action\n");
+        ProgrammingError("Cfengine: internal error: illegal file action");
     }
 }
 
@@ -902,7 +902,7 @@ static void AddPatchToSchedule(EvalContext *ctx, const Attributes *a, char *mgr,
         break;
 
     default:
-        ProgrammingError("Cfengine: internal error: illegal file action\n");
+        ProgrammingError("Cfengine: internal error: illegal file action");
     }
 }
 

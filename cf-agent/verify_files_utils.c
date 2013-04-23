@@ -1820,7 +1820,7 @@ static void VerifyDelete(EvalContext *ctx, char *path, struct stat *sb, Attribut
             break;
 
         default:
-            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
+            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
         }
     }
 }
@@ -1973,7 +1973,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
             break;
 
         default:
-            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
+            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
         }
     }
 
@@ -2026,7 +2026,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
             break;
 
         default:
-            ProgrammingError("Unhandled file action in switch: %d\n", attr.transaction.action);
+            ProgrammingError("Unhandled file action in switch: %d", attr.transaction.action);
         }
     }
 # endif

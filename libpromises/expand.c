@@ -300,7 +300,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
 
     if (length >= CF_BUFSIZE)
     {
-        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen\n");
+        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen");
     }
 
     strncpy(buffer, string, length);

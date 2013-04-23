@@ -750,7 +750,8 @@ struct ConstraintSyntax_
 struct BodyTypeSyntax_
 {
     const char *body_type;
-    const ConstraintSetSyntax constraint_set;
+    const ConstraintSyntax *constraints;
+    ParseTreeCheckFn check_body;
 };
 
 typedef struct

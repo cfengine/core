@@ -36,7 +36,7 @@ static const ConstraintSyntax service_method_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax service_method_body = BodyTypeSyntaxNew("service_method", ConstraintSetSyntaxNew(service_method_constraints, NULL));
+static const BodyTypeSyntax service_method_body = BodyTypeSyntaxNew("service_method", service_method_constraints, NULL);
 
 static const ConstraintSyntax services_constraints[] =
 {

@@ -33,7 +33,7 @@ static const ConstraintSyntax printfile_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax printfile_body = BodyTypeSyntaxNew("printfile", ConstraintSetSyntaxNew(printfile_constraints, NULL));
+static const BodyTypeSyntax printfile_body = BodyTypeSyntaxNew("printfile", printfile_constraints, NULL);
 
 const const ConstraintSyntax CF_REPORT_BODIES[] =
 {

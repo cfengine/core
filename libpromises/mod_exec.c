@@ -40,7 +40,7 @@ static const ConstraintSyntax contain_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax contain_body = BodyTypeSyntaxNew("contain", ConstraintSetSyntaxNew(contain_constraints, NULL));
+static const BodyTypeSyntax contain_body = BodyTypeSyntaxNew("contain", contain_constraints, NULL);
 
 static const ConstraintSyntax commands_constraints[] =
 {

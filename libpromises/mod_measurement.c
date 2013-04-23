@@ -38,7 +38,7 @@ static const ConstraintSyntax match_value_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax match_value_body = BodyTypeSyntaxNew("match_value", ConstraintSetSyntaxNew(match_value_constraints, NULL));
+static const BodyTypeSyntax match_value_body = BodyTypeSyntaxNew("match_value", match_value_constraints, NULL);
 
 static const ConstraintSyntax CF_MEASURE_BODIES[] =
 {

@@ -36,7 +36,7 @@ static const ConstraintSyntax volume_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax volume_body = BodyTypeSyntaxNew("volume_method", ConstraintSetSyntaxNew(volume_constraints, NULL));
+static const BodyTypeSyntax volume_body = BodyTypeSyntaxNew("volume_method", volume_constraints, NULL);
 
 static const ConstraintSyntax mount_constraints[] =
 {
@@ -49,7 +49,7 @@ static const ConstraintSyntax mount_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", ConstraintSetSyntaxNew(mount_constraints, NULL));
+static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", mount_constraints, NULL);
 
 static const ConstraintSyntax storage_constraints[] =
 {

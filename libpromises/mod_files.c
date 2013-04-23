@@ -34,7 +34,7 @@ static const ConstraintSyntax location_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax location_body = BodyTypeSyntaxNew("location", ConstraintSetSyntaxNew(location_constraints, NULL));
+static const BodyTypeSyntax location_body = BodyTypeSyntaxNew("location", location_constraints, NULL);
 
 static const ConstraintSyntax edit_field_constraints[] =
 {
@@ -49,7 +49,7 @@ static const ConstraintSyntax edit_field_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax edit_field_body = BodyTypeSyntaxNew("edit_field", ConstraintSetSyntaxNew(edit_field_constraints, NULL));
+static const BodyTypeSyntax edit_field_body = BodyTypeSyntaxNew("edit_field", edit_field_constraints, NULL);
 
 static const ConstraintSyntax replace_with_constraints[] =
 {
@@ -58,7 +58,7 @@ static const ConstraintSyntax replace_with_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax replace_with_body = BodyTypeSyntaxNew("replace_with", ConstraintSetSyntaxNew(replace_with_constraints, NULL));
+static const BodyTypeSyntax replace_with_body = BodyTypeSyntaxNew("replace_with", replace_with_constraints, NULL);
 
 static const ConstraintSyntax select_region_constraints[] =
 {
@@ -69,7 +69,7 @@ static const ConstraintSyntax select_region_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax select_region_body = BodyTypeSyntaxNew("select_region", ConstraintSetSyntaxNew(select_region_constraints, NULL));
+static const BodyTypeSyntax select_region_body = BodyTypeSyntaxNew("select_region", select_region_constraints, NULL);
 
 static const ConstraintSyntax delete_select_constraints[] =
 {
@@ -82,7 +82,7 @@ static const ConstraintSyntax delete_select_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax delete_select_body = BodyTypeSyntaxNew("delete_select", ConstraintSetSyntaxNew(delete_select_constraints, NULL));
+static const BodyTypeSyntax delete_select_body = BodyTypeSyntaxNew("delete_select", delete_select_constraints, NULL);
 
 static const ConstraintSyntax insert_select_constraints[] =
 {
@@ -95,7 +95,7 @@ static const ConstraintSyntax insert_select_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax insert_select_body = BodyTypeSyntaxNew("insert_select", ConstraintSetSyntaxNew(insert_select_constraints, NULL));
+static const BodyTypeSyntax insert_select_body = BodyTypeSyntaxNew("insert_select", insert_select_constraints, NULL);
 
 static const ConstraintSyntax CF_INSERTLINES_BODIES[] =
 {
@@ -142,7 +142,7 @@ static const ConstraintSyntax acl_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax acl_body = BodyTypeSyntaxNew("acl", ConstraintSetSyntaxNew(acl_constraints, NULL));
+static const BodyTypeSyntax acl_body = BodyTypeSyntaxNew("acl", acl_constraints, NULL);
 
 static const ConstraintSyntax changes_constraints[] =
 {
@@ -153,7 +153,7 @@ static const ConstraintSyntax changes_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax changes_body = BodyTypeSyntaxNew("changes", ConstraintSetSyntaxNew(changes_constraints, NULL));
+static const BodyTypeSyntax changes_body = BodyTypeSyntaxNew("changes", changes_constraints, NULL);
 
 static const ConstraintSyntax depth_search_constraints[] =
 {
@@ -167,7 +167,7 @@ static const ConstraintSyntax depth_search_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax depth_search_body = BodyTypeSyntaxNew("depth_search", ConstraintSetSyntaxNew(depth_search_constraints, NULL));
+static const BodyTypeSyntax depth_search_body = BodyTypeSyntaxNew("depth_search", depth_search_constraints, NULL);
 
 static const ConstraintSyntax edit_defaults_constraints[] =
 {
@@ -180,7 +180,7 @@ static const ConstraintSyntax edit_defaults_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax edit_defaults_body = BodyTypeSyntaxNew("edit_defaults", ConstraintSetSyntaxNew(edit_defaults_constraints, NULL));
+static const BodyTypeSyntax edit_defaults_body = BodyTypeSyntaxNew("edit_defaults", edit_defaults_constraints, NULL);
 
 static const ConstraintSyntax delete_constraints[] =
 {
@@ -189,7 +189,7 @@ static const ConstraintSyntax delete_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax delete_body = BodyTypeSyntaxNew("delete", ConstraintSetSyntaxNew(delete_constraints, NULL));
+static const BodyTypeSyntax delete_body = BodyTypeSyntaxNew("delete", delete_constraints, NULL);
 
 static const ConstraintSyntax rename_constraints[] =
 {
@@ -201,7 +201,7 @@ static const ConstraintSyntax rename_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax rename_body = BodyTypeSyntaxNew("rename", ConstraintSetSyntaxNew(rename_constraints, NULL));
+static const BodyTypeSyntax rename_body = BodyTypeSyntaxNew("rename", rename_constraints, NULL);
 
 static const ConstraintSyntax perms_constraints[] =
 {
@@ -213,7 +213,7 @@ static const ConstraintSyntax perms_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax perms_body = BodyTypeSyntaxNew("perms", ConstraintSetSyntaxNew(perms_constraints, NULL));
+static const BodyTypeSyntax perms_body = BodyTypeSyntaxNew("perms", perms_constraints, NULL);
 
 static const ConstraintSyntax file_select_constraints[] =
 {
@@ -236,7 +236,7 @@ static const ConstraintSyntax file_select_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax file_select_body = BodyTypeSyntaxNew("file_select", ConstraintSetSyntaxNew(file_select_constraints, NULL));
+static const BodyTypeSyntax file_select_body = BodyTypeSyntaxNew("file_select", file_select_constraints, NULL);
 
 /* Copy and link are really the same body and should have
    non-overlapping patterns so that they are XOR but it's
@@ -254,7 +254,7 @@ static const ConstraintSyntax link_from_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax link_from_body = BodyTypeSyntaxNew("link_from", ConstraintSetSyntaxNew(link_from_constraints, NULL));
+static const BodyTypeSyntax link_from_body = BodyTypeSyntaxNew("link_from", link_from_constraints, NULL);
 
 static const ConstraintSyntax copy_from_constraints[] =
 {
@@ -287,7 +287,7 @@ static const ConstraintSyntax copy_from_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax copy_from_body = BodyTypeSyntaxNew("copy_from", ConstraintSetSyntaxNew(copy_from_constraints, NULL));
+static const BodyTypeSyntax copy_from_body = BodyTypeSyntaxNew("copy_from", copy_from_constraints, NULL);
 
 static const ConstraintSyntax CF_FILES_BODIES[] =
 {

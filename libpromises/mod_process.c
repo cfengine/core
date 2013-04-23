@@ -34,7 +34,7 @@ static const ConstraintSyntax process_count_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax process_count_body = BodyTypeSyntaxNew("process_count", ConstraintSetSyntaxNew(process_count_constraints, NULL));
+static const BodyTypeSyntax process_count_body = BodyTypeSyntaxNew("process_count", process_count_constraints, NULL);
 
 static const ConstraintSyntax process_select_constraints[] =
 {
@@ -57,7 +57,7 @@ static const ConstraintSyntax process_select_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax process_select_body = BodyTypeSyntaxNew("process_select", ConstraintSetSyntaxNew(process_select_constraints, NULL));
+static const BodyTypeSyntax process_select_body = BodyTypeSyntaxNew("process_select", process_select_constraints, NULL);
 
 static const ConstraintSyntax processes_constraints[] =
 {

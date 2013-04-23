@@ -36,7 +36,7 @@ static const ConstraintSyntax environment_resources_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax environment_resources_body = BodyTypeSyntaxNew("environment_resources", ConstraintSetSyntaxNew(environment_resources_constraints, NULL));
+static const BodyTypeSyntax environment_resources_body = BodyTypeSyntaxNew("environment_resources", environment_resources_constraints, NULL);
 
 static const ConstraintSyntax environment_interface_constraints[] =
 {
@@ -46,7 +46,7 @@ static const ConstraintSyntax environment_interface_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax environment_interface_body = BodyTypeSyntaxNew("environment_interface", ConstraintSetSyntaxNew(environment_interface_constraints, NULL));
+static const BodyTypeSyntax environment_interface_body = BodyTypeSyntaxNew("environment_interface", environment_interface_constraints, NULL);
 
 static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {

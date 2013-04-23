@@ -70,7 +70,7 @@ static const ConstraintSyntax action_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", ConstraintSetSyntaxNew(action_constraints, NULL));
+static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", action_constraints, NULL);
 
 static const ConstraintSyntax classes_constraints[] =
 {
@@ -91,7 +91,7 @@ static const ConstraintSyntax classes_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax classes_body = BodyTypeSyntaxNew("classes", ConstraintSetSyntaxNew(classes_constraints, NULL));
+static const BodyTypeSyntax classes_body = BodyTypeSyntaxNew("classes", classes_constraints, NULL);
 
 const ConstraintSyntax CF_VARBODY[] =
 {

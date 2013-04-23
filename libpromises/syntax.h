@@ -113,9 +113,7 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 #define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description }
 #define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description }
 
-
-#define ConstraintSetSyntaxNew(constraints, validation_fn) { constraints, validation_fn }
-#define BodyTypeSyntaxNew(body_type, constraint_set) { body_type, constraint_set }
+#define BodyTypeSyntaxNew(body_type, constraints, check_fn) { body_type, constraints, check_fn }
 
 
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn) { agent_type, promise_type, constraints, check_fn }

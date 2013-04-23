@@ -401,7 +401,7 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
     {
     case DATA_TYPE_BODY:
         /* EXPORT CONSTRAINTS */
-        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax->constraint_set.constraints);
+        XmlExportConstraints(writer, constraint_syntax->range.body_type_syntax->constraints);
         break;
 
     case DATA_TYPE_INT:

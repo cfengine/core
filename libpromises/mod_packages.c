@@ -62,7 +62,7 @@ static const ConstraintSyntax package_method_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax package_method_body = BodyTypeSyntaxNew("package_method", ConstraintSetSyntaxNew(package_method_constraints, NULL));
+static const BodyTypeSyntax package_method_body = BodyTypeSyntaxNew("package_method", package_method_constraints, NULL);
 
 static const ConstraintSyntax packages_constraints[] =
 {

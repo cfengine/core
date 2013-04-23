@@ -373,21 +373,20 @@ static int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SI
 
 static int CompareResult(const char *filename, const char *prev_file)
 {
-    int i;
-    unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int md_len1, md_len2;
-    FILE *fp;
-    int rtn = 0;
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Comparing files  %s with %s\n", prev_file, filename);
 
-    if ((fp = fopen(prev_file, "r")) != NULL)
+    int rtn = 0;
+
+    FILE *fp = fopen(prev_file, "r");
+    if (fp)
     {
         fclose(fp);
 
-        md_len1 = FileChecksum(prev_file, digest1);
-        md_len2 = FileChecksum(filename, digest2);
+        unsigned char digest1[EVP_MAX_MD_SIZE + 1];
+        int md_len1 = FileChecksum(prev_file, digest1);
+
+        unsigned char digest2[EVP_MAX_MD_SIZE + 1];
+        int md_len2 = FileChecksum(filename, digest2);
 
         if (md_len1 != md_len2)
         {
@@ -395,7 +394,7 @@ static int CompareResult(const char *filename, const char *prev_file)
         }
         else
         {
-            for (i = 0; i < md_len1; i++)
+            for (int i = 0; i < md_len1; i++)
             {
                 if (digest1[i] != digest2[i])
                 {
@@ -428,7 +427,7 @@ static int CompareResult(const char *filename, const char *prev_file)
     }
 
     ThreadUnlock(cft_count);
-    return (rtn);
+    return rtn;
 }
 
 static void MailResult(const ExecConfig *config, const char *file)

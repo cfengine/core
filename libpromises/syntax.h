@@ -84,7 +84,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
  * @param body_type Type of body, e.g. 'contain'
  * @return NULL if not found
  */
-const ConstraintSyntax *BodySyntaxLookup(const char *body_type);
+const BodyTypeSyntax *BodySyntaxLookup(const char *body_type);
 const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
 
 

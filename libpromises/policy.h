@@ -242,6 +242,8 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
  */
 Seq *BodyGetConstraint(Body *body, const char *lval);
 
+bool BodyHasConstraint(const Body *body, const char *lval);
+
 const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes);

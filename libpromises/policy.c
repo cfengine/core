@@ -420,6 +420,33 @@ static bool PolicyCheckBundle(const Bundle *bundle, Seq *errors)
     return success;
 }
 
+static bool PolicyCheckBody(const Body *body, Seq *errors)
+{
+    bool success = true;
+
+    for (size_t i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        SyntaxTypeMatch err = ConstraintCheckType(cp);
+        if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
+                                             POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH,
+                                             cp->lval));
+            success = false;
+        }
+    }
+
+    const BodyTypeSyntax *body_syntax = BodySyntaxLookup(body->type);
+    assert(body_syntax && "Should have been checked at parse time");
+    if (body_syntax->check_body)
+    {
+        success &= body_syntax->check_body(body, errors);
+    }
+
+    return success;
+}
+
 /*************************************************************************/
 
 /* Get the syntax of a constraint according to its promise_type and lvalue.
@@ -820,20 +847,9 @@ bool PolicyCheckPartial(const Policy *policy, Seq *errors)
 
     for (size_t i = 0; i < SeqLength(policy->bodies); i++)
     {
-        const Body *bp = SeqAt(policy->bodies, i);
+        const Body *body = SeqAt(policy->bodies, i);
+        success &= PolicyCheckBody(body, errors);
 
-        for (size_t j = 0; j < SeqLength(bp->conlist); j++)
-        {
-            Constraint *cp = SeqAt(bp->conlist, j);
-            SyntaxTypeMatch err = ConstraintCheckType(cp);
-            if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
-            {
-                SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp,
-                                                 POLICY_ERROR_CONSTRAINT_TYPE_MISMATCH,
-                                                 cp->lval));
-                success = false;
-            }
-        }
     }
 
     success &= PolicyCheckDuplicateHandles(policy, errors);
@@ -2016,6 +2032,20 @@ Seq *BodyGetConstraint(Body *body, const char *lval)
     }
 
     return matches;
+}
+
+bool BodyHasConstraint(const Body *body, const char *lval)
+{
+    for (int i = 0; i < SeqLength(body->conlist); i++)
+    {
+        Constraint *cp = SeqAt(body->conlist, i);
+        if (strcmp(lval, cp->lval) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 const char *ConstraintContext(const Constraint *cp)

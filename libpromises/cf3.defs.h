@@ -727,6 +727,8 @@ typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 
 typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
+typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
+
 struct ConstraintSetSyntax_
 {
     const ConstraintSyntax *constraints;
@@ -751,7 +753,7 @@ struct BodyTypeSyntax_
 {
     const char *body_type;
     const ConstraintSyntax *constraints;
-    ParseTreeCheckFn check_body;
+    BodyCheckFn check_body;
 };
 
 typedef struct

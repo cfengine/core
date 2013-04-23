@@ -49,6 +49,24 @@ static const char *POLICY_ERROR_VARS_PROMISER_NUMERICAL = "Variable promises can
 static const char *POLICY_ERROR_VARS_PROMISER_RESERVED = "Variable promise is using a reserved name";
 static const char *POLICY_ERROR_CLASSES_PROMISER_NUMERICAL = "Classes promises cannot have a purely numerical promiser (name)";
 
+static bool ActionCheck(const Body *body, Seq *errors)
+{
+    bool success = true;
+
+    if (BodyHasConstraint(body, "log_kept")
+        || BodyHasConstraint(body, "log_repaired")
+        || BodyHasConstraint(body, "log_failed"))
+    {
+        if (!BodyHasConstraint(body, "log_string"))
+        {
+            SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body, "An action body with log_kept, log_repaired or log_failed is required to have a log_string attribute"));
+            success = false;
+        }
+    }
+
+    return success;
+}
+
 static const ConstraintSyntax action_constraints[] =
 {
     ConstraintSyntaxNewOption("action_policy", "fix,warn,nop", "Whether to repair or report about non-kept promises", NULL),
@@ -70,7 +88,7 @@ static const ConstraintSyntax action_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", action_constraints, NULL);
+static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", action_constraints, ActionCheck);
 
 static const ConstraintSyntax classes_constraints[] =
 {

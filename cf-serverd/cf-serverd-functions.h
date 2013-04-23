@@ -48,11 +48,6 @@ GenericAgentConfig *CheckOpts(int argc, char **argv);
 int OpenReceiverChannel(void);
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config);
 int InitServer(size_t queue_size);
-
-#if !defined(HAVE_GETADDRINFO)
-bool GetInetAddr(char *host, in_addr_t *address_out);
-#endif
-
 void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
 #endif // CFSERVERDFUNCTIONS_H

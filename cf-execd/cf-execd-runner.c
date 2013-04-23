@@ -678,13 +678,9 @@ static void MailResult(const ExecConfig *config, const char *file)
 
 static int Dialogue(int sd, const char *s)
 {
-    int sent;
-    char ch, f = '\0';
-    int charpos, rfclinetype = ' ';
-
     if ((s != NULL) && (*s != '\0'))
     {
-        sent = send(sd, s, strlen(s), 0);
+        int sent = send(sd, s, strlen(s), 0);
         CfDebug("SENT(%d)->%s", sent, s);
     }
     else
@@ -692,8 +688,10 @@ static int Dialogue(int sd, const char *s)
         CfDebug("Nothing to send .. waiting for opening\n");
     }
 
-    charpos = 0;
+    int charpos = 0;
+    int rfclinetype = ' ';
 
+    char ch, f = '\0';
     while (recv(sd, &ch, 1, 0))
     {
         charpos++;

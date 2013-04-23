@@ -635,7 +635,6 @@ typedef enum
     OUTPUT_LEVEL_ERROR,
     OUTPUT_LEVEL_REPORTING,
     OUTPUT_LEVEL_CMDOUT,
-    OUTPUT_LEVEL_NONE
 } OutputLevel;
 
 typedef enum

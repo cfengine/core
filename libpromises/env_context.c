@@ -2357,7 +2357,7 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
     }
 }
 
-static void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
     if (!IsPromiseValuableForStatus(pp))
     {
@@ -2447,9 +2447,6 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
         {
             SystemLog(mess, level);
         }
-        break;
-
-    case OUTPUT_LEVEL_NONE:
         break;
 
     default:

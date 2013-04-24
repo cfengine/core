@@ -220,13 +220,13 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     if (cfstat(public_key_file, &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", public_key_file);
+        printf("A key file already exists at %s\n", public_key_file);
         return;
     }
 
     if (cfstat(private_key_file, &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", "A key file already exists at %s\n", private_key_file);
+        printf("A key file already exists at %s\n", private_key_file);
         return;
     }
 

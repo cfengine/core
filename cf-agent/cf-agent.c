@@ -1725,7 +1725,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+    printf("-> Bootstrap to %s completed successfully\n", POLICY_SERVER);
 
     return true;
 }
@@ -1805,21 +1805,21 @@ static int AutomaticBootstrap()
         ListDestroy(&foundhubs);
         return -1;
     case 0:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "No hubs were found. Exiting.");
+        printf("No hubs were found. Exiting.\n");
         ListDestroy(&foundhubs);
         return -1;
     case 1:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found hub installed on:"
-                                                      "Hostname: %s"
-                                                      "IP Address: %s",
-                                                      ((HostProperties*)foundhubs)->Hostname,
-                                                      ((HostProperties*)foundhubs)->IPAddress);
+        printf("Found hub installed on:"
+               "Hostname: %s"
+               "IP Address: %s\n",
+               ((HostProperties*)foundhubs)->Hostname,
+               ((HostProperties*)foundhubs)->IPAddress);
         strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
         dlclose(avahi_handle);
         break;
     default:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found more than one hub registered in the network.\n"
-                                                      "Please bootstrap manually using IP from the list below:");
+        printf("Found more than one hub registered in the network.\n"
+               "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
         dlclose(avahi_handle);
         ListDestroy(&foundhubs);

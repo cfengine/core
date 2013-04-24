@@ -1700,10 +1700,20 @@ package_verify_command => "/usr/bin/zypper --non-interactive verify$";
 
 ##
 
+bundle common debian_knowledge
+{
+  vars:
+      "apt_prefix" string => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C PATH=/bin:/sbin/:/usr/bin:/usr/sbin";
+      "call_dpkg" string => "$(apt_prefix) $(paths.path[dpkg])";
+      "call_apt_get" string => "$(apt_prefix) $(paths.path[apt_get])";
+      "call_aptitude" string => "$(apt_prefix) $(paths.path[aptitude])";
+      "dpkg_options" string => "-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef";
+}
+
 body package_method apt
 {
 package_changes => "bulk";
-package_list_command => "/usr/bin/dpkg -l";
+package_list_command => "$(debian_knowledge.call_dpkg) -l";
 package_list_name_regex    => ".i\s+([^\s]+).*";
 package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
 package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
@@ -1713,11 +1723,11 @@ package_name_convention => "$(name)";
 package_list_update_ifelapsed => "240";
 
 have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_list_update_command => "/usr/bin/aptitude update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes -q remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_delete_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes -q remove";
+   package_update_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
+   package_patch_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_verify_command =>  "/usr/bin/aptitude show";
    package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
@@ -1726,15 +1736,15 @@ have_aptitude::
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 !have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_list_update_command => "/usr/bin/apt-get update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes -q remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_verify_command => "/usr/bin/dpkg -s";
+   package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_list_update_command => "$(debian_knowledge.call_apt_get) update";
+   package_delete_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes -q remove";
+   package_update_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_patch_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_verify_command => "$(debian_knowledge.call_dpkg) -s";
    package_noverify_returncode => "1";
 
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
@@ -1745,10 +1755,10 @@ have_aptitude::
 body package_method dpkg_version(repo)
 {
 package_changes => "individual";
-package_list_command => "/usr/bin/dpkg -l";
+package_list_command => "$(debian_knowledge.call_dpkg) -l";
 
 # set it to "0" to avoid caching of list during upgrade
-package_list_update_command => "/usr/bin/apt-get update";
+package_list_update_command => "$(debian_knowledge.call_apt_get) update";
 package_list_update_ifelapsed => "240";
 
 package_list_name_regex    => ".i\s+([^\s]+).*";
@@ -1769,15 +1779,15 @@ have_aptitude::
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 !have_aptitude::
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 debian::
-   package_add_command => "/usr/bin/dpkg --install";
-   package_delete_command => "/usr/bin/dpkg --purge";
-   package_update_command =>  "/usr/bin/dpkg --install";
-   package_patch_command =>  "/usr/bin/dpkg --install";
+   package_add_command => "$(debian_knowledge.call_dpkg) --install";
+   package_delete_command => "$(debian_knowledge.call_dpkg) --purge";
+   package_update_command =>  "$(debian_knowledge.call_dpkg) --install";
+   package_patch_command =>  "$(debian_knowledge.call_dpkg) --install";
 }
 
 ##
@@ -2375,7 +2385,7 @@ redhat::
 
 debian::
  package_changes => "bulk";
- package_list_command => "/usr/bin/dpkg -l";
+ package_list_command => "$(debian_knowledge.call_dpkg) -l";
  package_list_name_regex    => ".i\s+([^\s]+).*";
  package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
  package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
@@ -2383,11 +2393,11 @@ debian::
  package_list_update_ifelapsed => "240";		# 4 hours
 
 debian.have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_list_update_command => "/usr/bin/aptitude update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/aptitude -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --assume-yes install";
+   package_delete_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes remove";
+   package_update_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
+   package_patch_command =>  "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
    package_verify_command =>  "/usr/bin/aptitude show";
    package_noverify_regex => "(State: not installed|E: Unable to locate package .*)";
 
@@ -2396,15 +2406,15 @@ debian.have_aptitude::
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 
 debian.!have_aptitude::
-   package_add_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_list_update_command => "/usr/bin/apt-get update";
-   package_delete_command => "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes remove";
-   package_update_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_patch_command =>  "/usr/bin/env DEBIAN_FRONTEND=noninteractive LC_ALL=C /usr/bin/apt-get -o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef --yes install";
-   package_verify_command => "/usr/bin/dpkg -s";
+   package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_list_update_command => "$(debian_knowledge.call_apt_get) update";
+   package_delete_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes remove";
+   package_update_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_patch_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes install";
+   package_verify_command => "$(debian_knowledge.call_dpkg) -s";
    package_noverify_returncode => "1";
 
-   package_patch_list_command => "/usr/bin/apt-get --just-print dist-upgrade";
+   package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
    package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
    package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
 

@@ -28,7 +28,7 @@ The following code demonstrates simple CFEngine output through a reports promise
 
 The following policy code may be executed with cf-agent (the main CFEngine binary) as follows.
 
-    $ cf-agent/cf-agent -f ./hello.cf
+    $ cf-agent/cf-agent hello.cf
     R: Hello, world
 
 ### Contributing

@@ -667,7 +667,7 @@ static char *AbsLinkPath(const char *from, const char *relto)
 
     if (IsAbsoluteFileName(relto))
     {
-        ProgrammingError("Call to AbsLInkPath with absolute pathname\n");
+        ProgrammingError("Call to AbsLInkPath with absolute pathname");
     }
 
     strcpy(destination, from);  /* reuse to save stack space */

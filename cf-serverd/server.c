@@ -217,7 +217,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     if (SV.logconns)
     {
-        CfOut(OUTPUT_LEVEL_LOG, "", "Accepting connection from \"%s\"\n", ipaddr);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Accepting connection from \"%s\"\n", ipaddr);
     }
     else
     {
@@ -1389,7 +1389,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     if ((hp = gethostbyname(dns_assert)) == NULL)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cf-serverd Couldn't look up name %s\n", fqname);
-        CfOut(OUTPUT_LEVEL_LOG, "gethostbyname", "DNS lookup of %s failed", dns_assert);
+        CfOut(OUTPUT_LEVEL_INFORM, "gethostbyname", "DNS lookup of %s failed", dns_assert);
         matched = false;
     }
     else
@@ -1435,7 +1435,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
             if ((hp->h_addr_list[i] != NULL) && (hp->h_aliases[j] != NULL))
             {
-                CfOut(OUTPUT_LEVEL_LOG, "", "Reverse hostname lookup failed, host claiming to be %s was %s\n", buf,
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Reverse hostname lookup failed, host claiming to be %s was %s\n", buf,
                       sockaddr_ntop((struct sockaddr *) &raddr));
                 matched = false;
             }
@@ -1446,7 +1446,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_LOG, "", "No name was registered in DNS for %s - reverse lookup failed\n", dns_assert);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "No name was registered in DNS for %s - reverse lookup failed\n", dns_assert);
             matched = false;
         }
     }
@@ -1474,8 +1474,8 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     if (!matched)
     {
-        CfOut(OUTPUT_LEVEL_LOG, "gethostbyname", "Failed on DNS reverse lookup of %s\n", dns_assert);
-        CfOut(OUTPUT_LEVEL_LOG, "", "Client sent: %s", buf);
+        CfOut(OUTPUT_LEVEL_INFORM, "gethostbyname", "Failed on DNS reverse lookup of %s\n", dns_assert);
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Client sent: %s", buf);
         return false;
     }
 
@@ -1628,7 +1628,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
             if (cfstat(transpath, &statbuf) == -1)
             {
-                CfOut(OUTPUT_LEVEL_LOG, "",
+                CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",
                       transpath);
                 continue;
@@ -1680,7 +1680,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         if (encrypt && LOGENCRYPT)
         {
             /* Log files that were marked as requiring encryption */
-            CfOut(OUTPUT_LEVEL_LOG, "", "Host %s granted access to %s\n", conn->hostname, req_path);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Host %s granted access to %s\n", conn->hostname, req_path);
         }
     }
     else
@@ -1799,7 +1799,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
         if (encrypt && LOGENCRYPT)
         {
             /* Log files that were marked as requiring encryption */
-            CfOut(OUTPUT_LEVEL_LOG, "", "Host %s granted access to literal \"%s\"\n", conn->hostname, name);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Host %s granted access to literal \"%s\"\n", conn->hostname, name);
         }
     }
     else
@@ -1948,7 +1948,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
             if (encrypt && LOGENCRYPT)
             {
                 /* Log files that were marked as requiring encryption */
-                CfOut(OUTPUT_LEVEL_LOG, "", "Host %s granted access to context \"%s\"\n", conn->hostname, ip->name);
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Host %s granted access to context \"%s\"\n", conn->hostname, ip->name);
             }
         }
         else
@@ -3162,7 +3162,7 @@ static void RefuseAccess(ServerConnectionState *conn, int size, char *errmesg)
     {
         if (SV.logconns)
         {
-            CfOut(OUTPUT_LEVEL_LOG, "", "REFUSAL of request from connecting host: (%s)", errmesg);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "REFUSAL of request from connecting host: (%s)", errmesg);
         }
         else
         {

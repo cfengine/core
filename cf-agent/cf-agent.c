@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
@@ -336,7 +336,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -375,7 +375,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             BOOTSTRAP = true;
             MINUSF = true;
-            GenericAgentConfigSetInputFile(config, "promises.cf");
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
             IGNORELOCK = true;
 
             EvalContextHeapAddHard(ctx, "bootstrap_mode");
@@ -1725,7 +1725,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+    printf("-> Bootstrap to %s completed successfully\n", POLICY_SERVER);
 
     return true;
 }
@@ -1805,21 +1805,21 @@ static int AutomaticBootstrap()
         ListDestroy(&foundhubs);
         return -1;
     case 0:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "No hubs were found. Exiting.");
+        printf("No hubs were found. Exiting.\n");
         ListDestroy(&foundhubs);
         return -1;
     case 1:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found hub installed on:"
-                                                      "Hostname: %s"
-                                                      "IP Address: %s",
-                                                      ((HostProperties*)foundhubs)->Hostname,
-                                                      ((HostProperties*)foundhubs)->IPAddress);
+        printf("Found hub installed on:"
+               "Hostname: %s"
+               "IP Address: %s\n",
+               ((HostProperties*)foundhubs)->Hostname,
+               ((HostProperties*)foundhubs)->IPAddress);
         strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
         dlclose(avahi_handle);
         break;
     default:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found more than one hub registered in the network.\n"
-                                                      "Please bootstrap manually using IP from the list below:");
+        printf("Found more than one hub registered in the network.\n"
+               "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
         dlclose(avahi_handle);
         ListDestroy(&foundhubs);

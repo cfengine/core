@@ -146,7 +146,7 @@ static void test_expand_scalar_array_with_scalar_arg(void)
     EvalContextDestroy(ctx);
 }
 
-static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED *param)
+static void actuator_expand_promise_array_with_scalar_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     assert_string_equal("first", pp->promiser);
 }
@@ -233,7 +233,7 @@ static void test_expand_promise_slist(void)
 }
 
 
-static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED *param)
+static void actuator_expand_promise_array_with_slist_arg(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     if (strcmp("first", pp->promiser) == 0)
     {

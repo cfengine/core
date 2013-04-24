@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "logging.h"
+#include "hashes.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "unix.h"
@@ -46,10 +47,9 @@ static const int INF_LINES = -2;
 
 /*******************************************************************/
 
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
-static int CompareResult(char *filename, char *prev_file);
-static void MailResult(const ExecConfig *config, char *file);
-static int Dialogue(int sd, char *s);
+static int CompareResult(const char *filename, const char *prev_file);
+static void MailResult(const ExecConfig *config, const char *file);
+static int Dialogue(int sd, const char *s);
 
 /******************************************************************************/
 
@@ -151,26 +151,22 @@ static bool IsReadReady(int fd, int timeout_sec)
 
 void LocalExec(const ExecConfig *config)
 {
-    FILE *pp;
-    char line[CF_BUFSIZE], line_escaped[sizeof(line) * 2], filename[CF_BUFSIZE], *sp;
-    char cmd[CF_BUFSIZE], esc_command[CF_BUFSIZE];
-    int print, count = 0;
-    void *thread_name;
     time_t starttime = time(NULL);
-    char starttime_str[64];
-    FILE *fp;
-    char canonified_fq_name[CF_BUFSIZE];
 
-    thread_name = ThreadUniqueName();
+    void *thread_name = ThreadUniqueName();
 
-    cf_strtimestamp_local(starttime, starttime_str);
+    {
+        char starttime_str[64];
+        cf_strtimestamp_local(starttime, starttime_str);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n\n");
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n");
+    }
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
 
+    char cmd[CF_BUFSIZE];
     if (strlen(config->exec_command) > 0)
     {
         strncpy(cmd, config->exec_command, CF_BUFSIZE - 1);
@@ -185,19 +181,29 @@ void LocalExec(const ExecConfig *config)
         ConstructFailsafeCommand(config->scheduled_run, cmd);
     }
 
+    char esc_command[CF_BUFSIZE];
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
+    char line[CF_BUFSIZE];
     snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
 
-    strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
-    CanonifyNameInPlace(canonified_fq_name);
+    char filename[CF_BUFSIZE];
+    {
+        char canonified_fq_name[CF_BUFSIZE];
 
-    snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
-    MapName(filename);
+        strlcpy(canonified_fq_name, config->fq_name, CF_BUFSIZE);
+        CanonifyNameInPlace(canonified_fq_name);
+
+
+        snprintf(filename, CF_BUFSIZE - 1, "%s/outputs/cf_%s_%s_%p", CFWORKDIR, canonified_fq_name, line, thread_name);
+        MapName(filename);
+    }
+
 
 /* What if no more processes? Could sacrifice and exec() - but we need a sentinel */
 
-    if ((fp = fopen(filename, "w")) == NULL)
+    FILE *fp = fopen(filename, "w");
+    if (!fp)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "fopen", "!! Couldn't open \"%s\" - aborting exec\n", filename);
         return;
@@ -216,7 +222,8 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command => %s\n", cmd);
 
-    if ((pp = cf_popen_sh(esc_command, "r")) == NULL)
+    FILE *pp = cf_popen_sh(esc_command, "r");
+    if (!pp)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "!! Couldn't open pipe to command \"%s\"\n", cmd);
         fclose(fp);
@@ -225,6 +232,7 @@ void LocalExec(const ExecConfig *config)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is executing...%s\n", esc_command);
 
+    int count = 0;
     for (;;)
     {
         if(!IsReadReady(fileno(pp), (config->agent_expireafter * SECONDS_PER_MINUTE)))
@@ -265,9 +273,9 @@ void LocalExec(const ExecConfig *config)
             return;
         }
 
-        print = false;
+        bool print = false;
 
-        for (sp = line; *sp != '\0'; sp++)
+        for (const char *sp = line; *sp != '\0'; sp++)
         {
             if (!isspace((int) *sp))
             {
@@ -278,6 +286,8 @@ void LocalExec(const ExecConfig *config)
 
         if (print)
         {
+            char line_escaped[sizeof(line) * 2];
+
             // we must escape print format chars (%) from output
 
             ReplaceStr(line, line_escaped, sizeof(line_escaped), "%", "%%");
@@ -321,63 +331,22 @@ void LocalExec(const ExecConfig *config)
     }
 }
 
-static int FileChecksum(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+static int CompareResult(const char *filename, const char *prev_file)
 {
-    FILE *file;
-    EVP_MD_CTX context;
-    int len;
-    unsigned int md_len;
-    unsigned char buffer[1024];
-    const EVP_MD *md = NULL;
-
-    CfDebug("FileChecksum(%s)\n", filename);
-
-    if ((file = fopen(filename, "rb")) == NULL)
-    {
-        printf("%s can't be opened\n", filename);
-    }
-    else
-    {
-        md = EVP_get_digestbyname("md5");
-
-        if (!md)
-        {
-            fclose(file);
-            return 0;
-        }
-
-        EVP_DigestInit(&context, md);
-
-        while ((len = fread(buffer, 1, 1024, file)))
-        {
-            EVP_DigestUpdate(&context, buffer, len);
-        }
-
-        EVP_DigestFinal(&context, digest, &md_len);
-        fclose(file);
-        return (md_len);
-    }
-
-    return 0;
-}
-
-static int CompareResult(char *filename, char *prev_file)
-{
-    int i;
-    unsigned char digest1[EVP_MAX_MD_SIZE + 1];
-    unsigned char digest2[EVP_MAX_MD_SIZE + 1];
-    int md_len1, md_len2;
-    FILE *fp;
-    int rtn = 0;
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Comparing files  %s with %s\n", prev_file, filename);
 
-    if ((fp = fopen(prev_file, "r")) != NULL)
+    int rtn = 0;
+
+    FILE *fp = fopen(prev_file, "r");
+    if (fp)
     {
         fclose(fp);
 
-        md_len1 = FileChecksum(prev_file, digest1);
-        md_len2 = FileChecksum(filename, digest2);
+        unsigned char digest1[EVP_MAX_MD_SIZE + 1];
+        int md_len1 = FileChecksum(prev_file, digest1);
+
+        unsigned char digest2[EVP_MAX_MD_SIZE + 1];
+        int md_len2 = FileChecksum(filename, digest2);
 
         if (md_len1 != md_len2)
         {
@@ -385,7 +354,7 @@ static int CompareResult(char *filename, char *prev_file)
         }
         else
         {
-            for (i = 0; i < md_len1; i++)
+            for (int i = 0; i < md_len1; i++)
             {
                 if (digest1[i] != digest2[i])
                 {
@@ -418,43 +387,41 @@ static int CompareResult(char *filename, char *prev_file)
     }
 
     ThreadUnlock(cft_count);
-    return (rtn);
+    return rtn;
 }
 
-static void MailResult(const ExecConfig *config, char *file)
+static void MailResult(const ExecConfig *config, const char *file)
 {
-    int sd, count = 0, anomaly = false;
-    char prev_file[CF_BUFSIZE], vbuff[CF_BUFSIZE];
-    struct hostent *hp;
-    struct sockaddr_in raddr;
-    struct servent *server;
-    struct stat statbuf;
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
-    FILE *fp;
-
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Mail result...\n");
 
-    if (cfstat(file, &statbuf) == -1)
     {
-        return;
+        struct stat statbuf;
+        if (cfstat(file, &statbuf) == -1)
+        {
+            return;
+        }
+
+        if (statbuf.st_size == 0)
+        {
+            unlink(file);
+            CfDebug("Nothing to report in %s\n", file);
+            return;
+        }
     }
 
-    snprintf(prev_file, CF_BUFSIZE - 1, "%s/outputs/previous", CFWORKDIR);
-    MapName(prev_file);
-
-    if (statbuf.st_size == 0)
     {
-        unlink(file);
-        CfDebug("Nothing to report in %s\n", file);
-        return;
-    }
+        char prev_file[CF_BUFSIZE];
+        snprintf(prev_file, CF_BUFSIZE - 1, "%s/outputs/previous", CFWORKDIR);
+        MapName(prev_file);
 
-    if (CompareResult(file, prev_file) == 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Previous output is the same as current so do not mail it\n");
-        return;
+        if (CompareResult(file, prev_file) == 0)
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Previous output is the same as current so do not mail it\n");
+            return;
+        }
     }
 
     if ((strlen(config->mail_server) == 0) || (strlen(config->mail_to_address) == 0))
@@ -474,11 +441,15 @@ static void MailResult(const ExecConfig *config, char *file)
 
 /* Check first for anomalies - for subject header */
 
-    if ((fp = fopen(file, "r")) == NULL)
+    FILE *fp = fopen(file, "r");
+    if (!fp)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "fopen", "!! Couldn't open file %s", file);
         return;
     }
+
+    bool anomaly = false;
+    char vbuff[CF_BUFSIZE];
 
     while (!feof(fp))
     {
@@ -505,7 +476,8 @@ static void MailResult(const ExecConfig *config, char *file)
 
     CfDebug("Looking up hostname %s\n\n", config->mail_server);
 
-    if ((hp = gethostbyname(config->mail_server)) == NULL)
+    struct hostent *hp = gethostbyname(config->mail_server);
+    if (!hp)
     {
         printf("Unknown host: %s\n", config->mail_server);
         printf("Make sure that fully qualified names can be looked up at your site.\n");
@@ -513,13 +485,15 @@ static void MailResult(const ExecConfig *config, char *file)
         return;
     }
 
-    if ((server = getservbyname("smtp", "tcp")) == NULL)
+    struct servent *server = getservbyname("smtp", "tcp");
+    if (!server)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "getservbyname", "Unable to lookup smtp service");
         fclose(fp);
         return;
     }
 
+    struct sockaddr_in raddr;
     memset(&raddr, 0, sizeof(raddr));
 
     raddr.sin_port = (unsigned int) server->s_port;
@@ -528,7 +502,8 @@ static void MailResult(const ExecConfig *config, char *file)
 
     CfDebug("Connecting...\n");
 
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    int sd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sd == -1)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a socket");
         fclose(fp);
@@ -622,6 +597,7 @@ static void MailResult(const ExecConfig *config, char *file)
     CfDebug("%s", vbuff);
     send(sd, vbuff, strlen(vbuff), 0);
 
+    int count = 0;
     while (!feof(fp))
     {
         vbuff[0] = '\0';
@@ -664,18 +640,14 @@ static void MailResult(const ExecConfig *config, char *file)
 
     fclose(fp);
     cf_closesocket(sd);
-    CfOut(OUTPUT_LEVEL_LOG, "", "Cannot mail to %s.", config->mail_to_address);
+    CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot mail to %s.", config->mail_to_address);
 }
 
-static int Dialogue(int sd, char *s)
+static int Dialogue(int sd, const char *s)
 {
-    int sent;
-    char ch, f = '\0';
-    int charpos, rfclinetype = ' ';
-
     if ((s != NULL) && (*s != '\0'))
     {
-        sent = send(sd, s, strlen(s), 0);
+        int sent = send(sd, s, strlen(s), 0);
         CfDebug("SENT(%d)->%s", sent, s);
     }
     else
@@ -683,8 +655,10 @@ static int Dialogue(int sd, char *s)
         CfDebug("Nothing to send .. waiting for opening\n");
     }
 
-    charpos = 0;
+    int charpos = 0;
+    int rfclinetype = ' ';
 
+    char ch, f = '\0';
     while (recv(sd, &ch, 1, 0))
     {
         charpos++;

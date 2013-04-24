@@ -173,7 +173,7 @@ bool FileWriteOver(char *filename, char *contents)
 
 /*********************************************************************/
 
-ssize_t FileReadMax(char **output, char *filename, size_t size_max)
+ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
 // TODO: there is CfReadFile and FileRead with slightly different semantics, merge
 // free(output) should be called on positive return value
 {

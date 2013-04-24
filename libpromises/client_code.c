@@ -1467,6 +1467,25 @@ void ConnectionsCleanup(void)
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
+
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// HP-UX GCC type-pun warning on FD_SET() macro:
+// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
+// struct of an array of "long" values in accordance with the XPG4 standard's
+// requirements, the macros for the FD operations "pretend it is an array of
+// int32_t's so the binary layout is the same for both Narrow and Wide
+// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
+// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
+// which is defined as int32_t at _fd_macros.h:82.
+//
+// This conflict between the "long fds_bits[]" array in the XPG4-compliant
+// fd_set structure, and the cast to an int32_t - not long - pointer in the
+// macros, causes a type-pun warning if -Wstrict-aliasing is enabled.
+// The warning is merely a side effect of HP-UX working as designed,
+// so it can be ignored.
+#endif
+
 static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 /** 
  * Tries a nonblocking connect and then restores blocking if
@@ -1504,27 +1523,7 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
             FD_ZERO(&myset);
 
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-// HP-UX GCC type-pun warning on FD_SET() macro:
-// While the "fd_set" type is defined in /usr/include/sys/_fd_macros.h as a
-// struct of an array of "long" values in accordance with the XPG4 standard's
-// requirements, the macros for the FD operations "pretend it is an array of
-// int32_t's so the binary layout is the same for both Narrow and Wide
-// processes," as described in _fd_macros.h. In the FD_SET, FD_CLR, and
-// FD_ISSET macros at line 101, the result is cast to an "__fd_mask *" type,
-// which is defined as int32_t at _fd_macros.h:82.
-//
-// This conflict between the "long fds_bits[]" array in the XPG4-compliant
-// fd_set structure, and the cast to an int32_t - not long - pointer in the
-// macros, causes a type-pun warning if -Wstrict-aliasing is enabled.
-// The warning is merely a side effect of HP-UX working as designed,
-// so it can be ignored.
-#endif
             FD_SET(conn->sd, &myset);
-#if defined(__hpux) && defined(__GNUC__)
-#pragma GCC diagnostic warning "-Wstrict-aliasing"
-#endif
 
             /* now wait for connect, but no more than tvp.sec */
             res = select(conn->sd + 1, NULL, &myset, NULL, tvp);
@@ -1561,5 +1560,9 @@ static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockadd
 
     return true;
 }
+
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
 #endif /* !defined(__MINGW32__) */

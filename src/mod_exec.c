@@ -28,7 +28,7 @@
 static const BodySyntax CF_EXECCONTAIN_BODY[] =
 {
     {"useshell", cf_opts, CF_BOOL, "true/false embed the command in a shell environment", "false"},
-    {"umask", cf_opts, "0,77,22,27,72,077,022,027,072", "The umask value for the child process"},
+    {"umask", cf_opts, "0,77,22,27,72,077,002,022,027,072", "The umask value for the child process"},
     {"exec_owner", cf_str, "", "The user name or id under which to run the process"},
     {"exec_group", cf_str, "", "The group name or id under which to run the process"},
     {"exec_timeout", cf_int, "1,3600", "Timeout in seconds for command completion"},

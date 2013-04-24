@@ -651,7 +651,7 @@ AclInheritance AclInheritanceFromString(const char *string)
 
 ServicePolicy ServicePolicyFromString(const char *string)
 {
-    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
+    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", "reload", NULL };
 
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }

@@ -169,6 +169,12 @@ void test_rval_list_forgot_colon(void)
     assert_false(LoadPolicy("rval_list_forgot_colon.cf"));
 }
 
+void test_rval_list_wrong_input_type(void)
+{
+    assert_false(LoadPolicy("rval_list_wrong_input_type.cf"));
+}
+
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -209,7 +215,8 @@ int main()
 
         unit_test(test_constraint_ifvarclass_invalid),
 
-        unit_test(test_rval_list_forgot_colon)
+        unit_test(test_rval_list_forgot_colon),
+        unit_test(test_rval_list_wrong_input_type)
     };
 
     return run_tests(tests);

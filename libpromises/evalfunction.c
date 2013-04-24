@@ -91,7 +91,7 @@ typedef enum
     DATE_TEMPLATE_SEC
 } DateTemplate;
 
-static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
+static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max);
 
 static char *StripPatterns(char *file_buffer, char *pattern, char *filename);
 static void CloseStringHole(char *s, int start, int end);
@@ -1266,13 +1266,13 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
 static FnCallResult FnCallGrep(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return filter(ctx,
-                  fp,
-                  RlistScalarValue(finalargs), // regex
-                  RlistScalarValue(finalargs->next), // list identifier
-                  1, // regex match = TRUE
-                  0, // invert matches = FALSE
-                  99999999999); // max results = max int
+    return FilterInternal(ctx,
+                          fp,
+                          RlistScalarValue(finalargs), // regex
+                          RlistScalarValue(finalargs->next), // list identifier
+                          1, // regex match = TRUE
+                          0, // invert matches = FALSE
+                          99999999999); // max results = max int
 }
 
 /*********************************************************************/
@@ -2307,18 +2307,18 @@ static FnCallResult FnCallFileStatDetails(EvalContext *ctx, FnCall *fp, Rlist *f
 
 static FnCallResult FnCallFilter(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return filter(ctx,
-                  fp,
-                  RlistScalarValue(finalargs), // regex or string
-                  RlistScalarValue(finalargs->next), // list identifier
-                  BooleanFromString(RlistScalarValue(finalargs->next->next)), // match as regex or exactly
-                  BooleanFromString(RlistScalarValue(finalargs->next->next->next)), // invert matches
-                  IntFromString(RlistScalarValue(finalargs->next->next->next->next))); // max results
+    return FilterInternal(ctx,
+                          fp,
+                          RlistScalarValue(finalargs), // regex or string
+                          RlistScalarValue(finalargs->next), // list identifier
+                          BooleanFromString(RlistScalarValue(finalargs->next->next)), // match as regex or exactly
+                          BooleanFromString(RlistScalarValue(finalargs->next->next->next)), // invert matches
+                          IntFromString(RlistScalarValue(finalargs->next->next->next->next))); // max results
 }
 
 /*********************************************************************/
 
-static int preplist(EvalContext *ctx, FnCall *fp, char *name, Rval *rval2)
+static int Preplist(EvalContext *ctx, FnCall *fp, char *name, Rval *rval2)
 {
     char lval[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
@@ -2361,12 +2361,12 @@ static int preplist(EvalContext *ctx, FnCall *fp, char *name, Rval *rval2)
 
 /*********************************************************************/
 
-static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
+static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
 {
     Rval rval2;
     Rlist *rp, *returnlist = NULL;
 
-    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+    if (!Preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
@@ -2420,7 +2420,7 @@ static FnCallResult filter(EvalContext *ctx, FnCall *fp, char *regex, char *name
     {
         contextmode = -1;
         ret = -1;
-        FatalError(ctx, "in built-in FnCall %s: unhandled filter() contextmode", fp->name);
+        FatalError(ctx, "in built-in FnCall %s: unhandled FilterInternal() contextmode", fp->name);
     }
 
     if (contextmode)
@@ -2444,7 +2444,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     Rval rval2;
     Rlist *rp, *returnlist = NULL;
 
-    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+    if (!Preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
@@ -2485,7 +2485,7 @@ static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rval rval2;
     Rlist *rp, *returnlist = NULL;
 
-    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+    if (!Preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
@@ -2507,7 +2507,7 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     Rval rval2;
     Rlist *rp = NULL;
 
-    if (!preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
+    if (!Preplist(ctx, fp, name, &rval2)) return (FnCallResult) { FNCALL_FAILURE };
 
     for (rp = (Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
 
@@ -2520,13 +2520,13 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
 static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    return filter(ctx,
-                  fp,
-                  RlistScalarValue(finalargs), // regex or string
-                  RlistScalarValue(finalargs->next), // list identifier
-                  1,
-                  0,
-                  99999999999);
+    return FilterInternal(ctx,
+                          fp,
+                          RlistScalarValue(finalargs), // regex or string
+                          RlistScalarValue(finalargs->next), // list identifier
+                          1,
+                          0,
+                          99999999999);
 }
 
 /*********************************************************************/

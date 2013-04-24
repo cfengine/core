@@ -237,7 +237,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -253,7 +253,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }

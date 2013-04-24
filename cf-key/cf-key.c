@@ -204,7 +204,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key", OPTIONS, HINTS, ID, false);
             exit(0);
 
         case 'M':
@@ -212,7 +212,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key", OPTIONS, HINTS, ID, false);
             exit(1);
 
         }

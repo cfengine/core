@@ -189,11 +189,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            Syntax("cf-serverd", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            ManPage("cf-serverd - CFEngine's server agent", OPTIONS, HINTS, ID);
             exit(0);
 
         case 'x':
@@ -216,7 +216,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 #endif
 
         default:
-            Syntax("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            Syntax("cf-serverd", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }

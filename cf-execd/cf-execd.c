@@ -259,7 +259,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
+            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -271,7 +271,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
+            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }

@@ -444,7 +444,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -466,7 +466,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(1);
         }
     }

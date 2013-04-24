@@ -1386,31 +1386,27 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
 /*******************************************************************/
 
-void Syntax(const char *component, const struct option options[], const char *hints[], const char *id)
+void Syntax(const char *component, const struct option options[], const char *hints[], const char *description, bool accepts_file_argument)
 {
-    int i;
+    printf("Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
 
-    printf("\n\n%s\n\n", component);
+    printf("\n%s\n", description);
 
-    printf("SYNOPSIS:\n\n   program [options]\n\nDESCRIPTION:\n\n%s\n", id);
-    printf("Command line options:\n\n");
+    printf("\nOptions:\n");
 
-    for (i = 0; options[i].name != NULL; i++)
+    for (int i = 0; options[i].name != NULL; i++)
     {
         if (options[i].has_arg)
         {
-            printf("--%-12s, -%c value - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            printf("  --%-12s, -%c value - %s\n", options[i].name, (char) options[i].val, hints[i]);
         }
         else
         {
-            printf("--%-12s, -%-7c - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            printf("  --%-12s, -%-7c - %s\n", options[i].name, (char) options[i].val, hints[i]);
         }
     }
 
-    printf("\nBug reports: http://bug.cfengine.com, ");
-    printf("Community help: http://forum.cfengine.com\n");
-    printf("Community info: http://www.cfengine.com/pages/community, ");
-    printf("Support services: http://www.cfengine.com\n\n");
+    printf("\nWebsite: http://www.cfengine.com\n");
     printf("This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
 }
 

@@ -834,7 +834,7 @@ rval:                  IDSYNTAX
                        {
                            P.rval = (Rval) { P.currentfncall[P.arg_nesting+1], RVAL_TYPE_FNCALL };
                            P.references_body = false;
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -907,7 +907,7 @@ functionid:            IDSYNTAX
                            free(P.currentstring);
                            P.currentstring = NULL;
                            CfDebug("Found variable in place of a function identifier %s\n",P.currentid);
-                       };
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -934,6 +934,7 @@ givearglist:           OP
                        }
 
                        gaitems
+
                        CP 
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
@@ -944,14 +945,19 @@ givearglist:           OP
                            free(P.currentfnid[P.arg_nesting]);
                            P.currentfnid[P.arg_nesting] = NULL;
                            P.arg_nesting--;
-                       };
+                       }
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-gaitems:               gaitem
+gaitems:               /* empty */
+                     | gaitem
                      | gaitems ',' gaitem
-                     |;
+                     | gaitem error
+                       {
+                           yyclearin;
+                           ParseError("Expected ',', wrong input: %s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

@@ -164,6 +164,11 @@ void test_body_body_forget_cb_bundle(void)
     assert_false(LoadPolicy("body_body_forget_cb_bundle.cf"));
 }
 
+void test_rval_list_forgot_colon(void)
+{
+    assert_false(LoadPolicy("rval_list_forgot_colon.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -202,7 +207,9 @@ int main()
 
         unit_test(test_promise_promiser_nonscalar),
 
-        unit_test(test_constraint_ifvarclass_invalid)
+        unit_test(test_constraint_ifvarclass_invalid),
+
+        unit_test(test_rval_list_forgot_colon)
     };
 
     return run_tests(tests);

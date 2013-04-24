@@ -838,16 +838,18 @@ rval:                  IDSYNTAX
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-list:                  OB CB 
-                     | OB litems CB;
+list:                  OB litems CB
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-litems:                litems_int
-                     | litems_int ',';
-
-litems_int:            litem
-                     | litems_int ',' litem;
+litems:                /* empty */
+                     | litem
+                     | litem ','  litems
+                     | litem error
+                       {
+                           yyclearin;
+                           ParseError("Expected ',', wrong input: %s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

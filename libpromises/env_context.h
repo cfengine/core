@@ -177,4 +177,9 @@ void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
 void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
 
+/* This function is temporarily exported. It needs to be made an detail of
+ * evaluator again, once variables promises are no longer specially handled */
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
+
+
 #endif

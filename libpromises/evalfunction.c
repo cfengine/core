@@ -4510,7 +4510,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
     default:
         if (print)
         {
-            CfOut(OUTPUT_LEVEL_CMDOUT, "", "M \"%s\": %s\n", command, line);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "M \"%s\": %s\n", command, line);
         }
         break;
     }

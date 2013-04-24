@@ -760,7 +760,7 @@ static void EmitStringExpression(StringExpression *e, int level)
         EmitStringExpression(e->val.varref.name, -IncIndent(level, 3));
         break;
     default:
-        ProgrammingError("Unknown type of string expression: %d\n", e->op);
+        ProgrammingError("Unknown type of string expression: %d", e->op);
     }
 }
 
@@ -796,7 +796,7 @@ static void EmitExpression(Expression *e, int level)
         fputs(")", stderr);
         break;
     default:
-        ProgrammingError("Unknown logic expression type: %d\n", e->op);
+        ProgrammingError("Unknown logic expression type: %d", e->op);
     }
 }
 
@@ -1987,9 +1987,6 @@ void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
 /*
  * Internal functions temporarily used from logging implementation
  */
-void SystemLog(Item *mess, OutputLevel level);
-void LogListStdout(const Item *messages, bool has_prefix);
-const char *GetErrorStr(void);
 
 static const char *NO_STATUS_TYPES[] =
     { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
@@ -2085,78 +2082,6 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
         EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
 
         EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
-    }
-}
-
-static void AmendErrorMessageWithPromiseInformation(EvalContext *ctx, Item **error_message, const Promise *pp)
-{
-    Rval retval;
-    char *v;
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
-    {
-        v = (char *) retval.item;
-    }
-    else
-    {
-        v = "not specified";
-    }
-
-    const char *sp;
-    char handle[CF_MAXVARSIZE];
-    if ((sp = PromiseGetHandle(pp)) || (sp = PromiseID(pp)))
-    {
-        strncpy(handle, sp, CF_MAXVARSIZE - 1);
-    }
-    else
-    {
-        strcpy(handle, "(unknown)");
-    }
-
-    char output[CF_BUFSIZE];
-    if (INFORM || VERBOSE || DEBUG)
-    {
-        snprintf(output, CF_BUFSIZE - 1, "I: Report relates to a promise with handle \"%s\"", handle);
-        AppendItem(error_message, output, NULL);
-    }
-
-    if (pp && PromiseGetBundle(pp)->source_path)
-    {
-        snprintf(output, CF_BUFSIZE - 1, "I: Made in version \'%s\' of \'%s\' near line %zu",
-                 v, PromiseGetBundle(pp)->source_path, pp->offset.line);
-    }
-    else
-    {
-        snprintf(output, CF_BUFSIZE - 1, "I: Promise is made internally by cfengine");
-    }
-
-    AppendItem(error_message, output, NULL);
-
-    if (pp != NULL)
-    {
-        switch (pp->promisee.type)
-        {
-        case RVAL_TYPE_SCALAR:
-            snprintf(output, CF_BUFSIZE - 1, "I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
-            AppendItem(error_message, output, NULL);
-            break;
-
-        case RVAL_TYPE_LIST:
-        {
-            Writer *w = StringWriter();
-            WriterWriteF(w, "I: The promise was made to (stakeholders): ");
-            RlistWrite(w, pp->promisee.item);
-            AppendItem(error_message, StringWriterClose(w), NULL);
-            break;
-        }
-        default:
-            break;
-        }
-
-        if (pp->comment)
-        {
-            snprintf(output, CF_BUFSIZE - 1, "I: Comment: %s\n", pp->comment);
-            AppendItem(error_message, output, NULL);
-        }
     }
 }
 
@@ -2286,7 +2211,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            CfOut(OUTPUT_LEVEL_REPORTING, "", "L: %s\n", buffer);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "L: %s\n", buffer);
         }
         else
         {
@@ -2357,7 +2282,7 @@ static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, cons
     }
 }
 
-static void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
 {
     if (!IsPromiseValuableForStatus(pp))
     {
@@ -2372,112 +2297,110 @@ static void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, 
     DoSummarizeTransaction(ctx, status, pp, attr.transaction);
 }
 
+static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
+{
+    Rval retval;
+    char *v;
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
+
+    const char *sp = PromiseGetHandle(pp);
+    if (sp == NULL)
+    {
+        sp = PromiseID(pp);
+    }
+    if (sp == NULL)
+    {
+        sp = "(unknown)";
+    }
+
+    Log(LOG_LEVEL_INFO, "I: Report relates to a promise with handle \"%s\"", sp);
+
+    if (PromiseGetBundle(pp)->source_path)
+    {
+        Log(LOG_LEVEL_INFO, "I: Made in version \'%s\' of \'%s\' near line %zu",
+            v, PromiseGetBundle(pp)->source_path, pp->offset.line);
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "I: Promise is made internally by cfengine");
+    }
+
+    switch (pp->promisee.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        Log(LOG_LEVEL_INFO,"I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+        break;
+
+    case RVAL_TYPE_LIST:
+    {
+        Writer *w = StringWriter();
+        RlistWrite(w, pp->promisee.item);
+        Log(LOG_LEVEL_INFO, "I: The promise was made to (stakeholders): %s", StringWriterData(w));
+        WriterClose(w);
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (pp->comment)
+    {
+        Log(LOG_LEVEL_INFO, "I: Comment: %s\n", pp->comment);
+    }
+}
+
 void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
 {
-    if ((fmt == NULL) || (strlen(fmt) == 0))
+    /*
+     * This stub implementation of cfPS delegates to the new logging backend.
+     *
+     * Due to the fact very little of the code has been converted, this code
+     * does a full initialization and shutdown of logging subsystem for each
+     * cfPS.
+     *
+     * Instead, LoggingInit should be called at the moment EvalContext is
+     * created, LoggingPromiseEnter/LoggingPromiseFinish should be called around
+     * ExpandPromise and LoggingFinish should be called when EvalContext is
+     * going to be destroyed.
+     *
+     * But it requires all calls to cfPS to be eliminated.
+     */
+
+    /* FIXME: Ensure that NULL pp is never passed into cfPS */
+
+    if (pp)
     {
-        return;
+        LoggingInit(ctx);
+        LoggingPromiseEnter(ctx, pp);
+
+        if (level == OUTPUT_LEVEL_ERROR)
+        {
+            LogPromiseContext(ctx, pp);
+        }
     }
 
     va_list ap;
     va_start(ap, fmt);
-    char buffer[CF_BUFSIZE];
-    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, ap);
+    CfVOut(level, errstr, fmt, ap);
     va_end(ap);
 
-    if (Chop(buffer, CF_EXPANDSIZE) == -1)
+    if (pp)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-    }
+        char *last_msg = LoggingPromiseFinish(ctx, pp);
+        LoggingFinish(ctx);
 
-    Item *mess = NULL;
-    AppendItem(&mess, buffer, NULL);
+        /* Now complete the exits status classes and auditing */
 
-    if ((errstr == NULL) || (strlen(errstr) > 0))
-    {
-        char output[CF_BUFSIZE];
-        snprintf(output, CF_BUFSIZE - 1, " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
-        AppendItem(&mess, output, NULL);
-    }
-
-    if (level == OUTPUT_LEVEL_ERROR)
-    {
-        AmendErrorMessageWithPromiseInformation(ctx, &mess, pp);
-    }
-
-    int verbose = (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE) || VERBOSE;
-
-    switch (level)
-    {
-    case OUTPUT_LEVEL_INFORM:
-
-        if (INFORM || (attr.transaction.report_level == OUTPUT_LEVEL_INFORM)
-            || VERBOSE || (attr.transaction.report_level == OUTPUT_LEVEL_VERBOSE)
-            || DEBUG)
-        {
-            LogListStdout(mess, verbose);
-        }
-
-        if (attr.transaction.log_level == OUTPUT_LEVEL_INFORM)
-        {
-            SystemLog(mess, level);
-        }
-        break;
-
-    case OUTPUT_LEVEL_VERBOSE:
-
-        if (VERBOSE || (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
-            || DEBUG)
-        {
-            LogListStdout(mess, verbose);
-        }
-
-        if (attr.transaction.log_level == OUTPUT_LEVEL_VERBOSE)
-        {
-            SystemLog(mess, level);
-        }
-
-        break;
-
-    case OUTPUT_LEVEL_ERROR:
-
-        LogListStdout(mess, verbose);
-
-        if (attr.transaction.log_level == OUTPUT_LEVEL_ERROR)
-        {
-            SystemLog(mess, level);
-        }
-        break;
-
-    case OUTPUT_LEVEL_NONE:
-        break;
-
-    default:
-        ProgrammingError("Unexpected output level (%d) passed to cfPS", level);
-    }
-
-    if (pp != NULL)
-    {
-        LogPromiseResult(pp->promiser, pp->promisee.type, pp->promisee.item, status, attr.transaction.log_level, mess);
-    }
-
-/* Now complete the exits status classes and auditing */
-
-    if (pp != NULL)
-    {
         ClassAuditLog(ctx, pp, attr, status);
-        UpdatePromiseComplianceStatus(status, pp, buffer);
+        UpdatePromiseComplianceStatus(status, pp, last_msg);
+
+        free(last_msg);
     }
-
-    DeleteItemList(mess);
 }
-
-#if !defined(__MINGW32__)
-
-void LogPromiseResult(ARG_UNUSED char *promiser, ARG_UNUSED char peeType,
-                             ARG_UNUSED void *promisee, ARG_UNUSED char status,
-                             ARG_UNUSED OutputLevel log_level, ARG_UNUSED Item *mess)
-{
-}
-
-#endif

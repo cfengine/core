@@ -300,7 +300,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
 
     if (length >= CF_BUFSIZE)
     {
-        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen\n");
+        ProgrammingError("ExpandAndMapIteratorsFromScalar called with invalid strlen");
     }
 
     strncpy(buffer, string, length);
@@ -1423,6 +1423,8 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
         }
     }
 
+    PromiseResult promise_result;
+
     Rval rval = opts.cp_save->rval;
 
     if (rval.item != NULL)
@@ -1608,19 +1610,31 @@ void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_dupl
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
             PromiseRef(OUTPUT_LEVEL_VERBOSE, pp);
-            cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+            promise_result = PROMISE_RESULT_FAIL;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Added variable %s", pp->promiser);
+            promise_result = PROMISE_RESULT_CHANGE;
         }
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Variable %s has no promised value\n", pp->promiser);
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
-        cfPS(ctx, OUTPUT_LEVEL_NONE, PROMISE_RESULT_FAIL, "", pp, a, " !! Couldn't add variable %s", pp->promiser);
+        promise_result = PROMISE_RESULT_FAIL;
     }
+
+    /*
+     * FIXME: Variable promise are exempt from normal evaluation logic still, so
+     * they are not pushed to evaluation stack before being evaluated. Due to
+     * this reason, we cannot call cfPS here to set classes, as it will error
+     * out with ProgrammingError.
+     *
+     * In order to support 'classes' body for variables as well, we call
+     * ClassAuditLog explicitly.
+     */
+    ClassAuditLog(ctx, pp, a, promise_result);
+
     free(scope);
     BufferDestroy(&qualified_scope);
     RvalDestroy(rval);

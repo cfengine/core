@@ -217,7 +217,7 @@ OutputLevel OutputLevelFromString(const char *level)
 {
     static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
 
-    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
+    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_ERROR, OUTPUT_LEVEL_ERROR);
 }
 
 FileLinkType FileLinkTypeFromString(const char *s)

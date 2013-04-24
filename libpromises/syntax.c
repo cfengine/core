@@ -403,7 +403,7 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         return CheckParseRealRange(lval, (char *) rval.item, range);
 
     default:
-        ProgrammingError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)\n", lval);
+        ProgrammingError("Unknown (unhandled) datatype for lval = %s (CheckConstraintTypeMatch)", lval);
         break;
     }
 

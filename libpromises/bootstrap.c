@@ -82,7 +82,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     char name[CF_BUFSIZE];
     int have_policy = false, am_appliance = false;
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
+    printf("** CFEngine BOOTSTRAP probe initiated\n");
 
     PrintVersion();
     printf("\n");
@@ -108,29 +108,28 @@ void CheckAutoBootstrap(EvalContext *ctx)
 
     if (cfstat(name, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No previous policy has been cached on this host");
+        printf(" -> No previous policy has been cached on this host\n");
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
+        printf(" -> An existing policy was cached on this host in %s/inputs\n", CFWORKDIR);
         have_policy = true;
     }
 
     if (strlen(POLICY_SERVER) > 0)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
+        printf(" -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
               POLICY_SERVER);
     }
     else
     {
         if (have_policy)
         {
-            CfOut(OUTPUT_LEVEL_CMDOUT, "",
-                  " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
+            printf(" -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
+            printf(" -> No policy distribution host was defined - use --policy-server to set one\n");
         }
     }
 
@@ -278,7 +277,7 @@ void CreateFailSafe(char *name)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
+    printf(" -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
             "################################################################################\n"

@@ -28,158 +28,327 @@
 #include "string_lib.h"
 #include "item_lib.h"
 #include "misc_lib.h"
-#include "mutex.h"
+#include "env_context.h"
+#include "string_lib.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #endif
 
-/*
- * Those functions are internal to logging, but they are still used by cfPS in
- * env_context.c, so we don't export them in headers, but keep non-static.
- */
-void SystemLog(Item *mess, OutputLevel level);
-void LogListStdout(const Item *messages, bool has_prefix);
-const char *GetErrorStr(void);
-
-
-static void VLog(OutputLevel level, const char *errstr, const char *fmt, va_list args)
+static LogLevel OutputLevelToLogLevel(OutputLevel level)
 {
-    char buffer[CF_BUFSIZE], output[CF_BUFSIZE];
-    Item *mess = NULL;
-
-    if ((fmt == NULL) || (strlen(fmt) == 0))
-    {
-        return;
-    }
-
-    memset(output, 0, CF_BUFSIZE);
-    vsnprintf(buffer, CF_BUFSIZE - 1, fmt, args);
-
-    if (Chop(buffer, CF_EXPANDSIZE) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
-    }
-
-    AppendItem(&mess, buffer, NULL);
-
-    if ((errstr == NULL) || (strlen(errstr) > 0))
-    {
-        snprintf(output, CF_BUFSIZE - 1, " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
-        AppendItem(&mess, output, NULL);
-    }
-
     switch (level)
     {
-    case OUTPUT_LEVEL_INFORM:
-
-        if (INFORM || VERBOSE || DEBUG)
-        {
-            LogListStdout(mess, VERBOSE);
-        }
-        break;
-
-    case OUTPUT_LEVEL_VERBOSE:
-
-        if (VERBOSE || DEBUG)
-        {
-            LogListStdout(mess, VERBOSE);
-        }
-        break;
-
-    case OUTPUT_LEVEL_ERROR:
-    case OUTPUT_LEVEL_REPORTING:
-    case OUTPUT_LEVEL_CMDOUT:
-
-        LogListStdout(mess, VERBOSE);
-        SystemLog(mess, level);
-        break;
-
-    case OUTPUT_LEVEL_LOG:
-
-        if (VERBOSE || DEBUG)
-        {
-            LogListStdout(mess, VERBOSE);
-        }
-        SystemLog(mess, OUTPUT_LEVEL_VERBOSE);
-        break;
-
-    default:
-
-        ProgrammingError("Report level unknown");
-        break;
+    case OUTPUT_LEVEL_ERROR: return LOG_LEVEL_NOTICE; /* default level includes warnings and notices */
+    case OUTPUT_LEVEL_VERBOSE: return LOG_LEVEL_VERBOSE;
+    case OUTPUT_LEVEL_INFORM: return LOG_LEVEL_INFO;
     }
 
-    DeleteItemList(mess);
+    ProgrammingError("Unknown output level passed to OutputLevelToLogLevel: %d", level);
+}
+
+void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
+{
+    const char *GetErrorStr(void);
+
+    if (strchr(fmt, '\n'))
+    {
+        char *fmtcopy = xstrdup(fmt);
+        Chop(fmtcopy, strlen(fmtcopy));
+        VLog(OutputLevelToLogLevel(level), fmtcopy, ap);
+        free(fmtcopy);
+    }
+    else
+    {
+        VLog(OutputLevelToLogLevel(level), fmt, ap);
+    }
+
+    if (errstr && strlen(errstr) > 0)
+    {
+        Log(OutputLevelToLogLevel(level), " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
+    }
 }
 
 void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    VLog(level, errstr, fmt, ap);
+    CfVOut(level, errstr, fmt, ap);
     va_end(ap);
 }
 
-
-/* Temporarily in use by env_context.c */
-
-void LogListStdout(const Item *mess, bool has_prefix)
+typedef struct
 {
-    for (const Item *ip = mess; ip != NULL; ip = ip->next)
+    const EvalContext *ctx;
+
+    /* For current promise */
+    bool in_promise;
+    LogLevel log_level;
+    LogLevel report_level;
+    char *last_message; /* FIXME: there might be a need for stack of last_messages for enclosed promises */
+
+} LoggingContext;
+
+static pthread_once_t log_context_init_once;
+static pthread_key_t log_context_key;
+
+static void LoggingInitialize(void)
+{
+    if (pthread_key_create(&log_context_key, NULL) != 0)
     {
-        if (has_prefix)
+        /* There is no way to signal error out of pthread_once callback.
+         * However if pthread_key_create fails we are pretty much guaranteed
+         * that nothing else will work. */
+
+        fprintf(stderr, "Unable to initialize logging subsystem\n");
+        exit(255);
+    }
+}
+
+static LogLevel GetGlobalLogLevel(void)
+{
+    if (VERBOSE)
+    {
+        return LOG_LEVEL_VERBOSE;
+    }
+
+    if (INFORM)
+    {
+        return LOG_LEVEL_INFO;
+    }
+
+    return LOG_LEVEL_NOTICE;
+}
+
+static LoggingContext *GetCurrentThreadContext(void)
+{
+    pthread_once(&log_context_init_once, &LoggingInitialize);
+    LoggingContext *lctx = pthread_getspecific(log_context_key);
+    if (lctx == NULL)
+    {
+        lctx = xcalloc(1, sizeof(LoggingContext));
+        lctx->log_level = GetGlobalLogLevel();
+        lctx->report_level = GetGlobalLogLevel();
+        pthread_setspecific(log_context_key, lctx);
+    }
+    return lctx;
+}
+
+static LogLevel AdjustLogLevel(LogLevel base, LogLevel adjust)
+{
+    if (adjust == -1)
+    {
+        return base;
+    }
+    else
+    {
+        return MAX(base, adjust);
+    }
+}
+
+static LogLevel StringToLogLevel(const char *value)
+{
+    if (value)
+    {
+        if (!strcmp(value, "verbose"))
         {
-            printf("%s> %s\n", VPREFIX, ip->name);
+            return LOG_LEVEL_VERBOSE;
         }
-        else
+        if (!strcmp(value, "inform"))
         {
-            printf("%s\n", ip->name);
+            return LOG_LEVEL_INFO;
         }
+        if (!strcmp(value, "error"))
+        {
+            return LOG_LEVEL_NOTICE; /* Error level includes warnings and notices */
+        }
+    }
+    return -1;
+}
+
+static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, const char *attr_name)
+{
+    return StringToLogLevel(ConstraintGetRvalValue(ctx, attr_name, pp, RVAL_TYPE_SCALAR));
+}
+
+static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
+{
+    LogLevel log_level = GetGlobalLogLevel();
+
+    if (pp)
+    {
+        log_level = AdjustLogLevel(log_level, GetLevelForPromise(ctx, pp, "log_level"));
+    }
+
+    /* Disable system log for dry-runs and for non-root agent */
+    /* FIXME: do we really need it? */
+    if (!IsPrivileged() || DONTDO)
+    {
+        log_level = -1;
+    }
+
+    return log_level;
+}
+
+static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
+{
+    LogLevel report_level = GetGlobalLogLevel();
+
+    if (pp)
+    {
+        report_level = AdjustLogLevel(report_level, GetLevelForPromise(ctx, pp, "report_level"));
+    }
+
+    return report_level;
+}
+
+void LoggingInit(const EvalContext *ctx)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+
+    if (lctx->ctx != NULL)
+    {
+        ProgrammingError("Logging: Still bound to another EvalContext");
+    }
+
+    lctx->ctx = ctx;
+}
+
+void LoggingPromiseEnter(const EvalContext *ctx, const Promise *pp)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+
+    if (lctx->ctx != ctx)
+    {
+        ProgrammingError("Logging: Wrong EvalContext in setting current promise");
+    }
+
+    if (EvalContextStackGetTopPromise(ctx) != pp)
+    {
+        /*
+         * FIXME: There are still cases where promise passed here is not on top of stack
+         */
+        /* ProgrammingError("Logging: Attempt to set promise not on top of stack as current"); */
+    }
+
+    lctx->in_promise = true;
+    lctx->log_level = CalculateLogLevel(ctx, pp);
+    lctx->report_level = CalculateReportLevel(ctx, pp);
+}
+
+char *LoggingPromiseFinish(const EvalContext *ctx, const Promise *pp)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+
+    if (lctx->ctx == NULL || lctx->ctx != ctx)
+    {
+        ProgrammingError("Logging: Wrong EvalContext in finishing promise");
+    }
+
+    if (EvalContextStackGetTopPromise(ctx) != pp)
+    {
+        /*
+         * FIXME: There are still cases where promise passed here is not on top of stack
+         */
+        /* ProgrammingError("Logging: Attempt to finish promise not on top of stack"); */
+    }
+
+    char *last_message = lctx->last_message;
+
+    lctx->in_promise = false;
+    lctx->log_level = GetGlobalLogLevel();
+    lctx->report_level = GetGlobalLogLevel();
+    lctx->last_message = NULL;
+
+    return last_message;
+}
+
+void LoggingFinish(const EvalContext *ctx)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+
+    if (lctx->ctx == NULL || lctx->ctx != ctx)
+    {
+        ProgrammingError("Logging: Unable to finish, passed EvalContext is wrong");
+    }
+
+    if (lctx->in_promise == true)
+    {
+        ProgrammingError("Logging: Unable to finish, promise is still active");
+    }
+
+    lctx->ctx = NULL;
+}
+
+/* static const char *LogLevelToString(LogLevel level) */
+/* { */
+/*     switch (level) */
+/*     { */
+/*     case LOG_LEVEL_CRIT: return "!"; */
+/*     case LOG_LEVEL_ERR: return "E"; */
+/*     case LOG_LEVEL_WARNING: return "W"; */
+/*     case LOG_LEVEL_NOTICE: return "N"; */
+/*     case LOG_LEVEL_INFO: return "I"; */
+/*     case LOG_LEVEL_VERBOSE: return "V"; */
+/*     case LOG_LEVEL_DEBUG: return "D"; */
+/*     } */
+
+/*     ProgrammingError("Unknown log level passed to LogLevelToString: %d", level); */
+/* } */
+
+void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
+{
+    /* TODO: timestamps, logging levels in error messages */
+
+    /* struct tm now; */
+    /* time_t now_seconds = time(NULL); */
+    /* localtime_r(&now_seconds, &now); */
+
+    /* /\* 2000-01-01 23:01:01+0300 *\/ */
+    /* char formatted_timestamp[25]; */
+    /* if (strftime(formatted_timestamp, 25, "%Y-%m-%d %H:%M:%S%z", &now) == 0) */
+    /* { */
+    /*     /\* There was some massacre formating the timestamp. Wow *\/ */
+    /*     strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp)); */
+    /* } */
+
+    /* const char *string_level = LogLevelToString(level); */
+
+    /* printf("%s> %-24s %1s: %s\n", VPREFIX, formatted_timestamp, string_level, msg); */
+
+
+
+    /* FIXME: VPREFIX is only used in verbose mode. Is that ok? */
+    if (level >= LOG_LEVEL_VERBOSE)
+    {
+        printf("%s> %s\n", VPREFIX, msg);
+    }
+    else
+    {
+        printf("%s\n", msg);
     }
 }
 
 #if !defined(__MINGW32__)
-void SystemLog(Item *mess, OutputLevel level)
+static int LogLevelToSyslogPriority(LogLevel level)
 {
-    Item *ip;
-
-    if ((!IsPrivileged()) || DONTDO)
+    switch (level)
     {
-        return;
+    case LOG_LEVEL_CRIT: return LOG_CRIT;
+    case LOG_LEVEL_ERR: return LOG_ERR;
+    case LOG_LEVEL_WARNING: return LOG_WARNING;
+    case LOG_LEVEL_NOTICE: return LOG_NOTICE;
+    case LOG_LEVEL_INFO: return LOG_INFO;
+    case LOG_LEVEL_VERBOSE: return LOG_DEBUG; /* FIXME: Do we really want to conflate those levels? */
+    case LOG_LEVEL_DEBUG: return LOG_DEBUG;
     }
 
-/* If we can't mutex it could be dangerous to proceed with threaded file descriptors */
+    ProgrammingError("Unknown log level passed to LogLevelToSyslogPriority: %d", level);
+}
 
-    if (!ThreadLock(cft_output))
-    {
-        return;
-    }
-
-    for (ip = mess; ip != NULL; ip = ip->next)
-    {
-        switch (level)
-        {
-        case OUTPUT_LEVEL_INFORM:
-        case OUTPUT_LEVEL_REPORTING:
-        case OUTPUT_LEVEL_CMDOUT:
-            syslog(LOG_NOTICE, " %s", ip->name);
-            break;
-
-        case OUTPUT_LEVEL_VERBOSE:
-            syslog(LOG_INFO, " %s", ip->name);
-            break;
-
-        case OUTPUT_LEVEL_ERROR:
-            syslog(LOG_ERR, " %s", ip->name);
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    ThreadUnlock(cft_output);
+void LogToSystemLog(const char *msg, LogLevel level)
+{
+    syslog(LogLevelToSyslogPriority(level), "%s", msg);
 }
 
 const char *GetErrorStr(void)
@@ -187,3 +356,34 @@ const char *GetErrorStr(void)
     return strerror(errno);
 }
 #endif
+
+void VLog(LogLevel level, const char *fmt, va_list ap)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+
+    char *msg = StringVFormat(fmt, ap);
+
+    if (lctx->in_promise)
+    {
+        free(lctx->last_message);
+        lctx->last_message = msg;
+    }
+
+    if (level <= lctx->report_level)
+    {
+        LogToStdout(msg, level);
+    }
+
+    if (level <= lctx->log_level)
+    {
+        LogToSystemLog(msg, level);
+    }
+}
+
+void Log(LogLevel level, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    VLog(level, fmt, ap);
+    va_end(ap);
+}

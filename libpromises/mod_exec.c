@@ -29,7 +29,7 @@
 static const ConstraintSyntax contain_constraints[] =
 {
     ConstraintSyntaxNewBool("useshell", "true/false embed the command in a shell environment", "false"),
-    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,022,027,072", "The umask value for the child process", NULL),
+    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,002,022,027,072", "The umask value for the child process", NULL),
     ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the process", NULL),
     ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the process", NULL),
     ConstraintSyntaxNewInt("exec_timeout", "1,3600", "Timeout in seconds for command completion", NULL),

@@ -164,6 +164,11 @@ void test_body_body_forget_cb_bundle(void)
     assert_false(LoadPolicy("body_body_forget_cb_bundle.cf"));
 }
 
+void test_function_arg_allow_list_variable(void)
+{
+    assert_true(LoadPolicy("function_arg_allow_list_variable.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -202,7 +207,9 @@ int main()
 
         unit_test(test_promise_promiser_nonscalar),
 
-        unit_test(test_constraint_ifvarclass_invalid)
+        unit_test(test_constraint_ifvarclass_invalid),
+
+        unit_test(test_function_arg_allow_list_variable)
     };
 
     return run_tests(tests);

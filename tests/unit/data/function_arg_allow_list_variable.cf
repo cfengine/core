@@ -1,0 +1,13 @@
+bundle agent foo(one)
+{
+reports:
+  cfengine3::
+   "$(one)";
+}
+
+bundle agent bar
+{
+methods:
+  "any"
+    usebundle => foo( { "1", "2" } );
+}

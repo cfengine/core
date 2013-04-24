@@ -74,7 +74,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
-void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
+void Syntax(const char *comp, const struct option options[], const char *hints[], const char *description, bool accepts_file_argument);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersion(void);
 int CheckPromises(const GenericAgentConfig *config);
@@ -103,6 +103,8 @@ void WritePID(char *filename);
 void WarnAboutDeprecatedFeatures(EvalContext *ctx);
 void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
+
+bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

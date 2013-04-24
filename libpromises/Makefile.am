@@ -1,6 +1,6 @@
 projlib_LTLIBRARIES = libpromises.la
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
@@ -10,7 +10,7 @@ AM_YFLAGS = -d
 
 AM_LDFLAGS = -version-info 1:0:0 -no-undefined
 
-libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -28,9 +28,6 @@ libpromises_la_SOURCES = \
         cf-key-functions.c cf-key-functions.h \
         chflags.c chflags.h \
         classes.c \
-        client_code.c client_code.h \
-        client_protocol.c client_protocol.h \
-        communication.c communication.h \
         constants.c \
         conversion.c conversion.h \
         crypto.c crypto.h \
@@ -79,7 +76,6 @@ libpromises_la_SOURCES = \
         mod_storage.c mod_storage.h \
         modes.c \
         mutex.c mutex.h \
-        net.c net.h \
         ornaments.c ornaments.h \
         policy.c policy.h \
         parser.c parser.h \
@@ -94,7 +90,6 @@ libpromises_la_SOURCES = \
         rlist.c rlist.h \
         scope.c scope.h \
         signals.c signals.h \
-        sockaddr.c \
         sort.c sort.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \

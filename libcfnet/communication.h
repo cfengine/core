@@ -26,7 +26,8 @@
 #ifndef CFENGINE_COMMUNICATION_H
 #define CFENGINE_COMMUNICATION_H
 
-#include "cf3.defs.h"
+#include "cfnet.h"
+
 
 AgentConnection *NewAgentConn(const char *server_name);
 void DeleteAgentConn(AgentConnection *ap);

@@ -478,6 +478,37 @@ char *mkdtemp(char *template);
 #if !HAVE_DECL_STRRSTR
 char *strrstr(const char *haystack, const char *needle);
 #endif
+#if !HAVE_DECL_INET_NTOP
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+#endif
+#if !HAVE_DECL_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
+#if !HAVE_DECL_GETADDRINFO
+int getaddrinfo(const char *node, const char *service,
+                const struct addrinfo *hints, struct addrinfo **res);
+void freeaddrinfo(struct addrinfo *res);
+int getnameinfo(const struct sockaddr *sa, socklen_t salen,
+                char *node, socklen_t nodelen,
+                char *service, socklen_t servicelen, int flags);
+const char *gai_strerror(int errcode);
+#endif
+#if !HAVE_STRUCT_SOCKADDR_STORAGE
+    #ifdef AF_INET6
+        #define sockaddr_storage sockaddr_in6
+    #else
+        #define sockaddr_storage sockaddr
+    #endif
+#endif
+#ifndef AF_INET6
+    /* if the platform doesn't have it, it's useless, but define it as -1
+     * since we need it in our code... */
+    #define AF_INET6 -1
+#endif
+#ifndef AI_NUMERICSERV
+    /* Not portable to MinGW so don't use it. */
+    #define AI_NUMERICSERV -1
+#endif
 
 #if !defined(HAVE_MKDIR_PROPER)
 int rpl_mkdir(const char *pathname, mode_t mode);

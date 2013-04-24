@@ -1,6 +1,9 @@
 sbin_PROGRAMS = cf-execd
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ \
+	-I$(srcdir)/../libpromises \
+	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA

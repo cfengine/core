@@ -444,7 +444,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -466,18 +466,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(1);
         }
     }
 
-    if (argv_bootstrap_options_new[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv_bootstrap_options_new + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
 

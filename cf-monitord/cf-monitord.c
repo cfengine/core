@@ -181,7 +181,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
+            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -193,12 +193,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
+            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
             exit(1);
         }
     }
 
-    CfDebug("Set debugging\n");
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
+    {
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
+    }
 
     return config;
 }

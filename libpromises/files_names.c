@@ -375,7 +375,7 @@ const char *LastFileSeparator(const char *str)
 
 /*********************************************************************/
 
-int ChopLastNode(char *str)
+bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
      last character and removing up to the first / encountered 
      e.g. /a/b/c -> /a/b

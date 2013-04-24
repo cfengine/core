@@ -52,27 +52,33 @@ void RemoteSysLog(int log_priority, const char *log_string)
     time_t now = time(NULL);
     int pri = log_priority | FACILITY;
 
-#if defined(HAVE_GETADDRINFO)
     int err;
     struct addrinfo query, *response, *ap;
     char strport[CF_MAXVARSIZE];
 
     snprintf(strport, CF_MAXVARSIZE - 1, "%u", (unsigned) SYSLOG_PORT);
-    memset(&query, 0, sizeof(struct addrinfo));
+    memset(&query, 0, sizeof(query));
     query.ai_family = AF_UNSPEC;
     query.ai_socktype = SOCK_DGRAM;
 
     if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to find syslog_host or service: (%s/%s) %s", SYSLOG_HOST, strport,
-              gai_strerror(err));
+        CfOut(OUTPUT_LEVEL_INFORM, "",
+              "Unable to find syslog_host or service: (%s/%s) %s",
+              SYSLOG_HOST, strport, gai_strerror(err));
         return;
     }
 
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to syslog %s = %s on port %s\n", SYSLOG_HOST, sockaddr_ntop(ap->ai_addr),
-              strport);
+        /* No DNS lookup, just convert IP address to string. */
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                    txtaddr, sizeof(txtaddr),
+                    NULL, 0, NI_NUMERICHOST);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+              " -> Connect to syslog %s = %s on port %s\n",
+              SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {
@@ -83,45 +89,26 @@ void RemoteSysLog(int log_priority, const char *log_string)
         {
             char timebuffer[26];
 
-            snprintf(message, rfc3164_len, "<%u>%.15s %s %s", pri, cf_strtimestamp_local(now, timebuffer) + 4, VFQNAME,
-                     log_string);
-            if (sendto(sd, message, strlen(message), 0, ap->ai_addr, ap->ai_addrlen) == -1)
+            snprintf(message, rfc3164_len, "<%u>%.15s %s %s",
+                     pri, cf_strtimestamp_local(now, timebuffer) + 4,
+                     VFQNAME, log_string);
+            err = sendto(sd, message, strlen(message),
+                         0, ap->ai_addr, ap->ai_addrlen);
+            if (err == -1)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "sendto", " -> Couldn't send \"%s\" to syslog server \"%s\"\n", message, SYSLOG_HOST);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "sendto",
+                      " -> Couldn't send \"%s\" to syslog server \"%s\"\n",
+                      message, SYSLOG_HOST);
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Syslog message: \"%s\" to server \"%s\"\n", message, SYSLOG_HOST);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                      " -> Syslog message: \"%s\" to server \"%s\"\n",
+                      message, SYSLOG_HOST);
             }
             close(sd);
-            return;
         }
     }
 
-#else
-    struct sockaddr_in addr;
-    char timebuffer[26];
-
-    sockaddr_pton(AF_INET, SYSLOG_HOST, &addr);
-    addr.sin_port = htons(SYSLOG_PORT);
-
-    if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sendto", " !! Unable to send syslog datagram");
-        return;
-    }
-
-    snprintf(message, rfc3164_len, "<%u>%.15s %s %s", pri, cf_strtimestamp_local(now, timebuffer) + 4, VFQNAME,
-             log_string);
-
-    if (sendto(sd, message, strlen(message), 0, (struct sockaddr *) &addr, sizeof(addr)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sendto", " !! Unable to send syslog datagram");
-        return;
-    }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Syslog message: \"%s\" to server %s\n", message, SYSLOG_HOST);
-    close(sd);
-#endif
+    freeaddrinfo(response);
 }
-

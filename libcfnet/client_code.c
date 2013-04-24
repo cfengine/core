@@ -260,7 +260,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
         CfDebug("Remote IP set to %s\n", conn->remoteip);
 
-        if (!IdentifyAgent(conn->sd, conn->localip, conn->family))
+        if (!IdentifyAgent(conn->sd, conn->localip))
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Id-authentication for %s failed\n", VFQNAME);
             errno = EPERM;
@@ -1033,7 +1033,6 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 {
     short shortport;
     char strport[CF_MAXVARSIZE] = { 0 };
-    struct sockaddr_in cin = { 0 };
     struct timeval tv = { 0 };
 
     if (fc.portnumber == (short) CF_NOINT)
@@ -1047,7 +1046,9 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         snprintf(strport, CF_MAXVARSIZE, "%u", (int) fc.portnumber);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set cfengine port number to %s = %u\n", strport, (int) ntohs(shortport));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+          "Set cfengine port number to %s = %u\n",
+          strport, (int) ntohs(shortport));
 
     if ((fc.timeout == (short) CF_NOINT) || (fc.timeout <= 0))
     {
@@ -1058,144 +1059,113 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         tv.tv_sec = fc.timeout;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set connection timeout to %jd\n", (intmax_t) tv.tv_sec);
-
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Set connection timeout to %jd\n",
+          (intmax_t) tv.tv_sec);
     tv.tv_usec = 0;
 
-#if defined(HAVE_GETADDRINFO)
+    struct addrinfo query = { 0 }, *response, *ap;
+    struct addrinfo query2 = { 0 }, *response2, *ap2;
+    int err, connected = false;
 
-    if (!fc.force_ipv4)
+    memset(&query, 0, sizeof(query));
+    query.ai_family = fc.force_ipv4 ? AF_INET : AF_UNSPEC;
+    query.ai_socktype = SOCK_STREAM;
+
+    if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
     {
-        struct addrinfo query = { 0 }, *response, *ap;
-        struct addrinfo query2 = { 0 }, *response2, *ap2;
-        int err, connected = false;
-
-        memset(&query, 0, sizeof(query));
-        query.ai_family = AF_UNSPEC;
-        query.ai_socktype = SOCK_STREAM;
-
-        if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to find host or service: (%s/%s) %s", host, strport,
-                 gai_strerror(err));
-            return false;
-        }
-
-        for (ap = response; ap != NULL; ap = ap->ai_next)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to %s = %s on port %s\n", host, sockaddr_ntop(ap->ai_addr), strport);
-
-            if ((conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == SOCKET_INVALID)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "socket", " !! Couldn't open a socket");
-                continue;
-            }
-
-            if (BINDINTERFACE[0] != '\0')
-            {
-                memset(&query2, 0, sizeof(query2));
-                query2.ai_family = AF_UNSPEC;
-                query2.ai_socktype = SOCK_STREAM;
-
-                if ((err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2)) != 0)
-                {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Unable to lookup hostname or cfengine service: %s",
-                         gai_strerror(err));
-                    cf_closesocket(conn->sd);
-                    conn->sd = SOCKET_INVALID;
-                    return false;
-                }
-
-                for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
-                {
-                    if (bind(conn->sd, ap2->ai_addr, ap2->ai_addrlen) == 0)
-                    {
-                        freeaddrinfo(response2);
-                        response2 = NULL;
-                        break;
-                    }
-                }
-
-                if (response2)
-                {
-                    freeaddrinfo(response2);
-                }
-            }
-
-            if (TryConnect(conn, &tv, ap->ai_addr, ap->ai_addrlen))
-            {
-                connected = true;
-                break;
-            }
-
-        }
-
-        if (connected)
-        {
-            conn->family = ap->ai_family;
-            snprintf(conn->remoteip, CF_MAX_IP_LEN - 1, "%s", sockaddr_ntop(ap->ai_addr));
-        }
-        else
-        {
-            if (conn->sd != SOCKET_INVALID)
-            {
-                cf_closesocket(conn->sd);
-                conn->sd = SOCKET_INVALID;
-            }
-        }
-
-        if (response != NULL)
-        {
-            freeaddrinfo(response);
-        }
-
-        if (!connected)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "connect", " !! Unable to connect to server %s", host);
-            return false;
-        }
-
-        return true;
+        CfOut(OUTPUT_LEVEL_INFORM, "",
+              " !! Unable to find host or service: (%s/%s) %s",
+              host, strport, gai_strerror(err));
+        return false;
     }
 
-    else
-#endif /* ---------------------- only have ipv4 --------------------------------- */
-
+    for (ap = response; ap != NULL; ap = ap->ai_next)
     {
-        struct hostent *hp;
+        /* Convert address to string. */
+        char txtaddr[CF_MAX_IP_LEN] = "";
+        getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                    txtaddr, sizeof(txtaddr),
+                    NULL, 0, NI_NUMERICHOST);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Connect to %s = %s on port %s\n",
+              host, txtaddr, strport);
 
-        memset(&cin, 0, sizeof(cin));
-
-        if ((hp = gethostbyname(host)) == NULL)
+        conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
+        if (conn->sd == SOCKET_INVALID)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "gethostbyname", " !! Unable to look up IP address of %s", host);
-            return false;
+            CfOut(OUTPUT_LEVEL_ERROR, "socket", " !! Couldn't open a socket");
+            continue;
         }
 
-        cin.sin_port = shortport;
-        cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-        cin.sin_family = AF_INET;
-
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Connect to %s = %s, port = (%u=%s)\n", host, inet_ntoa(cin.sin_addr),
-              (int) ntohs(shortport), strport);
-
-        if ((conn->sd = socket(AF_INET, SOCK_STREAM, 0)) == SOCKET_INVALID)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open a socket");
-            return false;
-        }
-
+        /* Bind socket to specific interface, if requested. */
         if (BINDINTERFACE[0] != '\0')
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Cannot bind interface with this OS.\n");
-            /* Could fix this - any point? */
+            memset(&query2, 0, sizeof(query2));
+            query2.ai_family = fc.force_ipv4 ? AF_INET : AF_UNSPEC;
+            query2.ai_socktype = SOCK_STREAM;
+            /* returned address is for bind() */
+            query2.ai_flags = AI_PASSIVE;
+
+            err = getaddrinfo(BINDINTERFACE, NULL, &query2, &response2);
+            if ((err) != 0)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "",
+                      " !! getaddrinfo: Unable to lookup interface %s to bind: %s",
+                      BINDINTERFACE, gai_strerror(err));
+                cf_closesocket(conn->sd);
+                conn->sd = SOCKET_INVALID;
+                freeaddrinfo(response2);
+                freeaddrinfo(response);
+                return false;
+            }
+
+            for (ap2 = response2; ap2 != NULL; ap2 = ap2->ai_next)
+            {
+                if (bind(conn->sd, ap2->ai_addr, ap2->ai_addrlen) == 0)
+                {
+                    break;
+                }
+            }
+            freeaddrinfo(response2);
         }
 
-        conn->family = AF_INET;
-        snprintf(conn->remoteip, CF_MAX_IP_LEN - 1, "%s", inet_ntoa(cin.sin_addr));
+        if (TryConnect(conn, &tv, ap->ai_addr, ap->ai_addrlen))
+        {
+            connected = true;
+            break;
+        }
 
-        return TryConnect(conn, &tv, (struct sockaddr *) &cin, sizeof(cin));
     }
+
+    if (connected)
+    {
+        /* No lookup, just convert ai_addr to string. */
+        conn->family = ap->ai_family;
+        getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                    conn->remoteip, CF_MAX_IP_LEN,
+                    NULL, 0, NI_NUMERICHOST);
+    }
+    else
+    {
+        if (conn->sd != SOCKET_INVALID)
+        {
+            cf_closesocket(conn->sd);
+            conn->sd = SOCKET_INVALID;
+        }
+    }
+
+    if (response != NULL)
+    {
+        freeaddrinfo(response);
+    }
+
+    if (!connected)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "connect",
+              " !! Unable to connect to server %s", host);
+        return false;
+    }
+
+    return true;
 }
 
 /*********************************************************************/

@@ -249,25 +249,15 @@ int CheckPromises(const GenericAgentConfig *config)
 
         if (config->bundlesequence)
         {
-            snprintf(cmd, sizeof(cmd), "\"%s\" -f \"", cfpromises);
+            snprintf(cmd, sizeof(cmd), "\"%s\" \"", cfpromises);
         }
         else
         {
-            snprintf(cmd, sizeof(cmd), "\"%s\" -cf \"", cfpromises);
+            snprintf(cmd, sizeof(cmd), "\"%s\" -c \"", cfpromises);
         }
     }
 
-    bool outside_repository = IsFileOutsideDefaultRepository(config->input_file);
-    if (outside_repository)
-    {
-        strlcat(cmd, config->input_file, CF_BUFSIZE);
-    }
-    else
-    {
-        strlcat(cmd, CFWORKDIR, CF_BUFSIZE);
-        strlcat(cmd, FILE_SEPARATOR_STR "inputs" FILE_SEPARATOR_STR, CF_BUFSIZE);
-        strlcat(cmd, config->input_file, CF_BUFSIZE);
-    }
+    strlcat(cmd, config->input_file, CF_BUFSIZE);
 
     strlcat(cmd, "\"", CF_BUFSIZE);
 
@@ -297,7 +287,7 @@ int CheckPromises(const GenericAgentConfig *config)
 
     if (ShellCommandReturnsZero(cmd, true))
     {
-        if (!outside_repository)
+        if (!IsFileOutsideDefaultRepository(config->input_file))
         {
             char filename[CF_MAXVARSIZE];
 
@@ -1396,31 +1386,27 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
 /*******************************************************************/
 
-void Syntax(const char *component, const struct option options[], const char *hints[], const char *id)
+void Syntax(const char *component, const struct option options[], const char *hints[], const char *description, bool accepts_file_argument)
 {
-    int i;
+    printf("Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
 
-    printf("\n\n%s\n\n", component);
+    printf("\n%s\n", description);
 
-    printf("SYNOPSIS:\n\n   program [options]\n\nDESCRIPTION:\n\n%s\n", id);
-    printf("Command line options:\n\n");
+    printf("\nOptions:\n");
 
-    for (i = 0; options[i].name != NULL; i++)
+    for (int i = 0; options[i].name != NULL; i++)
     {
         if (options[i].has_arg)
         {
-            printf("--%-12s, -%c value - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            printf("  --%-12s, -%c value - %s\n", options[i].name, (char) options[i].val, hints[i]);
         }
         else
         {
-            printf("--%-12s, -%-7c - %s\n", options[i].name, (char) options[i].val, hints[i]);
+            printf("  --%-12s, -%-7c - %s\n", options[i].name, (char) options[i].val, hints[i]);
         }
     }
 
-    printf("\nBug reports: http://bug.cfengine.com, ");
-    printf("Community help: http://forum.cfengine.com\n");
-    printf("Community info: http://www.cfengine.com/pages/community, ");
-    printf("Support services: http://www.cfengine.com\n\n");
+    printf("\nWebsite: http://www.cfengine.com\n");
     printf("This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
 }
 
@@ -1644,7 +1630,24 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
     return ok;
 }
 
-/*******************************************************************/
+
+bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv)
+{
+    if (argc == 0)
+    {
+        return true;
+    }
+
+    if (argc > 1)
+    {
+        return false;
+    }
+
+    GenericAgentConfigSetInputFile(config, NULL, argv[0]);
+    MINUSF = true;
+    return true;
+}
+
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {
@@ -1741,7 +1744,7 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *work
 
     config->original_input_file = xstrdup(input_file);
 
-    if (FilePathGetType(input_file) == FILE_PATH_TYPE_NON_ANCHORED)
+    if (workdir && FilePathGetType(input_file) == FILE_PATH_TYPE_NON_ANCHORED)
     {
         config->input_file = StringFormat("%s%cinputs%c%s", workdir, FILE_SEPARATOR, FILE_SEPARATOR, input_file);
     }
@@ -1751,7 +1754,11 @@ void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *work
     }
 
     config->input_dir = xstrdup(config->input_file);
-    ChopLastNode(config->input_dir);
+    if (!ChopLastNode(config->input_dir))
+    {
+        free(config->input_dir);
+        config->input_dir = xstrdup(".");
+    }
 }
 
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence)

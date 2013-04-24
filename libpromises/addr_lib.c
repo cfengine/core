@@ -120,8 +120,10 @@ int FuzzySetMatch(const char *s1, const char *s2)
             sscanf(s1, "%16[^/]/%d", address, &mask);
             shift = 32 - mask;
 
-            sockaddr_pton(AF_INET, address, &addr1);
-            sockaddr_pton(AF_INET, s2, &addr2);
+            addr1.sin_family = AF_INET;
+            inet_pton(AF_INET, address, &addr1.sin_addr);
+            addr2.sin_family = AF_INET;
+            inet_pton(AF_INET, s2, &addr2.sin_addr);
 
             a1 = htonl(addr1.sin_addr.s_addr);
             a2 = htonl(addr2.sin_addr.s_addr);
@@ -197,7 +199,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
         }
     }
 
-#if defined(HAVE_GETADDRINFO)
     if (isv6)
     {
         int i;
@@ -205,7 +206,8 @@ int FuzzySetMatch(const char *s1, const char *s2)
         if (isCIDR)
         {
             int blocks;
-            struct sockaddr_in6 addr1, addr2;
+            struct sockaddr_in6 addr1 = {0};
+            struct sockaddr_in6 addr2 = {0};
 
             address[0] = '\0';
             mask = 0;
@@ -218,8 +220,10 @@ int FuzzySetMatch(const char *s1, const char *s2)
                 return -1;
             }
 
-            sockaddr_pton(AF_INET6, address, &addr1);
-            sockaddr_pton(AF_INET6, s2, &addr2);
+            addr1.sin6_family = AF_INET6;
+            inet_pton(AF_INET6, address, &addr1.sin6_addr);
+            addr2.sin6_family = AF_INET6;
+            inet_pton(AF_INET6, s2, &addr2.sin6_addr);
 
             for (i = 0; i < blocks; i++)        /* blocks < 16 */
             {
@@ -276,7 +280,6 @@ int FuzzySetMatch(const char *s1, const char *s2)
             return 0;
         }
     }
-#endif
 
     return -1;
 }

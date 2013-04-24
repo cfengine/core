@@ -417,6 +417,7 @@ AC_CHECK_HEADERS(sys/filesys.h)
 AC_CHECK_HEADERS(dustat.h)
 AC_CHECK_HEADERS(sys/systeminfo.h)
 AC_CHECK_HEADERS(winsock2.h)
+AC_CHECK_HEADERS(ws2tcpip.h)
 AC_CHECK_HEADERS(zone.h)
 AC_CHECK_HEADERS(sys/uio.h)
 AC_CHECK_HEADERS(sys/types.h)
@@ -570,27 +571,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
     #include <sys/types.h>]],
   [[int mkdir(const char *pathname, mode_t mode);]])
-
-dnl AC_CHECK_FUNC([mkdir], [], [AC_MSG_ERROR([Unable to find mkdir function])])
-
-dnl AC_CACHE_CHECK([whether mkdir accepts two parameters],
-dnl   [hw_cv_func_mkdir_posix],
-dnl   [AC_COMPILE_IFELSE(
-dnl     [AC_LANG_PROGRAM([[#include <sys/stat.h>
-dnl                        #include <sys/types.h>]],
-dnl                      [[int mkdir(const char *pathname, mode_t mode);]])],
-dnl     [hw_cv_func_mkdir_posix=yes],
-dnl     [hw_cv_func_mkdir_posix=no])])
-
-dnl AS_IF([test "$hw_cv_func_mkdir_posix" = yes],
-dnl   [AC_DEFINE([HAVE_MKDIR_POSIX], [1], [Define to 1 if you have POSIX-compliant `mkdir' function])],
-dnl   [post_macros="$post_macros
-dnl #define mkdir rpl_mkdir"
-dnl    AC_LIBOBJ([rpl_mkdir])])
 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
@@ -662,8 +647,32 @@ AC_SEARCH_LIBS(gethostent, nsl)
 
 AC_CHECK_FUNCS(socket)
 AC_CHECK_FUNCS(setsockopt)
-AC_CHECK_FUNCS(getaddrinfo)
 AC_CHECK_FUNCS(gethostent)
+
+AC_CHECK_TYPES(struct sockaddr_storage, [], [], [[
+#if HAVE_WINSOCK2_H
+    #include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+    #include <ws2tcpip.h>
+#else
+    #include <sys/socket.h>
+    #include <netdb.h>
+#endif]])
+AC_CHECK_DECLS(getaddrinfo, [], [], [[
+#if HAVE_WINSOCK2_H
+    #include <winsock2.h>
+#endif
+#if HAVE_WS2TCPIP_H
+    #include <ws2tcpip.h>
+#else
+    #include <sys/socket.h>
+    #include <netdb.h>
+#endif]])
+AC_REPLACE_FUNCS(getaddrinfo)
+
+AC_CHECK_DECLS([[inet_ntop], [inet_pton]], [], [], [[#include <arpa/inet.h>]])
+AC_REPLACE_FUNCS(inet_ntop inet_pton)
 
 AC_CHECK_FUNCS(getifaddrs)
 
@@ -734,11 +743,6 @@ LIBS="$LIBS $TOKYOCABINET_LIBS $QDBM_LIBS $PCRE_LIBS $OPENSSL_LIBS $MONGO_LIBS $
 dnl ######################################################################
 dnl OS specific stuff
 dnl ######################################################################
-
-dnl To ensure config.h is picked up via VPATH
-if test "$srcdir" != "."; then
-  CPPFLAGS="$CPPFLAGS -I`pwd`/libpromises"
-fi
 
 case "$target_os" in
 
@@ -1048,6 +1052,7 @@ AC_CONFIG_FILES([Makefile
     libcompat/Makefile
     libutils/Makefile
     libutils/config.post.h
+    libcfnet/Makefile
     libpromises/Makefile
     cf-agent/Makefile
     cf-promises/Makefile

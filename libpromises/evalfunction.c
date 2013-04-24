@@ -2416,7 +2416,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
         contextmode = 1;
         ret = (match_count > 0);
     }
-    else
+    else if (0 != strcmp(fp->name, "grep") && 0 != strcmp(fp->name, "filter"))
     {
         contextmode = -1;
         ret = -1;

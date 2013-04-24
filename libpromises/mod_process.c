@@ -61,8 +61,8 @@ static const BodyTypeSyntax process_select_body = BodyTypeSyntaxNew("process_sel
 
 static const ConstraintSyntax processes_constraints[] =
 {
-    ConstraintSyntaxNewBody("process_count", &process_count_body, "Criteria for constraining the number of processes matching other criteria"),
-    ConstraintSyntaxNewBody("process_select", &process_select_body, "Criteria for matching processes in the system process table"),
+    ConstraintSyntaxNewBody("process_count", &process_count_body, "Criteria for constraining the number of processes matching other criteria", NULL),
+    ConstraintSyntaxNewBody("process_select", &process_select_body, "Criteria for matching processes in the system process table", NULL),
     ConstraintSyntaxNewString("process_stop", CF_ABSPATHRANGE, "A command used to stop a running process", NULL),
     ConstraintSyntaxNewString("restart_class", CF_IDRANGE,
      "A class to be defined globally if the process is not running, so that a command: rule can be referred to restart the process", NULL),

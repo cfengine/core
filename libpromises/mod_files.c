@@ -101,34 +101,34 @@ static const ConstraintSyntax CF_INSERTLINES_BODIES[] =
 {
     ConstraintSyntaxNewBool("expand_scalars", "Expand any unexpanded variables", "false"),
     ConstraintSyntaxNewOption("insert_type", "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to", "literal"),
-    ConstraintSyntaxNewBody("insert_select", &insert_select_body, "Insert only if lines pass filter criteria"),
-    ConstraintSyntaxNewBody("location", &location_body, "Specify where in a file an insertion will be made"),
+    ConstraintSyntaxNewBody("insert_select", &insert_select_body, "Insert only if lines pass filter criteria", NULL),
+    ConstraintSyntaxNewBody("location", &location_body, "Specify where in a file an insertion will be made", NULL),
     ConstraintSyntaxNewOptionList("whitespace_policy", "ignore_leading,ignore_trailing,ignore_embedded,exact_match", "Criteria for matching and recognizing existing lines"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_DELETELINES_BODIES[] =
 {
-    ConstraintSyntaxNewBody("delete_select", &delete_select_body, "Delete only if lines pass filter criteria"),
+    ConstraintSyntaxNewBody("delete_select", &delete_select_body, "Delete only if lines pass filter criteria", NULL),
     ConstraintSyntaxNewBool("not_matching", "true/false negate match criterion", "false"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_COLUMN_BODIES[] =
 {
-    ConstraintSyntaxNewBody("edit_field", &edit_field_body, "Edit line-based file as matrix of fields"),
+    ConstraintSyntaxNewBody("edit_field", &edit_field_body, "Edit line-based file as matrix of fields", NULL),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_REPLACE_BODIES[] =
 {
-    ConstraintSyntaxNewBody("replace_with", &replace_with_body, "Search-replace pattern"),
+    ConstraintSyntaxNewBody("replace_with", &replace_with_body, "Search-replace pattern", NULL),
     ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CF_COMMON_EDITBODIES[] =
 {
-    ConstraintSyntaxNewBody("select_region", &select_region_body, "Limit edits to a demarked region of the file"),
+    ConstraintSyntaxNewBody("select_region", &select_region_body, "Limit edits to a demarked region of the file", NULL),
     ConstraintSyntaxNewNull()
 };
 
@@ -291,22 +291,22 @@ static const BodyTypeSyntax copy_from_body = BodyTypeSyntaxNew("copy_from", copy
 
 static const ConstraintSyntax CF_FILES_BODIES[] =
 {
-    ConstraintSyntaxNewBody("acl", &acl_body, "Criteria for access control lists on file"),
-    ConstraintSyntaxNewBody("changes", &changes_body, "Criteria for change management"),
-    ConstraintSyntaxNewBody("copy_from", &copy_from_body, "Criteria for copying file from a source"),
+    ConstraintSyntaxNewBody("acl", &acl_body, "Criteria for access control lists on file", NULL),
+    ConstraintSyntaxNewBody("changes", &changes_body, "Criteria for change management", NULL),
+    ConstraintSyntaxNewBody("copy_from", &copy_from_body, "Criteria for copying file from a source", NULL),
     ConstraintSyntaxNewBool("create", "true/false whether to create non-existing file", "false"),
-    ConstraintSyntaxNewBody("delete", &delete_body, "Criteria for deleting files"),
-    ConstraintSyntaxNewBody("depth_search", &depth_search_body, "Criteria for file depth searches"),
-    ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits"),
-    ConstraintSyntaxNewBundle("edit_line", "Line editing model for file"),
+    ConstraintSyntaxNewBody("delete", &delete_body, "Criteria for deleting files", NULL),
+    ConstraintSyntaxNewBody("depth_search", &depth_search_body, "Criteria for file depth searches", NULL),
+    ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits", NULL),
+    ConstraintSyntaxNewBundle("edit_line", "Line editing model for file", NULL),
     ConstraintSyntaxNewString("edit_template", CF_ABSPATHRANGE, "The name of a special CFEngine template file to expand", NULL),
-    ConstraintSyntaxNewBundle("edit_xml", "XML editing model for file"),
-    ConstraintSyntaxNewBody("file_select", &file_select_body, "Choose which files select in a search"),
-    ConstraintSyntaxNewBody("link_from", &link_from_body, "Criteria for linking file from a source"),
+    ConstraintSyntaxNewBundle("edit_xml", "XML editing model for file", NULL),
+    ConstraintSyntaxNewBody("file_select", &file_select_body, "Choose which files select in a search", NULL),
+    ConstraintSyntaxNewBody("link_from", &link_from_body, "Criteria for linking file from a source", NULL),
     ConstraintSyntaxNewBool("move_obstructions", "true/false whether to move obstructions to file-object creation", "false"),
     ConstraintSyntaxNewOption("pathtype", "literal,regex,guess", "Menu option for interpreting promiser file object", NULL),
-    ConstraintSyntaxNewBody("perms", &perms_body, "Criteria for setting permissions on a file"),
-    ConstraintSyntaxNewBody("rename", &rename_body, "Criteria for renaming files"),
+    ConstraintSyntaxNewBody("perms", &perms_body, "Criteria for setting permissions on a file", NULL),
+    ConstraintSyntaxNewBody("rename", &rename_body, "Criteria for renaming files", NULL),
     ConstraintSyntaxNewString("repository", CF_ABSPATHRANGE, "Name of a repository for versioning", NULL),
     ConstraintSyntaxNewBool("touch", "true/false whether to touch time stamps on file", NULL),
     ConstraintSyntaxNewString("transformer", CF_ABSPATHRANGE, "Command (with full path) used to transform current file (no shell wrapper used)", NULL),

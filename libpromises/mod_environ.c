@@ -51,8 +51,8 @@ static const BodyTypeSyntax environment_interface_body = BodyTypeSyntaxNew("envi
 static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {
     ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine", NULL),
-    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location"),
-    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description"),
+    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location", NULL),
+    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description", NULL),
     ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", NULL),
     ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", NULL),
     ConstraintSyntaxNewNull()

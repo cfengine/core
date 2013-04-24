@@ -45,7 +45,7 @@ static const BodyTypeSyntax contain_body = BodyTypeSyntaxNew("contain", contain_
 static const ConstraintSyntax commands_constraints[] =
 {
     ConstraintSyntaxNewString("args", "", "Alternative string of arguments for the command (concatenated with promiser string)", NULL),
-    ConstraintSyntaxNewBody("contain", &contain_body, "Containment options for the execution process"),
+    ConstraintSyntaxNewBody("contain", &contain_body, "Containment options for the execution process", NULL),
     ConstraintSyntaxNewBool("module", "true/false whether to expect the cfengine module protocol", "false"),
     ConstraintSyntaxNewNull()
 };

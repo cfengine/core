@@ -40,7 +40,7 @@ const const ConstraintSyntax CF_REPORT_BODIES[] =
     ConstraintSyntaxNewString("friend_pattern", "", "Regular expression to keep selected hosts from the friends report list", NULL),
     ConstraintSyntaxNewReal("intermittency", "0,1", "Real number threshold [0,1] of intermittency about current peers, report above", "false"),
     ConstraintSyntaxNewInt("lastseen", CF_VALRANGE, "Integer time threshold in hours since current peers were last seen, report absence", NULL),
-    ConstraintSyntaxNewBody("printfile", &printfile_body, "Quote part of a file to standard output"),
+    ConstraintSyntaxNewBody("printfile", &printfile_body, "Quote part of a file to standard output", NULL),
     ConstraintSyntaxNewString("report_to_file", CF_ABSPATHRANGE, "The path and filename to which output should be appended", NULL),
     ConstraintSyntaxNewString("bundle_return_value_index", CF_IDRANGE, "The promiser is to be interpreted as a literal value that the caller can accept as a result for this bundle, i.e. a return value with array index defined by this attribute.", NULL),
     ConstraintSyntaxNewStringList("showstate", "", "List of services about which status reports should be reported to standard output"),

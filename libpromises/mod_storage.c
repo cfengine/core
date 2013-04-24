@@ -53,8 +53,8 @@ static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", mount_constr
 
 static const ConstraintSyntax storage_constraints[] =
 {
-    ConstraintSyntaxNewBody("mount", &mount_body, "Criteria for mounting foreign file systems"),
-    ConstraintSyntaxNewBody("volume", &volume_body, "Criteria for monitoring/probing mounted volumes"),
+    ConstraintSyntaxNewBody("mount", &mount_body, "Criteria for mounting foreign file systems", NULL),
+    ConstraintSyntaxNewBody("volume", &volume_body, "Criteria for monitoring/probing mounted volumes", NULL),
     ConstraintSyntaxNewNull()
 };
 

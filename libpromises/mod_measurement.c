@@ -46,7 +46,7 @@ static const ConstraintSyntax CF_MEASURE_BODIES[] =
     ConstraintSyntaxNewOption("data_type", "counter,int,real,string,slist", "The datatype being collected.", NULL),
     ConstraintSyntaxNewOption("history_type", "weekly,scalar,static,log", "Whether the data can be seen as a time-series or just an isolated value", NULL),
     ConstraintSyntaxNewString("units", "", "The engineering dimensions of this value or a note about its intent used in plots", NULL),
-    ConstraintSyntaxNewBody("match_value", &match_value_body, "Criteria for extracting the measurement from a datastream"),
+    ConstraintSyntaxNewBody("match_value", &match_value_body, "Criteria for extracting the measurement from a datastream", NULL),
     ConstraintSyntaxNewNull()
 };
 

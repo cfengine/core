@@ -393,8 +393,8 @@ const BodyTypeSyntax CONTROL_BODIES[] =
 
 const ConstraintSyntax CF_COMMON_BODIES[] =
 {
-    ConstraintSyntaxNewBody("action", &action_body, "Output behaviour"),
-    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour"),
+    ConstraintSyntaxNewBody("action", &action_body, "Output behaviour", NULL),
+    ConstraintSyntaxNewBody("classes", &classes_body, "Signalling behaviour", NULL),
     ConstraintSyntaxNewString("comment", "", "A comment about this promise's real intention that follows through the program", NULL),
     ConstraintSyntaxNewStringList("depends_on", "","A list of promise handles that this promise builds on or depends on somehow (for knowledge management)"),
     ConstraintSyntaxNewString("handle", "", "A unique id-tag string for referring to this as a promisee elsewhere", NULL),

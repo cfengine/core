@@ -67,7 +67,7 @@ static const BodyTypeSyntax package_method_body = BodyTypeSyntaxNew("package_met
 static const ConstraintSyntax packages_constraints[] =
 {
     ConstraintSyntaxNewStringList("package_architectures", "", "Select the architecture for package selection"),
-    ConstraintSyntaxNewBody("package_method", &package_method_body, "Criteria for installation and verification"),
+    ConstraintSyntaxNewBody("package_method", &package_method_body, "Criteria for installation and verification", NULL),
     ConstraintSyntaxNewOption("package_policy", "add,delete,reinstall,update,addupdate,patch,verify", "Criteria for package installation/upgrade on the current system", "verify"),
     ConstraintSyntaxNewOption("package_select", ">,<,==,!=,>=,<=", "A criterion for first acceptable match relative to \"package_version\"", NULL),
     ConstraintSyntaxNewString("package_version", "", "Version reference point for determining promised version", NULL),

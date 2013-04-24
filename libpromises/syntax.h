@@ -110,8 +110,8 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 #define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description }
 #define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, default_value }
 
-#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description }
-#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description }
+#define ConstraintSyntaxNewBody(lval, body_syntax, description, default_value) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, default_value }
+#define ConstraintSyntaxNewBundle(lval, description, default_value) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, default_value }
 
 #define BodyTypeSyntaxNew(body_type, constraints, check_fn) { body_type, constraints, check_fn }
 #define BodyTypeSyntaxNewNull() { NULL, NULL, NULL }

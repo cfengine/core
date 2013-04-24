@@ -75,6 +75,8 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
+    case SERVICE_POLICY_RESTART:
+    case SERVICE_POLICY_RELOAD:
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
@@ -209,7 +211,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
         case SERVICE_POLICY_RELOAD:
             RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "restart");
+            RlistAppendScalar(&args, "reload");
             break;
             
         case SERVICE_POLICY_STOP:

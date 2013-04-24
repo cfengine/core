@@ -145,7 +145,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -573,7 +573,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 {
     CfDebug("Checking file updates on %s\n", config->input_file);
 
-    if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
+    if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 

@@ -33,6 +33,7 @@
 #include "logging.h"
 #include "signals.h"
 #include "scope.h"
+#include "sysinfo.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -142,7 +143,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'f':
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 

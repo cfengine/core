@@ -32,6 +32,7 @@
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
+#include "sysinfo.h"
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file);
             Writer *writer = FileWriter(stdout);
             PolicyToString(policy, writer);
             WriterClose(writer);
@@ -121,7 +122,7 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
             JsonElementPrint(writer, json_policy, 2);
@@ -166,7 +167,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 

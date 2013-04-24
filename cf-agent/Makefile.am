@@ -39,6 +39,7 @@ endif
 
 cf_agent_SOURCES = \
         agent-diagnostics.c agent-diagnostics.h \
+        tokyo_check.c tokyo_check.h \
         abstract_dir.c abstract_dir.h \
         cf-agent.c \
         cf_acl.c cf_acl.h \

@@ -1,6 +1,6 @@
 #######################################################
 #
-# Test nth()
+# Test every(), some(), and none()
 #
 #######################################################
 
@@ -30,13 +30,12 @@ bundle agent init
                            "starting list = one",
                            "starting list = two",
                            "starting list = three",
-                           "element #0 of the test list: 1",
-                           "element #1 of the test list: 2",
-                           "element #10 of the test list: one",
-                           "element #1000 of the test list: $(test#test[1000])",
-                           "element #11 of the test list: two",
-                           "element #2 of the test list: 3",
-                           "element #6 of the test list: long string",
+                           "every() test 1 passed",
+                           "every() test 2 passed",
+                           "none() test 1 passed",
+                           "none() test 2 passed",
+                           "some() test 1 passed",
+                           "some() test 2 passed",
       };
 
   files:
@@ -60,7 +59,7 @@ bundle edit_line init_insert
 
 #######################################################
 
-bundle agent test
+bundle common testaide
 {
   vars:
       "test" slist => {
@@ -71,11 +70,19 @@ bundle agent test
                         "one", "two", "three",
                       };
 
-      "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+  classes:
+      "every1" expression => every(".*", "test");
+      "every2" expression => every(".", "test");
 
-      "test[$(nth)]" string => nth("test", $(nth));
-      "test[0]" string => nth("test", 0);
+      "some1" expression => some("long string", "test");
+      "some2" expression => some("none", "test");
 
+      "none1" expression => none("jebadiah", "test");
+      "none2" expression => none("2", "test");
+}
+
+bundle agent test
+{
   files:
       "$(G.testfile).actual"
       create => "true",
@@ -85,9 +92,31 @@ bundle agent test
 bundle edit_line test_insert
 {
   insert_lines:
-      "starting list = $(test.test)";
-      "element #$(test.nth) of the test list: $(test.test[$(test.nth)])";
-      "element #0 of the test list: $(test.test[0])";
+      "starting list = $(testaide.test)";
+    every1::
+      "every() test 1 passed";
+    !every1::
+      "every() test 1 failed";
+    every2::
+      "every() test 2 failed";
+    !every2::
+      "every() test 2 passed";
+    some1::
+      "some() test 1 passed";
+    !some1::
+      "some() test 1 failed";
+    some2::
+      "some() test 2 failed";
+    !some2::
+      "some() test 2 passed";
+    none1::
+      "none() test 1 passed";
+    !none1::
+      "none() test 1 failed";
+    none2::
+      "none() test 2 failed";
+    !none2::
+      "none() test 2 passed";
 }
 
 #######################################################

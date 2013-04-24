@@ -880,7 +880,13 @@ litem:                 IDSYNTAX
                            CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
                            RlistAppendFnCall((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1]);
                            FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
-                       };
+                       }
+
+                     | error
+                       {
+                          yyclearin;
+                          ParseError("Not an valid input for a list value, wrong input: %s", yytext);
+                       }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 

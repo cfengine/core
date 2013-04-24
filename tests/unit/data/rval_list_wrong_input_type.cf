@@ -1,0 +1,6 @@
+bundle agent my_commands
+{
+vars:
+
+        "family" slist => { "andre",  bas:: } ;
+}

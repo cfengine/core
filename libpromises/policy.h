@@ -393,7 +393,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
 
 
 /**
- * @return A copy of the namespace compoent of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
+ * @return A copy of the namespace component of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
  */
 char *QualifiedNameNamespaceComponent(const char *qualified_name);
 

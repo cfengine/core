@@ -71,7 +71,6 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
     int result = 0, total = 0;
     char buffer[CF_MAXVARSIZE];
     Rlist *rp;
-    double prob, cum = 0, fluct;
     FnCall *fp;
     Rval rval;
 
@@ -199,6 +198,15 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         }
     }
 
+/* If we get here, anything remaining on the RHS must be a clist */
+
+    if (cp->rval.rtype != CF_LIST)
+    {
+        CfOut(cf_error, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
+        PromiseRef(cf_error, pp);
+        return true;
+    }
+
 // Class distributions
 
     if (strcmp(cp->lval, "dist") == 0)
@@ -223,20 +231,37 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
             PromiseRef(cf_error, pp);
             return false;
         }
-    }
 
-    fluct = drand48();          /* Get random number 0-1 */
-    cum = 0.0;
+        double fluct = drand48();          /* Get random number 0-1 */
+        double cum = 0.0;
 
-/* If we get here, anything remaining on the RHS must be a clist */
+        for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
+        {
+            double prob = ((double) Str2Int(rp->item)) / ((double) total);
+            cum += prob;
+            if (fluct < cum)
+            {
+                break;
+            }
+        }
 
-    if (cp->rval.rtype != CF_LIST)
-    {
-        CfOut(cf_error, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
-        PromiseRef(cf_error, pp);
+        snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
+        *(pp->donep) = true;
+
+        if (strcmp(pp->bundletype, "common") == 0)
+        {
+            NewClass(buffer, pp->namespace);
+        }
+        else
+        {
+            NewBundleClass(buffer, pp->bundle, pp->namespace);
+        }
+
+        CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
         return true;
     }
 
+    /* and/or/xor expressions */
     for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
     {
         if (rp->type != CF_SCALAR)
@@ -249,30 +274,6 @@ static int EvalClassExpression(Constraint *cp, Promise *pp)
         result_and = result_and && result;
         result_or = result_or || result;
         result_xor ^= result;
-
-        if (total > 0)          // dist class
-        {
-            prob = ((double) Str2Int(rp->item)) / ((double) total);
-            cum += prob;
-
-            if ((fluct < cum) || rp->next == NULL)
-            {
-                snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
-                *(pp->donep) = true;
-
-                if (strcmp(pp->bundletype, "common") == 0)
-                {
-                    NewClass(buffer, pp->namespace);
-                }
-                else
-                {
-                    NewBundleClass(buffer, pp->bundle, pp->namespace);
-                }
-
-                CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
-                return true;
-            }
-        }
     }
 
 // Class combinations

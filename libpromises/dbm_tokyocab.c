@@ -267,16 +267,6 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
         return false;
     }
 
-    /*
-     * Be more defensive when it comes to Tokyo Cabinet.
-     * Ensure that the k/v store is optimized whenever a cursor is opened.
-     */
-    if (!tchdboptimize(db->hdb, -1, -1, -1, false))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdboptimize failed: %s",
-              ErrorMessage(db->hdb));
-    }
-
     DBCursorPriv *cursor = xcalloc(1, sizeof(DBCursorPriv));
     cursor->db = db;
 

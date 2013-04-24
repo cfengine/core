@@ -1,3 +1,13 @@
+3.4.5   (Bugfix and Stability release)
+
+      Bugfixes:
+
+      - make qualified arrays expand correcty (Redmine #1998, Mantis #1128)
+
+      - correct possible errors in tcdb files when opening
+
+      - avoid possible db corruption when mixing read/write and cursor operations
+
 3.4.4   (Bugfix and Stability release)
 
        Bugfixes:

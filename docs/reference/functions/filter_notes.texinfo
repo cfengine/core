@@ -1,0 +1,10 @@
+
+Extracts a sublist of elements matching arg1 as a regular expression (if
+arg3 is true) or as an exact string (if arg3 is false) from a list
+variable specified in arg2.  In regular expression mode, the regex is
+anchored.  @xref{Anchored vs. unanchored regular expressions}.
+
+If arg4 is true, the matches are inverted (you get elements that don't match arg1).
+
+arg5 specifies a maximum number of elements to return.
+

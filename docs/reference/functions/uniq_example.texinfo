@@ -1,0 +1,25 @@
+
+@verbatim
+
+bundle agent test
+
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                      };
+
+      "test_str" string => join(",", "test");
+      "test_uniq" slist => uniq("test");
+      "uniq_str" string => join(",", "test_uniq");
+
+  reports:
+      "The test list is $(test_str)";
+      "The unique elements of the test list: $(uniq_str)";
+}
+
+@end verbatim

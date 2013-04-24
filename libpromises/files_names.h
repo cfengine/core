@@ -47,7 +47,7 @@ char *GetParentDirectoryCopy(const char *path);
 void DeleteSlash(char *str);
 const char *FirstFileSeparator(const char *str);
 const char *LastFileSeparator(const char *str);
-int ChopLastNode(char *str);
+bool ChopLastNode(char *str);
 char *CanonifyName(const char *str);
 void CanonifyNameInPlace(char *str);
 void TransformNameInPlace(char *s, char from, char to);

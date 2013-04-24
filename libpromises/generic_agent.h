@@ -104,6 +104,8 @@ void WarnAboutDeprecatedFeatures(EvalContext *ctx);
 void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
+bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
+
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
 void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);

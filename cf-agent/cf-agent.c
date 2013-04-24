@@ -471,13 +471,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         }
     }
 
-    if (argv_bootstrap_options_new[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv_bootstrap_options_new + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
 

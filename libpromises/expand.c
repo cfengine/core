@@ -1906,7 +1906,7 @@ static void ParseServices(EvalContext *ctx, Promise *pp)
 
         case SERVICE_POLICY_RELOAD:
             RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "restart");
+            RlistAppendScalar(&args, "reload");
             break;
 
         case SERVICE_POLICY_STOP:

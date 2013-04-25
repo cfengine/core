@@ -575,6 +575,13 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+AC_CHECK_FUNCS(sendto)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+                                     #include <sys/socket.h>]], 
+                                   [[extern ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)]])],
+    [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
+    [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
+
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>

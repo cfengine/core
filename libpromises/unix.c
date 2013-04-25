@@ -254,12 +254,7 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
     }
     else                        /* parent */
     {
-# ifndef HAVE_WAITPID
-        pid_t wait_result;
-# endif
         ALARM_PID = pid;
-
-# ifdef HAVE_WAITPID
 
         while (waitpid(pid, &status, 0) < 0)
         {
@@ -270,30 +265,6 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
         }
 
         return (WEXITSTATUS(status) == 0);
-
-# else
-
-        while ((wait_result = wait(&status)) != pid)
-        {
-            if (wait_result <= 0)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
-                return false;
-            }
-        }
-
-        if (WIFSIGNALED(status))
-        {
-            return false;
-        }
-
-        if (!WIFEXITED(status))
-        {
-            return false;
-        }
-
-        return (WEXITSTATUS(status) == 0);
-# endif
     }
 
     return false;

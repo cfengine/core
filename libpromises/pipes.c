@@ -608,8 +608,6 @@ int cf_pwait(pid_t pid)
 
     CfDebug("cf_pwait - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
-# ifdef HAVE_WAITPID
-
     while (waitpid(pid, &status, 0) < 0)
     {
         if (errno != EINTR)
@@ -624,30 +622,6 @@ int cf_pwait(pid_t pid)
     }
 
     return WEXITSTATUS(status);
-
-# else
-
-    while ((wait_result = wait(&status)) != pid)
-    {
-        if (wait_result <= 0)
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
-            return -1;
-        }
-    }
-
-    if (WIFSIGNALED(status))
-    {
-        return -1;
-    }
-
-    if (!WIFEXITED(status))
-    {
-        return -1;
-    }
-
-    return (WEXITSTATUS(status));
-# endif
 }
 
 /*******************************************************************/
@@ -753,8 +727,6 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
 
     CfDebug("cf_pclose_def - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
 
-# ifdef HAVE_WAITPID
-
     while (waitpid(pid, &status, 0) < 0)
     {
         if (errno != EINTR)
@@ -772,34 +744,6 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
     VerifyCommandRetcode(ctx, WEXITSTATUS(status), true, a, pp);
 
     return status;
-
-# else
-
-    while ((wait_result = wait(&status)) != pid)
-    {
-        if (wait_result <= 0)
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "wait", "Wait for child failed\n");
-            return -1;
-        }
-    }
-
-    if (WIFSIGNALED(status))
-    {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
-        return -1;
-    }
-
-    if (!WIFEXITED(status))
-    {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
-        return -1;
-    }
-
-    VerifyCommandRetcode(WEXITSTATUS(status), true, a, pp);
-
-    return (WEXITSTATUS(status));
-# endif
 }
 
 /*******************************************************************/

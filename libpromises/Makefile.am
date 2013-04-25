@@ -98,7 +98,9 @@ libpromises_la_SOURCES = \
         unix.c unix.h \
         var_expressions.c var_expressions.h \
         vars.c vars.h \
-        verify_reports.c
+        verify_classes.c verify_classes.h \
+        verify_reports.c \
+        verify_vars.c verify_vars.h
 
 if !NT
 

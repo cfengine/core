@@ -679,31 +679,50 @@ selection:             selection_id                         /* BODY ONLY */
 
                            if (!INSTALL_SKIP)
                            {
-                               Constraint *cp = NULL;
+                               const BodyTypeSyntax *body_syntax = BodySyntaxLookup(P.blocktype);
+                               assert(body_syntax);
 
-                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
-                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                               const ConstraintSyntax *constraint_syntax = BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
+                               if (constraint_syntax)
                                {
-                                   yyerror(SyntaxTypeMatchToString(err));
-                               }
+                                   switch (constraint_syntax->status)
+                                   {
+                                   case SYNTAX_STATUS_DEPRECATED:
+                                       SyntaxDeprecatedWarning("Constraint '%s' in body type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       // Intentional fall
+                                   case SYNTAX_STATUS_NORMAL:
+                                       {
+                                           SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                                           if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                           {
+                                               yyerror(SyntaxTypeMatchToString(err));
+                                           }
 
-                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
-                               {
-                                   ValidateClassLiteral(P.rval.item);
-                               }
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           {
+                                               ValidateClassLiteral(P.rval.item);
+                                           }
 
-                               if (P.currentclasses == NULL)
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                           Constraint *cp = NULL;
+                                           if (P.currentclasses == NULL)
+                                           {
+                                               cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                           }
+                                           else
+                                           {
+                                               cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
+                                           }
+                                           cp->offset.line = P.line_no;
+                                           cp->offset.start = P.offsets.last_id;
+                                           cp->offset.end = P.offsets.current;
+                                           cp->offset.context = P.offsets.last_class_id;
+                                           break;
+                                       }
+                                   case SYNTAX_STATUS_REMOVED:
+                                       SyntaxRemovedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       break;
+                                   }
                                }
-                               else
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
-                               }
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
                            }
                            else
                            {

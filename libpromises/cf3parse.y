@@ -106,14 +106,14 @@ bundletype_values:     typeid
 
                            if (!BundleTypeCheck(P.blocktype))
                            {
-                               ParseError("Unknown bundle type: %s", P.blocktype);
+                               ParseError("Unknown bundle type '%s'", P.blocktype);
                                INSTALL_SKIP = true;
                            }
                        }
                      | error 
                        {
                            yyclearin;
-                           ParseError("Expected bundle type, wrong input: %s", yytext);
+                           ParseError("Expected bundle type, wrong input '%s'", yytext);
                            INSTALL_SKIP = true;
                        }
 
@@ -126,7 +126,7 @@ bundleid_values:       blockid
                      | error 
                        {
                            yyclearin;
-                           ParseError("Expected bundle id, wrong input:%s", yytext);
+                           ParseError("Expected bundle identifier, wrong input '%s'", yytext);
                            INSTALL_SKIP = true;
                        }
 
@@ -147,13 +147,13 @@ bodytype_values:       typeid
                        {
                            if (!BodySyntaxLookup(P.blocktype))
                            {
-                               ParseError("Unknown body type: '%s'", P.blocktype);
+                               ParseError("Unknown body type '%s'", P.blocktype);
                            }
                        }
                      | error
                        {
                            yyclearin;
-                           ParseError("Expected body type, wrong input: '%s'", yytext);
+                           ParseError("Expected body type, wrong input '%s'", yytext);
                        }
 
 bodyid:                bodyid_values
@@ -165,7 +165,7 @@ bodyid_values:         blockid
                      | error
                        {
                            yyclearin;
-                           ParseError("Expected body id, wrong input: '%s'", yytext);
+                           ParseError("Expected body identifier, wrong input '%s'", yytext);
                            INSTALL_SKIP = true;
                        }
 
@@ -197,7 +197,7 @@ arglist:               /* Empty */
                      | arglist_begin error
                        {
                           yyclearin;
-                          ParseError("error in bundle function definition expected ), wrong input:%s", yytext);
+                          ParseError("Error in bundle parameter list, expected ')', wrong input '%s'", yytext);
                        }
 
 arglist_begin:         OP
@@ -225,7 +225,7 @@ aitem:                 IDSYNTAX  /* recipient of argument is never a literal */
                      | error
                        {
                           yyclearin;
-                          ParseError("Expected id, wrong input:%s", yytext);
+                          ParseError("Expected identifier, wrong input '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -282,7 +282,7 @@ body_begin:            OB
                        }
                      | error
                        {
-                           ParseError("Expected body open:{, wrong input:%s", yytext);
+                           ParseError("Expected body open '{', wrong input '%s'", yytext);
                        }
 
 
@@ -298,7 +298,7 @@ bundle_statements:     bundle_statement
                      | error 
                        {
                           INSTALL_SKIP=true;
-                          ParseError("Expected promise type, got:%s", yytext);
+                          ParseError("Expected promise type, got '%s'", yytext);
                           ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
                           yyclearin; 
                        }
@@ -318,7 +318,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
 
                            if (!PromiseTypeSyntaxLookup(P.blocktype, P.currenttype))
                            {
-                               ParseError("Unknown promise type: %s", P.currenttype);
+                               ParseError("Unknown promise type '%s'", P.currenttype);
                                INSTALL_SKIP = true;
                            }
 
@@ -362,17 +362,17 @@ promise_decl:          promise_line ';'
                             * Based on yychar display right error message
                            */
                            ParserDebug("P:promiser:error yychar = %d\n", yychar);
-                           if ( yychar =='-' || yychar == '>'  )
+                           if (yychar =='-' || yychar == '>')
                            {
-                              ParseError("Expected '->', got:%s", yytext);
+                              ParseError("Expected '->', got '%s'", yytext);
                            }
-                           else if ( yychar == IDSYNTAX || yychar == ',' )
+                           else if (yychar == IDSYNTAX || yychar == ',')
                            {
-                              ParseError("Expected constraint id, got:%s", yytext);
+                              ParseError("Expected attribute, got '%s'", yytext);
                            }
                            else
                            {
-                              ParseError("Expected ';', got:%s", yytext);
+                              ParseError("Expected ';', got '%s'", yytext);
                            }
                            yyclearin;
                        }
@@ -393,7 +393,7 @@ promisee_statement:    promiser
                            {
                                if (!P.currentstype)
                                {
-                                   yyerror("Missing promise type declaration");
+                                   ParseError("Missing promise type declaration");
                                }
 
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
@@ -420,7 +420,7 @@ promiser_statement:    promiser
                            {
                                if (!P.currentstype)
                                {
-                                   yyerror("Missing promise type declaration");
+                                   ParseError("Missing promise type declaration");
                                }
 
                                P.currentpromise = PromiseTypeAppendPromise(P.currentstype, P.promiser,
@@ -449,19 +449,19 @@ promiser:              QSTRING
                        }
                      | error
                        {
-                          INSTALL_SKIP=true;
+                          INSTALL_SKIP = true;
                           ParserDebug("P:promiser:qstring::error yychar = %d\n", yychar);
 
-                          if ( yychar == BUNDLE || yychar == BODY || yychar == YYEOF )
+                          if (yychar == BUNDLE || yychar == BODY || yychar == YYEOF)
                           {
-                             ParseError("Expected '}', got:%s", yytext);
+                             ParseError("Expected '}', got '%s'", yytext);
                              /*
                              YYABORT;
                              */
                           }
                           else
                           {
-                             ParseError("Expected promiser id, got:%s", yytext);
+                             ParseError("Expected promiser string, got '%s'", yytext);
                           }
 
                           yyclearin;
@@ -479,11 +479,11 @@ promiser_constraints_decl:      /* empty */
                                    ParserDebug("P:constraints_decl:error yychar = %d\n", yychar);
                                    if ( yychar == IDSYNTAX )
                                    {
-                                       ParseError("Check previous line, Expected ',', got:%s", yytext);
+                                       ParseError("Check previous line, Expected ',', got '%s'", yytext);
                                    }
                                    else
                                    {
-                                       ParseError("Check previous line, Expected ';', got:%s", yytext);
+                                       ParseError("Check previous line, Expected ';', got '%s'", yytext);
                                    }
                                    yyclearin;
 
@@ -587,7 +587,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                        }
                      | error
                        {
-                             ParseError("Expected constraint id, got:%s\n", yytext);
+                             ParseError("Expected attribute, got '%s'\n", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -637,7 +637,7 @@ bodyattrib:            class
 selection_line:        selection ';'
                      | selection error
                        {
-                          ParseError("Expected ';' check previous statement, got:%s", yytext);
+                          ParseError("Expected ';' check previous statement, got '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -724,14 +724,14 @@ selection_id:          IDSYNTAX
 
                           if ( yychar == BUNDLE || yychar == BODY || yychar == YYEOF )
                           {
-                             ParseError("Expected '}', got:%s", yytext);
+                             ParseError("Expected '}', got '%s'", yytext);
                              /*
                              YYABORT;
                              */
                           }
                           else
                           {
-                             ParseError("Expected selection id, got:%s", yytext);
+                             ParseError("Expected attribute, got '%s'", yytext);
                           }
 
                           yyclearin;
@@ -746,7 +746,7 @@ assign_type:           ASSIGN
                      | error
                        {
                           yyclearin;
-                          ParseError("Expected =>, got: %s", yytext);
+                          ParseError("Expected '=>', got '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -759,7 +759,7 @@ arrow_type:            ARROW
                      | error
                        {
                           yyclearin;
-                          ParseError("Expected ->, got: %s", yytext);
+                          ParseError("Expected '->', got '%s'", yytext);
                        }
                        */
 
@@ -839,7 +839,7 @@ rval:                  IDSYNTAX
                      | error
                        {
                            yyclearin;
-                           ParseError("Not an valid value type (rval), wrong input: %s", yytext);
+                           ParseError("Invalid r-value type '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -854,7 +854,7 @@ litems:                /* empty */
                      | litem error
                        {
                            yyclearin;
-                           ParseError("Expected ',', wrong input: %s", yytext);
+                           ParseError("Expected ',', wrong input '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -891,7 +891,7 @@ litem:                 IDSYNTAX
                      | error
                        {
                           yyclearin;
-                          ParseError("Not an valid input for a list value, wrong input: %s", yytext);
+                          ParseError("Invalid input for a list item, got '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -962,7 +962,7 @@ gaitems:               /* empty */
                      | gaitem error
                        {
                            yyclearin;
-                           ParseError("Expected ',', wrong input: %s", yytext);
+                           ParseError("Expected ',', wrong input '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1003,7 +1003,7 @@ gaitem:                IDSYNTAX
                      | error
                        {
                           yyclearin;
-                          ParseError("Invalid function argument, wrong input: %s", yytext);
+                          ParseError("Invalid function argument, wrong input '%s'", yytext);
                        }
 
 %%

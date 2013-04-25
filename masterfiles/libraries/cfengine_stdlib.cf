@@ -1546,6 +1546,16 @@ file_result => "leaf_name";
 
 ##
 
+body file_select older_than(years, months, days, hours, minutes, seconds)
+# Generic older_than selection body, aimed to have a common definition handy
+# for every case possible.
+{
+mtime       => irange(0,ago("$(years)","$(months)","$(days)","$(hours)","$(minutes)","$(seconds)"));
+file_result => "mtime";
+}
+
+##
+
 body file_select filetype_older_than(filetype, days)
 # Select files of specified type older than specified number of days
 # Note: This body only takes a single filetype, see filetypes_older_than

@@ -33,6 +33,7 @@ extern pthread_mutex_t *cft_getaddr;
 extern pthread_mutex_t *cft_lock;
 extern pthread_mutex_t *cft_vscope;
 extern pthread_mutex_t *cft_server_children;
+extern pthread_mutex_t *cft_server_filter;
 
 int ThreadLock(pthread_mutex_t *name);
 int ThreadUnlock(pthread_mutex_t *name);

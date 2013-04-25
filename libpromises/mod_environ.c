@@ -28,11 +28,11 @@
 
 static const ConstraintSyntax environment_resources_constraints[] =
 {
-    ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", NULL),
-    ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", NULL),
-    ConstraintSyntaxNewInt("env_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)", NULL),
-    ConstraintSyntaxNewString("env_baseline", CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment", NULL),
-    ConstraintSyntaxNewString("env_spec", CF_ANYSTRING, "A string containing a technology specific set of promises for the virtual instance", NULL),
+    ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment"),
+    ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"),
+    ConstraintSyntaxNewInt("env_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"),
+    ConstraintSyntaxNewString("env_baseline", CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"),
+    ConstraintSyntaxNewString("env_spec", CF_ANYSTRING, "A string containing a technology specific set of promises for the virtual instance"),
     ConstraintSyntaxNewNull()
 };
 
@@ -41,8 +41,8 @@ static const BodyTypeSyntax environment_resources_body = BodyTypeSyntaxNew("envi
 static const ConstraintSyntax environment_interface_constraints[] =
 {
     ConstraintSyntaxNewStringList("env_addresses", "", "The IP addresses of the environment's network interfaces"),
-    ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment", NULL),
-    ConstraintSyntaxNewString("env_network", "", "The hostname of the virtual network", NULL),
+    ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment"),
+    ConstraintSyntaxNewString("env_network", "", "The hostname of the virtual network"),
     ConstraintSyntaxNewNull()
 };
 
@@ -50,11 +50,11 @@ static const BodyTypeSyntax environment_interface_body = BodyTypeSyntaxNew("envi
 
 static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {
-    ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine", NULL),
-    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location", NULL),
-    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description", NULL),
-    ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", NULL),
-    ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", NULL),
+    ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine"),
+    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location"),
+    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description"),
+    ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment"),
+    ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type"),
     ConstraintSyntaxNewNull()
 };
 

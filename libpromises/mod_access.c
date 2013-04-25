@@ -52,8 +52,8 @@ const ConstraintSyntax CF_REMACCESS_BODIES[] =
     ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects"),
     ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects"),
     ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server"),
-    ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted", "false"),
-    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", NULL),
+    ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false"),
+    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)"),
     ConstraintSyntaxNewNull()
 };
 

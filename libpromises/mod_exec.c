@@ -28,15 +28,15 @@
 
 static const ConstraintSyntax contain_constraints[] =
 {
-    ConstraintSyntaxNewBool("useshell", "true/false embed the command in a shell environment", "false"),
-    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,002,022,027,072", "The umask value for the child process", NULL),
-    ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the process", NULL),
-    ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the process", NULL),
-    ConstraintSyntaxNewInt("exec_timeout", "1,3600", "Timeout in seconds for command completion", NULL),
-    ConstraintSyntaxNewString("chdir", CF_ABSPATHRANGE, "Directory for setting current/base directory for the process", NULL),
-    ConstraintSyntaxNewString("chroot", CF_ABSPATHRANGE, "Directory of root sandbox for process", NULL),
-    ConstraintSyntaxNewBool("preview", "true/false preview command when running in dry-run mode (with -n)", "false"),
-    ConstraintSyntaxNewBool("no_output", "true/false discard all output from the command", "false"),
+    ConstraintSyntaxNewBool("useshell", "true/false embed the command in a shell environment. Default value: false"),
+    ConstraintSyntaxNewOption("umask", "0,77,22,27,72,077,002,022,027,072", "The umask value for the child process"),
+    ConstraintSyntaxNewString("exec_owner", "", "The user name or id under which to run the process"),
+    ConstraintSyntaxNewString("exec_group", "", "The group name or id under which to run the process"),
+    ConstraintSyntaxNewInt("exec_timeout", "1,3600", "Timeout in seconds for command completion"),
+    ConstraintSyntaxNewString("chdir", CF_ABSPATHRANGE, "Directory for setting current/base directory for the process"),
+    ConstraintSyntaxNewString("chroot", CF_ABSPATHRANGE, "Directory of root sandbox for process"),
+    ConstraintSyntaxNewBool("preview", "true/false preview command when running in dry-run mode (with -n). Default value: false"),
+    ConstraintSyntaxNewBool("no_output", "true/false discard all output from the command. Default value: false"),
     ConstraintSyntaxNewNull()
 };
 
@@ -44,9 +44,9 @@ static const BodyTypeSyntax contain_body = BodyTypeSyntaxNew("contain", contain_
 
 static const ConstraintSyntax commands_constraints[] =
 {
-    ConstraintSyntaxNewString("args", "", "Alternative string of arguments for the command (concatenated with promiser string)", NULL),
-    ConstraintSyntaxNewBody("contain", &contain_body, "Containment options for the execution process", NULL),
-    ConstraintSyntaxNewBool("module", "true/false whether to expect the cfengine module protocol", "false"),
+    ConstraintSyntaxNewString("args", "", "Alternative string of arguments for the command (concatenated with promiser string)"),
+    ConstraintSyntaxNewBody("contain", &contain_body, "Containment options for the execution process"),
+    ConstraintSyntaxNewBool("module", "true/false whether to expect the cfengine module protocol. Default value: false"),
     ConstraintSyntaxNewNull()
 };
 

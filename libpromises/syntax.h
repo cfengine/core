@@ -92,26 +92,26 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 
 
 #define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL }
-#define ConstraintSyntaxNewBool(lval, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, default_value }
+#define ConstraintSyntaxNewBool(lval, description) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description }
 
-#define ConstraintSyntaxNewOption(lval, options, description, default_value) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description, default_value }
-#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, NULL }
+#define ConstraintSyntaxNewOption(lval, options, description) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description }
 
-#define ConstraintSyntaxNewString(lval, regex, description, default_value) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description, default_value }
-#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, NULL }
+#define ConstraintSyntaxNewString(lval, regex, description) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description }
+#define ConstraintSyntaxNewStringList(lval, item_range, description) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description }
 
-#define ConstraintSyntaxNewInt(lval, int_range, description, default_value) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description, default_value }
-#define ConstraintSyntaxNewIntRange(lval, int_range, description, default_value ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, default_value }
+#define ConstraintSyntaxNewInt(lval, int_range, description) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description }
+#define ConstraintSyntaxNewIntRange(lval, int_range, description ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description }
 #define ConstraintSyntaxNewIntList(lval, description) { lval, DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description }
 
-#define ConstraintSyntaxNewReal(lval, real_range, description, default_value) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description, default_value }
+#define ConstraintSyntaxNewReal(lval, real_range, description) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description }
 #define ConstraintSyntaxNewRealList(lval, description) { lval, DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description }
 
 #define ConstraintSyntaxNewContext(lval, description) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description }
-#define ConstraintSyntaxNewContextList(lval, description, default_value) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, default_value }
+#define ConstraintSyntaxNewContextList(lval, description) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description }
 
-#define ConstraintSyntaxNewBody(lval, body_syntax, description, default_value) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, default_value }
-#define ConstraintSyntaxNewBundle(lval, description, default_value) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, default_value }
+#define ConstraintSyntaxNewBody(lval, body_syntax, description) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description }
+#define ConstraintSyntaxNewBundle(lval, description) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description }
 
 #define BodyTypeSyntaxNew(body_type, constraints, check_fn) { body_type, constraints, check_fn }
 #define BodyTypeSyntaxNewNull() { NULL, NULL, NULL }

@@ -28,9 +28,9 @@
 
 static const ConstraintSyntax location_constraints[] =
 {
-    ConstraintSyntaxNewOption("before_after", "before,after", "Menu option, point cursor before of after matched line", "after"),
-    ConstraintSyntaxNewOption("first_last", "first,last", "Menu option, choose first or last occurrence of match in file", "last"),
-    ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching file line location", NULL),
+    ConstraintSyntaxNewOption("before_after", "before,after", "Menu option, point cursor before of after matched line. Default value: after"),
+    ConstraintSyntaxNewOption("first_last", "first,last", "Menu option, choose first or last occurrence of match in file. Default value: last"),
+    ConstraintSyntaxNewString("select_line_matching", CF_ANYSTRING, "Regular expression for matching file line location"),
     ConstraintSyntaxNewNull()
 };
 
@@ -38,14 +38,14 @@ static const BodyTypeSyntax location_body = BodyTypeSyntaxNew("location", locati
 
 static const ConstraintSyntax edit_field_constraints[] =
 {
-    ConstraintSyntaxNewBool("allow_blank_fields", "true/false allow blank fields in a line (do not purge)", "false"),
-    ConstraintSyntaxNewBool("extend_fields", "true/false add new fields at end of line if necessary to complete edit", "false"),
-    ConstraintSyntaxNewOption("field_operation", "prepend,append,alphanum,delete,set", "Menu option policy for editing subfields", "none"),
-    ConstraintSyntaxNewString("field_separator", CF_ANYSTRING, "The regular expression used to separate fields in a line", "none"),
-    ConstraintSyntaxNewString("field_value", CF_ANYSTRING, "Set field value to a fixed value", NULL),
-    ConstraintSyntaxNewInt("select_field", "0,99999999", "Integer index of the field required 0..n (default starts from 1)", NULL),
-    ConstraintSyntaxNewBool("start_fields_from_zero", "If set, the default field numbering starts from 0", NULL),
-    ConstraintSyntaxNewString("value_separator", CF_CHARRANGE, "Character separator for subfields inside the selected field", "none"),
+    ConstraintSyntaxNewBool("allow_blank_fields", "true/false allow blank fields in a line (do not purge). Default value: false"),
+    ConstraintSyntaxNewBool("extend_fields", "true/false add new fields at end of line if necessary to complete edit. Default value: false"),
+    ConstraintSyntaxNewOption("field_operation", "prepend,append,alphanum,delete,set", "Menu option policy for editing subfields. Default value: none"),
+    ConstraintSyntaxNewString("field_separator", CF_ANYSTRING, "The regular expression used to separate fields in a line. Default value: none"),
+    ConstraintSyntaxNewString("field_value", CF_ANYSTRING, "Set field value to a fixed value"),
+    ConstraintSyntaxNewInt("select_field", "0,99999999", "Integer index of the field required 0..n (default starts from 1)"),
+    ConstraintSyntaxNewBool("start_fields_from_zero", "If set, the default field numbering starts from 0"),
+    ConstraintSyntaxNewString("value_separator", CF_CHARRANGE, "Character separator for subfields inside the selected field. Default value: none"),
     ConstraintSyntaxNewNull()
 };
 
@@ -53,8 +53,8 @@ static const BodyTypeSyntax edit_field_body = BodyTypeSyntaxNew("edit_field", ed
 
 static const ConstraintSyntax replace_with_constraints[] =
 {
-    ConstraintSyntaxNewOption("occurrences", "all,first", "Menu option to replace all occurrences or just first (NB the latter is non-convergent)", "all"),
-    ConstraintSyntaxNewString("replace_value", CF_ANYSTRING, "Value used to replace regular expression matches in search", NULL),
+    ConstraintSyntaxNewOption("occurrences", "all,first", "Menu option to replace all occurrences or just first (NB the latter is non-convergent). Default value: all"),
+    ConstraintSyntaxNewString("replace_value", CF_ANYSTRING, "Value used to replace regular expression matches in search"),
     ConstraintSyntaxNewNull()
 };
 
@@ -62,10 +62,10 @@ static const BodyTypeSyntax replace_with_body = BodyTypeSyntaxNew("replace_with"
 
 static const ConstraintSyntax select_region_constraints[] =
 {
-    ConstraintSyntaxNewBool("include_start_delimiter", "Whether to include the section delimiter", "false"),
-    ConstraintSyntaxNewBool("include_end_delimiter", "Whether to include the section delimiter", "false"),
-    ConstraintSyntaxNewString("select_start", CF_ANYSTRING, "Regular expression matching start of edit region", NULL),
-    ConstraintSyntaxNewString("select_end", CF_ANYSTRING, "Regular expression matches end of edit region from start", NULL),
+    ConstraintSyntaxNewBool("include_start_delimiter", "Whether to include the section delimiter. Default value: false"),
+    ConstraintSyntaxNewBool("include_end_delimiter", "Whether to include the section delimiter. Default value: false"),
+    ConstraintSyntaxNewString("select_start", CF_ANYSTRING, "Regular expression matching start of edit region"),
+    ConstraintSyntaxNewString("select_end", CF_ANYSTRING, "Regular expression matches end of edit region from start"),
     ConstraintSyntaxNewNull()
 };
 
@@ -99,45 +99,45 @@ static const BodyTypeSyntax insert_select_body = BodyTypeSyntaxNew("insert_selec
 
 static const ConstraintSyntax CF_INSERTLINES_BODIES[] =
 {
-    ConstraintSyntaxNewBool("expand_scalars", "Expand any unexpanded variables", "false"),
-    ConstraintSyntaxNewOption("insert_type", "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to", "literal"),
-    ConstraintSyntaxNewBody("insert_select", &insert_select_body, "Insert only if lines pass filter criteria", NULL),
-    ConstraintSyntaxNewBody("location", &location_body, "Specify where in a file an insertion will be made", NULL),
+    ConstraintSyntaxNewBool("expand_scalars", "Expand any unexpanded variables. Default value: false"),
+    ConstraintSyntaxNewOption("insert_type", "literal,string,file,file_preserve_block,preserve_block", "Type of object the promiser string refers to. Default value: literal"),
+    ConstraintSyntaxNewBody("insert_select", &insert_select_body, "Insert only if lines pass filter criteria"),
+    ConstraintSyntaxNewBody("location", &location_body, "Specify where in a file an insertion will be made"),
     ConstraintSyntaxNewOptionList("whitespace_policy", "ignore_leading,ignore_trailing,ignore_embedded,exact_match", "Criteria for matching and recognizing existing lines"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_DELETELINES_BODIES[] =
 {
-    ConstraintSyntaxNewBody("delete_select", &delete_select_body, "Delete only if lines pass filter criteria", NULL),
-    ConstraintSyntaxNewBool("not_matching", "true/false negate match criterion", "false"),
+    ConstraintSyntaxNewBody("delete_select", &delete_select_body, "Delete only if lines pass filter criteria"),
+    ConstraintSyntaxNewBool("not_matching", "true/false negate match criterion. Default value: false"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_COLUMN_BODIES[] =
 {
-    ConstraintSyntaxNewBody("edit_field", &edit_field_body, "Edit line-based file as matrix of fields", NULL),
+    ConstraintSyntaxNewBody("edit_field", &edit_field_body, "Edit line-based file as matrix of fields"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax CF_REPLACE_BODIES[] =
 {
-    ConstraintSyntaxNewBody("replace_with", &replace_with_body, "Search-replace pattern", NULL),
+    ConstraintSyntaxNewBody("replace_with", &replace_with_body, "Search-replace pattern"),
     ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CF_COMMON_EDITBODIES[] =
 {
-    ConstraintSyntaxNewBody("select_region", &select_region_body, "Limit edits to a demarked region of the file", NULL),
+    ConstraintSyntaxNewBody("select_region", &select_region_body, "Limit edits to a demarked region of the file"),
     ConstraintSyntaxNewNull()
 };
 
 static const ConstraintSyntax acl_constraints[] =
 {
     ConstraintSyntaxNewStringList("aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry"),
-    ConstraintSyntaxNewOption("acl_directory_inherit", "nochange,parent,specify,clear", "Access control list type for the affected file system", NULL),
-    ConstraintSyntaxNewOption("acl_method", "append,overwrite", "Editing method for access control list", NULL),
-    ConstraintSyntaxNewOption("acl_type", "generic,posix,ntfs", "Access control list type for the affected file system", NULL),
+    ConstraintSyntaxNewOption("acl_directory_inherit", "nochange,parent,specify,clear", "Access control list type for the affected file system"),
+    ConstraintSyntaxNewOption("acl_method", "append,overwrite", "Editing method for access control list"),
+    ConstraintSyntaxNewOption("acl_type", "generic,posix,ntfs", "Access control list type for the affected file system"),
     ConstraintSyntaxNewStringList("specify_inherit_aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry"),
     ConstraintSyntaxNewNull()
 };
@@ -146,10 +146,10 @@ static const BodyTypeSyntax acl_body = BodyTypeSyntaxNew("acl", acl_constraints,
 
 static const ConstraintSyntax changes_constraints[] =
 {
-    ConstraintSyntaxNewOption("hash", "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection", NULL),
-    ConstraintSyntaxNewOption("report_changes", "all,stats,content,none", "Specify criteria for change warnings", NULL),
-    ConstraintSyntaxNewBool("update_hashes", "Update hash values immediately after change warning", NULL),
-    ConstraintSyntaxNewBool("report_diffs","Generate reports summarizing the major differences between individual text files", NULL),
+    ConstraintSyntaxNewOption("hash", "md5,sha1,sha224,sha256,sha384,sha512,best", "Hash files for change detection"),
+    ConstraintSyntaxNewOption("report_changes", "all,stats,content,none", "Specify criteria for change warnings"),
+    ConstraintSyntaxNewBool("update_hashes", "Update hash values immediately after change warning"),
+    ConstraintSyntaxNewBool("report_diffs","Generate reports summarizing the major differences between individual text files"),
     ConstraintSyntaxNewNull()
 };
 
@@ -157,13 +157,13 @@ static const BodyTypeSyntax changes_body = BodyTypeSyntaxNew("changes", changes_
 
 static const ConstraintSyntax depth_search_constraints[] =
 {
-    ConstraintSyntaxNewInt("depth", CF_VALRANGE, "Maximum depth level for search", NULL),
+    ConstraintSyntaxNewInt("depth", CF_VALRANGE, "Maximum depth level for search"),
     ConstraintSyntaxNewStringList("exclude_dirs", ".*", "List of regexes of directory names NOT to include in depth search"),
-    ConstraintSyntaxNewBool("include_basedir", "true/false include the start/root dir of the search results", NULL),
+    ConstraintSyntaxNewBool("include_basedir", "true/false include the start/root dir of the search results"),
     ConstraintSyntaxNewStringList("include_dirs", ".*", "List of regexes of directory names to include in depth search"),
-    ConstraintSyntaxNewBool("rmdeadlinks", "true/false remove links that point to nowhere", "false"),
-    ConstraintSyntaxNewBool("traverse_links", "true/false traverse symbolic links to directories", "false"),
-    ConstraintSyntaxNewBool("xdev", "true/false exclude directories that are on different devices", "false"),
+    ConstraintSyntaxNewBool("rmdeadlinks", "true/false remove links that point to nowhere. Default value: false"),
+    ConstraintSyntaxNewBool("traverse_links", "true/false traverse symbolic links to directories. Default value: false"),
+    ConstraintSyntaxNewBool("xdev", "true/false exclude directories that are on different devices. Default value: false"),
     ConstraintSyntaxNewNull()
 };
 
@@ -171,12 +171,12 @@ static const BodyTypeSyntax depth_search_body = BodyTypeSyntaxNew("depth_search"
 
 static const ConstraintSyntax edit_defaults_constraints[] =
 {
-    ConstraintSyntaxNewOption("edit_backup", "true,false,timestamp,rotate", "Menu option for backup policy on edit changes", "true"),
-    ConstraintSyntaxNewBool("empty_file_before_editing", "Baseline memory model of file to zero/empty before commencing promised edits", "false"),
-    ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent", NULL),
-    ConstraintSyntaxNewInt("max_file_size", CF_VALRANGE, "Do not edit files bigger than this number of bytes", NULL),
-    ConstraintSyntaxNewBool("recognize_join", "Join together lines that end with a backslash, up to 4kB limit", "false"),
-    ConstraintSyntaxNewInt("rotate", "0,99", "How many backups to store if 'rotate' edit_backup strategy is selected. Defaults to 1", NULL),
+    ConstraintSyntaxNewOption("edit_backup", "true,false,timestamp,rotate", "Menu option for backup policy on edit changes. Default value: true"),
+    ConstraintSyntaxNewBool("empty_file_before_editing", "Baseline memory model of file to zero/empty before commencing promised edits. Default value: false"),
+    ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent"),
+    ConstraintSyntaxNewInt("max_file_size", CF_VALRANGE, "Do not edit files bigger than this number of bytes"),
+    ConstraintSyntaxNewBool("recognize_join", "Join together lines that end with a backslash, up to 4kB limit. Default value: false"),
+    ConstraintSyntaxNewInt("rotate", "0,99", "How many backups to store if 'rotate' edit_backup strategy is selected. Default value: 1"),
     ConstraintSyntaxNewNull()
 };
 
@@ -184,8 +184,8 @@ static const BodyTypeSyntax edit_defaults_body = BodyTypeSyntaxNew("edit_default
 
 static const ConstraintSyntax delete_constraints[] =
 {
-    ConstraintSyntaxNewOption("dirlinks", "delete,tidy,keep", "Menu option policy for dealing with symbolic links to directories during deletion", NULL),
-    ConstraintSyntaxNewBool("rmdirs", "true/false whether to delete empty directories during recursive deletion", NULL),
+    ConstraintSyntaxNewOption("dirlinks", "delete,tidy,keep", "Menu option policy for dealing with symbolic links to directories during deletion"),
+    ConstraintSyntaxNewBool("rmdirs", "true/false whether to delete empty directories during recursive deletion"),
     ConstraintSyntaxNewNull()
 };
 
@@ -193,11 +193,11 @@ static const BodyTypeSyntax delete_body = BodyTypeSyntaxNew("delete", delete_con
 
 static const ConstraintSyntax rename_constraints[] =
 {
-    ConstraintSyntaxNewBool("disable", "true/false automatically rename and remove permissions", "false"),
-    ConstraintSyntaxNewString("disable_mode", CF_MODERANGE, "The permissions to set when a file is disabled", NULL),
-    ConstraintSyntaxNewString("disable_suffix", "", "The suffix to add to files when disabling (.cfdisabled)", NULL),
-    ConstraintSyntaxNewString("newname", "", "The desired name for the current file", NULL),
-    ConstraintSyntaxNewInt("rotate", "0,99", "Maximum number of file rotations to keep", NULL),
+    ConstraintSyntaxNewBool("disable", "true/false automatically rename and remove permissions. Default value: false"),
+    ConstraintSyntaxNewString("disable_mode", CF_MODERANGE, "The permissions to set when a file is disabled"),
+    ConstraintSyntaxNewString("disable_suffix", "", "The suffix to add to files when disabling (.cfdisabled)"),
+    ConstraintSyntaxNewString("newname", "", "The desired name for the current file"),
+    ConstraintSyntaxNewInt("rotate", "0,99", "Maximum number of file rotations to keep"),
     ConstraintSyntaxNewNull()
 };
 
@@ -207,9 +207,9 @@ static const ConstraintSyntax perms_constraints[] =
 {
     ConstraintSyntaxNewStringList("bsdflags", CF_BSDFLAGRANGE, "List of menu options for bsd file system flags to set"),
     ConstraintSyntaxNewStringList("groups", CF_USERRANGE, "List of acceptable groups of group ids, first is change target"),
-    ConstraintSyntaxNewString("mode", CF_MODERANGE, "File permissions (like posix chmod)", NULL),
+    ConstraintSyntaxNewString("mode", CF_MODERANGE, "File permissions (like posix chmod)"),
     ConstraintSyntaxNewStringList("owners", CF_USERRANGE, "List of acceptable owners or user ids, first is change target"),
-    ConstraintSyntaxNewBool("rxdirs", "true/false add execute flag for directories if read flag is set", NULL),
+    ConstraintSyntaxNewBool("rxdirs", "true/false add execute flag for directories if read flag is set"),
     ConstraintSyntaxNewNull()
 };
 
@@ -220,19 +220,19 @@ static const ConstraintSyntax file_select_constraints[] =
     ConstraintSyntaxNewStringList("leaf_name", "", "List of regexes that match an acceptable name"),
     ConstraintSyntaxNewStringList("path_name", CF_ABSPATHRANGE, "List of pathnames to match acceptable target"),
     ConstraintSyntaxNewStringList("search_mode", CF_MODERANGE, "A list of mode masks for acceptable file permissions"),
-    ConstraintSyntaxNewIntRange("search_size", "0,inf", "Integer range of file sizes", NULL),
+    ConstraintSyntaxNewIntRange("search_size", "0,inf", "Integer range of file sizes"),
     ConstraintSyntaxNewStringList("search_owners", "", "List of acceptable user names or ids for the file, or regexes to match"),
     ConstraintSyntaxNewStringList("search_groups", "", "List of acceptable group names or ids for the file, or regexes to match"),
     ConstraintSyntaxNewStringList("search_bsdflags", CF_BSDFLAGRANGE, "String of flags for bsd file system flags expected set"),
-    ConstraintSyntaxNewIntRange("ctime", CF_TIMERANGE, "Range of change times (ctime) for acceptable files", NULL),
-    ConstraintSyntaxNewIntRange("mtime", CF_TIMERANGE, "Range of modification times (mtime) for acceptable files", NULL),
-    ConstraintSyntaxNewIntRange("atime", CF_TIMERANGE, "Range of access times (atime) for acceptable files", NULL),
-    ConstraintSyntaxNewString("exec_regex", CF_ANYSTRING, "Matches file if this regular expression matches any full line returned by the command", NULL),
-    ConstraintSyntaxNewString("exec_program", CF_ABSPATHRANGE, "Execute this command on each file and match if the exit status is zero", NULL),
+    ConstraintSyntaxNewIntRange("ctime", CF_TIMERANGE, "Range of change times (ctime) for acceptable files"),
+    ConstraintSyntaxNewIntRange("mtime", CF_TIMERANGE, "Range of modification times (mtime) for acceptable files"),
+    ConstraintSyntaxNewIntRange("atime", CF_TIMERANGE, "Range of access times (atime) for acceptable files"),
+    ConstraintSyntaxNewString("exec_regex", CF_ANYSTRING, "Matches file if this regular expression matches any full line returned by the command"),
+    ConstraintSyntaxNewString("exec_program", CF_ABSPATHRANGE, "Execute this command on each file and match if the exit status is zero"),
     ConstraintSyntaxNewOptionList("file_types", "plain,reg,symlink,dir,socket,fifo,door,char,block", "List of acceptable file types from menu choices"),
     ConstraintSyntaxNewStringList("issymlinkto", "", "List of regular expressions to match file objects"),
     ConstraintSyntaxNewString("file_result", "[!*(leaf_name|path_name|file_types|mode|size|owner|group|atime|ctime|mtime|issymlinkto|exec_regex|exec_program|bsdflags)[|&.]*]*",
-                        "Logical expression combining classes defined by file search criteria", NULL),
+                        "Logical expression combining classes defined by file search criteria"),
     ConstraintSyntaxNewNull()
 };
 
@@ -246,11 +246,11 @@ static const BodyTypeSyntax file_select_body = BodyTypeSyntaxNew("file_select", 
 static const ConstraintSyntax link_from_constraints[] =
 {
     ConstraintSyntaxNewStringList("copy_patterns", "", "A set of patterns that should be copied and synchronized instead of linked"),
-    ConstraintSyntaxNewBool("link_children", "true/false whether to link all directory's children to source originals", "false"),
-    ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "The type of link used to alias the file", "symlink"),
-    ConstraintSyntaxNewString("source", CF_PATHRANGE, "The source file to which the link should point", NULL),
-    ConstraintSyntaxNewOption("when_linking_children", "override_file,if_no_such_file", "Policy for overriding existing files when linking directories of children", NULL),
-    ConstraintSyntaxNewOption("when_no_source", "force,delete,nop", "Behaviour when the source file to link to does not exist", "nop"),
+    ConstraintSyntaxNewBool("link_children", "true/false whether to link all directory's children to source originals. Default value: false"),
+    ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "The type of link used to alias the file. Default value: symlink"),
+    ConstraintSyntaxNewString("source", CF_PATHRANGE, "The source file to which the link should point"),
+    ConstraintSyntaxNewOption("when_linking_children", "override_file,if_no_such_file", "Policy for overriding existing files when linking directories of children"),
+    ConstraintSyntaxNewOption("when_no_source", "force,delete,nop", "Behaviour when the source file to link to does not exist. Default value: nop"),
     ConstraintSyntaxNewNull()
 };
 
@@ -262,28 +262,28 @@ static const ConstraintSyntax copy_from_constraints[] =
      * a verification stage -- this attribute gets picked instead of another
      * 'source'
      */
-    ConstraintSyntaxNewString("source", CF_PATHRANGE, "Reference source file from which to copy", NULL),
+    ConstraintSyntaxNewString("source", CF_PATHRANGE, "Reference source file from which to copy"),
     ConstraintSyntaxNewStringList("servers", "[A-Za-z0-9_.:-]+", "List of servers in order of preference from which to copy"),
-    ConstraintSyntaxNewBool("collapse_destination_dir", "true/false Place files in subdirectories into the root destination directory during copy", NULL),
-    ConstraintSyntaxNewOption("compare", "atime,mtime,ctime,digest,hash,exists,binary", "Menu option policy for comparing source and image file attributes", "mtime or ctime differs"),
-    ConstraintSyntaxNewOption("copy_backup", "true,false,timestamp", "Menu option policy for file backup/version control", "true"),
-    ConstraintSyntaxNewBool("encrypt", "true/false use encrypted data stream to connect to remote host", "false"),
-    ConstraintSyntaxNewBool("check_root", "true/false check permissions on the root directory when depth_search", NULL),
+    ConstraintSyntaxNewBool("collapse_destination_dir", "true/false Place files in subdirectories into the root destination directory during copy"),
+    ConstraintSyntaxNewOption("compare", "atime,mtime,ctime,digest,hash,exists,binary", "Menu option policy for comparing source and image file attributes. Default: mtime or ctime differs"),
+    ConstraintSyntaxNewOption("copy_backup", "true,false,timestamp", "Menu option policy for file backup/version control. Default value: true"),
+    ConstraintSyntaxNewBool("encrypt", "true/false use encrypted data stream to connect to remote host. Default value: false"),
+    ConstraintSyntaxNewBool("check_root", "true/false check permissions on the root directory when depth_search"),
     ConstraintSyntaxNewStringList("copylink_patterns", "", "List of patterns matching files that should be copied instead of linked"),
-    ConstraintSyntaxNewIntRange("copy_size", "0,inf", "Integer range of file sizes that may be copied", "any size range"),
-    ConstraintSyntaxNewOption("findertype", "MacOSX", "Menu option for default finder type on MacOSX", NULL),
+    ConstraintSyntaxNewIntRange("copy_size", "0,inf", "Integer range of file sizes that may be copied"),
+    ConstraintSyntaxNewOption("findertype", "MacOSX", "Menu option for default finder type on MacOSX"),
     ConstraintSyntaxNewStringList("linkcopy_patterns", "", "List of patterns matching files that should be replaced with symbolic links"),
-    ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "Menu option for type of links to use when copying", "symlink"),
-    ConstraintSyntaxNewBool("force_update", "true/false force copy update always", "false"),
-    ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 on ipv6 enabled network", "false"),
-    ConstraintSyntaxNewInt("portnumber", "1024,99999", "Port number to connect to on server host", NULL),
-    ConstraintSyntaxNewBool("preserve", "true/false whether to preserve file permissions on copied file", "false"),
-    ConstraintSyntaxNewBool("purge", "true/false purge files on client that do not match files on server when a depth_search is used", "false"),
-    ConstraintSyntaxNewBool("stealth", "true/false whether to preserve time stamps on copied file", "false"),
-    ConstraintSyntaxNewInt("timeout", "1,3600", "Connection timeout, seconds", NULL),
-    ConstraintSyntaxNewBool("trustkey", "true/false trust public keys from remote server if previously unknown", "false"),
-    ConstraintSyntaxNewBool("type_check", "true/false compare file types before copying and require match", NULL),
-    ConstraintSyntaxNewBool("verify", "true/false verify transferred file by hashing after copy (resource penalty)", "false"),
+    ConstraintSyntaxNewOption("link_type", CF_LINKRANGE, "Menu option for type of links to use when copying. Default value: symlink"),
+    ConstraintSyntaxNewBool("force_update", "true/false force copy update always. Default value: false"),
+    ConstraintSyntaxNewBool("force_ipv4", "true/false force use of ipv4 on ipv6 enabled network. Default value: false"),
+    ConstraintSyntaxNewInt("portnumber", "1024,99999", "Port number to connect to on server host"),
+    ConstraintSyntaxNewBool("preserve", "true/false whether to preserve file permissions on copied file. Default value: false"),
+    ConstraintSyntaxNewBool("purge", "true/false purge files on client that do not match files on server when a depth_search is used. Default value: false"),
+    ConstraintSyntaxNewBool("stealth", "true/false whether to preserve time stamps on copied file. Default value: false"),
+    ConstraintSyntaxNewInt("timeout", "1,3600", "Connection timeout, seconds"),
+    ConstraintSyntaxNewBool("trustkey", "true/false trust public keys from remote server if previously unknown. Default value: false"),
+    ConstraintSyntaxNewBool("type_check", "true/false compare file types before copying and require match"),
+    ConstraintSyntaxNewBool("verify", "true/false verify transferred file by hashing after copy (resource penalty). Default value: false"),
     ConstraintSyntaxNewNull()
 };
 
@@ -291,33 +291,33 @@ static const BodyTypeSyntax copy_from_body = BodyTypeSyntaxNew("copy_from", copy
 
 static const ConstraintSyntax CF_FILES_BODIES[] =
 {
-    ConstraintSyntaxNewBody("acl", &acl_body, "Criteria for access control lists on file", NULL),
-    ConstraintSyntaxNewBody("changes", &changes_body, "Criteria for change management", NULL),
-    ConstraintSyntaxNewBody("copy_from", &copy_from_body, "Criteria for copying file from a source", NULL),
-    ConstraintSyntaxNewBool("create", "true/false whether to create non-existing file", "false"),
-    ConstraintSyntaxNewBody("delete", &delete_body, "Criteria for deleting files", NULL),
-    ConstraintSyntaxNewBody("depth_search", &depth_search_body, "Criteria for file depth searches", NULL),
-    ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits", NULL),
-    ConstraintSyntaxNewBundle("edit_line", "Line editing model for file", NULL),
-    ConstraintSyntaxNewString("edit_template", CF_ABSPATHRANGE, "The name of a special CFEngine template file to expand", NULL),
-    ConstraintSyntaxNewBundle("edit_xml", "XML editing model for file", NULL),
-    ConstraintSyntaxNewBody("file_select", &file_select_body, "Choose which files select in a search", NULL),
-    ConstraintSyntaxNewBody("link_from", &link_from_body, "Criteria for linking file from a source", NULL),
-    ConstraintSyntaxNewBool("move_obstructions", "true/false whether to move obstructions to file-object creation", "false"),
-    ConstraintSyntaxNewOption("pathtype", "literal,regex,guess", "Menu option for interpreting promiser file object", NULL),
-    ConstraintSyntaxNewBody("perms", &perms_body, "Criteria for setting permissions on a file", NULL),
-    ConstraintSyntaxNewBody("rename", &rename_body, "Criteria for renaming files", NULL),
-    ConstraintSyntaxNewString("repository", CF_ABSPATHRANGE, "Name of a repository for versioning", NULL),
-    ConstraintSyntaxNewBool("touch", "true/false whether to touch time stamps on file", NULL),
-    ConstraintSyntaxNewString("transformer", CF_ABSPATHRANGE, "Command (with full path) used to transform current file (no shell wrapper used)", NULL),
+    ConstraintSyntaxNewBody("acl", &acl_body, "Criteria for access control lists on file"),
+    ConstraintSyntaxNewBody("changes", &changes_body, "Criteria for change management"),
+    ConstraintSyntaxNewBody("copy_from", &copy_from_body, "Criteria for copying file from a source"),
+    ConstraintSyntaxNewBool("create", "true/false whether to create non-existing file. Default value: false"),
+    ConstraintSyntaxNewBody("delete", &delete_body, "Criteria for deleting files"),
+    ConstraintSyntaxNewBody("depth_search", &depth_search_body, "Criteria for file depth searches"),
+    ConstraintSyntaxNewBody("edit_defaults", &edit_defaults_body, "Default promise details for file edits"),
+    ConstraintSyntaxNewBundle("edit_line", "Line editing model for file"),
+    ConstraintSyntaxNewString("edit_template", CF_ABSPATHRANGE, "The name of a special CFEngine template file to expand"),
+    ConstraintSyntaxNewBundle("edit_xml", "XML editing model for file"),
+    ConstraintSyntaxNewBody("file_select", &file_select_body, "Choose which files select in a search"),
+    ConstraintSyntaxNewBody("link_from", &link_from_body, "Criteria for linking file from a source"),
+    ConstraintSyntaxNewBool("move_obstructions", "true/false whether to move obstructions to file-object creation. Default value: false"),
+    ConstraintSyntaxNewOption("pathtype", "literal,regex,guess", "Menu option for interpreting promiser file object"),
+    ConstraintSyntaxNewBody("perms", &perms_body, "Criteria for setting permissions on a file"),
+    ConstraintSyntaxNewBody("rename", &rename_body, "Criteria for renaming files"),
+    ConstraintSyntaxNewString("repository", CF_ABSPATHRANGE, "Name of a repository for versioning"),
+    ConstraintSyntaxNewBool("touch", "true/false whether to touch time stamps on file"),
+    ConstraintSyntaxNewString("transformer", CF_ABSPATHRANGE, "Command (with full path) used to transform current file (no shell wrapper used)"),
     ConstraintSyntaxNewNull()
 };
 
 // edit_xml body syntax
 const ConstraintSyntax CF_COMMON_XMLBODIES[] =
 {
-    ConstraintSyntaxNewString("build_xpath", "", "Build an XPath within the XML file", NULL),
-    ConstraintSyntaxNewString("select_xpath", "", "Select the XPath node in the XML file to edit", NULL),
+    ConstraintSyntaxNewString("build_xpath", "", "Build an XPath within the XML file"),
+    ConstraintSyntaxNewString("select_xpath", "", "Select the XPath node in the XML file to edit"),
     ConstraintSyntaxNewNull()
 };
 
@@ -333,7 +333,7 @@ static const ConstraintSyntax CF_DELETETAGS_BODIES[] =
 
 static const ConstraintSyntax CF_INSERTATTRIBUTES_BODIES[] =
 {
-    ConstraintSyntaxNewString("attribute_value", "", "Value of the attribute to be inserted into the XPath node of the XML file", NULL),
+    ConstraintSyntaxNewString("attribute_value", "", "Value of the attribute to be inserted into the XPath node of the XML file"),
     ConstraintSyntaxNewNull()
 };
 

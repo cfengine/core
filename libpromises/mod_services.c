@@ -28,11 +28,11 @@
 
 static const ConstraintSyntax service_method_constraints[] =
 {
-    ConstraintSyntaxNewString("service_args", "", "Parameters for starting the service as command", NULL),
-    ConstraintSyntaxNewOption("service_autostart_policy", "none,boot_time,on_demand", "Should the service be started automatically by the OS", NULL),
-    ConstraintSyntaxNewBundle("service_bundle", "A bundle reference with two arguments (service_name,args) used if the service type is generic", NULL),
-    ConstraintSyntaxNewOption("service_dependence_chain", "ignore,start_parent_services,stop_child_services,all_related", "How to handle dependencies and dependent services", NULL),
-    ConstraintSyntaxNewOption("service_type", "windows,generic", "Service abstraction type", NULL),
+    ConstraintSyntaxNewString("service_args", "", "Parameters for starting the service as command"),
+    ConstraintSyntaxNewOption("service_autostart_policy", "none,boot_time,on_demand", "Should the service be started automatically by the OS"),
+    ConstraintSyntaxNewBundle("service_bundle", "A bundle reference with two arguments (service_name,args) used if the service type is generic"),
+    ConstraintSyntaxNewOption("service_dependence_chain", "ignore,start_parent_services,stop_child_services,all_related", "How to handle dependencies and dependent services"),
+    ConstraintSyntaxNewOption("service_type", "windows,generic", "Service abstraction type"),
     ConstraintSyntaxNewNull()
 };
 
@@ -40,9 +40,9 @@ static const BodyTypeSyntax service_method_body = BodyTypeSyntaxNew("service_met
 
 static const ConstraintSyntax services_constraints[] =
 {
-    ConstraintSyntaxNewOption("service_policy", "start,stop,disable,restart,reload", "Policy for cfengine service status", NULL),
+    ConstraintSyntaxNewOption("service_policy", "start,stop,disable,restart,reload", "Policy for cfengine service status"),
     ConstraintSyntaxNewStringList("service_dependencies", CF_IDRANGE, "A list of services on which the named service abstraction depends"),
-    ConstraintSyntaxNewBody("service_method", &service_method_body, "Details of promise body for the service abtraction feature", NULL),
+    ConstraintSyntaxNewBody("service_method", &service_method_body, "Details of promise body for the service abtraction feature"),
     ConstraintSyntaxNewNull()
 };
 

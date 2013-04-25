@@ -678,7 +678,6 @@ struct ConstraintSyntax_
         const BodyTypeSyntax *body_type_syntax;
     } range;
     const char *description;
-    const char *default_value;
 };
 
 struct BodyTypeSyntax_

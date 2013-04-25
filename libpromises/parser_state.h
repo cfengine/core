@@ -40,6 +40,7 @@ typedef struct
     int line_pos;
     int line_no;
     int error_count;
+    int warning_count;
 
     int arg_nesting;
     int list_nesting;

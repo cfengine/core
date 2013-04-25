@@ -53,6 +53,8 @@ static void fatal_yyerror(const char *s);
 
 static void ParseErrorColumnOffset(int column_offset, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
+static void SyntaxDeprecatedWarning(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
+static void SyntaxRemovedWarning(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
 
 static void ValidateClassLiteral(const char *class_literal);
 
@@ -319,7 +321,9 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                            CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
-                           if (!PromiseTypeSyntaxLookup(P.blocktype, P.currenttype))
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+
+                           if (!promise_type_syntax)
                            {
                                ParseError("Unknown promise type '%s'", P.currenttype);
                                INSTALL_SKIP = true;
@@ -528,33 +532,56 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               Constraint *cp = NULL;
-                               const PromiseTypeSyntax *ss = PromiseTypeSyntaxLookup(P.blocktype,P.currenttype);
+                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                               assert(promise_type_syntax);
+
+                               const ConstraintSyntax *constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
+                               if (constraint_syntax)
                                {
-                                   SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
-                                   if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                   switch (constraint_syntax->status)
                                    {
-                                       yyerror(SyntaxTypeMatchToString(err));
+                                   case SYNTAX_STATUS_DEPRECATED:
+                                       SyntaxDeprecatedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       // Intentional fall
+                                   case SYNTAX_STATUS_NORMAL:
+                                       {
+                                           {
+                                               SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, promise_type_syntax);
+                                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                               {
+                                                   yyerror(SyntaxTypeMatchToString(err));
+                                               }
+                                           }
+
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           {
+                                               ValidateClassLiteral(P.rval.item);
+                                           }
+
+                                           Constraint *cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                                           cp->offset.line = P.line_no;
+                                           cp->offset.start = P.offsets.last_id;
+                                           cp->offset.end = P.offsets.current;
+                                           cp->offset.context = P.offsets.last_class_id;
+                                           P.currentstype->offset.end = P.offsets.current;
+
+                                           // Cache whether there are subbundles for later $(this.promiser) logic
+
+                                           if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
+                                               || strcmp(P.lval,"edit_xml") == 0)
+                                           {
+                                               P.currentpromise->has_subbundles = true;
+                                           }
+                                       }
+                                       break;
+                                   case SYNTAX_STATUS_REMOVED:
+                                       SyntaxRemovedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       break;
                                    }
                                }
-                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               else
                                {
-                                   ValidateClassLiteral(P.rval.item);
-                               }
-
-                               cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
-                               P.currentstype->offset.end = P.offsets.current;
-
-                               // Cache whether there are subbundles for later $(this.promiser) logic
-
-                               if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
-                                   || strcmp(P.lval,"edit_xml") == 0)
-                               {
-                                   P.currentpromise->has_subbundles = true;
+                                   ParseError("Unknown constraint '%s' in promise type '%s'", P.lval, promise_type_syntax->promise_type);
                                }
 
                                P.rval = (Rval) { NULL, '\0' };
@@ -1058,6 +1085,45 @@ static void ParseError(const char *s, ...)
     va_list ap;
     va_start(ap, s);
     ParseErrorV(s, ap);
+    va_end(ap);
+}
+
+static void ParseWarningV(const char *s, va_list ap)
+{
+    char *errmsg = StringVFormat(s, ap);
+
+    fprintf(stderr, "%s:%d:%d: warning: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
+    fprintf(stderr, "%s\n", P.current_line);
+    fprintf(stderr, "%*s\n", P.line_pos, "^");
+
+    free(errmsg);
+
+    P.warning_count++;
+
+    if (P.error_count > 12)
+    {
+        fprintf(stderr, "Too many errors");
+        exit(1);
+    }
+}
+
+static void SyntaxDeprecatedWarning(const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    char *format = StringConcatenate(2, "Syntax is deprecated and may be removed in a future version: ", s);
+    ParseWarningV(format, ap);
+    free(format);
+    va_end(ap);
+}
+
+static void SyntaxRemovedWarning(const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    char *format = StringConcatenate(2, "Syntax is removed and will be ignored in policy: ", s);
+    ParseWarningV(format, ap);
+    free(format);
     va_end(ap);
 }
 

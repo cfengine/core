@@ -42,6 +42,7 @@ static void ParserStateReset(ParserState *p)
     p->line_no = 1;
     p->line_pos = 1;
     p->error_count = 0;
+    p->warning_count = 0;
     p->list_nesting = 0;
     p->arg_nesting = 0;
 

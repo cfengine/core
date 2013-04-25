@@ -106,6 +106,8 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
 /*****************************************************************************/
 
+static int cf_pwait(pid_t pid);
+
 static pid_t *CHILDREN;
 static int MAX_FD = 128;               /* Max number of simultaneous pipes */
 
@@ -602,7 +604,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
     return NULL;
 }
 
-int cf_pwait(pid_t pid)
+static int cf_pwait(pid_t pid)
 {
     int status;
 

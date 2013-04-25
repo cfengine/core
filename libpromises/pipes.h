@@ -37,8 +37,4 @@ int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp);
 bool PipeToPid(pid_t *pid, FILE *pp);
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp);
 
-#ifndef __MINGW32__
-int cf_pwait(pid_t pid);
-#endif /* !__MINGW32__ */
-
 #endif

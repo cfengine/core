@@ -479,11 +479,11 @@ promiser_constraints_decl:      /* empty */
                                    ParserDebug("P:constraints_decl:error yychar = %d\n", yychar);
                                    if ( yychar == IDSYNTAX )
                                    {
-                                       ParseError("Check previuos line, Expected ',', got:%s", yytext);
+                                       ParseError("Check previous line, Expected ',', got:%s", yytext);
                                    }
                                    else
                                    {
-                                       ParseError("Check previuos line, Expected ';', got:%s", yytext);
+                                       ParseError("Check previous line, Expected ';', got:%s", yytext);
                                    }
                                    yyclearin;
 
@@ -836,6 +836,12 @@ rval:                  IDSYNTAX
                            P.references_body = false;
                        }
 
+                     | error
+                       {
+                           yyclearin;
+                           ParseError("Not an valid value type (rval), wrong input: %s", yytext);
+                       }
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 list:                  OB litems CB
@@ -1016,7 +1022,7 @@ static void ParseErrorV(const char *s, va_list ap)
 
     P.error_count++;
 
-    if (P.error_count > 10)
+    if (P.error_count > 12)
     {
         fprintf(stderr, "Too many errors");
         exit(1);

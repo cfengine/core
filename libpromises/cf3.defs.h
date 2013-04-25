@@ -658,6 +658,13 @@ typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 typedef bool (*PromiseCheckFn)(const Promise *pp, Seq *errors);
 typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
 
+typedef enum
+{
+    SYNTAX_STATUS_NORMAL,
+    SYNTAX_STATUS_DEPRECATED,
+    SYNTAX_STATUS_REMOVED
+} SyntaxStatus;
+
 struct ConstraintSyntax_
 {
     const char *lval;
@@ -668,6 +675,7 @@ struct ConstraintSyntax_
         const BodyTypeSyntax *body_type_syntax;
     } range;
     const char *description;
+    SyntaxStatus status;
 };
 
 struct BodyTypeSyntax_
@@ -675,6 +683,7 @@ struct BodyTypeSyntax_
     const char *body_type;
     const ConstraintSyntax *constraints;
     BodyCheckFn check_body;
+    SyntaxStatus status;
 };
 
 typedef struct
@@ -683,6 +692,7 @@ typedef struct
     const char *promise_type;
     const ConstraintSyntax *constraints;
     const PromiseCheckFn check_promise;
+    SyntaxStatus status;
 } PromiseTypeSyntax;
 
 /*************************************************************************/

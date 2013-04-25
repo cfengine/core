@@ -28,13 +28,13 @@
 
 static const ConstraintSyntax CF_OUTPUTS_BODIES[] =
 {
-    ConstraintSyntaxNewOption("output_level", "verbose,debug,inform", "Output level to observe for the named promise or bundle (meta-promise). Default value: verbose"),
-    ConstraintSyntaxNewOption("promiser_type", "promise,bundle", "Output level to observe for the named promise or bundle (meta-promise). Default value: promise"),
+    ConstraintSyntaxNewOption("output_level", "verbose,debug,inform", "Output level to observe for the named promise or bundle (meta-promise). Default value: verbose", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("promiser_type", "promise,bundle", "Output level to observe for the named promise or bundle (meta-promise). Default value: promise", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_OUTPUTS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "outputs", CF_OUTPUTS_BODIES, NULL),
+    PromiseTypeSyntaxNew("agent", "outputs", CF_OUTPUTS_BODIES, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };

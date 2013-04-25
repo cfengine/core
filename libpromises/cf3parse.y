@@ -924,8 +924,20 @@ litems:                /* empty */
                      | litem ','  litems
                      | litem error
                        {
+                           ParserDebug("P:rval:list:error yychar = %d\n", yychar);
+                           if ( yychar ==';' )
+                           {
+                               ParseError("Expected '}', wrong input '%s'", yytext);
+                           }
+                           else if ( yychar == ASSIGN )
+                           {
+                               ParseError("Check list statement  previous line, Expected '}', wrong input '%s'", yytext);
+                           }
+                           else
+                           {
+                               ParseError("Expected ',', wrong input '%s'", yytext);
+                           }
                            yyclearin;
-                           ParseError("Expected ',', wrong input '%s'", yytext);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

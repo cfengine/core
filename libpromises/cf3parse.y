@@ -302,7 +302,7 @@ bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
                      | error 
                        {
-                          INSTALL_SKIP=true;
+                          INSTALL_SKIP = true;
                           ParseError("Expected promise type, got '%s'", yytext);
                           ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
                           yyclearin; 
@@ -323,24 +323,38 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
 
-                           if (!promise_type_syntax)
+                           if (promise_type_syntax)
+                           {
+                               switch (promise_type_syntax->status)
+                               {
+                               case SYNTAX_STATUS_DEPRECATED:
+                                   SyntaxDeprecatedWarning("Promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   // Intentional fall
+                               case SYNTAX_STATUS_NORMAL:
+                                   if (strcmp(P.block, "bundle") == 0)
+                                   {
+                                       if (!INSTALL_SKIP)
+                                       {
+                                           P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
+                                           P.currentstype->offset.line = P.line_no;
+                                           P.currentstype->offset.start = P.offsets.last_promise_type_id;
+                                       }
+                                       else
+                                       {
+                                           P.currentstype = NULL;
+                                       }
+                                   }
+                                   break;
+                               case SYNTAX_STATUS_REMOVED:
+                                   SyntaxRemovedWarning("Promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   INSTALL_SKIP = true;
+                                   break;
+                               }
+                           }
+                           else
                            {
                                ParseError("Unknown promise type '%s'", P.currenttype);
                                INSTALL_SKIP = true;
-                           }
-
-                           if (strcmp(P.block,"bundle") == 0)
-                           {
-                               if (!INSTALL_SKIP)
-                               {
-                                   P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
-                                   P.currentstype->offset.line = P.line_no;
-                                   P.currentstype->offset.start = P.offsets.last_promise_type_id;
-                               }
-                               else
-                               {
-                                   P.currentstype = NULL;
-                               }
                            }
                        }
 
@@ -607,7 +621,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
                            {
                                ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
-                               INSTALL_SKIP=true;
+                               INSTALL_SKIP = true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
@@ -759,7 +773,7 @@ selection_id:          IDSYNTAX
                            if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                            {
                                ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
-                               INSTALL_SKIP=true;
+                               INSTALL_SKIP = true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);

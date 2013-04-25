@@ -2,6 +2,7 @@
 
        New features:
        - classes promises now take an optional scope constraint.
+       - new built-in functions: every, none, some, nth, sublist, uniq, filter.
 
        Changes:
        - parser no longer allows ',' after promiser or promisee. must be either ';' or lval

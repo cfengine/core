@@ -26,6 +26,7 @@
 */
 
 #include "cf3.defs.h"
+#include "parser.h"
 #include "parser_state.h"
 
 #include "fncall.h"
@@ -53,8 +54,7 @@ static void fatal_yyerror(const char *s);
 
 static void ParseErrorColumnOffset(int column_offset, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
-static void SyntaxDeprecatedWarning(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
-static void SyntaxRemovedWarning(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
+static void ParseWarning(unsigned int warning, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 
 static void ValidateClassLiteral(const char *class_literal);
 
@@ -328,7 +328,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                switch (promise_type_syntax->status)
                                {
                                case SYNTAX_STATUS_DEPRECATED:
-                                   SyntaxDeprecatedWarning("Promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
                                    // Intentional fall
                                case SYNTAX_STATUS_NORMAL:
                                    if (strcmp(P.block, "bundle") == 0)
@@ -346,7 +346,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                                    }
                                    break;
                                case SYNTAX_STATUS_REMOVED:
-                                   SyntaxRemovedWarning("Promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   ParseWarning(PARSER_WARNING_REMOVED, "Removed promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
                                    INSTALL_SKIP = true;
                                    break;
                                }
@@ -555,7 +555,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                    switch (constraint_syntax->status)
                                    {
                                    case SYNTAX_STATUS_DEPRECATED:
-                                       SyntaxDeprecatedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
                                        // Intentional fall
                                    case SYNTAX_STATUS_NORMAL:
                                        {
@@ -589,7 +589,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                        }
                                        break;
                                    case SYNTAX_STATUS_REMOVED:
-                                       SyntaxRemovedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       ParseWarning(PARSER_WARNING_REMOVED, "Removed constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
                                        break;
                                    }
                                }
@@ -702,7 +702,7 @@ selection:             selection_id                         /* BODY ONLY */
                                    switch (constraint_syntax->status)
                                    {
                                    case SYNTAX_STATUS_DEPRECATED:
-                                       SyntaxDeprecatedWarning("Constraint '%s' in body type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated constraint '%s' in body type '%s'", constraint_syntax->lval, body_syntax->body_type);
                                        // Intentional fall
                                    case SYNTAX_STATUS_NORMAL:
                                        {
@@ -733,7 +733,7 @@ selection:             selection_id                         /* BODY ONLY */
                                            break;
                                        }
                                    case SYNTAX_STATUS_REMOVED:
-                                       SyntaxRemovedWarning("Constraint '%s' in promise type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       ParseWarning(PARSER_WARNING_REMOVED, "Removed constraint '%s' in promise type '%s'", constraint_syntax->lval, body_syntax->body_type);
                                        break;
                                    }
                                }
@@ -1121,17 +1121,28 @@ static void ParseError(const char *s, ...)
     va_end(ap);
 }
 
-static void ParseWarningV(const char *s, va_list ap)
+static void ParseWarningV(unsigned int warning, const char *s, va_list ap)
 {
-    char *errmsg = StringVFormat(s, ap);
+    if (((P.warnings | P.warnings_error) & warning) == 0)
+    {
+        return;
+    }
 
-    fprintf(stderr, "%s:%d:%d: warning: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
+    char *errmsg = StringVFormat(s, ap);
+    const char *warning_str = ParserWarningToString(warning);
+
+    fprintf(stderr, "%s:%d:%d: warning: %s [-W%s]\n", P.filename, P.line_no, P.line_pos, errmsg, warning_str);
     fprintf(stderr, "%s\n", P.current_line);
     fprintf(stderr, "%*s\n", P.line_pos, "^");
 
     free(errmsg);
 
     P.warning_count++;
+
+    if ((P.warnings_error & warning) != 0)
+    {
+        P.error_count++;
+    }
 
     if (P.error_count > 12)
     {
@@ -1140,23 +1151,11 @@ static void ParseWarningV(const char *s, va_list ap)
     }
 }
 
-static void SyntaxDeprecatedWarning(const char *s, ...)
+static void ParseWarning(unsigned int warning, const char *s, ...)
 {
     va_list ap;
     va_start(ap, s);
-    char *format = StringConcatenate(2, "Syntax is deprecated and may be removed in a future version: ", s);
-    ParseWarningV(format, ap);
-    free(format);
-    va_end(ap);
-}
-
-static void SyntaxRemovedWarning(const char *s, ...)
-{
-    va_list ap;
-    va_start(ap, s);
-    char *format = StringConcatenate(2, "Syntax is removed and will be ignored in policy: ", s);
-    ParseWarningV(format, ap);
-    free(format);
+    ParseWarningV(warning, s, ap);
     va_end(ap);
 }
 

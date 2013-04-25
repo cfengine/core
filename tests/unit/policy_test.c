@@ -13,7 +13,7 @@ static Policy *LoadPolicy(const char *filename)
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    return ParserParseFile(path);
+    return ParserParseFile(path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 }
 
 static void DumpErrors(Seq *errs)
@@ -53,7 +53,7 @@ static Seq *LoadAndCheckString(const char *policy_code)
         WriterClose(w);
     }
 
-    Policy *p = ParserParseFile(tmp);
+    Policy *p = ParserParseFile(tmp, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
     assert_true(p);
 
     Seq *errs = SeqNew(10, PolicyErrorDestroy);
@@ -68,7 +68,7 @@ static void test_failsafe(void)
     char *tmp = tempnam(NULL, "cfengine_test");
     CreateFailSafe(tmp);
 
-    Policy *failsafe = ParserParseFile(tmp);
+    Policy *failsafe = ParserParseFile(tmp, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 
     unlink(tmp);
     free(tmp);

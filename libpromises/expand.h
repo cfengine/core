@@ -61,6 +61,5 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

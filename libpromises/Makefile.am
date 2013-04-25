@@ -80,7 +80,7 @@ libpromises_la_SOURCES = \
         parser.c parser.h \
         parser_state.h \
         patches.c \
-        pipes.c pipes.h \
+        pipes.h \
         processes_select.c processes_select.h \
         process_lib.h process_unix_priv.h \
         promises.c promises.h \
@@ -103,7 +103,8 @@ libpromises_la_SOURCES = \
 if !NT
 
 libpromises_la_SOURCES += \
-        process_unix.c
+        process_unix.c \
+        pipes_unix.c
 
 if LINUX
 libpromises_la_SOURCES += \

@@ -32,14 +32,7 @@
 #include "policy.h"
 #include "env_context.h"
 
-#ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);
-#endif
-
-
-#ifndef __MINGW32__
-
-/*****************************************************************************/
 
 static int cf_pwait(pid_t pid);
 
@@ -679,4 +672,3 @@ static int CfSetuid(uid_t uid, gid_t gid)
     return true;
 }
 
-#endif /* !__MINGW32__ */

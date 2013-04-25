@@ -367,109 +367,6 @@ static char *HighlightExpressionError(const char *str, int position)
     return errmsg;
 }
 
-/**********************************************************************/
-/* Debugging output */
-
-static void IndentL(int level)
-{
-    int i;
-
-    if (level > 0)
-    {
-        putc('\n', stderr);
-        for (i = 0; i < level; ++i)
-        {
-            putc(' ', stderr);
-        }
-    }
-}
-
-/**********************************************************************/
-
-static int IncIndent(int level, int inc)
-{
-    if (level < 0)
-    {
-        return -level + inc;
-    }
-    else
-    {
-        return level + inc;
-    }
-}
-
-/**********************************************************************/
-
-static void EmitStringExpression(StringExpression *e, int level)
-{
-    if (!e)
-    {
-        return;
-    }
-
-    switch (e->op)
-    {
-    case CONCAT:
-        IndentL(level);
-        fputs("(concat ", stderr);
-        EmitStringExpression(e->val.concat.lhs, -IncIndent(level, 8));
-        EmitStringExpression(e->val.concat.rhs, IncIndent(level, 8));
-        fputs(")", stderr);
-        break;
-    case LITERAL:
-        IndentL(level);
-        fprintf(stderr, "\"%s\"", e->val.literal.literal);
-        break;
-    case VARREF:
-        IndentL(level);
-        fputs("($ ", stderr);
-        EmitStringExpression(e->val.varref.name, -IncIndent(level, 3));
-        break;
-    default:
-        ProgrammingError("Unknown type of string expression: %d", e->op);
-    }
-}
-
-/**********************************************************************/
-
-static void EmitExpression(Expression *e, int level)
-{
-    if (!e)
-    {
-        return;
-    }
-
-    switch (e->op)
-    {
-    case OR:
-    case AND:
-        IndentL(level);
-        fprintf(stderr, "(%s ", e->op == OR ? "|" : "&");
-        EmitExpression(e->val.andor.lhs, -IncIndent(level, 3));
-        EmitExpression(e->val.andor.rhs, IncIndent(level, 3));
-        fputs(")", stderr);
-        break;
-    case NOT:
-        IndentL(level);
-        fputs("(- ", stderr);
-        EmitExpression(e->val.not.arg, -IncIndent(level, 3));
-        fputs(")", stderr);
-        break;
-    case EVAL:
-        IndentL(level);
-        fputs("(eval ", stderr);
-        EmitStringExpression(e->val.eval.name, -IncIndent(level, 6));
-        fputs(")", stderr);
-        break;
-    default:
-        ProgrammingError("Unknown logic expression type: %d", e->op);
-    }
-}
-
-/*****************************************************************************/
-/* Syntax-checking and evaluating various expressions */
-/*****************************************************************************/
-
 static void EmitParserError(const char *str, int position)
 {
     char *errmsg = HighlightExpressionError(str, position);
@@ -484,12 +381,6 @@ static void EmitParserError(const char *str, int position)
 void ValidateClassSyntax(const char *str)
 {
     ParseResult res = ParseExpression(str, 0, strlen(str));
-
-    if (DEBUG)
-    {
-        EmitExpression(res.result, 0);
-        putc('\n', stderr);
-    }
 
     if (res.result)
     {

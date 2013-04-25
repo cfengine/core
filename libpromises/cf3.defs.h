@@ -644,7 +644,6 @@ typedef struct
 typedef struct Rlist_ Rlist;
 
 typedef struct ConstraintSyntax_ ConstraintSyntax;
-typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
 typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 
 /*
@@ -660,13 +659,6 @@ typedef struct BodyTypeSyntax_ BodyTypeSyntax;
 typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
 
 typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
-
-struct ConstraintSetSyntax_
-{
-    const ConstraintSyntax *constraints;
-    const ParseTreeCheckFn parse_tree_check;
-};
-
 
 struct ConstraintSyntax_
 {

@@ -27,6 +27,7 @@
 
 #include "audit.h"
 #include "env_context.h"
+#include "verify_classes.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
 #include "verify_exec.h"
@@ -1416,7 +1417,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

@@ -43,6 +43,7 @@
 #include "rlist.h"
 #include "cf-serverd-enterprise-stubs.h"
 #include "syslog_client.h"
+#include "verify_classes.h"
 
 #include "generic_agent.h" // HashControls
 
@@ -616,7 +617,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *pa
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

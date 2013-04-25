@@ -55,6 +55,7 @@
 #include "rlist.h"
 #include "syslog_client.h"
 #include "audit.h"
+#include "verify_classes.h"
 #include "verify_vars.h"
 
 #ifdef HAVE_NOVA
@@ -1254,7 +1255,7 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
             continue;
         }
 
-        ExpandPromise(ctx, pp, KeepClassContextPromise, NULL);
+        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
     }
 }
 

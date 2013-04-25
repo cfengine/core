@@ -32,7 +32,7 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
 #include "scope.h"
 #include "vars.h"

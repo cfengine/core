@@ -28,8 +28,6 @@
 
 #include "cf3.defs.h"
 
-#include "reporting.h"
-
 typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
 void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);

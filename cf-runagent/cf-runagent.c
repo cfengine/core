@@ -32,7 +32,6 @@
 #include "files_names.h"
 #include "promises.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "vars.h"
 #include "logging.h"
 #include "client_code.h"

@@ -86,7 +86,6 @@ libpromises_la_SOURCES = \
         process_lib.h process_unix_priv.h \
         promises.c promises.h \
         prototypes3.h \
-        reporting.c reporting.h \
         rlist.c rlist.h \
         scope.c scope.h \
         signals.c signals.h \

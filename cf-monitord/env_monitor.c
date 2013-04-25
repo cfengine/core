@@ -32,7 +32,7 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"

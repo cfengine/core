@@ -32,7 +32,7 @@
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "scope.h"
 #include "hashes.h"
 #include "unix.h"

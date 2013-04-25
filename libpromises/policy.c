@@ -28,7 +28,6 @@
 #include "syntax.h"
 #include "string_lib.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "mutex.h"
 #include "logging.h"
 #include "misc_lib.h"

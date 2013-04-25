@@ -58,7 +58,6 @@
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
-#include "nova_reporting.h"
 #endif
 
 #include <assert.h>
@@ -1044,37 +1043,6 @@ void SetFacility(const char *retval)
     OpenLog(ParseFacility(retval));
     SetSyslogFacility(ParseFacility(retval));
 }
-
-/**************************************************************/
-
-void BannerBundle(Bundle *bp, Rlist *params)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
-
-    if (VERBOSE || DEBUG)
-    {
-        printf("%s> BUNDLE %s", VPREFIX, bp->name);
-    }
-
-    if (params && (VERBOSE || DEBUG))
-    {
-        printf("(");
-        RlistShow(stdout, params);
-        printf(" )\n");
-    }
-    else
-    {
-        if (VERBOSE || DEBUG)
-            printf("\n");
-    }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-
-}
-
-/*********************************************************************/
 
 static void CheckWorkingDirectories(EvalContext *ctx)
 /* NOTE: We do not care about permissions (ACLs) in windows */

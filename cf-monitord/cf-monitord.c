@@ -28,7 +28,6 @@
 #include "env_context.h"
 #include "env_monitor.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "vars.h"
 #include "logging.h"
 #include "signals.h"

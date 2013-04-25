@@ -28,7 +28,6 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "reporting.h"
 #include "scope.h"
 #include "files_copy.h"
 #include "files_interfaces.h"

@@ -27,7 +27,6 @@
 #include "env_context.h"
 #include "files_names.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "matching.h"
 #include "logging.h"
 #include "string_lib.h"

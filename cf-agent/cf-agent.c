@@ -99,9 +99,9 @@ typedef enum
 #include "cf.nova.h"
 #include "agent_reports.h"
 #include "nova-agent-diagnostics.h"
-#else
-#include "reporting.h"
 #endif
+
+#include "ornaments.h"
 
 #include <assert.h>
 

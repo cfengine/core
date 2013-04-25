@@ -97,3 +97,71 @@ void BannerSubBundle(const Bundle *bp, const Rlist *params)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
+
+void Banner(const char *s)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " %s ", s);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
+}
+
+void BannerPromiseType(const char *bundlename, const char *type, int pass)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   %s in bundle %s (%d)\n", type, bundlename, pass);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+}
+
+void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type)
+{
+    if (strcmp(type, "processes") == 0)
+    {
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??? Local class context: \n");
+
+            StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+            const char *context = NULL;
+            while ((context = StringSetIteratorNext(&it)))
+            {
+                printf("       %s\n", context);
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        }
+    }
+
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      %s in bundle %s\n", type, bundlename);
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+}
+
+void BannerBundle(Bundle *bp, Rlist *params)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
+
+    if (VERBOSE || DEBUG)
+    {
+        printf("%s> BUNDLE %s", VPREFIX, bp->name);
+    }
+
+    if (params && (VERBOSE || DEBUG))
+    {
+        printf("(");
+        RlistShow(stdout, params);
+        printf(" )\n");
+    }
+    else
+    {
+        if (VERBOSE || DEBUG)
+            printf("\n");
+    }
+
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+
+}

@@ -28,13 +28,13 @@
 #include "cf3.defs.h"
 #include "parser_state.h"
 
-#include "env_context.h"
 #include "fncall.h"
 #include "rlist.h"
 #include "item_lib.h"
 #include "policy.h"
 #include "mod_files.h"
 #include "string_lib.h"
+#include "logic_expressions.h"
 
 // FIX: remove
 #include "syntax.h"
@@ -51,7 +51,10 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
 static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval rval, const PromiseTypeSyntax *ss);
 static void fatal_yyerror(const char *s);
 
+static void ParseErrorColumnOffset(int column_offset, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
+
+static void ValidateClassLiteral(const char *class_literal);
 
 static bool INSTALL_SKIP = false;
 
@@ -536,7 +539,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                                }
                                if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
-                                   ValidateClassSyntax(P.rval.item);
+                                   ValidateClassLiteral(P.rval.item);
                                }
 
                                cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
@@ -659,7 +662,7 @@ selection:             selection_id                         /* BODY ONLY */
 
                                if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
                                {
-                                   ValidateClassSyntax(P.rval.item);
+                                   ValidateClassLiteral(P.rval.item);
                                }
 
                                if (P.currentclasses == NULL)
@@ -769,6 +772,14 @@ class:                 CLASS
                        {
                            P.offsets.last_class_id = P.offsets.current - strlen(P.currentclasses) - 2;
                            ParserDebug("\tP:%s:%s:%s:%s class = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, yytext);
+
+                           /* class literal includes terminating :: */
+                           char *literal = xstrndup(yytext, yylen - 2);
+
+                           ValidateClassLiteral(literal);
+
+                           free(literal);
+
                            CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
                        }
 
@@ -1010,13 +1021,13 @@ gaitem:                IDSYNTAX
 
 /*****************************************************************/
 
-static void ParseErrorV(const char *s, va_list ap)
+static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap)
 {
     char *errmsg = StringVFormat(s, ap);
 
-    fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos, errmsg);
+    fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos + column_offset, errmsg);
     fprintf(stderr, "%s\n", P.current_line);
-    fprintf(stderr, "%*s\n", P.line_pos, "^");
+    fprintf(stderr, "%*s\n", P.line_pos + column_offset, "^");
 
     free(errmsg);
 
@@ -1027,6 +1038,19 @@ static void ParseErrorV(const char *s, va_list ap)
         fprintf(stderr, "Too many errors");
         exit(1);
     }
+}
+
+static void ParseErrorColumnOffset(int column_offset, const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    ParseErrorVColumnOffset(column_offset, s, ap);
+    va_end(ap);
+}
+
+static void ParseErrorV(const char *s, va_list ap)
+{
+    ParseErrorVColumnOffset(0, s, ap);
 }
 
 static void ParseError(const char *s, ...)
@@ -1261,4 +1285,14 @@ static SyntaxTypeMatch CheckConstraint(const char *type, const char *lval, Rval 
     }
 
     return SYNTAX_TYPE_MATCH_OK;
+}
+
+static void ValidateClassLiteral(const char *class_literal)
+{
+    ParseResult res = ParseExpression(class_literal, 0, strlen(class_literal));
+
+    if (!res.result)
+    {
+        ParseErrorColumnOffset(res.position - strlen(class_literal), "Syntax error in context string");
+    }
 }

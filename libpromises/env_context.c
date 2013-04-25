@@ -347,57 +347,6 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     }
 }
 
-/**********************************************************************/
-/* Utilities */
-/**********************************************************************/
-
-/* Return expression with error position highlighted. Result is on the heap. */
-
-static char *HighlightExpressionError(const char *str, int position)
-{
-    char *errmsg = xmalloc(strlen(str) + 3);
-    char *firstpart = xstrndup(str, position);
-    char *secondpart = xstrndup(str + position, strlen(str) - position);
-
-    sprintf(errmsg, "%s->%s", firstpart, secondpart);
-
-    free(secondpart);
-    free(firstpart);
-
-    return errmsg;
-}
-
-static void EmitParserError(const char *str, int position)
-{
-    char *errmsg = HighlightExpressionError(str, position);
-
-    yyerror(errmsg);
-    free(errmsg);
-}
-
-/**********************************************************************/
-
-/* To be used from parser only (uses yyerror) */
-void ValidateClassSyntax(const char *str)
-{
-    ParseResult res = ParseExpression(str, 0, strlen(str));
-
-    if (res.result)
-    {
-        FreeExpression(res.result);
-    }
-
-    if (!res.result || res.position != strlen(str))
-    {
-        EmitParserError(str, res.position);
-    }
-}
-
-/**********************************************************************/
-
-
-/**********************************************************************/
-
 typedef struct
 {
     const EvalContext *ctx;
@@ -486,10 +435,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
     if (!res.result)
     {
-        char *errexpr = HighlightExpressionError(context, res.position);
-
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", errexpr);
-        free(errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", context);
         return false;
     }
     else
@@ -528,10 +474,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
     if (!res.result)
     {
-        char *errexpr = HighlightExpressionError(expr, res.position);
-
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", errexpr);
-        free(errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", expr);
         return false;           /* FIXME: return error */
     }
     else

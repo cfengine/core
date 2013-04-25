@@ -46,6 +46,7 @@
 #include "rlist.h"
 #include "ornaments.h"
 #include "env_context.h"
+#include "retcode.h"
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"

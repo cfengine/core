@@ -44,6 +44,7 @@
 #include "scope.h"
 #include "ornaments.h"
 #include "env_context.h"
+#include "retcode.h"
 
 typedef enum
 {

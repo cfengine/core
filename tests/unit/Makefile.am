@@ -156,7 +156,7 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c
 
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la

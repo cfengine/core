@@ -28,30 +28,29 @@
 
 static const ConstraintSyntax database_server_constraints[] =
 {
-    ConstraintSyntaxNewString("db_server_owner", "", "User name for database connection", NULL),
-    ConstraintSyntaxNewString("db_server_password", "", "Clear text password for database connection", NULL),
-    ConstraintSyntaxNewString("db_server_host", "", "Hostname or address for connection to database, blank means localhost", NULL),
-    ConstraintSyntaxNewOption("db_server_type", "postgres,mysql", "The dialect of the database server", "none"),
-    ConstraintSyntaxNewString("db_server_connection_db", "",
-     "The name of an existing database to connect to in order to create/manage other databases", NULL),
+    ConstraintSyntaxNewString("db_server_owner", "", "User name for database connection", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("db_server_password", "", "Clear text password for database connection", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("db_server_host", "", "Hostname or address for connection to database, blank means localhost", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("db_server_type", "postgres,mysql", "The dialect of the database server. Default value: none", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("db_server_connection_db", "", "The name of an existing database to connect to in order to create/manage other databases", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax database_server_body = BodyTypeSyntaxNew("database_server", database_server_constraints, NULL);
+static const BodyTypeSyntax database_server_body = BodyTypeSyntaxNew("database_server", database_server_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax databases_constraints[] =
 {
-    ConstraintSyntaxNewBody("database_server", &database_server_body, "Credentials for connecting to a local/remote database server", NULL),
-    ConstraintSyntaxNewOption("database_type", "sql,ms_registry", "The type of database that is to be manipulated", "none"),
-    ConstraintSyntaxNewOption("database_operation", "create,delete,drop,cache,verify,restore", "The nature of the promise - to be or not to be", NULL),
-    ConstraintSyntaxNewStringList("database_columns", ".*", "A list of column definitions to be promised by SQL databases"),
-    ConstraintSyntaxNewStringList("database_rows", ".*,.*", "An ordered list of row values to be promised by SQL databases"),
-    ConstraintSyntaxNewStringList("registry_exclude", "", "A list of regular expressions to ignore in key/value verification"),
+    ConstraintSyntaxNewBody("database_server", &database_server_body, "Credentials for connecting to a local/remote database server", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("database_type", "sql,ms_registry", "The type of database that is to be manipulated. Default value: none", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("database_operation", "create,delete,drop,cache,verify,restore", "The nature of the promise - to be or not to be", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("database_columns", ".*", "A list of column definitions to be promised by SQL databases", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("database_rows", ".*,.*", "An ordered list of row values to be promised by SQL databases", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("registry_exclude", "", "A list of regular expressions to ignore in key/value verification", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_DATABASES_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "databases", databases_constraints, NULL),
-    PromiseTypeSyntaxNewNull(),
+    PromiseTypeSyntaxNew("agent", "databases", databases_constraints, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNewNull()
 };

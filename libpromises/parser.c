@@ -25,6 +25,8 @@
 #include "parser.h"
 #include "parser_state.h"
 
+#include "misc_lib.h"
+
 #include <errno.h>
 
 int yyparse(void);
@@ -37,11 +39,14 @@ static void ParserStateReset(ParserState *p)
 {
     p->policy = NULL;
 
+    p->warnings = PARSER_WARNING_ALL;
+
     free(p->current_line);
     p->current_line = NULL;
     p->line_no = 1;
     p->line_pos = 1;
     p->error_count = 0;
+    p->warning_count = 0;
     p->list_nesting = 0;
     p->arg_nesting = 0;
 
@@ -59,10 +64,13 @@ static void ParserStateReset(ParserState *p)
     p->blocktype[0] = '\0';
 }
 
-Policy *ParserParseFile(const char *path)
+Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error)
 {
     ParserStateReset(&P);
     P.policy = PolicyNew();
+
+    P.warnings = warnings;
+    P.warnings_error = warnings_error;
 
     strncpy(P.filename, path, CF_MAXVARSIZE);
 
@@ -94,4 +102,38 @@ Policy *ParserParseFile(const char *path)
     }
 
     return P.policy;
+}
+
+int ParserWarningFromString(const char *warning_str)
+{
+    if (strcmp("deprecated", warning_str) == 0)
+    {
+        return PARSER_WARNING_DEPRECATED;
+    }
+    else if (strcmp("removed", warning_str) == 0)
+    {
+        return PARSER_WARNING_REMOVED;
+    }
+    else if (strcmp("all", warning_str) == 0)
+    {
+        return PARSER_WARNING_ALL;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+const char *ParserWarningToString(unsigned int warning)
+{
+    switch (warning)
+    {
+    case PARSER_WARNING_DEPRECATED:
+        return "deprecated";
+    case PARSER_WARNING_REMOVED:
+        return "removed";
+
+    default:
+        ProgrammingError("Invalid parser warning: %u", warning);
+    }
 }

@@ -11,7 +11,7 @@ static Policy *LoadPolicy(const char *filename)
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    return ParserParseFile(path);
+    return ParserParseFile(path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 }
 
 static void TestCheckConfigIsDefault(ExecConfig *c)

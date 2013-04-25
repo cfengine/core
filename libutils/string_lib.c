@@ -769,6 +769,26 @@ bool StringEndsWith(const char *str, const char *suffix)
     return true;
 }
 
+bool StringStartsWith(const char *str, const char *prefix)
+{
+    int str_len = strlen(str);
+    int prefix_len = strlen(prefix);
+
+    if (prefix_len > str_len)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < prefix_len; i++)
+    {
+        if (str[i] != prefix[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
 char *StringVFormat(const char *fmt, va_list ap)
 {
     char *value;

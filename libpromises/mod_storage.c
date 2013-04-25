@@ -28,38 +28,38 @@
 
 static const ConstraintSyntax volume_constraints[] =
 {
-    ConstraintSyntaxNewBool("check_foreign", "true/false verify storage that is mounted from a foreign system on this host", "false"),
-    ConstraintSyntaxNewString("freespace", "[0-9]+[MBkKgGmb%]", "Absolute or percentage minimum disk space that should be available before warning", NULL),
-    ConstraintSyntaxNewInt("sensible_size", CF_VALRANGE, "Minimum size in bytes that should be used on a sensible-looking storage device", NULL),
-    ConstraintSyntaxNewInt("sensible_count", CF_VALRANGE, "Minimum number of files that should be defined on a sensible-looking storage device", NULL),
-    ConstraintSyntaxNewBool("scan_arrivals", "true/false generate pseudo-periodic disk change arrival distribution", "false"),
+    ConstraintSyntaxNewBool("check_foreign", "true/false verify storage that is mounted from a foreign system on this host. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("freespace", "[0-9]+[MBkKgGmb%]", "Absolute or percentage minimum disk space that should be available before warning", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("sensible_size", CF_VALRANGE, "Minimum size in bytes that should be used on a sensible-looking storage device", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("sensible_count", CF_VALRANGE, "Minimum number of files that should be defined on a sensible-looking storage device", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("scan_arrivals", "true/false generate pseudo-periodic disk change arrival distribution. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax volume_body = BodyTypeSyntaxNew("volume_method", volume_constraints, NULL);
+static const BodyTypeSyntax volume_body = BodyTypeSyntaxNew("volume_method", volume_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax mount_constraints[] =
 {
-    ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\")", "false"),
-    ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", NULL),
-    ConstraintSyntaxNewString("mount_source", CF_ABSPATHRANGE, "Path of remote file system to mount", NULL),
-    ConstraintSyntaxNewString("mount_server", "", "Hostname or IP or remote file system server", NULL),
-    ConstraintSyntaxNewStringList("mount_options", "", "List of option strings to add to the file system table (\"fstab\")"),
-    ConstraintSyntaxNewBool("unmount", "true/false unmount a previously mounted filesystem", "false"),
+    ConstraintSyntaxNewBool("edit_fstab", "true/false add or remove entries to the file system table (\"fstab\"). Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("mount_type", "nfs,nfs2,nfs3,nfs4", "Protocol type of remote file system", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("mount_source", CF_ABSPATHRANGE, "Path of remote file system to mount", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("mount_server", "", "Hostname or IP or remote file system server", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("mount_options", "", "List of option strings to add to the file system table (\"fstab\")", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("unmount", "true/false unmount a previously mounted filesystem. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", mount_constraints, NULL);
+static const BodyTypeSyntax mount_body = BodyTypeSyntaxNew("mount", mount_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax storage_constraints[] =
 {
-    ConstraintSyntaxNewBody("mount", &mount_body, "Criteria for mounting foreign file systems", NULL),
-    ConstraintSyntaxNewBody("volume", &volume_body, "Criteria for monitoring/probing mounted volumes", NULL),
+    ConstraintSyntaxNewBody("mount", &mount_body, "Criteria for mounting foreign file systems", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("volume", &volume_body, "Criteria for monitoring/probing mounted volumes", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_STORAGE_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "storage", storage_constraints, NULL),
+    PromiseTypeSyntaxNew("agent", "storage", storage_constraints, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };

@@ -97,6 +97,14 @@ int Chop(char *str, size_t max_length);
 bool StringEndsWith(const char *str, const char *suffix);
 
 /**
+ * @brief Check if a string starts with the given prefix
+ * @param str
+ * @param prefix
+ * @return True if prefix matches
+ */
+bool StringStartsWith(const char *str, const char *prefix);
+
+/**
  * @brief Format string like vsprintf and return formatted string allocated
  * on heap as a return value.
  */

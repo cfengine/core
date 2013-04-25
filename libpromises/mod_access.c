@@ -49,23 +49,23 @@
 
 const ConstraintSyntax CF_REMACCESS_BODIES[] =
 {
-    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects"),
-    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects"),
-    ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server"),
-    ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted", "false"),
-    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", NULL),
+    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 const ConstraintSyntax CF_REMROLE_BODIES[] =
 {
-    ConstraintSyntaxNewStringList("authorize", "", "List of public-key user names that are allowed to activate the promised class during remote agent activation"),
+    ConstraintSyntaxNewStringList("authorize", "", "List of public-key user names that are allowed to activate the promised class during remote agent activation", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, NULL),
-    PromiseTypeSyntaxNew("server", "roles", CF_REMROLE_BODIES, NULL),
-    PromiseTypeSyntaxNewNull(),
+    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("server", "roles", CF_REMROLE_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNewNull()
 };

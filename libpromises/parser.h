@@ -27,6 +27,24 @@
 
 #include "policy.h"
 
-Policy *ParserParseFile(const char *path);
+#define PARSER_WARNING_DEPRECATED       (1 << 0)
+#define PARSER_WARNING_REMOVED          (1 << 1)
+
+#define PARSER_WARNING_ALL              0xfffffff
+
+/**
+ * @return warning code, or -1 if not a valid warning
+ */
+int ParserWarningFromString(const char *warning_str);
+const char *ParserWarningToString(unsigned int warning);
+
+/**
+ * @brief Parse a CFEngine file to create a Policy DOM
+ * @param path Path of file to parse
+ * @param warnings Bitfield of which warnings should be recorded
+ * @param warnings_error Bitfield of which warnings should be counted as errors
+ * @return
+ */
+Policy *ParserParseFile(const char *path, unsigned int warnings, unsigned int warnings_error);
 
 #endif

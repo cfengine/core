@@ -34,6 +34,15 @@
 #include "logging.h"
 #include "string_lib.h"
 
+/*
+ * The HPUX linker is interesting. It does not find the symbol "DEBUG", which is
+ * declared in cf3globals.c. So we define it here protected by an ifdef.
+ * It is ugly and it does not look great, but it fixes the problem.
+ */
+#ifdef CF_DBTEST
+int DEBUG = false;
+#endif
+
 #ifdef QDB
 # include <depot.h>
 

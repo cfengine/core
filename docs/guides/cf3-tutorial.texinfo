@@ -1571,16 +1571,6 @@ mailmaxlines => "30";
 
 #######################################################
 
-body reporter control
-
-{
-reports => { "performance", "last_seen", "monitor_history" };
-build_directory => "/tmp/nerves";
-report_output => "html";
-}
-
-#######################################################
-
 body runagent control
 {
 hosts => {

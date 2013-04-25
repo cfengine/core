@@ -55,6 +55,7 @@
 #include "rlist.h"
 #include "syslog_client.h"
 #include "audit.h"
+#include "verify_vars.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -1229,7 +1230,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        ConvergeVarHashPromise(ctx, pp, allow_redefine);
+        VerifyVarPromise(ctx, pp, allow_redefine);
     }
 }
 

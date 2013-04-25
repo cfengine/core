@@ -352,12 +352,6 @@ void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 /* EXPORT TYPE */
     XmlExportType(writer, bs);
 
-/* XML ELEMENT -- DEFAULT-VALUE */
-    if (bs->default_value != NULL)
-    {
-        XmlTag(writer, XMLTAG_DEFAULTVAL, bs->default_value, 0);
-    }
-
     switch (bs->dtype)
     {
     case DATA_TYPE_BODY:

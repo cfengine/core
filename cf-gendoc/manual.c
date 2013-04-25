@@ -490,16 +490,9 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
         }
         else
         {
-            const char *res = bs[i].default_value;
-
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n", bs[i].lval, context,
                     bs[i].lval, CF_DATATYPES[bs[i].dtype]);
             TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
-
-            if (res)
-            {
-                fprintf(fout, "@noindent @b{Default value:} %s\n", res);
-            }
 
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
             fprintf(fout, "\n@noindent @b{Example}:@*\n");
@@ -671,16 +664,9 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const Constr
         }
         else
         {
-            const char *res = bs[i].default_value;
-
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
             TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
-
-            if (res)
-            {
-                fprintf(fout, "\n@noindent @b{Default value:} %s\n", res);
-            }
 
             fprintf(fout, "\n@b{Example}:@*\n");
             snprintf(filename, CF_BUFSIZE - 1, "bodyparts/%s_example.texinfo", bs[i].lval);

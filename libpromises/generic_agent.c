@@ -947,7 +947,14 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     }
     else
     {
-        policy = ParserParseFile(input_path);
+        if (config->agent_type == AGENT_TYPE_COMMON)
+        {
+            policy = ParserParseFile(input_path, config->agent_specific.common.parser_warnings, config->agent_specific.common.parser_warnings_error);
+        }
+        else
+        {
+            policy = ParserParseFile(input_path, 0, 0);
+        }
     }
 
     return policy;
@@ -1618,6 +1625,54 @@ bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char
     return true;
 }
 
+bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options)
+{
+    if (strlen(warning_options) == 0)
+    {
+        return false;
+    }
+
+    if (strcmp("error", warning_options) == 0)
+    {
+        config->agent_specific.common.parser_warnings_error |= PARSER_WARNING_ALL;
+        return true;
+    }
+
+    const char *options_start = warning_options;
+    bool warnings_as_errors = false;
+
+    if (StringStartsWith(warning_options, "error="))
+    {
+        options_start = warning_options + strlen("error=");
+        warnings_as_errors = true;
+    }
+
+    StringSet *warnings_set = StringSetFromString(options_start, ',');
+    StringSetIterator it = StringSetIteratorInit(warnings_set);
+    const char *warning_str = NULL;
+    while ((warning_str = StringSetIteratorNext(&it)))
+    {
+        int warning = ParserWarningFromString(warning_str);
+        if (warning == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Unrecognized warning '%s'", warning_str);
+            StringSetDestroy(warnings_set);
+            return false;
+        }
+
+        if (warnings_as_errors)
+        {
+            config->agent_specific.common.parser_warnings_error |= warning;
+        }
+        else
+        {
+            config->agent_specific.common.parser_warnings |= warning;
+        }
+    }
+
+    StringSetDestroy(warnings_set);
+    return true;
+}
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {

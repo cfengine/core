@@ -34,9 +34,9 @@ static const char *POLICY_ERROR_METHODS_BUNDLE_ARITY = "Conflicting arity in cal
 
 static const ConstraintSyntax CF_METHOD_BODIES[] =
 {
-    ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent", NULL),
-    ConstraintSyntaxNewBundle("usebundle", "Specify the name of a bundle to run as a parameterized method", NULL),
-    ConstraintSyntaxNewString("useresult", CF_IDRANGE, "Specify the name of a local variable to contain any result/return value from the child", NULL),
+    ConstraintSyntaxNewBool("inherit", "If true this causes the sub-bundle to inherit the private classes of its parent", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBundle("usebundle", "Specify the name of a bundle to run as a parameterized method", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("useresult", CF_IDRANGE, "Specify the name of a local variable to contain any result/return value from the child", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -78,6 +78,6 @@ static bool MethodsParseTreeCheck(const Promise *pp, Seq *errors)
 
 const PromiseTypeSyntax CF_METHOD_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("agent", "methods", CF_METHOD_BODIES, &MethodsParseTreeCheck),
+    PromiseTypeSyntaxNew("agent", "methods", CF_METHOD_BODIES, &MethodsParseTreeCheck, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };

@@ -26,6 +26,7 @@
 */
 
 #include "cf3.defs.h"
+#include "parser.h"
 #include "parser_state.h"
 
 #include "fncall.h"
@@ -53,6 +54,7 @@ static void fatal_yyerror(const char *s);
 
 static void ParseErrorColumnOffset(int column_offset, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 static void ParseError(const char *s, ...) FUNC_ATTR_PRINTF(1, 2);
+static void ParseWarning(unsigned int warning, const char *s, ...) FUNC_ATTR_PRINTF(2, 3);
 
 static void ValidateClassLiteral(const char *class_literal);
 
@@ -300,7 +302,7 @@ bundle_statements:     bundle_statement
                      | bundle_statements bundle_statement
                      | error 
                        {
-                          INSTALL_SKIP=true;
+                          INSTALL_SKIP = true;
                           ParseError("Expected promise type, got '%s'", yytext);
                           ParserDebug("P:promise_type:error yychar = %d, %c, yyempty = %d\n", yychar, yychar, YYEMPTY);
                           yyclearin; 
@@ -319,24 +321,40 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                            CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
-                           if (!PromiseTypeSyntaxLookup(P.blocktype, P.currenttype))
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+
+                           if (promise_type_syntax)
+                           {
+                               switch (promise_type_syntax->status)
+                               {
+                               case SYNTAX_STATUS_DEPRECATED:
+                                   ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   // Intentional fall
+                               case SYNTAX_STATUS_NORMAL:
+                                   if (strcmp(P.block, "bundle") == 0)
+                                   {
+                                       if (!INSTALL_SKIP)
+                                       {
+                                           P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
+                                           P.currentstype->offset.line = P.line_no;
+                                           P.currentstype->offset.start = P.offsets.last_promise_type_id;
+                                       }
+                                       else
+                                       {
+                                           P.currentstype = NULL;
+                                       }
+                                   }
+                                   break;
+                               case SYNTAX_STATUS_REMOVED:
+                                   ParseWarning(PARSER_WARNING_REMOVED, "Removed promise type '%s' in bundle type '%s'", promise_type_syntax->promise_type, promise_type_syntax->bundle_type);
+                                   INSTALL_SKIP = true;
+                                   break;
+                               }
+                           }
+                           else
                            {
                                ParseError("Unknown promise type '%s'", P.currenttype);
                                INSTALL_SKIP = true;
-                           }
-
-                           if (strcmp(P.block,"bundle") == 0)
-                           {
-                               if (!INSTALL_SKIP)
-                               {
-                                   P.currentstype = BundleAppendPromiseType(P.currentbundle,P.currenttype);
-                                   P.currentstype->offset.line = P.line_no;
-                                   P.currentstype->offset.start = P.offsets.last_promise_type_id;
-                               }
-                               else
-                               {
-                                   P.currentstype = NULL;
-                               }
                            }
                        }
 
@@ -528,33 +546,56 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               Constraint *cp = NULL;
-                               const PromiseTypeSyntax *ss = PromiseTypeSyntaxLookup(P.blocktype,P.currenttype);
+                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                               assert(promise_type_syntax);
+
+                               const ConstraintSyntax *constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
+                               if (constraint_syntax)
                                {
-                                   SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, ss);
-                                   if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                   switch (constraint_syntax->status)
                                    {
-                                       yyerror(SyntaxTypeMatchToString(err));
+                                   case SYNTAX_STATUS_DEPRECATED:
+                                       ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       // Intentional fall
+                                   case SYNTAX_STATUS_NORMAL:
+                                       {
+                                           {
+                                               SyntaxTypeMatch err = CheckConstraint(P.currenttype, P.lval, P.rval, promise_type_syntax);
+                                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                               {
+                                                   yyerror(SyntaxTypeMatchToString(err));
+                                               }
+                                           }
+
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           {
+                                               ValidateClassLiteral(P.rval.item);
+                                           }
+
+                                           Constraint *cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
+                                           cp->offset.line = P.line_no;
+                                           cp->offset.start = P.offsets.last_id;
+                                           cp->offset.end = P.offsets.current;
+                                           cp->offset.context = P.offsets.last_class_id;
+                                           P.currentstype->offset.end = P.offsets.current;
+
+                                           // Cache whether there are subbundles for later $(this.promiser) logic
+
+                                           if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
+                                               || strcmp(P.lval,"edit_xml") == 0)
+                                           {
+                                               P.currentpromise->has_subbundles = true;
+                                           }
+                                       }
+                                       break;
+                                   case SYNTAX_STATUS_REMOVED:
+                                       ParseWarning(PARSER_WARNING_REMOVED, "Removed constraint '%s' in promise type '%s'", constraint_syntax->lval, promise_type_syntax->promise_type);
+                                       break;
                                    }
                                }
-                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                               else
                                {
-                                   ValidateClassLiteral(P.rval.item);
-                               }
-
-                               cp = PromiseAppendConstraint(P.currentpromise, P.lval, P.rval, "any", P.references_body);
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
-                               P.currentstype->offset.end = P.offsets.current;
-
-                               // Cache whether there are subbundles for later $(this.promiser) logic
-
-                               if (strcmp(P.lval,"usebundle") == 0 || strcmp(P.lval,"edit_line") == 0
-                                   || strcmp(P.lval,"edit_xml") == 0)
-                               {
-                                   P.currentpromise->has_subbundles = true;
+                                   ParseError("Unknown constraint '%s' in promise type '%s'", P.lval, promise_type_syntax->promise_type);
                                }
 
                                P.rval = (Rval) { NULL, '\0' };
@@ -580,7 +621,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))
                            {
                                ParseError("Unknown attribute '%s' for promise type '%s' in bundle with type '%s'", P.currentid, P.currenttype, P.blocktype);
-                               INSTALL_SKIP=true;
+                               INSTALL_SKIP = true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
@@ -652,31 +693,50 @@ selection:             selection_id                         /* BODY ONLY */
 
                            if (!INSTALL_SKIP)
                            {
-                               Constraint *cp = NULL;
+                               const BodyTypeSyntax *body_syntax = BodySyntaxLookup(P.blocktype);
+                               assert(body_syntax);
 
-                               SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
-                               if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                               const ConstraintSyntax *constraint_syntax = BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
+                               if (constraint_syntax)
                                {
-                                   yyerror(SyntaxTypeMatchToString(err));
-                               }
+                                   switch (constraint_syntax->status)
+                                   {
+                                   case SYNTAX_STATUS_DEPRECATED:
+                                       ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated constraint '%s' in body type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       // Intentional fall
+                                   case SYNTAX_STATUS_NORMAL:
+                                       {
+                                           SyntaxTypeMatch err = CheckSelection(P.blocktype, P.blockid, P.lval, P.rval);
+                                           if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
+                                           {
+                                               yyerror(SyntaxTypeMatchToString(err));
+                                           }
 
-                               if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
-                               {
-                                   ValidateClassLiteral(P.rval.item);
-                               }
+                                           if (P.rval.type == RVAL_TYPE_SCALAR && strcmp(P.lval, "ifvarclass") == 0)
+                                           {
+                                               ValidateClassLiteral(P.rval.item);
+                                           }
 
-                               if (P.currentclasses == NULL)
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                           Constraint *cp = NULL;
+                                           if (P.currentclasses == NULL)
+                                           {
+                                               cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, "any", P.references_body);
+                                           }
+                                           else
+                                           {
+                                               cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
+                                           }
+                                           cp->offset.line = P.line_no;
+                                           cp->offset.start = P.offsets.last_id;
+                                           cp->offset.end = P.offsets.current;
+                                           cp->offset.context = P.offsets.last_class_id;
+                                           break;
+                                       }
+                                   case SYNTAX_STATUS_REMOVED:
+                                       ParseWarning(PARSER_WARNING_REMOVED, "Removed constraint '%s' in promise type '%s'", constraint_syntax->lval, body_syntax->body_type);
+                                       break;
+                                   }
                                }
-                               else
-                               {
-                                   cp = BodyAppendConstraint(P.currentbody, P.lval, P.rval, P.currentclasses, P.references_body);
-                               }
-                               cp->offset.line = P.line_no;
-                               cp->offset.start = P.offsets.last_id;
-                               cp->offset.end = P.offsets.current;
-                               cp->offset.context = P.offsets.last_class_id;
                            }
                            else
                            {
@@ -713,7 +773,7 @@ selection_id:          IDSYNTAX
                            if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                            {
                                ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
-                               INSTALL_SKIP=true;
+                               INSTALL_SKIP = true;
                            }
 
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
@@ -1058,6 +1118,44 @@ static void ParseError(const char *s, ...)
     va_list ap;
     va_start(ap, s);
     ParseErrorV(s, ap);
+    va_end(ap);
+}
+
+static void ParseWarningV(unsigned int warning, const char *s, va_list ap)
+{
+    if (((P.warnings | P.warnings_error) & warning) == 0)
+    {
+        return;
+    }
+
+    char *errmsg = StringVFormat(s, ap);
+    const char *warning_str = ParserWarningToString(warning);
+
+    fprintf(stderr, "%s:%d:%d: warning: %s [-W%s]\n", P.filename, P.line_no, P.line_pos, errmsg, warning_str);
+    fprintf(stderr, "%s\n", P.current_line);
+    fprintf(stderr, "%*s\n", P.line_pos, "^");
+
+    free(errmsg);
+
+    P.warning_count++;
+
+    if ((P.warnings_error & warning) != 0)
+    {
+        P.error_count++;
+    }
+
+    if (P.error_count > 12)
+    {
+        fprintf(stderr, "Too many errors");
+        exit(1);
+    }
+}
+
+static void ParseWarning(unsigned int warning, const char *s, ...)
+{
+    va_list ap;
+    va_start(ap, s);
+    ParseWarningV(warning, s, ap);
     va_end(ap);
 }
 

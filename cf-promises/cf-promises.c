@@ -60,6 +60,7 @@ static const struct option OPTIONS[] =
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
     {"full-check", no_argument, 0, 'c'},
+    {"warn", optional_argument, 0, 'W'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -79,6 +80,7 @@ static const char *HINTS[] =
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Ensure full policy integrity checks",
+    "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     NULL
 };
 
@@ -112,7 +114,8 @@ int main(int argc, char *argv[])
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(config->input_file);
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             Writer *writer = FileWriter(stdout);
             PolicyToString(policy, writer);
             WriterClose(writer);
@@ -122,7 +125,8 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(config->input_file);
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
             JsonElementPrint(writer, json_policy, 2);
@@ -151,7 +155,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:hW:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -245,6 +249,14 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
         case 'r':
             SHOWREPORTS = true;
+            break;
+
+        case 'W':
+            if (!GenericAgentConfigParseWarningOptions(config, optarg))
+            {
+                Log(LOG_LEVEL_ERR, "Error parsing warning option");
+                exit(EXIT_FAILURE);
+            }
             break;
 
         case 'x':

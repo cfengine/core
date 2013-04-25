@@ -1,0 +1,130 @@
+#######################################################
+#
+# Test every(), some(), and none()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+                           "starting list = 1",
+                           "starting list = 2",
+                           "starting list = 3",
+                           "starting list = one",
+                           "starting list = two",
+                           "starting list = three",
+                           "starting list = long string",
+                           "starting list = four",
+                           "starting list = fix",
+                           "starting list = six",
+                           "starting list = one",
+                           "starting list = two",
+                           "starting list = three",
+                           "every() test 1 passed",
+                           "every() test 2 passed",
+                           "none() test 1 passed",
+                           "none() test 2 passed",
+                           "some() test 1 passed",
+                           "some() test 2 passed",
+      };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle common testaide
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                      };
+
+  classes:
+      "every1" expression => every(".*", "test");
+      "every2" expression => every(".", "test");
+
+      "some1" expression => some("long string", "test");
+      "some2" expression => some("none", "test");
+
+      "none1" expression => none("jebadiah", "test");
+      "none2" expression => none("2", "test");
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "starting list = $(testaide.test)";
+    every1::
+      "every() test 1 passed";
+    !every1::
+      "every() test 1 failed";
+    every2::
+      "every() test 2 failed";
+    !every2::
+      "every() test 2 passed";
+    some1::
+      "some() test 1 passed";
+    !some1::
+      "some() test 1 failed";
+    some2::
+      "some() test 2 failed";
+    !some2::
+      "some() test 2 passed";
+    none1::
+      "none() test 1 passed";
+    !none1::
+      "none() test 1 failed";
+    none2::
+      "none() test 2 failed";
+    !none2::
+      "none() test 2 passed";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

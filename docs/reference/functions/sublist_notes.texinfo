@@ -1,0 +1,6 @@
+
+Extracts a sublist of elements from a list variable specified in arg1.
+arg2 can be @code{head} to specify extraction from the head of the list
+or @code{tail} to extract from the tail.
+
+arg3 specifies how many items to extract.

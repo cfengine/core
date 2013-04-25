@@ -1,0 +1,108 @@
+#######################################################
+#
+# Test filter()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+                           "starting list = 1",
+                           "starting list = 2",
+                           "starting list = 3",
+                           "starting list = one",
+                           "starting list = two",
+                           "starting list = three",
+                           "starting list = long string",
+                           "grepped list = 1",
+                           "grepped list = 2",
+                           "grepped list = 3",
+                           "filter-grepped list = 1",
+                           "filter-grepped list = 2",
+                           "filter-grepped list = 3",
+                           "filter-exact list, looking for 'one' = one",
+                           "filter-invert list, looking for non-digits = one",
+                           "filter-invert list, looking for non-digits = two",
+                           "filter-invert list, looking for non-digits = three",
+                           "filter-invert list, looking for non-digits = long string",
+                           "filter-bound list, matching at most 2 items = 1",
+                           "filter-bound list, matching at most 2 items = 2",
+      };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "one", "two", "three",
+                      };
+
+      "test_grep" slist => filter("[0-9]", "test", "true", "false", 999);
+      "test_exact1" slist => filter("one", "test", "false", "false", 999);
+      "test_exact2" slist => filter(".", "test", "false", "false", 999);
+      "test_invert" slist => filter("[0-9]", "test", "true", "true", 999);
+      "test_max2" slist => filter(".*", "test", "true", "false", 2);
+      "test_max0" slist => filter(".*", "test", "true", "false", 0);
+      "grep" slist => grep("[0-9]", "test");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "starting list = $(test.test)";
+      "grepped list = $(test.grep)";
+      "filter-grepped list = $(test.test_grep)";
+      "filter-exact list, looking for 'one' = $(test.test_exact1)";
+      "This line should not appear: $(test.test_exact2)";
+      "filter-invert list, looking for non-digits = $(test.test_invert)";
+      "filter-bound list, matching at most 2 items = $(test.test_max2)";
+      "This line should not appear: $(test.test_max0)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

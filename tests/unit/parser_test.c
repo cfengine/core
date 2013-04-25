@@ -184,6 +184,11 @@ void test_rval_function_wrong_input_type(void)
     assert_false(LoadPolicy("rval_function_wrong_input_type.cf"));
 }
 
+void test_rval_wrong_input_type(void)
+{
+    assert_false(LoadPolicy("rval_wrong_input_type.cf"));
+}
+
 
 int main()
 {
@@ -228,7 +233,8 @@ int main()
         unit_test(test_rval_list_forgot_colon),
         unit_test(test_rval_list_wrong_input_type),
         unit_test(test_rval_function_forgot_colon),
-        unit_test(test_rval_function_wrong_input_type)
+        unit_test(test_rval_function_wrong_input_type),
+        unit_test(test_rval_wrong_input_type)
 
     };
 

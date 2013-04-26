@@ -8,6 +8,8 @@
 
       - avoid possible db corruption when mixing read/write and cursor operations
 
+      - Allow umask value of 002 (Redmine #2496)
+
 3.4.4   (Bugfix and Stability release)
 
        Bugfixes:

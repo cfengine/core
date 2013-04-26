@@ -80,9 +80,6 @@ const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const cha
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
 
 const BodySyntax *BodySyntaxGet(const char *body_type);
-const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
-
-
 const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
 
 

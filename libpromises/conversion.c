@@ -29,7 +29,7 @@
 #include "dbm_api.h"
 #include "mod_access.h"
 #include "item_lib.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "rlist.h"
 
 #include <assert.h>

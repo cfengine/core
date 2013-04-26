@@ -36,7 +36,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "signals.h"
 #include "locks.h"
 #include "exec_tools.h"

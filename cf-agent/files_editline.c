@@ -36,7 +36,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "string_lib.h"
 #include "misc_lib.h"

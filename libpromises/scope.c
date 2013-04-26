@@ -29,7 +29,7 @@
 #include "expand.h"
 #include "hashes.h"
 #include "unix.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "fncall.h"
 #include "mutex.h"
 #include "misc_lib.h"

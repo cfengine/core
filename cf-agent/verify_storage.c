@@ -33,7 +33,7 @@
 #include "files_links.h"
 #include "files_properties.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "nfs.h"
 #include "rlist.h"

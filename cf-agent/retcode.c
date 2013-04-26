@@ -24,7 +24,7 @@
 
 #include "retcode.h"
 #include "rlist.h"
-#include "logging.h"
+#include "logging_old.h"
 
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
 {

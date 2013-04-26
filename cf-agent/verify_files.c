@@ -42,7 +42,7 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"

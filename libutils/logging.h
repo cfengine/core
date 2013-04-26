@@ -26,11 +26,8 @@
 #ifndef CFENGINE_LOGGING_H
 #define CFENGINE_LOGGING_H
 
-#include "cf3.defs.h"
-
-/* Obsolete, please use Log instead */
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
+#include "platform.h"
+#include "compiler.h"
 
 typedef enum
 {
@@ -46,30 +43,9 @@ typedef enum
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
-/* Promise-specific. To be split out of main logging functionality. */
-
-#include "policy.h"
-
-/**
- * @brief Binds logging in current thread to EvalContext.
+/*
+ * Portable strerror(errno)
  */
-void LoggingInit(const EvalContext *ctx);
-
-/**
- * @brief Calculates and sets logging context for the promise.
- */
-void LoggingPromiseEnter(const EvalContext *ctx, const Promise *pp);
-
-/**
- * @brief Finishes processing the promise and looks up the last error message associated with it.
- *
- * @return Last log message recorded for the promise, or NULL if there were none. Caller owns the memory.
- */
-char *LoggingPromiseFinish(const EvalContext *ctx, const Promise *pp);
-
-/**
- * @brief Unbinds logging from EvalContext.
- */
-void LoggingFinish(const EvalContext *ctx);
+const char *GetErrorStr(void);
 
 #endif

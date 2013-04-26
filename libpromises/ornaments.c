@@ -23,7 +23,7 @@
 */
 
 #include "ornaments.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "rlist.h"
 
 void PromiseBanner(const Promise *pp)

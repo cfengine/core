@@ -25,7 +25,7 @@
 
 #include "pipes.h"
 
-#include "logging.h"
+#include "logging_old.h"
 #include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"

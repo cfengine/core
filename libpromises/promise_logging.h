@@ -20,16 +20,40 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#include "cf-agent-enterprise-stubs.h"
-#include "logging_old.h"
+#ifndef CFENGINE_PROMISE_LOGGING_H
+#define CFENGINE_PROMISE_LOGGING_H
 
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
-}
+/*
+ * This module provides a way to adjust logging levels while evaluating
+ * promises.
+ */
 
-void LastSawBundle(const Bundle *bundle, double comp)
-{
-}
+#include "cf3.defs.h"
+#include "policy.h"
+
+/**
+ * @brief Binds logging in current thread to EvalContext.
+ */
+void PromiseLoggingInit(const EvalContext *ctx);
+
+/**
+ * @brief Calculates and sets logging context for the promise.
+ */
+void PromiseLoggingPromiseEnter(const EvalContext *ctx, const Promise *pp);
+
+/**
+ * @brief Finishes processing the promise and looks up the last error message associated with it.
+ *
+ * @return Last log message recorded for the promise, or NULL if there were none. Caller owns the memory.
+ */
+char *PromiseLoggingPromiseFinish(const EvalContext *ctx, const Promise *pp);
+
+/**
+ * @brief Unbinds logging from EvalContext.
+ */
+void PromiseLoggingFinish(const EvalContext *ctx);
+
+#endif

@@ -56,6 +56,7 @@
 #include "promises.h"
 #include "unix.h"
 #include "attributes.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "communication.h"
 #include "signals.h"

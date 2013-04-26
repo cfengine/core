@@ -28,7 +28,7 @@
 
 #include "prototypes3.h"
 #include "syntax.h"
-#include "logging.h"
+#include "logging_old.h"
 
 /*
  * This module contains numeruous functions which don't use all their parameters

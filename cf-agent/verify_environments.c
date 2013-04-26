@@ -30,7 +30,7 @@
 #include "vars.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "policy.h"
 #include "scope.h"

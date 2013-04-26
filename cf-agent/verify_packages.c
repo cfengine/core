@@ -36,7 +36,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "locks.h"

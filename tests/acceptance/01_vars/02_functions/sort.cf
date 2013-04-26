@@ -1,0 +1,80 @@
+#######################################################
+#
+# Test sort()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "a" slist => { "b", "c", "a" };
+  "b" slist => { "100", "9", "10" };
+  "c" slist => { };
+  "d" slist => { "", "a", "", "b" };
+  "e" slist => { "a", "1", "b" };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "sa" slist => sort("init.a", "lex");
+  "sb" slist => sort("init.b", "lex");
+  "sc" slist => sort("init.c", "lex");
+  "sd" slist => sort("init.d", "lex");
+  "se" slist => sort("init.e", "lex");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+      "ja" string => join(",", "test.sa");
+      "jb" string => join(",", "test.sb");
+      "jc" string => join(",", "test.sc");
+      "jd" string => join(",", "test.sd");
+      "je" string => join(",", "test.se");
+
+      "ea" string => "a,b,c";
+      "eb" string => "10,100,9";
+      "ec" string => "";
+      "ed" string => ",,a,b";
+      "ee" string => "1,a,b";
+
+
+classes:
+    any::
+      "ok_a" expression => strcmp($(ea), $(ja));
+      "ok_b" expression => strcmp($(eb), $(jb));
+      "ok_c" expression => strcmp($(ec), $(jc));
+      "ok_d" expression => strcmp($(ed), $(jd));
+      "ok_e" expression => strcmp($(ee), $(je));
+
+
+      "ok" and => { "ok_a", "ok_b", "ok_c", "ok_d", "ok_e" };
+
+reports:
+    DEBUG::
+        "a '$(ja)' <> '$(ea)'";
+        "b '$(jb)' <> '$(eb)'";
+        "c '$(jc)' <> '$(ec)'";
+        "d '$(jd)' <> '$(ed)'";
+        "e '$(je)' <> '$(ee)'";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

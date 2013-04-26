@@ -1063,8 +1063,8 @@ gaitems:               /* empty */
                      | gaitems ',' gaitem
                      | gaitem error
                        {
-                           yyclearin;
                            ParseError("Expected ',', wrong input '%s'", yytext);
+                           yyclearin;
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1104,8 +1104,20 @@ gaitem:                IDSYNTAX
 
                      | error
                        {
-                          yyclearin;
-                          ParseError("Invalid function argument, wrong input '%s'", yytext);
+                           ParserDebug("P:rval:function:gaitem:error yychar = %d\n", yychar);
+                           if (yychar == ';')
+                           {
+                              ParseError("Expected ')', wrong input '%s'", yytext);
+                           }
+                           else if (yychar == ASSIGN )
+                           {
+                              ParseError("Check function statement  previous line, Expected ')', wrong input '%s'", yytext);
+                           }
+                           else
+                           {
+                              ParseError("Invalid function argument, wrong input '%s'", yytext);
+                           }
+                           yyclearin;
                        }
 
 %%

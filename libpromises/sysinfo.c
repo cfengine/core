@@ -409,12 +409,14 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (PUBKEY)
     {
+        char pubkey_digest[CF_MAXVARSIZE] = { 0 };
+
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        HashPrintSafe(CF_DEFAULT_DIGEST, digest, PUBKEY_DIGEST);
+        HashPrintSafe(CF_DEFAULT_DIGEST, digest, pubkey_digest);
 
-        ScopeNewSpecialScalar(ctx, "sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "key_digest", pubkey_digest, DATA_TYPE_STRING);
 
-        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", PUBKEY_DIGEST);
+        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", pubkey_digest);
         CanonifyNameInPlace(workbuf);
         EvalContextHeapAddHard(ctx, workbuf);
     }

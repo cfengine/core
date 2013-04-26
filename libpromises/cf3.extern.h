@@ -29,7 +29,6 @@
 
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
-extern char PUBKEY_DIGEST[CF_MAXVARSIZE];
 extern char BINDINTERFACE[CF_BUFSIZE];
 
 extern Item *IPADDRESSES;

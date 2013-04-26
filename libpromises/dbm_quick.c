@@ -34,6 +34,9 @@
 #include "logging.h"
 #include "string_lib.h"
 
+#ifdef DBTEST
+int DEBUG = false;
+#endif
 #ifdef QDB
 # include <depot.h>
 

@@ -88,7 +88,7 @@ static const ConstraintSyntax action_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax action_body = BodyTypeSyntaxNew("action", action_constraints, ActionCheck, SYNTAX_STATUS_NORMAL);
+static const BodySyntax action_body = BodySyntaxNew("action", action_constraints, ActionCheck, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax classes_constraints[] =
 {
@@ -109,7 +109,7 @@ static const ConstraintSyntax classes_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax classes_body = BodyTypeSyntaxNew("classes", classes_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax classes_body = BodySyntaxNew("classes", classes_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 const ConstraintSyntax CF_VARBODY[] =
 {
@@ -365,20 +365,20 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
 
 /* This list is for checking free standing body lval => rval bindings */
 
-const BodyTypeSyntax CONTROL_BODIES[] =
+const BodySyntax CONTROL_BODIES[] =
 {
-    BodyTypeSyntaxNew(CF_COMMONC, CFG_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_AGENTC, CFA_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_SERVERC, CFS_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_MONITORC, CFM_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
-    BodyTypeSyntaxNew("file", CFFILE_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_COMMONC, CFG_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_AGENTC, CFA_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_SERVERC, CFS_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_MONITORC, CFM_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_RUNC, CFR_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+    BodySyntaxNew("file", CFFILE_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
-    BodyTypeSyntaxNewNull()
+    BodySyntaxNewNull()
 };
 
 /*********************************************************/

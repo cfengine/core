@@ -36,7 +36,7 @@ static const ConstraintSyntax database_server_constraints[] =
     ConstraintSyntaxNewNull()
 };
 
-static const BodyTypeSyntax database_server_body = BodyTypeSyntaxNew("database_server", database_server_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax database_server_body = BodySyntaxNew("database_server", database_server_constraints, NULL, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax databases_constraints[] =
 {

@@ -84,7 +84,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
  * @param body_type Type of body, e.g. 'contain'
  * @return NULL if not found
  */
-const BodyTypeSyntax *BodySyntaxLookup(const char *body_type);
+const BodySyntax *BodySyntaxLookup(const char *body_type);
 const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
 
 
@@ -113,8 +113,8 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 #define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
 #define ConstraintSyntaxNewBundle(lval, description, status) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }
 
-#define BodyTypeSyntaxNew(body_type, constraints, check_fn, status) { body_type, constraints, check_fn, status }
-#define BodyTypeSyntaxNewNull() { NULL, NULL, NULL, SYNTAX_STATUS_NORMAL }
+#define BodySyntaxNew(body_type, constraints, check_fn, status) { body_type, constraints, check_fn, status }
+#define BodySyntaxNewNull() { NULL, NULL, NULL, SYNTAX_STATUS_NORMAL }
 
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn, status) { agent_type, promise_type, constraints, check_fn, status }
 #define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)

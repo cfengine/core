@@ -644,7 +644,7 @@ typedef struct
 typedef struct Rlist_ Rlist;
 
 typedef struct ConstraintSyntax_ ConstraintSyntax;
-typedef struct BodyTypeSyntax_ BodyTypeSyntax;
+typedef struct BodySyntax_ BodySyntax;
 
 /*
  * Promise types or bodies may optionally provide parse-tree check function, called after
@@ -672,13 +672,13 @@ struct ConstraintSyntax_
     union
     {
         const char *validation_string;
-        const BodyTypeSyntax *body_type_syntax;
+        const BodySyntax *body_type_syntax;
     } range;
     const char *description;
     SyntaxStatus status;
 };
 
-struct BodyTypeSyntax_
+struct BodySyntax_
 {
     const char *body_type;
     const ConstraintSyntax *constraints;
@@ -1672,7 +1672,7 @@ extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const BodyTypeSyntax CONTROL_BODIES[];
+extern const BodySyntax CONTROL_BODIES[];
 extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_CLASSBODY[];

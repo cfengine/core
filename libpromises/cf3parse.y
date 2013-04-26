@@ -693,7 +693,7 @@ selection:             selection_id                         /* BODY ONLY */
 
                            if (!INSTALL_SKIP)
                            {
-                               const BodyTypeSyntax *body_syntax = BodySyntaxLookup(P.blocktype);
+                               const BodySyntax *body_syntax = BodySyntaxLookup(P.blocktype);
                                assert(body_syntax);
 
                                const ConstraintSyntax *constraint_syntax = BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
@@ -768,7 +768,7 @@ selection_id:          IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
-                           const BodyTypeSyntax *body_syntax = BodySyntaxLookup(P.currentbody->type);
+                           const BodySyntax *body_syntax = BodySyntaxLookup(P.currentbody->type);
 
                            if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                            {

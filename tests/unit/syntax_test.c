@@ -43,7 +43,7 @@ static void test_lookup_constraint_edit_xml_set_attribute_attribute_value(void)
 
 static void test_lookup_body_classes(void)
 {
-    const BodyTypeSyntax *x = BodySyntaxLookup("classes");
+    const BodySyntax *x = BodySyntaxLookup("classes");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "promise_repaired");
@@ -53,7 +53,7 @@ static void test_lookup_body_classes(void)
 
 static void test_lookup_body_process_count(void)
 {
-    const BodyTypeSyntax *x = BodySyntaxLookup("process_count");
+    const BodySyntax *x = BodySyntaxLookup("process_count");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "match_range");
@@ -63,7 +63,7 @@ static void test_lookup_body_process_count(void)
 
 static void test_lookup_body_delete_select(void)
 {
-    const BodyTypeSyntax *x = BodySyntaxLookup("delete_select");
+    const BodySyntax *x = BodySyntaxLookup("delete_select");
     assert_true(x);
 
     const ConstraintSyntax *y = BodySyntaxGetConstraintSyntax(x->constraints, "delete_if_startwith_from_list");

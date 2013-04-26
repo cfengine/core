@@ -146,7 +146,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     return GetCommonConstraint(lval);
 }
 
-const BodyTypeSyntax *BodySyntaxLookup(const char *body_type)
+const BodySyntax *BodySyntaxLookup(const char *body_type)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
@@ -168,7 +168,7 @@ const BodyTypeSyntax *BodySyntaxLookup(const char *body_type)
 
     for (int i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
-        const BodyTypeSyntax body_syntax = CONTROL_BODIES[i];
+        const BodySyntax body_syntax = CONTROL_BODIES[i];
 
         if (strcmp(body_type, body_syntax.body_type) == 0)
         {

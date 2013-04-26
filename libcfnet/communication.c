@@ -25,6 +25,8 @@
 
 #include "communication.h"
 
+#include "alloc.h"
+#include "logging.h"
 
 AgentConnection *NewAgentConn(const char *server_name)
 {
@@ -163,7 +165,7 @@ const char *Hostname2IPString(const char *hostname)
 
     if ((err = getaddrinfo(hostname, NULL, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "",
+        Log(LOG_LEVEL_INFO,
               "Unable to lookup hostname (%s) or cfengine service: %s",
               hostname, gai_strerror(err));
         return hostname;
@@ -204,7 +206,7 @@ char *IPString2Hostname(const char *ipaddress)
     query.ai_flags = AI_NUMERICHOST;
     if ((err = getaddrinfo(ipaddress, NULL, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "",
+        Log(LOG_LEVEL_INFO,
               "getaddrinfo: Unable to convert IP address (%s): %s",
               ipaddress, gai_strerror(err));
         strlcpy(hostbuffer, ipaddress, MAXHOSTNAMELEN);
@@ -250,12 +252,12 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "gethostbyname", "!! Could not get host entry for local host");
+            Log(LOG_LEVEL_ERR, "!! Could not get host entry for local host: %s", GetErrorStr());
         }
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "gethostname", "!! Could not get host name");
+        Log(LOG_LEVEL_ERR, "!! Could not get host name: %s", GetErrorStr());
     }
 
     return false;
@@ -270,7 +272,7 @@ unsigned short SocketFamily(int sd)
 
    if (getsockname(sd, &sa, &len) == -1)
    {
-       CfOut(OUTPUT_LEVEL_ERROR, "getsockname", "!! Could not get socket family");
+       Log(LOG_LEVEL_ERR, "!! Could not get socket family: %s", GetErrorStr());
    }
 
    return sa.sa_family;

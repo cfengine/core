@@ -24,6 +24,7 @@
 
 #include "net.h"
 
+#include "logging.h"
 #include "misc_lib.h"
 
 /*************************************************************************/
@@ -65,7 +66,7 @@ int SendTransaction(int sd, char *buffer, int len, char status)
 
     if (wlen > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
+        Log(LOG_LEVEL_ERR, "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
         ProgrammingError("SendTransaction software failure");
     }
 
@@ -104,7 +105,7 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
+        Log(LOG_LEVEL_ERR, "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
         return -1;
     }
 
@@ -139,7 +140,7 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
     if (toget > CF_BUFSIZE - 1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bad software request for overfull buffer");
+        Log(LOG_LEVEL_ERR, "Bad software request for overfull buffer");
         return -1;
     }
 
@@ -154,14 +155,14 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
         if ((got == -1) && (LastRecvTimedOut()))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "recv", "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d)",
-                  already, toget);
+            Log(LOG_LEVEL_ERR, "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d): %s",
+                already, toget, GetErrorStr());
             return -1;
         }
 
         if (got == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "recv", "Couldn't recv");
+            Log(LOG_LEVEL_ERR, "Couldn't recv: %s", GetErrorStr());
             return -1;
         }
 
@@ -197,7 +198,7 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
         if (sent == -1)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "send", "Couldn't send");
+            Log(LOG_LEVEL_VERBOSE, "Couldn't send: %s", GetErrorStr());
             return -1;
         }
 

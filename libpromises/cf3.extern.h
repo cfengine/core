@@ -38,7 +38,6 @@ extern unsigned short SHORT_CFENGINEPORT;
 extern time_t CONNTIMEOUT;
 
 extern char CFLOCK[CF_BUFSIZE];
-extern char CFLOG[CF_BUFSIZE];
 
 extern char CFWORKDIR[CF_BUFSIZE];
 

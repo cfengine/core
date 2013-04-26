@@ -103,7 +103,6 @@ int CF_DEFAULT_DIGEST_LEN;
 /***********************************************************/
 
 char CFLOCK[CF_BUFSIZE] = { 0 };
-char CFLOG[CF_BUFSIZE] = { 0 };
 
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;

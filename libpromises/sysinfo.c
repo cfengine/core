@@ -79,6 +79,8 @@ static int Xen_Domain(EvalContext *ctx);
 static int EOS_Version(EvalContext *ctx);
 static int MiscOS(EvalContext *ctx);
 
+static void OpenVZ_Detect(EvalContext *ctx);
+
 #ifdef XEN_CPUID_SUPPORT
 static void Xen_Cpuid(uint32_t idx, uint32_t *eax, uint32_t *ebx, uint32_t *ecx, uint32_t *edx);
 static int Xen_Hv_Check(void);
@@ -921,6 +923,7 @@ void OSClasses(EvalContext *ctx)
     }
 #endif
 
+    OpenVZ_Detect(ctx);
 #else
 
     char vbuff[CF_BUFSIZE];
@@ -2187,6 +2190,55 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
     StripTrailingNewline(buf, CF_EXPANDSIZE);
 
     return fp;
+}
+
+static void OpenVZ_Detect(EvalContext *ctx)
+{
+    FILE *fp;
+    char buffer[CF_BUFSIZE];
+    int envID;
+
+    /* read /proc/self/status and try to detect if we are in:
+       -the host system (or hardware_node)
+       -a container (or virtual environement)
+    */
+
+  if ((fp = fopen("/proc/self/status", "r")) != NULL)
+  {
+      for (;;)
+      {
+          ssize_t res = CfReadLine(buffer, CF_BUFSIZE, fp);
+          if (res == 0)
+          {
+              break;
+          }
+
+          if (res == -1)
+          {
+              // Should not happen, but log anyway
+              fclose(fp);
+              CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not read /proc/self/status to detect OpenVZ environment\n");
+              return;
+          }
+
+          if (strstr(buffer, "envID:"))
+          {
+              sscanf(buffer, "envID: %d\n", &envID);
+              if ( envID == 0)
+              {
+                  EvalContextHeapAddHard(ctx, "openvz_hardware_node");
+              }
+              else
+              {
+                  EvalContextHeapAddHard(ctx, "openvz_container");
+              }
+
+              // Once we got our environment, reading remaining lines is useless
+              break;
+          }
+      }
+      fclose(fp);
+  }
 }
 #endif /* __linux__ */
 

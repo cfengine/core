@@ -638,18 +638,34 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
 
 bodybody:              body_begin
                        {
-                           P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
-                           if (P.currentbody)
+                           const BodySyntax *body_syntax = BodySyntaxGet(P.blocktype);
+
+                           if (body_syntax)
                            {
-                               P.currentbody->offset.line = P.line_no;
-                               P.currentbody->offset.start = P.offsets.last_block_id;
+                               INSTALL_SKIP = false;
+
+                               switch (body_syntax->status)
+                               {
+                               case SYNTAX_STATUS_DEPRECATED:
+                                   ParseWarning(PARSER_WARNING_DEPRECATED, "Deprecated body '%s' of type '%s'", P.blockid, body_syntax->body_type);
+                                   // intentional fall
+                               case SYNTAX_STATUS_NORMAL:
+                                   P.currentbody = PolicyAppendBody(P.policy, P.current_namespace, P.blockid, P.blocktype, P.useargs, P.filename);
+                                   P.currentbody->offset.line = P.line_no;
+                                   P.currentbody->offset.start = P.offsets.last_block_id;
+                                   break;
+
+                               case SYNTAX_STATUS_REMOVED:
+                                   ParseWarning(PARSER_WARNING_REMOVED, "Removed body '%s' of type '%s'", P.blockid, body_syntax->body_type);
+                                   INSTALL_SKIP = true;
+                                   break;
+                               }
                            }
 
                            RlistDestroy(P.useargs);
                            P.useargs = NULL;
 
                            strcpy(P.currentid,"");
-                           CfDebug("Starting block\n");
                        }
 
                        bodyattribs
@@ -768,15 +784,18 @@ selection_id:          IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
-                           const BodySyntax *body_syntax = BodySyntaxGet(P.currentbody->type);
-
-                           if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
+                           if (!INSTALL_SKIP)
                            {
-                               ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
-                               INSTALL_SKIP = true;
-                           }
+                               const BodySyntax *body_syntax = BodySyntaxGet(P.currentbody->type);
 
-                           strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                               if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
+                               {
+                                   ParseError("Unknown selection '%s' for body type '%s'", P.currentid, P.currentbody->type);
+                                   INSTALL_SKIP = true;
+                               }
+
+                               strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
+                           }
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
                            CfDebug("Recorded LVAL %s\n",P.lval);

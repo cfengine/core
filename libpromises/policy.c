@@ -1053,14 +1053,6 @@ Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, con
 
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path)
 {
-    CfDebug("Appending new promise body %s %s(", type, name);
-
-    for (const Rlist *rp = args; rp; rp = rp->next)
-    {
-        CfDebug("%s,", (char *) rp->item);
-    }
-    CfDebug(")\n");
-
     Body *body = xcalloc(1, sizeof(Body));
     body->parent_policy = policy;
 

@@ -16,7 +16,7 @@ body common control
 bundle agent init
 {
 vars:
-  "a" slist => { "c", "b", "a" };
+  "a" slist => { "a", "b", "c", "d", "e", "f", "g" };
   "b" slist => { };
 }
 
@@ -25,8 +25,8 @@ vars:
 bundle agent test
 {
 vars:
-  "sa" slist => reverse("init.a");
-  "sb" slist => reverse("init.b");
+  "sa" slist => shuffle("init.a", "skruf");
+  "sb" slist => shuffle("init.b", "skruf");
 }
 
 
@@ -38,7 +38,7 @@ vars:
       "ja" string => join(",", "test.sa");
       "jb" string => join(",", "test.sb");
 
-      "ea" string => "a,b,c";
+      "ea" string => "g,e,c,f,a,b,d";
       "eb" string => "";
 
 classes:

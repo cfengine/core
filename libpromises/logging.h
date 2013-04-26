@@ -46,6 +46,11 @@ typedef enum
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
 void VLog(LogLevel level, const char *fmt, va_list ap);
 
+/*
+ * Portable strerror(errno)
+ */
+const char *GetErrorStr(void);
+
 /* Promise-specific. To be split out of main logging functionality. */
 
 #include "policy.h"

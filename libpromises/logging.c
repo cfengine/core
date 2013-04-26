@@ -49,8 +49,6 @@ static LogLevel OutputLevelToLogLevel(OutputLevel level)
 
 void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
 {
-    const char *GetErrorStr(void);
-
     if (strchr(fmt, '\n'))
     {
         char *fmtcopy = xstrdup(fmt);

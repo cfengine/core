@@ -661,6 +661,11 @@ bodybody:              body_begin
                                    break;
                                }
                            }
+                           else
+                           {
+                               ParseError("Invalid body type '%s'", P.blocktype);
+                               INSTALL_SKIP = true;
+                           }
 
                            RlistDestroy(P.useargs);
                            P.useargs = NULL;

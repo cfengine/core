@@ -1,0 +1,40 @@
+# Test usebundle passing a naked list from local scope
+
+body common control
+{
+    inputs => { "../../default.cf.sub" };
+    bundlesequence => { default("$(this.promise_filename)") };
+    version => "1.0";
+}
+
+bundle agent init
+{
+  vars:
+    "expected" string => "1,2,3";
+}
+
+bundle agent test
+{
+  vars:
+      "testlist" slist => {"1","2","3"};
+  methods:
+      "call sub" usebundle => sub(@{testlist});
+}
+
+bundle agent sub(sublist)
+{
+  vars:
+      "joined" string => join(",", "sublist");
+  reports:
+    DEBUG::
+      "sub joined $(joined)";
+}
+
+bundle agent check
+{
+  methods:
+      "check results" usebundle => default_check_strcmp("$(init.expected)", "$(sub.joined)", "$(this.promise_filename)", "no");
+  reports:
+    DEBUG::
+      "comparing '$(init.expected)' with '$(sub.joined)'";
+}

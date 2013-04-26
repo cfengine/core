@@ -55,6 +55,7 @@
 #include "misc_lib.h"
 #include "fncall.h"
 #include "audit.h"
+#include "sort.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -2463,7 +2464,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
         int offset = max >= length ? 0 : length-max;
 
-        for (rp; rp != NULL && offset--; rp = rp->next);
+        for (; rp != NULL && offset--; rp = rp->next);
 
         for (; rp != NULL; rp = rp->next)
         {
@@ -2526,6 +2527,30 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *fin
                           1,
                           0,
                           99999999999);
+}
+
+static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    VarRef list_var_lval = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    Rval list_var_rval;
+    DataType list_var_dtype = DATA_TYPE_NONE;
+
+    if (!EvalContextVariableGet(ctx, list_var_lval, &list_var_rval, &list_var_dtype))
+    {
+        VarRefDestroy(list_var_lval);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    VarRefDestroy(list_var_lval);
+
+    if (list_var_dtype != DATA_TYPE_STRING_LIST)
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Rlist *sorted = AlphaSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sorted, RVAL_TYPE_LIST } };
 }
 
 /*********************************************************************/
@@ -5418,6 +5443,12 @@ FnCallArg USEREXISTS_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg SORT_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5583,6 +5614,8 @@ const FnCallType CF_FNCALL_TYPES[] =
      "Select tcp servers which respond correctly to a query and return their number, set array of names"},
     {"some", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
      "True if an element in the named list matches the given regular expression"},
+    {"sort", DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort,
+     "Sort a string list"},
     {"splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass,
      "True if the first argument's time-slot has arrived, according to a policy in arg2"},
     {"splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString,

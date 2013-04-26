@@ -46,6 +46,7 @@
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 static Item *DONELIST = NULL;
+static char CFLAST[CF_BUFSIZE];
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 

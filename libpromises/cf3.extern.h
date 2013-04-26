@@ -39,7 +39,6 @@ extern time_t CONNTIMEOUT;
 
 extern char CFLOCK[CF_BUFSIZE];
 extern char CFLOG[CF_BUFSIZE];
-extern char CFLAST[CF_BUFSIZE];
 
 extern char CFWORKDIR[CF_BUFSIZE];
 

@@ -36,6 +36,8 @@ int VERBOSE;
 int DEBUG;
 char VPREFIX[1024];
 
+void LogToSystemLog(const char *msg, LogLevel level);
+
 typedef struct
 {
     LogLevel log_level;

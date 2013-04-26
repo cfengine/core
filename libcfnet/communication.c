@@ -32,7 +32,6 @@ AgentConnection *NewAgentConn(const char *server_name)
 {
     AgentConnection *conn = xcalloc(1, sizeof(AgentConnection));
 
-    CfDebug("New server connection...\n");
     conn->sd = SOCKET_INVALID;
     conn->family = AF_INET;
     conn->trust = false;
@@ -61,8 +60,6 @@ int IsIPV6Address(char *name)
 {
     char *sp;
     int count, max = 0;
-
-    CfDebug("IsIPV6Address(%s)\n", name);
 
     if (name == NULL)
     {
@@ -99,7 +96,6 @@ int IsIPV6Address(char *name)
 
     if (max <= 2)
     {
-        CfDebug("Looks more like a MAC address");
         return false;
     }
 
@@ -122,8 +118,6 @@ int IsIPV4Address(char *name)
 {
     char *sp;
     int count = 0;
-
-    CfDebug("IsIPV4Address(%s)\n", name);
 
     if (name == NULL)
     {
@@ -179,7 +173,6 @@ const char *Hostname2IPString(const char *hostname)
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     ipbuffer, sizeof(ipbuffer),
                     NULL, 0, NI_NUMERICHOST);
-        CfDebug("Found address (%s) for host %s\n", ipbuffer, hostname);
 
         freeaddrinfo(response);
         return ipbuffer;
@@ -223,7 +216,6 @@ char *IPString2Hostname(const char *ipaddress)
         {
             break;
         }
-        CfDebug("Found address (%s) for host %s\n", hostbuffer, ipaddress);
         freeaddrinfo(response);
         return hostbuffer;
     }

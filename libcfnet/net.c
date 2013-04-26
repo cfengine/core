@@ -74,8 +74,6 @@ int SendTransaction(int sd, char *buffer, int len, char status)
 
     memcpy(work + CF_INBAND_OFFSET, buffer, wlen);
 
-    CfDebug("Transaction Send[%s][Packed text]\n", work);
-
     if (SendSocketStream(sd, work, wlen + CF_INBAND_OFFSET, 0) == -1)
     {
         return -1;
@@ -101,8 +99,6 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     sscanf(proto, "%c %u", &status, &len);
 
-    CfDebug("Transaction Receive [%s][%s]\n", proto, proto + CF_INBAND_OFFSET);
-
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
         Log(LOG_LEVEL_ERR, "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
@@ -111,7 +107,6 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     if (strncmp(proto, "CAUTH", 5) == 0)
     {
-        CfDebug("Version 1 protocol connection attempted - no you don't!!\n");
         return -1;
     }
 
@@ -135,8 +130,6 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
-
-    CfDebug("RecvSocketStream(%d)\n", toget);
 
     if (toget > CF_BUFSIZE - 1)
     {
@@ -168,11 +161,8 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
         if (got == 0)           /* doesn't happen unless sock is closed */
         {
-            CfDebug("Transmission empty or timed out...\n");
             break;
         }
-
-        CfDebug("    (Concatenated %d from stream)\n", got);
     }
 
     buffer[already] = '\0';
@@ -187,8 +177,6 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
     do
     {
-        CfDebug("Attempting to send %d bytes\n", tosend - already);
-
         sent = send(sd, buffer + already, tosend - already, flags);
 
         if ((sent == -1) && (errno == EINTR))
@@ -202,7 +190,6 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
             return -1;
         }
 
-        CfDebug("SendSocketStream, sent %d\n", sent);
         already += sent;
     }
     while (already < tosend);

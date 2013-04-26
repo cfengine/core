@@ -237,8 +237,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
     if (conn->sd == SOCKET_INVALID)
     {
-        CfDebug("Opening server connection to %s\n", server);
-
         if (!ServerConnect(conn, server, fc))
         {
             Log(LOG_LEVEL_INFO, " !! No server is responding on this port");
@@ -257,8 +255,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             *err = -1; // unreachable err
             return NULL;
         }
-
-        CfDebug("Remote IP set to %s\n", conn->remoteip);
 
         if (!IdentifyAgent(conn->sd, conn->localip))
         {
@@ -281,10 +277,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
         conn->authenticated = true;
         return conn;
     }
-    else
-    {
-        CfDebug("Server connection to %s already open on %d\n", server, conn->sd);
-    }
 
     return conn;
 }
@@ -293,8 +285,6 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
 void DisconnectServer(AgentConnection *conn)
 {
-    CfDebug("Closing current server connection\n");
-
     if (conn)
     {
         if (conn->sd != SOCKET_INVALID)
@@ -318,7 +308,6 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
     int ret, tosend, cipherlen;
     time_t tloc;
 
-    CfDebug("cf_remotestat(%s,%s)\n", file, stattype);
     memset(recvbuffer, 0, CF_BUFSIZE);
 
     if (strlen(file) > CF_BUFSIZE - 30)
@@ -430,21 +419,12 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
 
         /* Use %?d here to avoid memory overflow attacks */
 
-        CfDebug("Mode = %u, %u\n", cfst.cf_mode, cfst.cf_lmode);
-
-        CfDebug
-            ("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%ld\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX " ino=%d nlnk=%d, dev=%" PRIdMAX "\n",
-             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (uintmax_t)cfst.cf_uid, (uintmax_t)cfst.cf_gid, (long) cfst.cf_size,
-             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime, cfst.cf_ino, cfst.cf_nlink, (intmax_t) cfst.cf_dev);
-
         memset(recvbuffer, 0, CF_BUFSIZE);
 
         if (ReceiveTransaction(conn->sd, recvbuffer, NULL) == -1)
         {
             return -1;
         }
-
-        CfDebug("Linkbuffer: %s\n", recvbuffer);
 
         if (strlen(recvbuffer) > 3)
         {
@@ -530,8 +510,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     char *sp;
     Item *files = NULL;
     Item *ret = NULL;
-
-    CfDebug("CfOpenDir(%s:%s)\n", conn->this_server, dirname);
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
@@ -631,8 +609,6 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
 static void NewClientCache(Stat *data, AgentConnection *conn)
 {
-    CfDebug("NewClientCache\n");
-
     Stat *sp = xmemdup(data, sizeof(Stat));
     sp->next = conn->cache;
     conn->cache = sp;
@@ -656,10 +632,8 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
     static unsigned char d[EVP_MAX_MD_SIZE + 1];
     char *sp, sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], in[CF_BUFSIZE], out[CF_BUFSIZE];
     int i, tosend, cipherlen;
-    char buffer[EVP_MAX_MD_SIZE * 4];
 
     HashFile(file2, d, CF_DEFAULT_DIGEST);
-    CfDebug("Send digest of %s to server, %s\n", file2, HashPrintSafe(CF_DEFAULT_DIGEST, d, buffer));
 
     memset(recvbuffer, 0, CF_BUFSIZE);
 
@@ -709,12 +683,10 @@ int CompareHashNet(char *file1, char *file2, bool encrypt, AgentConnection *conn
 
     if (strcmp(CFD_TRUE, recvbuffer) == 0)
     {
-        CfDebug("Hash mismatch: (reply - %s)\n", recvbuffer);
         return true;            /* mismatch */
     }
     else
     {
-        CfDebug("Hash matched ok: (reply - %s)\n", recvbuffer);
         return false;
     }
 
@@ -875,7 +847,6 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
         return false;
     }
 
-    CfDebug("End of CopyNetReg\n");
     close(dd);
     free(buf);
     return true;
@@ -973,7 +944,6 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
         if (!EVP_DecryptUpdate(&crypto_ctx, workbuf, &plainlen, buf, cipherlen))
         {
-            CfDebug("Decryption failed\n");
             close(dd);
             free(buf);
             return false;
@@ -981,7 +951,6 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
         if (!EVP_DecryptFinal_ex(&crypto_ctx, workbuf + plainlen, &finlen))
         {
-            CfDebug("Final decrypt failed\n");
             close(dd);
             free(buf);
             return false;
@@ -1345,8 +1314,6 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
 {
     Stat *sp;
 
-    CfDebug("CacheStat(%s)\n", file);
-
     for (sp = conn->cache; sp != NULL; sp = sp->next)
     {
         if ((strcmp(conn->this_server, sp->cf_server) == 0) && (strcmp(file, sp->cf_filename) == 0))
@@ -1354,7 +1321,6 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
             if (sp->cf_failed)  /* cached failure from cfopendir */
             {
                 errno = EPERM;
-                CfDebug("Cached failure to stat\n");
                 return -1;
             }
 
@@ -1376,12 +1342,10 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
             statbuf->st_ino = sp->cf_ino;
             statbuf->st_nlink = sp->cf_nlink;
 
-            CfDebug("Found in cache\n");
             return true;
         }
     }
 
-    CfDebug("Did not find in cache\n");
     return false;
 }
 

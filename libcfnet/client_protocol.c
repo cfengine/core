@@ -87,8 +87,6 @@ int IdentifyAgent(int sd, char *localip)
         getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
                     localip, CF_MAX_IP_LEN,
                     NULL, 0, NI_NUMERICHOST);
-        CfDebug("Identifying this agent as %s i.e. %s, with signature %d\n",
-                localip, VFQNAME, 0);
 
         /* dnsname: Reverse lookup of the bound IP address. */
         ret = getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
@@ -129,7 +127,6 @@ int IdentifyAgent(int sd, char *localip)
 
     if ((strlen(VDOMAIN) > 0) && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
     {
-        CfDebug("Appending domain %s to %s\n", VDOMAIN, dnsname);
         strcat(dnsname, ".");
         strncat(dnsname, VDOMAIN, CF_MAXVARSIZE / 2);
     }
@@ -155,8 +152,6 @@ int IdentifyAgent(int sd, char *localip)
               "!! IdentifyAgent: Could not send auth response");
         return false;
     }
-
-    CfDebug("SENT:::%s\n", sendbuff);
 
     return true;
 }
@@ -331,8 +326,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
 /* Receive counter challenge from server */
 
-    CfDebug("Receive counter challenge from server\n");
-
 /* proposition S3 */
     memset(in, 0, CF_BUFSIZE);
     encrypted_len = ReceiveTransaction(conn->sd, in, NULL);
@@ -364,8 +357,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         HashString(decrypted_cchall, nonce_len, digest, HASH_METHOD_MD5);
     }
-
-    CfDebug("Replying to counter challenge with hash\n");
 
     if (FIPS_MODE)
     {
@@ -440,8 +431,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
 
     encrypted_len = RSA_size(server_pubkey);
 
-    CfDebug("Encrypt %d bytes of session key into %d RSA bytes\n", session_size, encrypted_len);
-
     out = xmalloc(encrypted_len);
 
     if (RSA_public_encrypt(session_size, conn->session_key, out, server_pubkey, RSA_PKCS1_PADDING) <= 0)
@@ -504,7 +493,6 @@ static bool SetSessionKey(AgentConnection *conn)
 
 int BadProtoReply(char *buf)
 {
-    CfDebug("Protoreply: (%s)\n", buf);
     return (strncmp(buf, "BAD:", 4) == 0);
 }
 

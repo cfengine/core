@@ -43,6 +43,7 @@
 #include "logging.h"
 #include "logging_old.h"
 #include "promise_logging.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

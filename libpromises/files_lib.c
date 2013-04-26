@@ -41,6 +41,9 @@
 #include "cf.nova.h"
 #endif
 
+static Item *ROTATED = NULL;
+
+
 bool FileCanOpen(const char *path, const char *modes)
 {
     FILE *test = NULL;

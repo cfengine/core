@@ -87,9 +87,8 @@ extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
 extern Scope *VSCOPE;
-extern Item *ROTATED;
-
 extern Rlist *CF_STCK;
+
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;

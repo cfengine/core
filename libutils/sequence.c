@@ -235,3 +235,10 @@ size_t SeqLength(const Seq *seq)
     return seq->length;
 }
 
+void SeqShuffle(Seq *seq, unsigned int seed)
+{
+    for (size_t i = 0; i < SeqLength(seq); i++)
+    {
+        Swap(&seq->data[rand_r(&seed) % SeqLength(seq)], &seq->data[rand_r(&seed) % SeqLength(seq)]);
+    }
+}

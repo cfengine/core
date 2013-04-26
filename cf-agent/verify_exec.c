@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "instrumentation.h"
 #include "attributes.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "pipes.h"
 #include "locks.h"

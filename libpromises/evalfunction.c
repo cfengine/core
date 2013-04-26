@@ -43,7 +43,7 @@
 #include "matching.h"
 #include "hashes.h"
 #include "unix.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "args.h"
 #include "client_code.h"

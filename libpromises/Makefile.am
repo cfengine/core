@@ -56,7 +56,7 @@ libpromises_la_SOURCES = \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
         locks.c locks.h \
-        logging_old.c logging_old.h \
+        logging_old.h \
         logging.c logging.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \

@@ -28,7 +28,7 @@
 
 #include "dbm_api.h"
 #include "files_interfaces.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "client_code.h"
 #include "files_lib.h"
 #include "rlist.h"

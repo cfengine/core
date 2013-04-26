@@ -31,7 +31,7 @@
 #include "files_operators.h"
 #include "files_lib.h"
 #include "locks.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "env_context.h"

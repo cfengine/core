@@ -27,7 +27,7 @@
 #include "promises.h"
 #include "policy.h"
 #include "conversion.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "chflags.h"
 #include "audit.h"
 

@@ -24,7 +24,7 @@
 */
 
 #include "verify_files_hashes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "rlist.h"
 #include "policy.h"
 #include "client_code.h"

@@ -27,7 +27,7 @@
 
 #include "scope.h"
 #include "vars.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "fncall.h"
 #include "env_context.h"
 

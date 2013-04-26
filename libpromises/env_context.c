@@ -40,6 +40,7 @@
 #include "vars.h"
 #include "syslog_client.h"
 #include "audit.h"
+#include "logging.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

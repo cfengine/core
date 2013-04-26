@@ -31,7 +31,7 @@
 /* ExpandScalar */
 #include "expand.h"
 #include "vars.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "pipes.h"
 #include "misc_lib.h"
 #include "env_context.h"

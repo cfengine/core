@@ -29,6 +29,7 @@
 #include "env_monitor.h"
 #include "conversion.h"
 #include "vars.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "signals.h"
 #include "scope.h"

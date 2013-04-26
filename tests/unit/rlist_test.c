@@ -175,6 +175,18 @@ static void test_filter_everything(void)
     assert_true(list == NULL);
 }
 
+static void test_reverse(void)
+{
+    Rlist *list = RlistFromSplitString("a,b,c", ',');
+
+    RlistReverse(&list);
+    assert_string_equal("c", list->item);
+    assert_string_equal("b", list->next->item);
+    assert_string_equal("a", list->next->next->item);
+
+    RlistDestroy(list);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -192,7 +204,8 @@ int main()
         unit_test(test_rval_to_fncall2),
         unit_test(test_last),
         unit_test(test_filter),
-        unit_test(test_filter_everything)
+        unit_test(test_filter_everything),
+        unit_test(test_reverse),
     };
 
     return run_tests(tests);

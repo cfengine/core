@@ -56,8 +56,7 @@ libpromises_la_SOURCES = \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
         locks.c locks.h \
-        logging_old.h \
-        logging.c logging.h \
+        logging_old.c logging_old.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \
         mod_access.c mod_access.h \
@@ -84,6 +83,7 @@ libpromises_la_SOURCES = \
         pipes.h \
         processes_select.c processes_select.h \
         process_lib.h process_unix_priv.h \
+        promise_logging.c promise_logging.h \
         promises.c promises.h \
         prototypes3.h \
         rlist.c rlist.h \

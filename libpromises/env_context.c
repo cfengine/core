@@ -41,6 +41,8 @@
 #include "syslog_client.h"
 #include "audit.h"
 #include "logging.h"
+#include "logging_old.h"
+#include "promise_logging.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
@@ -1867,8 +1869,8 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
 
     if (pp)
     {
-        LoggingInit(ctx);
-        LoggingPromiseEnter(ctx, pp);
+        PromiseLoggingInit(ctx);
+        PromiseLoggingPromiseEnter(ctx, pp);
 
         if (level == OUTPUT_LEVEL_ERROR)
         {
@@ -1883,8 +1885,8 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
 
     if (pp)
     {
-        char *last_msg = LoggingPromiseFinish(ctx, pp);
-        LoggingFinish(ctx);
+        char *last_msg = PromiseLoggingPromiseFinish(ctx, pp);
+        PromiseLoggingFinish(ctx);
 
         /* Now complete the exits status classes and auditing */
 

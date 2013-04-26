@@ -146,7 +146,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     return GetCommonConstraint(lval);
 }
 
-const BodySyntax *BodySyntaxLookup(const char *body_type)
+const BodySyntax *BodySyntaxGet(const char *body_type)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {

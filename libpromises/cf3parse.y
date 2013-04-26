@@ -150,7 +150,7 @@ bodytype:              bodytype_values
 
 bodytype_values:       typeid
                        {
-                           if (!BodySyntaxLookup(P.blocktype))
+                           if (!BodySyntaxGet(P.blocktype))
                            {
                                ParseError("Unknown body type '%s'", P.blocktype);
                            }
@@ -693,7 +693,7 @@ selection:             selection_id                         /* BODY ONLY */
 
                            if (!INSTALL_SKIP)
                            {
-                               const BodySyntax *body_syntax = BodySyntaxLookup(P.blocktype);
+                               const BodySyntax *body_syntax = BodySyntaxGet(P.blocktype);
                                assert(body_syntax);
 
                                const ConstraintSyntax *constraint_syntax = BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.lval);
@@ -768,7 +768,7 @@ selection_id:          IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
 
-                           const BodySyntax *body_syntax = BodySyntaxLookup(P.currentbody->type);
+                           const BodySyntax *body_syntax = BodySyntaxGet(P.currentbody->type);
 
                            if (!body_syntax || !BodySyntaxGetConstraintSyntax(body_syntax->constraints, P.currentid))
                            {

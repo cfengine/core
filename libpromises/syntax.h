@@ -75,16 +75,11 @@ SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
 DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
-const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name);
 
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name);
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
 
-/**
- * @brief An array of ConstraintSyntax for the given body_type
- * @param body_type Type of body, e.g. 'contain'
- * @return NULL if not found
- */
-const BodySyntax *BodySyntaxLookup(const char *body_type);
+const BodySyntax *BodySyntaxGet(const char *body_type);
 const ConstraintSyntax *ControlBodySyntaxGet(const char *agent_type);
 
 

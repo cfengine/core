@@ -39,6 +39,7 @@
 #include "mod_process.h"
 #include "mod_services.h"
 #include "mod_measurement.h"
+#include "mod_knowledge.h"
 
 #include "conversion.h"
 #include "policy.h"
@@ -381,6 +382,32 @@ const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
     ConstraintSyntaxNewNull()
 };
 
+
+const ConstraintSyntax CFK_CONTROLBODY[] =
+{
+    ConstraintSyntaxNewString("build_directory", ".*", "The directory in which to generate output files", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("document_root", ".*", "The directory in which the web root resides", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("generate_manual", CF_BOOL, "true/false generate texinfo manual page skeleton for this version", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("graph_directory", CF_ABSPATHRANGE, "Path to directory where rendered .png files will be created", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("graph_output", CF_BOOL, "true/false generate png visualization of topic map if possible (requires lib)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("html_banner", "", "HTML code for a banner to be added to rendered in html after the header", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("html_footer", "", "HTML code for a page footer to be added to rendered in html before the end body tag", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("id_prefix", ".*", "The LTM identifier prefix used to label topic maps (used for disambiguation in merging)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("manual_source_directory", CF_ABSPATHRANGE, "Path to directory where raw text about manual topics is found (defaults to build_directory)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("query_engine", "", "Name of a dynamic web-page used to accept and drive queries in a browser", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("query_output", "html,text", "Menu option for generated output format", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("sql_type", "mysql,postgres", "Menu option for supported database type", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("sql_database", "", "Name of database used for the topic map", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("sql_owner", "", "User id of sql database user", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("sql_passwd", "", "Embedded password for accessing sql database", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("sql_server", "", "Name or IP of database server (or localhost)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("sql_connection_db", "", "The name of an existing database to connect to in order to create/manage other databases", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("style_sheet", "", "Name of a style-sheet to be used in rendering html output (added to headers)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("view_projections", CF_BOOL, "Perform view-projection analytics in graph generation", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewNull()
+};
+
+
 /* This list is for checking free standing body lval => rval bindings */
 
 const BodySyntax CONTROL_BODIES[] =
@@ -395,6 +422,7 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew("file", CFFILE_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
 
     BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
+    BodySyntaxNew("knowledge", CFK_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 
@@ -460,6 +488,7 @@ const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[] =
     CF_STORAGE_PROMISE_TYPES,        /* mod_storage.c */
     CF_REMACCESS_PROMISE_TYPES,      /* mod_access.c */
     CF_MEASUREMENT_PROMISE_TYPES,    /* mod_measurement.c */
+    CF_KNOWLEDGE_PROMISE_TYPES,      /* mod_knowledge.c */
 };
 
 const int CF3_MODULES = (sizeof(CF_ALL_PROMISE_TYPES) / sizeof(CF_ALL_PROMISE_TYPES[0]));

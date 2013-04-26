@@ -2826,6 +2826,11 @@ bool BundleTypeCheck(const char *name)
         }
     }
 
+    if (!strcmp("knowledge", name))
+    {
+        return true;
+    }
+
     if (!strcmp("edit_line", name))
     {
         return true;

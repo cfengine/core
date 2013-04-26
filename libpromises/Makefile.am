@@ -73,6 +73,7 @@ libpromises_la_SOURCES = \
         mod_report.c mod_report.h \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
+        mod_knowledge.c mod_knowledge.h \
         modes.c \
         mutex.c mutex.h \
         ornaments.c ornaments.h \

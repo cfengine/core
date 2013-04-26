@@ -99,7 +99,7 @@ static void CloseStringHole(char *s, int start, int end);
 static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lval, char *file_buffer, char *split, int maxent, DataType type, int intIndex);
 static int ExecModule(EvalContext *ctx, char *command, const char *ns);
 static int CheckID(char *id);
-
+static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, const char *lval_str, Rval *rval_out, DataType *datatype_out);
 static void *CfReadFile(char *filename, int maxsize);
 
 /*******************************************************************/
@@ -2015,7 +2015,43 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
 }
 
-/*********************************************************************/
+
+static FnCallResult FnCallShuffle(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char *seed_str = RlistScalarValue(finalargs->next);
+
+    Rval list_rval;
+    DataType list_dtype = DATA_TYPE_NONE;
+
+    if (!GetListReferenceArgument(ctx, fp, RlistScalarValue(finalargs), &list_rval, &list_dtype))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    if (list_dtype != DATA_TYPE_STRING_LIST)
+    {
+        Log(LOG_LEVEL_ERR, "Function '%s' expected a variable that resolves to a string list, got '%s'", fp->name, DataTypeToString(list_dtype));
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Seq *seq = SeqNew(1000, NULL);
+    for (const Rlist *rp = list_rval.item; rp; rp = rp->next)
+    {
+        SeqAppend(seq, rp->item);
+    }
+
+    SeqShuffle(seq, OatHash(seed_str, RAND_MAX));
+
+    Rlist *shuffled = NULL;
+    for (size_t i = 0; i < SeqLength(seq); i++)
+    {
+        RlistPrependScalar(&shuffled, xstrdup(SeqAt(seq, i)));
+    }
+
+    SeqDestroy(seq);
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { shuffled, RVAL_TYPE_LIST } };
+}
+
 
 static FnCallResult FnCallIsNewerThan(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
@@ -5469,6 +5505,12 @@ FnCallArg REVERSE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg SHUFFLE_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Any seed string"}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5633,6 +5675,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     {"reverse", DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a string list"},
     {"selectservers", DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers,
      "Select tcp servers which respond correctly to a query and return their number, set array of names"},
+    {"shuffle", DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle a string list"},
     {"some", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
      "True if an element in the named list matches the given regular expression"},
     {"sort", DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort,

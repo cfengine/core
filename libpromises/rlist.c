@@ -942,6 +942,19 @@ void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *, void *), void *pred
     }
 }
 
+void RlistReverse(Rlist **list)
+{
+    Rlist *prev = NULL;
+    while (*list)
+    {
+        Rlist *tmp = *list;
+        *list = (*list)->next;
+        tmp->next = prev;
+        prev = tmp;
+    }
+    *list = prev;
+}
+
 /* Human-readable serialization */
 
 static void FnCallPrint(Writer *writer, const FnCall *call)

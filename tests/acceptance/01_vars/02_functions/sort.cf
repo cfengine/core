@@ -1,0 +1,50 @@
+#######################################################
+#
+# Test sort()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "string_list" slist => { "b", "c", "a" };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "sorted_string_list" slist => sort("init.string_list");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    any::
+      "ok_slist" expression => strcmp("a,b,c", join(",", "test.sorted_string_list"));
+
+      "ok" and => { "ok_slist" };
+
+reports:
+    DEBUG::
+        "slist $(test.sorted_string_list)";
+        "ilist $(test.sorted_int_list)";
+        "rlist $(test.sorted_real_list)";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

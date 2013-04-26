@@ -108,7 +108,6 @@ int main(int argc, char *argv[])
         ShowPromises(policy->bundles, policy->bodies);
     }
 
-    WarnAboutDeprecatedFeatures(ctx);
     CheckForPolicyHub(ctx);
 
     switch (config->agent_specific.common.policy_output_format)

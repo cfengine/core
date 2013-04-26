@@ -228,7 +228,7 @@ const ConstraintSyntax CFG_CONTROLBODY[] =
     ConstraintSyntaxNewString("output_prefix", "", "The string prefix for standard output", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("domain", ".*", "Specify the domain name for this host", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("require_comments", "Warn about promises that do not have comment documentation. Default value: false", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewInt("host_licenses_paid", CF_VALRANGE, "This promise is deprecated since CFEngine version 3.1 and is ignored. Default value: 25", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("host_licenses_paid", CF_VALRANGE, "This promise is deprecated since CFEngine version 3.1 and is ignored. Default value: 25", SYNTAX_STATUS_REMOVED),
     ConstraintSyntaxNewContextList("site_classes", "A list of classes that will represent geographical site locations for hosts. These should be defined elsewhere in the configuration in a classes promise.", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("syslog_host", CF_IPRANGE, "The name or address of a host to which syslog messages should be sent directly by UDP. Default value: 514", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("syslog_port", CF_VALRANGE, "The port number of a UDP syslog service", SYNTAX_STATUS_NORMAL),

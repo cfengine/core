@@ -98,18 +98,6 @@ static void SanitizeEnvironment()
 
 /*****************************************************************************/
 
-void WarnAboutDeprecatedFeatures(EvalContext *ctx)
-{
-    Rval retval;
-
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LICENSES, &retval))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The \"host_licenses_paid\" promise is deprecated and should be removed");
-    }
-}
-
-/*****************************************************************************/
-
 void CheckForPolicyHub(EvalContext *ctx)
 {
     struct stat sb;

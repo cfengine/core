@@ -24,7 +24,7 @@
 
 #include "verify_files_utils.h"
 
-#include "logging.h"
+#include "logging_old.h"
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"

@@ -26,7 +26,7 @@
 
 #include "attributes.h"
 #include "matching.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "files_names.h"
 #include "fncall.h"
 #include "rlist.h"

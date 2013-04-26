@@ -33,7 +33,7 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"

@@ -45,6 +45,7 @@
 #include "scope.h"
 #include "atexit.h"
 #include "unix.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "client_code.h"
 #include "string_lib.h"

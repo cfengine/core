@@ -28,7 +28,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "instrumentation.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "policy.h"
 #include "files_lib.h"
 #include "string_lib.h"

@@ -28,7 +28,7 @@
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "fncall.h"
 #include "locks.h"
 #include "rlist.h"

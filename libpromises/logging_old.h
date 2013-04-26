@@ -20,16 +20,16 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#include "cf-agent-enterprise-stubs.h"
-#include "logging_old.h"
+#ifndef CFENGINE_LOGGING_OLD_H
+#define CFENGINE_LOGGING_OLD_H
 
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
-}
+#include "cf3.defs.h"
 
-void LastSawBundle(const Bundle *bundle, double comp)
-{
-}
+/* Obsolete, please use Log instead */
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
+void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
+
+#endif

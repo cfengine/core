@@ -31,7 +31,7 @@
 #include "fncall.h"
 #include "rlist.h"
 #include "conversion.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "expand.h"
 #include "scope.h"
 #include "promises.h"

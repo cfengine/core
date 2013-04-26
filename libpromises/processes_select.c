@@ -28,7 +28,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "matching.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "item_lib.h"
 #include "pipes.h"

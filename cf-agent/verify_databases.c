@@ -29,7 +29,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "locks.h"
 #include "cf_sql.h"

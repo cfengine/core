@@ -24,7 +24,7 @@
 
 #include "syslog_client.h"
 
-#include "logging.h"
+#include "logging_old.h"
 
 static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";
 static uint16_t SYSLOG_PORT = 514;

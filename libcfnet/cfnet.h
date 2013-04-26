@@ -83,11 +83,6 @@ struct Stat_
     Stat *next;
 };
 
-
-/* TODO remove all libpromises includes */
-#include "logging.h"                                            /* CfOut */
-
-
 typedef struct
 {
     int sd;

@@ -32,6 +32,7 @@
 #include "vars.h"
 #include "sort.h"
 #include "attributes.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "communication.h"
 #include "locks.h"

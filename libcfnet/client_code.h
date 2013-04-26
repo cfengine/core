@@ -29,6 +29,9 @@
 #include "platform.h"
 #include "communication.h"
 
+/* TODO: Remove dependency on libpromises */
+#include "attributes.h"
+#include "item_lib.h"
 
 void DetermineCfenginePort(void);
 /**

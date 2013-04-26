@@ -29,7 +29,7 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"

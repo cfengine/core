@@ -9,7 +9,8 @@ void test_load_masterfiles(void)
     EvalContext *ctx = EvalContextNew();
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    GenericAgentConfigSetInputFile(config, GetWorkDir(), "../../masterfiles/promises.cf");
+    GenericAgentConfigSetInputFile(config, NULL,
+                                   ABS_TOP_SRCDIR "/masterfiles/promises.cf");
 
     Policy *masterfiles = GenericAgentLoadPolicy(ctx, config);
     assert_true(masterfiles);

@@ -32,7 +32,7 @@
 #include "files_lib.h"
 #include "files_editxml.h"
 #include "item_lib.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "policy.h"
 
 /*****************************************************************************/

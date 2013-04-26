@@ -48,6 +48,7 @@ cf_agent_SOURCES = \
         cf_sql.c cf_sql.h \
         nfs.c nfs.h \
         promiser_regex_resolver.c promiser_regex_resolver.h \
+        retcode.c retcode.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
         verify_files_hashes.c verify_files_hashes.h \
@@ -55,7 +56,6 @@ cf_agent_SOURCES = \
         verify_exec.c verify_exec.h \
         verify_methods.c verify_methods.h \
         verify_databases.c verify_databases.h \
-        verify_outputs.c verify_outputs.h \
         verify_processes.c verify_processes.h \
         verify_services.c verify_services.h \
         verify_environments.c verify_environments.h \

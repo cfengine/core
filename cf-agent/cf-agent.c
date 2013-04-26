@@ -27,17 +27,18 @@
 
 #include "audit.h"
 #include "env_context.h"
+#include "verify_classes.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
 #include "verify_exec.h"
 #include "verify_methods.h"
 #include "verify_processes.h"
 #include "verify_packages.h"
-#include "verify_outputs.h"
 #include "verify_services.h"
 #include "verify_storage.h"
 #include "verify_files.h"
 #include "verify_files_utils.h"
+#include "verify_vars.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -55,6 +56,7 @@
 #include "promises.h"
 #include "unix.h"
 #include "attributes.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "communication.h"
 #include "signals.h"
@@ -76,7 +78,6 @@ typedef enum
     TYPE_SEQUENCE_VARS,
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
-    TYPE_SEQUENCE_OUTPUTS,
     TYPE_SEQUENCE_INTERFACES,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -101,9 +102,9 @@ typedef enum
 #include "cf.nova.h"
 #include "agent_reports.h"
 #include "nova-agent-diagnostics.h"
-#else
-#include "reporting.h"
 #endif
+
+#include "ornaments.h"
 
 #include <assert.h>
 
@@ -129,7 +130,6 @@ static const char *AGENT_TYPESEQUENCE[] =
     "vars",
     "defaults",
     "classes",                  /* Maelstrom order 2 */
-    "outputs",
     "interfaces",
     "files",
     "packages",
@@ -1127,14 +1127,12 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            SetBundleOutputs(bp->name);
             BannerBundle(bp, params);
 
             EvalContextStackPushBundleFrame(ctx, bp, false);
             ScopeAugment(ctx, bp, params);
 
             ScheduleAgentOperations(ctx, bp);
-            ResetBundleOutputs(bp->name);
 
             EvalContextStackPopFrame(ctx);
         }
@@ -1362,7 +1360,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
        }
 
     ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
-    ConvergeVarHashPromise(ctx, pp, true);
+    VerifyVarPromise(ctx, pp, true);
 }
 
 static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
@@ -1407,7 +1405,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
-        ConvergeVarHashPromise(ctx, pp, true);
+        VerifyVarPromise(ctx, pp, true);
         return;
     }
 
@@ -1420,17 +1418,9 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *par
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
-
-    if (strcmp("outputs", pp->parent_promise_type->name) == 0)
-    {
-        VerifyOutputsPromise(ctx, pp);
-        return;
-    }
-
-    SetPromiseOutputs(ctx, pp);
 
     if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {

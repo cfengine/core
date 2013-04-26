@@ -33,9 +33,8 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
-#include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 #include "rlist.h"
@@ -127,14 +126,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         ScopeClear(bp->name);
         BundleHashVariables(ctx, bp);
 
-        SetBundleOutputs(bp->name);
-
         ScopeAugment(ctx, bp, params);
 
         retval = ScheduleAgentOperations(ctx, bp);
 
         GetReturnValue(ctx, bp->name, pp);
-        ResetBundleOutputs(bp->name);
 
         EvalContextStackPopFrame(ctx);
 

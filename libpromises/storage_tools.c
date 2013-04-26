@@ -25,7 +25,7 @@
 
 #include "cf3.defs.h"
 
-#include "logging.h"
+#include "logging_old.h"
 
 #ifdef HAVE_SYS_STATFS_H
 # include <sys/statfs.h>

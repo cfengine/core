@@ -28,7 +28,6 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "reporting.h"
 #include "scope.h"
 #include "files_copy.h"
 #include "files_interfaces.h"
@@ -37,7 +36,7 @@
 #include "env_context.h"
 #include "crypto.h"
 #include "sysinfo.h"
-#include "logging.h"
+#include "logging_old.h"
 
 #include "cf-key-functions.h"
 

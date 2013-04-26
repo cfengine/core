@@ -24,6 +24,7 @@
 
 #include "net.h"
 
+#include "logging.h"
 #include "misc_lib.h"
 
 /*************************************************************************/
@@ -65,15 +66,13 @@ int SendTransaction(int sd, char *buffer, int len, char status)
 
     if (wlen > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
+        Log(LOG_LEVEL_ERR, "SendTransaction: wlen (%d) > %d - %d", wlen, CF_BUFSIZE, CF_INBAND_OFFSET);
         ProgrammingError("SendTransaction software failure");
     }
 
     snprintf(work, CF_INBAND_OFFSET, "%c %d", status, wlen);
 
     memcpy(work + CF_INBAND_OFFSET, buffer, wlen);
-
-    CfDebug("Transaction Send[%s][Packed text]\n", work);
 
     if (SendSocketStream(sd, work, wlen + CF_INBAND_OFFSET, 0) == -1)
     {
@@ -100,17 +99,14 @@ int ReceiveTransaction(int sd, char *buffer, int *more)
 
     sscanf(proto, "%c %u", &status, &len);
 
-    CfDebug("Transaction Receive [%s][%s]\n", proto, proto + CF_INBAND_OFFSET);
-
     if (len > CF_BUFSIZE - CF_INBAND_OFFSET)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
+        Log(LOG_LEVEL_ERR, "Bad transaction packet -- too long (%c %d) Proto = %s ", status, len, proto);
         return -1;
     }
 
     if (strncmp(proto, "CAUTH", 5) == 0)
     {
-        CfDebug("Version 1 protocol connection attempted - no you don't!!\n");
         return -1;
     }
 
@@ -135,11 +131,9 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 {
     int already, got;
 
-    CfDebug("RecvSocketStream(%d)\n", toget);
-
     if (toget > CF_BUFSIZE - 1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bad software request for overfull buffer");
+        Log(LOG_LEVEL_ERR, "Bad software request for overfull buffer");
         return -1;
     }
 
@@ -154,24 +148,21 @@ int RecvSocketStream(int sd, char buffer[CF_BUFSIZE], int toget)
 
         if ((got == -1) && (LastRecvTimedOut()))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "recv", "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d)",
-                  already, toget);
+            Log(LOG_LEVEL_ERR, "!! Timeout - remote end did not respond with the expected amount of data (received=%d, expecting=%d): %s",
+                already, toget, GetErrorStr());
             return -1;
         }
 
         if (got == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "recv", "Couldn't recv");
+            Log(LOG_LEVEL_ERR, "Couldn't recv: %s", GetErrorStr());
             return -1;
         }
 
         if (got == 0)           /* doesn't happen unless sock is closed */
         {
-            CfDebug("Transmission empty or timed out...\n");
             break;
         }
-
-        CfDebug("    (Concatenated %d from stream)\n", got);
     }
 
     buffer[already] = '\0';
@@ -186,8 +177,6 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
     do
     {
-        CfDebug("Attempting to send %d bytes\n", tosend - already);
-
         sent = send(sd, buffer + already, tosend - already, flags);
 
         if ((sent == -1) && (errno == EINTR))
@@ -197,11 +186,10 @@ int SendSocketStream(int sd, char buffer[CF_BUFSIZE], int tosend, int flags)
 
         if (sent == -1)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "send", "Couldn't send");
+            Log(LOG_LEVEL_VERBOSE, "Couldn't send: %s", GetErrorStr());
             return -1;
         }
 
-        CfDebug("SendSocketStream, sent %d\n", sent);
         already += sent;
     }
     while (already < tosend);

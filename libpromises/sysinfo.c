@@ -35,7 +35,7 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "unix.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "rlist.h"

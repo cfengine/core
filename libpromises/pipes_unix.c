@@ -25,86 +25,16 @@
 
 #include "pipes.h"
 
-#include "logging.h"
+#include "logging_old.h"
 #include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "policy.h"
 #include "env_context.h"
 
-#ifndef __MINGW32__
 static int CfSetuid(uid_t uid, gid_t gid);
-#endif
 
-int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
-{
-    char retcodeStr[128] = { 0 };
-    int result = true;
-    int matched = false;
-
-    if ((a.classes.retcode_kept) || (a.classes.retcode_repaired) || (a.classes.retcode_failed))
-    {
-
-        snprintf(retcodeStr, sizeof(retcodeStr), "%d", retcode);
-
-        if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a,
-                 "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
-                 retcode);
-            result = true;
-            matched = true;
-        }
-
-        if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a,
-                 "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
-                 retcode);
-            result = true;
-            matched = true;
-        }
-
-        if (RlistKeyIn(a.classes.retcode_failed, retcodeStr))
-        {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
-                 "!! Command related to promiser \"%s\" returned code defined as promise failed (%d)", pp->promiser,
-                 retcode);
-            result = false;
-            matched = true;
-        }
-
-        if (!matched)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  "Command related to promiser \"%s\" returned code %d -- did not match any failed, repaired or kept lists",
-                  pp->promiser, retcode);
-        }
-
-    }
-    else if (fallback)          // default: 0 is success, != 0 is failure
-    {
-        if (retcode == 0)
-        {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
-                 pp->promiser);
-            result = true;
-        }
-        else
-        {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a,
-                 " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
-                 retcode);
-            result = false;
-        }
-    }
-
-    return result;
-}
-
-#ifndef __MINGW32__
-
-/*****************************************************************************/
+static int cf_pwait(pid_t pid);
 
 static pid_t *CHILDREN;
 static int MAX_FD = 128;               /* Max number of simultaneous pipes */
@@ -602,13 +532,11 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
     return NULL;
 }
 
-int cf_pwait(pid_t pid)
+static int cf_pwait(pid_t pid)
 {
     int status;
 
     CfDebug("cf_pwait - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
-
-# ifdef HAVE_WAITPID
 
     while (waitpid(pid, &status, 0) < 0)
     {
@@ -624,30 +552,6 @@ int cf_pwait(pid_t pid)
     }
 
     return WEXITSTATUS(status);
-
-# else
-
-    while ((wait_result = wait(&status)) != pid)
-    {
-        if (wait_result <= 0)
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
-            return -1;
-        }
-    }
-
-    if (WIFSIGNALED(status))
-    {
-        return -1;
-    }
-
-    if (!WIFEXITED(status))
-    {
-        return -1;
-    }
-
-    return (WEXITSTATUS(status));
-# endif
 }
 
 /*******************************************************************/
@@ -700,109 +604,6 @@ int cf_pclose(FILE *pp)
 
     return cf_pwait(pid);
 }
-
-/*******************************************************************/
-
-int cf_pclose_def(EvalContext *ctx, FILE *pfp, Attributes a, Promise *pp)
-/**
- * Defines command failure/success with cfPS based on exit code.
- */
-{
-    int fd, status;
-    pid_t pid;
-
-    CfDebug("cf_pclose_def(pfp)\n");
-
-    if (!ThreadLock(cft_count))
-    {
-        return -1;
-    }
-
-    if (CHILDREN == NULL)       /* popen hasn't been called */
-    {
-        ThreadUnlock(cft_count);
-        return -1;
-    }
-
-    ThreadUnlock(cft_count);
-
-    ALARM_PID = -1;
-    fd = fileno(pfp);
-
-    if (fd >= MAX_FD)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
-              "File descriptor %d of child higher than MAX_FD in cf_pclose_def, check for defunct children", fd);
-        fclose(pfp);
-        return -1;
-    }
-
-    if ((pid = CHILDREN[fd]) == 0)
-    {
-        return -1;
-    }
-
-    ThreadLock(cft_count);
-    CHILDREN[fd] = 0;
-    ThreadUnlock(cft_count);
-
-    if (fclose(pfp) == EOF)
-    {
-        return -1;
-    }
-
-    CfDebug("cf_pclose_def - Waiting for process %" PRIdMAX "\n", (intmax_t)pid);
-
-# ifdef HAVE_WAITPID
-
-    while (waitpid(pid, &status, 0) < 0)
-    {
-        if (errno != EINTR)
-        {
-            return -1;
-        }
-    }
-
-    if (!WIFEXITED(status))
-    {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
-        return -1;
-    }
-
-    VerifyCommandRetcode(ctx, WEXITSTATUS(status), true, a, pp);
-
-    return status;
-
-# else
-
-    while ((wait_result = wait(&status)) != pid)
-    {
-        if (wait_result <= 0)
-        {
-            CfOut(OUTPUT_LEVEL_INFORM, "wait", "Wait for child failed\n");
-            return -1;
-        }
-    }
-
-    if (WIFSIGNALED(status))
-    {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a, " -> Finished script - interrupted %s\n", pp->promiser);
-        return -1;
-    }
-
-    if (!WIFEXITED(status))
-    {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
-        return -1;
-    }
-
-    VerifyCommandRetcode(WEXITSTATUS(status), true, a, pp);
-
-    return (WEXITSTATUS(status));
-# endif
-}
-
-/*******************************************************************/
 
 bool PipeToPid(pid_t *pid, FILE *pp)
 {
@@ -871,4 +672,3 @@ static int CfSetuid(uid_t uid, gid_t gid)
     return true;
 }
 
-#endif /* !__MINGW32__ */

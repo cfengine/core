@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "instrumentation.h"
 #include "attributes.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "pipes.h"
 #include "locks.h"
@@ -44,6 +45,7 @@
 #include "scope.h"
 #include "ornaments.h"
 #include "env_context.h"
+#include "retcode.h"
 
 typedef enum
 {
@@ -362,12 +364,19 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
                 cf_pclose(pfp);
             }
             else
+#endif /* __MINGW32__ */
             {
-                cf_pclose_def(ctx, pfp, a, pp);
+                int ret = cf_pclose(pfp);
+
+                if (ret == -1)
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, "", pp, a, " !! Finished script \"%s\" - failed (abnormal termination)", pp->promiser);
+                }
+                else
+                {
+                    VerifyCommandRetcode(ctx, ret, true, a, pp);
+                }
             }
-#else /* !__MINGW32__ */
-            cf_pclose_def(ctx, pfp, a, pp);
-#endif
         }
 
         if (count)

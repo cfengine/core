@@ -63,7 +63,7 @@ static char *MANUAL_DIRECTORY;
 static void XmlExportVariables(Writer *writer, const char *scope);
 static void XmlExportFunction(Writer *writer, FnCallType fn);
 static void XmlExportPromiseType(Writer *writer, const PromiseTypeSyntax *st);
-static void XmlExportControl(Writer *writer, BodyTypeSyntax body);
+static void XmlExportControl(Writer *writer, BodySyntax body);
 static void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportConstraints(Writer *writer, const ConstraintSyntax *bs);
 static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syntax);
@@ -221,7 +221,7 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
 
 /*****************************************************************************/
 
-static void XmlExportControl(Writer *writer, BodyTypeSyntax type)
+static void XmlExportControl(Writer *writer, BodySyntax type)
 {
     char *filebuffer = NULL;
 
@@ -351,12 +351,6 @@ void XmlExportConstraint(Writer *writer, const ConstraintSyntax *bs)
 
 /* EXPORT TYPE */
     XmlExportType(writer, bs);
-
-/* XML ELEMENT -- DEFAULT-VALUE */
-    if (bs->default_value != NULL)
-    {
-        XmlTag(writer, XMLTAG_DEFAULTVAL, bs->default_value, 0);
-    }
 
     switch (bs->dtype)
     {

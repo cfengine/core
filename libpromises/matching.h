@@ -28,18 +28,20 @@
 
 #include "cf3.defs.h"
 
-bool ValidateRegEx(const char *regex); /* Pure */
 int FullTextMatch(const char *regptr, const char *cmpptr); /* Sets variables */
-char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
 int BlockTextMatch(const char *regexp, const char *teststring, int *s, int *e); /* Sets variables */
 int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex); /* Uses context, sets variables */
+int MatchRlistItem(Rlist *listofregex, const char *teststring); /* Sets variables */
+int MatchPolicy(const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
+
+char *ExtractFirstReference(const char *regexp, const char *teststring); /* Pure, not thread-safe */
+
+bool ValidateRegEx(const char *regex); /* Pure */
 int IsPathRegex(char *str); /* Pure */
 int IsRegex(char *str); /* Pure */
-int MatchRlistItem(Rlist *listofregex, const char *teststring); /* Sets variables */
 void EscapeRegexChars(char *str, char *strEsc, int strEscSz); /* Pure */
 void EscapeSpecialChars(char *str, char *strEsc, int strEscSz, char *noEscseq, char *noEsclist); /* Pure */
 char *EscapeChar(char *str, int strSz, char esc); /* Pure */
 void AnchorRegex(const char *regex, char *out, int outSz); /* Pure */
-int MatchPolicy(const char *needle, const char *haystack, Rlist *insert_match, const Promise *pp); /* Sets variables */
 
 #endif // MATCHING_H

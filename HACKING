@@ -2,7 +2,7 @@ How to contribute
 -----------------
 
 Thanks for considering contributing to the CFEngine! We take pull-requests on GitHub at
-http://github.com/cfengine, and we have a public Redmine bug-tracker at http://cfengine.com
+http://github.com/cfengine, and we have a public Redmine bug-tracker at http://bug.cfengine.com
 
 Normally, bug fixes have a higher chance of getting accepted than new features, but we certainly
 welcome feature contributions. If you have an idea for a new feature, it might be a good

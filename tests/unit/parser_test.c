@@ -8,7 +8,7 @@ static Policy *LoadPolicy(const char *filename)
     char path[1024];
     sprintf(path, "%s/%s", TESTDATADIR, filename);
 
-    return ParserParseFile(path);
+    return ParserParseFile(path, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 }
 
 void test_benchmark(void)
@@ -169,6 +169,36 @@ void test_rval_list_forgot_colon(void)
     assert_false(LoadPolicy("rval_list_forgot_colon.cf"));
 }
 
+void test_rval_list_wrong_input_type(void)
+{
+    assert_false(LoadPolicy("rval_list_wrong_input_type.cf"));
+}
+
+void test_rval_function_forgot_colon(void)
+{
+    assert_false(LoadPolicy("rval_function_forgot_colon.cf"));
+}
+
+void test_rval_function_wrong_input_type(void)
+{
+    assert_false(LoadPolicy("rval_function_wrong_input_type.cf"));
+}
+
+void test_rval_wrong_input_type(void)
+{
+    assert_false(LoadPolicy("rval_wrong_input_type.cf"));
+}
+
+void test_rval_list_forgot_cb_semicolon(void)
+{
+    assert_false(LoadPolicy("rval_list_forgot_cb_semicolon.cf"));
+}
+
+void test_rval_list_forgot_cb_colon(void)
+{
+    assert_false(LoadPolicy("rval_list_forgot_cb_colon.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -209,7 +239,14 @@ int main()
 
         unit_test(test_constraint_ifvarclass_invalid),
 
-        unit_test(test_rval_list_forgot_colon)
+        unit_test(test_rval_list_forgot_colon),
+        unit_test(test_rval_list_wrong_input_type),
+        unit_test(test_rval_list_forgot_cb_semicolon),
+        unit_test(test_rval_list_forgot_cb_colon),
+        unit_test(test_rval_function_forgot_colon),
+        unit_test(test_rval_function_wrong_input_type),
+        unit_test(test_rval_wrong_input_type)
+
     };
 
     return run_tests(tests);

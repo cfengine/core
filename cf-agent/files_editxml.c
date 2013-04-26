@@ -33,15 +33,15 @@
 #include "item_lib.h"
 #include "sort.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "expand.h"
 #include "scope.h"
 #include "files_interfaces.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "policy.h"
 #include "ornaments.h"
+#include "verify_classes.h"
 
 enum editxmltypesequence
 {
@@ -259,7 +259,7 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

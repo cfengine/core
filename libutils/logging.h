@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -21,38 +20,32 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_CFKEYFUNCTIONS_H
-#define CFENGINE_CFKEYFUNCTIONS_H
+#ifndef CFENGINE_LOGGING_H
+#define CFENGINE_LOGGING_H
 
-#include "generic_agent.h"
+#include "platform.h"
+#include "compiler.h"
 
-#include "lastseen.h"
-#include "dir.h"
-#include "reporting.h"
-#include "scope.h"
-#include "files_copy.h"
-#include "files_interfaces.h"
-#include "files_hashes.h"
-#include "keyring.h"
-#include "env_context.h"
-#include "crypto.h"
+typedef enum
+{
+    LOG_LEVEL_CRIT,
+    LOG_LEVEL_ERR,
+    LOG_LEVEL_WARNING,
+    LOG_LEVEL_NOTICE,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_VERBOSE,
+    LOG_LEVEL_DEBUG,
+} LogLevel;
 
-#ifdef HAVE_NOVA
-#include "license.h"
+void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void VLog(LogLevel level, const char *fmt, va_list ap);
+
+/*
+ * Portable strerror(errno)
+ */
+const char *GetErrorStr(void);
+
 #endif
-
-RSA* LoadPublicKey(const char* filename);
-char* GetPubkeyDigest(const char* pubkey);
-int PrintDigest(const char* pubkey);
-int TrustKey(const char* pubkey);
-bool ShowHost(const char *hostkey, const char *address, bool incoming, const KeyHostSeen *quality, void *ctx);
-void ShowLastSeenHosts();
-int RemoveKeys(const char *host);
-void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
-
-bool LicenseInstall(char *path_source);
-
-
-#endif // CFKEYFUNCTIONS_H

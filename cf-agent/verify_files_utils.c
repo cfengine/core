@@ -24,7 +24,7 @@
 
 #include "verify_files_utils.h"
 
-#include "logging.h"
+#include "logging_old.h"
 #include "dir.h"
 #include "files_names.h"
 #include "files_links.h"
@@ -58,6 +58,7 @@
 #include "abstract_dir.h"
 #include "verify_files_hashes.h"
 #include "audit.h"
+#include "retcode.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"

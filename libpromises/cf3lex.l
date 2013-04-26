@@ -34,9 +34,6 @@
 #include "cf3parse.h"
 #include "parser_state.h"
 
-#include "env_context.h" /* TODO: remove, for class syntax */
-
-
 /* yyinput/input are generated and unused */
 
 #if defined(__GNUC__)
@@ -223,7 +220,6 @@ promise_type   [a-zA-Z_]+:
                               free(P.currentclasses);
                           }
 
-                          ValidateClassSyntax(tmp);
                           P.currentclasses = xstrdup(tmp);
 
                           free(tmp);

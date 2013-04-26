@@ -644,11 +644,10 @@ typedef struct
 typedef struct Rlist_ Rlist;
 
 typedef struct ConstraintSyntax_ ConstraintSyntax;
-typedef struct ConstraintSetSyntax_ ConstraintSetSyntax;
-typedef struct BodyTypeSyntax_ BodyTypeSyntax;
+typedef struct BodySyntax_ BodySyntax;
 
 /*
- * Promise type may optionally provide parse-tree check function, called after
+ * Promise types or bodies may optionally provide parse-tree check function, called after
  * parsing to do a preliminary syntax/semantic checking of unexpanded promises.
  *
  * This check function should populate #errors sequence with errors it finds and
@@ -656,17 +655,15 @@ typedef struct BodyTypeSyntax_ BodyTypeSyntax;
  *
  * If the check function has not found any errors, it should return true.
  */
-
-typedef bool (*ParseTreeCheckFn)(const Promise *pp, Seq *errors);
-
+typedef bool (*PromiseCheckFn)(const Promise *pp, Seq *errors);
 typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
 
-struct ConstraintSetSyntax_
+typedef enum
 {
-    const ConstraintSyntax *constraints;
-    const ParseTreeCheckFn parse_tree_check;
-};
-
+    SYNTAX_STATUS_NORMAL,
+    SYNTAX_STATUS_DEPRECATED,
+    SYNTAX_STATUS_REMOVED
+} SyntaxStatus;
 
 struct ConstraintSyntax_
 {
@@ -675,17 +672,18 @@ struct ConstraintSyntax_
     union
     {
         const char *validation_string;
-        const BodyTypeSyntax *body_type_syntax;
+        const BodySyntax *body_type_syntax;
     } range;
     const char *description;
-    const char *default_value;
+    SyntaxStatus status;
 };
 
-struct BodyTypeSyntax_
+struct BodySyntax_
 {
     const char *body_type;
     const ConstraintSyntax *constraints;
     BodyCheckFn check_body;
+    SyntaxStatus status;
 };
 
 typedef struct
@@ -693,7 +691,8 @@ typedef struct
     const char *bundle_type;
     const char *promise_type;
     const ConstraintSyntax *constraints;
-    const ParseTreeCheckFn check_promise;
+    const PromiseCheckFn check_promise;
+    SyntaxStatus status;
 } PromiseTypeSyntax;
 
 /*************************************************************************/
@@ -1673,7 +1672,7 @@ extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
 extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const BodyTypeSyntax CONTROL_BODIES[];
+extern const BodySyntax CONTROL_BODIES[];
 extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
 extern const ConstraintSyntax CF_CLASSBODY[];

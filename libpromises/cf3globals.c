@@ -35,8 +35,6 @@ int SHOWREPORTS = false;
 /* operational state                                                         */
 /*****************************************************************************/
 
-int VERBOSE = false;
-int INFORM = false;
 int LOOKUP = false;
 int FIPS_MODE = false;
 
@@ -71,7 +69,6 @@ char POLICY_SERVER[CF_BUFSIZE] = { 0 };
 
 int IGNORELOCK = false;
 int DONTDO = false;
-int DEBUG = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };
@@ -81,8 +78,6 @@ char VYEAR[5] = { 0 };
 char VDAY[3] = { 0 };
 char VMONTH[4] = { 0 };
 char VSHIFT[12] = { 0 };
-
-char VPREFIX[CF_MAXVARSIZE] = { 0 };
 
 char CFWORKDIR[CF_BUFSIZE] = { 0 };
 

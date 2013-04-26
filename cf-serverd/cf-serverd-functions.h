@@ -39,7 +39,6 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "xml_writer.h"
 #include "pipes.h"
 

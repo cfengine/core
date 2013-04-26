@@ -28,8 +28,6 @@
 
 #include "cf3.defs.h"
 
-#include "reporting.h"
-
 typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
 void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
@@ -63,6 +61,5 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

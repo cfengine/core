@@ -32,11 +32,11 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "signals.h"
 #include "locks.h"
 #include "exec_tools.h"
@@ -44,6 +44,7 @@
 #include "files_lib.h"
 #include "unix.h"
 #include "verify_measurements.h"
+#include "verify_classes.h"
 #include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
@@ -1187,7 +1188,7 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

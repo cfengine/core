@@ -28,7 +28,7 @@
 #include "acl_posix.h"
 #include "promises.h"
 #include "files_names.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "env_context.h"

@@ -45,6 +45,7 @@
 #include "scope.h"
 #include "atexit.h"
 #include "unix.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "client_code.h"
 #include "string_lib.h"
@@ -55,10 +56,11 @@
 #include "rlist.h"
 #include "syslog_client.h"
 #include "audit.h"
+#include "verify_classes.h"
+#include "verify_vars.h"
 
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
-#include "nova_reporting.h"
 #endif
 
 #include <assert.h>
@@ -946,7 +948,14 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     }
     else
     {
-        policy = ParserParseFile(input_path);
+        if (config->agent_type == AGENT_TYPE_COMMON)
+        {
+            policy = ParserParseFile(input_path, config->agent_specific.common.parser_warnings, config->agent_specific.common.parser_warnings_error);
+        }
+        else
+        {
+            policy = ParserParseFile(input_path, 0, 0);
+        }
     }
 
     return policy;
@@ -1044,37 +1053,6 @@ void SetFacility(const char *retval)
     OpenLog(ParseFacility(retval));
     SetSyslogFacility(ParseFacility(retval));
 }
-
-/**************************************************************/
-
-void BannerBundle(Bundle *bp, Rlist *params)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
-
-    if (VERBOSE || DEBUG)
-    {
-        printf("%s> BUNDLE %s", VPREFIX, bp->name);
-    }
-
-    if (params && (VERBOSE || DEBUG))
-    {
-        printf("(");
-        RlistShow(stdout, params);
-        printf(" )\n");
-    }
-    else
-    {
-        if (VERBOSE || DEBUG)
-            printf("\n");
-    }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-
-}
-
-/*********************************************************************/
 
 static void CheckWorkingDirectories(EvalContext *ctx)
 /* NOTE: We do not care about permissions (ACLs) in windows */
@@ -1261,7 +1239,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
-        ConvergeVarHashPromise(ctx, pp, allow_redefine);
+        VerifyVarPromise(ctx, pp, allow_redefine);
     }
 }
 
@@ -1285,7 +1263,7 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
             continue;
         }
 
-        ExpandPromise(ctx, pp, KeepClassContextPromise, NULL);
+        ExpandPromise(ctx, pp, VerifyClassPromise, NULL);
     }
 }
 
@@ -1648,6 +1626,54 @@ bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char
     return true;
 }
 
+bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options)
+{
+    if (strlen(warning_options) == 0)
+    {
+        return false;
+    }
+
+    if (strcmp("error", warning_options) == 0)
+    {
+        config->agent_specific.common.parser_warnings_error |= PARSER_WARNING_ALL;
+        return true;
+    }
+
+    const char *options_start = warning_options;
+    bool warnings_as_errors = false;
+
+    if (StringStartsWith(warning_options, "error="))
+    {
+        options_start = warning_options + strlen("error=");
+        warnings_as_errors = true;
+    }
+
+    StringSet *warnings_set = StringSetFromString(options_start, ',');
+    StringSetIterator it = StringSetIteratorInit(warnings_set);
+    const char *warning_str = NULL;
+    while ((warning_str = StringSetIteratorNext(&it)))
+    {
+        int warning = ParserWarningFromString(warning_str);
+        if (warning == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Unrecognized warning '%s'", warning_str);
+            StringSetDestroy(warnings_set);
+            return false;
+        }
+
+        if (warnings_as_errors)
+        {
+            config->agent_specific.common.parser_warnings_error |= warning;
+        }
+        else
+        {
+            config->agent_specific.common.parser_warnings |= warning;
+        }
+    }
+
+    StringSetDestroy(warnings_set);
+    return true;
+}
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 {

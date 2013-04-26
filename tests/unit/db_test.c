@@ -158,3 +158,5 @@ void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 
+int DEBUG = false;
+

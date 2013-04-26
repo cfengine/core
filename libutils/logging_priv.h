@@ -20,16 +20,47 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
+
 */
 
-#ifndef CFENGINE_VERIFY_OUTPUTS_H
-#define CFENGINE_VERIFY_OUTPUTS_H
+#ifndef CFENGINE_LOGGING_PRIV_H
+#define CFENGINE_LOGGING_PRIV_H
 
-#include "cf3.defs.h"
+#include "logging.h"
 
-void VerifyOutputsPromise(EvalContext *ctx, Promise *pp);
-void SetPromiseOutputs(EvalContext *ctx, Promise *pp);
-void SetBundleOutputs(char *name);
-void ResetBundleOutputs(char *name);
+/*
+ * This interface is private and intended only for use by logging extensions (such as one defined in libpromises).
+ */
+
+typedef struct LoggingPrivContext LoggingPrivContext;
+
+typedef void (*LoggingPrivLogHook)(LoggingPrivContext *context, const char *message);
+
+struct LoggingPrivContext
+{
+    LoggingPrivLogHook log_hook;
+
+    void *param;
+};
+
+/**
+ * @brief Attaches context to logging for current thread
+ */
+void LoggingPrivSetContext(LoggingPrivContext *context);
+
+/**
+ * @brief Retrieves logging context for current thread
+ */
+LoggingPrivContext *LoggingPrivGetContext(void);
+
+/**
+ * @brief Set logging (syslog) and reporting (stdout) level for current thread
+ */
+void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level);
+
+/**
+ * @brief Return global logging level
+ */
+LogLevel LoggingPrivGetGlobalLogLevel(void);
 
 #endif

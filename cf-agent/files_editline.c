@@ -32,18 +32,18 @@
 #include "item_lib.h"
 #include "sort.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "expand.h"
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
 #include "ornaments.h"
+#include "verify_classes.h"
 
 #include <assert.h>
 
@@ -346,7 +346,7 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp, NULL);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

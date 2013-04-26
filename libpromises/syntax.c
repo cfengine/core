@@ -30,7 +30,6 @@
 #include "mod_files.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "expand.h"
 #include "matching.h"
 #include "scope.h"
@@ -53,7 +52,7 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
@@ -147,7 +146,7 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
     return GetCommonConstraint(lval);
 }
 
-const BodyTypeSyntax *BodySyntaxLookup(const char *body_type)
+const BodySyntax *BodySyntaxGet(const char *body_type)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {
@@ -169,7 +168,7 @@ const BodyTypeSyntax *BodySyntaxLookup(const char *body_type)
 
     for (int i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
-        const BodyTypeSyntax body_syntax = CONTROL_BODIES[i];
+        const BodySyntax body_syntax = CONTROL_BODIES[i];
 
         if (strcmp(body_type, body_syntax.body_type) == 0)
         {

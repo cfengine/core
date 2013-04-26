@@ -36,7 +36,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "locks.h"
@@ -46,6 +46,7 @@
 #include "rlist.h"
 #include "ornaments.h"
 #include "env_context.h"
+#include "retcode.h"
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"
@@ -961,7 +962,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
     if (strchr(id, '*'))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              "!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
+              "!! Package name contains '*' -- perhaps a missing attribute (name/version/arch) should be specified");
     }
 
     if ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_EQ) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE) ||

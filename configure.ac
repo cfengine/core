@@ -30,6 +30,10 @@ AM_MAINTAINER_MODE([enable])
 
 AC_DEFINE(BUILD_YEAR, esyscmd([date +%Y | tr -d '\n']), "Software build year")
 
+AC_DEFINE_UNQUOTED(ABS_TOP_SRCDIR,
+"`cd -- "$srcdir"; pwd`",
+[Absolute path of source tree])
+
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 AC_CONFIG_HEADERS([libutils/config.h])
@@ -583,7 +587,7 @@ AC_REPLACE_FUNCS(mkdtemp)
 AC_CHECK_DECLS(strrstr)
 AC_REPLACE_FUNCS(strrstr)
 
-AC_CHECK_FUNCS(waitpid seteuid setegid setreuid setregid)
+AC_CHECK_FUNCS(seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
 AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)

@@ -22,14 +22,12 @@
   included file COSL.txt.
 */
 
-#ifndef CFENGINE_REPORTING_H
-#define CFENGINE_REPORTING_H
+#ifndef CFENGINE_VERIFY_VARS_H
+#define CFENGINE_VERIFY_VARS_H
 
-#include "cf3.defs.h"
+#include "env_context.h"
+#include "policy.h"
 
-// stdout only
-void BannerPromiseType(const char *bundlename, const char *type, int p);
-void BannerSubPromiseType(EvalContext *ctx, const char *bundlename, const char *type);
-void Banner(const char *s);
+void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

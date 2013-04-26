@@ -27,10 +27,9 @@
 
 #include "promises.h"
 #include "syntax.h"
-#include "reporting.h"
 #include "expand.h"
 #include "vars.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "fncall.h"
 #include "evalfunction.h"
 #include "misc_lib.h"

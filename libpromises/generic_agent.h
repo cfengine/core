@@ -63,6 +63,8 @@ typedef struct
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF,
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
             } policy_output_format;
+            unsigned int parser_warnings;
+            unsigned int parser_warnings_error;
         } common;
     } agent_specific;
 
@@ -98,13 +100,13 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
-void BannerBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
 void WarnAboutDeprecatedFeatures(EvalContext *ctx);
 void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
 bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
+bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);

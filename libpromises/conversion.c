@@ -29,8 +29,7 @@
 #include "dbm_api.h"
 #include "mod_access.h"
 #include "item_lib.h"
-#include "reporting.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "rlist.h"
 
 #include <assert.h>
@@ -651,7 +650,7 @@ AclInheritance AclInheritanceFromString(const char *string)
 
 ServicePolicy ServicePolicyFromString(const char *string)
 {
-    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
+    static const char *SERVICE_POLICY_TYPES[] = { "start", "stop", "disable", "restart", "reload", NULL };
 
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }

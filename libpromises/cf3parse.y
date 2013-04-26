@@ -321,7 +321,7 @@ promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                            CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
-                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
 
                            if (promise_type_syntax)
                            {
@@ -546,7 +546,7 @@ constraint:            constraint_id                        /* BUNDLE ONLY */
                        {
                            if (!INSTALL_SKIP)
                            {
-                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                               const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
                                assert(promise_type_syntax);
 
                                const ConstraintSyntax *constraint_syntax = PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.lval);
@@ -615,7 +615,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                        {
                            ParserDebug("\tP:%s:%s:%s:%s:%s:%s attribute = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser, P.currentid);
 
-                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(P.blocktype, P.currenttype);
+                           const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
                            assert(promise_type_syntax);
 
                            if (!PromiseTypeSyntaxGetConstraintSyntax(promise_type_syntax, P.currentid))

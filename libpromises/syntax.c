@@ -52,7 +52,7 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-const PromiseTypeSyntax *PromiseTypeSyntaxLookup(const char *bundle_type, const char *promise_type_name)
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name)
 {
     for (int i = 0; i < CF3_MODULES; i++)
     {

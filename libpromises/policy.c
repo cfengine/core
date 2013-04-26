@@ -302,7 +302,7 @@ static bool ConstraintCheckSyntax(const Constraint *constraint, Seq *errors)
     const Bundle *bundle = promise_type->parent_bundle;
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
-    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, promise_type->name);
     for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
     {
         const ConstraintSyntax *body_syntax = &promise_type_syntax->constraints[i];
@@ -462,7 +462,7 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
     const PromiseType *promise_type = promise->parent_promise_type;
     const Bundle *bundle = promise_type->parent_bundle;
 
-    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxLookup(bundle->type, promise_type->name);
+    const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(bundle->type, promise_type->name);
 
     /* Check if lvalue is valid for the bundle's specific promise_type. */
     for (size_t i = 0; promise_type_syntax->constraints[i].lval != NULL; i++)
@@ -2263,7 +2263,7 @@ static bool PromiseCheck(const Promise *pp, Seq *errors)
         success &= ConstraintCheckSyntax(constraint, errors);
     }
 
-    const PromiseTypeSyntax *pts = PromiseTypeSyntaxLookup(pp->parent_promise_type->parent_bundle->type,
+    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGet(pp->parent_promise_type->parent_bundle->type,
                                                            pp->parent_promise_type->name);
 
     if (pts->check_promise)

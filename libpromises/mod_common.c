@@ -363,6 +363,24 @@ const ConstraintSyntax CFFILE_CONTROLBODY[] =  /* enum cfh_control */
     ConstraintSyntaxNewNull()
 };
 
+const ConstraintSyntax CFRE_CONTROLBODY[] = /* enum cfrecontrol */
+{
+    ConstraintSyntaxNewString("aggregation_point", CF_ABSPATHRANGE, "The root directory of the data cache for CMDB aggregation", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("auto_scaling", CF_BOOL, "true/false whether to auto-scale graph output to optimize use of space. Default value: true", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("build_directory", ".*", "The directory in which to generate output files", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewStringList("csv2xml", "", "A list of csv formatted files in the build directory to convert to simple xml", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("error_bars", CF_BOOL, "true/false whether to generate error bars on graph output", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("html_banner", "", "HTML code for a banner to be added to rendered in html after the header", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("html_embed", CF_BOOL, "If true, no header and footer tags will be added to html output", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("html_footer", "", "HTML code for a page footer to be added to rendered in html before the end body tag", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("query_engine", "", "Name of a dynamic web-page used to accept and drive queries in a browser", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOptionList("reports", "all,audit,performance,all_locks,active_locks,hashes,classes,last_seen,monitor_now,monitor_history,monitor_summary,compliance,setuid,file_changes,installed_software,software_patches,value,variables", "A list of reports that may be generated", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewOption("report_output", "csv,html,text,xml", "Menu option for generated output format. Applies only to text reports, graph data remain in xydy format.", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("style_sheet", "", "Name of a style-sheet to be used in rendering html output (added to headers)", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewString("time_stamps", CF_BOOL, "true/false whether to generate timestamps in the output directory name", SYNTAX_STATUS_REMOVED),
+    ConstraintSyntaxNewNull()
+};
+
 /* This list is for checking free standing body lval => rval bindings */
 
 const BodySyntax CONTROL_BODIES[] =
@@ -375,6 +393,8 @@ const BodySyntax CONTROL_BODIES[] =
     BodySyntaxNew(CF_EXECC, CFEX_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew(CF_HUBC, CFH_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
     BodySyntaxNew("file", CFFILE_CONTROLBODY, NULL, SYNTAX_STATUS_NORMAL),
+
+    BodySyntaxNew("reporter", CFRE_CONTROLBODY, NULL, SYNTAX_STATUS_REMOVED),
 
     //  get others from modules e.g. "agent","files",CF_FILES_BODIES,
 

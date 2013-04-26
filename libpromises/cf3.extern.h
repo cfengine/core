@@ -50,7 +50,6 @@ extern char VMONTH[];
 extern char VSHIFT[];
 
 extern const char *CLASSTEXT[];
-extern int AUDIT;
 
 extern time_t CFSTARTTIME;
 extern time_t CFINITSTARTTIME;

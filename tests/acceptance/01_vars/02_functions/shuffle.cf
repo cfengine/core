@@ -42,7 +42,6 @@ vars:
       "eb" string => "";
 
 classes:
-    any::
       "ok_a" expression => strcmp($(ea), $(ja));
       "ok_b" expression => strcmp($(eb), $(jb));
 

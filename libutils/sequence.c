@@ -242,7 +242,7 @@ void SeqShuffle(Seq *seq, unsigned int seed)
 
     srand(seed);
 
-    for (size_t i = SeqLength(seq) - 1; i > 0; i++)
+    for (size_t i = SeqLength(seq) - 1; i > 0; i--)
     {
         size_t j = rand() % (i + 1);
 

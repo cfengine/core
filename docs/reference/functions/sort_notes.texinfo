@@ -1,0 +1,26 @@
+
+arg1 names a list to be sorted according to the predicate arg2, which
+can request a lexicographical or a numeric (integer or floating-point)
+or IPv4, IPv6, or MAC address sort.
+
+The integer sort will use lexicographical order if the numerical values
+are equal, so @code{a,,c,b,100,9} will be numerically sorted as
+@code{a,b,c,,9,100}.  Note the empty string has numeric value 0.  Also,
+values are simple integers, so @code{15k} will be "15", not "15
+thousand" and strings such as @code{now} are not accepted.
+
+The real (floating point) sort will drop to integer sort if
+@emph{either} of the values are not valid real numbers.
+
+The IPv6 sort will drop to IPv4 sort if neither of the values is a valid
+IPv6 address (non-IPv6 values will move to the left) .  The IPv4 sort
+will drop to lexicographical sort if neither of the values a valid IPv4
+address (non-IPv4 values will move to the left).  Either @code{IPv4} or
+@code{ipv4} and @code{IPv6} or @code{ipv6} can be used to request these
+IP sorts.
+
+The MAC sort will drop to lexicographical sort if either of the values
+is not a valid MAC address (invalid MAC addresses will move to the
+left).  The format "aa:bb:cc:dd:ee:ff" and "aabbccddeeff" are valid, but
+the first one accepts 1 or 2 digits while the second one doesn't.
+Either @code{MAC} or @code{mac} can be used to request the MAC sort.

@@ -1,0 +1,34 @@
+
+@verbatim
+
+bundle agent test
+
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                        "100.200.100.0", "1.2.3.4",
+                      };
+
+      "sorted_test" slist => sort("test", "lex");
+      "integer_sorted_test" slist => sort("test", "int");
+      "real_sorted_test" slist => sort("test", "real"); # floating point
+      "IPv4_sorted_test" slist => sort("test", "IPv4");
+      "IPv6_sorted_test" slist => sort("test", "IPv6");
+      "MAC_sorted_test" slist => sort("test", "MAC");
+
+  reports:
+      "The test list is $(test)";
+      "The lex-sorted list is $(sorted_test)";
+      "The integer-sorted list is $(integer_sorted_test)";
+      "The real-sorted list is $(real_sorted_test)";
+      "The IPv4-sorted list is $(IPv4_sorted_test)";
+      "The IPv6-sorted list is $(IPv6_sorted_test)";
+      "The MAC-sorted list is $(MAC_sorted_test)";
+}
+
+@end verbatim

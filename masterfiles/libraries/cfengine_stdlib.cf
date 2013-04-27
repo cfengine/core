@@ -1437,6 +1437,12 @@ body depth_search include_base
 include_basedir => "true";
 }
 
+body depth_search recurse_with_base(d) {
+	depth => "$(d)";
+	xdev  => "true";
+	include_basedir => "true";
+}
+
 ##-------------------------------------------------------
 ## delete
 ##-------------------------------------------------------

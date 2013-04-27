@@ -35,22 +35,26 @@ vars:
 bundle agent check
 {
 vars:
+      "asorted" slist => sort("test.sa", "lex");
+
+      "jaorig" string => join(",", "init.a");
+      "jasorted" string => join(",", "asorted");
       "ja" string => join(",", "test.sa");
       "jb" string => join(",", "test.sb");
 
-      "ea" string => "g,e,c,f,a,b,d";
-      "eb" string => "";
-
 classes:
-      "ok_a" expression => strcmp($(ea), $(ja));
-      "ok_b" expression => strcmp($(eb), $(jb));
+      "a_not_changed" expression => strcmp($(jaorig), $(ja));
+      "a_is_permutation" expression => strcmp($(jasorted), $(jaorig));
+      "ok_a" and => { "!a_not_changed", "a_is_permutation" };
+
+      "ok_b" expression => strcmp("", $(jb));
 
       "ok" and => { "ok_a", "ok_b" };
 
 reports:
     DEBUG::
-        "a '$(ja)' <> '$(ea)'";
-        "b '$(jb)' <> '$(eb)'";
+        "a '$(jaorig)' <> sort('$(ja)')";
+        "b '$(jb)' <> ''";
 
     ok::
         "$(this.promise_filename) Pass";

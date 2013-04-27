@@ -237,8 +237,16 @@ size_t SeqLength(const Seq *seq)
 
 void SeqShuffle(Seq *seq, unsigned int seed)
 {
+    /* Store current random number state for being reset at the end of function */
+    int rand_state = rand();
+
+    srand(seed);
+
     for (size_t i = 0; i < SeqLength(seq); i++)
     {
-        Swap(&seq->data[rand_r(&seed) % SeqLength(seq)], &seq->data[rand_r(&seed) % SeqLength(seq)]);
+        Swap(&seq->data[rand() % SeqLength(seq)], &seq->data[rand() % SeqLength(seq)]);
     }
+
+    /* Restore previous random number state */
+    srand(rand_state);
 }

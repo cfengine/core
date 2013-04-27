@@ -242,9 +242,11 @@ void SeqShuffle(Seq *seq, unsigned int seed)
 
     srand(seed);
 
-    for (size_t i = 0; i < SeqLength(seq); i++)
+    for (size_t i = SeqLength(seq) - 1; i > 0; i++)
     {
-        Swap(&seq->data[rand() % SeqLength(seq)], &seq->data[rand() % SeqLength(seq)]);
+        size_t j = rand() % (i + 1);
+
+        Swap(seq->data + i, seq->data + j);
     }
 
     /* Restore previous random number state */

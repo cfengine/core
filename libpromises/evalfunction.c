@@ -5508,7 +5508,8 @@ FnCallArg REVERSE_ARGS[] =
 FnCallArg SHUFFLE_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
-    {CF_ANYSTRING, DATA_TYPE_STRING, "Any seed string"}
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Any seed string"},
+    {NULL, DATA_TYPE_NONE, NULL}
 };
 
 /*********************************************************/

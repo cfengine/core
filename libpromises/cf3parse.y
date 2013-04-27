@@ -1132,20 +1132,24 @@ gaitem:                IDSYNTAX
 static void ParseErrorVColumnOffset(int column_offset, const char *s, va_list ap)
 {
     char *errmsg = StringVFormat(s, ap);
-
     fprintf(stderr, "%s:%d:%d: error: %s\n", P.filename, P.line_no, P.line_pos + column_offset, errmsg);
-    fprintf(stderr, "%s\n", P.current_line);
-    fprintf(stderr, "%*s\n", P.line_pos + column_offset, "^");
-
     free(errmsg);
 
-    P.error_count++;
-
-    if (P.error_count > 12)
+    /* FIXME: why this might be NULL? */
+    if (P.current_line)
     {
-        fprintf(stderr, "Too many errors");
-        exit(1);
+        fprintf(stderr, "%s\n", P.current_line);
+        fprintf(stderr, "%*s\n", P.line_pos + column_offset, "^");
+
+        P.error_count++;
+
+        if (P.error_count > 12)
+        {
+            fprintf(stderr, "Too many errors");
+            exit(1);
+        }
     }
+
 }
 
 static void ParseErrorColumnOffset(int column_offset, const char *s, ...)

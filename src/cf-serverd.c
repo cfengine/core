@@ -688,6 +688,7 @@ void PurgeOldConnections(Item **list, time_t now)
 
     if (list == NULL)
     {
+        ThreadUnlock(cft_count);
         return;
     }
 

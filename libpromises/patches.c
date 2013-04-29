@@ -183,20 +183,6 @@ int endnetgrent(void)
 
 #endif
 
-#ifndef HAVE_PUTENV
-
-int putenv(char *s)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(This system does not have putenv: cannot update CFALLCLASSES\n");
-    return 0;
-}
-
-#endif
-
-/***********************************************************/
-/* seteuid/gid() missing on some on posix systems          */
-/***********************************************************/
-
 #ifndef HAVE_SETEUID
 
 # if !defined __STDC__ || !__STDC__

@@ -451,9 +451,6 @@ void *memdup(const void *mem, size_t size);
 #if !HAVE_DECL_STRERROR
 char *strerror(int err);
 #endif
-#ifndef HAVE_PUTENV
-int putenv(char *s);
-#endif
 #if !HAVE_DECL_UNSETENV
 int unsetenv(const char *name);
 #endif

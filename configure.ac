@@ -623,7 +623,6 @@ AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
-AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)

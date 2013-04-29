@@ -40,8 +40,6 @@
 #include "rlist.h"
 #include "env_context.h"
 
-#ifndef __MINGW32__
-
 /* seconds */
 #define RPCTIMEOUT 60
 
@@ -769,5 +767,3 @@ void CleanupNFS(void)
         FSTAB_EDITS = 0;
     }
 }
-
-#endif /* !__MINGW32__ */

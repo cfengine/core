@@ -378,6 +378,9 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #ifndef HAVE_SETEGID
 int setegid(gid_t gid);
 #endif
+#if !HAVE_DECL_UNAME
+int uname(struct utsname *buf);
+#endif
 #if !HAVE_DECL_GETUID
 uid_t getuid(void);
 #endif
@@ -424,9 +427,6 @@ int setnetgrent(const char *netgroup);
 int endnetgrent(void);
 #endif
 
-#ifndef HAVE_UNAME
-int uname(struct utsname *name);
-#endif
 #if !HAVE_DECL_STRSTR
 char *strstr(const char *haystack, const char *needle);
 #endif

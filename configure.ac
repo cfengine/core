@@ -489,6 +489,9 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
+AC_CHECK_DECLS(uname)
+AC_REPLACE_FUNCS(uname)
+
 AC_CHECK_DECLS(getuid)
 AC_REPLACE_FUNCS(getuid)
 

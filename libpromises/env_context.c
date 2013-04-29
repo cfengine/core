@@ -1377,7 +1377,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         sscanf(sval, "%[^.].", scopeid);
         strlcpy(vlval, sval + strlen(scopeid) + 1, sizeof(vlval));
         CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
-        ptr = ScopeGet(scopeid);
     }
     else
     {
@@ -1385,12 +1384,11 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         strlcpy(scopeid, lval.scope, sizeof(scopeid));
     }
 
-    if (ptr == NULL)
-    {
-        /* Assume current scope */
-        strcpy(vlval, lval.lval);
-        ptr = ScopeGet(scopeid);
+    if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0) {
+        sprintf(expbuf, "%s%c%s", lval.ns, CF_NS, scopeid);
+        strlcpy(scopeid, expbuf, sizeof(scopeid));
     }
+    ptr = ScopeGet(scopeid);
 
     if (ptr == NULL)
     {
@@ -1430,7 +1428,7 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
+    CfDebug("return final variable type=%s, value={", CF_DATATYPES[assoc->dtype]);
 
     if (DEBUG)
     {

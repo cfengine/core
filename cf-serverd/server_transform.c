@@ -529,7 +529,7 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
                 BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL);
+                ScopeAugment(ctx, bp, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -575,7 +575,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
                 BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL);
+                ScopeAugment(ctx, bp, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

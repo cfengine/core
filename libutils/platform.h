@@ -396,9 +396,6 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
-#ifdef __MINGW32__
-unsigned int alarm(unsigned int seconds);
-#endif
 #if !HAVE_DECL_REALPATH
 char *realpath(const char *path, char *resolved_path);
 #endif

@@ -568,7 +568,7 @@ static void PublishEnvironment(Item *classes)
 
     fclose(fp);
 
-    cf_rename(ENVFILE_NEW, ENVFILE);
+    rename(ENVFILE_NEW, ENVFILE);
 }
 
 /*********************************************************************/

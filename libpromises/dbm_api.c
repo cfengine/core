@@ -373,7 +373,7 @@ static void DBPathMoveBroken(const char *filename)
         ProgrammingError("Unable to construct broken database filename for file %s", filename);
     }
 
-    if(cf_rename(filename, filename_broken) != 0)
+    if(rename(filename, filename_broken) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed moving broken db out of the way");
     }

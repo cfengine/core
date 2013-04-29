@@ -618,6 +618,17 @@ CF3_CHECK_PROPER_FUNC([stat],
     #endif]],
   [])
 
+dnl Check for Win32 rename. We don't know how to detect improper rename (not
+dnl removing target file if it exists) during cross-compilation, so we resort to
+dnl OS type detection.
+
+CF3_CHECK_PROPER_FUNC([rename],
+  [],
+  [[#if defined(__MINGW32__)
+    #error rename in Windows CRT ill-behaves
+    #endif]],
+  [#define rename rpl_rename])
+
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 

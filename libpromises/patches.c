@@ -337,17 +337,6 @@ int cf_chmod(const char *path, mode_t mode)
 #endif
 }
 
-/*******************************************************************/
-
-int cf_rename(const char *oldpath, const char *newpath)
-{
-#ifdef __MINGW32__
-    return NovaWin_rename(oldpath, newpath);
-#else
-    return rename(oldpath, newpath);
-#endif
-}
-
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on

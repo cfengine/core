@@ -537,6 +537,10 @@ int rpl_stat(const char *path, struct stat *buf);
 #define _stat64(name, st) rpl_stat(name, st)
 #endif
 
+#if !defined(HAVE_RENAME_PROPER)
+int rpl_rename(const char *oldpath, const char *newpath);
+#endif
+
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif

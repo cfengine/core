@@ -89,9 +89,9 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving file object %s to %s\n", from, saved);
 
-            if (cf_rename(from, saved) == -1)
+            if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
                 return false;
             }
 
@@ -128,9 +128,9 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
                 return false;
             }
 
-            if (cf_rename(from, saved) == -1)
+            if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, "Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, "Can't rename %s to %s\n", from, saved);
                 return false;
             }
         }
@@ -189,7 +189,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         return false;
     }
 
-    if (cf_rename(file, backup) == -1)
+    if (rename(file, backup) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
@@ -215,7 +215,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
         unlink(backup);
     }
 
-    if (cf_rename(new, file) == -1)
+    if (rename(new, file) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);

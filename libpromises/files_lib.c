@@ -112,9 +112,9 @@ int RawSaveItemList(const Item *liststart, const char *file)
         return false;
     }
 
-    if (cf_rename(new, file) == -1)
+    if (rename(new, file) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Error while renaming %s\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "rename", "Error while renaming %s\n", file);
         return false;
     }
 
@@ -344,9 +344,9 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                 /* And then move the current object out of the way... */
 
-                if (cf_rename(pathbuf, currentpath) == -1)
+                if (rename(pathbuf, currentpath) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Warning. The object %s is not a directory.\n", pathbuf);
+                    CfOut(OUTPUT_LEVEL_INFORM, "rename", "Warning. The object %s is not a directory.\n", pathbuf);
                     return (false);
                 }
             }
@@ -641,7 +641,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -649,7 +649,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.gz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -657,7 +657,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.Z", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -665,7 +665,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -673,7 +673,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz2", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }

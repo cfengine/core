@@ -687,7 +687,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             DeleteSlash(to);
             strcat(backup, ".cf-moved");
 
-            if (cf_rename(to, backup) == -1)
+            if (rename(to, backup) == -1)
             {
                 CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to backup old %s", to);
                 unlink(to);
@@ -1251,12 +1251,12 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
             unlink(backup);
         }
 
-        if (cf_rename(dest, backup) == -1)
+        if (rename(dest, backup) == -1)
         {
             /* ignore */
         }
 
-        backupok = (lstat(backup, &s) != -1);   /* Did the cf_rename() succeed? NFS-safe */
+        backupok = (lstat(backup, &s) != -1);   /* Did the rename() succeed? NFS-safe */
     }
     else
     {
@@ -1286,7 +1286,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
         if (backupok)
         {
-            cf_rename(backup, dest);    /* ignore failure of this call, as there is nothing more we can do */
+            rename(backup, dest);    /* ignore failure of this call, as there is nothing more we can do */
         }
 
         return false;
@@ -1303,7 +1303,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
             if (backupok)
             {
-                cf_rename(backup, dest);
+                rename(backup, dest);
             }
 
             return false;
@@ -1393,14 +1393,14 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
 #endif
 
-        if (cf_rename(new, dest) == -1)
+        if (rename(new, dest) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr,
                  " !! Could not install copy file as %s, directory in the way?\n", dest);
 
             if (backupok)
             {
-                cf_rename(backup, dest);        /* ignore failure */
+                rename(backup, dest);        /* ignore failure */
             }
 
             return false;
@@ -1554,9 +1554,9 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         {
             if (!FileInRepository(attr.rename.newname))
             {
-                if (cf_rename(path, attr.rename.newname) == -1)
+                if (rename(path, attr.rename.newname) == -1)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, " !! Error occurred while renaming %s\n", path);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, " !! Error occurred while renaming %s\n", path);
                     return;
                 }
                 else
@@ -1670,9 +1670,9 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
 
             if (!FileInRepository(newname))
             {
-                if (cf_rename(path, newname) == -1)
+                if (rename(path, newname) == -1)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, "Error occurred while renaming %s\n", path);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, "Error occurred while renaming %s\n", path);
                     return;
                 }
                 else

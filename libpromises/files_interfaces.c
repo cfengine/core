@@ -38,21 +38,6 @@
 #include "string_lib.h"
 #include "rlist.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
-int cfstat(const char *path, struct stat *buf)
-{
-#ifdef __MINGW32__
-    return NovaWin_stat(path, buf);
-#else
-    return stat(path, buf);
-#endif
-}
-
-/*********************************************************************/
-
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))

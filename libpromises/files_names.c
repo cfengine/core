@@ -135,7 +135,7 @@ Returns true if so, false otherwise.
 #else
     struct stat sb;
 
-    if (cfstat(path, &sb) != -1)
+    if (stat(path, &sb) != -1)
     {
         if (S_ISDIR(sb.st_mode))
         {

@@ -212,11 +212,6 @@ void Unix_FindV6InterfaceInfo(void)
     fail();
 }
 
-int cfstat(const char *path, struct stat *buf)
-{
-    fail();
-}
-
 void FatalError(char *s, ...)
 {
     fail();

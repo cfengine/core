@@ -723,7 +723,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     char *filename = StringWriterClose(filenamew);
 
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         if (!GenerateStub(filename))
         {

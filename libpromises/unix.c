@@ -165,7 +165,7 @@ int IsExecutable(const char *file)
     gid_t grps[NGROUPS];
     int n;
 
-    if (cfstat(file, &sb) == -1)
+    if (stat(file, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Proposed executable file \"%s\" doesn't exist", file);
         return false;

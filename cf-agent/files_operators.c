@@ -120,7 +120,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             strcat(saved, CF_SAVED);
             strcat(saved, ".dir");
 
-            if (cfstat(saved, &sb) != -1)
+            if (stat(saved, &sb) != -1)
             {
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Couldn't save directory %s, since %s exists already\n", from,
                      saved);
@@ -164,7 +164,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     stamp_now = time((time_t *) NULL);
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Can no longer access file %s, which needed editing!\n", file);
         return false;
@@ -379,7 +379,7 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
 
     CfDebug("CompareToFile(%s)\n", file);
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         return false;
     }

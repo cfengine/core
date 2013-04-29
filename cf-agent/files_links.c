@@ -91,7 +91,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     bool source_file_exists = true;
 
-    if (cfstat(absto, &sb) == -1)
+    if (stat(absto, &sb) == -1)
     {
         CfDebug("No source file\n");
         source_file_exists = false;
@@ -338,7 +338,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         strcpy(absto, to);
     }
 
-    if (cfstat(absto, &ssb) == -1)
+    if (stat(absto, &ssb) == -1)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Source file %s doesn't exist\n", source);
         return PROMISE_RESULT_WARN;
@@ -353,7 +353,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     CfDebug("Trying to (hard) link %s -> %s\n", destination, to);
 
-    if (cfstat(destination, &dsb) == -1)
+    if (stat(destination, &dsb) == -1)
     {
         return MakeHardLink(ctx, destination, to, attr, pp) ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_FAIL;
     }
@@ -436,7 +436,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     strcat(linkpath, linkbuf);
     CompressPath(tmp, linkpath);
 
-    if (cfstat(tmp, &statbuf) == -1)    /* link points nowhere */
+    if (stat(tmp, &statbuf) == -1)    /* link points nowhere */
     {
         if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {

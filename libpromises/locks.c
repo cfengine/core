@@ -360,7 +360,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     fclose(fp);
 
-    if (cfstat(cflog, &statbuf) != -1)
+    if (stat(cflog, &statbuf) != -1)
     {
         if (statbuf.st_size > CFLOGSIZE)
         {

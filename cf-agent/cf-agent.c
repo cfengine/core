@@ -1262,7 +1262,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
     for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        cfstat(rp->item, &sb);
+        stat(rp->item, &sb);
 
         if (ACCESSLIST)
         {
@@ -1694,7 +1694,7 @@ static bool VerifyBootstrap(void)
     snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
     MapName(filePath);
 
-    if (cfstat(filePath, &sb) == -1)
+    if (stat(filePath, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
         return false;

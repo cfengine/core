@@ -70,7 +70,7 @@ void PurgeItemList(Item **list, char *name)
 
     for (ip = copy; ip != NULL; ip = ip->next)
     {
-        if (cfstat(ip->name, &sb) == -1)
+        if (stat(ip->name, &sb) == -1)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
             DeleteItemLiteral(list, ip->name);
@@ -183,7 +183,7 @@ ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
     assert(size_max > 0);
 
     struct stat sb;
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         return -1;
     }
@@ -384,7 +384,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             if (strlen(currentpath) == 0)
             {
             }
-            else if (cfstat(currentpath, &statbuf) == -1)
+            else if (stat(currentpath, &statbuf) == -1)
             {
                 CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
 
@@ -448,7 +448,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
     char line[CF_BUFSIZE], concat[CF_BUFSIZE];
     int join = false;
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
@@ -630,7 +630,7 @@ void RotateFiles(char *name, int number)
 
     PrependItem(&ROTATED, name, NULL);
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "No access to file %s\n", name);
         return;

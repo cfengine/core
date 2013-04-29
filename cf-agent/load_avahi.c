@@ -47,14 +47,14 @@ static const char *getavahipath()
     const char *env = getenv("AVAHI_PATH");
     struct stat sb;
 
-    if (cfstat(env, &sb) == 0)
+    if (stat(env, &sb) == 0)
     {
         return env;
     }
 
     for (int i = 0; i < 3; i++)
     {
-        if (cfstat(paths[i], &sb) == 0)
+        if (stat(paths[i], &sb) == 0)
         {
             return paths[i];
         }

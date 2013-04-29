@@ -106,7 +106,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
+    if (stat(name, &sb) == -1)
     {
         printf(" -> No previous policy has been cached on this host\n");
     }
@@ -221,7 +221,7 @@ void SetPolicyServer(EvalContext *ctx, char *name)
 
     struct stat sb;
     
-    if ((cfstat(file, &sb)) != 0)
+    if ((stat(file, &sb)) != 0)
     {
         return;
     }
@@ -262,7 +262,7 @@ bool GetAmPolicyServer(const char *workdir)
     MapName(path);
 
     struct stat sb;
-    return cfstat(path, &sb) == 0;
+    return stat(path, &sb) == 0;
 }
 
 /********************************************************************/

@@ -173,7 +173,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 {
     struct stat statbuf;
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;

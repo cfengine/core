@@ -1727,7 +1727,7 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
 
     CfDebug("XmlCompareToFile(%s)\n", file);
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         return false;
     }

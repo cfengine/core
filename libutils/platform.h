@@ -532,6 +532,11 @@ const char *gai_strerror(int errcode);
 int rpl_mkdir(const char *pathname, mode_t mode);
 #endif
 
+#if !defined(HAVE_STAT_PROPER)
+int rpl_stat(const char *path, struct stat *buf);
+#define _stat64(name, st) rpl_stat(name, st)
+#endif
+
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif

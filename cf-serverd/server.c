@@ -1558,7 +1558,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Found a matching rule in access list (%s in %s)\n", transrequest, transpath);
 
-            if (cfstat(transpath, &statbuf) == -1)
+            if (stat(transpath, &statbuf) == -1)
             {
                 CfOut(OUTPUT_LEVEL_INFORM, "",
                       "Warning cannot stat file object %s in admit/grant, or access list refers to dangling link\n",
@@ -2372,7 +2372,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
     }
 #endif /* !__MINGW32__ */
 
-    if ((!islink) && (cfstat(filename, &statbuf) == -1))
+    if ((!islink) && (stat(filename, &statbuf) == -1))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", "BAD: unable to stat file %s\n", filename);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
@@ -2381,7 +2381,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     CfDebug("Getting size of link deref %s\n", linkbuf);
 
-    if (islink && (cfstat(filename, &statlinkbuf) != -1))       /* linktype=copy used by agent */
+    if (islink && (stat(filename, &statlinkbuf) != -1))       /* linktype=copy used by agent */
     {
         statbuf.st_size = statlinkbuf.st_size;
         statbuf.st_mode = statlinkbuf.st_mode;
@@ -2500,7 +2500,7 @@ static void CfGetFile(ServerFileGetState *args)
 
     TranslatePath(filename, args->replyfile);
 
-    cfstat(filename, &sb);
+    stat(filename, &sb);
 
     CfDebug("CfGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
@@ -2623,7 +2623,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     TranslatePath(filename, args->replyfile);
 
-    cfstat(filename, &sb);
+    stat(filename, &sb);
 
     CfDebug("CfEncryptGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 

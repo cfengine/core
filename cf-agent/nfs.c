@@ -644,7 +644,7 @@ void MountAll()
 
     struct stat sb;
 
-    if (cfstat("/etc/fstab", &sb) == -1)
+    if (stat("/etc/fstab", &sb) == -1)
     {
         int fd;
         if ((fd = creat("/etc/fstab", 0755)) > 0)

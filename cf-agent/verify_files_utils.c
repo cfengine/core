@@ -335,7 +335,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
             }
             else if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, attr, pp, inode_cache, conn))
             {
-                if (cfstat(destfile, &dsb) == -1)
+                if (stat(destfile, &dsb) == -1)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "stat", "Can't stat destination file %s\n", destfile);
                 }
@@ -481,7 +481,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
 
                 if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, attr, pp, inode_cache, conn))
                 {
-                    if (cfstat(destfile, &dsb) == -1)
+                    if (stat(destfile, &dsb) == -1)
                     {
                         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "stat", pp, attr, "Can't stat destination %s\n", destfile);
                     }
@@ -793,7 +793,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
             /* Only copy dirs if we are tracking subdirs */
 
-            if ((!attr.copy.collapse) && (cfstat(newto, &dsb) == -1))
+            if ((!attr.copy.collapse) && (stat(newto, &dsb) == -1))
             {
                 if (mkdir(newto, 0700) == -1)
                 {
@@ -801,7 +801,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
                     continue;
                 }
 
-                if (cfstat(newto, &dsb) == -1)
+                if (stat(newto, &dsb) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "stat", pp, attr,
                          " !! Can't stat local copy %s - failed to establish directory\n", newto);
@@ -882,7 +882,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
         /* Now check any overrides */
 
-        if (cfstat(destdir, &dsb) == -1)
+        if (stat(destdir, &dsb) == -1)
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, attr, "Can't stat directory %s\n", destdir);
         }
@@ -991,7 +991,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
         ExpandLinks(linkbuf, sourcefile, 0);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine: link item in copy %s marked for copying from %s instead\n", sourcefile,
               linkbuf);
-        cfstat(linkbuf, &ssb);
+        stat(linkbuf, &ssb);
         CfCopyFile(ctx, linkbuf, destfile, ssb, attr, pp, inode_cache, conn);
         return;
     }
@@ -1103,7 +1103,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 #ifdef WITH_SELINUX
     if (selinux_enabled)
     {
-        dest_exists = cfstat(dest, &cur_dest);
+        dest_exists = stat(dest, &cur_dest);
 
         if (dest_exists == 0)
         {
@@ -1262,7 +1262,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
         /* Mainly important if there is a dir in the way */
 
-        if (cfstat(dest, &s) != -1)
+        if (stat(dest, &s) != -1)
         {
             if (S_ISDIR(s.st_mode))
             {
@@ -2135,7 +2135,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
             /* if so, hide the difference by replacing with actual object */
 
-            if (cfstat(dirp->d_name, &lsb) == -1)
+            if (stat(dirp->d_name, &lsb) == -1)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "stat", "Recurse was working on %s when this failed:\n", path);
                 continue;
@@ -2231,7 +2231,7 @@ static bool CheckLinkSecurity(struct stat *sb, char *name)
 
     CfDebug("Checking the inode and device to make sure we are where we think we are...\n");
 
-    if (cfstat(".", &security) == -1)
+    if (stat(".", &security) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Could not stat directory %s after entering!", name);
         return true; // continue anyway
@@ -2365,7 +2365,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
 
         SourceSearchAndCopy(ctx, source, destination, attr.recursion.depth, attr, pp, ssb.st_dev, &inode_cache, conn);
 
-        if (cfstat(destination, &dsb) != -1)
+        if (stat(destination, &dsb) != -1)
         {
             if (attr.copy.check_root)
             {
@@ -2906,7 +2906,7 @@ static void TruncateFile(char *name)
     struct stat statbuf;
     int fd;
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         CfDebug("cfengine: didn't find %s to truncate\n", name);
     }
@@ -2951,7 +2951,7 @@ static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 {
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        return cfstat(file, buf);
+        return stat(file, buf);
     }
     else
     {

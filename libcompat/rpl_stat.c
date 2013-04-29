@@ -23,20 +23,9 @@
 
 */
 
-#ifndef CFENGINE_FILES_INTERFACES_H
-#define CFENGINE_FILES_INTERFACES_H
+#include "platform.h"
+#include "compiler.h"
 
-#include "cf3.defs.h"
-#include "cfnet.h"                                       /* AgentConnection */
-
-int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
-
-/**
- * Reads one line from #fp and places it in #buff. Newline at the end of line is
- * removed. Line is truncated to #size - 1 characters.
- *
- * @return Length of line read (not truncated), 0 on EOF, -1 on error.
- */
-ssize_t CfReadLine(char *buff, size_t size, FILE *fp) FUNC_WARN_UNUSED_RESULT;
-
+#if defined(__MINGW32__)
+#include "../nova/libcompat-win32/rpl_stat.c"
 #endif

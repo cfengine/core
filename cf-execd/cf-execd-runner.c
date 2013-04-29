@@ -399,7 +399,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     {
         struct stat statbuf;
-        if (cfstat(file, &statbuf) == -1)
+        if (stat(file, &statbuf) == -1)
         {
             return;
         }

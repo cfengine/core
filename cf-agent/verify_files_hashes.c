@@ -299,7 +299,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     if (path)
     {
-        if (cfstat(path, &statbuf) == -1)
+        if (stat(path, &statbuf) == -1)
         {
             DeleteDB(dbp, path);
         }
@@ -322,7 +322,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
     {
         char *obj = (char *) key + CF_INDEX_OFFSET;
 
-        if (cfstat(obj, &statbuf) == -1)
+        if (stat(obj, &statbuf) == -1)
         {
             if (attr.change.update)
             {
@@ -389,7 +389,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 
 #ifndef __MINGW32__
     struct stat sb;
-    if (cfstat(fname, &sb) != -1)
+    if (stat(fname, &sb) != -1)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))
         {

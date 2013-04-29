@@ -28,7 +28,7 @@ void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[
         MapName(diagnostics_path);
 
         struct stat sb;
-        if (cfstat(diagnostics_path, &sb) != 0)
+        if (stat(diagnostics_path, &sb) != 0)
         {
             if (mkdir(diagnostics_path, DEFAULTMODE) != 0)
             {
@@ -70,7 +70,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPrivateKey(const char *workdir)
     assert(path);
     struct stat sb;
 
-    if (cfstat(path, &sb) != 0)
+    if (stat(path, &sb) != 0)
     {
         return AgentDiagnosticsResultNew(false, StringFormat("No private key found at '%s'", path));
     }
@@ -89,7 +89,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckPublicKey(const char *workdir)
     assert(path);
     struct stat sb;
 
-    if (cfstat(path, &sb) != 0)
+    if (stat(path, &sb) != 0)
     {
         return AgentDiagnosticsResultNew(false, StringFormat("No public key found at '%s'", path));
     }

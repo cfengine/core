@@ -129,13 +129,13 @@ int ArchiveToRepository(const char *file, Attributes attr)
     {
     }
 
-    if (cfstat(file, &sb) == -1)
+    if (stat(file, &sb) == -1)
     {
         CfDebug("File %s promised to archive to the repository but it disappeared!\n", file);
         return true;
     }
 
-    cfstat(destination, &dsb);
+    stat(destination, &dsb);
 
     if (CopyRegularFileDisk(file, destination))
     {

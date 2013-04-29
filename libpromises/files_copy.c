@@ -124,7 +124,7 @@ bool CopyRegularFileDisk(const char *source, const char *destination)
      */
     struct stat statbuf;
 
-    if (cfstat(source, &statbuf) == -1)
+    if (stat(source, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_INFORM, "stat", "Can't copy %s!\n", source);
         unlink(destination);

@@ -598,7 +598,19 @@ dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
     #include <sys/types.h>]],
-  [[int mkdir(const char *pathname, mode_t mode);]])
+  [[int mkdir(const char *pathname, mode_t mode);]],
+  [#define mkdir rpl_mkdir])
+
+dnl Check for Win32 stat. We don't know to detect improper stat during
+dnl compilation, so we resort to OS type detection.
+
+CF3_CHECK_PROPER_FUNC([stat],
+  [[#include <sys/types.h>
+    #include <sys/stat.h>]],
+  [[#if defined(__MINGW32__)
+    #error stat in Windows CRT ill-behaves
+    #endif]],
+  [])
 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
@@ -1013,6 +1025,7 @@ AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall
 # Populate contents of config.post.h
 #
 AC_SUBST(post_macros)
+AM_SUBST_NOTMAKE(post_macros)
 
 dnl ######################################################################
 dnl Summarize

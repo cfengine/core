@@ -273,7 +273,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         }
     }
 
-    if (cfstat(path, &osb) == -1)
+    if (stat(path, &osb) == -1)
     {
         if ((a.create) || (a.touch))
         {
@@ -309,7 +309,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
     if (a.link.link_children)
     {
-        if (cfstat(a.link.source, &dsb) != -1)
+        if (stat(a.link.source, &dsb) != -1)
         {
             if (!S_ISDIR(dsb.st_mode))
             {
@@ -389,7 +389,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
 // Once more in case a file has been created as a result of editing or copying
 
-    if ((cfstat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
+    if ((stat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }

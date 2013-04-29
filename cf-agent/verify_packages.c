@@ -2160,7 +2160,7 @@ char *PrefixLocalRepository(Rlist *repositories, char *package)
 
         strcat(path, package);
 
-        if (cfstat(path, &sb) != -1)
+        if (stat(path, &sb) != -1)
         {
             snprintf(quotedPath, sizeof(quotedPath), "\"%s\"", path);
             return quotedPath;

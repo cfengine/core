@@ -100,7 +100,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
             return;
         }
 
-        if (cfstat(pbuffer, &statbuf) != -1)
+        if (stat(pbuffer, &statbuf) != -1)
         {
             if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {

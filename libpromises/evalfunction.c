@@ -808,7 +808,7 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
 
-    if (cfstat(CommandArg0(RlistScalarValue(finalargs)), &statbuf) == -1)
+    if (stat(CommandArg0(RlistScalarValue(finalargs)), &statbuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -868,7 +868,7 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     snprintf(modulecmd, CF_BUFSIZE, "%s%cmodules%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, command);
 
-    if (cfstat(CommandArg0(modulecmd), &statbuf) == -1)
+    if (stat(CommandArg0(modulecmd), &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "(Plug-in module %s not found)", modulecmd);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -2059,12 +2059,12 @@ static FnCallResult FnCallIsNewerThan(EvalContext *ctx, FnCall *fp, Rlist *final
 
 /* begin fn specific content */
 
-    if (cfstat(RlistScalarValue(finalargs), &frombuf) == -1)
+    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (cfstat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE};
     }
@@ -2087,12 +2087,12 @@ static FnCallResult FnCallIsAccessedBefore(EvalContext *ctx, FnCall *fp, Rlist *
 
 /* begin fn specific content */
 
-    if (cfstat(RlistScalarValue(finalargs), &frombuf) == -1)
+    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    if (cfstat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE};
     }
@@ -2115,11 +2115,11 @@ static FnCallResult FnCallIsChangedBefore(EvalContext *ctx, FnCall *fp, Rlist *f
 
 /* begin fn specific content */
 
-    if (cfstat(RlistScalarValue(finalargs), &frombuf) == -1)
+    if (stat(RlistScalarValue(finalargs), &frombuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
-    else if (cfstat(RlistScalarValue(finalargs->next), &tobuf) == -1)
+    else if (stat(RlistScalarValue(finalargs->next), &tobuf) == -1)
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -4156,7 +4156,7 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
 
     for (rp = files; rp != NULL; rp = rp->next)
     {
-        if (cfstat(rp->item, &sb) == -1)
+        if (stat(rp->item, &sb) == -1)
         {
             strcpy(buffer, "!any");
             break;
@@ -4399,7 +4399,7 @@ static void *CfReadFile(char *filename, int maxsize)
     size_t size;
     int i, newlines = 0;
 
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {

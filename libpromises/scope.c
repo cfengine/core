@@ -176,7 +176,7 @@ Scope *ScopeGetCurrent(void)
     return SCOPE_CURRENT;
 }
 
-void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments)
 {
     if (RlistLen(bp->args) != RlistLen(arguments))
     {
@@ -187,6 +187,12 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
         RlistShow(stderr, arguments);
         fprintf(stderr, "\n");
         FatalError(ctx, "Augment scope, formal and actual parameter mismatch is fatal");
+    }
+
+    const Bundle *pbp = NULL;
+    if (pp != NULL)
+    {
+        pbp = PromiseGetBundle(pp);
     }
 
     for (const Rlist *rpl = bp->args, *rpr = arguments; rpl != NULL; rpl = rpl->next, rpr = rpr->next)
@@ -201,18 +207,19 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
         if (IsNakedVar(rpr->item, '@'))
         {
             DataType vtype;
-            char qnaked[CF_MAXVARSIZE];
             char naked[CF_BUFSIZE];
             
             GetNaked(naked, rpr->item);
 
-            if (IsQualifiedVariable(naked) && strchr(naked, CF_NS) == NULL)
-            {
-                snprintf(qnaked, CF_MAXVARSIZE, "%s%c%s", bp->ns, CF_NS, naked);
-            }
-            
             Rval retval;
-            EvalContextVariableGet(ctx, (VarRef) { NULL, bp->name, qnaked }, &retval, &vtype);
+            if (pbp != NULL)
+            {
+                EvalContextVariableGet(ctx, (VarRef) { pbp->ns, pbp->name, naked }, &retval, &vtype);
+            }
+            else
+            {
+                EvalContextVariableGet(ctx, (VarRef) { NULL, bp->name, naked }, &retval, &vtype);
+            }
 
             switch (vtype)
             {
@@ -222,7 +229,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
                 ScopeNewList(ctx, (VarRef) { NULL, bp->name, lval }, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", qnaked, bp->name);
+                CfOut(OUTPUT_LEVEL_ERROR, "", " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
                 ScopeNewScalar(ctx, (VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
                 break;
             }
@@ -238,7 +245,6 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments)
             case RVAL_TYPE_FNCALL:
                 {
                     FnCall *subfp = rpr->item;
-                    Promise *pp = NULL; // This argument should really get passed down.
                     Rval rval = FnCallEvaluate(ctx, subfp, pp).rval;
                     if (rval.type == RVAL_TYPE_SCALAR)
                     {

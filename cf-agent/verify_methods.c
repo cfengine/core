@@ -126,7 +126,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         ScopeClear(bp->name);
         BundleHashVariables(ctx, bp);
 
-        ScopeAugment(ctx, bp, params);
+        ScopeAugment(ctx, bp, pp, params);
 
         retval = ScheduleAgentOperations(ctx, bp);
 

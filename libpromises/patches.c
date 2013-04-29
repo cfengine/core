@@ -348,19 +348,6 @@ int cf_rename(const char *oldpath, const char *newpath)
 #endif
 }
 
-/*******************************************************************/
-
-#ifdef __MINGW32__                    // FIXME: Timeouts ignored on windows for now...
-unsigned int alarm(unsigned int seconds)
-{
-    return 0;
-}
-#endif /* __MINGW32__ */
-
-/*******************************************************************/
-
-/*******************************************************************/
-
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on

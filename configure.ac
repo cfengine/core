@@ -574,6 +574,9 @@ AC_REPLACE_FUNCS(gmtime_r)
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
+AC_CHECK_DECLS(alarm)
+AC_REPLACE_FUNCS(alarm)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])

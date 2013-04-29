@@ -328,15 +328,6 @@ int cf_closesocket(int sd)
     return res;
 }
 
-int cf_chmod(const char *path, mode_t mode)
-{
-#ifdef __MINGW32__
-    return NovaWin_chmod(path, mode);
-#else
-    return chmod(path, mode);
-#endif
-}
-
 int LinkOrCopy(const char *from, const char *to, int sym)
 /**
  *  Creates symlink to file on platforms supporting it, copies on

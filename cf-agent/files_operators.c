@@ -223,7 +223,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     }
 
     mask = umask(0);
-    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
+    chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
     if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to restore file permissions for '%s'\n", file);

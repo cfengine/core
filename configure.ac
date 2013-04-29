@@ -577,6 +577,9 @@ AC_REPLACE_FUNCS(localtime_r)
 AC_CHECK_DECLS(alarm)
 AC_REPLACE_FUNCS(alarm)
 
+AC_CHECK_DECLS(chmod)
+AC_REPLACE_FUNCS(chmod)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])

@@ -484,6 +484,9 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #if !HAVE_DECL_LOCALTIME_R
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
+#if !HAVE_DECL_CHMOD
+int chmod(const char *path, mode_t mode);
+#endif
 #if !HAVE_DECL_ALARM
 unsigned int alarm(unsigned int seconds);
 #endif

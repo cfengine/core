@@ -451,8 +451,8 @@ void CreateFailSafe(char *name)
 #endif /* !__MINGW32__ */
     fclose(fout);
 
-    if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
+    if (chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
     }
 }

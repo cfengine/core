@@ -565,7 +565,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            cf_chmod(vbuff, sb.st_mode | 0700);
+            chmod(vbuff, sb.st_mode | 0700);
         }
 
         snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
@@ -576,7 +576,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         }
         else
         {
-            cf_chmod(vbuff, sb.st_mode | 0700);
+            chmod(vbuff, sb.st_mode | 0700);
         }
 
         sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
@@ -1069,7 +1069,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     if (stat(CFWORKDIR, &statbuf) != -1)
     {
         /* change permissions go-w */
-        cf_chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
+        chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
@@ -1088,7 +1088,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %jd.%jd", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
-        cf_chmod(vbuff, (mode_t) 0755);
+        chmod(vbuff, (mode_t) 0755);
     }
     else
     {
@@ -1115,7 +1115,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %ju.%ju", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
-        cf_chmod(vbuff, (mode_t) 0700);
+        chmod(vbuff, (mode_t) 0700);
     }
     else
     {
@@ -1137,7 +1137,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
 
-        cf_chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
+        chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
     }
     else
     {

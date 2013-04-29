@@ -687,12 +687,12 @@ void RotateFiles(char *name, int number)
         return;
     }
 
-    cf_chmod(to, statbuf.st_mode);
+    chmod(to, statbuf.st_mode);
     if (chown(to, statbuf.st_uid, statbuf.st_gid))
     {
         UnexpectedError("Failed to chown %s", to);
     }
-    cf_chmod(name, 0600);       /* File must be writable to empty .. */
+    chmod(name, 0600);       /* File must be writable to empty .. */
 
     if ((fd = creat(name, statbuf.st_mode)) == -1)
     {

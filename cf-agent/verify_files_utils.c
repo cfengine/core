@@ -1666,7 +1666,7 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         }
         else
         {
-            cf_chmod(path, newperm);
+            chmod(path, newperm);
 
             if (!FileInRepository(newname))
             {
@@ -1949,9 +1949,9 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
             if (!DONTDO)
             {
-                if (cf_chmod(file, newperm & 07777) == -1)
+                if (chmod(file, newperm & 07777) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "cf_chmod failed on %s\n", file);
+                    CfOut(OUTPUT_LEVEL_ERROR, "chmod", "chmod failed on %s\n", file);
                     break;
                 }
             }

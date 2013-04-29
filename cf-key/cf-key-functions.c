@@ -305,7 +305,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
     RAND_write_file(vbuff);
-    cf_chmod(vbuff, 0644);
+    chmod(vbuff, 0644);
 }
 
 

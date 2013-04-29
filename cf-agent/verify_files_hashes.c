@@ -409,5 +409,5 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
-    cf_chmod(fname, perm);
+    chmod(fname, perm);
 }

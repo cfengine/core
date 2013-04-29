@@ -451,7 +451,7 @@ long TimeAbs2Int(const char *s)
 
     cftime += (year - 1970) * 365 * 24 * 3600;
 
-    CfDebug("Time %s CORRESPONDS %s\n", s, cf_ctime(&cftime));
+    CfDebug("Time %s CORRESPONDS %s\n", s, ctime(&cftime));
     return (long) cftime;
 }
 
@@ -759,7 +759,7 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
     char month[CF_SMALLBUF], day[CF_SMALLBUF], year[CF_SMALLBUF];
     char tmp[CF_SMALLBUF];
 
-    snprintf(tmp, sizeof(tmp), "%s", cf_ctime(&t));
+    snprintf(tmp, sizeof(tmp), "%s", ctime(&t));
     sscanf(tmp, "%*s %5s %3s %*s %5s", month, day, year);
     snprintf(outStr, outStrSz, "%s %s %s", day, month, year);
 }

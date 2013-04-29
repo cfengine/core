@@ -286,7 +286,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
+    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", ctime(&starttime));
 
     if (sd != -1)
     {

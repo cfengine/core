@@ -233,15 +233,6 @@ int IsPrivileged()
 #endif
 }
 
-/*******************************************************************/
-
-char *cf_ctime(const time_t *timep)
-{
-    static char buf[26];
-
-    return cf_strtimestamp_local(*timep, buf);
-}
-
 /*
  * This function converts passed time_t value to string timestamp used
  * throughout the system. By sheer coincidence this timestamp has the same
@@ -251,7 +242,7 @@ char *cf_ctime(const time_t *timep)
  * Buffer passed should be at least 26 bytes long (including the trailing zero).
  *
  * Please use this function instead of (non-portable and deprecated) ctime_r or
- * (non-threadsafe) cf_ctime or ctime.
+ * (non-threadsafe) ctime.
  */
 
 /*******************************************************************/

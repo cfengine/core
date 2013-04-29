@@ -74,9 +74,9 @@ void SetReferenceTime(EvalContext *ctx, int setclasses)
 
     CFSTARTTIME = tloc;
 
-    snprintf(vbuff, CF_BUFSIZE, "%s", cf_ctime(&tloc));
+    snprintf(vbuff, CF_BUFSIZE, "%s", ctime(&tloc));
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reference time set to %s\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reference time set to %s\n", ctime(&tloc));
 
     if (setclasses)
     {
@@ -98,7 +98,7 @@ void SetStartTime(void)
 
     CFINITSTARTTIME = tloc;
 
-    CfDebug("Job start time set to %s\n", cf_ctime(&tloc));
+    CfDebug("Job start time set to %s\n", ctime(&tloc));
 }
 
 /*********************************************************************/

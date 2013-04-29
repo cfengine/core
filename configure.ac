@@ -632,6 +632,11 @@ CF3_CHECK_PROPER_FUNC([rename],
     #endif]],
   [#define rename rpl_rename])
 
+CF3_CHECK_PROPER_FUNC([ctime],
+  [],
+  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
+  [#define ctime rpl_ctime])
+ 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 

@@ -384,10 +384,10 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Release is %s\n", VSYSNAME.release);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", ctime(&tloc));
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
 
-    snprintf(workbuf, CF_MAXVARSIZE, "%s", cf_ctime(&tloc));
+    snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
     if (Chop(workbuf, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
@@ -665,7 +665,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         return;
     }
 
-    snprintf(value, CF_MAXVARSIZE - 1, "%s", cf_ctime(&statbuf.st_mtime));
+    snprintf(value, CF_MAXVARSIZE - 1, "%s", ctime(&statbuf.st_mtime));
     if (Chop(value, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");

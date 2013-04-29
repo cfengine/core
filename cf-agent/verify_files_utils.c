@@ -1224,7 +1224,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
             stampnow = time((time_t *) NULL);
-            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));
+            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
             if (!JoinSuffix(backup, stamp))
             {
@@ -3318,8 +3318,8 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         char from[CF_MAXVARSIZE];
         char to[CF_MAXVARSIZE];
 
-        strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
-        strcpy(to, cf_ctime(&(sb->st_mtime)));
+        strcpy(from, ctime(&(cmpsb.st_mtime)));
+        strcpy(to, ctime(&(sb->st_mtime)));
         Chop(from, CF_MAXVARSIZE);
         Chop(to, CF_MAXVARSIZE);
         CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);

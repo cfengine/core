@@ -94,7 +94,6 @@ int IsPrivileged(void);
 char *MapName(char *s);
 char *MapNameCopy(const char *s);
 char *MapNameForward(char *s);
-char *cf_ctime(const time_t *timep);
 char *cf_strtimestamp_local(const time_t time, char *buf);
 char *cf_strtimestamp_utc(const time_t time, char *buf);
 int cf_closesocket(int sd);

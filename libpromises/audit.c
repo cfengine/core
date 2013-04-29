@@ -100,7 +100,7 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
             CfOut(OUTPUT_LEVEL_INFORM, "", " -> Recording promise valuations");
 
             snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
-            snprintf(datestr, CF_MAXVARSIZE, "%s", cf_ctime(&now));
+            snprintf(datestr, CF_MAXVARSIZE, "%s", ctime(&now));
 
             if ((fout = fopen(name, "a")) == NULL)
             {

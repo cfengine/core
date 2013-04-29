@@ -223,11 +223,6 @@ Item *SplitString(const char *string, char sep)
     fail();
 }
 
-char *cf_ctime(const time_t *timep)
-{
-    fail();
-}
-
 char *CanonifyName(const char *str)
 {
     fail();

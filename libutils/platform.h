@@ -541,6 +541,10 @@ int rpl_stat(const char *path, struct stat *buf);
 int rpl_rename(const char *oldpath, const char *newpath);
 #endif
 
+#if !defined(HAVE_CTIME_PROPER)
+char *rpl_ctime(const time_t *t);
+#endif
+
 #ifndef NGROUPS
 # define NGROUPS 20
 #endif

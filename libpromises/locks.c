@@ -349,7 +349,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
         CfDebug("Cfengine: couldn't read system clock\n");
     }
 
-    sprintf(buffer, "%s", cf_ctime(&tim));
+    sprintf(buffer, "%s", ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {

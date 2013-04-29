@@ -3505,7 +3505,7 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         CfOut(OUTPUT_LEVEL_INFORM, "", "Illegal time value");
     }
 
-    CfDebug("Time computed from input was: %s\n", cf_ctime(&cftime));
+    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
@@ -3583,7 +3583,7 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
         CfOut(OUTPUT_LEVEL_INFORM, "", "Illegal time value");
     }
 
-    CfDebug("Time computed from input was: %s\n", cf_ctime(&cftime));
+    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
 
     if (now > cftime)
     {
@@ -3633,7 +3633,7 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
     CfDebug("Total negative offset = %.1f minutes\n", (double) (CFSTARTTIME - cftime) / 60.0);
-    CfDebug("Time computed from input was: %s\n", cf_ctime(&cftime));
+    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
@@ -3705,7 +3705,7 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     cftime = CFSTARTTIME;
 
-    CfDebug("Time computed from input was: %s\n", cf_ctime(&cftime));
+    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
 

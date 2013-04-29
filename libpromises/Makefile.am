@@ -21,7 +21,6 @@ libpromises_la_SOURCES = \
         audit.c audit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
-        cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \

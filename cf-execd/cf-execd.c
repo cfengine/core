@@ -45,11 +45,11 @@
 #include "rlist.h"
 #include "processes_select.h"
 
+#include <assert.h>
+
 #ifdef HAVE_NOVA
 #include "cf.nova.h"
 #endif
-
-#include <assert.h>
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1

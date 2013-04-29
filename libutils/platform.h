@@ -378,6 +378,12 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #ifndef HAVE_SETEGID
 int setegid(gid_t gid);
 #endif
+#if !HAVE_DECL_GETUID
+uid_t getuid(void);
+#endif
+#if !HAVE_DECL_GETGID
+gid_t getgid(void);
+#endif
 #if !HAVE_DECL_DRAND48
 double drand48(void);
 #endif
@@ -392,6 +398,18 @@ unsigned int alarm(unsigned int seconds);
 #endif
 #if !HAVE_DECL_REALPATH
 char *realpath(const char *path, char *resolved_path);
+#endif
+#if !HAVE_DECL_LSTAT
+int lstat(const char *file_name, struct stat *buf);
+#endif
+#if !HAVE_DECL_SLEEP
+unsigned int sleep(unsigned int seconds);
+#endif
+#if !HAVE_DECL_CHOWN
+int chown(const char *path, uid_t owner, gid_t group);
+#endif
+#if !HAVE_DECL_FCHMOD
+int fchmod(int fd, mode_t mode);
 #endif
 
 #if !HAVE_DECL_GETNETGRENT

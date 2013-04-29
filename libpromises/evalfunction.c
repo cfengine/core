@@ -59,7 +59,7 @@
 #include "logging.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #include <libgen.h>

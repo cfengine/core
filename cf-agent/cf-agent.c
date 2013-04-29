@@ -99,7 +99,6 @@ typedef enum
 #endif
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
 #include "agent_reports.h"
 #include "nova-agent-diagnostics.h"
 #endif

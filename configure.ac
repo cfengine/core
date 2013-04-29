@@ -489,6 +489,12 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
+AC_CHECK_DECLS(getuid)
+AC_REPLACE_FUNCS(getuid)
+
+AC_CHECK_DECLS(getgid)
+AC_REPLACE_FUNCS(getgid)
+
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
@@ -514,11 +520,17 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
+AC_CHECK_DECLS(lstat)
+AC_REPLACE_FUNCS(lstat)
+
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
+
+AC_CHECK_FUNCS(sleep)
+AC_REPLACE_FUNCS(sleep)
 
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
@@ -688,6 +700,12 @@ AC_REPLACE_FUNCS(inet_ntop inet_pton)
 AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
+
+AC_CHECK_DECLS(chown)
+AC_REPLACE_FUNCS(chown)
+
+AC_CHECK_FUNCS(fchmod)
+AC_REPLACE_FUNCS(fchmod)
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)

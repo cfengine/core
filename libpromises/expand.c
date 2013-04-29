@@ -49,10 +49,6 @@
 #include "audit.h"
 #include "verify_vars.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #include <assert.h>
 
 static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listvars,

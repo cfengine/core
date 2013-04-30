@@ -28,7 +28,7 @@
 #include "cfnet.h"
 
 
-int IdentifyAgent(int sd, char *localip);
+int IdentifyAgent(int sd);
 int AuthenticateAgent(AgentConnection *conn, bool trust_key);
 int BadProtoReply(char *buf);
 int OKProtoReply(char *buf);

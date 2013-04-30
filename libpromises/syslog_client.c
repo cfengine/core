@@ -26,7 +26,7 @@
 
 #include "logging_old.h"
 
-static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";
+static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
 static uint16_t SYSLOG_PORT = 514;
 int FACILITY;
 
@@ -35,9 +35,17 @@ void SetSyslogFacility(int facility)
     FACILITY = facility;
 }
 
-void SetSyslogHost(const char *host)
+bool SetSyslogHost(const char *host)
 {
-    strlcpy(SYSLOG_HOST, host, CF_BUFSIZE);
+    if (strlen(host) < sizeof(SYSLOG_HOST))
+    {
+        strcpy(SYSLOG_HOST, host);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void SetSyslogPort(uint16_t port)

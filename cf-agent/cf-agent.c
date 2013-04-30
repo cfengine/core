@@ -380,7 +380,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             // temporary assure that network functions are working
             OpenNetwork();
 
-            strncpy(POLICY_SERVER, Hostname2IPString(optarg), CF_BUFSIZE - 1);
+            if (Hostname2IPString(POLICY_SERVER, optarg,
+                                  sizeof(POLICY_SERVER)) == -1)
+            {
+                Log(LOG_LEVEL_ERR,
+                    "CheckOpts: ERROR, could not resolve %s, can't bootstrap",
+                    optarg);
+                exit(EXIT_FAILURE);
+            }
 
             CloseNetwork();
 
@@ -1019,8 +1026,18 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
-        SetSyslogHost(Hostname2IPString(retval.item));
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
+        /* Don't resolve syslog_host now, better do it per log request. */
+        if (!SetSyslogHost(retval.item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "FAILed to set syslog_host, ""\"%s\" too long",
+                  (char *) retval.item);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s",
+                  (char *) retval.item);
+        }
     }
 
 #ifdef HAVE_NOVA
@@ -1782,38 +1799,49 @@ static int AutomaticBootstrap()
 {
     List *foundhubs = NULL;
     int hubcount = ListHubs(&foundhubs);
-    
+    int ret;
+
     switch(hubcount)
     {
     case -1:
         CfOut(OUTPUT_LEVEL_ERROR, "", "Error while trying to find a Policy Server");
-        ListDestroy(&foundhubs);
-        return -1;
+        ret = -1;
+        break;
     case 0:
         printf("No hubs were found. Exiting.\n");
-        ListDestroy(&foundhubs);
-        return -1;
-    case 1:
-        printf("Found hub installed on:"
-               "Hostname: %s"
-               "IP Address: %s\n",
-               ((HostProperties*)foundhubs)->Hostname,
-               ((HostProperties*)foundhubs)->IPAddress);
-        strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
-        dlclose(avahi_handle);
+        ret = -1;
         break;
+    case 1:
+    {
+        char *hostname = ((HostProperties*)foundhubs)->Hostname;
+        char *ipaddr = ((HostProperties*)foundhubs)->IPAddress;
+        printf("Autodiscovered hub installed on:"
+               " Hostname \"%s\", IP Address %s\n",
+               hostname, ipaddr);
+        if (strlen((ipaddr) < sizeof(POLICY_SERVER))
+        {
+            strcpy(POLICY_SERVER, ipaddr);
+            ret = 0;
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "Invalid autodiscovered hub IP address \"%s\"", ipaddr);
+            ret = -1;
+        }
+        break;
+    }
     default:
         printf("Found more than one hub registered in the network.\n"
                "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
-        dlclose(avahi_handle);
-        ListDestroy(&foundhubs);
-        return -1;
+        ret = -1;
     };
 
+    dlclose(avahi_handle);
     ListDestroy(&foundhubs);
 
-    return 0;
+    return ret;
 }
 #endif
 #endif

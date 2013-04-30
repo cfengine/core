@@ -45,4 +45,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, Pro
 
 int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
 
+/* To be implemented in Nova for Win32 */
+int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
+
 #endif

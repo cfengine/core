@@ -3471,6 +3471,7 @@ bundle common paths
       "path[find]"          string => "/usr/bin/find";
       "path[grep]"          string => "/bin/grep";
       "path[hostname]"      string => "/bin/hostname";
+      "path[init]"          string => "/sbin/init";
       "path[iptables]"      string => "/sbin/iptables";
       "path[iptables_save]" string => "/sbin/iptables-save";
       "path[ls]"            string => "/bin/ls";
@@ -3520,6 +3521,7 @@ bundle common paths
       "path[grep]"          string => "/bin/grep";
       "path[hostname]"      string => "/bin/hostname";
       "path[ls]"            string => "/bin/ls";
+      "path[init]"          string => "/sbin/init";
       "path[iptables]"      string => "/sbin/iptables";
       "path[iptables_save]" string => "/sbin/iptables-save";
       "path[netstat]"       string => "/bin/netstat";

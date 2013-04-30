@@ -28,7 +28,6 @@ body agent control
  debian::
   environment => {
                   "DEBIAN_FRONTEND=noninteractive",
-                  "PATH=/bin:/sbin:/usr/bin:/usr/sbin"
 #                  "APT_LISTBUGS_FRONTEND=none",
 #                  "APT_LISTCHANGES_FRONTEND=none",
                  };

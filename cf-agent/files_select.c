@@ -36,10 +36,6 @@
 #include "exec_tools.h"
 #include "chflags.h"
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
-
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);
 static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit);
 static int SelectModeMatch(struct stat *lstatptr, Rlist *ls);
@@ -50,15 +46,13 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog);
 static int SelectIsSymLinkTo(char *filename, Rlist *crit);
 static int SelectExecProgram(char *filename, char *command);
 static int SelectSizeMatch(size_t size, size_t min, size_t max);
-#ifndef __MINGW32__
-static int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
+
+#if !defined(__MINGW32__)
+static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
 #if defined HAVE_CHFLAGS
 static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags);
-#endif
-#ifndef __MINGW32__
-static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit);
 #endif
 
 int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
@@ -524,7 +518,7 @@ static int SelectExecProgram(char *filename, char *command)
 /* Unix implementations                                            */
 /*******************************************************************/
 
-static int GetOwnerName(ARG_UNUSED char *path, struct stat *lstatptr, char *owner, int ownerSz)
+int GetOwnerName(ARG_UNUSED char *path, struct stat *lstatptr, char *owner, int ownerSz)
 {
     struct passwd *pw;
 

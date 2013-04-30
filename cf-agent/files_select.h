@@ -29,4 +29,7 @@
 
 int SelectLeaf(char *path, struct stat *sb, FileSelect fs);
 
+/* For implementation in Nova */
+int GetOwnerName(char *path, struct stat *lstatptr, char *owner, int ownerSz);
+
 #endif

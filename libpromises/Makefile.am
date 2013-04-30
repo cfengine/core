@@ -36,7 +36,6 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
-        enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
@@ -102,6 +101,11 @@ libpromises_la_SOURCES = \
         verify_classes.c verify_classes.h \
         verify_reports.c \
         verify_vars.c verify_vars.h
+
+if !HAVE_NOVA
+libpromises_la_SOURCES += \
+	enterprise_stubs.c
+endif
 
 if !NT
 

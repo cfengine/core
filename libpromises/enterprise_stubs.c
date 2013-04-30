@@ -42,8 +42,6 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#if !defined(HAVE_NOVA)
-
 extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
@@ -208,5 +206,3 @@ void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
 void ShowPromise(ARG_UNUSED const Promise *pp)
 {
 }
-
-#endif

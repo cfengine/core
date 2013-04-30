@@ -1198,6 +1198,23 @@ body classes always(x)
 ## files promises
 ##..................................................
 
+# this is a workaround for the issue that recurse_with_base precludes
+# a file from being deleted
+bundle agent rm_rf(name)
+{
+  classes:
+      "isdir" expression => isdir($(name));
+  files:
+    isdir::
+      "$(name)"
+      file_select => all,
+      depth_search => recurse_with_base(999),
+      delete => tidy;
+
+    !isdir::
+      "$(name)" delete => tidy;
+}
+
 ##-------------------------------------------------------
 ## copy_from
 ##-------------------------------------------------------

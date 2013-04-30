@@ -46,7 +46,7 @@
 #include "audit.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 typedef enum

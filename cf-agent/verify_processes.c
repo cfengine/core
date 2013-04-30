@@ -41,7 +41,7 @@
 #include "ornaments.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);

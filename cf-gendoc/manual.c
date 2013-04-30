@@ -40,7 +40,7 @@
 #include "rlist.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 extern char BUILD_DIR[CF_BUFSIZE];

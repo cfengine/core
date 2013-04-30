@@ -59,9 +59,10 @@
 #include "verify_files_hashes.h"
 #include "audit.h"
 #include "retcode.h"
+#include "cf-agent-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #define CF_RECURSION_LIMIT 100
@@ -105,14 +106,6 @@ static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise 
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
-
-#ifndef HAVE_NOVA
-static void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
-                          ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
-}
-#endif
 
 void SetFileAutoDefineList(Rlist *auto_define_list)
 {

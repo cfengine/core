@@ -31,12 +31,7 @@
 #include "string_lib.h"
 #include "rlist.h"
 #include "env_context.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
-/*****************************************************************************/
+#include "cf-agent-enterprise-stubs.h"
 
 // Valid operations (first char of mode)
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
@@ -88,12 +83,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
         break;
 
     case ACL_TYPE_NTFS_:
-
-#if defined(__MINGW32__)
         Nova_CheckNtACL(ctx, file, a.acl, a, pp);
-#else
-        CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are not supported on this system");
-#endif
         break;
 
     default:

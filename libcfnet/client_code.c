@@ -41,10 +41,6 @@
 #include "files_lib.h"
 #include "string_lib.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 typedef struct
 {
     char *server;
@@ -73,9 +69,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
   */
 static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err);
 
-#if !defined(__MINGW32__)
-static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
-#endif
+int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 /*********************************************************************/
 
@@ -1421,7 +1415,7 @@ void ConnectionsCleanup(void)
 // so it can be ignored.
 #endif
 
-static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
+int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 /** 
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.

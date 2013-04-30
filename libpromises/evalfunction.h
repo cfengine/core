@@ -35,4 +35,8 @@ int FnNumArgs(const FnCallType *call_type);
 
 void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, const char *ns);
 
+/* Implemented in Nova for Win32 */
+FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
+FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs);
+
 #endif

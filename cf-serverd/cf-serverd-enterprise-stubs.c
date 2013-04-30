@@ -28,18 +28,18 @@
 #include "logging_old.h"
 #include "cf-serverd-functions.h"
 
-void RegisterLiteralServerData(EvalContext *ctx, const char *handle, Promise *pp)
+void RegisterLiteralServerData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const char *handle, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
 }
 
-int ReturnLiteralData(EvalContext *ctx, char *handle, char *ret)
+int ReturnLiteralData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *handle, ARG_UNUSED char *ret)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
     return 0;
 }
 
-int SetServerListenState(EvalContext *ctx, size_t queue_size)
+int SetServerListenState(ARG_UNUSED EvalContext *ctx, ARG_UNUSED size_t queue_size)
 {
     if (!SERVER_LISTEN)
     {
@@ -54,13 +54,13 @@ void TryCollectCall(void)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
-int ReceiveCollectCall(struct ServerConnectionState *conn)
+int ReceiveCollectCall(ARG_UNUSED struct ServerConnectionState *conn)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
     return false;
 }
 
-bool ReturnQueryData(struct ServerConnectionState *conn, char *menu)
+bool ReturnQueryData(ARG_UNUSED struct ServerConnectionState *conn, ARG_UNUSED char *menu)
 {
     return false;
 }

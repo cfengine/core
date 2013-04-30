@@ -29,11 +29,6 @@
 #include "item_lib.h"
 #include "logging_old.h"
 
-/* lstat */
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static Item *SUSPICIOUSLIST = NULL;
 
 void AddFilenameToListOfSuspicious(const char *pattern)

@@ -37,10 +37,6 @@
 
 #include <assert.h>
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static Item *ROTATED = NULL;
 
 

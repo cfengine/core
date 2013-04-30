@@ -48,10 +48,6 @@
 #include "files_repository.h"
 #include "files_lib.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #include <assert.h>
 
 int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp)

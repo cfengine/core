@@ -31,10 +31,6 @@
 #include "chflags.h"
 #include "audit.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static int CHECKSUMUPDATES;
 
 /*******************************************************************/

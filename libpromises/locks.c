@@ -38,10 +38,6 @@
 #include "fncall.h"
 #include "env_context.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 static Item *DONELIST = NULL;

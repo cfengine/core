@@ -35,10 +35,6 @@
 #include "scope.h"
 #include "sysinfo.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 typedef enum
 {
     MONITOR_CONTROL_FORGET_RATE,

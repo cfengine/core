@@ -48,8 +48,7 @@
 #include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
-#include "history.h"
+# include "history.h"
 #endif
 
 #include <math.h>

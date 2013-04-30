@@ -53,10 +53,6 @@
 #include "ornaments.h"
 #include "audit.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
 static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp);

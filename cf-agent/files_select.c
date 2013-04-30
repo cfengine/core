@@ -37,7 +37,7 @@
 #include "chflags.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 static int SelectTypeMatch(struct stat *lstatptr, Rlist *crit);

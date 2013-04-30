@@ -33,10 +33,6 @@
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 /*
 
 Bootstrapping is a tricky sequence of fragile events. We need to map shakey/IP
@@ -58,14 +54,14 @@ During commercial bootstrap:
 
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return true;
 }
 
 #elif !defined(__MINGW32__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return IsPrivileged();
 }

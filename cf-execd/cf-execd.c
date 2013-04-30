@@ -48,7 +48,7 @@
 #include <assert.h>
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #define CF_EXEC_IFELAPSED 0

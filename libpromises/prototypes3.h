@@ -51,6 +51,7 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
+bool BootstrapAllowed(void);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);

@@ -58,10 +58,6 @@
 #include "sort.h"
 #include "logging.h"
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
-
 #include <libgen.h>
 #include <assert.h>
 
@@ -4313,7 +4309,7 @@ static FnCallResult FnCallDiskFree(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 #if !defined(__MINGW32__)
 
-static FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
     struct passwd *pw;
@@ -4350,7 +4346,7 @@ static FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 /*********************************************************************/
 
-static FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
     struct group *gr;

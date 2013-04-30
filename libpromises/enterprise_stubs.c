@@ -50,7 +50,6 @@ extern int PR_NOTKEPT;
 
 /* all agents: generic_agent.c */
 
-
 const char *GetConsolePrefix(void)
 {
     return "cf3";
@@ -67,7 +66,6 @@ void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in CFEngine Enterprise");
 }
-
 
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 

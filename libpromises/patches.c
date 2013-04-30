@@ -35,10 +35,6 @@
 #include "logging_old.h"
 #include "audit.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);
 
 /*********************************************************/

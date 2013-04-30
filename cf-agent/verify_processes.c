@@ -40,21 +40,10 @@
 #include "scope.h"
 #include "ornaments.h"
 
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
-
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
-
-#ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
-#endif
-
-
-/*****************************************************************************/
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
@@ -259,7 +248,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 }
 
 #ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
     Rlist *rp;

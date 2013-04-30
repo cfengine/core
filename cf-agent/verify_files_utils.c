@@ -59,9 +59,10 @@
 #include "verify_files_hashes.h"
 #include "audit.h"
 #include "retcode.h"
+#include "cf-agent-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #define CF_RECURSION_LIMIT 100
@@ -98,21 +99,12 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
-static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
-
-#ifndef HAVE_NOVA
-static void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
-                          ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
-}
-#endif
 
 void SetFileAutoDefineList(Rlist *auto_define_list)
 {
@@ -335,7 +327,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
             }
             else if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, attr, pp, inode_cache, conn))
             {
-                if (cfstat(destfile, &dsb) == -1)
+                if (stat(destfile, &dsb) == -1)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "stat", "Can't stat destination file %s\n", destfile);
                 }
@@ -481,7 +473,7 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
 
                 if (CopyRegularFile(ctx, sourcefile, destfile, ssb, dsb, attr, pp, inode_cache, conn))
                 {
-                    if (cfstat(destfile, &dsb) == -1)
+                    if (stat(destfile, &dsb) == -1)
                     {
                         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "stat", pp, attr, "Can't stat destination %s\n", destfile);
                     }
@@ -687,7 +679,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
             DeleteSlash(to);
             strcat(backup, ".cf-moved");
 
-            if (cf_rename(to, backup) == -1)
+            if (rename(to, backup) == -1)
             {
                 CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to backup old %s", to);
                 unlink(to);
@@ -793,7 +785,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
             /* Only copy dirs if we are tracking subdirs */
 
-            if ((!attr.copy.collapse) && (cfstat(newto, &dsb) == -1))
+            if ((!attr.copy.collapse) && (stat(newto, &dsb) == -1))
             {
                 if (mkdir(newto, 0700) == -1)
                 {
@@ -801,7 +793,7 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
                     continue;
                 }
 
-                if (cfstat(newto, &dsb) == -1)
+                if (stat(newto, &dsb) == -1)
                 {
                     cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "stat", pp, attr,
                          " !! Can't stat local copy %s - failed to establish directory\n", newto);
@@ -882,7 +874,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
         /* Now check any overrides */
 
-        if (cfstat(destdir, &dsb) == -1)
+        if (stat(destdir, &dsb) == -1)
         {
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, attr, "Can't stat directory %s\n", destdir);
         }
@@ -991,7 +983,7 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
         ExpandLinks(linkbuf, sourcefile, 0);
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine: link item in copy %s marked for copying from %s instead\n", sourcefile,
               linkbuf);
-        cfstat(linkbuf, &ssb);
+        stat(linkbuf, &ssb);
         CfCopyFile(ctx, linkbuf, destfile, ssb, attr, pp, inode_cache, conn);
         return;
     }
@@ -1103,7 +1095,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 #ifdef WITH_SELINUX
     if (selinux_enabled)
     {
-        dest_exists = cfstat(dest, &cur_dest);
+        dest_exists = stat(dest, &cur_dest);
 
         if (dest_exists == 0)
         {
@@ -1224,7 +1216,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP)
         {
             stampnow = time((time_t *) NULL);
-            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(cf_ctime(&stampnow)));
+            snprintf(stamp, CF_BUFSIZE - 1, "_%lu_%s", CFSTARTTIME, CanonifyName(ctime(&stampnow)));
 
             if (!JoinSuffix(backup, stamp))
             {
@@ -1251,18 +1243,18 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
             unlink(backup);
         }
 
-        if (cf_rename(dest, backup) == -1)
+        if (rename(dest, backup) == -1)
         {
             /* ignore */
         }
 
-        backupok = (lstat(backup, &s) != -1);   /* Did the cf_rename() succeed? NFS-safe */
+        backupok = (lstat(backup, &s) != -1);   /* Did the rename() succeed? NFS-safe */
     }
     else
     {
         /* Mainly important if there is a dir in the way */
 
-        if (cfstat(dest, &s) != -1)
+        if (stat(dest, &s) != -1)
         {
             if (S_ISDIR(s.st_mode))
             {
@@ -1286,7 +1278,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
         if (backupok)
         {
-            cf_rename(backup, dest);    /* ignore failure of this call, as there is nothing more we can do */
+            rename(backup, dest);    /* ignore failure of this call, as there is nothing more we can do */
         }
 
         return false;
@@ -1303,7 +1295,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
             if (backupok)
             {
-                cf_rename(backup, dest);
+                rename(backup, dest);
             }
 
             return false;
@@ -1393,14 +1385,14 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     {
 #endif
 
-        if (cf_rename(new, dest) == -1)
+        if (rename(new, dest) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr,
                  " !! Could not install copy file as %s, directory in the way?\n", dest);
 
             if (backupok)
             {
-                cf_rename(backup, dest);        /* ignore failure */
+                rename(backup, dest);        /* ignore failure */
             }
 
             return false;
@@ -1554,9 +1546,9 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         {
             if (!FileInRepository(attr.rename.newname))
             {
-                if (cf_rename(path, attr.rename.newname) == -1)
+                if (rename(path, attr.rename.newname) == -1)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, " !! Error occurred while renaming %s\n", path);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, " !! Error occurred while renaming %s\n", path);
                     return;
                 }
                 else
@@ -1666,13 +1658,13 @@ static void VerifyName(EvalContext *ctx, char *path, struct stat *sb, Attributes
         }
         else
         {
-            cf_chmod(path, newperm);
+            chmod(path, newperm);
 
             if (!FileInRepository(newname))
             {
-                if (cf_rename(path, newname) == -1)
+                if (rename(path, newname) == -1)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, "Error occurred while renaming %s\n", path);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, "Error occurred while renaming %s\n", path);
                     return;
                 }
                 else
@@ -1949,9 +1941,9 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
             if (!DONTDO)
             {
-                if (cf_chmod(file, newperm & 07777) == -1)
+                if (chmod(file, newperm & 07777) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "cf_chmod failed on %s\n", file);
+                    CfOut(OUTPUT_LEVEL_ERROR, "chmod", "chmod failed on %s\n", file);
                     break;
                 }
             }
@@ -2135,7 +2127,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
             /* if so, hide the difference by replacing with actual object */
 
-            if (cfstat(dirp->d_name, &lsb) == -1)
+            if (stat(dirp->d_name, &lsb) == -1)
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "stat", "Recurse was working on %s when this failed:\n", path);
                 continue;
@@ -2231,7 +2223,7 @@ static bool CheckLinkSecurity(struct stat *sb, char *name)
 
     CfDebug("Checking the inode and device to make sure we are where we think we are...\n");
 
-    if (cfstat(".", &security) == -1)
+    if (stat(".", &security) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Could not stat directory %s after entering!", name);
         return true; // continue anyway
@@ -2365,7 +2357,7 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
 
         SourceSearchAndCopy(ctx, source, destination, attr.recursion.depth, attr, pp, ssb.st_dev, &inode_cache, conn);
 
-        if (cfstat(destination, &dsb) != -1)
+        if (stat(destination, &dsb) != -1)
         {
             if (attr.copy.check_root)
             {
@@ -2906,7 +2898,7 @@ static void TruncateFile(char *name)
     struct stat statbuf;
     int fd;
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         CfDebug("cfengine: didn't find %s to truncate\n", name);
     }
@@ -2951,7 +2943,7 @@ static int cf_stat(char *file, struct stat *buf, FileCopy fc, AgentConnection *c
 {
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        return cfstat(file, buf);
+        return stat(file, buf);
     }
     else
     {
@@ -3037,7 +3029,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 
 #ifndef __MINGW32__
 
-static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb)
+int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb)
 {
     struct passwd *pw;
     struct group *gp;
@@ -3318,8 +3310,8 @@ static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Prom
         char from[CF_MAXVARSIZE];
         char to[CF_MAXVARSIZE];
 
-        strcpy(from, cf_ctime(&(cmpsb.st_mtime)));
-        strcpy(to, cf_ctime(&(sb->st_mtime)));
+        strcpy(from, ctime(&(cmpsb.st_mtime)));
+        strcpy(to, ctime(&(sb->st_mtime)));
         Chop(from, CF_MAXVARSIZE);
         Chop(to, CF_MAXVARSIZE);
         CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Last modified time for %s changed %s -> %s", file, from, to);

@@ -1,19 +1,18 @@
-
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "client_code.h"
@@ -42,10 +40,6 @@
 #include "item_lib.h"
 #include "files_lib.h"
 #include "string_lib.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
 
 typedef struct
 {
@@ -75,9 +69,7 @@ static int CacheStat(const char *file, struct stat *statbuf, const char *stattyp
   */
 static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *err);
 
-#if !defined(__MINGW32__)
-static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
-#endif
+int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz);
 
 /*********************************************************************/
 
@@ -93,7 +85,7 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (lseek(dd, skip_span - cur, SEEK_CUR) < 0)
             {
-                Log(OUTPUT_LEVEL_ERROR, "Copy failed (no space?) while copying to %s from network: %s", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to %s from network: %s", destination, GetErrorStr());
                 return false;
             }
 
@@ -105,7 +97,7 @@ static int FSWrite(const char *destination, int dd, const char *buf, size_t n_wr
         {
             if (FullWrite(dd, cur, copy_span - cur) < 0)
             {
-                Log(OUTPUT_LEVEL_ERROR, "Copy failed (no space?) while copying to %s from network: %s", destination, GetErrorStr());
+                Log(LOG_LEVEL_ERR, "Copy failed (no space?) while copying to %s from network: %s", destination, GetErrorStr());
                 return false;
             }
 
@@ -1423,7 +1415,7 @@ void ConnectionsCleanup(void)
 // so it can be ignored.
 #endif
 
-static int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
+int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp, int cinpSz)
 /** 
  * Tries a nonblocking connect and then restores blocking if
  * successful. Returns true on success, false otherwise.

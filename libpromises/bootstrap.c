@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) Cfengine AS
 
@@ -21,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "bootstrap.h"
@@ -34,10 +32,6 @@
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
 
 /*
 
@@ -60,14 +54,14 @@ During commercial bootstrap:
 
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return true;
 }
 
 #elif !defined(__MINGW32__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return IsPrivileged();
 }
@@ -106,7 +100,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
+    if (stat(name, &sb) == -1)
     {
         printf(" -> No previous policy has been cached on this host\n");
     }
@@ -221,7 +215,7 @@ void SetPolicyServer(EvalContext *ctx, char *name)
 
     struct stat sb;
     
-    if ((cfstat(file, &sb)) != 0)
+    if ((stat(file, &sb)) != 0)
     {
         return;
     }
@@ -262,7 +256,7 @@ bool GetAmPolicyServer(const char *workdir)
     MapName(path);
 
     struct stat sb;
-    return cfstat(path, &sb) == 0;
+    return stat(path, &sb) == 0;
 }
 
 /********************************************************************/
@@ -451,8 +445,8 @@ void CreateFailSafe(char *name)
 #endif /* !__MINGW32__ */
     fclose(fout);
 
-    if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
+    if (chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
     }
 }

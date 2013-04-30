@@ -37,9 +37,8 @@
 
 #include <assert.h>
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+static Item *ROTATED = NULL;
+
 
 bool FileCanOpen(const char *path, const char *modes)
 {
@@ -67,7 +66,7 @@ void PurgeItemList(Item **list, char *name)
 
     for (ip = copy; ip != NULL; ip = ip->next)
     {
-        if (cfstat(ip->name, &sb) == -1)
+        if (stat(ip->name, &sb) == -1)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
             DeleteItemLiteral(list, ip->name);
@@ -109,9 +108,9 @@ int RawSaveItemList(const Item *liststart, const char *file)
         return false;
     }
 
-    if (cf_rename(new, file) == -1)
+    if (rename(new, file) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Error while renaming %s\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "rename", "Error while renaming %s\n", file);
         return false;
     }
 
@@ -180,7 +179,7 @@ ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
     assert(size_max > 0);
 
     struct stat sb;
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         return -1;
     }
@@ -341,9 +340,9 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                 /* And then move the current object out of the way... */
 
-                if (cf_rename(pathbuf, currentpath) == -1)
+                if (rename(pathbuf, currentpath) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Warning. The object %s is not a directory.\n", pathbuf);
+                    CfOut(OUTPUT_LEVEL_INFORM, "rename", "Warning. The object %s is not a directory.\n", pathbuf);
                     return (false);
                 }
             }
@@ -381,7 +380,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             if (strlen(currentpath) == 0)
             {
             }
-            else if (cfstat(currentpath, &statbuf) == -1)
+            else if (stat(currentpath, &statbuf) == -1)
             {
                 CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
 
@@ -445,7 +444,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
     char line[CF_BUFSIZE], concat[CF_BUFSIZE];
     int join = false;
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
@@ -627,7 +626,7 @@ void RotateFiles(char *name, int number)
 
     PrependItem(&ROTATED, name, NULL);
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "No access to file %s\n", name);
         return;
@@ -638,7 +637,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -646,7 +645,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.gz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -654,7 +653,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.Z", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -662,7 +661,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -670,7 +669,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz2", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -684,12 +683,12 @@ void RotateFiles(char *name, int number)
         return;
     }
 
-    cf_chmod(to, statbuf.st_mode);
+    chmod(to, statbuf.st_mode);
     if (chown(to, statbuf.st_uid, statbuf.st_gid))
     {
         UnexpectedError("Failed to chown %s", to);
     }
-    cf_chmod(name, 0600);       /* File must be writable to empty .. */
+    chmod(name, 0600);       /* File must be writable to empty .. */
 
     if ((fd = creat(name, statbuf.st_mode)) == -1)
     {

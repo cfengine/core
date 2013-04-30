@@ -1,0 +1,23 @@
+body file control
+{
+  namespace => "b";
+}
+
+bundle agent test_in_namespace(passed_list)
+{
+  vars:
+      "mylist" slist => { @(passed_list) };
+      "joined" string => join(",", "mylist");
+  reports:
+    default:DEBUG::
+      "Set joined to $(joined)";
+}
+
+bundle agent check_in_namespace(target,test)
+{
+  methods:
+      "any" usebundle => default:default_check_strcmp("$(b:test_in_namespace.joined)", "$(target)", "$(test)", "no");
+  reports:
+    default:DEBUG::
+      "comparing '$(b:test_in_namespace.joined)' and '$(target)'";
+}

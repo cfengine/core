@@ -31,10 +31,6 @@
 #include "chflags.h"
 #include "audit.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static int CHECKSUMUPDATES;
 
 /*******************************************************************/
@@ -436,12 +432,8 @@ FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
-#ifdef __MINGW32__
-    p.owners = NovaWin_Rlist2SidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST));
-#else /* !__MINGW32__ */
     p.owners = Rlist2UidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST), pp);
     p.groups = Rlist2GidList((Rlist *) ConstraintGetRvalValue(ctx, "groups", pp, RVAL_TYPE_LIST), pp);
-#endif /* !__MINGW32__ */
 
     p.findertype = (char *) ConstraintGetRvalValue(ctx, "findertype", pp, RVAL_TYPE_SCALAR);
     p.rxdirs = PromiseGetConstraintAsBoolean(ctx, "rxdirs", pp);

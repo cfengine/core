@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_SCOPE_H
@@ -80,7 +79,7 @@ void ScopeDeleteAll(void);
  *        in addition to copying them in, also attempts to do one-pass resolution of variables,
  *        and evaluates function calls, and attempts expansion on senior scope members.
  */
-void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Rlist *arguments);
+void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const Rlist *arguments);
 
 /**
  * @brief prepend GetScope("this") to CF_STCK

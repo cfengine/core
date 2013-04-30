@@ -147,4 +147,11 @@ void SeqSoftRemove(Seq *seq, size_t index);
   */
 void SeqReverse(Seq *seq);
 
+/**
+ * @brief Shuffle the sequence by randomly switching positions of the pointers
+ * @param seq
+ * @param seed Seed value for the PRNG
+ */
+void SeqShuffle(Seq *seq, unsigned int seed);
+
 #endif

@@ -1,0 +1,63 @@
+#######################################################
+#
+# Test reverse()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "a" slist => { "a", "b", "c", "d", "e", "f", "g" };
+  "b" slist => { };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "sa" slist => shuffle("init.a", "skruf");
+  "sb" slist => shuffle("init.b", "skruf");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+      "asorted" slist => sort("test.sa", "lex");
+
+      "jaorig" string => join(",", "init.a");
+      "jasorted" string => join(",", "asorted");
+      "ja" string => join(",", "test.sa");
+      "jb" string => join(",", "test.sb");
+
+classes:
+      "a_not_changed" expression => strcmp($(jaorig), $(ja));
+      "a_is_permutation" expression => strcmp($(jasorted), $(jaorig));
+      "ok_a" and => { "!a_not_changed", "a_is_permutation" };
+
+      "ok_b" expression => strcmp("", $(jb));
+
+      "ok" and => { "ok_a", "ok_b" };
+
+reports:
+    DEBUG::
+        "a '$(jaorig)' <> sort('$(ja)')";
+        "b '$(jb)' <> ''";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

@@ -52,7 +52,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    WarnAboutDeprecatedFeatures(ctx);
     CheckForPolicyHub(ctx);
 
     ThisAgentInit();

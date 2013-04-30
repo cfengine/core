@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_FILES_INTERFACES_H
@@ -29,7 +28,6 @@
 #include "cf3.defs.h"
 #include "cfnet.h"                                       /* AgentConnection */
 
-int cfstat(const char *path, struct stat *buf);
 int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn);
 
 /**

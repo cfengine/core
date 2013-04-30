@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_storage.h"
@@ -42,10 +41,6 @@
 #include "promiser_regex_resolver.h"
 #include "ornaments.h"
 #include "env_context.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
 
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
@@ -178,7 +173,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking required filesystem %s\n", name);
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         return (false);
     }
@@ -270,7 +265,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
     }
 #endif /* __MINGW32__ */
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Couldn't stat %s checking diskspace\n", file);
         return true;
@@ -401,7 +396,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
         strcat(vbuff, "..");
     }
 
-    if (cfstat(vbuff, &parentstat) == -1)
+    if (stat(vbuff, &parentstat) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " !! Unable to stat %s", vbuff);
         return (false);

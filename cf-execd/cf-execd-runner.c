@@ -185,7 +185,7 @@ void LocalExec(const ExecConfig *config)
     strncpy(esc_command, MapName(cmd), CF_BUFSIZE - 1);
 
     char line[CF_BUFSIZE];
-    snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(cf_ctime(&starttime)));
+    snprintf(line, CF_BUFSIZE - 1, "_%jd_%s", (intmax_t) starttime, CanonifyName(ctime(&starttime)));
 
     char filename[CF_BUFSIZE];
     {
@@ -399,7 +399,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     {
         struct stat statbuf;
-        if (cfstat(file, &statbuf) == -1)
+        if (stat(file, &statbuf) == -1)
         {
             return;
         }

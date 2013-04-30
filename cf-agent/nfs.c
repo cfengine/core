@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "cf3.defs.h"
@@ -39,8 +38,6 @@
 #include "misc_lib.h"
 #include "rlist.h"
 #include "env_context.h"
-
-#ifndef __MINGW32__
 
 /* seconds */
 #define RPCTIMEOUT 60
@@ -646,7 +643,7 @@ void MountAll()
 
     struct stat sb;
 
-    if (cfstat("/etc/fstab", &sb) == -1)
+    if (stat("/etc/fstab", &sb) == -1)
     {
         int fd;
         if ((fd = creat("/etc/fstab", 0755)) > 0)
@@ -769,5 +766,3 @@ void CleanupNFS(void)
         FSTAB_EDITS = 0;
     }
 }
-
-#endif /* !__MINGW32__ */

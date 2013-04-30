@@ -1,19 +1,18 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "env_context.h"
@@ -46,7 +44,7 @@
 #include "rlist.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #include <assert.h>
@@ -1185,48 +1183,30 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 {
     assert(type != DATA_TYPE_NONE);
 
-    Scope *ptr;
-    const Rlist *rp;
-    CfAssoc *assoc;
-
-    if (rval.type == RVAL_TYPE_SCALAR)
-    {
-        CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n", lval.scope, lval.lval, (const char *) rval.item, CF_DATATYPES[type],
-                rval.type);
-    }
-    else
-    {
-        CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n", lval.scope, lval.lval, CF_DATATYPES[type], rval.type);
-    }
-
     if (lval.lval == NULL || lval.scope == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "scope.value = %s.%s", lval.scope, lval.lval);
-        ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
+        ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
     }
 
     if (rval.item == NULL)
     {
-        CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
         return false;
     }
 
     if (strlen(lval.lval) > CF_MAXVARSIZE)
     {
         char *lval_str = VarRefToString(lval, true);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable %s cannot be added because its length exceeds the maximum length allowed: %d", lval_str, CF_MAXVARSIZE);
+        Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because its length exceeds the maximum length allowed '%d' characters", lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
     }
 
-/* If we are not expanding a body template, check for recursive singularities */
-
+    // If we are not expanding a body template, check for recursive singularities
     if (strcmp(lval.scope, "body") != 0)
     {
         switch (rval.type)
         {
         case RVAL_TYPE_SCALAR:
-
             if (StringContainsVar((char *) rval.item, lval.lval))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
@@ -1236,10 +1216,9 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             break;
 
         case RVAL_TYPE_LIST:
-
-            for (rp = rval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
-                if (StringContainsVar((char *) rp->item, lval.lval))
+                if (StringContainsVar(rp->item, lval.lval))
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval.lval);
                     return false;
@@ -1251,12 +1230,16 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             break;
         }
     }
-
-    ptr = ScopeGet(lval.scope);
-    if (!ptr)
+    else
     {
-        ptr = ScopeNew(lval.scope);
-        if (!ptr)
+        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
+    }
+
+    Scope *put_scope = ScopeGet(lval.scope);
+    if (!put_scope)
+    {
+        put_scope = ScopeNew(lval.scope);
+        if (!put_scope)
         {
             return false;
         }
@@ -1287,50 +1270,35 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     // FIX: lval is stored with array params as part of the lval for legacy reasons.
     char *final_lval = VarRefToString(lval, false);
 
-    assoc = HashLookupElement(ptr->hashtable, final_lval);
-
+    CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
     if (assoc)
     {
-        if (CompareVariableValue(rval, assoc) == 0)
-        {
-            /* Identical value, keep as is */
-        }
-        else
+        if (CompareVariableValue(rval, assoc) != 0)
         {
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, rval.type))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval.lval, ptr->scope);
+                Log(LOG_LEVEL_INFO, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
             assoc->dtype = type;
-            CfDebug("Stored \"%s\" in context %s\n", lval.lval, lval.scope);
         }
     }
     else
     {
-        if (!HashInsertElement(ptr->hashtable, final_lval, rval, type))
+        if (!HashInsertElement(put_scope->hashtable, final_lval, rval, type))
         {
             ProgrammingError("Hash table is full");
         }
     }
 
     free(final_lval);
-
-    CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);
     return true;
 }
 
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
-    Scope *ptr = NULL;
-    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
-    char expbuf[CF_EXPANDSIZE];
-    CfAssoc *assoc;
-
-    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", lval.scope, lval.lval);
-
     if (lval.lval == NULL)
     {
         if (rval_out)
@@ -1344,20 +1312,20 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
+    char expanded_lval[CF_MAXVARSIZE] = "";
     if (!IsExpandable(lval.lval))
     {
-        strncpy(sval, lval.lval, CF_MAXVARSIZE - 1);
+        strncpy(expanded_lval, lval.lval, CF_MAXVARSIZE - 1);
     }
     else
     {
-        if (ExpandScalar(ctx, lval.scope, lval.lval, expbuf))
+        char buffer[CF_EXPANDSIZE] = "";
+        if (ExpandScalar(ctx, lval.scope, lval.lval, buffer))
         {
-            strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
+            strncpy(expanded_lval, buffer, CF_MAXVARSIZE - 1);
         }
         else
         {
-            /* C type system does not allow us to express the fact that returned
-               value may contain immutable string. */
             if (rval_out)
             {
                 *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1366,38 +1334,39 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
             {
                 *type_out = DATA_TYPE_NONE;
             }
-            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval.lval);
             return false;
         }
     }
 
-    if (IsQualifiedVariable(sval))
+    Scope *get_scope = NULL;
+    char lookup_key[CF_MAXVARSIZE] = "";
     {
-        scopeid[0] = '\0';
-        sscanf(sval, "%[^.].", scopeid);
-        strlcpy(vlval, sval + strlen(scopeid) + 1, sizeof(vlval));
-        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
-        ptr = ScopeGet(scopeid);
-    }
-    else
-    {
-        strlcpy(vlval, sval, sizeof(vlval));
-        strlcpy(scopeid, lval.scope, sizeof(scopeid));
+        char scopeid[CF_MAXVARSIZE] = "";
+
+        if (IsQualifiedVariable(expanded_lval))
+        {
+            scopeid[0] = '\0';
+            sscanf(expanded_lval, "%[^.].", scopeid);
+            strlcpy(lookup_key, expanded_lval + strlen(scopeid) + 1, sizeof(lookup_key));
+        }
+        else
+        {
+            strlcpy(lookup_key, expanded_lval, sizeof(lookup_key));
+            strlcpy(scopeid, lval.scope, sizeof(scopeid));
+        }
+
+        if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0)
+        {
+            char buffer[CF_EXPANDSIZE] = "";
+            sprintf(buffer, "%s%c%s", lval.ns, CF_NS, scopeid);
+            strlcpy(scopeid, buffer, sizeof(scopeid));
+        }
+
+        get_scope = ScopeGet(scopeid);
     }
 
-    if (ptr == NULL)
+    if (!get_scope)
     {
-        /* Assume current scope */
-        strcpy(vlval, lval.lval);
-        ptr = ScopeGet(scopeid);
-    }
-
-    if (ptr == NULL)
-    {
-        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-        // TODO: returning the same lval as was past in?
         if (rval_out)
         {
             *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1409,16 +1378,9 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n", scopeid, vlval, ptr->scope, vlval);
-
-    assoc = HashLookupElement(ptr->hashtable, vlval);
-
-    if (assoc == NULL)
+    CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
+    if (!assoc)
     {
-        CfDebug("No such variable found %s.%s\n\n", scopeid, vlval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-
         if (rval_out)
         {
             *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1429,14 +1391,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         }
         return false;
     }
-
-    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, assoc->rval);
-    }
-    CfDebug("}\n");
 
     if (rval_out)
     {

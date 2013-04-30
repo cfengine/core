@@ -35,10 +35,6 @@
 #include "scope.h"
 #include "sysinfo.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 typedef enum
 {
     MONITOR_CONTROL_FORGET_RATE,
@@ -116,7 +112,6 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    WarnAboutDeprecatedFeatures(ctx);
     CheckForPolicyHub(ctx);
 
     ThisAgentInit(ctx);

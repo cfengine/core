@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "generic_agent.h"
@@ -99,7 +98,6 @@ typedef enum
 #endif
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
 #include "agent_reports.h"
 #include "nova-agent-diagnostics.h"
 #endif
@@ -259,7 +257,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    WarnAboutDeprecatedFeatures(ctx);
     CheckForPolicyHub(ctx);
 
     ThisAgentInit();
@@ -1130,7 +1127,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
             BannerBundle(bp, params);
 
             EvalContextStackPushBundleFrame(ctx, bp, false);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, NULL, params);
 
             ScheduleAgentOperations(ctx, bp);
 
@@ -1264,7 +1261,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
     for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        cfstat(rp->item, &sb);
+        stat(rp->item, &sb);
 
         if (ACCESSLIST)
         {
@@ -1696,7 +1693,7 @@ static bool VerifyBootstrap(void)
     snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
     MapName(filePath);
 
-    if (cfstat(filePath, &sb) == -1)
+    if (stat(filePath, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
         return false;

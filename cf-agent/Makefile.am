@@ -46,7 +46,6 @@ cf_agent_SOURCES = \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
-        nfs.c nfs.h \
         promiser_regex_resolver.c promiser_regex_resolver.h \
         retcode.c retcode.h \
         verify_files.c verify_files.h \
@@ -70,6 +69,10 @@ cf_agent_SOURCES = \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
+
+if !NT
+cf_agent_SOURCES += nfs.c nfs.h
+endif
 
 if !HAVE_NOVA
 cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h

@@ -45,11 +45,11 @@
 #include "rlist.h"
 #include "processes_select.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #include <assert.h>
+
+#ifdef HAVE_NOVA
+# include "cf.nova.h"
+#endif
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -150,7 +150,6 @@ int main(int argc, char *argv[])
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    WarnAboutDeprecatedFeatures(ctx);
     CheckForPolicyHub(ctx);
 
     ThisAgentInit();
@@ -328,7 +327,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", cf_ctime(&now));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", ctime(&now));
         _exit(0);
     }
 
@@ -560,13 +559,13 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         {
             if (IsDefinedClass(ctx, time_context, NULL))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), time_context);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", ctime(&CFSTARTTIME), time_context);
                 return true;
             }
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Nothing to do at %s\n", ctime(&CFSTARTTIME));
     return false;
 }
 

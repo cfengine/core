@@ -199,6 +199,16 @@ void test_rval_list_forgot_cb_colon(void)
     assert_false(LoadPolicy("rval_list_forgot_cb_colon.cf"));
 }
 
+void test_rval_function_forgot_cp_semicolon(void)
+{
+    assert_false(LoadPolicy("rval_function_forgot_cp_semicolon.cf"));
+}
+
+void test_rval_function_forgot_cp_colon(void)
+{
+    assert_false(LoadPolicy("rval_function_forgot_cp_colon.cf"));
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -245,6 +255,8 @@ int main()
         unit_test(test_rval_list_forgot_cb_colon),
         unit_test(test_rval_function_forgot_colon),
         unit_test(test_rval_function_wrong_input_type),
+        unit_test(test_rval_function_forgot_cp_semicolon),
+        unit_test(test_rval_function_forgot_cp_colon),
         unit_test(test_rval_wrong_input_type)
 
     };

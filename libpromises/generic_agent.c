@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "generic_agent.h"
@@ -60,7 +59,7 @@
 #include "verify_vars.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #include <assert.h>
@@ -94,18 +93,6 @@ static void SanitizeEnvironment()
     unsetenv("LANG");
     unsetenv("LANGUAGE");
     unsetenv("LC_MESSAGES");
-}
-
-/*****************************************************************************/
-
-void WarnAboutDeprecatedFeatures(EvalContext *ctx)
-{
-    Rval retval;
-
-    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LICENSES, &retval))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The \"host_licenses_paid\" promise is deprecated and should be removed");
-    }
 }
 
 /*****************************************************************************/
@@ -242,7 +229,7 @@ int CheckPromises(const GenericAgentConfig *config)
                  EXEC_SUFFIX);
 
         struct stat sb;
-        if (cfstat(cfpromises, &sb) == -1)
+        if (stat(cfpromises, &sb) == -1)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "cf-promises%s needs to be installed in %s%cbin for pre-validation of full configuration",
                   EXEC_SUFFIX, CFWORKDIR, FILE_SEPARATOR);
@@ -571,44 +558,44 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs", CFWORKDIR, FILE_SEPARATOR);
 
-        if (cfstat(vbuff, &sb) == -1)
+        if (stat(vbuff, &sb) == -1)
         {
             FatalError(ctx, " !!! No access to WORKSPACE/inputs dir");
         }
         else
         {
-            cf_chmod(vbuff, sb.st_mode | 0700);
+            chmod(vbuff, sb.st_mode | 0700);
         }
 
         snprintf(vbuff, CF_BUFSIZE, "%s%coutputs", CFWORKDIR, FILE_SEPARATOR);
 
-        if (cfstat(vbuff, &sb) == -1)
+        if (stat(vbuff, &sb) == -1)
         {
             FatalError(ctx, " !!! No access to WORKSPACE/outputs dir");
         }
         else
         {
-            cf_chmod(vbuff, sb.st_mode | 0700);
+            chmod(vbuff, sb.st_mode | 0700);
         }
 
         sprintf(ebuff, "%s%cstate%ccf_procs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(ebuff, force);
 
-        if (cfstat(ebuff, &statbuf) == -1)
+        if (stat(ebuff, &statbuf) == -1)
         {
             CreateEmptyFile(ebuff);
         }
 
         sprintf(ebuff, "%s%cstate%ccf_rootprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-        if (cfstat(ebuff, &statbuf) == -1)
+        if (stat(ebuff, &statbuf) == -1)
         {
             CreateEmptyFile(ebuff);
         }
 
         sprintf(ebuff, "%s%cstate%ccf_otherprocs", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
-        if (cfstat(ebuff, &statbuf) == -1)
+        if (stat(ebuff, &statbuf) == -1)
         {
             CreateEmptyFile(ebuff);
         }
@@ -645,7 +632,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
 #ifndef HAVE_NOVA
-        if (cfstat(vbuff, &statbuf) == -1)
+        if (stat(vbuff, &statbuf) == -1)
         {
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         }
@@ -734,7 +721,7 @@ static bool MissingInputFile(const char *input_file)
 {
     struct stat sb;
 
-    if (cfstat(input_file, &sb) == -1)
+    if (stat(input_file, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "There is no readable input file at %s", input_file);
         return true;
@@ -790,7 +777,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
         return true;
     }
 
-    if (cfstat(config->input_file, &sb) == -1)
+    if (stat(config->input_file, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", "There is no readable input file at %s", config->input_file);
         return true;
@@ -829,7 +816,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
             {
             case RVAL_TYPE_SCALAR:
 
-                if (cfstat(GenericAgentResolveInputPath(config, (char *) returnval.item), &sb) == -1)
+                if (stat(GenericAgentResolveInputPath(config, (char *) returnval.item), &sb) == -1)
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) returnval.item);
                     result = true;
@@ -846,7 +833,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
 
                 for (sl = (Rlist *) returnval.item; sl != NULL; sl = sl->next)
                 {
-                    if (cfstat(GenericAgentResolveInputPath(config, (char *) sl->item), &sb) == -1)
+                    if (stat(GenericAgentResolveInputPath(config, (char *) sl->item), &sb) == -1)
                     {
                         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Unreadable promise proposals at %s", (char *) sl->item);
                         result = true;
@@ -878,7 +865,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
     snprintf(filename, CF_MAXVARSIZE, "%s/policy_server.dat", CFWORKDIR);
     MapName(filename);
 
-    if ((cfstat(filename, &sb) != -1) && (sb.st_mtime > PROMISETIME))
+    if ((stat(filename, &sb) != -1) && (sb.st_mtime > PROMISETIME))
     {
         result = true;
     }
@@ -894,7 +881,7 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
 {
     struct stat statbuf;
 
-    if (cfstat(input_path, &statbuf) == -1)
+    if (stat(input_path, &statbuf) == -1)
     {
         if (config->ignore_missing_inputs)
         {
@@ -1078,10 +1065,10 @@ static void CheckWorkingDirectories(EvalContext *ctx)
         CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %ju.%ju", CFWORKDIR, (uintmax_t)getuid(), (uintmax_t)getgid());
     }
 
-    if (cfstat(CFWORKDIR, &statbuf) != -1)
+    if (stat(CFWORKDIR, &statbuf) != -1)
     {
         /* change permissions go-w */
-        cf_chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
+        chmod(CFWORKDIR, (mode_t) (statbuf.st_mode & ~022));
     }
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
@@ -1090,7 +1077,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Checking integrity of the state database\n");
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
 
-    if (cfstat(vbuff, &statbuf) == -1)
+    if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
@@ -1100,7 +1087,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %jd.%jd", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
-        cf_chmod(vbuff, (mode_t) 0755);
+        chmod(vbuff, (mode_t) 0755);
     }
     else
     {
@@ -1117,7 +1104,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cmodules", CFWORKDIR, FILE_SEPARATOR);
 
-    if (cfstat(vbuff, &statbuf) == -1)
+    if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cmodules%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
@@ -1127,7 +1114,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
             CfOut(OUTPUT_LEVEL_ERROR, "chown", "Unable to set owner on %s to %ju.%ju", vbuff, (uintmax_t)getuid(), (uintmax_t)getgid());
         }
 
-        cf_chmod(vbuff, (mode_t) 0700);
+        chmod(vbuff, (mode_t) 0700);
     }
     else
     {
@@ -1144,12 +1131,12 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys", CFWORKDIR, FILE_SEPARATOR);
 
-    if (cfstat(vbuff, &statbuf) == -1)
+    if (stat(vbuff, &statbuf) == -1)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, false);
 
-        cf_chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
+        chmod(vbuff, (mode_t) 0700); /* Keys must be immutable to others */
     }
     else
     {

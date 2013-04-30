@@ -59,6 +59,7 @@ static void ParserStateReset(ParserState *p)
     p->currentclasses = NULL;
     p->currentRlist = NULL;
     p->currentpromise = NULL;
+    p->currentbody = NULL;
     p->promiser = NULL;
     p->blockid[0] = '\0';
     p->blocktype[0] = '\0';

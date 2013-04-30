@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -217,13 +216,13 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     cipher = EVP_des_ede3_cbc();
 
-    if (cfstat(public_key_file, &statbuf) != -1)
+    if (stat(public_key_file, &statbuf) != -1)
     {
         printf("A key file already exists at %s\n", public_key_file);
         return;
     }
 
-    if (cfstat(private_key_file, &statbuf) != -1)
+    if (stat(private_key_file, &statbuf) != -1)
     {
         printf("A key file already exists at %s\n", private_key_file);
         return;
@@ -305,7 +304,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 
     snprintf(vbuff, CF_BUFSIZE, "%s/randseed", CFWORKDIR);
     RAND_write_file(vbuff);
-    cf_chmod(vbuff, 0644);
+    chmod(vbuff, 0644);
 }
 
 
@@ -322,9 +321,9 @@ bool LicenseInstall(char *path_source)
 {
     struct stat sb;
 
-    if(cfstat(path_source, &sb) == -1)
+    if(stat(path_source, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cfstat", "!! Can not stat input license file %s", path_source);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", "!! Can not stat input license file %s", path_source);
         return false;
     }
 
@@ -332,7 +331,7 @@ bool LicenseInstall(char *path_source)
     snprintf(path_destination, sizeof(path_destination), "%s/inputs/license.dat", CFWORKDIR);
     MapName(path_destination);
 
-    if(cfstat(path_destination, &sb) == 0)
+    if(stat(path_destination, &sb) == 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! A license file is already installed in %s -- please move it out of the way and try again", path_destination);
         return false;
@@ -345,7 +344,7 @@ bool LicenseInstall(char *path_source)
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not find path to public key -- license parse error?");
     }
 
-    if(cfstat(path_public_key, &sb) != 0)
+    if(stat(path_public_key, &sb) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! The licensed public key is not installed -- please copy it to %s and try again", path_public_key);
         return false;

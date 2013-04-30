@@ -48,8 +48,7 @@
 #include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
-#include "history.h"
+# include "history.h"
 #endif
 
 #include <math.h>
@@ -568,7 +567,7 @@ static void PublishEnvironment(Item *classes)
 
     fclose(fp);
 
-    cf_rename(ENVFILE_NEW, ENVFILE);
+    rename(ENVFILE_NEW, ENVFILE);
 }
 
 /*********************************************************************/

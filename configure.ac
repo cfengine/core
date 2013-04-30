@@ -489,6 +489,15 @@ dnl ######################################################################
 dnl Check for special functions
 dnl ######################################################################
 
+AC_CHECK_DECLS(uname)
+AC_REPLACE_FUNCS(uname)
+
+AC_CHECK_DECLS(getuid)
+AC_REPLACE_FUNCS(getuid)
+
+AC_CHECK_DECLS(getgid)
+AC_REPLACE_FUNCS(getgid)
+
 AC_CHECK_DECLS(clock_gettime, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(clock_gettime)
 
@@ -514,11 +523,17 @@ AC_REPLACE_FUNCS(strlcpy)
 AC_CHECK_DECLS(realpath)
 AC_CHECK_FUNCS(realpath)
 
+AC_CHECK_DECLS(lstat)
+AC_REPLACE_FUNCS(lstat)
+
 AC_CHECK_DECLS(strdup)
 AC_REPLACE_FUNCS(strdup)
 
 AC_CHECK_DECLS(round, [], [], [[#include <math.h>]])
 AC_REPLACE_FUNCS(round)
+
+AC_CHECK_FUNCS(sleep)
+AC_REPLACE_FUNCS(sleep)
 
 AC_CHECK_DECLS(nanosleep)
 AC_REPLACE_FUNCS(nanosleep)
@@ -559,6 +574,12 @@ AC_REPLACE_FUNCS(gmtime_r)
 AC_CHECK_DECLS(localtime_r, [], [], [[#include <time.h>]])
 AC_REPLACE_FUNCS(localtime_r)
 
+AC_CHECK_DECLS(alarm)
+AC_REPLACE_FUNCS(alarm)
+
+AC_CHECK_DECLS(chmod)
+AC_REPLACE_FUNCS(chmod)
+
 AC_CHECK_FUNCS(getpwent setpwent endpwent)
 
 AC_CHECK_DECLS(getnetgrent, [], [], [[#include <netdb.h>]])
@@ -575,12 +596,47 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
 AC_CHECK_DECLS(endnetgrent, [], [], [[#include <netdb.h>]])
 AC_CHECK_FUNCS(endnetgrent)
 
+AC_CHECK_FUNCS(sendto)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+                                     #include <sys/socket.h>]], 
+                                   [[extern ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)]])],
+    [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 1, [Whether sendto returns ssize_t])],
+    [AC_DEFINE([SENDTO_RETURNS_SSIZE_T], 0, [Whether sendto does not returns ssize_t])])
+
 dnl Check whether mkdir accepts two parameters
 CF3_CHECK_PROPER_FUNC([mkdir],
   [[#include <sys/stat.h>
     #include <sys/types.h>]],
-  [[int mkdir(const char *pathname, mode_t mode);]])
+  [[int mkdir(const char *pathname, mode_t mode);]],
+  [#define mkdir rpl_mkdir])
 
+dnl Check for Win32 stat. We don't know to detect improper stat during
+dnl compilation, so we resort to OS type detection.
+
+CF3_CHECK_PROPER_FUNC([stat],
+  [[#include <sys/types.h>
+    #include <sys/stat.h>]],
+  [[#if defined(__MINGW32__)
+    #error stat in Windows CRT ill-behaves
+    #endif]],
+  [])
+
+dnl Check for Win32 rename. We don't know how to detect improper rename (not
+dnl removing target file if it exists) during cross-compilation, so we resort to
+dnl OS type detection.
+
+CF3_CHECK_PROPER_FUNC([rename],
+  [],
+  [[#if defined(__MINGW32__)
+    #error rename in Windows CRT ill-behaves
+    #endif]],
+  [#define rename rpl_rename])
+
+CF3_CHECK_PROPER_FUNC([ctime],
+  [],
+  [[#error ctime(3) may produce different results on different OSes. Let's have our POSIX-compliant implementation all the time]],
+  [#define ctime rpl_ctime])
+ 
 AC_CHECK_DECLS(mkdtemp)
 AC_REPLACE_FUNCS(mkdtemp)
 
@@ -589,7 +645,6 @@ AC_REPLACE_FUNCS(strrstr)
 
 AC_CHECK_FUNCS(seteuid setegid setreuid setregid)
 AC_CHECK_FUNCS(uname gethostname chflags)
-AC_CHECK_FUNCS(putenv)
 AC_CHECK_FUNCS(mkfifo statfs statvfs door)
 AC_CHECK_FUNCS(sysinfo setsid sysconf)
 AC_CHECK_FUNCS(getzoneid getzonenamebyid)
@@ -681,6 +736,12 @@ AC_REPLACE_FUNCS(inet_ntop inet_pton)
 AC_CHECK_FUNCS(getifaddrs)
 
 AC_CHECK_FUNC(lchown, AC_DEFINE(HAVE_LCHOWN, 1, [Whether to use lchown(3) to change ownerships]))
+
+AC_CHECK_DECLS(chown)
+AC_REPLACE_FUNCS(chown)
+
+AC_CHECK_FUNCS(fchmod)
+AC_REPLACE_FUNCS(fchmod)
 
 AC_CHECK_DECLS(pthread_attr_setstacksize, [], [], [[#include <pthread.h>]])
 AC_REPLACE_FUNCS(pthread_attr_setstacksize)
@@ -988,6 +1049,7 @@ AM_CONDITIONAL(PDF_DOCS, test "x$use_docs" = "xpdf" || test "x$use_docs" = "xall
 # Populate contents of config.post.h
 #
 AC_SUBST(post_macros)
+AM_SUBST_NOTMAKE(post_macros)
 
 dnl ######################################################################
 dnl Summarize

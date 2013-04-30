@@ -41,10 +41,6 @@
 #include "logging_old.h"
 #include "item_lib.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
 {
     Item *path, *ip, *remainder = NULL;
@@ -104,7 +100,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
             return;
         }
 
-        if (cfstat(pbuffer, &statbuf) != -1)
+        if (stat(pbuffer, &statbuf) != -1)
         {
             if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {

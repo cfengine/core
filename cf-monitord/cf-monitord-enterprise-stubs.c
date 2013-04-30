@@ -24,12 +24,12 @@
 
 #include "cf-monitord-enterprise-stubs.h"
 
-void GetObservable(int i, char *name, char *desc)
+void GetObservable(ARG_UNUSED int i, ARG_UNUSED char *name, ARG_UNUSED char *desc)
 {
     strcpy(name, OBS[i][0]);
 }
 
-void SetMeasurementPromises(Item **classlist)
+void SetMeasurementPromises(ARG_UNUSED Item **classlist)
 {
 }
 
@@ -37,14 +37,14 @@ void MonOtherInit(void)
 {
 }
 
-void MonOtherGatherData(double *cf_this)
+void MonOtherGatherData(ARG_UNUSED double *cf_this)
 {
 }
 
-void HistoryUpdate(EvalContext *ctx, Averages newvals)
+void HistoryUpdate(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Averages newvals)
 {
 }
 
-void VerifyMeasurement(EvalContext *ctx, double *this, Attributes a, Promise *pp)
+void VerifyMeasurement(ARG_UNUSED EvalContext *ctx, ARG_UNUSED double *this, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
 }

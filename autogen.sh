@@ -1,6 +1,6 @@
 #
 try_exec() {
-      type "$1" > /dev/null 2>&1 && exec "$@"
+  type "$1" > /dev/null 2>&1 && exec "$@"
 }
 
 unset foo
@@ -8,11 +8,11 @@ unset foo
 T1="$?"
 
 if test "$T1" != 0; then
-      try_exec /usr/xpg4/bin/sh "$0" "$@"
-        echo "No compatible shell script interpreter found."
-          echo "Please find a POSIX shell for your system."
-            exit 42
-            fi
+  try_exec /usr/xpg4/bin/sh "$0" "$@"
+  echo "No compatible shell script interpreter found."
+  echo "Please find a POSIX shell for your system."
+  exit 42
+fi
 
 #
 # Do not set -e before switching to POSIX shell, as it will break the test

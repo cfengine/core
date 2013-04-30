@@ -34,5 +34,10 @@ void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp);
 
 void LastSawBundle(const Bundle *bundle, double compliance);
 
+void LogFileChange(EvalContext *ctx, char *file,
+                   int change, Attributes a, Promise *pp);
+
+void Nova_CheckNtACL(EvalContext *ctx, char *file_path, Acl acl, Attributes a, Promise *pp);
+
 #endif
 

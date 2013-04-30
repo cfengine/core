@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_files_hashes.h"
@@ -299,7 +298,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     if (path)
     {
-        if (cfstat(path, &statbuf) == -1)
+        if (stat(path, &statbuf) == -1)
         {
             DeleteDB(dbp, path);
         }
@@ -322,7 +321,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
     {
         char *obj = (char *) key + CF_INDEX_OFFSET;
 
-        if (cfstat(obj, &statbuf) == -1)
+        if (stat(obj, &statbuf) == -1)
         {
             if (attr.change.update)
             {
@@ -389,7 +388,7 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
 
 #ifndef __MINGW32__
     struct stat sb;
-    if (cfstat(fname, &sb) != -1)
+    if (stat(fname, &sb) != -1)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))
         {
@@ -409,5 +408,5 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
     fclose(fp);
 
-    cf_chmod(fname, perm);
+    chmod(fname, perm);
 }

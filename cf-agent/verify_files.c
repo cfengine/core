@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_files.h"
@@ -53,10 +52,6 @@
 #include "promiser_regex_resolver.h"
 #include "ornaments.h"
 #include "audit.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -273,7 +268,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         }
     }
 
-    if (cfstat(path, &osb) == -1)
+    if (stat(path, &osb) == -1)
     {
         if ((a.create) || (a.touch))
         {
@@ -309,7 +304,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
     if (a.link.link_children)
     {
-        if (cfstat(a.link.source, &dsb) != -1)
+        if (stat(a.link.source, &dsb) != -1)
         {
             if (!S_ISDIR(dsb.st_mode))
             {
@@ -389,7 +384,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
 // Once more in case a file has been created as a result of editing or copying
 
-    if ((cfstat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
+    if ((stat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }
@@ -472,7 +467,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, pp, params);
 
             retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
@@ -525,7 +520,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, pp, params);
 
             retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 

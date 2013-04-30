@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "locks.h"
@@ -39,13 +38,11 @@
 #include "fncall.h"
 #include "env_context.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
 
 static Item *DONELIST = NULL;
+static char CFLAST[CF_BUFSIZE] = { 0 };
+static char CFLOG[CF_BUFSIZE] = { 0 };
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
@@ -347,7 +344,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
         CfDebug("Cfengine: couldn't read system clock\n");
     }
 
-    sprintf(buffer, "%s", cf_ctime(&tim));
+    sprintf(buffer, "%s", ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
@@ -358,7 +355,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     fclose(fp);
 
-    if (cfstat(cflog, &statbuf) != -1)
+    if (stat(cflog, &statbuf) != -1)
     {
         if (statbuf.st_size > CFLOGSIZE)
         {

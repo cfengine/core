@@ -218,7 +218,7 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
     snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(newname);
 
-    if (cfstat(newname, &statbuf) == -1)
+    if (stat(newname, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Did not find new key format %s", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
@@ -226,7 +226,7 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trying old style %s", oldname);
 
-        if (cfstat(oldname, &statbuf) == -1)
+        if (stat(oldname, &statbuf) == -1)
         {
             CfDebug("Did not have old-style key %s\n", oldname);
             return NULL;
@@ -293,7 +293,7 @@ void SavePublicKey(char *user, char *ipaddress, char *digest, RSA *key)
     snprintf(filename, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(filename);
 
-    if (cfstat(filename, &statbuf) != -1)
+    if (stat(filename, &statbuf) != -1)
     {
         return;
     }

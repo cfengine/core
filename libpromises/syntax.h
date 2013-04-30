@@ -28,7 +28,7 @@
 #include "cf3.defs.h"
 
 #include "sequence.h"
-#include "writer.h"
+#include "json.h"
 
 #include <stdio.h>
 
@@ -82,6 +82,9 @@ const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSy
 const BodySyntax *BodySyntaxGet(const char *body_type);
 const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
 
+const char *SyntaxStatusToString(SyntaxStatus status);
+
+JsonElement *SyntaxToJson(void);
 
 #define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL, .status = SYNTAX_STATUS_NORMAL }
 #define ConstraintSyntaxNewBool(lval, description, status) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, status }
@@ -110,8 +113,5 @@ const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *bo
 
 #define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn, status) { agent_type, promise_type, constraints, check_fn, status }
 #define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)
-
-/* print a specification of the CFEngine language */
-void SyntaxPrintAsJson(Writer *writer);
 
 #endif

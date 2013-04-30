@@ -59,6 +59,7 @@ static const struct option OPTIONS[] =
     {"diagnostic", no_argument, 0, 'x'},
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
+    {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
     {NULL, 0, 0, '\0'}
@@ -79,6 +80,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
+    "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     NULL
@@ -154,7 +156,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:hW:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -203,6 +205,27 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             else
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                exit(EXIT_FAILURE);
+            }
+            break;
+
+        case 's':
+            if (strcmp("none", optarg) == 0)
+            {
+                break;
+            }
+            else if (strcmp("json", optarg) == 0)
+            {
+                JsonElement *json_syntax = SyntaxToJson();
+                Writer *out = FileWriter(stdout);
+                JsonElementPrint(out, json_syntax, 0);
+                FileWriterDetach(out);
+                JsonElementDestroy(json_syntax);
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Invalid syntax description output format: '%s'. Possible values are 'none', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;

@@ -24,7 +24,7 @@ static const char *ARRAY_NUMERIC = "[\n" "  123,\n" "  123.1234\n" "]";
 
 static const char *ARRAY_OBJECT = "[\n" "  {\n" "    \"first\": \"one\"\n" "  }\n" "]";
 
-static void test_new_delete(void **state)
+static void test_new_delete(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -32,7 +32,7 @@ static void test_new_delete(void **state)
     JsonElementDestroy(json);
 }
 
-static void test_show_string(void **state)
+static void test_show_string(void)
 {
     JsonElement *str = JsonStringCreate("snookie");
 
@@ -47,7 +47,7 @@ static void test_show_string(void **state)
     free(output);
 }
 
-static void test_show_object_simple(void **state)
+static void test_show_object_simple(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -65,7 +65,7 @@ static void test_show_object_simple(void **state)
     free(output);
 }
 
-static void test_show_object_escaped(void **state)
+static void test_show_object_escaped(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -82,7 +82,7 @@ static void test_show_object_escaped(void **state)
     free(output);
 }
 
-static void test_show_object_numeric(void **state)
+static void test_show_object_numeric(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -100,7 +100,7 @@ static void test_show_object_numeric(void **state)
     free(output);
 }
 
-static void test_show_object_boolean(void **state)
+static void test_show_object_boolean(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -117,7 +117,7 @@ static void test_show_object_boolean(void **state)
     free(output);
 }
 
-static void test_show_object_compound(void **state)
+static void test_show_object_compound(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -148,7 +148,7 @@ static void test_show_object_compound(void **state)
     free(output);
 }
 
-static void test_show_object_array(void **state)
+static void test_show_object_array(void)
 {
     JsonElement *json = JsonObjectCreate(10);
 
@@ -170,7 +170,7 @@ static void test_show_object_array(void **state)
     free(output);
 }
 
-static void test_show_array(void **state)
+static void test_show_array(void)
 {
     JsonElement *array = JsonArrayCreate(10);
 
@@ -188,7 +188,7 @@ static void test_show_array(void **state)
     free(output);
 }
 
-static void test_show_array_boolean(void **state)
+static void test_show_array_boolean(void)
 {
     JsonElement *array = JsonArrayCreate(10);
 
@@ -206,7 +206,7 @@ static void test_show_array_boolean(void **state)
     free(output);
 }
 
-static void test_show_array_numeric(void **state)
+static void test_show_array_numeric(void)
 {
     JsonElement *array = JsonArrayCreate(10);
 
@@ -224,7 +224,7 @@ static void test_show_array_numeric(void **state)
     free(output);
 }
 
-static void test_show_array_object(void **state)
+static void test_show_array_object(void)
 {
     JsonElement *array = JsonArrayCreate(10);
     JsonElement *object = JsonObjectCreate(10);
@@ -244,7 +244,7 @@ static void test_show_array_object(void **state)
     free(output);
 }
 
-static void test_show_array_empty(void **state)
+static void test_show_array_empty(void)
 {
     JsonElement *array = JsonArrayCreate(10);
 
@@ -259,7 +259,7 @@ static void test_show_array_empty(void **state)
     free(output);
 }
 
-static void test_show_array_nan(void **state)
+static void test_show_array_nan(void)
 {
     JsonElement *array = JsonArrayCreate(10);
     JsonArrayAppendReal(array, sqrt(-1));
@@ -275,7 +275,11 @@ static void test_show_array_nan(void **state)
     free(output);
 }
 
-static void test_show_array_infinity(void **state)
+#ifndef INFINITY
+  #define INFINITY (1.0/0.0)
+#endif
+
+static void test_show_array_infinity(void)
 {
     JsonElement *array = JsonArrayCreate(10);
     JsonArrayAppendReal(array, INFINITY);
@@ -291,7 +295,7 @@ static void test_show_array_infinity(void **state)
     free(output);
 }
 
-static void test_object_get_string(void **state)
+static void test_object_get_string(void)
 {
     JsonElement *obj = JsonObjectCreate(10);
 
@@ -304,7 +308,7 @@ static void test_object_get_string(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_object_get_array(void **state)
+static void test_object_get_array(void)
 {
     JsonElement *arr = JsonArrayCreate(10);
 
@@ -322,7 +326,7 @@ static void test_object_get_array(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_object_iterator(void **state)
+static void test_object_iterator(void)
 {
     JsonElement *obj = JsonObjectCreate(10);
 
@@ -358,7 +362,7 @@ static void test_object_iterator(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_array_get_string(void **state)
+static void test_array_get_string(void)
 {
     JsonElement *arr = JsonArrayCreate(10);
 
@@ -371,7 +375,7 @@ static void test_array_get_string(void **state)
     JsonElementDestroy(arr);
 }
 
-static void test_array_iterator(void **state)
+static void test_array_iterator(void)
 {
     JsonElement *arr = JsonArrayCreate(10);
 
@@ -389,7 +393,7 @@ static void test_array_iterator(void **state)
     JsonElementDestroy(arr);
 }
 
-static void test_parse_object_simple(void **state)
+static void test_parse_object_simple(void)
 {
     const char *data = OBJECT_SIMPLE;
     JsonElement *obj = NULL;
@@ -402,7 +406,7 @@ static void test_parse_object_simple(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_parse_object_escaped(void **state)
+static void test_parse_object_escaped(void)
 {
     const char *escaped_string = "\\\"/var/cfenigne/bin/cf-know\\\" ";
     const char *key = "json_element_key";
@@ -422,7 +426,7 @@ static void test_parse_object_escaped(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_parse_array_simple(void **state)
+static void test_parse_array_simple(void)
 {
     const char *data = ARRAY_SIMPLE;
     JsonElement *arr = NULL;
@@ -434,7 +438,7 @@ static void test_parse_array_simple(void **state)
     JsonElementDestroy(arr);
 }
 
-static void test_parse_object_compound(void **state)
+static void test_parse_object_compound(void)
 {
     const char *data = OBJECT_COMPOUND;
     JsonElement *obj = NULL;
@@ -453,7 +457,7 @@ static void test_parse_object_compound(void **state)
     JsonElementDestroy(obj);
 }
 
-static void test_parse_object_diverse(void **state)
+static void test_parse_object_diverse(void)
 {
     {
         const char *data = "{ \"a\": 1, \"b\": \"snookie\", \"c\": 1.0, \"d\": {}, \"e\": [], \"f\": true, \"g\": false, \"h\": null }";
@@ -472,7 +476,7 @@ static void test_parse_object_diverse(void **state)
     }
 }
 
-static void test_parse_array_object(void **state)
+static void test_parse_array_object(void)
 {
     const char *data = ARRAY_OBJECT;
     JsonElement *arr = NULL;
@@ -485,7 +489,7 @@ static void test_parse_array_object(void **state)
     JsonElementDestroy(arr);
 }
 
-static void test_iterator_current(void **state)
+static void test_iterator_current(void)
 {
     const char *data = ARRAY_SIMPLE;
     JsonElement *arr = NULL;
@@ -507,7 +511,7 @@ static void test_iterator_current(void **state)
     JsonElementDestroy(json);
 }
 
-static void test_parse_empty(void **state)
+static void test_parse_empty(void)
 {
     const char *data = "";
     JsonElement *json = NULL;
@@ -516,7 +520,7 @@ static void test_parse_empty(void **state)
     assert_false(json);
 }
 
-static void test_parse_good_numbers(void **state)
+static void test_parse_good_numbers(void)
 {
     {
         const char *data = "[0.1]";
@@ -607,7 +611,7 @@ static void test_parse_good_numbers(void **state)
     }
 }
 
-static void test_parse_bad_numbers(void **state)
+static void test_parse_bad_numbers(void)
 {
     {
         const char *data = "[01]";
@@ -658,7 +662,7 @@ static void test_parse_bad_numbers(void **state)
     }
 }
 
-static void test_parse_trim(void **state)
+static void test_parse_trim(void)
 {
     const char *data = "           []    ";
     JsonElement *json = NULL;
@@ -669,7 +673,7 @@ static void test_parse_trim(void **state)
     JsonElementDestroy(json);
 }
 
-static void test_parse_array_extra_closing(void **state)
+static void test_parse_array_extra_closing(void)
 {
     const char *data = "  []]";
     JsonElement *json = NULL;
@@ -680,7 +684,7 @@ static void test_parse_array_extra_closing(void **state)
     JsonElementDestroy(json);
 }
 
-static void test_parse_array_diverse(void **state)
+static void test_parse_array_diverse(void)
 {
     {
         const char *data = "[1, \"snookie\", 1.0, {}, [], true, false, null ]";
@@ -699,7 +703,7 @@ static void test_parse_array_diverse(void **state)
     }
 }
 
-static void test_parse_bad_apple2(void **state)
+static void test_parse_bad_apple2(void)
 {
     const char *data = "][";
     JsonElement *json = NULL;
@@ -708,7 +712,7 @@ static void test_parse_bad_apple2(void **state)
     assert_false(json);
 }
 
-static void test_parse_object_garbage(void **state)
+static void test_parse_object_garbage(void)
 {
     {
         const char *data = "{ \"first\": 1, garbage \"second\": 2 }";
@@ -739,7 +743,7 @@ static void test_parse_object_garbage(void **state)
     }
 }
 
-static void test_parse_object_nested_garbage(void **state)
+static void test_parse_object_nested_garbage(void)
 {
     {
         const char *data = "{ \"first\": { garbage } }";
@@ -756,7 +760,7 @@ static void test_parse_object_nested_garbage(void **state)
     }
 }
 
-static void test_parse_array_garbage(void **state)
+static void test_parse_array_garbage(void)
 {
     {
         const char *data = "[1, garbage]";
@@ -787,7 +791,7 @@ static void test_parse_array_garbage(void **state)
     }
 }
 
-static void test_parse_array_nested_garbage(void **state)
+static void test_parse_array_nested_garbage(void)
 {
     {
         const char *data = "[1, [garbage]]";
@@ -804,7 +808,7 @@ static void test_parse_array_nested_garbage(void **state)
     }
 }
 
-static void test_array_remove_range(void **state)
+static void test_array_remove_range(void)
 {
     {
         // remove whole
@@ -867,7 +871,7 @@ static void test_array_remove_range(void **state)
     }
 }
 
-static void test_remove_key_from_object(void **state)
+static void test_remove_key_from_object(void)
 {
     JsonElement *object = JsonObjectCreate(3);
 
@@ -882,7 +886,7 @@ static void test_remove_key_from_object(void **state)
     JsonElementDestroy(object);
 }
 
-static void test_detach_key_from_object(void **state)
+static void test_detach_key_from_object(void)
 {
     JsonElement *object = JsonObjectCreate(3);
 

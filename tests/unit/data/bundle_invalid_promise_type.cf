@@ -1,0 +1,4 @@
+bundle agent foo
+{
+invalid:
+}

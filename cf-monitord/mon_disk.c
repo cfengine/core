@@ -26,7 +26,7 @@
 
 #include "mon.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
+#include "logging_old.h"
 
 /* Globals */
 
@@ -74,7 +74,7 @@ static int GetFileGrowth(const char *filename, enum observables index)
     size_t q;
     double dq;
 
-    if (cfstat(filename, &statbuf) == -1)
+    if (stat(filename, &statbuf) == -1)
     {
         return 0;
     }

@@ -70,7 +70,7 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-static void test_no_migration(void **context)
+static void test_no_migration(void)
 {
     DBHandle *db = setup(true);
 
@@ -100,7 +100,7 @@ static void test_no_migration(void **context)
     CloseDB(db);
 }
 
-static void test_up_to_date(void **context)
+static void test_up_to_date(void)
 {
     /* Test that upgrade is not performed if there is already a version
      * marker */
@@ -184,17 +184,17 @@ void test_migrate_single(const char *expected_old_key,
     CloseDB(db);
 }
 
-void test_migrate_incoming(void **context)
+void test_migrate_incoming(void)
 {
     test_migrate_single(KEYHASH_IN, QUALITY_IN);
 }
 
-void test_migrate_outgoing(void **context)
+void test_migrate_outgoing(void)
 {
     test_migrate_single(KEYHASH_OUT, QUALITY_OUT);
 }
 
-void test_ignore_wrong_sized(void **context)
+void test_ignore_wrong_sized(void)
 {
     /* Test that malformed values are discarded */
 

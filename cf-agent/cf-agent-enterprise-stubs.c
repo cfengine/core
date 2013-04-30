@@ -23,13 +23,24 @@
 */
 
 #include "cf-agent-enterprise-stubs.h"
-#include "cfstream.h"
+#include "logging_old.h"
 
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
+void VerifyWindowsService(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
 }
 
-void LastSawBundle(const Bundle *bundle, double comp)
+void LastSawBundle(ARG_UNUSED const Bundle *bundle, ARG_UNUSED double comp)
 {
+}
+
+void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
+                   ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
+}
+
+void Nova_CheckNtACL(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+{
+    CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are only supported in CFEngine Enterprise");
 }

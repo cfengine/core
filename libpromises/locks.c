@@ -20,12 +20,11 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "locks.h"
 #include "mutex.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
@@ -34,15 +33,16 @@
 #include "files_hashes.h"
 #include "item_lib.h"
 #include "files_names.h"
-#include "logging.h"
 #include "rlist.h"
 #include "process_lib.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "fncall.h"
+#include "env_context.h"
 
 #define CFLOGSIZE 1048576       /* Size of lock-log before rotation */
+
+static Item *DONELIST = NULL;
+static char CFLAST[CF_BUFSIZE] = { 0 };
+static char CFLOG[CF_BUFSIZE] = { 0 };
 
 static pthread_once_t lock_cleanup_once = PTHREAD_ONCE_INIT;
 
@@ -344,7 +344,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
         CfDebug("Cfengine: couldn't read system clock\n");
     }
 
-    sprintf(buffer, "%s", cf_ctime(&tim));
+    sprintf(buffer, "%s", ctime(&tim));
 
     if (Chop(buffer, CF_EXPANDSIZE) == -1)
     {
@@ -355,7 +355,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     fclose(fp);
 
-    if (cfstat(cflog, &statbuf) != -1)
+    if (stat(cflog, &statbuf) != -1)
     {
         if (statbuf.st_size > CFLOGSIZE)
         {
@@ -458,7 +458,100 @@ static bool KillLockHolder(const char *lock)
 
 #endif
 
-CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc, Promise *pp, int ignoreProcesses)
+static void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
+{
+    static const char *PACK_UPIFELAPSED_SALT = "packageuplist";
+
+    EVP_MD_CTX context;
+    int md_len;
+    const EVP_MD *md = NULL;
+    Rlist *rp;
+    FnCall *fp;
+
+    char *noRvalHash[] = { "mtime", "atime", "ctime", NULL };
+    int doHash;
+
+    md = EVP_get_digestbyname(FileHashName(type));
+
+    EVP_DigestInit(&context, md);
+
+// multiple packages (promisers) may share same package_list_update_ifelapsed lock
+    if (!(salt && (strncmp(salt, PACK_UPIFELAPSED_SALT, sizeof(PACK_UPIFELAPSED_SALT) - 1) == 0)))
+    {
+        EVP_DigestUpdate(&context, pp->promiser, strlen(pp->promiser));
+    }
+
+    if (pp->comment)
+    {
+        EVP_DigestUpdate(&context, pp->comment, strlen(pp->comment));
+    }
+
+    if (salt)
+    {
+        EVP_DigestUpdate(&context, salt, strlen(salt));
+    }
+
+    for (size_t i = 0; i < SeqLength(pp->conlist); i++)
+    {
+        Constraint *cp = SeqAt(pp->conlist, i);
+
+        EVP_DigestUpdate(&context, cp->lval, strlen(cp->lval));
+
+        // don't hash rvals that change (e.g. times)
+        doHash = true;
+
+        for (int j = 0; noRvalHash[j] != NULL; j++)
+        {
+            if (strcmp(cp->lval, noRvalHash[j]) == 0)
+            {
+                doHash = false;
+                break;
+            }
+        }
+
+        if (!doHash)
+        {
+            continue;
+        }
+
+        switch (cp->rval.type)
+        {
+        case RVAL_TYPE_SCALAR:
+            EVP_DigestUpdate(&context, cp->rval.item, strlen(cp->rval.item));
+            break;
+
+        case RVAL_TYPE_LIST:
+            for (rp = cp->rval.item; rp != NULL; rp = rp->next)
+            {
+                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+            }
+            break;
+
+        case RVAL_TYPE_FNCALL:
+
+            /* Body or bundle */
+
+            fp = (FnCall *) cp->rval.item;
+
+            EVP_DigestUpdate(&context, fp->name, strlen(fp->name));
+
+            for (rp = fp->args; rp != NULL; rp = rp->next)
+            {
+                EVP_DigestUpdate(&context, rp->item, strlen(rp->item));
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    EVP_DigestFinal(&context, digest, &md_len);
+
+/* Digest length stored in md_len */
+}
+
+CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, TransactionContext tc, const Promise *pp, int ignoreProcesses)
 {
     int i, sum = 0;
     time_t lastcompleted = 0, elapsedtime;
@@ -489,15 +582,15 @@ CfLock AcquireLock(char *operand, char *host, time_t now, TransactionContext tc,
    promises. Sub routine bundles cannot be marked as done or it will
    disallow iteration over bundles */
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return this;
     }
 
     if (RlistLen(CF_STCK) == 1)
     {
-        *(pp->donep) = true;
-        /* Must not set pp->done = true for editfiles etc */
+        /* Must not set promise to be done for editfiles etc */
+        EvalContextMarkPromiseDone(ctx, pp);
     }
 
     PromiseHash(pp, operand, digest, CF_DEFAULT_DIGEST);

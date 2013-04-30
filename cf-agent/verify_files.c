@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_files.h"
@@ -42,19 +41,17 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "string_lib.h"
 #include "verify_files_utils.h"
 #include "verify_files_hashes.h"
-#include "logging.h"
 #include "generic_agent.h" // HashVariables
 #include "misc_lib.h"
 #include "fncall.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "promiser_regex_resolver.h"
+#include "ornaments.h"
+#include "audit.h"
 
 static void LoadSetuid(Attributes a);
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp);
@@ -62,186 +59,6 @@ static void FindFilePromiserObjects(EvalContext *ctx, Promise *pp);
 static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp);
 
 /*****************************************************************************/
-
-void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void (*fnptr) (EvalContext *ctx, char *path, Promise *ptr))
-{
-    Item *path, *ip, *remainder = NULL;
-    char pbuffer[CF_BUFSIZE];
-    struct stat statbuf;
-    int count = 0, lastnode = false, expandregex = false;
-    uid_t agentuid = getuid();
-    int create = PromiseGetConstraintAsBoolean(ctx, "create", pp);
-    char *pathtype = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
-
-    CfDebug("LocateFilePromiserGroup(%s)\n", wildpath);
-
-/* Do a search for promiser objects matching wildpath */
-
-    if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using literal pathtype for %s\n", wildpath);
-        (*fnptr) (ctx, wildpath, pp);
-        return;
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
-    }
-
-    pbuffer[0] = '\0';
-    path = SplitString(wildpath, '/');  // require forward slash in regex on all platforms
-
-    for (ip = path; ip != NULL; ip = ip->next)
-    {
-        if ((ip->name == NULL) || (strlen(ip->name) == 0))
-        {
-            continue;
-        }
-
-        if (ip->next == NULL)
-        {
-            lastnode = true;
-        }
-
-        /* No need to chdir as in recursive descent, since we know about the path here */
-
-        if (IsRegex(ip->name))
-        {
-            remainder = ip->next;
-            expandregex = true;
-            break;
-        }
-        else
-        {
-            expandregex = false;
-        }
-
-        if (!JoinPath(pbuffer, ip->name))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Buffer has limited size in LocateFilePromiserGroup\n");
-            return;
-        }
-
-        if (cfstat(pbuffer, &statbuf) != -1)
-        {
-            if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "",
-                      "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
-                      pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
-                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
-            }
-        }
-    }
-
-    if (expandregex)            /* Expand one regex link and hand down */
-    {
-        char nextbuffer[CF_BUFSIZE], nextbufferOrig[CF_BUFSIZE], regex[CF_BUFSIZE];
-        const struct dirent *dirp;
-        Dir *dirh;
-        FileCopy dummyfc = { 0 };
-
-        memset(regex, 0, CF_BUFSIZE);
-
-        strncpy(regex, ip->name, CF_BUFSIZE - 1);
-
-        if ((dirh = DirOpen(pbuffer)) == NULL)
-        {
-            // Could be a dummy directory to be created so this is not an error.
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
-            (*fnptr) (ctx, wildpath, pp);
-            DeleteItemList(path);
-            return;
-        }
-        else
-        {
-            count = 0;
-
-            for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
-            {
-                if (!ConsiderFile(dirp->d_name, pbuffer, dummyfc, pp))
-                {
-                    continue;
-                }
-
-                if ((!lastnode) && (!S_ISDIR(statbuf.st_mode)))
-                {
-                    CfDebug("Skipping non-directory %s\n", dirp->d_name);
-                    continue;
-                }
-
-                if (FullTextMatch(regex, dirp->d_name))
-                {
-                    CfDebug("Link %s matched regex %s\n", dirp->d_name, regex);
-                }
-                else
-                {
-                    continue;
-                }
-
-                count++;
-
-                strncpy(nextbuffer, pbuffer, CF_BUFSIZE - 1);
-                AddSlash(nextbuffer);
-                strcat(nextbuffer, dirp->d_name);
-
-                for (ip = remainder; ip != NULL; ip = ip->next)
-                {
-                    AddSlash(nextbuffer);
-                    strcat(nextbuffer, ip->name);
-                }
-
-                /* The next level might still contain regexs, so go again as long as expansion is not nullpotent */
-
-                if ((!lastnode) && (strcmp(nextbuffer, wildpath) != 0))
-                {
-                    LocateFilePromiserGroup(ctx, nextbuffer, pp, fnptr);
-                }
-                else
-                {
-                    Promise *pcopy;
-
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using expanded file base path %s\n", nextbuffer);
-
-                    /* Now need to recompute any back references to get the complete path */
-
-                    snprintf(nextbufferOrig, sizeof(nextbufferOrig), "%s", nextbuffer);
-                    MapNameForward(nextbuffer);
-
-                    if (!FullTextMatch(pp->promiser, nextbuffer))
-                    {
-                        CfDebug("Error recomputing references for \"%s\" in: %s", pp->promiser, nextbuffer);
-                    }
-
-                    /* If there were back references there could still be match.x vars to expand */
-
-                    pcopy = ExpandDeRefPromise(ctx, ScopeGetCurrent()->scope, pp);
-                    (*fnptr) (ctx, nextbufferOrig, pcopy);
-                    PromiseDestroy(pcopy);
-                }
-            }
-
-            DirClose(dirh);
-        }
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using file base path %s\n", pbuffer);
-        (*fnptr) (ctx, pbuffer, pp);
-    }
-
-    if (count == 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No promiser file objects matched as regular expression %s\n", wildpath);
-
-        if (create)
-        {
-            VerifyFilePromise(ctx, pp->promiser, pp);
-        }
-    }
-
-    DeleteItemList(path);
-}
 
 static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Promise *pp)
 {
@@ -382,14 +199,12 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     ScopeDeleteSpecialScalar("this", "promiser");
     ScopeNewSpecialScalar(ctx, "this", "promiser", path, DATA_TYPE_STRING);
     
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
         return;
     }
-
-    CF_OCCUR++;
 
     LoadSetuid(a);
 
@@ -421,6 +236,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     if ((a.havedelete) && (!exists))
     {
         cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> File \"%s\" does not exist as promised", path);
+        goto exit;
     }
 
     if (!a.havedepthsearch)     /* if the search is trivial, make sure that we are in the parent dir of the leaf */
@@ -452,7 +268,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         }
     }
 
-    if (cfstat(path, &osb) == -1)
+    if (stat(path, &osb) == -1)
     {
         if ((a.create) || (a.touch))
         {
@@ -488,7 +304,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
     if (a.link.link_children)
     {
-        if (cfstat(a.link.source, &dsb) != -1)
+        if (stat(a.link.source, &dsb) != -1)
         {
             if (!S_ISDIR(dsb.st_mode))
             {
@@ -568,7 +384,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
 
 // Once more in case a file has been created as a result of editing or copying
 
-    if ((cfstat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
+    if ((stat(path, &osb) != -1) && (S_ISREG(osb.st_mode)))
     {
         VerifyFileLeaf(ctx, path, &osb, a, pp);
     }
@@ -590,21 +406,20 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
     CfLock thislock;
 
     snprintf(lockname, CF_BUFSIZE - 1, "fileedit-%s", filename);
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
         return false;
     }
 
-    pp->edcontext = NewEditContext(filename, a);
+    EditContext *edcontext = NewEditContext(filename, a);
 
-    if (pp->edcontext == NULL)
+    if (edcontext == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "File %s was marked for editing but could not be opened\n", filename);
-        FinishEditContext(ctx, pp->edcontext, a, pp);
-        YieldCurrentLock(thislock);
-        return false;
+        retval = false;
+        goto exit;
     }
 
     Policy *policy = PolicyFromPromise(pp);
@@ -624,9 +439,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         }             
         else
         {
-            FinishEditContext(ctx, pp->edcontext, a, pp);
-            YieldCurrentLock(thislock);
-            return false;
+            retval = false;
+            goto exit;
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
@@ -645,7 +459,6 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Handling file edits in edit_line bundle %s\n", method_deref);
 
-        // add current filename to context - already there?
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
         {
@@ -654,9 +467,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, pp, params);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -684,9 +497,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         }
         else
         {
-            FinishEditContext(ctx, pp->edcontext, a, pp);
-            YieldCurrentLock(thislock);
-            return false;
+            retval = false;
+            goto exit;
         }
 
         if (strncmp(edit_bundle_name,"default:",strlen("default:")) == 0) // CF_NS == ':'
@@ -708,9 +520,9 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             EvalContextStackPushBundleFrame(ctx, bp, a.edits.inherit);
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, pp, params);
 
-            retval = ScheduleEditXmlOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditXmlOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -733,7 +545,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             ScopeClear(bp->name);
             BundleHashVariables(ctx, bp);
 
-            retval = ScheduleEditLineOperations(ctx, filename, bp, a, pp);
+            retval = ScheduleEditLineOperations(ctx, bp, a, pp, edcontext);
 
             EvalContextStackPopFrame(ctx);
 
@@ -743,7 +555,8 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
         PolicyDestroy(tmp_policy);
     }
 
-    FinishEditContext(ctx, pp->edcontext, a, pp);
+exit:
+    FinishEditContext(ctx, edcontext, a, pp);
     YieldCurrentLock(thislock);
     return retval;
 }
@@ -799,13 +612,12 @@ static void LoadSetuid(Attributes a)
 
 static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
 {
-    Attributes b = { {0} };
-    char filename[CF_BUFSIZE];
+    Attributes b = a;
 
-    b = a;
     b.edits.backup = BACKUP_OPTION_NO_BACKUP;
     b.edits.maxfilesize = 1000000;
 
+    char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/cfagent.%s.log", CFWORKDIR, VSYSNAME.nodename);
     MapName(filename);
 
@@ -813,7 +625,7 @@ static void SaveSetuid(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (!CompareToFile(ctx, VSETUIDLIST, filename, a, pp))
     {
-        SaveItemListAsFile(ctx, VSETUIDLIST, filename, b, pp);
+        SaveItemListAsFile(VSETUIDLIST, filename, b);
     }
 
     DeleteItemList(VSETUIDLIST);

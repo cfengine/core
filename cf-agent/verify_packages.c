@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_packages.h"
@@ -36,15 +35,17 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "policy.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "ornaments.h"
+#include "env_context.h"
+#include "retcode.h"
 
 #ifdef HAVE_NOVA
 #include "agent_reports.h"
@@ -118,7 +119,7 @@ void VerifyPackagesPromise(EvalContext *ctx, Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "package-%s-%s", pp->promiser, a.packages.package_list_command);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -422,8 +423,6 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
             return false;
         }
 
-        CF_OCCUR++;
-
         if (a.packages.package_multiline_start)
         {
             if (FullTextMatch(a.packages.package_multiline_start, buf))
@@ -532,14 +531,18 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     snprintf(thismanager, CF_MAXVARSIZE - 1, "%s", ReadLastNode(CommandArg0(manager->manager)));
 
     int linenumber = 0;
-    while (!feof(fin))
+    for(;;)
     {
-        line[0] = '\0';
         if (fgets(line, CF_BUFSIZE, fin) == NULL)
         {
-            if (strlen(line))
+            if (ferror(fin))
             {
                 UnexpectedError("Failed to read line %d from stream '%s'", linenumber+1, name);
+                break;
+            }
+            else /* feof */
+            {
+                break;
             }
         }
         ++linenumber;
@@ -832,10 +835,80 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
     return false;
 }
 
+static const char *PackageAction2String(PackageAction pa)
+{
+    switch (pa)
+    {
+    case PACKAGE_ACTION_ADD:
+        return "installing";
+    case PACKAGE_ACTION_DELETE:
+        return "uninstalling";
+    case PACKAGE_ACTION_REINSTALL:
+        return "reinstalling";
+    case PACKAGE_ACTION_UPDATE:
+        return "updating";
+    case PACKAGE_ACTION_ADDUPDATE:
+        return "installing/updating";
+    case PACKAGE_ACTION_PATCH:
+        return "patching";
+    case PACKAGE_ACTION_VERIFY:
+        return "verifying";
+    default:
+        ProgrammingError("Cfengine: internal error: illegal package action");
+    }
+}
+
+static void AddPackageToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
+                                 const char *name, const char *version, const char *arch, Promise *pp)
+{
+    PackageManager *manager;
+
+    switch (a->transaction.action)
+    {
+    case cfa_warn:
+
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, *a, "Need to repair promise %s by %s package %s",
+             pp->promiser, PackageAction2String(pa), name);
+        break;
+
+    case cfa_fix:
+
+        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        PrependPackageItem(ctx, &(manager->pack_list), name, version, arch, pp);
+        break;
+
+    default:
+        ProgrammingError("Cfengine: internal error: illegal file action");
+    }
+}
+
+static void AddPatchToSchedule(EvalContext *ctx, const Attributes *a, char *mgr, PackageAction pa,
+                                 const char *name, const char *version, const char *arch, Promise *pp)
+{
+    PackageManager *manager;
+
+    switch (a->transaction.action)
+    {
+    case cfa_warn:
+
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, *a, "Need to repair promise %s by %s package %s",
+             pp->promiser, PackageAction2String(pa), name);
+        break;
+
+    case cfa_fix:
+
+        manager = NewPackageManager(&PACKAGE_SCHEDULE, mgr, pa, a->packages.package_changes);
+        PrependPackageItem(ctx, &(manager->patch_list), name, version, arch, pp);
+        break;
+
+    default:
+        ProgrammingError("Cfengine: internal error: illegal file action");
+    }
+}
+
 static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *version, const char *arch, int installed, int matched,
                               int no_version_specified, Attributes a, Promise *pp)
 {
-    PackageManager *manager;
     char reference[CF_EXPANDSIZE], reference2[CF_EXPANDSIZE];
     char refAnyVer[CF_EXPANDSIZE];
     char refAnyVerEsc[CF_EXPANDSIZE];
@@ -888,7 +961,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
     if (strchr(id, '*'))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              "!! Package name contians '*' -- perhaps a missing attribute (name/version/arch) should be specified");
+              "!! Package name contains '*' -- perhaps a missing attribute (name/version/arch) should be specified");
     }
 
     if ((a.packages.package_select == PACKAGE_VERSION_COMPARATOR_EQ) || (a.packages.package_select == PACKAGE_VERSION_COMPARATOR_GE) ||
@@ -952,10 +1025,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, a, "Package add command undefined");
                 return;
             }
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
         }
         else
         {
@@ -1000,10 +1070,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 }
             }
 
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id, "any", "any", pp);
         }
         else
         {
@@ -1028,15 +1095,9 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             }
             if ((matched && package_select_in_range) || (installed && no_version_specified))
             {
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id, "any", "any", pp);
             }
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
         }
         else
         {
@@ -1146,23 +1207,14 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                     cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, a, "Package delete command undefined");
                     return;
                 }
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_delete_command, PACKAGE_ACTION_DELETE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id_del, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_delete_command, PACKAGE_ACTION_DELETE, id_del, "any", "any", pp);
 
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_add_command, PACKAGE_ACTION_ADD,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_add_command, PACKAGE_ACTION_ADD, id, "any", "any", pp);
             }
             else
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for update\n");
-                manager =
-                    NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_update_command, PACKAGE_ACTION_UPDATE,
-                                      a.packages.package_changes);
-                PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+                AddPackageToSchedule(ctx, &a, a.packages.package_update_command, PACKAGE_ACTION_UPDATE, id, "any", "any", pp);
             }
         }
         else
@@ -1177,10 +1229,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if (matched && (!installed))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for patching\n");
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_patch_command, PACKAGE_ACTION_PATCH,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->patch_list), id, "any", "any", pp);
+            AddPatchToSchedule(ctx, &a, a.packages.package_patch_command, PACKAGE_ACTION_PATCH, id, "any", "any", pp);
         }
         else
         {
@@ -1194,10 +1243,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Schedule package for verification\n");
-            manager =
-                NewPackageManager(&PACKAGE_SCHEDULE, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY,
-                                  a.packages.package_changes);
-            PrependPackageItem(ctx, &(manager->pack_list), id, "any", "any", pp);
+            AddPackageToSchedule(ctx, &a, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY, id, "any", "any", pp);
         }
         else
         {
@@ -2113,7 +2159,7 @@ char *PrefixLocalRepository(Rlist *repositories, char *package)
 
         strcat(path, package);
 
-        if (cfstat(path, &sb) != -1)
+        if (stat(path, &sb) != -1)
         {
             snprintf(quotedPath, sizeof(quotedPath), "\"%s\"", path);
             return quotedPath;

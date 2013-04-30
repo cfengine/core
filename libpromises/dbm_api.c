@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -29,8 +28,7 @@
 #include "dbm_priv.h"
 #include "dbm_migration.h"
 #include "atexit.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "misc_lib.h"
 
 #include <assert.h>
@@ -98,13 +96,13 @@ static const char *DB_PATHS[] = {
 
 /******************************************************************************/
 
-static char *DBIdToPath(dbid id)
+char *DBIdToPath(const char *workdir, dbid id)
 {
     assert(DB_PATHS[id] != NULL);
 
     char *filename;
     if (xasprintf(&filename, "%s/%s.%s",
-                  CFWORKDIR, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
+                  workdir, DB_PATHS[id], DBPrivGetFileExtension()) == -1)
     {
         ProgrammingError("Unable to construct database filename for file %s", DB_PATHS[id]);
     }
@@ -123,7 +121,7 @@ static DBHandle *DBHandleGet(int id)
 
     if (db_handles[id].filename == NULL)
     {
-        db_handles[id].filename = DBIdToPath(id);
+        db_handles[id].filename = DBIdToPath(CFWORKDIR, id);
         pthread_mutex_init(&db_handles[id].lock, NULL);
     }
 
@@ -338,20 +336,22 @@ static int DBPathLock(const char *filename)
 
     int fd = open(filename_lock, O_CREAT | O_RDWR, 0666);
 
-    free(filename_lock);
-
     if(fd == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "flock", "!! Unable to open database lock file '%s'", filename_lock);
+        free(filename_lock);
         return -1;
     }
 
     if (ExclusiveLockFile(fd) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file");
+        CfOut(OUTPUT_LEVEL_ERROR, "fcntl(F_SETLK)", "!! Unable to lock database lock file '%s'", filename_lock);
+        free(filename_lock);
         close(fd);
         return -1;
     }
+
+    free(filename_lock);
 
     return fd;
 }
@@ -372,7 +372,7 @@ static void DBPathMoveBroken(const char *filename)
         ProgrammingError("Unable to construct broken database filename for file %s", filename);
     }
 
-    if(cf_rename(filename, filename_broken) != 0)
+    if(rename(filename, filename_broken) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed moving broken db out of the way");
     }

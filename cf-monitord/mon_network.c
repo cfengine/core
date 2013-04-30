@@ -29,9 +29,8 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "pipes.h"
-#include "logging.h"
 
 /* Globals */
 
@@ -382,7 +381,7 @@ void MonNetworkGatherData(double *cf_this)
 
         CfDebug("save incoming %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
@@ -406,7 +405,7 @@ void MonNetworkGatherData(double *cf_this)
         CfDebug("save outgoing %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {

@@ -1,0 +1,10 @@
+body common control
+{
+  bundlesequence => { "test" };
+}
+
+bundle wrongwrongwrong test
+{
+vars:
+ "dummy" string => "dummy";
+}

@@ -27,13 +27,13 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-void test_file_write(void **p)
+void test_file_write(void)
 {
     bool res = FileWriteOver(FILE_NAME, FILE_CONTENTS);
     assert_true(res);
 }
 
-void test_file_read_all(void **p)
+void test_file_read_all(void)
 {
     char *output;
 
@@ -52,7 +52,7 @@ void test_file_read_all(void **p)
     free(output2);
 }
 
-void test_file_read_truncate(void **p)
+void test_file_read_truncate(void)
 {
     char expected_output[FILE_SIZE + 1];
     char *output;
@@ -79,7 +79,7 @@ void test_file_read_truncate(void **p)
     free(output3);
 }
 
-void test_file_read_empty(void **p)
+void test_file_read_empty(void)
 {
     int creat_fd = creat(FILE_NAME_EMPTY, 0600);
     assert_true(creat_fd > -1);
@@ -93,7 +93,7 @@ void test_file_read_empty(void **p)
     assert_true(output);
 }
 
-void test_file_read_invalid(void **p)
+void test_file_read_invalid(void)
 {
     char *output;
     ssize_t bytes_read = FileReadMax(&output, "nonexisting file", 100);

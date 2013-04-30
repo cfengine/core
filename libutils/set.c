@@ -37,7 +37,7 @@ Set *SetNew(MapHashFn element_hash_fn,
     return MapNew(element_hash_fn, element_equal_fn, element_destroy_fn, NULL);
 }
 
-void SetDestroy(void *set)
+void SetDestroy(Set *set)
 {
     MapDestroy(set);
 }

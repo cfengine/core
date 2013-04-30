@@ -13,23 +13,28 @@ static unsigned int ConstHash(const void *key, unsigned int max)
     return 0;
 }
 
-static void test_new_destroy(void **state)
+static void test_new_destroy(void)
 {
     Map *map = MapNew(NULL, NULL, NULL, NULL);
+    assert_int_equal(MapSize(map), 0);
     MapDestroy(map);
 }
 
-static void test_insert(void **state)
+static void test_insert(void)
 {
     StringMap *map = StringMapNew();
 
     assert_false(StringMapHasKey(map, "one"));
     StringMapInsert(map, xstrdup("one"), xstrdup("first"));
     assert_true(StringMapHasKey(map, "one"));
+    assert_int_equal(StringMapSize(map), 1);
+    StringMapInsert(map, xstrdup("one"), xstrdup("duplicate"));
+    assert_int_equal(StringMapSize(map), 1);
 
     assert_false(StringMapHasKey(map, "two"));
     StringMapInsert(map, xstrdup("two"), xstrdup("second"));
     assert_true(StringMapHasKey(map, "two"));
+    assert_int_equal(StringMapSize(map), 2);
 
     assert_false(StringMapHasKey(map, "third"));
     StringMapInsert(map, xstrdup("third"), xstrdup("first"));
@@ -37,6 +42,7 @@ static void test_insert(void **state)
 
     StringMapInsert(map, xstrdup("third"), xstrdup("stuff"));
     assert_true(StringMapHasKey(map, "third"));
+    assert_int_equal(StringMapSize(map), 3);
 
     StringMapDestroy(map);
 }
@@ -53,7 +59,7 @@ static char *StringTimes(char *str, size_t times)
     return res;
 }
 
-static void test_insert_jumbo(void **state)
+static void test_insert_jumbo(void)
 {
     StringMap *map = StringMapNew();
     for (int i = 0; i < 10000; i++)
@@ -67,7 +73,7 @@ static void test_insert_jumbo(void **state)
     StringMapDestroy(map);
 }
 
-static void test_remove(void **state)
+static void test_remove(void)
 {
     HashMap *hashmap = HashMapNew(ConstHash, (MapKeyEqualFn)StringSafeEqual, free, free);
 
@@ -83,7 +89,7 @@ static void test_remove(void **state)
     HashMapDestroy(hashmap);
 }
 
-static void test_get(void **state)
+static void test_get(void)
 {
     StringMap *map = StringMapNew();
 
@@ -94,7 +100,7 @@ static void test_get(void **state)
     StringMapDestroy(map);
 }
 
-static void test_has_key(void **state)
+static void test_has_key(void)
 {
     StringMap *map = StringMapNew();
 
@@ -108,7 +114,7 @@ static void test_has_key(void **state)
     StringMapDestroy(map);
 }
 
-static void test_clear(void **state)
+static void test_clear(void)
 {
     StringMap *map = StringMapNew();
 
@@ -121,7 +127,7 @@ static void test_clear(void **state)
     StringMapDestroy(map);
 }
 
-static void test_iterate(void **state)
+static void test_iterate(void)
 {
     StringMap *map = StringMapNew();
 
@@ -133,6 +139,7 @@ static void test_iterate(void **state)
         assert_true(StringMapHasKey(map, s));
         free(s);
     }
+    size_t size = StringMapSize(map);
 
     MapIterator it = MapIteratorInit(map->impl);
     MapKeyValue *item = NULL;
@@ -148,18 +155,19 @@ static void test_iterate(void **state)
         count++;
     }
     assert_int_equal(count, 10000);
+    assert_int_equal(count, size);
     assert_int_equal(sum_len, 10000*9999/2);
 
     StringMapDestroy(map);
 }
 
-static void test_hashmap_new_destroy(void **state)
+static void test_hashmap_new_destroy(void)
 {
     HashMap *hashmap = HashMapNew(NULL, NULL, NULL, NULL);
     HashMapDestroy(hashmap);
 }
 
-static void test_hashmap_degenerate_hash_fn(void **state)
+static void test_hashmap_degenerate_hash_fn(void)
 {
     HashMap *hashmap = HashMapNew(ConstHash, (MapKeyEqualFn)StringSafeEqual, free, free);
 

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "files_links.h"
@@ -31,15 +30,15 @@
 #include "files_operators.h"
 #include "files_lib.h"
 #include "locks.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "misc_lib.h"
+#include "env_context.h"
 
 #define CF_MAXLINKLEVEL 4
 
 #if !defined(__MINGW32__)
-static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, Promise *pp);
+static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp);
 #endif
 static char *AbsLinkPath(const char *from, const char *relto);
 
@@ -47,7 +46,7 @@ static char *AbsLinkPath(const char *from, const char *relto);
 
 #ifdef __MINGW32__
 
-PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support symbolic links (at VerifyLink())");
     return PROMISE_RESULT_FAIL;
@@ -60,7 +59,7 @@ static bool EnforcePromise(enum cfopaction action)
     return ((!DONTDO) && (action != cfa_warn));
 }
 
-PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
@@ -91,7 +90,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     bool source_file_exists = true;
 
-    if (cfstat(absto, &sb) == -1)
+    if (stat(absto, &sb) == -1)
     {
         CfDebug("No source file\n");
         source_file_exists = false;
@@ -186,7 +185,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
 /*****************************************************************************/
 
-PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char absto[CF_BUFSIZE];
     char expand[CF_BUFSIZE];
@@ -235,7 +234,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
 
 /*****************************************************************************/
 
-PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char *sp, *commonto, *commonfrom;
     char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
@@ -311,7 +310,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
 
 /*****************************************************************************/
 
-PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, Promise *pp)
+PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *source, Attributes attr, const Promise *pp)
 {
     char to[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat ssb, dsb;
@@ -338,7 +337,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         strcpy(absto, to);
     }
 
-    if (cfstat(absto, &ssb) == -1)
+    if (stat(absto, &ssb) == -1)
     {
         cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, attr, " !! Source file %s doesn't exist\n", source);
         return PROMISE_RESULT_WARN;
@@ -353,7 +352,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     CfDebug("Trying to (hard) link %s -> %s\n", destination, to);
 
-    if (cfstat(destination, &dsb) == -1)
+    if (stat(destination, &dsb) == -1)
     {
         return MakeHardLink(ctx, destination, to, attr, pp) ? PROMISE_RESULT_CHANGE : PROMISE_RESULT_FAIL;
     }
@@ -436,7 +435,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     strcat(linkpath, linkbuf);
     CompressPath(tmp, linkpath);
 
-    if (cfstat(tmp, &statbuf) == -1)    /* link points nowhere */
+    if (stat(tmp, &statbuf) == -1)    /* link points nowhere */
     {
         if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {
@@ -460,7 +459,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
 /*****************************************************************************/
 
 #if !defined(__MINGW32__)
-static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, Promise *pp)
+static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attributes attr, const Promise *pp)
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
@@ -667,7 +666,7 @@ static char *AbsLinkPath(const char *from, const char *relto)
 
     if (IsAbsoluteFileName(relto))
     {
-        ProgrammingError("Call to AbsLInkPath with absolute pathname\n");
+        ProgrammingError("Call to AbsLInkPath with absolute pathname");
     }
 
     strcpy(destination, from);  /* reuse to save stack space */

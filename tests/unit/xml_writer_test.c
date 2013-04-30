@@ -10,7 +10,7 @@
  * escaping of generated XML.
  */
 
-void test_comment(void **state)
+void test_comment(void)
 {
     Writer *w = StringWriter();
 
@@ -18,7 +18,7 @@ void test_comment(void **state)
     assert_string_equal(StringWriterClose(w), "<!-- foobar -->\n");
 }
 
-void test_no_attr(void **state)
+void test_no_attr(void)
 {
     Writer *w = StringWriter();
 
@@ -26,7 +26,7 @@ void test_no_attr(void **state)
     assert_string_equal(StringWriterClose(w), "<foobar></foobar>\n");
 }
 
-void test_tag(void **state)
+void test_tag(void)
 {
     Writer *w = StringWriter();
 
@@ -36,7 +36,7 @@ void test_tag(void **state)
     assert_string_equal(StringWriterClose(w), "<foobar a=\"b\" >some value</foobar>\n");
 }
 
-void test_complex_tag(void **state)
+void test_complex_tag(void)
 {
     Writer *w = StringWriter();
 
@@ -52,7 +52,7 @@ void test_complex_tag(void **state)
                         "<complex-tag attr1=\"value1\" attr2=\"value2\" >\nSome content</complex-tag>\n");
 }
 
-void test_escape(void **state)
+void test_escape(void)
 {
     Writer *w = StringWriter();
 

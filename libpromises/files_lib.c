@@ -28,8 +28,7 @@
 #include "files_names.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "promises.h"
 #include "matching.h"
 #include "misc_lib.h"
@@ -38,9 +37,8 @@
 
 #include <assert.h>
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+static Item *ROTATED = NULL;
+
 
 bool FileCanOpen(const char *path, const char *modes)
 {
@@ -68,7 +66,7 @@ void PurgeItemList(Item **list, char *name)
 
     for (ip = copy; ip != NULL; ip = ip->next)
     {
-        if (cfstat(ip->name, &sb) == -1)
+        if (stat(ip->name, &sb) == -1)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
             DeleteItemLiteral(list, ip->name);
@@ -110,9 +108,9 @@ int RawSaveItemList(const Item *liststart, const char *file)
         return false;
     }
 
-    if (cf_rename(new, file) == -1)
+    if (rename(new, file) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Error while renaming %s\n", file);
+        CfOut(OUTPUT_LEVEL_INFORM, "rename", "Error while renaming %s\n", file);
         return false;
     }
 
@@ -174,14 +172,14 @@ bool FileWriteOver(char *filename, char *contents)
 
 /*********************************************************************/
 
-ssize_t FileReadMax(char **output, char *filename, size_t size_max)
+ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
 // TODO: there is CfReadFile and FileRead with slightly different semantics, merge
 // free(output) should be called on positive return value
 {
     assert(size_max > 0);
 
     struct stat sb;
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         return -1;
     }
@@ -342,9 +340,9 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                 /* And then move the current object out of the way... */
 
-                if (cf_rename(pathbuf, currentpath) == -1)
+                if (rename(pathbuf, currentpath) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "cf_rename", "Warning. The object %s is not a directory.\n", pathbuf);
+                    CfOut(OUTPUT_LEVEL_INFORM, "rename", "Warning. The object %s is not a directory.\n", pathbuf);
                     return (false);
                 }
             }
@@ -382,7 +380,7 @@ int MakeParentDirectory(char *parentandchild, int force)
             if (strlen(currentpath) == 0)
             {
             }
-            else if (cfstat(currentpath, &statbuf) == -1)
+            else if (stat(currentpath, &statbuf) == -1)
             {
                 CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
 
@@ -390,9 +388,9 @@ int MakeParentDirectory(char *parentandchild, int force)
                 {
                     mask = umask(0);
 
-                    if (cf_mkdir(currentpath, DEFAULTMODE) == -1)
+                    if (mkdir(currentpath, DEFAULTMODE) == -1)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "cf_mkdir", "Unable to make directories to %s\n", parentandchild);
+                        CfOut(OUTPUT_LEVEL_ERROR, "mkdir", "Unable to make directories to %s\n", parentandchild);
                         umask(mask);
                         return (false);
                     }
@@ -446,7 +444,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
     char line[CF_BUFSIZE], concat[CF_BUFSIZE];
     int join = false;
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
@@ -628,7 +626,7 @@ void RotateFiles(char *name, int number)
 
     PrependItem(&ROTATED, name, NULL);
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "No access to file %s\n", name);
         return;
@@ -639,7 +637,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -647,7 +645,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.gz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -655,7 +653,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.Z", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -663,7 +661,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -671,7 +669,7 @@ void RotateFiles(char *name, int number)
         snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
         snprintf(to, CF_BUFSIZE, "%s.%d.bz2", name, i + 1);
 
-        if (cf_rename(from, to) == -1)
+        if (rename(from, to) == -1)
         {
             CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
         }
@@ -679,18 +677,18 @@ void RotateFiles(char *name, int number)
 
     snprintf(to, CF_BUFSIZE, "%s.1", name);
 
-    if (CopyRegularFileDisk(name, to, false) == false)
+    if (CopyRegularFileDisk(name, to) == false)
     {
         CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;
     }
 
-    cf_chmod(to, statbuf.st_mode);
+    chmod(to, statbuf.st_mode);
     if (chown(to, statbuf.st_uid, statbuf.st_gid))
     {
         UnexpectedError("Failed to chown %s", to);
     }
-    cf_chmod(name, 0600);       /* File must be writable to empty .. */
+    chmod(name, 0600);       /* File must be writable to empty .. */
 
     if ((fd = creat(name, statbuf.st_mode)) == -1)
     {
@@ -731,69 +729,4 @@ void CreateEmptyFile(char *name)
 
 #endif
 
-static char FileStateToChar(FileState status)
-{
-    switch(status)
-    {
-    case FILE_STATE_NEW:
-        return 'N';
 
-    case FILE_STATE_REMOVED:
-        return 'R';
-
-    case FILE_STATE_CONTENT_CHANGED:
-        return 'C';
-
-    case FILE_STATE_STATS_CHANGED:
-        return 'S';
-
-    default:
-        ProgrammingError("Unhandled file status in switch: %d", status);
-    }
-}
-
-void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
-{
-    FILE *fp;
-    char fname[CF_BUFSIZE];
-    time_t now = time(NULL);
-    mode_t perm = 0600;
-    static char prevFile[CF_MAXVARSIZE] = { 0 };
-
-// we might get called twice..
-    if (strcmp(file, prevFile) == 0)
-    {
-        return;
-    }
-
-    strlcpy(prevFile, file, CF_MAXVARSIZE);
-
-/* This is inefficient but we don't want to lose any data */
-
-    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
-    MapName(fname);
-
-#ifndef __MINGW32__
-    struct stat sb;
-    if (cfstat(fname, &sb) != -1)
-    {
-        if (sb.st_mode & (S_IWGRP | S_IWOTH))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
-        }
-    }
-#endif /* !__MINGW32__ */
-
-    if ((fp = fopen(fname, "a")) == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not write to the hash change log");
-        return;
-    }
-
-    const char *handle = PromiseID(pp);
-
-    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
-    fclose(fp);
-
-    cf_chmod(fname, perm);
-}

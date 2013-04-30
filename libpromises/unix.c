@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "unix.h"
@@ -32,10 +31,9 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "communication.h"
 #include "pipes.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "misc_lib.h"
 #include "rlist.h"
@@ -47,6 +45,13 @@
 
 #ifdef HAVE_SYS_JAIL_H
 # include <sys/jail.h>
+#endif
+
+#ifdef HAVE_GETIFADDRS
+# include <ifaddrs.h>
+# ifdef HAVE_NET_IF_DL_H
+#   include <net/if_dl.h>
+# endif
 #endif
 
 #define CF_IFREQ 2048           /* Reportedly the largest size that does not segfault 32/64 bit */
@@ -159,7 +164,7 @@ int IsExecutable(const char *file)
     gid_t grps[NGROUPS];
     int n;
 
-    if (cfstat(file, &sb) == -1)
+    if (stat(file, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Proposed executable file \"%s\" doesn't exist", file);
         return false;
@@ -248,12 +253,7 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
     }
     else                        /* parent */
     {
-# ifndef HAVE_WAITPID
-        pid_t wait_result;
-# endif
         ALARM_PID = pid;
-
-# ifdef HAVE_WAITPID
 
         while (waitpid(pid, &status, 0) < 0)
         {
@@ -264,30 +264,6 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
         }
 
         return (WEXITSTATUS(status) == 0);
-
-# else
-
-        while ((wait_result = wait(&status)) != pid)
-        {
-            if (wait_result <= 0)
-            {
-                CfOut(OUTPUT_LEVEL_INFORM, "wait", " !! Wait for child failed\n");
-                return false;
-            }
-        }
-
-        if (WIFSIGNALED(status))
-        {
-            return false;
-        }
-
-        if (!WIFEXITED(status))
-        {
-            return false;
-        }
-
-        return (WEXITSTATUS(status) == 0);
-# endif
     }
 
     return false;
@@ -351,17 +327,28 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
     }
 
+    // mac address on a loopback interface doesn't make sense
+    if (ifr->ifr_flags & IFF_LOOPBACK)
+    {
+      return;
+    }
+
 # if defined(SIOCGIFHWADDR) && defined(HAVE_STRUCT_IFREQ_IFR_HWADDR)
     char hw_mac[CF_MAXVARSIZE];
 
-    
-    ioctl(fd, SIOCGIFHWADDR, ifr);
+    if ((ioctl(fd, SIOCGIFHWADDR, ifr) == -1))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "Couldn't get mac address for %s interface\n", ifr->ifr_name);
+        return;
+    }
+      
     snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
              (unsigned char) ifr->ifr_hwaddr.sa_data[0],
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],
              (unsigned char) ifr->ifr_hwaddr.sa_data[2],
              (unsigned char) ifr->ifr_hwaddr.sa_data[3],
-             (unsigned char) ifr->ifr_hwaddr.sa_data[4], (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
+             (unsigned char) ifr->ifr_hwaddr.sa_data[4], 
+             (unsigned char) ifr->ifr_hwaddr.sa_data[5]);
 
     ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
@@ -369,10 +356,98 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
     snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
     EvalContextHeapAddHard(ctx, name);
+
+# elif defined(HAVE_GETIFADDRS)
+    char hw_mac[CF_MAXVARSIZE];
+    char *m;
+    struct ifaddrs *ifaddr, *ifa;
+    struct sockaddr_dl *sdl;
+
+    if (getifaddrs(&ifaddr) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "getifaddrs", "!! Could not get interface %s addresses\n", 
+          ifp->ifr_name);
+
+        ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
+        EvalContextHeapAddHard(ctx, "mac_unknown");
+        return;
+    }
+    for (ifa = ifaddr; ifa != NULL; ifa=ifa->ifa_next)
+    {
+        if ( strcmp(ifa->ifa_name, ifp->ifr_name) == 0) 
+        {
+            if (ifa->ifa_addr->sa_family == AF_LINK) 
+            {
+                sdl = (struct sockaddr_dl *)ifa->ifa_addr;
+                m = (char *) LLADDR(sdl);
+                
+                snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+                    (unsigned char) m[0],
+                    (unsigned char) m[1],
+                    (unsigned char) m[2],
+                    (unsigned char) m[3],
+                    (unsigned char) m[4],
+                    (unsigned char) m[5]);
+
+                ScopeNewSpecialScalar(ctx, "sys", name, hw_mac, DATA_TYPE_STRING);
+                RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
+                RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
+
+                snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+                EvalContextHeapAddHard(ctx, name);
+            }
+        }
+
+    }
+    freeifaddrs(ifaddr);
+
 # else
     ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
     EvalContextHeapAddHard(ctx, "mac_unknown");
 # endif
+}
+
+/******************************************************************/
+
+void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist **flags)
+{
+    char name[CF_MAXVARSIZE];
+    char buffer[CF_BUFSIZE] = "";
+    char *fp = NULL;
+
+    if (ag != AGENT_TYPE_GENDOC)
+    {
+        snprintf(name, CF_MAXVARSIZE, "interface_flags[%s]", ifr->ifr_name);
+    }
+    else
+    {
+        snprintf(name, CF_MAXVARSIZE, "interface_flags[interface_name]");
+    }
+
+    if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
+    if (ifr->ifr_flags & IFF_BROADCAST) strcat(buffer, " broadcast");
+    if (ifr->ifr_flags & IFF_DEBUG) strcat(buffer, " debug");
+    if (ifr->ifr_flags & IFF_LOOPBACK) strcat(buffer, " loopback");
+    if (ifr->ifr_flags & IFF_POINTOPOINT) strcat(buffer, " pointopoint");
+
+#ifdef IFF_NOTRAILERS
+    if (ifr->ifr_flags & IFF_NOTRAILERS) strcat(buffer, " notrailers");
+#endif
+
+    if (ifr->ifr_flags & IFF_RUNNING) strcat(buffer, " running");
+    if (ifr->ifr_flags & IFF_NOARP) strcat(buffer, " noarp");
+    if (ifr->ifr_flags & IFF_PROMISC) strcat(buffer, " promisc");
+    if (ifr->ifr_flags & IFF_ALLMULTI) strcat(buffer, " allmulti");
+    if (ifr->ifr_flags & IFF_MULTICAST) strcat(buffer, " multicast");
+
+    // If a least 1 flag is found
+    if (strlen(buffer) > 1)
+    {
+      // Skip leading space
+      fp = buffer + 1;
+      ScopeNewSpecialScalar(ctx, "sys", name, fp, DATA_TYPE_STRING);
+      RlistAppend(flags, fp, RVAL_TYPE_SCALAR);
+    }
 }
 
 /******************************************************************/
@@ -388,7 +463,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char ip[CF_MAXVARSIZE];
     char name[CF_MAXVARSIZE];
     char last_name[CF_BUFSIZE];
-    Rlist *interfaces = NULL, *hardware = NULL, *ips = NULL;
+    Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
     CfDebug("GetInterfacesInfo()\n");
 
@@ -456,12 +531,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             CfOut(OUTPUT_LEVEL_VERBOSE, "", "Interface %d: %s\n", j + 1, ifp->ifr_name);
         }
 
-        // Ignore the loopback
-
-        if (strcmp(ifp->ifr_name, "lo") == 0)
-        {
-            continue;
-        }
 
         if (strncmp(last_name, ifp->ifr_name, sizeof(ifp->ifr_name)) == 0)
         {
@@ -491,8 +560,12 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                 CfOut(OUTPUT_LEVEL_ERROR, "ioctl", "No such network device");
                 continue;
             }
+            else
+            {
+              GetInterfaceFlags(ctx, ag, &ifr, &flags);
+            }
 
-            if ((ifr.ifr_flags & IFF_UP) && (!(ifr.ifr_flags & IFF_LOOPBACK)))
+            if (ifr.ifr_flags & IFF_UP)
             {
                 sin = (struct sockaddr_in *) &ifp->ifr_addr;
 
@@ -631,10 +704,12 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
     ScopeNewSpecialList(ctx, "sys", "interfaces", interfaces, DATA_TYPE_STRING_LIST);
     ScopeNewSpecialList(ctx, "sys", "hardware_addresses", hardware, DATA_TYPE_STRING_LIST);
+    ScopeNewSpecialList(ctx, "sys", "hardware_flags", flags, DATA_TYPE_STRING_LIST);
     ScopeNewSpecialList(ctx, "sys", "ip_addresses", ips, DATA_TYPE_STRING_LIST);
 
     RlistDestroy(interfaces);
     RlistDestroy(hardware);
+    RlistDestroy(flags);
     RlistDestroy(ips);
 
     FindV6InterfacesInfo(ctx);
@@ -681,20 +756,19 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
 /* Don't know the output format of ifconfig on all these .. hope for the best*/
 
-    while (!feof(pp))
+    for(;;)
     {
-        buffer[0] = '\0';
         if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
         {
-            if (strlen(buffer))
+            if (ferror(pp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            break;
+            else /* feof */
+            {
+                break;
+            }
         }
 
         if (strcasestr(buffer, "inet6"))

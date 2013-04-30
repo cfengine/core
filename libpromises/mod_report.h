@@ -25,7 +25,9 @@
 #ifndef CFENGINE_MOD_REPORT_H
 #define CFENGINE_MOD_REPORT_H
 
+#include "cf3.defs.h"
+
 extern const PromiseTypeSyntax CF_REPORT_PROMISE_TYPES[];
-extern const BodySyntax CF_REPORT_BODIES[];
+extern const ConstraintSyntax CF_REPORT_BODIES[];
 
 #endif

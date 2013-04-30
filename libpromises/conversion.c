@@ -29,9 +29,7 @@
 #include "dbm_api.h"
 #include "mod_access.h"
 #include "item_lib.h"
-#include "reporting.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "rlist.h"
 
 #include <assert.h>
@@ -218,7 +216,7 @@ OutputLevel OutputLevelFromString(const char *level)
 {
     static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
 
-    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
+    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_ERROR, OUTPUT_LEVEL_ERROR);
 }
 
 FileLinkType FileLinkTypeFromString(const char *s)
@@ -255,11 +253,11 @@ DataType DataTypeFromString(const char *name)
 }
 
 
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval)
 {
     int i = 0;
 
-    for (i = 0; body_syntax[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].lval != NULL; i++)
     {
         if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {
@@ -453,7 +451,7 @@ long TimeAbs2Int(const char *s)
 
     cftime += (year - 1970) * 365 * 24 * 3600;
 
-    CfDebug("Time %s CORRESPONDS %s\n", s, cf_ctime(&cftime));
+    CfDebug("Time %s CORRESPONDS %s\n", s, ctime(&cftime));
     return (long) cftime;
 }
 
@@ -652,7 +650,7 @@ AclInheritance AclInheritanceFromString(const char *string)
 
 ServicePolicy ServicePolicyFromString(const char *string)
 {
-    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
+    static const char *SERVICE_POLICY_TYPES[] = { "start", "stop", "disable", "restart", "reload", NULL };
 
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }
@@ -761,7 +759,7 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
     char month[CF_SMALLBUF], day[CF_SMALLBUF], year[CF_SMALLBUF];
     char tmp[CF_SMALLBUF];
 
-    snprintf(tmp, sizeof(tmp), "%s", cf_ctime(&t));
+    snprintf(tmp, sizeof(tmp), "%s", ctime(&t));
     sscanf(tmp, "%*s %5s %3s %*s %5s", month, day, year);
     snprintf(outStr, outStrSz, "%s %s %s", day, month, year);
 }

@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_storage.h"
@@ -33,17 +32,15 @@
 #include "files_links.h"
 #include "files_properties.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "nfs.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "verify_files.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "promiser_regex_resolver.h"
+#include "ornaments.h"
+#include "env_context.h"
 
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
@@ -89,8 +86,6 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 
     a = GetStorageAttributes(ctx, pp);
 
-    CF_OCCUR++;
-
 #ifdef __MINGW32__
     if (!a.havemount)
     {
@@ -120,7 +115,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
         }
     }
 
-    thislock = AcquireLock(path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, path, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -178,7 +173,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checking required filesystem %s\n", name);
 
-    if (cfstat(name, &statbuf) == -1)
+    if (stat(name, &statbuf) == -1)
     {
         return (false);
     }
@@ -199,7 +194,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(dirp->d_name, name, a.copy, pp))
+            if (!ConsiderLocalFile(dirp->d_name, name))
             {
                 continue;
             }
@@ -270,7 +265,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
     }
 #endif /* __MINGW32__ */
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", "Couldn't stat %s checking diskspace\n", file);
         return true;
@@ -401,7 +396,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
         strcat(vbuff, "..");
     }
 
-    if (cfstat(vbuff, &parentstat) == -1)
+    if (stat(vbuff, &parentstat) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " !! Unable to stat %s", vbuff);
         return (false);
@@ -505,3 +500,16 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 }
 
 #endif /* !__MINGW32__ */
+
+void DeleteStorageContext(void)
+{
+#ifndef __MINGW32__
+    CleanupNFS();
+
+    if (!DONTDO && CF_MOUNTALL)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
+        MountAll();
+    }
+#endif /* !__MINGW32__ */
+}

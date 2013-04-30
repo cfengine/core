@@ -2,7 +2,6 @@ body common control
 {
 inputs => { "cfengine_stdlib.cf" };
 bundlesequence => { "test" };
-host_licenses_paid => "1";
 }
 
 ###

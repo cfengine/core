@@ -1,0 +1,45 @@
+#######################################################
+#
+# Check that we can use scope attributes to promise global classes
+# from common bundles
+#
+#######################################################
+
+body common control {
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+bundle agent init {
+vars:
+        "classes" slist => { "global_c", "local_c", "unglobal_c", "unlocal_c" };
+}
+
+bundle common test {
+classes:
+        "global_c" expression => "any";
+        "unglobal_c" expression => "!any";
+        "local_c" expression => "any", scope => "bundle";
+        "unlocal_c" expression => "!any", scope => "bundle";
+reports:
+    DEBUG::
+        "$(init.classes) defined from test" ifvarclass => "${init.classes}";
+        "$(init.classes) not defined from test" ifvarclass => "!${init.classes}";
+}
+
+bundle agent check {
+classes:
+        global_c.!local_c.!unglobal_c.!unlocal_c::
+            "ok" expression => "any";
+
+reports:
+    DEBUG::
+        "$(init.classes) defined from check" ifvarclass => "${init.classes}";
+        "$(init.classes) not defined from check" ifvarclass => "!${init.classes}";
+
+    ok::
+        "${this.promise_filename} Pass";
+    !ok::
+        "${this.promise_filename} FAIL";
+}

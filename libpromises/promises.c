@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "promises.h"
@@ -31,10 +30,9 @@
 #include "files_names.h"
 #include "scope.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "args.h"
 #include "locks.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "fncall.h"
 #include "env_context.h"
@@ -143,9 +141,12 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     if (pp->promisee.item)
     {
         pcopy->promisee = RvalCopy(pp->promisee);
-        Rlist *rval_list = RvalRlistValue(pcopy->promisee);
-        RlistFlatten(ctx, &rval_list);
-        pcopy->promisee.item = rval_list;
+        if (pcopy->promisee.type == RVAL_TYPE_LIST)
+        {
+            Rlist *rval_list = RvalRlistValue(pcopy->promisee);
+            RlistFlatten(ctx, &rval_list);
+            pcopy->promisee.item = rval_list;
+        }
     }
 
     if (pp->classes)
@@ -161,16 +162,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
     pcopy->parent_promise_type = pp->parent_promise_type;
     pcopy->offset.line = pp->offset.line;
-    pcopy->ref = pp->ref;
-    pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->done = pp->done;
-    pcopy->this_server = pp->this_server;
-    pcopy->donep = pp->donep;
-    pcopy->conn = pp->conn;
-    pcopy->edcontext = pp->edcontext;
+    pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->has_subbundles = pp->has_subbundles;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
-    pcopy->org_pp = pp;
+    pcopy->org_pp = pp->org_pp;
 
     CfDebug("Copying promise constraints\n\n");
 
@@ -221,7 +216,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 CfOut(OUTPUT_LEVEL_ERROR, "",
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
                       bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
-                ERRORCOUNT++;
             }
 
             /* Keep the referent body type as a boolean for convenience when checking later */
@@ -242,7 +236,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
-                    ERRORCOUNT++;
                     CfOut(OUTPUT_LEVEL_ERROR, "",
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
@@ -356,17 +349,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     }
 
     pcopy->parent_promise_type = pp->parent_promise_type;
-    pcopy->done = pp->done;
-    pcopy->donep = pp->donep;
     pcopy->offset.line = pp->offset.line;
-    pcopy->ref = pp->ref;
-    pcopy->ref_alloc = pp->ref_alloc;
-    pcopy->cache = pp->cache;
-    pcopy->this_server = pp->this_server;
-    pcopy->conn = pp->conn;
-    pcopy->edcontext = pp->edcontext;
+    pcopy->comment = pp->comment ? xstrdup(pp->comment) : NULL;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
-    pcopy->org_pp = pp;
+    pcopy->org_pp = pp->org_pp;
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -401,9 +387,9 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             }
             else
             {
-                pcopy->ref = final.item;        /* No alloc reference to comment item */
+                pcopy->comment = final.item ? xstrdup(final.item) : NULL;
 
-                if (pcopy->ref && (strstr(pcopy->ref, "$(this.promiser)") || strstr(pcopy->ref, "${this.promiser}")))
+                if (pcopy->comment && (strstr(pcopy->comment, "$(this.promiser)") || strstr(pcopy->comment, "${this.promiser}")))
                 {
                     DereferenceComment(pcopy);
                 }
@@ -432,9 +418,9 @@ void PromiseRef(OutputLevel level, const Promise *pp)
               pp->offset.line);
     }
 
-    if (pp->ref)
+    if (pp->comment)
     {
-        CfOut(level, "", "Comment: %s\n", pp->ref);
+        CfOut(level, "", "Comment: %s\n", pp->comment);
     }
 
     switch (pp->promisee.type)
@@ -463,21 +449,16 @@ static void DereferenceComment(Promise *pp)
     char pre_buffer[CF_BUFSIZE], post_buffer[CF_BUFSIZE], buffer[CF_BUFSIZE], *sp;
     int offset = 0;
 
-    strlcpy(pre_buffer, pp->ref, CF_BUFSIZE);
+    strlcpy(pre_buffer, pp->comment, CF_BUFSIZE);
 
     if ((sp = strstr(pre_buffer, "$(this.promiser)")) || (sp = strstr(pre_buffer, "${this.promiser}")))
     {
         *sp = '\0';
         offset = sp - pre_buffer + strlen("$(this.promiser)");
-        strncpy(post_buffer, pp->ref + offset, CF_BUFSIZE);
+        strncpy(post_buffer, pp->comment + offset, CF_BUFSIZE);
         snprintf(buffer, CF_BUFSIZE, "%s%s%s", pre_buffer, pp->promiser, post_buffer);
 
-        if (pp->ref_alloc == 'y')
-        {
-            free(pp->ref);
-        }
-
-        pp->ref = xstrdup(buffer);
-        pp->ref_alloc = 'y';
+        free(pp->comment);
+        pp->comment = xstrdup(buffer);
     }
 }

@@ -20,15 +20,22 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_FILES_PROPERTIES_H
 #define CFENGINE_FILES_PROPERTIES_H
 
 #include "cf3.defs.h"
+#include "cfnet.h"                                       /* AgentConnection */
 
 void AddFilenameToListOfSuspicious(const char *filename);
-int ConsiderFile(const char *nodename, char *path, FileCopy fc, Promise *pp);
+
+/*
+ * Both functions assume that current working directory is #path, so #filename
+ * can be stat'ed at relative path (if it is a local file).
+ */
+bool ConsiderLocalFile(const char *filename, const char *path);
+
+bool ConsiderAbstractFile(const char *nodename, const char *path, FileCopy fc, AgentConnection *conn);
 
 #endif

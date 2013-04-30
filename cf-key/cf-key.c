@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -28,20 +27,15 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "reporting.h"
 #include "scope.h"
 #include "files_copy.h"
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "cfstream.h"
-#include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
-
-#ifdef HAVE_NOVA
-#include "license.h"
-#endif
+#include "sysinfo.h"
+#include "logging_old.h"
 
 #include "cf-key-functions.h"
 
@@ -139,8 +133,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        public_key_file = xstrdup(PublicKeyFile());
-        private_key_file = xstrdup(PrivateKeyFile());
+        public_key_file = xstrdup(PublicKeyFile(GetWorkDir()));
+        private_key_file = xstrdup(PrivateKeyFile(GetWorkDir()));
     }
 
     KeepKeyPromises(public_key_file, private_key_file);
@@ -207,7 +201,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key", OPTIONS, HINTS, ID, false);
             exit(0);
 
         case 'M':
@@ -215,7 +209,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            Syntax("cf-key", OPTIONS, HINTS, ID, false);
             exit(1);
 
         }

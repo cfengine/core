@@ -28,9 +28,8 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "pipes.h"
-#include "logging.h"
 
 /* Globals */
 
@@ -83,13 +82,13 @@ void MonTempInit(void)
 {
     struct stat statbuf;
 
-    if (cfstat("/proc/acpi/thermal_zone", &statbuf) != -1)
+    if (stat("/proc/acpi/thermal_zone", &statbuf) != -1)
     {
         CfDebug("Found an acpi service\n");
         ACPI = true;
     }
 
-    if (cfstat("/usr/bin/sensors", &statbuf) != -1)
+    if (stat("/usr/bin/sensors", &statbuf) != -1)
     {
         if (statbuf.st_mode & 0111)
         {

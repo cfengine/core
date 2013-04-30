@@ -10,7 +10,7 @@
  * Those testcases only perform smoke testing of sorting functionality.
  */
 
-void test_sort_item_list_names(void **ctx)
+void test_sort_item_list_names(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->name = "c";
@@ -27,7 +27,7 @@ void test_sort_item_list_names(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_classes(void **ctx)
+void test_sort_item_list_classes(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->classes = "b";
@@ -44,7 +44,7 @@ void test_sort_item_list_classes(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_counters(void **ctx)
+void test_sort_item_list_counters(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->counter = -1;
@@ -62,7 +62,7 @@ void test_sort_item_list_counters(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_times(void **ctx)
+void test_sort_item_list_times(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->time = 1;
@@ -84,7 +84,7 @@ int FirstItemShorter(const char *lhs, const char *rhs)
     return strlen(lhs) < strlen(rhs);
 }
 
-void test_sort_rlist(void **ctx)
+void test_sort_rlist(void)
 {
     Rlist *head = xcalloc(1, sizeof(Rlist));
     head->item = "a";
@@ -101,7 +101,7 @@ void test_sort_rlist(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_alpha_sort_rlist_names(void **ctx)
+void test_alpha_sort_rlist_names(void)
 {
     Rlist *head = xcalloc(1, sizeof(Rlist));
     head->item = "c";

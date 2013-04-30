@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "generic_agent.h"
@@ -32,17 +31,17 @@
 #include "files_names.h"
 #include "promises.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "logging.h"
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"
 #include "policy.h"
+#include "audit.h"
 
 typedef enum
 {
@@ -63,7 +62,7 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
+static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
@@ -124,7 +123,7 @@ static const char *HINTS[17] =
     NULL
 };
 
-extern const BodySyntax CFR_CONTROLBODY[];
+extern const ConstraintSyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
@@ -157,7 +156,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
@@ -166,18 +165,6 @@ int main(int argc, char *argv[])
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot specify background mode and interactive mode together");
         exit(1);
-    }
-
-    Policy *runagent_adhoc_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(policy, NamespaceDefault(), "runagent_adhoc_bundle", "agent", NULL, NULL);
-        PromiseType *tp = BundleAppendPromiseType(bp, "runagent");
-
-        pp = PromiseTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
-
-        // TODO: wat?
-        pp->donep = &(pp->done);
     }
 
 /* HvB */
@@ -202,7 +189,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, rp->item, RUNATTR, pp);
+                        HailServer(ctx, rp->item);
                         exit(0);
                     }
                     else        /* parent process */
@@ -221,7 +208,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, rp->item, RUNATTR, pp);
+                HailServer(ctx, rp->item);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -239,8 +226,6 @@ int main(int argc, char *argv[])
         }
     }
 #endif
-
-    PolicyDestroy(runagent_adhoc_policy);
 
     GenericAgentConfigDestroy(config);
 
@@ -264,7 +249,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         switch ((char) c)
         {
         case 'f':
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -339,7 +324,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-runagent - Run agent", OPTIONS, HINTS, ID);
+            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -351,13 +336,17 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-runagent - Run agent", OPTIONS, HINTS, ID);
+            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }
     }
 
-    CfDebug("Set debugging\n");
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
+    {
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
+    }
 
     return config;
 }
@@ -378,7 +367,7 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
+static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
     char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
@@ -386,7 +375,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
     bool gotkey;
     char reply[8];
 
-    a.copy.portnumber = (short) ParseHostname(host, peer);
+    FileCopy fc = {
+        .portnumber = (short) ParseHostname(host, peer),
+    };
 
     snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
     Address2Hostkey(ipv4, digest);
@@ -423,13 +414,13 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
                 if (strcmp(reply, "yes") == 0)
                 {
                     printf(" -> Will trust the key...\n");
-                    a.copy.trustkey = true;
+                    fc.trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
                     printf(" -> Will not trust the key...\n");
-                    a.copy.trustkey = false;
+                    fc.trustkey = false;
                     break;
                 }
                 else
@@ -445,7 +436,7 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 #ifdef __MINGW32__
 
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
           REMOTE_AGENT_OPTIONS);
     CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
 
@@ -453,34 +444,34 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
     if (BACKGROUND)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
         CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
     }
 
 #endif /* !__MINGW32__ */
 
-    a.copy.servers = RlistFromSplitString(peer, '*');
+    fc.servers = RlistFromSplitString(peer, '*');
 
-    if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_NOOP, "", pp, a, "No hosts are registered to connect to");
+        CfOut(OUTPUT_LEVEL_INFORM, "", "No hosts are registered to connect to");
         return false;
     }
     else
     {
         int err = 0;
-        conn = NewServerConnection(a.copy, a.transaction.background, pp, &err);
+        conn = NewServerConnection(fc, false, &err);
 
         if (conn == NULL)
         {
-            RlistDestroy(a.copy.servers);
+            RlistDestroy(fc.servers);
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No suitable server responded to hail\n");
             return false;
         }
@@ -488,11 +479,9 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
 /* Check trust interaction*/
 
-    pp->cache = NULL;
-
     HailExec(conn, peer, recvbuffer, sendbuffer);
 
-    RlistDestroy(a.copy.servers);
+    RlistDestroy(fc.servers);
 
     return true;
 }

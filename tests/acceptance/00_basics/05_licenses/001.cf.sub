@@ -1,0 +1,38 @@
+#######################################################
+#
+# Test that we do not complain about license.
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+  host_licenses_paid => "0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+    "dummy" string => "dummy";
+}
+

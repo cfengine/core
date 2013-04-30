@@ -28,15 +28,12 @@
 #include "env_context.h"
 #include "env_monitor.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "logging.h"
 #include "signals.h"
 #include "scope.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "sysinfo.h"
 
 typedef enum
 {
@@ -57,7 +54,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy);
 
 extern int NO_FORK;
 
-extern const BodySyntax CFM_CONTROLBODY[];
+extern const ConstraintSyntax CFM_CONTROLBODY[];
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -115,7 +112,7 @@ int main(int argc, char *argv[])
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit(ctx);
     KeepPromises(ctx, policy);
@@ -141,7 +138,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'f':
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -179,7 +176,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
+            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -191,12 +188,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
+            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
             exit(1);
         }
     }
 
-    CfDebug("Set debugging\n");
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
+    {
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
+    }
 
     return config;
 }

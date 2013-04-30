@@ -98,21 +98,21 @@ methods:
 bundle agent xml_check_diff(file1, file2, test, expected_difference)
 {
 vars:
-    DEBUG.!no_difference::
+    DEBUG.check_ready.!no_difference::
         "file1r" string => execresult("$(G.cwd)/xml-c14nize $(file1)", "noshell");
         "file2r" string => execresult("$(G.cwd)/xml-c14nize $(file2)", "noshell");
 
-    DEBUG.!no_difference.has_hexdump::
+    DEBUG.check_ready.!no_difference.has_hexdump::
         "file1h" string => execresult("$(G.hexdump) -C $(file1)", "useshell");
         "file2h" string => execresult("$(G.hexdump) -C $(file2)", "useshell");
 
-    DEBUG.!no_difference.!has_hexdump::
+    DEBUG.check_ready.!no_difference.!has_hexdump::
         "file1h" string => execresult("$(G.od) -c $(file1)", "useshell");
         "file2h" string => execresult("$(G.od) -c $(file2)", "useshell");
 
-    DEBUG.!no_difference.has_unified_diff::
+    DEBUG.check_ready.!no_difference.has_unified_diff::
         "diffu" string => execresult("$(G.diff) -u $(file2) $(file1) 2>/dev/null", "useshell");
-    DEBUG.!no_difference.!has_unified_diff::
+    DEBUG.check_ready.!no_difference.!has_unified_diff::
         "diffu" string => execresult("$(G.diff) -c $(file2) $(file1) 2>/dev/null", "useshell");
 
 classes:
@@ -124,7 +124,8 @@ classes:
         "$(G.diff) $(G.testfile).default-xml-check-diff-1 $(G.testfile).default-xml-check-diff-2 >/dev/null 2>/dev/null",
         "useshell");
 
-        "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+    "expected_difference" expression => strcmp("$(expected_difference)", "yes");
+    "check_ready" expression => "any";
 
 commands:
     "$(G.cwd)/xml-c14nize $(file1) > $(G.testfile).default-xml-check-diff-1"
@@ -134,16 +135,16 @@ commands:
       classes => default_cf_sub_if_ok("c14n_files_created");
 
 reports:
-    no_difference.!expected_difference::
+    check_ready.no_difference.!expected_difference::
     "$(test) Pass";
-    !no_difference.expected_difference::
+    check_ready.!no_difference.expected_difference::
     "$(test) Pass";
-    !no_difference.!expected_difference::
+    check_ready.!no_difference.!expected_difference::
     "$(test) FAIL";
-    no_difference.expected_difference::
+    check_ready.no_difference.expected_difference::
     "$(test) FAIL";
 
-    DEBUG.!no_difference.!expected_difference::
+    DEBUG.check_ready.!no_difference.!expected_difference::
         "$(file1) and $(file2) differ:";
         "$(file1): <$(file1r)>";
         "$(file2): <$(file2r)>";
@@ -152,7 +153,7 @@ $(file1h)";
         "dump $(file2):
 $(file2h)";
         "$(diffu)";
-    DEBUG.no_difference.expected_difference::
+    DEBUG.check_ready.no_difference.expected_difference::
         "Contents of $(file1) and $(file) is the same.";
 }
 

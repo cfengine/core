@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "server_transform.h"
@@ -32,19 +31,22 @@
 #include "mod_access.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
-#include "logging.h"
 #include "scope.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "communication.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "cf-serverd-enterprise-stubs.h"
+#include "syslog_client.h"
+#include "verify_classes.h"
 
 #include "generic_agent.h" // HashControls
+
+#include <assert.h>
 
 typedef enum
 {
@@ -88,15 +90,15 @@ typedef enum
 } ServerControl;
 
 static void KeepContextBundles(EvalContext *ctx, Policy *policy);
-static void KeepServerPromise(EvalContext *ctx, Promise *pp);
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, void *param);
 static void InstallServerAuthPath(const char *path, Auth **list, Auth **listtop);
 static void KeepServerRolePromise(EvalContext *ctx, Promise *pp);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static Auth *GetAuthPath(const char *path, Auth *list);
 
-extern const BodySyntax CFS_CONTROLBODY[];
-extern const BodySyntax CF_REMROLE_BODIES[];
+extern const ConstraintSyntax CFS_CONTROLBODY[];
+extern const ConstraintSyntax CF_REMROLE_BODIES[];
 extern int COLLECT_INTERVAL;
 extern int COLLECT_WINDOW;
 extern bool SERVER_LISTEN;
@@ -526,12 +528,12 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
                 BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL);
+                ScopeAugment(ctx, bp, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -572,12 +574,12 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
                 BannerPromiseType(bp->name, sp->name, 0);
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
-                ScopeAugment(ctx, bp, NULL);
+                ScopeAugment(ctx, bp, NULL, NULL);
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepServerPromise);
+                    ExpandPromise(ctx, pp, KeepServerPromise, NULL);
                 }
 
                 EvalContextStackPopFrame(ctx);
@@ -590,9 +592,11 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepServerPromise(EvalContext *ctx, Promise *pp)
+static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
     char *sp = NULL;
+
+    assert(param == NULL);
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
@@ -612,7 +616,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp(pp->parent_promise_type->name, "classes") == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 

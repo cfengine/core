@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "files_operators.h"
@@ -41,22 +40,17 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "client_code.h"
 #include "pipes.h"
 #include "locks.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "files_repository.h"
 #include "files_lib.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #include <assert.h>
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
+int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp)
 {
     struct stat sb;
     char stamp[CF_BUFSIZE], saved[CF_BUFSIZE];
@@ -82,7 +76,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
             if (attr.copy.backup == BACKUP_OPTION_TIMESTAMP || attr.edits.backup == BACKUP_OPTION_TIMESTAMP)
             {
-                snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+                snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
                 strcat(saved, stamp);
             }
 
@@ -90,13 +84,13 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
             cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving file object %s to %s\n", from, saved);
 
-            if (cf_rename(from, saved) == -1)
+            if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
                 return false;
             }
 
-            if (ArchiveToRepository(saved, attr, pp))
+            if (ArchiveToRepository(saved, attr))
             {
                 unlink(saved);
             }
@@ -116,12 +110,12 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
             saved[0] = '\0';
             strcpy(saved, from);
 
-            snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&now_stamp)));
+            snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&now_stamp)));
             strcat(saved, stamp);
             strcat(saved, CF_SAVED);
             strcat(saved, ".dir");
 
-            if (cfstat(saved, &sb) != -1)
+            if (stat(saved, &sb) != -1)
             {
                 cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Couldn't save directory %s, since %s exists already\n", from,
                      saved);
@@ -129,9 +123,9 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
                 return false;
             }
 
-            if (cf_rename(from, saved) == -1)
+            if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, attr, "Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, "Can't rename %s to %s\n", from, saved);
                 return false;
             }
         }
@@ -142,7 +136,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp)
 
 /*********************************************************************/
 
-int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp)
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a)
 {
     struct stat statbuf;
     char new[CF_BUFSIZE], backup[CF_BUFSIZE];
@@ -165,9 +159,9 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     stamp_now = time((time_t *) NULL);
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "stat", pp, a, " !! Can no longer access file %s, which needed editing!\n", file);
+        CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Can no longer access file %s, which needed editing!\n", file);
         return false;
     }
 
@@ -175,7 +169,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (a.edits.backup == BACKUP_OPTION_TIMESTAMP)
     {
-        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(cf_ctime(&stamp_now)));
+        snprintf(stamp, CF_BUFSIZE, "_%jd_%s", (intmax_t) CFSTARTTIME, CanonifyName(ctime(&stamp_now)));
         strcat(backup, stamp);
     }
 
@@ -185,14 +179,14 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
     strcat(new, ".cf-after-edit");
     unlink(new);                /* Just in case of races */
 
-    if ((*callback)(ctx, new, file, param, a, pp) == false)
+    if ((*callback)(new, param) == false)
     {
         return false;
     }
 
-    if (cf_rename(file, backup) == -1)
+    if (rename(file, backup) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
+        CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
         return false;
     }
@@ -205,7 +199,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
     if (a.edits.backup != BACKUP_OPTION_NO_BACKUP)
     {
-        if (ArchiveToRepository(backup, a, pp))
+        if (ArchiveToRepository(backup, a))
         {
             unlink(backup);
         }
@@ -216,15 +210,15 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
         unlink(backup);
     }
 
-    if (cf_rename(new, file) == -1)
+    if (rename(new, file) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_rename", pp, a,
+        CfOut(OUTPUT_LEVEL_ERROR, "rename",
              " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
         return false;
     }
 
     mask = umask(0);
-    cf_chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
+    chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
     if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to restore file permissions for '%s'\n", file);
@@ -244,7 +238,7 @@ int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const cha
 
 /*********************************************************************/
 
-static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+static bool SaveItemListCallback(const char *dest_filename, void *param)
 {
     Item *liststart = param, *ip;
     FILE *fp;
@@ -252,30 +246,33 @@ static bool SaveItemListCallback(EvalContext *ctx, const char *dest_filename, co
     //saving list to file
     if ((fp = fopen(dest_filename, "w")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fopen", pp, a, "Couldn't write file %s after editing\n", dest_filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to open destination file %s for writing", dest_filename);
         return false;
     }
 
     for (ip = liststart; ip != NULL; ip = ip->next)
     {
-        fprintf(fp, "%s\n", ip->name);
+        if (fprintf(fp, "%s\n", ip->name) < 0)
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "fprintf", "Unable to write into destination file %s", dest_filename);
+            return false;
+        }
     }
 
     if (fclose(fp) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "fclose", pp, a, "Unable to close file while writing");
+        CfOut(OUTPUT_LEVEL_ERROR, "fclose", "Unable to close file %s after writing", dest_filename);
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited file %s \n", orig_filename);
     return true;
 }
 
 /*********************************************************************/
 
-int SaveItemListAsFile(EvalContext *ctx, Item *liststart, const char *file, Attributes a, Promise *pp)
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a)
 {
-    return SaveAsFile(ctx, &SaveItemListCallback, liststart, file, a, pp);
+    return SaveAsFile(&SaveItemListCallback, liststart, file, a);
 }
 
 // Some complex logic here to enable warnings of diffs to be given
@@ -377,7 +374,7 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
 
     CfDebug("CompareToFile(%s)\n", file);
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         return false;
     }

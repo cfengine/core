@@ -187,6 +187,7 @@ runtest() {
 
     # Prepare workdir
     WORKDIR=$BASE_WORKDIR/$FLATNAME
+    $GAINROOT rm -rf $WORKDIR
     mkdir -p $WORKDIR/bin $WORKDIR/tmp
     ln -sf $AGENT $WORKDIR/bin
     ln -sf $CF_PROMISES $WORKDIR/bin
@@ -225,7 +226,7 @@ $AGENT $VERBOSE -Kf \"$TEST\" -D AUTO,DEBUG 2>&1
       fi
     fi
 
-    if [ $RESULT = Pass ]; then
+    if [ "$RESULT" = "Pass" ]; then
       $GAINROOT rm -rf $WORKDIR
     fi
 

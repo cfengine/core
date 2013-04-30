@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -32,8 +31,7 @@
 #include "files_lib.h"
 #include "files_editxml.h"
 #include "item_lib.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "policy.h"
 
 /*****************************************************************************/
@@ -51,7 +49,6 @@ EditContext *NewEditContext(char *filename, Attributes a)
     ec = xcalloc(1, sizeof(EditContext));
 
     ec->filename = filename;
-    ec->empty_first = a.edits.empty_before_use;
 
     if (a.haveeditline)
     {
@@ -84,18 +81,13 @@ EditContext *NewEditContext(char *filename, Attributes a)
         ec->file_start = NULL;
     }
 
-    EDIT_MODEL = true;
     return ec;
 }
 
 /*****************************************************************************/
 
-void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise *pp)
+void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Promise *pp)
 {
-    Item *ip;
-
-    EDIT_MODEL = false;
-
     if (DONTDO || (a.transaction.action == cfa_warn))
     {
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
@@ -117,7 +109,14 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                SaveItemListAsFile(ctx, ec->file_start, ec->filename, a, pp);
+                if (SaveItemListAsFile(ec->file_start, ec->filename, a))
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Edit file %s", ec->filename);
+                }
+                else
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "-> Unable to save file %s after editing", ec->filename);
+                }
             }
         }
 
@@ -133,7 +132,14 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
             }
             else
             {
-                SaveXmlDocAsFile(ctx, ec->xmldoc, ec->filename, a, pp);
+                if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s", ec->filename);
+                }
+                else
+                {
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Failed to edit XML file %s", ec->filename);
+                }
             }
             xmlFreeDoc(ec->xmldoc);
 #else
@@ -151,12 +157,6 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, Promise 
 
     if (ec != NULL)
     {
-        for (ip = ec->file_classes; ip != NULL; ip = ip->next)
-        {
-            EvalContextHeapAddSoft(ctx, ip->name, PromiseGetNamespace(pp));
-        }
-
-        DeleteItemList(ec->file_classes);
         DeleteItemList(ec->file_start);
     }
 }
@@ -172,7 +172,7 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 {
     struct stat statbuf;
 
-    if (cfstat(file, &statbuf) == -1)
+    if (stat(file, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
         return false;
@@ -213,18 +213,17 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp)
+bool SaveXmlCallback(const char *dest_filename, void *param)
 {
     xmlDocPtr doc = param;
 
     //saving xml to file
     if (xmlSaveFile(dest_filename, doc) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "xmlSaveFile", pp, a, "Failed to write xml document to file %s after editing\n", dest_filename);
+        CfOut(OUTPUT_LEVEL_ERROR, "xmlSaveFile", "Failed to write xml document to file %s after editing\n", dest_filename);
         return false;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s \n", orig_filename);
     return true;
 }
 #endif
@@ -232,8 +231,8 @@ bool SaveXmlCallback(EvalContext *ctx, const char *dest_filename, const char *or
 /*********************************************************************/
 
 #ifdef HAVE_LIBXML2
-int SaveXmlDocAsFile(EvalContext *ctx, xmlDocPtr doc, const char *file, Attributes a, Promise *pp)
+int SaveXmlDocAsFile(xmlDocPtr doc, const char *file, Attributes a)
 {
-    return SaveAsFile(ctx, &SaveXmlCallback, doc, file, a, pp);
+    return SaveAsFile(&SaveXmlCallback, doc, file, a);
 }
 #endif

@@ -31,8 +31,9 @@
   and its array dimension, in mod_common, in the manner shown here.
 */
 
-#include "cf3.defs.h"
 #include "mod_access.h"
+
+#include "syntax.h"
 
 /*
   Read this module file backwards, as dependencies have to be defined first -
@@ -46,29 +47,25 @@
   like in a body "sub-routine"
 */
 
-const BodySyntax CF_REMACCESS_BODIES[] =
+const ConstraintSyntax CF_REMACCESS_BODIES[] =
 {
-    {"admit", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to grant access to file objects"},
-    {"deny", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to deny access to file objects"},
-    {"maproot", DATA_TYPE_STRING_LIST, "", "List of host names or IP addresses to grant full read-privilege on the server"},
-    {"ifencrypted", DATA_TYPE_OPTION, CF_BOOL,
-     "true/false whether the current file access promise is conditional on the connection from the client being encrypted",
-     "false"},
-    {"resource_type", DATA_TYPE_OPTION, "path,literal,context,query,variable",
-     "The type of object being granted access (the default grants access to files)"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("deny", "", "List of host names or IP addresses to deny access to file objects", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
 };
 
-const BodySyntax CF_REMROLE_BODIES[] =
+const ConstraintSyntax CF_REMROLE_BODIES[] =
 {
-    {"authorize", DATA_TYPE_STRING_LIST, "",
-     "List of public-key user names that are allowed to activate the promised class during remote agent activation"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("authorize", "", "List of public-key user names that are allowed to activate the promised class during remote agent activation", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
 };
 
 const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[] =
 {
-    {"server", "access", CF_REMACCESS_BODIES},
-    {"server", "roles", CF_REMROLE_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("server", "roles", CF_REMROLE_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNewNull()
 };

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_databases.h"
@@ -29,14 +28,15 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "locks.h"
 #include "cf_sql.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "env_context.h"
+#include "ornaments.h"
 
 static int CheckDatabaseSanity(Attributes a, Promise *pp);
 static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp);
@@ -64,7 +64,7 @@ void VerifyDatabasePromises(EvalContext *ctx, Promise *pp)
 {
     Attributes a = { {0} };
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return;
     }
@@ -108,7 +108,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     snprintf(lockname, CF_BUFSIZE - 1, "db-%s", pp->promiser);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -397,7 +397,7 @@ static int CheckDatabaseSanity(Attributes a, Promise *pp)
     if ((a.database.operation)
         && ((strcmp(a.database.operation, "delete") == 0) || (strcmp(a.database.operation, "drop") == 0)))
     {
-        if (pp->ref == NULL)
+        if (pp->comment == NULL)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
                   "When specifying a delete/drop from an SQL database you must add a comment. Take a backup of the database before making this change. This is a highly destructive operation.");

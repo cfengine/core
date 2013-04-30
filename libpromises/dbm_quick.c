@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -31,7 +30,8 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "string_lib.h"
 
 #ifdef QDB
 # include <depot.h>
@@ -127,7 +127,7 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
         if (dprepair(filename))
         {
-            CfOut(OUTPUT_LEVEL_LOG, "", "Successfully repaired database \"%s\"", filename);
+            CfOut(OUTPUT_LEVEL_INFORM, "", "Successfully repaired database \"%s\"", filename);
         }
         else
         {
@@ -351,6 +351,11 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
     Unlock(db);
     /* Cursor lock was obtained in DBPrivOpenCursor */
     UnlockCursor(db);
+}
+
+char *DBPrivDiagnose(const char *dbpath)
+{
+    return StringFormat("Unable to diagnose QuickDB file (not implemented) for '%s'", dbpath);
 }
 
 #endif

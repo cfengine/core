@@ -1,6 +1,7 @@
 sbin_PROGRAMS = cf-agent
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS) \
 	$(LIBVIRT_CPPFLAGS) \
 	$(POSTGRESQL_CPPFLAGS) \
@@ -38,21 +39,23 @@ LDADD += ../nova/libcfagent/libcfagent.la
 endif
 
 cf_agent_SOURCES = \
-	abstract_dir.c abstract_dir.h \
+        agent-diagnostics.c agent-diagnostics.h \
+        tokyo_check.c tokyo_check.h \
+        abstract_dir.c abstract_dir.h \
         cf-agent.c \
         cf_acl.c cf_acl.h \
         comparray.c comparray.h \
         acl_posix.c acl_posix.h \
         cf_sql.c cf_sql.h \
-        nfs.c nfs.h \
+        promiser_regex_resolver.c promiser_regex_resolver.h \
+        retcode.c retcode.h \
         verify_files.c verify_files.h \
         verify_files_utils.c verify_files_utils.h \
-	verify_files_hashes.c verify_files_hashes.h \
+        verify_files_hashes.c verify_files_hashes.h \
         verify_storage.c verify_storage.h \
         verify_exec.c verify_exec.h \
         verify_methods.c verify_methods.h \
         verify_databases.c verify_databases.h \
-        verify_outputs.c verify_outputs.h \
         verify_processes.c verify_processes.h \
         verify_services.c verify_services.h \
         verify_environments.c verify_environments.h \
@@ -67,6 +70,10 @@ cf_agent_SOURCES = \
         vercmp_internal.c vercmp_internal.h \
         vercmp.c vercmp.h \
         verify_packages.c verify_packages.h
+
+if !NT
+cf_agent_SOURCES += nfs.c nfs.h
+endif
 
 if !HAVE_NOVA
 cf_agent_SOURCES += cf-agent-enterprise-stubs.c cf-agent-enterprise-stubs.h

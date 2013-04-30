@@ -28,10 +28,10 @@
 #include "acl_posix.h"
 #include "promises.h"
 #include "files_names.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 #ifdef HAVE_ACL_H
 # include <acl.h>
@@ -349,7 +349,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action");
         }
 
     }
@@ -434,7 +434,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action");
             result = false;
         }
 
@@ -519,7 +519,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action\n");
+            ProgrammingError("Cfengine: internal error: illegal file action");
             result = false;
         }
 

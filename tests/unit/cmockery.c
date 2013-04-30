@@ -1808,7 +1808,7 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
 #endif // !_WIN32
     }
 
-    if (function_type == UNIT_TEST_FUNCTION_TYPE_TEST)
+    if (function_type == UNIT_TEST_FUNCTION_TYPE_TEST || function_type == UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE)
     {
         print_message("%s: Starting test\n", function_name);
     }
@@ -1816,7 +1816,15 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
     global_running_test = 1;
     if (setjmp(global_run_test_env) == 0)
     {
-        Function(state ? state : &current_state);
+        if (function_type == UNIT_TEST_FUNCTION_TYPE_TEST)
+        {
+            Function();
+        }
+        else
+        {
+            ((UnitTestFunctionWithState)Function)(state ? state : &current_state);
+        }
+
         fail_if_leftover_values(function_name);
 
         /* If this is a setup function then ignore any allocated blocks
@@ -1828,7 +1836,7 @@ int _run_test(const char *const function_name, const UnitTestFunction Function,
 
         global_running_test = 0;
 
-        if (function_type == UNIT_TEST_FUNCTION_TYPE_TEST)
+        if (function_type == UNIT_TEST_FUNCTION_TYPE_TEST || function_type == UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE)
         {
             print_message("%s: Test completed successfully.\n", function_name);
         }
@@ -1940,7 +1948,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
         TestState *current_TestState;
         const UnitTest *const test = &tests[current_test++];
 
-        if (!test->function)
+        if (!test->f.function)
         {
             continue;
         }
@@ -1948,6 +1956,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
         switch (test->function_type)
         {
         case UNIT_TEST_FUNCTION_TYPE_TEST:
+        case UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE:
             run_next_test = 1;
             break;
         case UNIT_TEST_FUNCTION_TYPE_SETUP:
@@ -1988,7 +1997,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             global_casename = casename;
             init_xml("");
             time(&time_case);
-            int failed = _run_test(test->name, test->function, current_state,
+            int failed = _run_test(test->name, test->f.function, current_state,
                                    test->function_type, test_check_point);
             strcpy(xmlfile, "xml_tmp_suite");
             time(&time_now);
@@ -2002,6 +2011,7 @@ int _run_tests(const UnitTest *const tests, const size_t number_of_tests, const 
             switch (test->function_type)
             {
             case UNIT_TEST_FUNCTION_TYPE_TEST:
+            case UNIT_TEST_FUNCTION_TYPE_TEST_WITH_STATE:
                 previous_test_failed = failed;
                 total_failed += failed;
                 tests_executed++;

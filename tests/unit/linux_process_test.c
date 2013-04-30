@@ -98,51 +98,51 @@ int close(int fd)
     return 0;
 }
 
-static void test_get_start_time_process1(ARG_UNUSED void **state)
+static void test_get_start_time_process1(void)
 {
     time_t t = GetProcessStartTime(1);
     assert_int_equal(t, 65535 / sysconf(_SC_CLK_TCK));
 }
 
 
-static void test_get_start_time_process2(ARG_UNUSED void **state)
+static void test_get_start_time_process2(void)
 {
     time_t t2 = GetProcessStartTime(2);
     assert_int_equal(t2, 100000 / sysconf(_SC_CLK_TCK));
 }
 
-static void test_get_start_time_process3(ARG_UNUSED void **state)
+static void test_get_start_time_process3(void)
 {
     time_t t3 = GetProcessStartTime(3);
     assert_int_equal(t3, PROCESS_START_TIME_UNKNOWN);
 }
 
-static void test_get_start_time_process666(ARG_UNUSED void **state)
+static void test_get_start_time_process666(void)
 {
     time_t t4 = GetProcessStartTime(666);
     assert_int_equal(t4, PROCESS_START_TIME_UNKNOWN);
 }
 
 
-static void test_get_state_process1(ARG_UNUSED void **state)
+static void test_get_state_process1(void)
 {
     ProcessState s = GetProcessState(1);
     assert_int_equal(s, PROCESS_STATE_RUNNING);
 }
 
-static void test_get_state_process2(ARG_UNUSED void **state)
+static void test_get_state_process2(void)
 {
     ProcessState s = GetProcessState(2);
     assert_int_equal(s, PROCESS_STATE_STOPPED);
 }
 
-static void test_get_state_process3(ARG_UNUSED void **state)
+static void test_get_state_process3(void)
 {
     ProcessState s = GetProcessState(3);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);
 }
 
-static void test_get_state_process666(ARG_UNUSED void **state)
+static void test_get_state_process666(void)
 {
     ProcessState s = GetProcessState(666);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);

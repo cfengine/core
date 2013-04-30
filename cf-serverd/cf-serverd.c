@@ -25,8 +25,7 @@
 #include "cf-serverd-functions.h"
 
 #include "server_transform.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 
 int main(int argc, char *argv[])
 {
@@ -43,18 +42,17 @@ int main(int argc, char *argv[])
     }
     else if (config->tty_interactive)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
         exit(EXIT_FAILURE);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     KeepPromises(ctx, policy, config);

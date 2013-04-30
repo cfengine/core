@@ -79,6 +79,8 @@ typedef struct
     } data;
 } StackFrame;
 
+TYPED_SET_DECLARE(Promise, const Promise *)
+
 struct EvalContext_
 {
     StringSet *heap_soft;
@@ -90,6 +92,8 @@ struct EvalContext_
     Seq *stack;
 
     StringSet *dependency_handles;
+
+    PromiseSet *promises_done;
 };
 
 EvalContext *EvalContextNew(void);
@@ -137,6 +141,11 @@ void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
 
+/**
+ * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed
+ */
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx);
+
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type);
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out);
 
@@ -149,11 +158,27 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 bool EvalProcessResult(const char *process_result, StringSet *proc_attr);
 bool EvalFileResult(const char *file_result, StringSet *leaf_attr);
 
+/* - Promise status */
+bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp);
+
+/* Those two functions are compromises: there are pieces of code which
+ * manipulate promise 'doneness', and it's not simple to figure out how to
+ * properly reimplement it. So for the time being, let particular pieces of code
+ * continue to manipulate the state.
+ */
+void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp);
+void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp);
+
 /* - Rest - */
 int Abort(void);
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp);
 int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes);
 void MarkPromiseHandleDone(EvalContext *ctx, const Promise *pp);
 int MissingDependencies(EvalContext *ctx, const Promise *pp);
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...) FUNC_ATTR_PRINTF(7, 8);
+
+/* This function is temporarily exported. It needs to be made an detail of
+ * evaluator again, once variables promises are no longer specially handled */
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status);
+
 
 #endif

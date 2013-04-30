@@ -27,13 +27,9 @@
 #include "promises.h"
 #include "policy.h"
 #include "conversion.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "chflags.h"
-#include "logging.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "audit.h"
 
 static int CHECKSUMUPDATES;
 
@@ -436,12 +432,8 @@ FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
         PromiseRef(OUTPUT_LEVEL_ERROR, pp);
     }
 
-#ifdef __MINGW32__
-    p.owners = NovaWin_Rlist2SidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST));
-#else /* !__MINGW32__ */
     p.owners = Rlist2UidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST), pp);
     p.groups = Rlist2GidList((Rlist *) ConstraintGetRvalValue(ctx, "groups", pp, RVAL_TYPE_LIST), pp);
-#endif /* !__MINGW32__ */
 
     p.findertype = (char *) ConstraintGetRvalValue(ctx, "findertype", pp, RVAL_TYPE_SCALAR);
     p.rxdirs = PromiseGetConstraintAsBoolean(ctx, "rxdirs", pp);
@@ -977,13 +969,18 @@ ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *p
     a.expression = NULL;
     a.persistent = PromiseGetConstraintAsInt(ctx, "persistence", pp);
 
+    {
+        const char *context_scope = ConstraintGetRvalValue(ctx, "scope", pp, RVAL_TYPE_SCALAR);
+        a.scope = ContextScopeFromString(context_scope);
+    }
+
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
     {
         Constraint *cp = SeqAt(pp->conlist, i);
 
         for (int k = 0; CF_CLASSBODY[k].lval != NULL; k++)
         {
-            if (strcmp(cp->lval, "persistence") == 0)
+            if (strcmp(cp->lval, "persistence") == 0 || strcmp(cp->lval, "scope") == 0)
             {
                 continue;
             }

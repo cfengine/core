@@ -28,18 +28,15 @@
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "fncall.h"
 #include "locks.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
 #include "cf-agent-enterprise-stubs.h"
-
-#ifdef __MINGW32__
-#include "cf.nova.h"
-#endif
+#include "ornaments.h"
+#include "env_context.h"
 
 static int ServicesSanityChecks(Attributes a, Promise *pp);
 static void SetServiceDefaults(Attributes *a);
@@ -74,6 +71,8 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     case SERVICE_POLICY_STOP:
     case SERVICE_POLICY_DISABLE:
+    case SERVICE_POLICY_RESTART:
+    case SERVICE_POLICY_RELOAD:
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "",
@@ -158,17 +157,7 @@ void VerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 {
     CfLock thislock;
 
-    // allow to start Cfengine windows executor without license
-#ifdef __MINGW32__
-
-    if ((LICENSES == 0) && (strcmp(WINSERVICE_NAME, pp->promiser) != 0))
-    {
-        return;
-    }
-
-#endif
-
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -218,7 +207,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
         case SERVICE_POLICY_RELOAD:
             RlistAppendScalar(&args, pp->promiser);
-            RlistAppendScalar(&args, "restart");
+            RlistAppendScalar(&args, "reload");
             break;
             
         case SERVICE_POLICY_STOP:

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "files_interfaces.h"
@@ -34,40 +33,19 @@
 #include "item_lib.h"
 #include "vars.h"
 #include "matching.h"
-#include "cfstream.h"
 #include "client_code.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
-int cfstat(const char *path, struct stat *buf)
+int cf_lstat(char *file, struct stat *buf, FileCopy fc, AgentConnection *conn)
 {
-#ifdef __MINGW32__
-    return NovaWin_stat(path, buf);
-#else
-    return stat(path, buf);
-#endif
-}
-
-/*********************************************************************/
-
-int cf_lstat(char *file, struct stat *buf, FileCopy fc, Promise *pp)
-{
-    int res;
-
     if ((fc.servers == NULL) || (strcmp(fc.servers->item, "localhost") == 0))
     {
-        res = lstat(file, buf);
-        CheckForFileHoles(buf, pp);
-        return res;
+        return lstat(file, buf);
     }
     else
     {
-        return cf_remote_stat(file, buf, "link", fc.encrypt, pp);
+        return cf_remote_stat(file, buf, "link", fc.encrypt, conn);
     }
 }
 

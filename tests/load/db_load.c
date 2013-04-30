@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
-#include "cfstream.h"
-#include "logging.h"
 
 #include <assert.h>
 
@@ -35,6 +33,8 @@ static bool ReadWriteDataIsValid(char *data);
 static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
+
+void CfOut(OutputLevel level, const char *function, const char *fmt, ...);
 
 void *contend(void *param)
 {

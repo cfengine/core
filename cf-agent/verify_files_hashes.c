@@ -20,18 +20,26 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_files_hashes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "rlist.h"
 #include "policy.h"
 #include "client_code.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
 #include "files_hashes.h"
+#include "misc_lib.h"
+#include "env_context.h"
 
+/*
+ * Key format:
+ *
+ * 7 bytes    hash name, \0 padded at right
+ * 1 byte     \0
+ * N bytes    filename
+ */
 static char *NewIndexKey(char type, char *name, int *size)
 {
     char *chk_key;
@@ -123,7 +131,7 @@ static void DeleteHash(CF_DB *dbp, HashMethod type, char *name)
    to the database. Returns true if hashes do not match and also potentially
    updates database to the new value */
 
-int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], int warnlevel, HashMethod type,
+int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type,
                     Attributes attr, Promise *pp)
 {
     int i, size = 21;
@@ -149,16 +157,16 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             {
                 CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
 
-                CfOut(warnlevel, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
+                CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
-                if (pp->ref)
+                if (pp->comment)
                 {
-                    CfOut(warnlevel, "", "Preceding promise: %s", pp->ref);
+                    CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->comment);
                 }
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -166,7 +174,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 }
                 else
                 {
-                    cfPS(ctx, warnlevel, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
                 }
 
                 CloseDB(dbp);
@@ -181,7 +189,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, warnlevel, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
              FileHashName(type));
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
@@ -193,7 +201,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     }
 }
 
-int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
+int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
@@ -224,11 +232,11 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
     }
     else
     {
-        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 
-int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, Promise *pp)
+int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat *dstat, FileCopy fc, AgentConnection *conn)
 {
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
@@ -269,7 +277,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
     else
     {
         CfDebug("Using network checksum instead\n");
-        return CompareHashNet(file1, file2, fc.encrypt, pp);  /* client.c */
+        return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }
 
@@ -290,7 +298,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     if (path)
     {
-        if (cfstat(path, &statbuf) == -1)
+        if (stat(path, &statbuf) == -1)
         {
             DeleteDB(dbp, path);
         }
@@ -313,7 +321,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
     {
         char *obj = (char *) key + CF_INDEX_OFFSET;
 
-        if (cfstat(obj, &statbuf) == -1)
+        if (stat(obj, &statbuf) == -1)
         {
             if (attr.change.update)
             {
@@ -335,3 +343,70 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
     CloseDB(dbp);
 }
 
+
+static char FileStateToChar(FileState status)
+{
+    switch(status)
+    {
+    case FILE_STATE_NEW:
+        return 'N';
+
+    case FILE_STATE_REMOVED:
+        return 'R';
+
+    case FILE_STATE_CONTENT_CHANGED:
+        return 'C';
+
+    case FILE_STATE_STATS_CHANGED:
+        return 'S';
+
+    default:
+        ProgrammingError("Unhandled file status in switch: %d", status);
+    }
+}
+
+void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
+{
+    FILE *fp;
+    char fname[CF_BUFSIZE];
+    time_t now = time(NULL);
+    mode_t perm = 0600;
+    static char prevFile[CF_MAXVARSIZE] = { 0 };
+
+// we might get called twice..
+    if (strcmp(file, prevFile) == 0)
+    {
+        return;
+    }
+
+    strlcpy(prevFile, file, CF_MAXVARSIZE);
+
+/* This is inefficient but we don't want to lose any data */
+
+    snprintf(fname, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_FILECHANGE_NEW);
+    MapName(fname);
+
+#ifndef __MINGW32__
+    struct stat sb;
+    if (stat(fname, &sb) != -1)
+    {
+        if (sb.st_mode & (S_IWGRP | S_IWOTH))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
+        }
+    }
+#endif /* !__MINGW32__ */
+
+    if ((fp = fopen(fname, "a")) == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not write to the hash change log");
+        return;
+    }
+
+    const char *handle = PromiseID(pp);
+
+    fprintf(fp, "%ld,%s,%s,%c,%s\n", (long) now, handle, file, FileStateToChar(status), msg);
+    fclose(fp);
+
+    chmod(fname, perm);
+}

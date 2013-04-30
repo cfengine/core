@@ -1,19 +1,18 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,43 +20,36 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "env_context.h"
 
-#include "policy.h"
-#include "promises.h"
 #include "files_names.h"
 #include "logic_expressions.h"
-#include "dbm_api.h"
 #include "syntax.h"
 #include "item_lib.h"
-#include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
 #include "matching.h"
-#include "hashes.h"
-#include "attributes.h"
-#include "cfstream.h"
-#include "fncall.h"
 #include "string_lib.h"
-#include "logging.h"
-#include "rlist.h"
 #include "misc_lib.h"
 #include "assoc.h"
 #include "scope.h"
 #include "vars.h"
+#include "syslog_client.h"
+#include "audit.h"
+#include "logging.h"
+#include "logging_old.h"
+#include "promise_logging.h"
+#include "rlist.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #include <assert.h>
 
 /*****************************************************************************/
-
-static bool ValidClassName(const char *str);
 
 static bool EvalContextStackFrameContainsNegated(const EvalContext *ctx, const char *context);
 
@@ -140,351 +132,6 @@ static StackFrame *LastStackFrameBundle(const EvalContext *ctx)
         ProgrammingError("Unhandled stack frame type");
     }
 }
-
-static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
-{
-    int result_and = true;
-    int result_or = false;
-    int result_xor = 0;
-    int result = 0, total = 0;
-    char buffer[CF_MAXVARSIZE];
-    Rlist *rp;
-    double prob, cum = 0, fluct;
-    FnCall *fp;
-    Rval rval;
-
-    if (cp == NULL)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
-    }
-
-    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
-    {
-        return false;
-    }
-
-    if (pp->done)
-    {
-        return false;
-    }
-
-    if (IsDefinedClass(ctx, pp->promiser, PromiseGetNamespace(pp)))
-    {
-        if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
-            EvalContextHeapPersistentRemove(pp->promiser);
-        }
-        return false;
-    }
-
-    switch (cp->rval.type)
-    {
-    case RVAL_TYPE_FNCALL:
-
-        fp = (FnCall *) cp->rval.item;  /* Special expansion of functions for control, best effort only */
-        FnCallResult res = FnCallEvaluate(ctx, fp, pp);
-
-        FnCallDestroy(fp);
-        cp->rval = res.rval;
-        break;
-
-    case RVAL_TYPE_LIST:
-        for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-        {
-            rval = EvaluateFinalRval(ctx, "this", (Rval) {rp->item, rp->type}, true, pp);
-            RvalDestroy((Rval) {rp->item, rp->type});
-            rp->item = rval.item;
-            rp->type = rval.type;
-        }
-        break;
-
-    default:
-
-        rval = ExpandPrivateRval(ctx, "this", cp->rval);
-        RvalDestroy(cp->rval);
-        cp->rval = rval;
-        break;
-    }
-
-    if (strcmp(cp->lval, "expression") == 0)
-    {
-        if (cp->rval.type != RVAL_TYPE_SCALAR)
-        {
-            return false;
-        }
-
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    if (strcmp(cp->lval, "not") == 0)
-    {
-        if (cp->rval.type != RVAL_TYPE_SCALAR)
-        {
-            return false;
-        }
-
-        if (IsDefinedClass(ctx, (char *) cp->rval.item, PromiseGetNamespace(pp)))
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-
-// Class selection
-
-    if (strcmp(cp->lval, "select_class") == 0)
-    {
-        char splay[CF_MAXVARSIZE];
-        int i, n;
-        double hash;
-
-        total = 0;
-
-        for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-        {
-            total++;
-        }
-
-        if (total == 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! No classes to select on RHS");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-            return false;
-        }
-
-        snprintf(splay, CF_MAXVARSIZE, "%s+%s+%ju", VFQNAME, VIPADDRESS, (uintmax_t)getuid());
-        hash = (double) OatHash(splay, CF_HASHTABLESIZE);
-        n = (int) (total * hash / (double) CF_HASHTABLESIZE);
-
-        for (rp = (Rlist *) cp->rval.item, i = 0; rp != NULL; rp = rp->next, i++)
-        {
-            if (i == n)
-            {
-                EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
-                return true;
-            }
-        }
-    }
-
-// Class distributions
-
-    if (strcmp(cp->lval, "dist") == 0)
-    {
-        for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-        {
-            result = IntFromString(rp->item);
-
-            if (result < 0)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Non-positive integer in class distribution");
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-                return false;
-            }
-
-            total += result;
-        }
-
-        if (total == 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! An empty distribution was specified on RHS");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-            return false;
-        }
-    }
-
-    fluct = drand48();          /* Get random number 0-1 */
-    cum = 0.0;
-
-/* If we get here, anything remaining on the RHS must be a clist */
-
-    if (cp->rval.type != RVAL_TYPE_LIST)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        return true;
-    }
-
-    for (rp = (Rlist *) cp->rval.item; rp != NULL; rp = rp->next)
-    {
-        if (rp->type != RVAL_TYPE_SCALAR)
-        {
-            return false;
-        }
-
-        result = IsDefinedClass(ctx, (char *) (rp->item), PromiseGetNamespace(pp));
-
-        result_and = result_and && result;
-        result_or = result_or || result;
-        result_xor ^= result;
-
-        if (total > 0)          // dist class
-        {
-            prob = ((double) IntFromString(rp->item)) / ((double) total);
-            cum += prob;
-
-            if ((fluct < cum) || rp->next == NULL)
-            {
-                snprintf(buffer, CF_MAXVARSIZE - 1, "%s_%s", pp->promiser, (char *) rp->item);
-                *(pp->donep) = true;
-
-                if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
-                {
-                    EvalContextHeapAddSoft(ctx, buffer, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    EvalContextStackFrameAddSoft(ctx, buffer);
-                }
-
-                CfDebug(" ?? \'Strategy\' distribution class interval -> %s\n", buffer);
-                return true;
-            }
-        }
-    }
-
-// Class combinations
-
-    if (strcmp(cp->lval, "or") == 0)
-    {
-        return result_or;
-    }
-
-    if (strcmp(cp->lval, "xor") == 0)
-    {
-        return (result_xor == 1) ? true : false;
-    }
-
-    if (strcmp(cp->lval, "and") == 0)
-    {
-        return result_and;
-    }
-
-    return false;
-}
-
-/*******************************************************************/
-
-void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
-{
-    Attributes a;
-
-    a = GetClassContextAttributes(ctx, pp);
-
-    if (!FullTextMatch("[a-zA-Z0-9_]+", pp->promiser))
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Class identifier \"%s\" contains illegal characters - canonifying", pp->promiser);
-        snprintf(pp->promiser, strlen(pp->promiser) + 1, "%s", CanonifyName(pp->promiser));
-    }
-
-    if (a.context.nconstraints == 0)
-    {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "No constraints for class promise %s", pp->promiser);
-        return;
-    }
-
-    if (a.context.nconstraints > 1)
-    {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
-        return;
-    }
-
-// If this is a common bundle ...
-
-    if (strcmp(PromiseGetBundle(pp)->type, "common") == 0)
-    {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
-        {
-            {
-                char *sp = NULL;
-                if (VarClassExcluded(ctx, pp, &sp))
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-                    return;
-                }
-            }
-
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining additional global class %s\n", pp->promiser);
-
-            if (!ValidClassName(pp->promiser))
-            {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
-            }
-            else
-            {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit global class %s\n", pp->promiser);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-            }
-        }
-
-        /* These are global and loaded once */
-        /* *(pp->donep) = true; */
-
-        return;
-    }
-
-// If this is some other kind of bundle (else here??)
-
-    if (strcmp(PromiseGetBundle(pp)->type, CF_AGENTTYPES[THIS_AGENT_TYPE]) == 0 || FullTextMatch("edit_.*", PromiseGetBundle(pp)->type))
-    {
-        if (EvalClassExpression(ctx, a.context.expression, pp))
-        {
-            if (!ValidClassName(pp->promiser))
-            {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a,
-                     " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
-            }
-            else
-            {
-                if (a.context.persistent > 0)
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
-                          a.context.persistent);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                          " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
-                    EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
-                }
-                else
-                {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit local bundle class %s\n", pp->promiser);
-                    EvalContextStackFrameAddSoft(ctx, pp->promiser);
-                }
-            }
-        }
-
-        // Private to bundle, can be reloaded
-
-        *(pp->donep) = false;
-        return;
-    }
-}
-
-/*******************************************************************/
 
 void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *ns)
 {
@@ -702,177 +349,6 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     }
 }
 
-/**********************************************************************/
-/* Utilities */
-/**********************************************************************/
-
-/* Return expression with error position highlighted. Result is on the heap. */
-
-static char *HighlightExpressionError(const char *str, int position)
-{
-    char *errmsg = xmalloc(strlen(str) + 3);
-    char *firstpart = xstrndup(str, position);
-    char *secondpart = xstrndup(str + position, strlen(str) - position);
-
-    sprintf(errmsg, "%s->%s", firstpart, secondpart);
-
-    free(secondpart);
-    free(firstpart);
-
-    return errmsg;
-}
-
-/**********************************************************************/
-/* Debugging output */
-
-static void IndentL(int level)
-{
-    int i;
-
-    if (level > 0)
-    {
-        putc('\n', stderr);
-        for (i = 0; i < level; ++i)
-        {
-            putc(' ', stderr);
-        }
-    }
-}
-
-/**********************************************************************/
-
-static int IncIndent(int level, int inc)
-{
-    if (level < 0)
-    {
-        return -level + inc;
-    }
-    else
-    {
-        return level + inc;
-    }
-}
-
-/**********************************************************************/
-
-static void EmitStringExpression(StringExpression *e, int level)
-{
-    if (!e)
-    {
-        return;
-    }
-
-    switch (e->op)
-    {
-    case CONCAT:
-        IndentL(level);
-        fputs("(concat ", stderr);
-        EmitStringExpression(e->val.concat.lhs, -IncIndent(level, 8));
-        EmitStringExpression(e->val.concat.rhs, IncIndent(level, 8));
-        fputs(")", stderr);
-        break;
-    case LITERAL:
-        IndentL(level);
-        fprintf(stderr, "\"%s\"", e->val.literal.literal);
-        break;
-    case VARREF:
-        IndentL(level);
-        fputs("($ ", stderr);
-        EmitStringExpression(e->val.varref.name, -IncIndent(level, 3));
-        break;
-    default:
-        ProgrammingError("Unknown type of string expression: %d\n", e->op);
-    }
-}
-
-/**********************************************************************/
-
-static void EmitExpression(Expression *e, int level)
-{
-    if (!e)
-    {
-        return;
-    }
-
-    switch (e->op)
-    {
-    case OR:
-    case AND:
-        IndentL(level);
-        fprintf(stderr, "(%s ", e->op == OR ? "|" : "&");
-        EmitExpression(e->val.andor.lhs, -IncIndent(level, 3));
-        EmitExpression(e->val.andor.rhs, IncIndent(level, 3));
-        fputs(")", stderr);
-        break;
-    case NOT:
-        IndentL(level);
-        fputs("(- ", stderr);
-        EmitExpression(e->val.not.arg, -IncIndent(level, 3));
-        fputs(")", stderr);
-        break;
-    case EVAL:
-        IndentL(level);
-        fputs("(eval ", stderr);
-        EmitStringExpression(e->val.eval.name, -IncIndent(level, 6));
-        fputs(")", stderr);
-        break;
-    default:
-        ProgrammingError("Unknown logic expression type: %d\n", e->op);
-    }
-}
-
-/*****************************************************************************/
-/* Syntax-checking and evaluating various expressions */
-/*****************************************************************************/
-
-static void EmitParserError(const char *str, int position)
-{
-    char *errmsg = HighlightExpressionError(str, position);
-
-    yyerror(errmsg);
-    free(errmsg);
-}
-
-/**********************************************************************/
-
-/* To be used from parser only (uses yyerror) */
-void ValidateClassSyntax(const char *str)
-{
-    ParseResult res = ParseExpression(str, 0, strlen(str));
-
-    if (DEBUG)
-    {
-        EmitExpression(res.result, 0);
-        putc('\n', stderr);
-    }
-
-    if (res.result)
-    {
-        FreeExpression(res.result);
-    }
-
-    if (!res.result || res.position != strlen(str))
-    {
-        EmitParserError(str, res.position);
-    }
-}
-
-/**********************************************************************/
-
-static bool ValidClassName(const char *str)
-{
-    ParseResult res = ParseExpression(str, 0, strlen(str));
-
-    if (res.result)
-    {
-        FreeExpression(res.result);
-    }
-
-    return res.result && res.position == strlen(str);
-}
-
-/**********************************************************************/
-
 typedef struct
 {
     const EvalContext *ctx;
@@ -961,10 +437,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
     if (!res.result)
     {
-        char *errexpr = HighlightExpressionError(context, res.position);
-
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", errexpr);
-        free(errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", context);
         return false;
     }
     else
@@ -1003,10 +476,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
     if (!res.result)
     {
-        char *errexpr = HighlightExpressionError(expr, res.position);
-
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", errexpr);
-        free(errexpr);
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", expr);
         return false;           /* FIXME: return error */
     }
     else
@@ -1334,6 +804,18 @@ static void StackFrameDestroy(StackFrame *frame)
     }
 }
 
+static unsigned PointerHashFn(const void *p, unsigned int max)
+{
+    return ((unsigned)(uintptr_t)p) % max;
+}
+
+static bool PointerEqualFn(const void *key1, const void *key2)
+{
+    return key1 == key2;
+}
+
+TYPED_SET_DEFINE(Promise, const Promise *, &PointerHashFn, &PointerEqualFn, NULL)
+
 EvalContext *EvalContextNew(void)
 {
     EvalContext *ctx = xmalloc(sizeof(EvalContext));
@@ -1347,6 +829,8 @@ EvalContext *EvalContextNew(void)
     ctx->stack = SeqNew(10, StackFrameDestroy);
 
     ctx->dependency_handles = StringSetNew();
+
+    ctx->promises_done = PromiseSetNew();
 
     return ctx;
 }
@@ -1362,8 +846,11 @@ void EvalContextDestroy(EvalContext *ctx)
         DeleteItemList(ctx->heap_abort_current_bundle);
 
         SeqDestroy(ctx->stack);
+        ScopeDeleteAll();
 
         StringSetDestroy(ctx->dependency_handles);
+
+        PromiseSetDestroy(ctx->promises_done);
     }
 }
 
@@ -1673,53 +1160,53 @@ StringSetIterator EvalContextStackFrameIteratorSoft(const EvalContext *ctx)
     return StringSetIteratorInit(frame->data.bundle.contexts);
 }
 
+const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
+{
+    for (int i = SeqLength(ctx->stack) - 1; i >= 0; --i)
+    {
+        StackFrame *st = SeqAt(ctx->stack, i);
+        if (st->type == STACK_FRAME_TYPE_PROMISE)
+        {
+            return st->data.promise.owner;
+        }
+
+        if (st->type == STACK_FRAME_TYPE_PROMISE_ITERATION)
+        {
+            return st->data.promise_iteration.owner;
+        }
+    }
+
+    return NULL;
+}
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
 
-    Scope *ptr;
-    const Rlist *rp;
-    CfAssoc *assoc;
-
-    if (rval.type == RVAL_TYPE_SCALAR)
-    {
-        CfDebug("AddVariableHash(%s.%s=%s (%s) rtype=%c)\n", lval.scope, lval.lval, (const char *) rval.item, CF_DATATYPES[type],
-                rval.type);
-    }
-    else
-    {
-        CfDebug("AddVariableHash(%s.%s=(list) (%s) rtype=%c)\n", lval.scope, lval.lval, CF_DATATYPES[type], rval.type);
-    }
-
     if (lval.lval == NULL || lval.scope == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "scope.value = %s.%s", lval.scope, lval.lval);
-        ProgrammingError("Bad variable or scope in a variable assignment, should not happen - forgotten to register a function call in fncall.c?");
+        ProgrammingError("Bad variable or scope in a variable assignment. scope.value = %s.%s", lval.scope, lval.lval);
     }
 
     if (rval.item == NULL)
     {
-        CfDebug("No value to assignment - probably a parameter in an unused bundle/body\n");
         return false;
     }
 
     if (strlen(lval.lval) > CF_MAXVARSIZE)
     {
-        char *lval_str = VarRefToString(lval);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Variable %s cannot be added because its length exceeds the maximum length allowed: %d", lval_str, CF_MAXVARSIZE);
+        char *lval_str = VarRefToString(lval, true);
+        Log(LOG_LEVEL_ERR, "Variable '%s'' cannot be added because its length exceeds the maximum length allowed '%d' characters", lval_str, CF_MAXVARSIZE);
         free(lval_str);
         return false;
     }
 
-/* If we are not expanding a body template, check for recursive singularities */
-
+    // If we are not expanding a body template, check for recursive singularities
     if (strcmp(lval.scope, "body") != 0)
     {
         switch (rval.type)
         {
         case RVAL_TYPE_SCALAR:
-
             if (StringContainsVar((char *) rval.item, lval.lval))
             {
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
@@ -1729,10 +1216,9 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             break;
 
         case RVAL_TYPE_LIST:
-
-            for (rp = rval.item; rp != NULL; rp = rp->next)
+            for (const Rlist *rp = rval.item; rp != NULL; rp = rp->next)
             {
-                if (StringContainsVar((char *) rp->item, lval.lval))
+                if (StringContainsVar(rp->item, lval.lval))
                 {
                     CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval.lval);
                     return false;
@@ -1744,12 +1230,16 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             break;
         }
     }
-
-    ptr = ScopeGet(lval.scope);
-    if (!ptr)
+    else
     {
-        ptr = ScopeNew(lval.scope);
-        if (!ptr)
+        assert(STACK_FRAME_TYPE_BODY == LastStackFrame(ctx, 0)->type);
+    }
+
+    Scope *put_scope = ScopeGet(lval.scope);
+    if (!put_scope)
+    {
+        put_scope = ScopeNew(lval.scope);
+        if (!put_scope)
         {
             return false;
         }
@@ -1760,10 +1250,11 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
     if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
     {
         Rlist *listvars = NULL;
+        Rlist *scalars = NULL; // TODO what do we do with scalars?
 
         if (ScopeGetCurrent() && strcmp(ScopeGetCurrent()->scope, "this") != 0)
         {
-            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, rval);
+            MapIteratorsFromRval(ctx, ScopeGetCurrent()->scope, &listvars, &scalars, rval);
 
             if (listvars != NULL)
             {
@@ -1772,51 +1263,42 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             }
 
             RlistDestroy(listvars);
+            RlistDestroy(scalars);
         }
     }
 
-    assoc = HashLookupElement(ptr->hashtable, lval.lval);
+    // FIX: lval is stored with array params as part of the lval for legacy reasons.
+    char *final_lval = VarRefToString(lval, false);
 
+    CfAssoc *assoc = HashLookupElement(put_scope->hashtable, final_lval);
     if (assoc)
     {
-        if (CompareVariableValue(rval, assoc) == 0)
-        {
-            /* Identical value, keep as is */
-        }
-        else
+        if (CompareVariableValue(rval, assoc) != 0)
         {
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, rval.type))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Duplicate selection of value for variable \"%s\" in scope %s", lval.lval, ptr->scope);
+                Log(LOG_LEVEL_INFO, "Replaced value of variable '%s' in scope '%s'", lval.lval, put_scope->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
             assoc->dtype = type;
-            CfDebug("Stored \"%s\" in context %s\n", lval.lval, lval.scope);
         }
     }
     else
     {
-        if (!HashInsertElement(ptr->hashtable, lval.lval, rval, type))
+        if (!HashInsertElement(put_scope->hashtable, final_lval, rval, type))
         {
             ProgrammingError("Hash table is full");
         }
     }
 
-    CfDebug("Added Variable %s in scope %s with value (omitted)\n", lval.lval, lval.scope);
+    free(final_lval);
     return true;
 }
 
 bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
 {
-    Scope *ptr = NULL;
-    char scopeid[CF_MAXVARSIZE], vlval[CF_MAXVARSIZE], sval[CF_MAXVARSIZE];
-    char expbuf[CF_EXPANDSIZE];
-    CfAssoc *assoc;
-
-    CfDebug("GetVariable(%s,%s) type=(to be determined)\n", lval.scope, lval.lval);
-
     if (lval.lval == NULL)
     {
         if (rval_out)
@@ -1830,20 +1312,20 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
+    char expanded_lval[CF_MAXVARSIZE] = "";
     if (!IsExpandable(lval.lval))
     {
-        strncpy(sval, lval.lval, CF_MAXVARSIZE - 1);
+        strncpy(expanded_lval, lval.lval, CF_MAXVARSIZE - 1);
     }
     else
     {
-        if (ExpandScalar(ctx, lval.scope, lval.lval, expbuf))
+        char buffer[CF_EXPANDSIZE] = "";
+        if (ExpandScalar(ctx, lval.scope, lval.lval, buffer))
         {
-            strncpy(sval, expbuf, CF_MAXVARSIZE - 1);
+            strncpy(expanded_lval, buffer, CF_MAXVARSIZE - 1);
         }
         else
         {
-            /* C type system does not allow us to express the fact that returned
-               value may contain immutable string. */
             if (rval_out)
             {
                 *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1852,37 +1334,39 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
             {
                 *type_out = DATA_TYPE_NONE;
             }
-            CfDebug("Couldn't expand array-like variable (%s) due to undefined dependencies\n", lval.lval);
             return false;
         }
     }
 
-    if (IsQualifiedVariable(sval))
+    Scope *get_scope = NULL;
+    char lookup_key[CF_MAXVARSIZE] = "";
     {
-        scopeid[0] = '\0';
-        sscanf(sval, "%[^.].%s", scopeid, vlval);
-        CfDebug("Variable identifier \"%s\" is prefixed with scope id \"%s\"\n", vlval, scopeid);
-        ptr = ScopeGet(scopeid);
-    }
-    else
-    {
-        strlcpy(vlval, sval, sizeof(vlval));
-        strlcpy(scopeid, lval.scope, sizeof(scopeid));
+        char scopeid[CF_MAXVARSIZE] = "";
+
+        if (IsQualifiedVariable(expanded_lval))
+        {
+            scopeid[0] = '\0';
+            sscanf(expanded_lval, "%[^.].", scopeid);
+            strlcpy(lookup_key, expanded_lval + strlen(scopeid) + 1, sizeof(lookup_key));
+        }
+        else
+        {
+            strlcpy(lookup_key, expanded_lval, sizeof(lookup_key));
+            strlcpy(scopeid, lval.scope, sizeof(scopeid));
+        }
+
+        if (lval.ns != NULL && strchr(scopeid, CF_NS) == NULL && strcmp(lval.ns, "default") != 0)
+        {
+            char buffer[CF_EXPANDSIZE] = "";
+            sprintf(buffer, "%s%c%s", lval.ns, CF_NS, scopeid);
+            strlcpy(scopeid, buffer, sizeof(scopeid));
+        }
+
+        get_scope = ScopeGet(scopeid);
     }
 
-    if (ptr == NULL)
+    if (!get_scope)
     {
-        /* Assume current scope */
-        strcpy(vlval, lval.lval);
-        ptr = ScopeGet(scopeid);
-    }
-
-    if (ptr == NULL)
-    {
-        CfDebug("Scope \"%s\" for variable \"%s\" does not seem to exist\n", scopeid, vlval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-        // TODO: returning the same lval as was past in?
         if (rval_out)
         {
             *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1894,16 +1378,9 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         return false;
     }
 
-    CfDebug("GetVariable(%s,%s): using scope '%s' for variable '%s'\n", scopeid, vlval, ptr->scope, vlval);
-
-    assoc = HashLookupElement(ptr->hashtable, vlval);
-
-    if (assoc == NULL)
+    CfAssoc *assoc = HashLookupElement(get_scope->hashtable, lookup_key);
+    if (!assoc)
     {
-        CfDebug("No such variable found %s.%s\n\n", scopeid, lval.lval);
-        /* C type system does not allow us to express the fact that returned
-           value may contain immutable string. */
-
         if (rval_out)
         {
             *rval_out = (Rval) {(char *) lval.lval, RVAL_TYPE_SCALAR };
@@ -1914,14 +1391,6 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
         }
         return false;
     }
-
-    CfDebug("return final variable type=%s, value={\n", CF_DATATYPES[assoc->dtype]);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, assoc->rval);
-    }
-    CfDebug("}\n");
 
     if (rval_out)
     {
@@ -1939,4 +1408,446 @@ bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out,
 bool EvalContextVariableControlCommonGet(const EvalContext *ctx, CommonControl lval, Rval *rval_out)
 {
     return EvalContextVariableGet(ctx, (VarRef) { NULL, "control_common", CFG_CONTROLBODY[lval].lval }, rval_out, NULL);
+}
+
+bool EvalContextPromiseIsDone(const EvalContext *ctx, const Promise *pp)
+{
+    return PromiseSetContains(ctx->promises_done, pp);
+}
+
+void EvalContextMarkPromiseDone(EvalContext *ctx, const Promise *pp)
+{
+    PromiseSetAdd(ctx->promises_done, pp->org_pp);
+}
+
+void EvalContextMarkPromiseNotDone(EvalContext *ctx, const Promise *pp)
+{
+    PromiseSetRemove(ctx->promises_done, pp->org_pp);
+}
+
+
+
+/* cfPS and associated machinery */
+
+
+
+/*
+ * Internal functions temporarily used from logging implementation
+ */
+
+static const char *NO_STATUS_TYPES[] =
+    { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+static const char *NO_LOG_TYPES[] =
+    { "vars", "classes", "insert_lines", "delete_lines", "replace_patterns", "field_edits", NULL };
+
+/*
+ * Vars, classes and similar promises which do not affect the system itself (but
+ * just support evalution) do not need to be counted as repaired/failed, as they
+ * may change every iteration and introduce lot of churn in reports without
+ * giving any value.
+ */
+static bool IsPromiseValuableForStatus(const Promise *pp)
+{
+    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_STATUS_TYPES));
+}
+
+/*
+ * Vars, classes and subordinate promises (like edit_line) do not need to be
+ * logged, as they exist to support other promises.
+ */
+
+static bool IsPromiseValuableForLogging(const Promise *pp)
+{
+    return pp && (pp->parent_promise_type->name != NULL) && (!IsStrIn(pp->parent_promise_type->name, NO_LOG_TYPES));
+}
+
+static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, bool persist, ContextStatePolicy policy, ContextScope context_scope)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        char *classname = xstrdup(rp->item);
+
+        CanonifyNameInPlace(classname);
+
+        if (EvalContextHeapContainsHard(ctx, classname))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            // TODO: ok.. but should we take any action? continue; maybe?
+        }
+
+        if (persist > 0)
+        {
+            if (context_scope != CONTEXT_SCOPE_NAMESPACE)
+            {
+                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
+            EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
+            EvalContextHeapAddSoft(ctx, classname, ns);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
+
+            switch (context_scope)
+            {
+            case CONTEXT_SCOPE_BUNDLE:
+                EvalContextStackFrameAddSoft(ctx, classname);
+                break;
+
+            default:
+            case CONTEXT_SCOPE_NAMESPACE:
+                EvalContextHeapAddSoft(ctx, classname, ns);
+                break;
+            }
+        }
+    }
+}
+
+static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
+{
+    for (const Rlist *rp = list; rp != NULL; rp = rp->next)
+    {
+        if (CheckParseContext((char *) rp->item, CF_IDRANGE) != SYNTAX_TYPE_MATCH_OK)
+        {
+            return; // TODO: interesting course of action, but why is the check there in the first place?
+        }
+
+        if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+                  RlistScalarValue(rp));
+        }
+
+        const char *string = (char *) (rp->item);
+
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+
+        EvalContextHeapPersistentRemove(string);
+
+        EvalContextHeapRemoveSoft(ctx, CanonifyName(string));
+
+        EvalContextStackFrameAddNegated(ctx, CanonifyName(string));
+    }
+}
+
+#ifdef HAVE_NOVA
+static void TrackTotalCompliance(PromiseResult status, const Promise *pp)
+{
+    char nova_status;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        nova_status = 'r';
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        nova_status = 'n';
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        nova_status = 'c';
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to TrackTotalCompliance", status);
+    }
+
+    EnterpriseTrackTotalCompliance(pp, nova_status);
+}
+#endif
+
+
+static void SetPromiseOutcomeClasses(PromiseResult status, EvalContext *ctx, const Promise *pp, DefineClasses dc)
+{
+    Rlist *add_classes = NULL;
+    Rlist *del_classes = NULL;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        add_classes = dc.change;
+        del_classes = dc.del_change;
+        break;
+
+    case PROMISE_RESULT_TIMEOUT:
+        add_classes = dc.timeout;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_FAIL:
+        add_classes = dc.failure;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_DENIED:
+        add_classes = dc.denied;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_INTERRUPTED:
+        add_classes = dc.interrupt;
+        del_classes = dc.del_notkept;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        add_classes = dc.kept;
+        del_classes = dc.del_kept;
+        break;
+
+    default:
+        ProgrammingError("Unexpected status '%c' has been passed to SetPromiseOutcomeClasses", status);
+    }
+
+    AddAllClasses(ctx, PromiseGetNamespace(pp), add_classes, dc.persist, dc.timer, dc.scope);
+    DeleteAllClasses(ctx, del_classes);
+}
+
+static void UpdatePromiseComplianceStatus(PromiseResult status, const Promise *pp, char *reason)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char compliance_status;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        compliance_status = PROMISE_STATE_REPAIRED;
+        break;
+
+    case PROMISE_RESULT_WARN:
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        compliance_status = PROMISE_STATE_NOTKEPT;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        compliance_status = PROMISE_STATE_ANY;
+        break;
+
+    default:
+        ProgrammingError("Unknown status '%c' has been passed to UpdatePromiseComplianceStatus", status);
+    }
+
+    NotePromiseCompliance(pp, compliance_status, reason);
+}
+
+static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const char *logname)
+{
+    if (logname && (tc.log_string))
+    {
+        char buffer[CF_EXPANDSIZE];
+
+        ExpandScalar(ctx, ScopeGetCurrent()->scope, tc.log_string, buffer);
+
+        if (strcmp(logname, "udp_syslog") == 0)
+        {
+            RemoteSysLog(tc.log_priority, buffer);
+        }
+        else if (strcmp(logname, "stdout") == 0)
+        {
+            CfOut(OUTPUT_LEVEL_INFORM, "", "L: %s\n", buffer);
+        }
+        else
+        {
+            FILE *fout = fopen(logname, "a");
+
+            if (fout == NULL)
+            {
+                CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open private log %s", logname);
+                return;
+            }
+
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
+            fprintf(fout, "%s\n", buffer);
+
+            fclose(fout);
+        }
+
+        tc.log_string = NULL;     /* To avoid repetition */
+    }
+}
+
+static void DoSummarizeTransaction(EvalContext *ctx, PromiseResult status, const Promise *pp, TransactionContext tc)
+{
+    if (!IsPromiseValuableForLogging(pp))
+    {
+        return;
+    }
+
+    char *log_name;
+
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+        log_name = tc.log_repaired;
+        break;
+
+    case PROMISE_RESULT_WARN:
+        /* FIXME: nothing? */
+        return;
+
+    case PROMISE_RESULT_TIMEOUT:
+    case PROMISE_RESULT_FAIL:
+    case PROMISE_RESULT_DENIED:
+    case PROMISE_RESULT_INTERRUPTED:
+        log_name = tc.log_failed;
+        break;
+
+    case PROMISE_RESULT_NOOP:
+        log_name = tc.log_kept;
+        break;
+    }
+
+    SummarizeTransaction(ctx, tc, log_name);
+}
+
+static void NotifyDependantPromises(PromiseResult status, EvalContext *ctx, const Promise *pp)
+{
+    switch (status)
+    {
+    case PROMISE_RESULT_CHANGE:
+    case PROMISE_RESULT_NOOP:
+        MarkPromiseHandleDone(ctx, pp);
+        break;
+
+    default:
+        /* This promise is not yet done, don't mark it is as such */
+        break;
+    }
+}
+
+void ClassAuditLog(EvalContext *ctx, const Promise *pp, Attributes attr, PromiseResult status)
+{
+    if (!IsPromiseValuableForStatus(pp))
+    {
+#ifdef HAVE_NOVA
+        TrackTotalCompliance(status, pp);
+#endif
+        UpdatePromiseCounters(status, attr.transaction);
+    }
+
+    SetPromiseOutcomeClasses(status, ctx, pp, attr.classes);
+    NotifyDependantPromises(status, ctx, pp);
+    DoSummarizeTransaction(ctx, status, pp, attr.transaction);
+}
+
+static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
+{
+    Rval retval;
+    char *v;
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_VERSION, &retval))
+    {
+        v = (char *) retval.item;
+    }
+    else
+    {
+        v = "not specified";
+    }
+
+    const char *sp = PromiseGetHandle(pp);
+    if (sp == NULL)
+    {
+        sp = PromiseID(pp);
+    }
+    if (sp == NULL)
+    {
+        sp = "(unknown)";
+    }
+
+    Log(LOG_LEVEL_INFO, "I: Report relates to a promise with handle \"%s\"", sp);
+
+    if (PromiseGetBundle(pp)->source_path)
+    {
+        Log(LOG_LEVEL_INFO, "I: Made in version \'%s\' of \'%s\' near line %zu",
+            v, PromiseGetBundle(pp)->source_path, pp->offset.line);
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "I: Promise is made internally by cfengine");
+    }
+
+    switch (pp->promisee.type)
+    {
+    case RVAL_TYPE_SCALAR:
+        Log(LOG_LEVEL_INFO,"I: The promise was made to: \'%s\'", (char *) pp->promisee.item);
+        break;
+
+    case RVAL_TYPE_LIST:
+    {
+        Writer *w = StringWriter();
+        RlistWrite(w, pp->promisee.item);
+        Log(LOG_LEVEL_INFO, "I: The promise was made to (stakeholders): %s", StringWriterData(w));
+        WriterClose(w);
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (pp->comment)
+    {
+        Log(LOG_LEVEL_INFO, "I: Comment: %s\n", pp->comment);
+    }
+}
+
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
+{
+    /*
+     * This stub implementation of cfPS delegates to the new logging backend.
+     *
+     * Due to the fact very little of the code has been converted, this code
+     * does a full initialization and shutdown of logging subsystem for each
+     * cfPS.
+     *
+     * Instead, LoggingInit should be called at the moment EvalContext is
+     * created, LoggingPromiseEnter/LoggingPromiseFinish should be called around
+     * ExpandPromise and LoggingFinish should be called when EvalContext is
+     * going to be destroyed.
+     *
+     * But it requires all calls to cfPS to be eliminated.
+     */
+
+    /* FIXME: Ensure that NULL pp is never passed into cfPS */
+
+    if (pp)
+    {
+        PromiseLoggingInit(ctx);
+        PromiseLoggingPromiseEnter(ctx, pp);
+
+        if (level == OUTPUT_LEVEL_ERROR)
+        {
+            LogPromiseContext(ctx, pp);
+        }
+    }
+
+    va_list ap;
+    va_start(ap, fmt);
+    CfVOut(level, errstr, fmt, ap);
+    va_end(ap);
+
+    if (pp)
+    {
+        char *last_msg = PromiseLoggingPromiseFinish(ctx, pp);
+        PromiseLoggingFinish(ctx);
+
+        /* Now complete the exits status classes and auditing */
+
+        ClassAuditLog(ctx, pp, attr, status);
+        UpdatePromiseComplianceStatus(status, pp, last_msg);
+
+        free(last_msg);
+    }
 }

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "cf3.defs.h"
@@ -30,7 +29,7 @@
 #include "files_lib.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "mutex.h"
 #include "policy.h"
 
@@ -93,7 +92,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
 /*********************************************************************/
 
-int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
+int ArchiveToRepository(const char *file, Attributes attr)
  /* Returns true if the file was backup up and false if not */
 {
     char destination[CF_BUFSIZE];
@@ -129,17 +128,15 @@ int ArchiveToRepository(const char *file, Attributes attr, Promise *pp)
     {
     }
 
-    if (cfstat(file, &sb) == -1)
+    if (stat(file, &sb) == -1)
     {
         CfDebug("File %s promised to archive to the repository but it disappeared!\n", file);
         return true;
     }
 
-    cfstat(destination, &dsb);
+    stat(destination, &dsb);
 
-    CheckForFileHoles(&sb, pp);
-
-    if (pp && CopyRegularFileDisk(file, destination, pp->makeholes))
+    if (CopyRegularFileDisk(file, destination))
     {
         CfOut(OUTPUT_LEVEL_INFORM, "", "Moved %s to repository location %s\n", file, destination);
         return true;

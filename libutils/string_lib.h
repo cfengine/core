@@ -97,6 +97,20 @@ int Chop(char *str, size_t max_length);
 bool StringEndsWith(const char *str, const char *suffix);
 
 /**
+ * @brief Check if a string starts with the given prefix
+ * @param str
+ * @param prefix
+ * @return True if prefix matches
+ */
+bool StringStartsWith(const char *str, const char *prefix);
+
+/**
+ * @brief Format string like vsprintf and return formatted string allocated
+ * on heap as a return value.
+ */
+char *StringVFormat(const char *fmt, va_list ap);
+
+/**
  * @brief Format string like sprintf and return formatted string allocated on
  * heap as a return value.
  *
@@ -106,5 +120,19 @@ bool StringEndsWith(const char *str, const char *suffix);
  * the latter case (see errno codes for sprintf).
  */
 char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
+
+/**
+ * @brief Find the initial segment of memory (up to #n bytes) consisting of character #c.
+ *
+ * @return first byte which is not #c, or #mem + #n if all bytes in memory segment are #c
+ */
+void *MemSpan(const void *mem, char c, size_t n);
+
+/**
+ * @brief Find the initial segment of memory (up to #n bytes) consisting not of character #c.
+ *
+ * @return first byte which is #c, or #mem + #n if none of bytes in memory segment are #c
+ */
+void *MemSpanInverse(const void *mem, char c, size_t n);
 
 #endif

@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_methods.h"
@@ -33,16 +32,15 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "locks.h"
-#include "logging.h"
-#include "verify_outputs.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
 #include "rlist.h"
+#include "ornaments.h"
 
 static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp);
-    
+
 /*****************************************************************************/
 
 void VerifyMethodsPromise(EvalContext *ctx, Promise *pp)
@@ -89,7 +87,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
 
     GetLockName(lockname, "method", pp->promiser, params);
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -127,16 +125,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         ScopeClear(bp->name);
         BundleHashVariables(ctx, bp);
 
-        char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",method_name);
-        SetBundleOutputs(bp->name);
-
-        ScopeAugment(ctx, bp, params);
+        ScopeAugment(ctx, bp, pp, params);
 
         retval = ScheduleAgentOperations(ctx, bp);
 
         GetReturnValue(ctx, bp->name, pp);
-        ResetBundleOutputs(bp->name);
 
         EvalContextStackPopFrame(ctx);
 

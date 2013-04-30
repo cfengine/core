@@ -57,62 +57,62 @@ int getprocs64(struct procentry64* pe, int process_size, struct fdsinfo64 *fi, i
     }
 }
 
-static void test_get_start_time_process1(ARG_UNUSED void **state)
+static void test_get_start_time_process1(void)
 {
     time_t t = GetProcessStartTime(1);
     assert_int_equal(t, 946681200);
 }
 
 
-static void test_get_start_time_process2(ARG_UNUSED void **state)
+static void test_get_start_time_process2(void)
 {
     time_t t2 = GetProcessStartTime(2);
     assert_int_equal(t2, 347151599);
 }
 
-static void test_get_start_time_process666(ARG_UNUSED void **state)
+static void test_get_start_time_process666(void)
 {
     time_t t = GetProcessStartTime(666);
     assert_int_equal(t, PROCESS_START_TIME_UNKNOWN);
 }
 
-static void test_get_start_time_process1000(ARG_UNUSED void **state)
+static void test_get_start_time_process1000(void)
 {
     time_t t = GetProcessStartTime(1000);
     assert_int_equal(t, PROCESS_START_TIME_UNKNOWN);
 }
 
-static void test_get_start_time_process1000000(ARG_UNUSED void **state)
+static void test_get_start_time_process1000000(void)
 {
     time_t t = GetProcessStartTime(1000000);
     assert_int_equal(t, PROCESS_START_TIME_UNKNOWN);
 }
 
-static void test_get_state_process1(ARG_UNUSED void **state)
+static void test_get_state_process1(void)
 {
     ProcessState s = GetProcessState(1);
     assert_int_equal(s, PROCESS_STATE_RUNNING);
 }
 
-static void test_get_state_process2(ARG_UNUSED void **state)
+static void test_get_state_process2(void)
 {
     ProcessState s = GetProcessState(2);
     assert_int_equal(s, PROCESS_STATE_STOPPED);
 }
 
-static void test_get_state_process666(ARG_UNUSED void **state)
+static void test_get_state_process666(void)
 {
     ProcessState s = GetProcessState(666);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);
 }
 
-static void test_get_state_process1000(ARG_UNUSED void **state)
+static void test_get_state_process1000(void)
 {
     ProcessState s = GetProcessState(1000);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);
 }
 
-static void test_get_state_process1000000(ARG_UNUSED void **state)
+static void test_get_state_process1000000(void)
 {
     ProcessState s = GetProcessState(1000000);
     assert_int_equal(s, PROCESS_STATE_DOES_NOT_EXIST);

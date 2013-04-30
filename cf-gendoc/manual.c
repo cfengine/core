@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "manual.h"
@@ -37,20 +36,20 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "assoc.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "rlist.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 extern char BUILD_DIR[CF_BUFSIZE];
 
 static void TexinfoHeader(FILE *fout);
 static void TexinfoFooter(FILE *fout);
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context);
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs);
-static void TexinfoShowRange(FILE *fout, char *s, DataType type);
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context);
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs);
+static void TexinfoShowRange(FILE *fout, const char *s, DataType type);
 static void IncludeManualFile(const char *source_dir, FILE *fout, char *filename);
 static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const PromiseTypeSyntax *st);
 static void TexinfoSpecialFunction(const char *source_dir, FILE *fout, FnCallType fn);
@@ -95,22 +94,22 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
     IncludeManualFile(source_dir, fout, "reference_control_intro.texinfo");
 
     fprintf(fout, "@menu\n");
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; ++i)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; ++i)
     {
-        fprintf(fout, "* control %s::\n", CF_ALL_BODIES[i].bundle_type);
+        fprintf(fout, "* control %s::\n", CONTROL_BODIES[i].body_type);
     }
     fprintf(fout, "@end menu\n");
 
-    for (i = 0; CF_ALL_BODIES[i].bundle_type != NULL; i++)
+    for (i = 0; CONTROL_BODIES[i].body_type != NULL; i++)
     {
-        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CF_ALL_BODIES[i].bundle_type,
-                CF_ALL_BODIES[i].bundle_type);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CF_ALL_BODIES[i].bundle_type);
+        fprintf(fout, "@node control %s\n@section @code{%s} control promises\n\n", CONTROL_BODIES[i].body_type,
+                CONTROL_BODIES[i].body_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_example.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
-        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CF_ALL_BODIES[i].bundle_type);
+        snprintf(filename, CF_BUFSIZE - 1, "control/%s_notes.texinfo", CONTROL_BODIES[i].body_type);
         IncludeManualFile(source_dir, fout, filename);
 
-        TexinfoBodyParts(source_dir, fout, CF_ALL_BODIES[i].bs, CF_ALL_BODIES[i].bundle_type);
+        TexinfoBodyParts(source_dir, fout, CONTROL_BODIES[i].constraints, CONTROL_BODIES[i].body_type);
     }
 
 /* Components */
@@ -443,7 +442,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
             snprintf(filename, CF_BUFSIZE - 1, "promises/%s_notes.texinfo", promise_type_filename);
         }
         IncludeManualFile(source_dir, fout, filename);
-        TexinfoBodyParts(source_dir, fout, st[j].bs, st[j].promise_type);
+        TexinfoBodyParts(source_dir, fout, st[j].constraints, st[j].promise_type);
     }
 }
 
@@ -451,7 +450,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
 /* Level                                                                     */
 /*****************************************************************************/
 
-static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySyntax *bs, const char *context)
+static void TexinfoBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs, const char *context)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -477,7 +476,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " - -  Dealing with body type %s\n", bs[i].lval);
 
-        if (bs[i].range == (void *) CF_BUNDLE)
+        if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n", bs[i].lval,
                     context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
@@ -486,20 +485,13 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const BodySynta
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
                     bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {
-            const char *res = bs[i].default_value;
-
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n", bs[i].lval, context,
                     bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoShowRange(fout, (char *) bs[i].range, bs[i].dtype);
-
-            if (res)
-            {
-                fprintf(fout, "@noindent @b{Default value:} %s\n", res);
-            }
+            TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
 
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
             fprintf(fout, "\n@noindent @b{Example}:@*\n");
@@ -611,7 +603,7 @@ static void TexinfoVariables(const char *source_dir, FILE *fout, char *scope)
 /* Level                                                           */
 /*******************************************************************/
 
-static void TexinfoShowRange(FILE *fout, char *s, DataType type)
+static void TexinfoShowRange(FILE *fout, const char *s, DataType type)
 {
     Rlist *list = NULL, *rp;
 
@@ -636,13 +628,16 @@ static void TexinfoShowRange(FILE *fout, char *s, DataType type)
     }
     else
     {
-        fprintf(fout, "@noindent @b{Allowed input range}: @code{%s}\n\n", TexInfoEscape(s));
+        char *escaped = xstrdup(s);
+        TexInfoEscape(escaped);
+        fprintf(fout, "@noindent @b{Allowed input range}: @code{%s}\n\n", escaped);
+        free(escaped);
     }
 }
 
 /*****************************************************************************/
 
-static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *bs)
+static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const ConstraintSyntax *bs)
 {
     int i;
     char filename[CF_BUFSIZE];
@@ -656,7 +651,7 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *
 
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        if (bs[i].range == (void *) CF_BUNDLE)
+        if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n (Separate Bundle) \n\n", bs[i].lval,
                     CF_DATATYPES[bs[i].dtype]);
@@ -664,20 +659,13 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, BodySyntax *
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoSubBodyParts(source_dir, fout, (BodySyntax *) bs[i].range);
+            TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {
-            const char *res = bs[i].default_value;
-
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
-            TexinfoShowRange(fout, (char *) bs[i].range, bs[i].dtype);
+            TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
-
-            if (res)
-            {
-                fprintf(fout, "\n@noindent @b{Default value:} %s\n", res);
-            }
 
             fprintf(fout, "\n@b{Example}:@*\n");
             snprintf(filename, CF_BUFSIZE - 1, "bodyparts/%s_example.texinfo", bs[i].lval);
@@ -734,7 +722,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     char *filename = StringWriterClose(filenamew);
 
-    if (cfstat(filename, &sb) == -1)
+    if (stat(filename, &sb) == -1)
     {
         if (!GenerateStub(filename))
         {

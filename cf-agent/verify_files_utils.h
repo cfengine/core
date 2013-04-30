@@ -20,13 +20,13 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_VERIFY_FILES_UTILS_H
 #define CFENGINE_VERIFY_FILES_UTILS_H
 
 #include "cf3.defs.h"
+#include "cfnet.h"                                       /* AgentConnection */
 
 extern Item *VSETUIDLIST;
 extern Rlist *SINGLE_COPY_LIST;
@@ -43,6 +43,9 @@ int ScheduleLinkChildrenOperation(EvalContext *ctx, char *destination, char *sou
 int ScheduleLinkOperation(EvalContext *ctx, char *destination, char *source, Attributes attr, Promise *pp);
 int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes attr, Promise *pp);
 
-int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache);
+int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat sstat, struct stat dstat, Attributes attr, Promise *pp, CompressedArray **inode_cache, AgentConnection *conn);
+
+/* To be implemented in Nova for Win32 */
+int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
 
 #endif

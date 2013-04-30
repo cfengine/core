@@ -1,6 +1,6 @@
 projlib_LTLIBRARIES = libpromises.la
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libutils -I $(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS)
 
 AM_CFLAGS = @CFLAGS@ \
@@ -10,7 +10,7 @@ AM_YFLAGS = -d
 
 AM_LDFLAGS = -version-info 1:0:0 -no-undefined
 
-libpromises_la_LIBADD = ../libutils/libutils.la $(NOVA_LDADD)
+libpromises_la_LIBADD = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
 
 libpromises_la_SOURCES = \
         cf3parse.y cf3parse.h \
@@ -18,19 +18,14 @@ libpromises_la_SOURCES = \
         addr_lib.c addr_lib.h \
         args.c args.h \
         assoc.c assoc.h \
+        audit.c audit.h \
         attributes.c attributes.h \
         bootstrap.c bootstrap.h \
-        cf.events.h \
         cf3.defs.h \
         cf3.extern.h \
         cf3globals.c \
-        cf-key-functions.c cf-key-functions.h \
-        cfstream.c cfstream.h \
         chflags.c chflags.h \
         classes.c \
-        client_code.c client_code.h \
-        client_protocol.c client_protocol.h \
-        communication.c communication.h \
         constants.c \
         conversion.c conversion.h \
         crypto.c crypto.h \
@@ -41,7 +36,6 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
-        enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
@@ -60,7 +54,7 @@ libpromises_la_SOURCES = \
         keyring.c keyring.h\
         lastseen.c lastseen.h \
         locks.c locks.h \
-        logging.c logging.h \
+        logging_old.c logging_old.h \
         logic_expressions.c logic_expressions.h \
         matching.c matching.h \
         mod_access.c mod_access.h \
@@ -77,38 +71,47 @@ libpromises_la_SOURCES = \
         mod_report.c mod_report.h \
         mod_services.c mod_services.h \
         mod_storage.c mod_storage.h \
+        mod_knowledge.c mod_knowledge.h \
         modes.c \
         mutex.c mutex.h \
-        net.c net.h \
+        ornaments.c ornaments.h \
         policy.c policy.h \
         parser.c parser.h \
         parser_state.h \
         patches.c \
-        pipes.c pipes.h \
+        pipes.h \
         processes_select.c processes_select.h \
         process_lib.h process_unix_priv.h \
+        promise_logging.c promise_logging.h \
         promises.c promises.h \
         prototypes3.h \
-        reporting.c reporting.h \
         rlist.c rlist.h \
         scope.c scope.h \
         signals.c signals.h \
-        sockaddr.c \
         sort.c sort.h \
         storage_tools.c \
         string_expressions.c string_expressions.h \
         syntax.c syntax.h \
         sysinfo.c sysinfo.h \
+        syslog_client.c syslog_client.h \
         timeout.c \
         unix.c unix.h \
-        var_expressions.c \
+        var_expressions.c var_expressions.h \
         vars.c vars.h \
-        verify_reports.c
+        verify_classes.c verify_classes.h \
+        verify_reports.c \
+        verify_vars.c verify_vars.h
+
+if !HAVE_NOVA
+libpromises_la_SOURCES += \
+	enterprise_stubs.c
+endif
 
 if !NT
 
 libpromises_la_SOURCES += \
-        process_unix.c
+        process_unix.c \
+        pipes_unix.c
 
 if LINUX
 libpromises_la_SOURCES += \
@@ -157,7 +160,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

@@ -24,14 +24,15 @@
 
 #include "cf-serverd-functions.h"
 
+#include "client_code.h"
 #include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "logging.h"
 #include "signals.h"
 #include "mutex.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "unix.h"
 
@@ -146,7 +147,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -190,11 +191,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            Syntax("cf-serverd", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            ManPage("cf-serverd - CFEngine's server agent", OPTIONS, HINTS, ID);
             exit(0);
 
         case 'x':
@@ -217,19 +218,17 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 #endif
 
         default:
-            Syntax("cf-serverd - cfengine's server agent", OPTIONS, HINTS, ID);
+            Syntax("cf-serverd", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }
     }
 
-    if (argv[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     return config;
 }
@@ -252,13 +251,8 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     CfLock thislock;
     time_t starttime = time(NULL), last_collect = 0;
 
-#if defined(HAVE_GETADDRINFO)
-    socklen_t addrlen = sizeof(struct sockaddr_in6);
-    struct sockaddr_in6 cin;
-#else
-    socklen_t addrlen = sizeof(struct sockaddr_in);
-    struct sockaddr_in cin;
-#endif
+    struct sockaddr_storage cin;
+    socklen_t addrlen = sizeof(cin);
 
     signal(SIGINT, HandleSignalsForDaemon);
     signal(SIGTERM, HandleSignalsForDaemon);
@@ -284,7 +278,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
     }
     assert(pp);
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -292,7 +286,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", cf_ctime(&starttime));
+    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", ctime(&starttime));
 
     if (sd != -1)
     {
@@ -388,12 +382,11 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
-                char ipaddr[CF_MAXVARSIZE];
-
-                memset(ipaddr, 0, CF_MAXVARSIZE);
-                ThreadLock(cft_getaddr);
-                snprintf(ipaddr, CF_MAXVARSIZE - 1, "%s", sockaddr_ntop((struct sockaddr *) &cin));
-                ThreadUnlock(cft_getaddr);
+                /* Just convert IP address to string, no DNS lookup. */
+                char ipaddr[CF_MAX_IP_LEN] = "";
+                getnameinfo((struct sockaddr *) &cin, addrlen,
+                            ipaddr, sizeof(ipaddr),
+                            NULL, 0, NI_NUMERICHOST);
 
                 ServerEntryPoint(ctx, sd_reply, ipaddr);
             }
@@ -428,45 +421,28 @@ int InitServer(size_t queue_size)
 
 int OpenReceiverChannel(void)
 {
-    int sd;
-    int yes = 1;
+    struct addrinfo *response, *ap;
+    struct addrinfo query = {
+        .ai_flags = AI_PASSIVE,
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM
+    };
 
-    struct linger cflinger;
-
-#if defined(HAVE_GETADDRINFO)
-    struct addrinfo query, *response, *ap;
-#else
-    struct sockaddr_in sin;
-#endif
-
-    cflinger.l_onoff = 1;
-    cflinger.l_linger = 60;
-
-#if defined(HAVE_GETADDRINFO)
+    /* Listen to INADDR(6)_ANY if BINDINTERFACE unset. */
     char *ptr = NULL;
-
-    memset(&query, 0, sizeof(struct addrinfo));
-
-    query.ai_flags = AI_PASSIVE;
-    query.ai_family = AF_UNSPEC;
-    query.ai_socktype = SOCK_STREAM;
-
-/*
- * HvB : Bas van der Vlies
-*/
     if (BINDINTERFACE[0] != '\0')
     {
         ptr = BINDINTERFACE;
     }
 
+    /* Resolve listening interface. */
     if (getaddrinfo(ptr, STR_CFENGINEPORT, &query, &response) != 0)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "getaddrinfo", "DNS/service lookup failure");
         return -1;
     }
 
-    sd = -1;
-
+    int sd = -1;
     for (ap = response; ap != NULL; ap = ap->ai_next)
     {
         if ((sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol)) == -1)
@@ -474,95 +450,55 @@ int OpenReceiverChannel(void)
             continue;
         }
 
-        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
+        int yes = 1;
+        if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
+                       &yes, sizeof(yes)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
+                  "Socket option SO_REUSEADDR was not accepted");
             exit(1);
         }
 
-        if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
+        struct linger cflinger = {
+            .l_onoff = 1,
+            .l_linger = 60
+        };
+        if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
+                       &cflinger, sizeof(cflinger)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt", "Socket options were not accepted");
+            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
+                  "Socket option SO_LINGER was not accepted");
             exit(1);
         }
 
-        if (bind(sd, ap->ai_addr, ap->ai_addrlen) == 0)
+        if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
         {
             if (DEBUG)
             {
-                ThreadLock(cft_getaddr);
-                printf("Bound to address %s on %s=%d\n", sockaddr_ntop(ap->ai_addr), CLASSTEXT[VSYSTEMHARDCLASS],
-                       VSYSTEMHARDCLASS);
-                ThreadUnlock(cft_getaddr);
+                /* Convert IP address to string, no DNS lookup performed. */
+                char txtaddr[CF_MAX_IP_LEN] = "";
+                getnameinfo(ap->ai_addr, ap->ai_addrlen,
+                            txtaddr, sizeof(txtaddr),
+                            NULL, 0, NI_NUMERICHOST);
+                printf("Bound to address %s on %s=%d\n", txtaddr,
+                       CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
             }
-
-#if defined(__MINGW32__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
-            continue;       /* *bsd doesn't map ipv6 addresses */
-#else
             break;
-#endif
         }
-
-        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
-        cf_closesocket(sd);
-        sd = -1;
+        else
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
+            cf_closesocket(sd);
+        }
     }
 
     if (sd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open bind an open socket\n");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open/bind a socket\n");
         exit(1);
     }
 
-    if (response != NULL)
-    {
-        freeaddrinfo(response);
-    }
-#else
-
-    memset(&sin, 0, sizeof(sin));
-
-    if (BINDINTERFACE[0] != '\0')
-    {
-         if (GetInetAddr(BINDINTERFACE, &sin.sin_addr.s_addr))
-         {
-             exit(EXIT_FAILURE); // TODO: should we return -1 here?
-         }
-    }
-    else
-    {
-        sin.sin_addr.s_addr = INADDR_ANY;
-    }
-
-    sin.sin_port = (unsigned short) SHORT_CFENGINEPORT;
-    sin.sin_family = AF_INET;
-
-    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "socket", "Couldn't open socket");
-        exit(1);
-    }
-
-    if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(int)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
-        exit(1);
-    }
-
-    if (setsockopt(sd, SOL_SOCKET, SO_LINGER, (char *) &cflinger, sizeof(struct linger)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "sockopt", "Couldn't set socket options");
-        exit(1);
-    }
-
-    if (bind(sd, (struct sockaddr *) &sin, sizeof(sin)) == -1)
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "bind", "Couldn't bind to socket");
-        exit(1);
-    }
-
-#endif
-
+    freeaddrinfo(response);
     return sd;
 }
 
@@ -572,18 +508,13 @@ int OpenReceiverChannel(void)
 
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! This enterprise license is invalid.");
-    }
-
     CfDebug("Checking file updates on %s\n", config->input_file);
 
-    if (NewPromiseProposals(ctx, config->input_file, InputFiles(ctx, *policy)))
+    if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(config->input_file))
+        if (CheckPromises(config))
         {
             CfOut(OUTPUT_LEVEL_INFORM, "", "Rereading config files %s..\n", config->input_file);
 
@@ -639,16 +570,8 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             PolicyDestroy(*policy);
             *policy = NULL;
 
-            ERRORCOUNT = 0;
-
             SetPolicyServer(ctx, POLICY_SERVER);
             ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
-
-            if (EnterpriseExpiry(ctx, AGENT_TYPE_SERVER))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
-                      "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-            }
 
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);
@@ -676,42 +599,6 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         CfDebug(" -> No new promises found\n");
     }
 }
-
-#if !defined(HAVE_GETADDRINFO)
-bool GetInetAddr(char *host, in_addr_t *address_out)
-{
-    struct in_addr addr;
-    struct hostent *hp;
-
-    addr.s_addr = inet_addr(host);
-
-    if ((addr.s_addr == INADDR_NONE) || (addr.s_addr == 0))
-    {
-        if ((hp = gethostbyname(host)) == 0)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "host not found: %s", host);
-            return false;
-        }
-
-        if (hp->h_addrtype != AF_INET)
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address family: %d\n", hp->h_addrtype);
-            return false;
-        }
-
-        if (hp->h_length != sizeof(addr))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "unexpected address length %d\n", hp->h_length);
-            return false;
-        }
-
-        memcpy((char *) &addr, hp->h_addr, hp->h_length);
-    }
-
-    *address_out = addr.s_addr;
-    return true;
-}
-#endif
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H

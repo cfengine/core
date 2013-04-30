@@ -1,0 +1,7 @@
+
+Extracts a single element from a list variable specified in arg1 at the
+zero-based position arg2.
+
+Thus, if arg1 has @code{N} elements, arg2 would be useful between
+@code{0} and @code{N-1}.  Above @code{N-1}, the call does not return a
+valid value.

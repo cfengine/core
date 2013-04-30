@@ -18,14 +18,14 @@ static Seq *SequenceCreateRange(size_t initialCapacity, size_t start, size_t end
     return seq;
 }
 
-static void test_create_destroy(void **state)
+static void test_create_destroy(void)
 {
     Seq *seq = SeqNew(5, NULL);
 
     SeqDestroy(seq);
 }
 
-static void test_append(void **state)
+static void test_append(void)
 {
     Seq *seq = SeqNew(2, free);
 
@@ -49,7 +49,7 @@ static int CompareNumbers(const void *a, const void *b, void *_user_data)
     return *(size_t *) a - *(size_t *) b;
 }
 
-static void test_lookup(void **state)
+static void test_lookup(void)
 {
     Seq *seq = SequenceCreateRange(10, 0, 9);
 
@@ -68,7 +68,7 @@ static void test_lookup(void **state)
     free(key);
 }
 
-static void test_index_of(void **state)
+static void test_index_of(void)
 {
     Seq *seq = SequenceCreateRange(10, 0, 9);
 
@@ -87,7 +87,7 @@ static void test_index_of(void **state)
     free(key);
 }
 
-static void test_sort(void **state)
+static void test_sort(void)
 {
     Seq *seq = SeqNew(5, NULL);
 
@@ -114,7 +114,7 @@ static void test_sort(void **state)
     SeqDestroy(seq);
 }
 
-static void test_remove_range(void **state)
+static void test_remove_range(void)
 {
 
     Seq *seq = SequenceCreateRange(10, 0, 9);
@@ -143,7 +143,7 @@ static void test_remove_range(void **state)
     SeqDestroy(seq);
 }
 
-static void test_remove(void **state)
+static void test_remove(void)
 {
 
     Seq *seq = SequenceCreateRange(10, 0, 9);
@@ -171,7 +171,7 @@ static void test_remove(void **state)
     SeqDestroy(seq);
 }
 
-static void test_reverse(void **state)
+static void test_reverse(void)
 {
     {
         Seq *seq = SequenceCreateRange(2, 0, 1);
@@ -193,7 +193,7 @@ static void test_reverse(void **state)
     }
 }
 
-static void test_len(void **state)
+static void test_len(void)
 {
     Seq *seq = SeqNew(5, NULL);
 

@@ -32,29 +32,18 @@
 #include "conversion.h"
 #include "matching.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "locks.h"
 #include "exec_tools.h"
-#include "logging.h"
 #include "rlist.h"
 #include "policy.h"
 #include "scope.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "ornaments.h"
 
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
-
-#ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
-#endif
-
-
-/*****************************************************************************/
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
@@ -128,7 +117,7 @@ static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp)
         snprintf(lockname, CF_BUFSIZE - 1, "proc-%s-norestart", pp->promiser);
     }
 
-    thislock = AcquireLock(lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+    thislock = AcquireLock(ctx, lockname, VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -259,7 +248,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 }
 
 #ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
     Rlist *rp;
@@ -327,8 +316,6 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
     for (Item *ip = matched; ip != NULL; ip = ip->next)
     {
-        CF_OCCUR++;
-
         if (a.transaction.action == cfa_warn)
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", " !! Matched: %s\n", ip->name);

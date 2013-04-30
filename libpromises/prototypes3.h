@@ -40,9 +40,6 @@ void yyerror(const char *s);
 
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp);
 
-/* Mark connection as free */
-void ServerNotBusy(AgentConnection *conn);
-
 /* Only for agent.c */
 
 void ConnectionsInit(void);
@@ -54,12 +51,11 @@ void SetSkipIdentify(bool enabled);
 
 /* enterprise_stubs.c */
 
+bool BootstrapAllowed(void);
 int CfSessionKeySize(char c);
 char CfEnterpriseOptions(void);
 const EVP_CIPHER *CfengineCipher(char type);
-int IsEnterprise(void);
 void EnterpriseContext(EvalContext *ctx);
-int EnterpriseExpiry(EvalContext *ctx, AgentType agent_type);
 const char *GetConsolePrefix(void);
 void LoadSlowlyVaryingObservations(EvalContext *ctx);
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv);
@@ -82,6 +78,9 @@ bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name
 void ShowPromises(const Seq* bundles, const Seq *bodies);
 void ShowPromise(const Promise *pp);
 
+void LogPromiseResult(char *promiser, char peeType, void *promisee, char status, OutputLevel log_level,
+                      Item *mess);
+
 /* manual.c */
 
 void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_file);
@@ -96,13 +95,9 @@ int IsPrivileged(void);
 char *MapName(char *s);
 char *MapNameCopy(const char *s);
 char *MapNameForward(char *s);
-char *cf_ctime(const time_t *timep);
 char *cf_strtimestamp_local(const time_t time, char *buf);
 char *cf_strtimestamp_utc(const time_t time, char *buf);
 int cf_closesocket(int sd);
-int cf_mkdir(const char *path, mode_t mode);
-int cf_chmod(const char *path, mode_t mode);
-int cf_rename(const char *oldpath, const char *newpath);
 
 #if !defined(__MINGW32__)
 #define OpenNetwork() /* noop */
@@ -115,15 +110,6 @@ void CloseNetwork(void);
 int LinkOrCopy(const char *from, const char *to, int sym);
 int ExclusiveLockFile(int fd);
 int ExclusiveUnlockFile(int fd);
-
-/* sockaddr.c */
-
-/* Not thread-safe */
-char *sockaddr_ntop(struct sockaddr *sa);
-
-/* Thread-safe. Returns boolean success.
-   It's up to caller to provide large enough addr. */
-bool sockaddr_pton(int af, const void *src, void *addr);
 
 /* storage_tools.c */
 

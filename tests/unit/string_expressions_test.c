@@ -42,27 +42,27 @@ static void CheckParse(const char *string_expression, const char *expected_outpu
     FreeStringExpression(res.result);
 }
 
-static void test_literal(void **state)
+static void test_literal(void)
 {
     CheckParse("hello", "hello", ForbiddenVarRefEval, NULL);
 }
 
-static void test_var_naked(void **state)
+static void test_var_naked(void)
 {
     CheckParse("$(foo)", "foo", IdentityVarRefEval, NULL);
 }
 
-static void test_var_naked_two_level(void **state)
+static void test_var_naked_two_level(void)
 {
     CheckParse("$($(foo))", "aafoo", AppendAVarRefEval, NULL);
 }
 
-static void test_var_one_level(void **state)
+static void test_var_one_level(void)
 {
     CheckParse("$(foo)x$(bar)y$(baz)", "fooxbarybaz", IdentityVarRefEval, NULL);
 }
 
-static void test_different_var_types(void **state)
+static void test_different_var_types(void)
 {
     CheckParse("@{a$(b@(c)${d})@(e)}", "ugly{acozy(bugly{c}cozy(d))ugly{e}}", DiscriminateVarTypesVarRefEval, NULL);
 }

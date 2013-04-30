@@ -33,6 +33,8 @@
 #include <libxml/xpathInternals.h>
 #endif
 
+#include "sequence.h"
+
 /*******************************************************************/
 /* Preprocessor tricks                                             */
 /*******************************************************************/
@@ -58,7 +60,7 @@
 #define CF_MAXSIDSIZE 2048      /* Windows only: Max size (bytes) of security identifiers */
 #define CF_NONCELEN (CF_BUFSIZE/16)
 #define CF_MAXLINKSIZE 256
-#define CF_MAX_IP_LEN 64        /* numerical ip length */
+#define CF_MAX_IP_LEN 64        /* TODO INET6_ADDRSTRLEN */
 #define CF_PROCCOLS 16
 #define CF_HASHTABLESIZE 8192
 #define CF_MACROALPHABET 61     /* a-z, A-Z plus a bit */
@@ -69,7 +71,6 @@
 #define CF_SAME_GROUP ((gid_t)-1)
 #define CF_UNKNOWN_GROUP ((gid_t)-2)
 #define CF_INFINITY ((int)999999999)
-#define SOCKET_INVALID -1
 #define CF_MONDAY_MORNING 345600
 
 #define MINUTES_PER_HOUR 60
@@ -89,7 +90,6 @@
 #define CF_INDEX_FIELD_LEN 7
 #define CF_INDEX_OFFSET  CF_INDEX_FIELD_LEN+1
 
-#define MAXIP4CHARLEN 16
 #define MAX_MONTH_NAME 9
 
 #define MAX_DIGEST_BYTES (512 / 8)  /* SHA-512 */
@@ -117,9 +117,6 @@
 #define CFD_TRUE "CFD_TRUE"
 #define CFD_FALSE "CFD_FALSE"
 #define CF_ANYCLASS "any"
-#define CF_RSA_PROTO_OFFSET 24
-#define CF_PROTO_OFFSET 16
-#define CF_INBAND_OFFSET 8
 #define CF_SMALL_OFFSET 2
 
 /* digest sizes */
@@ -206,45 +203,6 @@ typedef struct
 #endif /* !__MINGW32__ */
 
 #define CF_WORDSIZE 8           /* Number of bytes in a word */
-
-/*******************************************************************/
-
-typedef enum
-{
-    FILE_TYPE_REGULAR,
-    FILE_TYPE_LINK,
-    FILE_TYPE_DIR,
-    FILE_TYPE_FIFO,
-    FILE_TYPE_BLOCK,
-    FILE_TYPE_CHAR_, /* Conflict with winbase.h */
-    FILE_TYPE_SOCK
-} FileType;
-
-/*******************************************************************/
-
-typedef struct Stat_ Stat;
-
-struct Stat_
-{
-    char *cf_filename;          /* What file are we statting? */
-    char *cf_server;            /* Which server did this come from? */
-    FileType cf_type;           /* enum filetype */
-    mode_t cf_lmode;            /* Mode of link, if link */
-    mode_t cf_mode;             /* Mode of remote file, not link */
-    uid_t cf_uid;               /* User ID of the file's owner */
-    gid_t cf_gid;               /* Group ID of the file's group */
-    off_t cf_size;              /* File size in bytes */
-    time_t cf_atime;            /* Time of last access */
-    time_t cf_mtime;            /* Time of last data modification */
-    time_t cf_ctime;            /* Time of last file status change */
-    char cf_makeholes;          /* what we need to know from blksize and blks */
-    char *cf_readlink;          /* link value or NULL */
-    int cf_failed;              /* stat returned -1 */
-    int cf_nlink;               /* Number of hard links */
-    int cf_ino;                 /* inode number on server */
-    dev_t cf_dev;               /* device number */
-    Stat *next;
-};
 
 /*******************************************************************/
 
@@ -372,24 +330,6 @@ enum observables
     ob_ipp_out,
     ob_spare
 };
-
-/*******************************************************************/
-
-typedef struct
-{
-    int sd;
-    int trust;                  /* true if key being accepted on trust */
-    int authenticated;
-    int protoversion;
-    int family;                 /* AF_INET or AF_INET6 */
-    char username[CF_SMALLBUF];
-    char localip[CF_MAX_IP_LEN];
-    char remoteip[CF_MAX_IP_LEN];
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    unsigned char *session_key;
-    char encryption_type;
-    short error;
-} AgentConnection;
 
 /*******************************************************************/
 
@@ -629,10 +569,6 @@ typedef enum
     OUTPUT_LEVEL_INFORM,
     OUTPUT_LEVEL_VERBOSE,
     OUTPUT_LEVEL_ERROR,
-    OUTPUT_LEVEL_LOG,
-    OUTPUT_LEVEL_REPORTING,
-    OUTPUT_LEVEL_CMDOUT,
-    OUTPUT_LEVEL_NONE
 } OutputLevel;
 
 typedef enum
@@ -707,22 +643,56 @@ typedef struct
 
 typedef struct Rlist_ Rlist;
 
-typedef struct
+typedef struct ConstraintSyntax_ ConstraintSyntax;
+typedef struct BodySyntax_ BodySyntax;
+
+/*
+ * Promise types or bodies may optionally provide parse-tree check function, called after
+ * parsing to do a preliminary syntax/semantic checking of unexpanded promises.
+ *
+ * This check function should populate #errors sequence with errors it finds and
+ * return false in case it has found at least one error.
+ *
+ * If the check function has not found any errors, it should return true.
+ */
+typedef bool (*PromiseCheckFn)(const Promise *pp, Seq *errors);
+typedef bool (*BodyCheckFn)(const Body *body, Seq *errors);
+
+typedef enum
+{
+    SYNTAX_STATUS_NORMAL,
+    SYNTAX_STATUS_DEPRECATED,
+    SYNTAX_STATUS_REMOVED
+} SyntaxStatus;
+
+struct ConstraintSyntax_
 {
     const char *lval;
     const DataType dtype;
-    const void *range;          /* either char or BodySyntax * */
+    union
+    {
+        const char *validation_string;
+        const BodySyntax *body_type_syntax;
+    } range;
     const char *description;
-    const char *default_value;
-} BodySyntax;
+    SyntaxStatus status;
+};
 
-/*************************************************************************/
+struct BodySyntax_
+{
+    const char *body_type;
+    const ConstraintSyntax *constraints;
+    BodyCheckFn check_body;
+    SyntaxStatus status;
+};
 
 typedef struct
 {
     const char *bundle_type;
     const char *promise_type;
-    const BodySyntax *bs;
+    const ConstraintSyntax *constraints;
+    const PromiseCheckFn check_promise;
+    SyntaxStatus status;
 } PromiseTypeSyntax;
 
 /*************************************************************************/
@@ -758,9 +728,7 @@ typedef struct
 {
     char *filename;
     Item *file_start;
-    Item *file_classes;
     int num_edits;
-    int empty_first;
 #ifdef HAVE_LIBXML2
     xmlDocPtr xmldoc;
 #endif
@@ -1342,6 +1310,7 @@ typedef struct
 typedef struct
 {
     Constraint *expression;
+    ContextScope scope;
     int nconstraints;
     int persistent;
 } ContextConstraint;
@@ -1698,17 +1667,17 @@ typedef struct
 #include "alloc.h"
 #include "cf3.extern.h"
 
-extern const BodySyntax CF_COMMON_BODIES[];
-extern const BodySyntax CF_VARBODY[];
+extern const ConstraintSyntax CF_COMMON_BODIES[];
+extern const ConstraintSyntax CF_VARBODY[];
 extern const PromiseTypeSyntax *CF_ALL_PROMISE_TYPES[];
-extern const BodySyntax CFG_CONTROLBODY[];
+extern const ConstraintSyntax CFG_CONTROLBODY[];
 extern const FnCallType CF_FNCALL_TYPES[];
-extern const PromiseTypeSyntax CF_ALL_BODIES[];
-extern const BodySyntax CFH_CONTROLBODY[];
+extern const BodySyntax CONTROL_BODIES[];
+extern const ConstraintSyntax CFH_CONTROLBODY[];
 extern const PromiseTypeSyntax CF_COMMON_PROMISE_TYPES[];
-extern const BodySyntax CF_CLASSBODY[];
-extern const BodySyntax CFA_CONTROLBODY[];
-extern const BodySyntax CFEX_CONTROLBODY[];
+extern const ConstraintSyntax CF_CLASSBODY[];
+extern const ConstraintSyntax CFA_CONTROLBODY[];
+extern const ConstraintSyntax CFEX_CONTROLBODY[];
 
 #endif
 

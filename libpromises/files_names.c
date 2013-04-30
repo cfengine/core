@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "files_names.h"
@@ -32,12 +31,11 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "string_lib.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 /*********************************************************************/
@@ -136,7 +134,7 @@ Returns true if so, false otherwise.
 #else
     struct stat sb;
 
-    if (cfstat(path, &sb) != -1)
+    if (stat(path, &sb) != -1)
     {
         if (S_ISDIR(sb.st_mode))
         {
@@ -376,7 +374,7 @@ const char *LastFileSeparator(const char *str)
 
 /*********************************************************************/
 
-int ChopLastNode(char *str)
+bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
      last character and removing up to the first / encountered 
      e.g. /a/b/c -> /a/b
@@ -597,6 +595,22 @@ int IsAbsoluteFileName(const char *f)
     }
 
     return false;
+}
+
+FilePathType FilePathGetType(const char *file_path)
+{
+    if (IsAbsoluteFileName(file_path))
+    {
+        return FILE_PATH_TYPE_ABSOLUTE;
+    }
+    else if (IsFileOutsideDefaultRepository(file_path))
+    {
+        return FILE_PATH_TYPE_RELATIVE;
+    }
+    else
+    {
+        return FILE_PATH_TYPE_NON_ANCHORED;
+    }
 }
 
 bool IsFileOutsideDefaultRepository(const char *f)

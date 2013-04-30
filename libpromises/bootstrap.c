@@ -1,4 +1,3 @@
-
 /*
    Copyright (C) Cfengine AS
 
@@ -21,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "bootstrap.h"
@@ -30,14 +28,10 @@
 #include "files_names.h"
 #include "scope.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "audit.h"
 
 /*
 
@@ -58,18 +52,16 @@ During commercial bootstrap:
 
 /*****************************************************************************/
 
-static void CreateFailSafe(char *name);
-
 #if defined(__CYGWIN__) || defined(__ANDROID__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return true;
 }
 
 #elif !defined(__MINGW32__)
 
-static bool BootstrapAllowed(void)
+bool BootstrapAllowed(void)
 {
     return IsPrivileged();
 }
@@ -84,7 +76,7 @@ void CheckAutoBootstrap(EvalContext *ctx)
     char name[CF_BUFSIZE];
     int have_policy = false, am_appliance = false;
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "** CFEngine BOOTSTRAP probe initiated");
+    printf("** CFEngine BOOTSTRAP probe initiated\n");
 
     PrintVersion();
     printf("\n");
@@ -108,31 +100,30 @@ void CheckAutoBootstrap(EvalContext *ctx)
     snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
     MapName(name);
 
-    if (cfstat(name, &sb) == -1)
+    if (stat(name, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No previous policy has been cached on this host");
+        printf(" -> No previous policy has been cached on this host\n");
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> An existing policy was cached on this host in %s/inputs", CFWORKDIR);
+        printf(" -> An existing policy was cached on this host in %s/inputs\n", CFWORKDIR);
         have_policy = true;
     }
 
     if (strlen(POLICY_SERVER) > 0)
     {
-        CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
+        printf(" -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
               POLICY_SERVER);
     }
     else
     {
         if (have_policy)
         {
-            CfOut(OUTPUT_LEVEL_CMDOUT, "",
-                  " -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
+            printf(" -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy distribution host was defined - use --policy-server to set one\n");
+            printf(" -> No policy distribution host was defined - use --policy-server to set one\n");
         }
     }
 
@@ -224,7 +215,7 @@ void SetPolicyServer(EvalContext *ctx, char *name)
 
     struct stat sb;
     
-    if ((cfstat(file, &sb)) != 0)
+    if ((stat(file, &sb)) != 0)
     {
         return;
     }
@@ -235,9 +226,42 @@ void SetPolicyServer(EvalContext *ctx, char *name)
     ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
+char *GetPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
+    char contents[CF_BUFSIZE] = { 0 };
+
+    FILE *fp = fopen(path, "r");
+    if (fp)
+    {
+        if (fscanf(fp, "%4095s", contents) != 1)
+        {
+            fclose(fp);
+            return NULL;
+        }
+        fclose(fp);
+        return xstrdup(contents);
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+bool GetAmPolicyServer(const char *workdir)
+{
+    char path[CF_BUFSIZE] = { 0 };
+    snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);
+    MapName(path);
+
+    struct stat sb;
+    return stat(path, &sb) == 0;
+}
+
 /********************************************************************/
 
-static void CreateFailSafe(char *name)
+void CreateFailSafe(char *name)
 {
     FILE *fout;
 
@@ -247,7 +271,7 @@ static void CreateFailSafe(char *name)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", " -> No policy failsafe discovered, assume temporary bootstrap vector\n");
+    printf(" -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
             "################################################################################\n"
@@ -260,7 +284,6 @@ static void CreateFailSafe(char *name)
             "\nbody common control\n"
             "{\n"
             " bundlesequence => { \"cfe_internal_update\" };\n"
-            " host_licenses_paid => \"25\";\n"
             "}\n\n"
             "################################################################################\n"
             "\nbody agent control\n"
@@ -341,33 +364,33 @@ static void CreateFailSafe(char *name)
             "\n#\n\n"
             " reports:\n\n"
             "  bootstrap_mode.am_policy_hub::\n"
-            "   \"This host assumes the role of policy distribution host\",\n"
+            "   \"This host assumes the role of policy distribution host\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_policy_hub\";\n"
             "  bootstrap_mode.!am_policy_hub::\n"
-            "   \"This autonomous node assumes the role of voluntary client\",\n"
+            "   \"This autonomous node assumes the role of voluntary client\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_assume_voluntary_client\";\n"
             "  got_policy::\n"
-            "   \" -> Updated local policy from policy server\",\n"
+            "   \" -> Updated local policy from policy server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_got_policy\";\n"
             "  !got_policy.!have_promises_cf::\n"
-            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\",\n"
+            "   \" !! Failed to copy policy from policy server at $(sys.policy_hub):/var/cfengine/masterfiles\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_did_not_get_policy\";\n"
             "  server_started::\n"
-            "   \" -> Started the server\",\n"
+            "   \" -> Started the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_serverd\";\n"
             "  am_policy_hub.!server_started.!have_promises_cf::\n"
-            "   \" !! Failed to start the server\",\n"
+            "   \" !! Failed to start the server\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_serverd\";\n"
             "  executor_started::\n"
-            "   \" -> Started the scheduler\",\n"
+            "   \" -> Started the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_started_execd\";\n"
             "  !executor_started.!have_promises_cf::\n"
-            "   \" !! Did not start the scheduler\",\n"
+            "   \" !! Did not start the scheduler\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_failed_to_start_execd\";\n"
             "  !executor_started.have_promises_cf::\n"
             "   \" -> You are running a hard-coded failsafe. Please use the following command instead.\n"
             "    - 3.0.0: $(sys.cf_agent) -f $(sys.workdir)/inputs/failsafe/failsafe.cf\n"
-            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\",\n"
+            "    - 3.0.1: $(sys.cf_agent) -f $(sys.workdir)/inputs/update.cf\"\n"
             "      handle => \"cfe_internal_bootstrap_update_reports_run_another_failsafe_instead\";\n"
             "}\n\n"
             "############################################\n"
@@ -422,8 +445,8 @@ static void CreateFailSafe(char *name)
 #endif /* !__MINGW32__ */
     fclose(fout);
 
-    if (cf_chmod(name, S_IRUSR | S_IWUSR) == -1)
+    if (chmod(name, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        CfOut(OUTPUT_LEVEL_ERROR, "chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
     }
 }

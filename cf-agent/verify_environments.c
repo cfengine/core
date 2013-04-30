@@ -30,11 +30,11 @@
 #include "vars.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "locks.h"
-#include "logging.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/
@@ -83,9 +83,9 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
 static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
-static void ShowDormant(virConnectPtr vc);
+static void ShowDormant(void);
 static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
 
 /*****************************************************************************/
@@ -127,14 +127,12 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
 
     if (EnvironmentsSanityChecks(a, pp))
     {
-        thislock = AcquireLock("virtual", VUQNAME, CFSTARTTIME, a.transaction, pp, false);
+        thislock = AcquireLock(ctx, "virtual", VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
         if (thislock.lock == NULL)
         {
             return;
         }
-
-        CF_OCCUR++;
 
         PromiseBanner(pp);
         ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
@@ -341,7 +339,7 @@ static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors env
     ShowRunList(CFVC[envtype]);
     num = virConnectListDefinedDomains(CFVC[envtype], CF_SUSPENDED, CF_MAX_CONCURRENT_ENVIRONMENTS);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found %d dormant guest environments on this host", num);
-    ShowDormant(CFVC[envtype]);
+    ShowDormant();
 
     switch (a.env.state)
     {
@@ -398,7 +396,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
         break;
 
     case ENVIRONMENT_STATE_DELETE:
-        DeleteVirtNetwork(ctx, CFVC[envtype], networks, a, pp);
+        DeleteVirtNetwork(ctx, CFVC[envtype], a, pp);
         break;
 
     default:
@@ -922,7 +920,7 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
 /*****************************************************************************/
 
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp)
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virNetworkPtr network;
     int ret = true;
@@ -986,7 +984,7 @@ static void ShowRunList(virConnectPtr vc)
 
 /*****************************************************************************/
 
-static void ShowDormant(virConnectPtr vc)
+static void ShowDormant(void)
 {
     int i;
 

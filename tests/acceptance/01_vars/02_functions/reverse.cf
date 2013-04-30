@@ -1,0 +1,60 @@
+#######################################################
+#
+# Test reverse()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "a" slist => { "c", "b", "a" };
+  "b" slist => { };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "sa" slist => reverse("init.a");
+  "sb" slist => reverse("init.b");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+      "ja" string => join(",", "test.sa");
+      "jb" string => join(",", "test.sb");
+
+      "ea" string => "a,b,c";
+      "eb" string => "";
+
+classes:
+    any::
+      "ok_a" expression => strcmp($(ea), $(ja));
+      "ok_b" expression => strcmp($(eb), $(jb));
+
+      "ok" and => { "ok_a", "ok_b" };
+
+reports:
+    DEBUG::
+        "a '$(ja)' <> '$(ea)'";
+        "b '$(jb)' <> '$(eb)'";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

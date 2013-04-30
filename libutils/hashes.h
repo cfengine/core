@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_HASHES_H
@@ -29,5 +28,7 @@
 #include "platform.h"
 
 int OatHash(const char *key, unsigned int max);
+
+int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1]);
 
 #endif

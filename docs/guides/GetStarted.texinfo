@@ -220,11 +220,6 @@ If you mistype the address of the hub, we recommend doing the following steps to
 
 @item The software should now be running.
 
-@item CFE Nova users: To complete licensing setup, you should make a promise to accept the license
-terms by editing @file{/var/cfengine/masterfiles/promises.cf}
-on the hub (policy server), changing the line @samp{host_licenses_paid => "1";}
-in @samp{body common control} to reflect the correct number of licenses that you have subscribed to.
-
 @end enumerate
 
 @noindent @b{How to assess success in this procedure (CFE Community and CFE Nova):}
@@ -485,8 +480,6 @@ Here we go:
  hub # /var/cfengine/bin/cf-agent --bootstrap <ip address of the hub>
   *** Warning: do not use 127.0.0.1 as the ip address ***
 @end verbatim
-@item Open @code{"/var/cfengine/masterfiles/promises.cf"}, and change 
-@code{'host_licenses_paid => "<Number of licenses subscribed>";'}
 @end enumerate
 @item @b{Clients}
 @enumerate

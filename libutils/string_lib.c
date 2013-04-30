@@ -769,10 +769,30 @@ bool StringEndsWith(const char *str, const char *suffix)
     return true;
 }
 
-static char *StringVFormat(const char *fmt, va_list ap)
+bool StringStartsWith(const char *str, const char *prefix)
+{
+    int str_len = strlen(str);
+    int prefix_len = strlen(prefix);
+
+    if (prefix_len > str_len)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < prefix_len; i++)
+    {
+        if (str[i] != prefix[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+char *StringVFormat(const char *fmt, va_list ap)
 {
     char *value;
-    int ret = xasprintf(&value, fmt, ap);
+    int ret = xvasprintf(&value, fmt, ap);
     if (ret < 0)
     {
         return NULL;
@@ -790,4 +810,32 @@ char *StringFormat(const char *fmt, ...)
     char *res = StringVFormat(fmt, ap);
     va_end(ap);
     return res;
+}
+
+char *MemSpan(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem != c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
+}
+
+char *MemSpanInverse(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem == c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
 }

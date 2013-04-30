@@ -107,21 +107,12 @@ struct Promise_
     PromiseType *parent_promise_type;
 
     char *classes;
-    char *ref;                  /* comment */
-    char ref_alloc;
+    char *comment;
     char *promiser;
     Rval promisee;
     Seq *conlist;
+    bool has_subbundles;
 
-    /* Runtime bus for private flags and work space */
-    int done;                   /* this needs to be preserved across runs */
-    int *donep;                 /* used by locks to mark as done */
-    int makeholes;
-    char *this_server;
-    int has_subbundles;
-    Stat *cache; /* Cache for network connection (READDIR result) */
-    AgentConnection *conn;
-    EditContext *edcontext;
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 
     SourceOffset offset;
@@ -251,14 +242,14 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
  */
 Seq *BodyGetConstraint(Body *body, const char *lval);
 
+bool BodyHasConstraint(const Body *body, const char *lval);
+
 const char *ConstraintGetNamespace(const Constraint *cp);
 
 Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes);
 void PromiseTypeDestroy(PromiseType *promise_type);
 
 void PromiseDestroy(Promise *pp);
-
-void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
 
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
 
@@ -370,14 +361,6 @@ const char *ConstraintContext(const Constraint *cp);
 Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints);
 
 /**
- * @brief Replace the rval of a scalar constraint (copies rval)
- * @param conlist
- * @param lval
- * @param rval
- */
-void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
-
-/**
  * @brief Get the Rval value of the first effective constraint that matches the given type
  * @param lval
  * @param promise
@@ -410,7 +393,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
 
 
 /**
- * @return A copy of the namespace compoent of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
+ * @return A copy of the namespace component of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
  */
 char *QualifiedNameNamespaceComponent(const char *qualified_name);
 
@@ -418,5 +401,10 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name);
  * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
  */
 char *QualifiedNameScopeComponent(const char *qualified_name);
+
+/**
+ * @brief Check whether the promise type is allowed one
+ */
+bool BundleTypeCheck(const char *name);
 
 #endif

@@ -1,13 +1,13 @@
 # Just recursively include in dist tarball all data we need for unit tests
 EXTRA_DIST = data
 
-AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
-	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd
+AM_CFLAGS = $(NOVA_CFLAGS) -I$(srcdir)/../../libcfnet -I$(srcdir)/../../libpromises -I$(srcdir)/../../libutils \
+	-DTESTDATADIR='"$(srcdir)/data"' -I$(srcdir)/../../cf-serverd -I$(srcdir)/../../cf-agent -I$(srcdir)/../../cf-execd -I$(srcdir)/../../cf-key
 
 LDADD = ../../libpromises/libpromises.la libtest.la
 
 check_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c
+libtest_la_SOURCES = cmockery.c cmockery.h schema.h test.c test.h ../../libutils/alloc.c ../../libpromises/patches.c ../../libpromises/constants.c
 libtest_la_LIBADD = ../../libcompat/libcompat.la
 
 check_LTLIBRARIES += libstr.la
@@ -16,7 +16,10 @@ libstr_la_LIBADD = libtest.la
 
 
 check_LTLIBRARIES += libdb.la
-libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/patches.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
+libdb_la_SOURCES = ../../libpromises/dbm_api.c ../../libpromises/dbm_quick.c ../../libpromises/dbm_tokyocab.c ../../libpromises/dbm_migration.c ../../libpromises/dbm_migration_lastseen.c ../../libpromises/dbm_migration_bundles.c ../../libutils/atexit.c
+if HPUX
+libdb_la_SOURCES += ../../libpromises/cf3globals.c
+endif
 libdb_la_LIBADD = libstr.la
 
 check_PROGRAMS = \
@@ -49,6 +52,7 @@ check_PROGRAMS = \
 	package_versions_compare_test \
 	files_lib_test \
 	map_test \
+	parser_test \
 	policy_test \
 	sort_test \
 	file_name_test \
@@ -66,7 +70,10 @@ check_PROGRAMS = \
 	string_expressions_test \
 	var_expressions_test \
 	process_terminate_unix_test \
-	exec-config-test
+	exec-config-test \
+	generic_agent_test \
+	syntax_test \
+	hashes_test
 
 #	ipaddress_test
 
@@ -109,7 +116,7 @@ refcount_test_SOURCES = refcount_test.c ../../libutils/refcount.c
 
 buffer_test_SOURCES = buffer_test.c ../../libutils/buffer.c
 
-cf_key_functions_test_SOURCES = cf_key_functions_test.c
+cf_key_functions_test_SOURCES = cf_key_functions_test.c ../../cf-key/cf-key-functions.c
 
 #ipaddress_test_SOURCES = ipaddress_test.c 
 
@@ -119,10 +126,10 @@ if HAVE_AVAHI_COMMON
 findhub_test_SOURCES = findhub_test.c ../../cf-agent/findhub.c ../../cf-agent/load_avahi.c
 
 if HAVE_NOVA
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
 avahi_config_test_LDADD = libtest.la ../../nova/libcfserverd/libcfserverd.la
 else
-avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/enterprise_stubs_serverd.c ../../cf-serverd/server_transform.c
+avahi_config_test_SOURCES = avahi_config_test.c ../../cf-serverd/server.c ../../cf-serverd/cf-serverd-enterprise-stubs.c ../../cf-serverd/server_transform.c
 avahi_config_test_LDADD = ../../libpromises/libpromises.la libtest.la
 endif
 
@@ -135,7 +142,7 @@ endif
 file_writer_test_SOURCES = file_writer_test.c gcov-stub.c
 file_writer_test_CFLAGS = $(AM_CFLAGS) -fno-profile-arcs -fno-test-coverage
 file_writer_test_LDADD = libstr.la
-file_writer_test_LDLFAGS =
+file_writer_test_LDFLAGS =
 
 db_test_SOURCES = db_test.c
 db_test_LDADD = libdb.la
@@ -152,7 +159,7 @@ dbm_migration_bundles_test_LDADD = libdb.la
 
 CLEANFILES = *.gcno *.gcda
 
-package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c
+package_versions_compare_test_SOURCES = package_versions_compare_test.c ../../cf-agent/verify_packages.c ../../cf-agent/vercmp.c ../../cf-agent/vercmp_internal.c ../../cf-agent/retcode.c
 
 package_versions_compare_test_CPPFLAGS = $(AM_CPPFLAGS)
 package_versions_compare_test_LDADD = ../../libpromises/libpromises.la libtest.la
@@ -163,6 +170,9 @@ endif
 
 sort_test_SOURCES = sort_test.c ../../libpromises/sort.c
 sort_test_LDADD = libtest.la
+
+logging_test_SOURCES = logging_test.c ../../libpromises/syslog_client.c mock_logging.c
+logging_test_LDADD = libtest.la
 
 connection_management_test_SOURCES = connection_management_test.c ../../cf-serverd/server.c
 connection_management_test_LDADD = ../../libpromises/libpromises.la libtest.la

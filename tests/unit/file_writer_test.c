@@ -24,7 +24,7 @@ int fclose(FILE *stream)
     return 0;
 }
 
-void test_empty_file_buffer(void **p)
+void test_empty_file_buffer(void)
 {
     global_w = StringWriter();
     global_w_closed = false;
@@ -38,7 +38,7 @@ void test_empty_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_write_empty_file_buffer(void **p)
+void test_write_empty_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);
@@ -53,7 +53,7 @@ void test_write_empty_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_write_file_buffer(void **p)
+void test_write_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);
@@ -68,7 +68,7 @@ void test_write_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_multiwrite_file_buffer(void **p)
+void test_multiwrite_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);

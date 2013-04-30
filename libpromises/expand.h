@@ -1,5 +1,4 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
@@ -28,21 +27,19 @@
 
 #include "cf3.defs.h"
 
-#include "reporting.h"
+typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
-typedef void PromiseActuator(EvalContext *ctx, Promise *pp);
+void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
 
-void CommonEvalPromise(EvalContext *ctx, Promise *pp);
-
-void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise);
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rval rval);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
 
 int IsExpandable(const char *str);
+
 bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
 Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f, int expandnaked);
 Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
 Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
@@ -63,6 +60,5 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates);
 
 #endif

@@ -27,12 +27,11 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "pipes.h"
-#include "logging.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 /* Prototypes */

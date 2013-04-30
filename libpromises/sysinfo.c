@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "sysinfo.h"
@@ -35,11 +34,11 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "unix.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "string_lib.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "audit.h"
 
 #ifdef HAVE_ZONE_H
 # include <zone.h>
@@ -58,7 +57,7 @@
 #endif
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 void CalculateDomainName(const char *nodename, const char *dnsname, char *fqname, char *uqname, char *domain);
@@ -384,10 +383,10 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Release is %s\n", VSYSNAME.release);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", cf_ctime(&tloc));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", ctime(&tloc));
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
 
-    snprintf(workbuf, CF_MAXVARSIZE, "%s", cf_ctime(&tloc));
+    snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
     if (Chop(workbuf, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
@@ -404,18 +403,19 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     ScopeNewSpecialScalar(ctx, "sys", "resolv", VRESOLVCONF[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecialScalar(ctx, "sys", "maildir", VMAILDIR[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
     ScopeNewSpecialScalar(ctx, "sys", "exports", VEXPORTS[VSYSTEMHARDCLASS], DATA_TYPE_STRING);
-    ScopeNewSpecialScalar(ctx, "sys", "expires", EXPIRY, DATA_TYPE_STRING);
 /* FIXME: type conversion */
     ScopeNewSpecialScalar(ctx, "sys", "cf_version", (char *) Version(), DATA_TYPE_STRING);
 
     if (PUBKEY)
     {
+        char pubkey_digest[CF_MAXVARSIZE] = { 0 };
+
         HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-        HashPrintSafe(CF_DEFAULT_DIGEST, digest, PUBKEY_DIGEST);
+        HashPrintSafe(CF_DEFAULT_DIGEST, digest, pubkey_digest);
 
-        ScopeNewSpecialScalar(ctx, "sys", "key_digest", PUBKEY_DIGEST, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "key_digest", pubkey_digest, DATA_TYPE_STRING);
 
-        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", PUBKEY_DIGEST);
+        snprintf(workbuf, CF_MAXVARSIZE - 1, "PK_%s", pubkey_digest);
         CanonifyNameInPlace(workbuf);
         EvalContextHeapAddHard(ctx, workbuf);
     }
@@ -442,7 +442,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
         have_component[i] = false;
 
-        if (cfstat(name, &sb) != -1)
+        if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
             ScopeNewSpecialScalar(ctx, "sys", shortname, quoteName, DATA_TYPE_STRING);
@@ -463,7 +463,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         snprintf(name, CF_MAXVARSIZE - 1, "%s%cbin%c%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR, components[1]);
 #endif
 
-        if (cfstat(name, &sb) != -1)
+        if (stat(name, &sb) != -1)
         {
             snprintf(quoteName, sizeof(quoteName), "\"%s\"", name);
             ScopeNewSpecialScalar(ctx, "sys", shortname, quoteName, DATA_TYPE_STRING);
@@ -651,7 +651,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     snprintf(env, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
     MapName(env);
 
-    if (cfstat(env, &statbuf) == -1)
+    if (stat(env, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to detect environment from cf-monitord\n\n");
         return;
@@ -664,7 +664,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         return;
     }
 
-    snprintf(value, CF_MAXVARSIZE - 1, "%s", cf_ctime(&statbuf.st_mtime));
+    snprintf(value, CF_MAXVARSIZE - 1, "%s", ctime(&statbuf.st_mtime));
     if (Chop(value, CF_EXPANDSIZE) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
@@ -681,23 +681,22 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         return;
     }
 
-    while (!feof(fp))
+    for(;;)
     {
-        context[0] = '\0';
         name[0] = '\0';
         value[0] = '\0';
 
         if (fgets(context, CF_BUFSIZE, fp) == NULL)
         {
-            if (strlen(context))
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
             }
-        }
-
-        if (feof(fp))
-        {
-            break;
+            else /* feof */
+            {
+                break;
+            }
         }
 
 
@@ -803,23 +802,23 @@ void OSClasses(EvalContext *ctx)
 /* Mandrake/Mandriva, Fedora and Oracle VM Server supply /etc/redhat-release, so
    we test for those distributions first */
 
-    if (cfstat("/etc/mandriva-release", &statbuf) != -1)
+    if (stat("/etc/mandriva-release", &statbuf) != -1)
     {
         Linux_Mandriva_Version(ctx);
     }
-    else if (cfstat("/etc/mandrake-release", &statbuf) != -1)
+    else if (stat("/etc/mandrake-release", &statbuf) != -1)
     {
         Linux_Mandrake_Version(ctx);
     }
-    else if (cfstat("/etc/fedora-release", &statbuf) != -1)
+    else if (stat("/etc/fedora-release", &statbuf) != -1)
     {
         Linux_Fedora_Version(ctx);
     }
-    else if (cfstat("/etc/ovs-release", &statbuf) != -1)
+    else if (stat("/etc/ovs-release", &statbuf) != -1)
     {
         Linux_Oracle_VM_Server_Version(ctx);
     }
-    else if (cfstat("/etc/redhat-release", &statbuf) != -1)
+    else if (stat("/etc/redhat-release", &statbuf) != -1)
     {
         Linux_Redhat_Version(ctx);
     }
@@ -827,89 +826,89 @@ void OSClasses(EvalContext *ctx)
 /* Oracle Linux >= 6 supplies separate /etc/oracle-release alongside
    /etc/redhat-release, use it to precisely identify version */
 
-    if (cfstat("/etc/oracle-release", &statbuf) != -1)
+    if (stat("/etc/oracle-release", &statbuf) != -1)
     {
         Linux_Oracle_Version(ctx);
     }
 
-    if (cfstat("/etc/generic-release", &statbuf) != -1)
+    if (stat("/etc/generic-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a sun cobalt system.\n");
         SetFlavour(ctx, "SunCobalt");
     }
 
-    if (cfstat("/etc/SuSE-release", &statbuf) != -1)
+    if (stat("/etc/SuSE-release", &statbuf) != -1)
     {
         Linux_Suse_Version(ctx);
     }
 
 # define SLACKWARE_ANCIENT_VERSION_FILENAME "/etc/slackware-release"
 # define SLACKWARE_VERSION_FILENAME "/etc/slackware-version"
-    if (cfstat(SLACKWARE_VERSION_FILENAME, &statbuf) != -1)
+    if (stat(SLACKWARE_VERSION_FILENAME, &statbuf) != -1)
     {
         Linux_Slackware_Version(ctx, SLACKWARE_VERSION_FILENAME);
     }
-    else if (cfstat(SLACKWARE_ANCIENT_VERSION_FILENAME, &statbuf) != -1)
+    else if (stat(SLACKWARE_ANCIENT_VERSION_FILENAME, &statbuf) != -1)
     {
         Linux_Slackware_Version(ctx, SLACKWARE_ANCIENT_VERSION_FILENAME);
     }
 
-    if (cfstat("/etc/debian_version", &statbuf) != -1)
+    if (stat("/etc/debian_version", &statbuf) != -1)
     {
         Linux_Debian_Version(ctx);
     }
 
-    if (cfstat("/usr/bin/aptitude", &statbuf) != -1)
+    if (stat("/usr/bin/aptitude", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This system seems to have the aptitude package system\n");
         EvalContextHeapAddHard(ctx, "have_aptitude");
     }
 
-    if (cfstat("/etc/UnitedLinux-release", &statbuf) != -1)
+    if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a UnitedLinux system.\n");
         SetFlavour(ctx, "UnitedLinux");
     }
 
-    if (cfstat("/etc/alpine-release", &statbuf) != -1)
+    if (stat("/etc/alpine-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an AlpineLinux system.\n");
         SetFlavour(ctx, "alpinelinux");
     }
 
-    if (cfstat("/etc/gentoo-release", &statbuf) != -1)
+    if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a gentoo system.\n");
         SetFlavour(ctx, "gentoo");
     }
 
-    if (cfstat("/etc/arch-release", &statbuf) != -1)
+    if (stat("/etc/arch-release", &statbuf) != -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an Arch Linux system.\n");
         SetFlavour(ctx, "archlinux");
     }
 
-    if (cfstat("/proc/vmware/version", &statbuf) != -1 || cfstat("/etc/vmware-release", &statbuf) != -1)
+    if (stat("/proc/vmware/version", &statbuf) != -1 || stat("/etc/vmware-release", &statbuf) != -1)
     {
         VM_Version(ctx);
     }
-    else if (cfstat("/etc/vmware", &statbuf) != -1 && S_ISDIR(statbuf.st_mode))
+    else if (stat("/etc/vmware", &statbuf) != -1 && S_ISDIR(statbuf.st_mode))
     {
         VM_Version(ctx);
     }
 
-    if (cfstat("/proc/xen/capabilities", &statbuf) != -1)
+    if (stat("/proc/xen/capabilities", &statbuf) != -1)
     {
         Xen_Domain(ctx);
     }
 
-    if (cfstat("/etc/Eos-release", &statbuf) != -1)
+    if (stat("/etc/Eos-release", &statbuf) != -1)
     {
         EOS_Version(ctx);
         SetFlavour(ctx, "Eos");
     }
 
-    if (cfstat("/etc/issue", &statbuf) != -1)
+    if (stat("/etc/issue", &statbuf) != -1)
     {
         MiscOS(ctx);
     }
@@ -1528,14 +1527,18 @@ static int Linux_Suse_Version(EvalContext *ctx)
     strversion[0] = '\0';
     strpatch[0] = '\0';
 
-    while (!feof(fp))
+    for(;;)
     {
-        vbuf[0] = '\0';
         if (fgets(vbuf, sizeof(vbuf), fp) == NULL)
         {
-            if (strlen(vbuf))
+            if (ferror(fp))
             {
                 UnexpectedError("Failed to read line from stream");
+                break;
+            }
+            else /* feof */
+            {
+                break;
             }
         }
 
@@ -2194,14 +2197,14 @@ static FILE *ReadFirstLine(const char *filename, char *buf, int bufsize)
 
 #if defined(__CYGWIN__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+static const char *GetDefaultWorkDir(void)
 {
     return WORKDIR;
 }
 
 #elif defined(__ANDROID__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+static const char *GetDefaultWorkDir(void)
 {
     /* getpwuid() on Android returns /data, so use compile-time default instead */
     return WORKDIR;
@@ -2209,22 +2212,21 @@ static const char *GetDefaultWorkDir(EvalContext *ctx)
 
 #elif !defined(__MINGW32__)
 
-static const char *GetDefaultWorkDir(EvalContext *ctx)
+#define MAX_WORKDIR_LENGTH (CF_BUFSIZE / 2)
+
+static const char *GetDefaultWorkDir(void)
 {
     if (getuid() > 0)
     {
-        static char workdir[CF_BUFSIZE];
+        static char workdir[MAX_WORKDIR_LENGTH];
 
         if (!*workdir)
         {
             struct passwd *mpw = getpwuid(getuid());
 
-            strncpy(workdir, mpw->pw_dir, CF_BUFSIZE - 10);
-            strcat(workdir, "/.cfagent");
-
-            if (strlen(workdir) > CF_BUFSIZE / 2)
+            if (snprintf(workdir, MAX_WORKDIR_LENGTH, "%s/.cfagent", mpw->pw_dir) >= MAX_WORKDIR_LENGTH)
             {
-                FatalError(ctx, "Suspicious looking home directory. The path is too long and will lead to problems.");
+                return NULL;
             }
         }
         return workdir;
@@ -2239,11 +2241,11 @@ static const char *GetDefaultWorkDir(EvalContext *ctx)
 
 /******************************************************************/
 
-const char *GetWorkDir(EvalContext *ctx)
+const char *GetWorkDir(void)
 {
     const char *workdir = getenv("CFENGINE_TEST_OVERRIDE_WORKDIR");
 
-    return workdir == NULL ? GetDefaultWorkDir(ctx) : workdir;
+    return workdir == NULL ? GetDefaultWorkDir() : workdir;
 }
 
 /******************************************************************/

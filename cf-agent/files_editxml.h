@@ -25,7 +25,7 @@
 #ifndef CFENGINE_FILES_EDITXML_H
 #define CFENGINE_FILES_EDITXML_H
 
-int ScheduleEditXmlOperations(EvalContext *ctx, char *filename, Bundle *bp, Attributes a, Promise *parentp);
+int ScheduleEditXmlOperations(EvalContext *ctx, Bundle *bp, Attributes a, const Promise *parentp, EditContext *edcontext);
 #ifdef HAVE_LIBXML2
 int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits);
 #endif

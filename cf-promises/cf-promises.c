@@ -1,19 +1,18 @@
 /*
-
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -27,12 +26,13 @@
 
 #include "env_context.h"
 #include "conversion.h"
-#include "reporting.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
+#include "sysinfo.h"
+#include "logging_old.h"
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
@@ -60,6 +60,7 @@ static const struct option OPTIONS[] =
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
     {"full-check", no_argument, 0, 'c'},
+    {"warn", optional_argument, 0, 'W'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -79,6 +80,7 @@ static const char *HINTS[] =
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
     "Ensure full policy integrity checks",
+    "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     NULL
 };
 
@@ -94,19 +96,25 @@ int main(int argc, char *argv[])
 
     GenericAgentDiscoverContext(ctx, config);
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    if (!policy)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Input files contain errors.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (SHOWREPORTS)
     {
         ShowPromises(policy->bundles, policy->bodies);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     switch (config->agent_specific.common.policy_output_format)
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             Writer *writer = FileWriter(stdout);
             PolicyToString(policy, writer);
             WriterClose(writer);
@@ -116,7 +124,8 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
             JsonElementPrint(writer, json_policy, 2);
@@ -132,17 +141,6 @@ int main(int argc, char *argv[])
 
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
-
-    if (ERRORCOUNT > 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
-        exit(1);
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
-        exit(0);
-    }
 }
 
 /*******************************************************************/
@@ -156,7 +154,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:hW:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -172,7 +170,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -186,7 +184,6 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
                 GenericAgentConfigSetBundleSequence(config, bundlesequence);
                 RlistDestroy(bundlesequence);
-                CBUNDLESEQUENCE_STR = optarg; // TODO: wtf is this
             }
             break;
 
@@ -242,7 +239,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -253,23 +250,30 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             SHOWREPORTS = true;
             break;
 
+        case 'W':
+            if (!GenericAgentConfigParseWarningOptions(config, optarg))
+            {
+                Log(LOG_LEVEL_ERR, "Error parsing warning option");
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }
     }
 
-    if (argv[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     return config;
 }

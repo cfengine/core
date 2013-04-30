@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "cf3.defs.h"
@@ -32,21 +31,19 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
-#include "logging.h"
 #include "nfs.h"
 #include "misc_lib.h"
 #include "rlist.h"
+#include "env_context.h"
 
 /* seconds */
 #define RPCTIMEOUT 60
 
-int FSTAB_EDITS;
-Item *FSTABLIST = NULL;
-
-#ifndef __MINGW32__
+static int FSTAB_EDITS;
+static Item *FSTABLIST = NULL;
 
 static void AugmentMountInfo(Rlist **list, char *host, char *source, char *mounton, char *options);
 static int MatchFSInFstab(char *match);
@@ -646,7 +643,7 @@ void MountAll()
 
     struct stat sb;
 
-    if (cfstat("/etc/fstab", &sb) == -1)
+    if (stat("/etc/fstab", &sb) == -1)
     {
         int fd;
         if ((fd = creat("/etc/fstab", 0755)) > 0)
@@ -753,4 +750,19 @@ static void DeleteThisItem(Item **liststart, Item *entry)
     }
 }
 
-#endif /* !__MINGW32__ */
+void CleanupNFS(void)
+{
+    Attributes a = { {0} };
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+
+    if (FSTAB_EDITS && FSTABLIST && !DONTDO)
+    {
+        if (FSTABLIST)
+        {
+            SaveItemListAsFile(FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a);
+            DeleteItemList(FSTABLIST);
+            FSTABLIST = NULL;
+        }
+        FSTAB_EDITS = 0;
+    }
+}

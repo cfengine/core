@@ -1,18 +1,18 @@
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -20,23 +20,24 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "generic_agent.h"
 
+#include "audit.h"
 #include "env_context.h"
+#include "verify_classes.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
 #include "verify_exec.h"
 #include "verify_methods.h"
 #include "verify_processes.h"
 #include "verify_packages.h"
-#include "verify_outputs.h"
 #include "verify_services.h"
 #include "verify_storage.h"
 #include "verify_files.h"
 #include "verify_files_utils.h"
+#include "verify_vars.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -54,16 +55,19 @@
 #include "promises.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "logging.h"
 #include "communication.h"
 #include "signals.h"
-#include "logging.h"
 #include "nfs.h"
 #include "processes_select.h"
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "agent-diagnostics.h"
+#include "sysinfo.h"
 #include "cf-agent-enterprise-stubs.h"
+#include "syslog_client.h"
 
 #include "mod_common.h"
 
@@ -73,7 +77,6 @@ typedef enum
     TYPE_SEQUENCE_VARS,
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
-    TYPE_SEQUENCE_OUTPUTS,
     TYPE_SEQUENCE_INTERFACES,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -95,11 +98,13 @@ typedef enum
 #endif
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
 #include "agent_reports.h"
-#else
-#include "reporting.h"
+#include "nova-agent-diagnostics.h"
 #endif
+
+#include "ornaments.h"
+
+#include <assert.h>
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -123,7 +128,6 @@ static const char *AGENT_TYPESEQUENCE[] =
     "vars",
     "defaults",
     "classes",                  /* Maelstrom order 2 */
-    "outputs",
     "interfaces",
     "files",
     "packages",
@@ -149,7 +153,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
 static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp);
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
 static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
@@ -158,6 +162,7 @@ static bool VerifyBootstrap(void);
 static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
+static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
@@ -178,7 +183,7 @@ static const struct option OPTIONS[15] =
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"define", required_argument, 0, 'D'},
-    {"diagnostic", optional_argument, 0, 'x'},
+    {"self-diagnostics", optional_argument, 0, 'x'},
     {"dry-run", no_argument, 0, 'n'},
     {"file", required_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
@@ -196,7 +201,7 @@ static const char *HINTS[15] =
     "Set or override bundlesequence from command line",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
-    "Do internal diagnostic (developers only) level in optional argument",
+    "Run checks to diagnose a CFEngine agent installation",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Specify an alternative input file than the default",
     "Print the help message",
@@ -207,12 +212,6 @@ static const char *HINTS[15] =
     "Output the version of the software",
     NULL
 };
-
-#ifndef HAVE_NOVA
-void NoteEfficiency(ARG_UNUSED double e)
-{
-}
-#endif
 
 /*******************************************************************/
 
@@ -248,25 +247,29 @@ int main(int argc, char *argv[])
     }
     else if (config->tty_interactive)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
         exit(EXIT_FAILURE);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     BeginAudit();
     KeepPromises(ctx, policy, config);
 
+    if (ALLCLASSESREPORT)
+    {
+        AllClassesReport(ctx);
+    }
+
     // only note class usage when default policy is run
-    if (!config->input_file)
+    if (!MINUSF)
     {
         StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
         NoteClassUsage(soft_iter, true);
@@ -319,7 +322,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
 
-    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:Vx:MB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -330,15 +333,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
         case 'b':
             if (optarg)
             {
-                config->bundlesequence = RlistFromSplitString(optarg, ',');
-                CBUNDLESEQUENCE_STR = optarg;
+                Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
+                GenericAgentConfigSetBundleSequence(config, bundlesequence);
+                RlistDestroy(bundlesequence);
             }
             break;
 
@@ -368,7 +372,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             BOOTSTRAP = true;
             MINUSF = true;
-            GenericAgentConfigSetInputFile(config, "promises.cf");
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
             IGNORELOCK = true;
 
             EvalContextHeapAddHard(ctx, "bootstrap_mode");
@@ -437,7 +441,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -445,22 +449,30 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired");
+            {
+                const char *workdir = GetWorkDir();
+                Writer *out = FileWriter(stdout);
+                WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
+
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
+#ifdef HAVE_NOVA
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecksNova(), out);
+#endif
+                FileWriterDetach(out);
+            }
             exit(0);
 
         default:
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
             exit(1);
         }
     }
 
-    if (argv_bootstrap_options_new[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv_bootstrap_options_new + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
 
@@ -636,22 +648,8 @@ static void ThisAgentInit(void)
 
 static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
-    double efficiency, model;
-
     KeepControlPromises(ctx, policy);
     KeepPromiseBundles(ctx, policy, config);
-
-// TOPICS counts the number of currently defined promises
-// OCCUR counts the number of objects touched while verifying config
-
-    efficiency = 100.0 * CF_OCCUR / (double) (CF_OCCUR + CF_TOPICS);
-    model = 100.0 * (1.0 - CF_TOPICS / (double)(PR_KEPT + PR_NOTKEPT + PR_REPAIRED));
-    
-    NoteEfficiency(efficiency);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checked %d objects with %d promises, i.e. model efficiency %.2lf%%", CF_OCCUR, CF_TOPICS, efficiency);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The %d declared promise patterns actually expanded into %d individual promises, i.e. declaration efficiency %.2lf%%", (int) CF_TOPICS, PR_KEPT + PR_NOTKEPT + PR_REPAIRED, model);
-
 }
 
 /*******************************************************************/
@@ -1126,72 +1124,61 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            char ns[CF_BUFSIZE];
-            snprintf(ns,CF_BUFSIZE,"%s_meta", name);
-
-            SetBundleOutputs(bp->name);
             BannerBundle(bp, params);
 
             EvalContextStackPushBundleFrame(ctx, bp, false);
-            ScopeAugment(ctx, bp, params);
+            ScopeAugment(ctx, bp, NULL, params);
 
             ScheduleAgentOperations(ctx, bp);
-            ResetBundleOutputs(bp->name);
 
             EvalContextStackPopFrame(ctx);
         }
     }
 }
 
-/*********************************************************************/
-/* Level 3                                                           */
-/*********************************************************************/
-
-static void SaveClassEnvironment(EvalContext *ctx, Writer *writer)
+static void SaveClassEnvironment(const EvalContext *ctx, Writer *writer)
 {
+    SetIterator it = EvalContextHeapIteratorHard(ctx);
+    const char *context;
+    while ((context = SetIteratorNext(&it)))
     {
-        SetIterator it = EvalContextHeapIteratorHard(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
+        if (!EvalContextHeapContainsNegated(ctx, context))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
+            WriterWriteF(writer, "%s\n", context);
         }
     }
 
+    it = EvalContextHeapIteratorSoft(ctx);
+    while ((context = SetIteratorNext(&it)))
     {
-        SetIterator it = EvalContextHeapIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
+        if (!EvalContextHeapContainsNegated(ctx, context))
         {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
+            WriterWriteF(writer, "%s\n", context);
         }
     }
+}
 
+static void AllClassesReport(const EvalContext *ctx)
+{
+    char context_report_file[CF_BUFSIZE];
+    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+    FILE *fp = NULL;
+    if ((fp = fopen(context_report_file, "w")) == NULL)
     {
-        SetIterator it = EvalContextStackFrameIteratorSoft(ctx);
-        const char *context = NULL;
-        while ((context = SetIteratorNext(&it)))
-        {
-            if (!EvalContextHeapContainsNegated(ctx, context))
-            {
-                WriterWriteF(writer, "%s\n", context);
-            }
-        }
+        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
+    }
+    else
+    {
+        Writer *writer = FileWriter(fp);
+        SaveClassEnvironment(ctx, writer);
+        WriterClose(writer);
     }
 }
 
 int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
-    PromiseType *sp;
-    TypeSequence type;
-    int pass;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -1202,13 +1189,15 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
         PROCESSTABLE = NULL;
     }
 
-    for (pass = 1; pass < CF_DONEPASSES; pass++)
+    for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
+        for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(ctx, type);
 
-            if ((sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
+            PromiseType *sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type]);
+
+            if (sp == NULL)
             {
                 continue;
             }
@@ -1224,30 +1213,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                if (ALLCLASSESREPORT)
-                {
-                    char context_report_file[CF_BUFSIZE];
-                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-
-                    FILE *fp = NULL;
-                    if ((fp = fopen(context_report_file, "w")) == NULL)
-                    {
-                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-                    }
-                    else
-                    {
-                        Writer *writer = FileWriter(fp);
-                        SaveClassEnvironment(ctx, writer);
-                        WriterClose(writer);
-                    }
-                }
-
-                if (pass == 1)  // Count the number of promises modelled for efficiency
-                {
-                    CF_TOPICS++;
-                }
-
-                ExpandPromise(ctx, pp, KeepAgentPromise);
+                ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
 
                 if (Abort())
                 {
@@ -1295,7 +1261,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
     for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        cfstat(rp->item, &sb);
+        stat(rp->item, &sb);
 
         if (ACCESSLIST)
         {
@@ -1391,11 +1357,13 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
        }
 
     ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
-    ConvergeVarHashPromise(ctx, pp, true);
+    VerifyVarPromise(ctx, pp, true);
 }
 
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
@@ -1409,7 +1377,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
         return;
     }
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return;
     }
@@ -1434,7 +1402,7 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
-        ConvergeVarHashPromise(ctx, pp, true);
+        VerifyVarPromise(ctx, pp, true);
         return;
     }
 
@@ -1447,17 +1415,9 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp)
     
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
-
-    if (strcmp("outputs", pp->parent_promise_type->name) == 0)
-    {
-        VerifyOutputsPromise(ctx, pp);
-        return;
-    }
-
-    SetPromiseOutputs(ctx, pp);
 
     if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
@@ -1600,29 +1560,7 @@ static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
         break;
 
     case TYPE_SEQUENCE_STORAGE:
-#ifndef __MINGW32__
-    {
-        Attributes a = { {0} };
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
-
-        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
-        {
-            if (FSTABLIST)
-            {
-                SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
-                DeleteItemList(FSTABLIST);
-                FSTABLIST = NULL;
-            }
-            FSTAB_EDITS = 0;
-        }
-
-        if (!DONTDO && CF_MOUNTALL)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
-            MountAll();
-        }
-    }
-#endif /* !__MINGW32__ */
+        DeleteStorageContext();
         break;
 
     case TYPE_SEQUENCE_PACKAGES:
@@ -1755,7 +1693,7 @@ static bool VerifyBootstrap(void)
     snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
     MapName(filePath);
 
-    if (cfstat(filePath, &sb) == -1)
+    if (stat(filePath, &sb) == -1)
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
         return false;
@@ -1772,7 +1710,7 @@ static bool VerifyBootstrap(void)
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+    printf("-> Bootstrap to %s completed successfully\n", POLICY_SERVER);
 
     return true;
 }
@@ -1852,21 +1790,21 @@ static int AutomaticBootstrap()
         ListDestroy(&foundhubs);
         return -1;
     case 0:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "No hubs were found. Exiting.");
+        printf("No hubs were found. Exiting.\n");
         ListDestroy(&foundhubs);
         return -1;
     case 1:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found hub installed on:"
-                                                      "Hostname: %s"
-                                                      "IP Address: %s",
-                                                      ((HostProperties*)foundhubs)->Hostname,
-                                                      ((HostProperties*)foundhubs)->IPAddress);
+        printf("Found hub installed on:"
+               "Hostname: %s"
+               "IP Address: %s\n",
+               ((HostProperties*)foundhubs)->Hostname,
+               ((HostProperties*)foundhubs)->IPAddress);
         strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
         dlclose(avahi_handle);
         break;
     default:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found more than one hub registered in the network.\n"
-                                                      "Please bootstrap manually using IP from the list below:");
+        printf("Found more than one hub registered in the network.\n"
+               "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
         dlclose(avahi_handle);
         ListDestroy(&foundhubs);

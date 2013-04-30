@@ -3,7 +3,7 @@ AM_CFLAGS = $(NOVA_CFLAGS) -I$(top_srcdir)/libpromises -I$(srcdir)/../../libutil
 noinst_PROGRAMS = mock-package-manager
 
 mock_package_manager_SOURCES = mock-package-manager.c
-mock_package_manager_LDADD = $(abs_top_builddir)/libpromises/libpromises.la
+mock_package_manager_LDADD = ../../libpromises/libpromises.la
 
 if HAVE_LIBXML2
 noinst_PROGRAMS += xml-c14nize
@@ -11,7 +11,7 @@ noinst_PROGRAMS += xml-c14nize
 xml_c14nize_CPPFLAGS = $(LIBXML2_CPPFLAGS)
 xml_c14nize_CFLAGS = -I$(top_srcdir)/libpromises -I$(srcdir)/../../libutils \
     $(LIBXML2_CFLAGS)
-xml_c14nize_LDADD = $(abs_top_builddir)/libutils/libutils.la \
+xml_c14nize_LDADD = ../../libutils/libutils.la \
     $(LIBXML2_LIBS)
 endif
 

@@ -36,8 +36,14 @@ typedef struct
     char blockid[CF_MAXVARSIZE];
 
     char filename[CF_MAXVARSIZE];
+    char *current_line;
     int line_pos;
     int line_no;
+    int error_count;
+
+    int warning_count;
+    int warnings; // bitfield of warnings not considered to be an error
+    int warnings_error; // bitfield of warnings considered to be an error
 
     int arg_nesting;
     int list_nesting;

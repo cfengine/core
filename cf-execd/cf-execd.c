@@ -32,24 +32,24 @@
 #include "vars.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "scope.h"
 #include "hashes.h"
 #include "unix.h"
-#include "cfstream.h"
+#include "logging_old.h"
+#include "logging.h"
 #include "string_lib.h"
 #include "signals.h"
 #include "locks.h"
-#include "logging.h"
 #include "exec_tools.h"
 #include "rlist.h"
 #include "processes_select.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 #include <assert.h>
+
+#ifdef HAVE_NOVA
+# include "cf.nova.h"
+#endif
 
 #define CF_EXEC_IFELAPSED 0
 #define CF_EXEC_EXPIREAFTER 1
@@ -140,18 +140,17 @@ int main(int argc, char *argv[])
     }
     else if (config->tty_interactive)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
         exit(EXIT_FAILURE);
     }
     else
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
 
@@ -200,7 +199,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -260,7 +259,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
+            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
             exit(0);
 
         case 'M':
@@ -272,15 +271,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
+            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
             exit(1);
 
         }
     }
 
-    if (argv[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
     }
 
     return config;
@@ -327,7 +327,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", cf_ctime(&now));
+        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-execd starting %.24s\n", ctime(&now));
         _exit(0);
     }
 
@@ -460,13 +460,13 @@ typedef enum
     RELOAD_FULL
 } Reload;
 
-static Reload CheckNewPromises(EvalContext *ctx, const char *input_file, const Rlist *input_files)
+static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files)
 {
-    if (NewPromiseProposals(ctx, input_file, input_files))
+    if (NewPromiseProposals(ctx, config, input_files))
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
 
-        if (CheckPromises(input_file))
+        if (CheckPromises(config))
         {
             return RELOAD_FULL;
         }
@@ -489,19 +489,11 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Sleeping for pulse time %d seconds...\n", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
 
-// recheck license (in case of license updates or expiry)
-
-    if (EnterpriseExpiry(ctx, AGENT_TYPE_EXECUTOR))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine - autonomous configuration engine. This enterprise license is invalid.\n");
-        exit(1);
-    }
-
     /*
      * FIXME: this logic duplicates the one from cf-serverd.c. Unify ASAP.
      */
 
-    if (CheckNewPromises(ctx, config->input_file, InputFiles(ctx, *policy)) == RELOAD_FULL)
+    if (CheckNewPromises(ctx, config, InputFiles(ctx, *policy)) == RELOAD_FULL)
     {
         /* Full reload */
 
@@ -519,8 +511,6 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
 
         PolicyDestroy(*policy);
         *policy = NULL;
-
-        ERRORCOUNT = 0;
 
         SetPolicyServer(ctx, POLICY_SERVER);
         ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
@@ -569,13 +559,13 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         {
             if (IsDefinedClass(ctx, time_context, NULL))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", cf_ctime(&CFSTARTTIME), time_context);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Waking up the agent at %s ~ %s \n", ctime(&CFSTARTTIME), time_context);
                 return true;
             }
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Nothing to do at %s\n", cf_ctime(&CFSTARTTIME));
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Nothing to do at %s\n", ctime(&CFSTARTTIME));
     return false;
 }
 

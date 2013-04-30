@@ -1,0 +1,29 @@
+body common control
+{
+      inputs => { "../../../default.cf.sub", "passing_slists.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+      "slist_pass" slist => { "1", "2", "3" };
+}
+
+bundle agent init
+{
+  vars:
+}
+
+bundle agent test
+{
+  methods:
+      "test_in_namespace"   usebundle => b:test_in_namespace("@(g.slist_pass)");
+}
+
+bundle agent check
+{
+  methods:
+      "check_in_namespace"  usebundle => b:check_in_namespace(join(",", "g.slist_pass"), "$(this.promise_filename)");
+}

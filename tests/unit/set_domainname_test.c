@@ -18,7 +18,11 @@ static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };
 
+#ifdef SOLARIS
+int gethostname(char *name, int len)
+#else
 int gethostname(char *name, size_t len)
+#endif
 {
     strcpy(name, "laptop.intra");
     return 0;
@@ -100,7 +104,7 @@ void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname
     ScopeNewScalar(ctx, ns, varname, value, type);
 }
 
-static void test_set_names(void **state)
+static void test_set_names(void)
 {
     int i = 0;
 
@@ -208,11 +212,6 @@ void Unix_FindV6InterfaceInfo(void)
     fail();
 }
 
-int cfstat(const char *path, struct stat *buf)
-{
-    fail();
-}
-
 void FatalError(char *s, ...)
 {
     fail();
@@ -220,11 +219,6 @@ void FatalError(char *s, ...)
 }
 
 Item *SplitString(const char *string, char sep)
-{
-    fail();
-}
-
-char *cf_ctime(const time_t *timep)
 {
     fail();
 }
@@ -265,11 +259,6 @@ void LoadSlowlyVaryingObservations(EvalContext *ctx)
 }
 
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
-{
-    fail();
-}
-
-char *MapName(char *s)
 {
     fail();
 }

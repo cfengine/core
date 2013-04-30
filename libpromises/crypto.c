@@ -29,10 +29,10 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "hashes.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "pipes.h"
 #include "mutex.h"
-#include "logging.h"
+#include "sysinfo.h"
 
 static void RandomSeed(void);
 
@@ -100,9 +100,9 @@ bool LoadSecretKeys(void)
     unsigned long err;
     struct stat sb;
 
-    if ((fp = fopen(PrivateKeyFile(), "r")) == NULL)
+    if ((fp = fopen(PrivateKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile());
+        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile(GetWorkDir()));
         return true; // TODO: return true?
     }
 
@@ -117,11 +117,11 @@ bool LoadSecretKeys(void)
 
     fclose(fp);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile());
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile(GetWorkDir()));
 
-    if ((fp = fopen(PublicKeyFile(), "r")) == NULL)
+    if ((fp = fopen(PublicKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile());
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile(GetWorkDir()));
         return true; // TODO: return true?
     }
 
@@ -134,7 +134,7 @@ bool LoadSecretKeys(void)
         return true; // TODO: return true?
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile());
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile(GetWorkDir()));
     fclose(fp);
 
     if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
@@ -218,7 +218,7 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
     snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(newname);
 
-    if (cfstat(newname, &statbuf) == -1)
+    if (stat(newname, &statbuf) == -1)
     {
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Did not find new key format %s", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
@@ -226,7 +226,7 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
         CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trying old style %s", oldname);
 
-        if (cfstat(oldname, &statbuf) == -1)
+        if (stat(oldname, &statbuf) == -1)
         {
             CfDebug("Did not have old-style key %s\n", oldname);
             return NULL;
@@ -293,7 +293,7 @@ void SavePublicKey(char *user, char *ipaddress, char *digest, RSA *key)
     snprintf(filename, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(filename);
 
-    if (cfstat(filename, &statbuf) != -1)
+    if (stat(filename, &statbuf) != -1)
     {
         return;
     }
@@ -405,22 +405,22 @@ void DebugBinOut(char *buffer, int len, char *comment)
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
 }
 
-const char *PublicKeyFile(void)
+const char *PublicKeyFile(const char *workdir)
 {
     if (!CFPUBKEYFILE)
     {
         xasprintf(&CFPUBKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", CFWORKDIR);
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.pub", workdir);
     }
     return CFPUBKEYFILE;
 }
 
-const char *PrivateKeyFile(void)
+const char *PrivateKeyFile(const char *workdir)
 {
     if (!CFPRIVKEYFILE)
     {
         xasprintf(&CFPRIVKEYFILE,
-                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", CFWORKDIR);
+                  "%s" FILE_SEPARATOR_STR "ppkeys" FILE_SEPARATOR_STR "localhost.priv", workdir);
     }
     return CFPRIVKEYFILE;
 }

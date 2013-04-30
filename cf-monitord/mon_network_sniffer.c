@@ -29,16 +29,11 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "cfstream.h"
-#include "communication.h"
+#include "logging_old.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"
 #include "misc_lib.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
 
 typedef enum
 {
@@ -110,7 +105,7 @@ void MonNetworkSnifferOpen(void)
 
         sscanf(CF_TCPDUMP_COMM, "%s", buffer);
 
-        if (cfstat(buffer, &statbuf) != -1)
+        if (stat(buffer, &statbuf) != -1)
         {
             if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r", true)) == NULL)
             {
@@ -465,7 +460,7 @@ void MonNetworkSnifferGatherData(void)
         CfDebug("save incoming %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
@@ -493,7 +488,7 @@ void MonNetworkSnifferGatherData(void)
         CfDebug("save outgoing %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {

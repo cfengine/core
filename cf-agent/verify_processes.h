@@ -29,4 +29,8 @@
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp);
 
+/* To be implemented in Nova for Win32 */
+
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
+
 #endif

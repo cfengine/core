@@ -32,11 +32,11 @@
 #include "promises.h"
 #include "item_lib.h"
 #include "conversion.h"
-#include "reporting.h"
+#include "ornaments.h"
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
-#include "cfstream.h"
+#include "logging_old.h"
 #include "signals.h"
 #include "locks.h"
 #include "exec_tools.h"
@@ -44,11 +44,11 @@
 #include "files_lib.h"
 #include "unix.h"
 #include "verify_measurements.h"
+#include "verify_classes.h"
 #include "cf-monitord-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
-#include "history.h"
+# include "history.h"
 #endif
 
 #include <math.h>
@@ -115,7 +115,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
 static void SetVariable(char *name, double now, double average, double stddev, Item **list);
 static double RejectAnomaly(double new, double av, double var, double av2, double var2);
 static void ZeroArrivals(void);
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp);
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, void *param);
 
 /****************************************************************/
 
@@ -306,7 +306,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
         .expireafter = 0,
     };
 
-    thislock = AcquireLock(pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
+    thislock = AcquireLock(ctx, pp->promiser, VUQNAME, CFSTARTTIME, tc, pp, false);
 
     if (thislock.lock == NULL)
     {
@@ -567,7 +567,7 @@ static void PublishEnvironment(Item *classes)
 
     fclose(fp);
 
-    cf_rename(ENVFILE_NEW, ENVFILE);
+    rename(ENVFILE_NEW, ENVFILE);
 }
 
 /*********************************************************************/
@@ -1139,7 +1139,7 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
-                    ExpandPromise(ctx, pp, KeepMonitorPromise);
+                    ExpandPromise(ctx, pp, KeepMonitorPromise, NULL);
                 }
             }
         }
@@ -1159,8 +1159,10 @@ static void GatherPromisedMeasures(EvalContext *ctx, const Policy *policy)
 /* Level                                                             */
 /*********************************************************************/
 
-static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
+static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     char *sp = NULL;
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
@@ -1185,14 +1187,15 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp)
 
     if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 
     if (strcmp("measurements", pp->parent_promise_type->name) == 0)
     {
         VerifyMeasurementPromise(ctx, CF_THIS, pp);
-        *pp->donep = false;
+        /* FIXME: Verify why this explicit promise status change is done */
+        EvalContextMarkPromiseNotDone(ctx, pp);
         return;
     }
 }

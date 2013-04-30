@@ -20,7 +20,6 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_CONVERSION_H
@@ -69,16 +68,16 @@ bool IsRealNumber(const char *s);
 
 // Misc.
 char *Rlist2String(Rlist *list, char *sep); // TODO: Yet another Rlist serialization scheme.. Found 5 so far.
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval);
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval);
 char *MapAddress(char *addr);
 const char *CommandArg0(const char *execstr);
 void CommandPrefix(char *execstr, char *comm);
 const char *DataTypeShortToType(char *short_type);
 int FindTypeInArray(const char **haystack, const char *needle, int default_value, int null_value);
 
-#ifndef __MINGW32__
 UidList *Rlist2UidList(Rlist *uidnames, const Promise *pp);
 GidList *Rlist2GidList(Rlist *gidnames, const Promise *pp);
+#ifndef __MINGW32__
 uid_t Str2Uid(char *uidbuff, char *copy, const Promise *pp);
 gid_t Str2Gid(char *gidbuff, char *copy, const Promise *pp);
 #endif /* !__MINGW32__ */

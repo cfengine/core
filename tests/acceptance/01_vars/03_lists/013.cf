@@ -1,0 +1,71 @@
+# Test expansion of remote arrays containing lists
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+    nova_edition::
+      host_licenses_paid => "5";
+}
+
+bundle agent init
+{
+  vars:
+      "array[one]" string => "1";
+      "array[two]" string => "2";
+      "array[list]" slist => { "first", "second", "last" };
+
+      "keys" slist => { "one", "two", "list" };
+
+      "expected" string => "
+1
+2
+first
+second
+last";
+
+     "actual" string => "";
+
+     "states" slist => { "expected", "actual" };
+
+  files:
+      "$(G.testfile).$(states)"
+        create => "true",
+        edit_line => init_insert("$($(states))"),
+        edit_defaults => init_empty;
+}
+
+bundle agent test
+{
+  files:
+      "$(G.testfile).actual"
+            edit_line => test_insert;
+        
+}
+
+bundle edit_line init_insert(str) {
+  insert_lines:
+    "$(str)";
+}
+
+body edit_defaults init_empty {
+    empty_file_before_editing => "true";
+}
+
+bundle edit_line test_insert {
+ insert_lines: 
+    "$(init.array[$(init.keys)])";
+}
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => default_check_diff("$(G.testfile).actual",
+                                            "$(G.testfile).expected",
+                                            "$(this.promise_filename)");
+
+  reports:
+    DEBUG::
+      "can expand $(init.array[$(init.keys)])";
+}

@@ -1,19 +1,18 @@
-
-/* 
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -21,15 +20,13 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "cf3.defs.h"
 
 #include "prototypes3.h"
 #include "syntax.h"
-#include "cfstream.h"
-#include "logging.h"
+#include "logging_old.h"
 
 /*
  * This module contains numeruous functions which don't use all their parameters
@@ -45,23 +42,15 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#if !defined(HAVE_NOVA)
-
 extern int PR_KEPT;
 extern int PR_REPAIRED;
 extern int PR_NOTKEPT;
 
 /* all agents: generic_agent.c */
 
-
 const char *GetConsolePrefix(void)
 {
     return "cf3";
-}
-
-int IsEnterprise(void)
-{
-    return false;
 }
 
 
@@ -75,16 +64,6 @@ void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in CFEngine Enterprise");
 }
-
-
-/* all agents: generic_agent.c, cf-execd.c, cf-serverd.c */
-
-
-int EnterpriseExpiry(ARG_UNUSED EvalContext *ctx, ARG_UNUSED AgentType agent_type)
-{
-    return false;
-}
-
 
 /* all agents: cfstream.c, expand.c, generic_agent.c */
 
@@ -121,7 +100,20 @@ void LogTotalCompliance(const char *version, int background_tasks)
 
     CfOut(OUTPUT_LEVEL_VERBOSE, "", "Total: %s", string);
 
-    PromiseLog(string);
+    char filename[CF_BUFSIZE];
+    snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
+    MapName(filename);
+
+    FILE *fout = fopen(filename, "a");
+    if (fout == NULL)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
+    }
+    else
+    {
+        fprintf(fout, "%" PRIdMAX ",%" PRIdMAX ": %s\n", (intmax_t)CFSTARTTIME, (intmax_t)time(NULL), string);
+        fclose(fout);
+    }
 }
 
 
@@ -214,5 +206,3 @@ void ShowPromises(ARG_UNUSED const Seq *bundles, ARG_UNUSED const Seq *bodies)
 void ShowPromise(ARG_UNUSED const Promise *pp)
 {
 }
-
-#endif

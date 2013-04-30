@@ -1,19 +1,18 @@
-/* 
-
+/*
    Copyright (C) Cfengine AS
 
    This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
@@ -35,8 +34,6 @@ int SHOWREPORTS = false;
 /* operational state                                                         */
 /*****************************************************************************/
 
-int VERBOSE = false;
-int INFORM = false;
 int LOOKUP = false;
 int FIPS_MODE = false;
 
@@ -48,24 +45,9 @@ int CF_PERSISTENCE = 10;
 AgentType THIS_AGENT_TYPE;
 time_t PROMISETIME = 0;
 
-int LICENSES = 0;
-int AM_NOVA = false;
-int AM_PHP_MODULE = false;
-char EXPIRY[CF_SMALLBUF] = { 0 };
-char LICENSE_COMPANY[CF_SMALLBUF] = { 0 };
-
-// These are used to measure graph complexity in know/agent
-
-int CF_TOPICS = 0;              // objects
-int CF_OCCUR = 0;               // objects
-
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
-Item *DONELIST = NULL;
 
-char *CBUNDLESEQUENCE_STR;
-
-int EDIT_MODEL = false;
 int BOOTSTRAP = false;
 
 /*****************************************************************************/
@@ -86,7 +68,6 @@ char POLICY_SERVER[CF_BUFSIZE] = { 0 };
 
 int IGNORELOCK = false;
 int DONTDO = false;
-int DEBUG = false;
 
 char VFQNAME[CF_MAXVARSIZE] = { 0 };
 char VUQNAME[CF_MAXVARSIZE] = { 0 };
@@ -96,9 +77,6 @@ char VYEAR[5] = { 0 };
 char VDAY[3] = { 0 };
 char VMONTH[4] = { 0 };
 char VSHIFT[12] = { 0 };
-
-int ERRORCOUNT = 0;
-char VPREFIX[CF_MAXVARSIZE] = { 0 };
 
 char CFWORKDIR[CF_BUFSIZE] = { 0 };
 
@@ -124,8 +102,6 @@ int CF_DEFAULT_DIGEST_LEN;
 /***********************************************************/
 
 char CFLOCK[CF_BUFSIZE] = { 0 };
-char CFLOG[CF_BUFSIZE] = { 0 };
-char CFLAST[CF_BUFSIZE] = { 0 };
 
 time_t CFSTARTTIME;
 time_t CFINITSTARTTIME;

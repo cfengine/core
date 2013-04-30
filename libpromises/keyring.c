@@ -26,7 +26,7 @@
 
 #include "keyring.h"
 #include "dir.h"
-#include "cfstream.h"
+#include "logging_old.h"
 
 /***************************************************************/
 

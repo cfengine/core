@@ -20,20 +20,10 @@
   versions of Cfengine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-
-#if !HAVE_DECL_MKDTEMP
-char *mkdtemp(char *template);
-#endif
-
-#if !HAVE_DECL_STRRSTR
-char *strrstr(const char *haystack, const char *needle);
-#endif
+#include "platform.h"
+#include "compiler.h"
 
 #define MAXTRY 999999
 

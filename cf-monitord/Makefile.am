@@ -1,6 +1,9 @@
 sbin_PROGRAMS = cf-monitord
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ \
+	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
+	-I$(srcdir)/../libpromises \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA
@@ -31,7 +34,7 @@ cf_monitord_SOURCES = \
 
 if !HAVE_NOVA
 cf_monitord_SOURCES += \
-	cf-monitord-enterprise-stubs.c cf-monitord-enterpsise-stubs.h
+	cf-monitord-enterprise-stubs.c cf-monitord-enterprise-stubs.h
 endif
 
 CLEANFILES = *.gcno *.gcda

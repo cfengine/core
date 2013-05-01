@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<!--
+  This file is part of KDE's kate project.
+
+  copyright   : (C) 2009, 2012 by Jessica Greer, John Coleman
+  copyright   : (C) 2012 Panos Christeas
+  email       : jessica.greer@yale.edu, xrg@linux.gr
+
+ **********************************************************************
+ * This library is free software; you can redistribute it and/or      *
+ * modify it under the terms of the GNU Library General Public        *
+ * License as published by the Free Software Foundation; either       *
+ * version 2 of the License, or (at your option) any later version.   *
+ *                                                                    *
+ * This library is distributed in the hope that it will be useful,    *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  *max
+ * Library General Public License for more details.                   *
+ *                                                                    *
+ * You should have received a copy of the GNU Library General Public  *
+ * License along with this library; if not, write to the              *
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,   *
+ * Boston, MA  02110-1301, USA.                                       *
+ **********************************************************************
+
+
+-->
+
+
+<language name="CFEngine" section="Other"
+          version="0.1" kateversion="2.4"
+          indenter="cstyle"
+          extensions="*.cf"
+          priority="10">
+<highlighting>
+    <list name="bundle_promises">
+      <item> vars </item>
+      <item> classes </item>
+      <item> outputs </item>
+      <item> interfaces </item>
+      <item> files </item>
+      <item> packages </item>
+      <item> guest_environments </item>
+      <item> methods </item>
+      <item> processes </item>
+      <item> services </item>
+      <item> commands </item>
+      <item> storage </item>
+      <item> databases </item>
+      <item> reports </item>
+      <item> access </item>
+    </list>
+
+    <list name="edit_line_promises" >
+        <item> vars </item>
+        <item> classes </item>
+        <item> delete_lines </item>
+        <item> field_edits </item>
+        <item> insert_lines </item>
+        <item> replace_patterns </item>
+        <item> reports </item>
+    </list>
+
+    <list name="bundle_context">
+        <item>common</item>
+        <item>agent</item>
+        <item>server</item>
+        <item>knowledge</item>
+        <item>monitor</item>
+    </list>
+
+    <list name="special_bundles">
+        <item> control </item>
+    </list>
+
+    <list name="all_promises">
+	<item> comment </item>
+	<item> handle </item>
+	<!-- TODO -->
+      <!-- common control promises -->
+      <item> bundlesequence </item>
+      <item> inputs </item>
+      <item> version </item>
+      <item> lastseenexpireafter </item>
+      <item> output_prefix </item>
+      <item> domain </item>
+      <!-- agent control promises -->
+      <item> maxconnections </item>
+      <item> abortclasses </item>
+      <item> abortbundleclasses </item>
+      <item> addclasses </item>
+      <item> agentaccess </item>
+      <item> auditing </item>
+      <item> binarypaddingchar </item>
+      <item> bindtointerface </item>
+      <item> hashupdates </item>
+      <item> childlibpath </item>
+      <item> defaultcopytype </item>
+      <item> dryrun </item>
+      <item> editbinaryfilesize </item>
+      <item> editfilesize </item>
+      <item> exclamation </item>
+      <item> expireafter </item>
+      <item> files_single_copy </item>
+      <item> files_auto_define </item>
+      <item> fullencryption </item>
+      <item> hostnamekeys </item>
+      <item> ifelapsed </item>
+      <item> inform </item>
+      <item> lastseen </item>
+      <item> lastseenexpireafter </item>
+      <item> mountfilesystems </item>
+      <item> nonalphanumfiles </item>
+      <item> repchar </item>
+      <item> default_repository </item>
+      <item> secureinput </item>
+      <item> sensiblecount</item>
+      <item> sensiblesize </item>
+      <item> skipidentify </item>
+      <item> suspiciousnames </item>
+      <item> syslog </item>
+      <item> timezone </item>
+      <item> default_timeout </item>
+      <item> verbose </item>
+      <!-- agent control promises -->
+      <item> cfruncommand </item>
+      <item> maxconnections </item>
+      <item> denybadclocks </item>
+      <item> allowconnects </item>
+      <item> denyconnects </item>
+      <item> allowallconnects </item>
+      <item> trustkeysfrom</item>
+      <item> allowusers </item>
+      <item> dynamicaddresses </item>
+      <item> skipverify </item>
+      <item> logallconnections </item>
+      <item> logencryptedtransfers </item>
+      <item> hostnamekeys </item>
+      <item> auditing </item>
+      <item> bindtointerface </item>
+      <item> serverfacility </item>
+      <!-- monitor control promises -->
+      <item> forgetrate </item>
+      <item> monitorfacility </item>
+      <item> histograms </item>
+      <item> tcpdump </item>
+      <item> tcpdumpcommand </item>
+      <!-- runagent control promises -->
+      <item> hosts </item>
+      <item> port </item>
+      <item> force_ipv4 </item>
+      <item> trustkey </item>
+      <item> encrypt </item>
+      <item> background_children </item>
+      <item> max_children </item>
+      <item> output_to_file </item>
+      <!-- executor control promises -->
+      <item> splaytime </item>
+      <item> mailfrom </item>
+      <item> mailto </item>
+      <item> smtpserver </item>
+      <item> mailmaxlines </item>
+      <item> schedule </item>
+      <item> executorfacility </item>
+      <item> exec_command </item>
+      <!-- knowledge control promises -->
+      <item> id_prefix </item>
+      <item> build_directory </item>
+      <item> sql_type </item>
+      <item> sql_database </item>
+      <item> sql_owner </item>
+      <item> sql_passwd </item>
+      <item> sql_server </item>
+      <item> query_output </item>
+      <item> query_engine </item>
+      <item> style_sheet </item>
+      <item> html_banner </item>
+      <item> html_footer </item>
+      <item> graph_output </item>
+      <item> graph_directory </item>
+      <item> generate_manual </item>
+      <item> manual_source_directory </item>
+      <!--reporter control promises -->
+      <item> reports </item>
+      <item> report_output </item>
+      <item> build_directory </item>
+      <item> auto_scaling </item>
+      <item> error_bars </item>
+      <item> time_stamps </item>
+      <item> query_engine </item>
+      <item> style_sheet </item>
+      <item> html_banner </item>
+      <item> html_footer </item>
+      <item> style_sheet </item>
+    </list>
+    <list name="data_types">
+      <item> string </item>
+      <item> int </item>
+      <item> real </item>
+      <item> slist </item>
+      <item> ilist </item>
+      <item> policy </item>
+    </list>
+
+  <contexts>
+      <context attribute="Normal Text" lineEndContext="#pop" name="Outer Scope" >
+        <WordDetect attribute="Keyword" context="bundle header" String="body" />
+        <WordDetect attribute="Keyword" context="body header" String="bundle" />
+        <DetectChar attribute="Comment" context="Comment" char="#" />
+        <!--<DetectChar attribute="String" context="string" char="&quot;" />-->
+      </context>
+      
+      <context name="headers1" attribute="Definition">
+              <DetectSpaces />
+              <DetectChar attribute="Comment" context="Comment" char="#" />
+              <DetectIdentifier attribute="Name" context="#stay" />
+              
+      </context>
+      
+      
+      <context name="bundle header" attribute="Definition">
+              <keyword String="bundle_context" attribute="Context" />
+              <keyword String="special_bundles" attribute="Keyword" />
+              <IncludeRules context="headers1" />
+              <DetectChar attribute="RegionMarker" context="bundle definition" char="{" 
+                beginRegion="Bundle" />
+      </context>
+
+      <context name="body header" attribute="Definition">
+              <IncludeRules context="headers1" />
+              <DetectChar attribute="RegionMarker" context="bundle definition" char="{" 
+                beginRegion="Body"/>
+      </context>
+
+      <context name="bundle definition"  attribute="Normal Text" >
+              <DetectSpaces />
+              <keyword attribute="Keyword" String="bundle_promises" />
+	    <RegExpr attribute="Class" context="#stay"
+		String="[\w\.!\|&amp;]+::" />
+
+        <IncludeRules context="content" />
+        <DetectChar attribute="RegionMarker" context="#pop#pop" endRegion="Bundle" char="}" />
+      </context>
+      
+      <context name="body definition" attribute="Normal Text" lineEndContext="#pop" >
+        <IncludeRules context="content" />
+        <DetectChar attribute="RegionMarker" context="#pop#pop" endRegion="Body" char="}" />
+      </context>
+
+      <context name="content" >
+	      <keyword attribute="Data_types" context="#stay" String="data_types" />
+	      <keyword attribute="Promises" context="#stay" String="all_promises" />
+	      
+              <DetectChar attribute="String" context="string" char="&quot;" />
+              <DetectChar attribute="Symbol" context="List" char="{" beginRegion="List" />
+              <DetectChar attribute="Comment" context="Comment" char="#" />
+      </context>
+
+       <context name="List" lineEndContext="#stay">
+               <DetectSpaces />
+               <DetectChar attribute="Symbol" context="#pop" char="}" endRegion="List" />
+               <IncludeRules context="content" />
+       </context>
+
+      <context attribute="String" lineEndContext="#stay" name="string" >
+        <HlCStringChar attribute="String Char" context="#stay"/>
+        <Detect2Chars attribute="Variable Identifier" context="Instr Var" char="$" char1="(" />
+        <DetectChar attribute="String" context="#pop" char="&quot;" />
+      </context>
+
+      <context attribute="Comment" lineEndContext="#pop" name="Comment">
+      </context>
+      <context name="Instr Var" attribute="Variable" >
+              <Detect2Chars attribute="Variable Identifier" context="Instr Var" char="$" char1="(" />
+              <DetectChar attribute="Variable Identifier" context="#pop" char=")" />
+      </context>
+    </contexts>
+    
+
+    <itemDatas>
+      <itemData name="Normal Text" defStyleNum="dsNormal" />
+      <itemData name="Definition" defStyleNum="dsOthers" /> <!--??-->
+      <itemData name="Context" defStyleNum="dsFunction" />
+     
+      <itemData name="Name" defStyleNum="dsDataType" />
+      <itemData name="Variable Identifier" defStyleNum="dsOthers" />
+      <itemData name="Keyword" defStyleNum="dsKeyword" />
+      <itemData name="String" defStyleNum="dsString" />
+      <itemData name="RegionMarker" defStyleNum="dsNormal" />
+      <itemData name="Symbol" defStyleNum="dsFunction" />
+      <itemData name="Comment" defStyleNum="dsComment" />
+      <itemData name="Variable" defStyleNum="dsFunction" />
+      <itemData name="Data_types" defStyleNum="dsDataType" />
+      <itemData name="Promises" defStyleNum="dsKeyword"/>
+      <itemData name="Class" defStyleNum="dsDataType" />
+    </itemDatas>
+  </highlighting>
+  <general>
+    <comments>
+      <comment name="singleLine" start="#"/>
+    </comments>
+    <keywords casesensitive="1"/>
+  </general>
+</language>

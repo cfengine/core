@@ -486,6 +486,41 @@ static void PromiseHash(const Promise *pp, const char *salt, unsigned char diges
         EVP_DigestUpdate(&context, pp->comment, strlen(pp->comment));
     }
 
+    if (pp->parent_promise_type && pp->parent_promise_type->parent_bundle)
+    {
+        if (pp->parent_promise_type->parent_bundle->ns)
+        {
+            EVP_DigestUpdate(&context, pp->parent_promise_type->parent_bundle->ns, strlen(pp->parent_promise_type->parent_bundle->ns));
+        }
+
+        if (pp->parent_promise_type->parent_bundle->name)
+        {
+            EVP_DigestUpdate(&context, pp->parent_promise_type->parent_bundle->name, strlen(pp->parent_promise_type->parent_bundle->name));
+        }
+    }
+
+    char *str = NULL;
+    if (pp->offset.start)
+    {
+        xasprintf(&str, "%u", (unsigned int)pp->offset.start);
+        EVP_DigestUpdate(&context, str, strlen(str));
+        free(str);
+    }
+
+    if (pp->offset.end)
+    {
+        xasprintf(&str, "%u", (unsigned int)pp->offset.end);
+        EVP_DigestUpdate(&context, str, strlen(str));
+        free(str);
+    }
+
+    if (pp->offset.line)
+    {
+        xasprintf(&str, "%u", (unsigned int)pp->offset.line);
+        EVP_DigestUpdate(&context, str, strlen(str));
+        free(str);
+    }
+
     if (salt)
     {
         EVP_DigestUpdate(&context, salt, strlen(salt));

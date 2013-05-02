@@ -68,7 +68,7 @@ const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
-char VIPADDRESS[18];
+char VIPADDRESS[CF_MAX_IP_LEN];
 RSA *PUBKEY;
 
 Item *IdempPrependItem(Item **liststart, const char *itemstring, const char *classes)

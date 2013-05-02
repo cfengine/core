@@ -140,12 +140,14 @@ bool ShowHost(const char *hostkey, const char *address, bool incoming,
     int *count = ctx;
     char timebuf[26];
 
-    char hostname[CF_BUFSIZE];
-    strlcpy(hostname, IPString2Hostname(address), CF_BUFSIZE);
+    char hostname[MAXHOSTNAMELEN];
+    int ret = IPString2Hostname(hostname, address, sizeof(hostname));
 
     (*count)++;
-    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n", incoming ? "Incoming" : "Outgoing",
-           address, hostname, cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
+    printf("%-10.10s %-17.17s %-25.25s %-26.26s %-s\n",
+           incoming ? "Incoming" : "Outgoing",
+           address, (ret != -1) ? hostname : "-",
+           cf_strtimestamp_local(quality->lastseen, timebuf), hostkey);
 
     return true;
 }
@@ -168,15 +170,20 @@ void ShowLastSeenHosts()
 
 int RemoveKeys(const char *host)
 {
-    char ip[CF_BUFSIZE];
     char digest[CF_BUFSIZE];
+    char ipaddr[CF_MAX_IP_LEN];
 
-    strcpy(ip, Hostname2IPString(host));
-    Address2Hostkey(ip, digest);
+    if (Hostname2IPString(ipaddr, host, sizeof(ipaddr)) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", 
+            "ERROR, could not resolve %s, not removing", host);
+        return 255;
+    }
 
+    Address2Hostkey(ipaddr, digest);
     RemoveHostFromLastSeen(digest);
 
-    int removed_by_ip = RemovePublicKey(ip);
+    int removed_by_ip = RemovePublicKey(ipaddr);
     int removed_by_digest = RemovePublicKey(digest);
 
     if ((removed_by_ip == -1) || (removed_by_digest == -1))

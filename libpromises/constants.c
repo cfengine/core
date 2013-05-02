@@ -62,26 +62,6 @@ const char *SHIFT_TEXT[] =
     NULL
 };
 
-const char *CF_DATATYPES[] =    /* see enum cfdatatype */
-{
-    "string",
-    "int",
-    "real",
-    "slist",
-    "ilist",
-    "rlist",
-    "(menu option)",
-    "(option list)",
-    "(ext body)",
-    "(ext bundle)",
-    "class",
-    "clist",
-    "irange [int,int]",
-    "rrange [real,real]",
-    "counter",
-    "<notype>",
-};
-
 const char *CF_AGENTTYPES[] =   /* see enum cfagenttype */
 {
     CF_COMMONC,

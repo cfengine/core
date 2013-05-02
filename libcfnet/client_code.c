@@ -40,6 +40,8 @@
 #include "item_lib.h"
 #include "files_lib.h"
 #include "string_lib.h"
+#include "misc_lib.h"                                   /* ProgrammingError */
+
 
 typedef struct
 {
@@ -50,12 +52,17 @@ typedef struct
 
 #define CFENGINE_SERVICE "cfengine"
 
-/* seconds */
-#define RECVTIMEOUT 30
+#define RECVTIMEOUT 30 /* seconds */
 
 #define CF_COULD_NOT_CONNECT -2
 
-Rlist *SERVERLIST = NULL;
+/* Only ip address strings are stored in this list, so don't put any
+ * hostnames. TODO convert to list of (sockaddr_storage *) to enforce this. */
+static Rlist *SERVERLIST = NULL;
+/* With this lock we ensure we read the list head atomically, but we don't
+ * guarantee anything about the queue's contents. It should be OK since we
+ * never remove elements from the queue, only prepend to the head.*/
+static pthread_mutex_t cft_serverlist = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP;
 
 static void NewClientCache(Stat *data, AgentConnection *conn);
 static void CacheServerConnection(AgentConnection *conn, const char *server);
@@ -142,51 +149,56 @@ AgentConnection *NewServerConnection(FileCopy fc, bool background, int *err)
     AgentConnection *conn;
     Rlist *rp;
 
-// First one in goal has to open the connection, or mark it failed or private (thread)
-
-    // We never close a non-background connection until end
-    // mark serial connections as such
-
     for (rp = fc.servers; rp != NULL; rp = rp->next)
     {
-        if (ServerOffline(RlistScalarValue(rp)))
+        const char *servername = RlistScalarValue(rp);
+
+        if (ServerOffline(servername))
         {
             continue;
         }
 
         if (background)
         {
-            if (RlistLen(SERVERLIST) < CFA_MAXTHREADS)
+            ThreadLock(&cft_serverlist);
+                Rlist *srvlist_tmp = SERVERLIST;
+            ThreadUnlock(&cft_serverlist);
+
+            /* TODO not return NULL if >= CFA_MAXTREADS ? */
+            /* TODO RlistLen is O(n) operation. */
+            if (RlistLen(srvlist_tmp) < CFA_MAXTHREADS)
             {
-                conn = ServerConnection(RlistScalarValue(rp), fc, err);
+                /* If background connection was requested, then don't cache it
+                 * in SERVERLIST since it will be closed right afterwards. */
+                conn = ServerConnection(servername, fc, err);
                 return conn;
             }
         }
         else
         {
-            if ((conn = GetIdleConnectionToServer(RlistScalarValue(rp))))
+            conn = GetIdleConnectionToServer(servername);
+            if (conn != NULL)
             {
                 *err = 0;
                 return conn;
             }
 
             /* This is first usage, need to open */
-
-            conn = ServerConnection(RlistScalarValue(rp), fc, err);
-
-            if (conn == NULL)
+            conn = ServerConnection(servername, fc, err);
+            if (conn != NULL)
             {
-                Log(LOG_LEVEL_INFO, "Unable to establish connection with %s", RlistScalarValue(rp));
-                MarkServerOffline(RlistScalarValue(rp));
-            }
-            else
-            {
-                CacheServerConnection(conn, RlistScalarValue(rp));
+                CacheServerConnection(conn, servername);
                 return conn;
             }
+
+            /* This server failed, trying next in list. */
+            Log(LOG_LEVEL_INFO, "Unable to establish connection with %s",
+                servername);
+            MarkServerOffline(servername);
         }
     }
 
+    Log(LOG_LEVEL_ERR, "Unable to establish any connection with server.");
     return NULL;
 }
 
@@ -248,7 +260,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
             return NULL;
         }
 
-        if (!IdentifyAgent(conn->sd, conn->localip))
+        if (!IdentifyAgent(conn->sd))
         {
             Log(LOG_LEVEL_ERR, " !! Id-authentication for %s failed", VFQNAME);
             errno = EPERM;
@@ -1138,24 +1150,40 @@ static bool ServerOffline(const char *server)
 {
     Rlist *rp;
     ServerItem *svp;
-    char ipname[CF_MAXVARSIZE];
 
-    ThreadLock(cft_getaddr);
-    strncpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE - 1);
-    ThreadUnlock(cft_getaddr);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
+    {
+        /* Ignore the error for now, resolution
+           will probably fail again soon... TODO return true? */
+        return false;
+    }
 
-    for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+    ThreadLock(&cft_serverlist);
+        Rlist *srvlist_tmp = SERVERLIST;
+    ThreadUnlock(&cft_serverlist);
+
+    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
         svp = (ServerItem *) rp->item;
-
         if (svp == NULL)
         {
-            continue;
+            ProgrammingError("SERVERLIST had NULL ServerItem!");
         }
 
-        if ((strcmp(ipname, svp->server) == 0) && (svp->conn == NULL))
+        if (strcmp(ipaddr, svp->server) == 0)
         {
-            return true;
+            if (svp->conn == NULL)
+            {
+                ProgrammingError("ServerOffline:"
+                                 " NULL connection in SERVERLIST for %s!",
+                                 ipaddr);
+            }
+
+            if (svp->conn->sd == CF_COULD_NOT_CONNECT)
+                return true;
+            else
+                return false;
         }
     }
 
@@ -1166,36 +1194,66 @@ static AgentConnection *GetIdleConnectionToServer(const char *server)
 {
     Rlist *rp;
     ServerItem *svp;
-    char ipname[CF_MAXVARSIZE];
 
-    ThreadLock(cft_getaddr);
-    strncpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE - 1);
-    ThreadUnlock(cft_getaddr);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "GetIdleConnectionToServer: ERROR, could not resolve %s", server);
+    }
 
-    for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+    ThreadLock(&cft_serverlist);
+        Rlist *srvlist_tmp = SERVERLIST;
+    ThreadUnlock(&cft_serverlist);
+
+    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
         svp = (ServerItem *) rp->item;
-
         if (svp == NULL)
         {
-            continue;
+            ProgrammingError("SERVERLIST had NULL ServerItem!");
         }
 
-        if (svp->busy)
+        if ((strcmp(ipaddr, svp->server) == 0))
         {
-            Log(LOG_LEVEL_VERBOSE, "Existing connection to %s seems to be active...", ipname);
-            return NULL;
-        }
+            if (svp->conn == NULL)
+            {
+                ProgrammingError("GetIdleConnectionToServer:"
+                                 " NULL connection in SERVERLIST for %s!",
+                                 ipaddr);
+            }
 
-        if ((strcmp(ipname, svp->server) == 0) && (svp->conn) && (svp->conn->sd > 0))
-        {
-            Log(LOG_LEVEL_VERBOSE, "Connection to %s is already open and ready...", ipname);
-            svp->busy = true;
-            return svp->conn;
+            if (svp->busy)
+            {
+                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
+                    " connection to %s seems to be active...",
+                    ipaddr);
+            }
+            else if (svp->conn->sd == CF_COULD_NOT_CONNECT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
+                    " connection to %s is marked as offline...",
+                    ipaddr);
+            }
+            else if (svp->conn->sd > 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
+                    " found connection to %s already open and ready.",
+                    ipaddr);
+                svp->busy = true;
+                return svp->conn;
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE,
+                    " connection to %s is in unknown state %d...",
+                    ipaddr, svp->conn->sd);
+            }
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "No existing connection to %s is established...", ipname);
+    Log(LOG_LEVEL_VERBOSE, "GetIdleConnectionToServer:"
+        " no existing connection to %s is established...", ipaddr);
     return NULL;
 }
 
@@ -1206,18 +1264,22 @@ void ServerNotBusy(AgentConnection *conn)
     Rlist *rp;
     ServerItem *svp;
 
-    for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+    ThreadLock(&cft_serverlist);
+        Rlist *srvlist_tmp = SERVERLIST;
+    ThreadUnlock(&cft_serverlist);
+
+    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
         svp = (ServerItem *) rp->item;
 
         if (svp->conn == conn)
         {
             svp->busy = false;
-            break;
+            Log(LOG_LEVEL_VERBOSE, "Existing connection just became free...");
+            return;
         }
     }
-
-    Log(LOG_LEVEL_VERBOSE, "Existing connection just became free...");
+    ProgrammingError("ServerNotBusy: No connection found!");
 }
 
 /*********************************************************************/
@@ -1229,48 +1291,46 @@ static void MarkServerOffline(const char *server)
     Rlist *rp;
     AgentConnection *conn = NULL;
     ServerItem *svp;
-    char ipname[CF_MAXVARSIZE];
 
-    ThreadLock(cft_getaddr);
-    strncpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE - 1);
-    ThreadUnlock(cft_getaddr);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "MarkServerOffline: ERROR, could not resolve %s", server);
+        return;
+    }
 
-    for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+    ThreadLock(&cft_serverlist);
+        Rlist *srvlist_tmp = SERVERLIST;
+    ThreadUnlock(&cft_serverlist);
+    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
         svp = (ServerItem *) rp->item;
-
         if (svp == NULL)
         {
-            continue;
+            ProgrammingError("SERVERLIST had NULL ServerItem!");
         }
 
         conn = svp->conn;
-
-        if (strcmp(ipname, conn->localip) == 0)
+        if (strcmp(ipaddr, svp->server) == 0)
+        /* TODO assert conn->remoteip == svp->server? Why do we need both? */
         {
+            /* Found it, mark offline */
             conn->sd = CF_COULD_NOT_CONNECT;
             return;
         }
     }
 
-    ThreadLock(cft_getaddr);
-
-/* If no existing connection, get one .. */
-
-    rp = RlistPrependScalar(&SERVERLIST, "nothing");
-
-    svp = xmalloc(sizeof(ServerItem));
-
-    svp->server = xstrdup(ipname);
-
-    free(rp->item);
-    rp->item = svp;
-
-    svp->conn = NewAgentConn(ipname);
-
+    /* If no existing connection, get one .. */
+    svp = xmalloc(sizeof(*svp));
+    svp->server = xstrdup(ipaddr);
     svp->busy = false;
+    svp->conn = NewAgentConn(ipaddr);
+    svp->conn->sd = CF_COULD_NOT_CONNECT;
 
-    ThreadUnlock(cft_getaddr);
+    ThreadLock(&cft_serverlist);
+        rp = RlistPrependAlien(&SERVERLIST, svp);
+    ThreadUnlock(&cft_serverlist);
 }
 
 /*********************************************************************/
@@ -1278,26 +1338,24 @@ static void MarkServerOffline(const char *server)
 static void CacheServerConnection(AgentConnection *conn, const char *server)
 /* First time we open a connection, so store it */
 {
-    Rlist *rp;
     ServerItem *svp;
-    char ipname[CF_MAXVARSIZE];
 
-    if (!ThreadLock(cft_getaddr))
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, server, sizeof(ipaddr)) == -1)
     {
-        exit(1);
+        Log(LOG_LEVEL_ERR,
+            "GetIdleConnectionToServer: ERROR, could not resolve %s", server);
+        return;
     }
 
-    strlcpy(ipname, Hostname2IPString(server), CF_MAXVARSIZE);
-
-    rp = RlistPrependScalar(&SERVERLIST, "nothing");
-    free(rp->item);
-    svp = xmalloc(sizeof(ServerItem));
-    rp->item = svp;
-    svp->server = xstrdup(ipname);
-    svp->conn = conn;
+    svp = xmalloc(sizeof(*svp));
+    svp->server = xstrdup(ipaddr);
     svp->busy = true;
+    svp->conn = conn;
 
-    ThreadUnlock(cft_getaddr);
+    ThreadLock(&cft_serverlist);
+        RlistPrependAlien(&SERVERLIST, svp);
+    ThreadUnlock(&cft_serverlist);
 }
 
 /*********************************************************************/
@@ -1360,37 +1418,41 @@ static void FlushFileStream(int sd, int toget)
 
 void ConnectionsInit(void)
 {
-    SERVERLIST = NULL;
+    ThreadLock(&cft_serverlist);
+        SERVERLIST = NULL;
+    ThreadUnlock(&cft_serverlist);
 }
 
 /*********************************************************************/
 
+/* No locking taking place in here, so make sure you've finalised all threads
+ * before calling this one! */
 void ConnectionsCleanup(void)
 {
     Rlist *rp;
     ServerItem *svp;
 
-    for (rp = SERVERLIST; rp != NULL; rp = rp->next)
+    Rlist *srvlist_tmp = SERVERLIST;
+    SERVERLIST = NULL;
+
+    for (rp = srvlist_tmp; rp != NULL; rp = rp->next)
     {
         svp = (ServerItem *) rp->item;
-
         if (svp == NULL)
         {
-            continue;
+            ProgrammingError("SERVERLIST had NULL ServerItem!");
+        }
+        if (svp->conn == NULL)
+        {
+            ProgrammingError("ConnectionsCleanup:"
+                             "NULL connection in SERVERLIST!");
         }
 
         DisconnectServer(svp->conn);
-
-        if (svp->server)
-        {
-            free(svp->server);
-        }
-
-        rp->item = NULL;
+        free(svp->server);
     }
 
-    RlistDestroy(SERVERLIST);
-    SERVERLIST = NULL;
+    RlistDestroy(srvlist_tmp);
 }
 
 /*********************************************************************/

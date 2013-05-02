@@ -32,8 +32,8 @@ AgentConnection *NewAgentConn(const char *server_name);
 void DeleteAgentConn(AgentConnection *ap);
 int IsIPV6Address(char *name);
 int IsIPV4Address(char *name);
-const char *Hostname2IPString(const char *hostname);
-char *IPString2Hostname(const char *ipaddress);
+int Hostname2IPString(char *dst, const char *hostname, size_t dst_size);
+int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size);
 int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN]);
 unsigned short SocketFamily(int sd);
 

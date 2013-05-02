@@ -151,7 +151,16 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         }
         else
         {
-            snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
+            char hostname[MAXHOSTNAMELEN];
+            if (IPString2Hostname(hostname, ip->name, sizeof(hostname)) != -1)
+            {
+                snprintf(address, sizeof(address), "%s", hostname);
+            }
+            else
+            {
+                /* Not numeric address was requested, but IP was unresolvable. */
+                snprintf(address, sizeof(address), "%s", ip->name);
+            }
         }
 
         if (entrytime < now - horizon)
@@ -432,18 +441,46 @@ static FnCallResult FnCallEscape(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallHost2IP(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char *name = RlistScalarValue(finalargs);
+    char ipaddr[CF_MAX_IP_LEN];
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(Hostname2IPString(name)), RVAL_TYPE_SCALAR } };
+    if (Hostname2IPString(ipaddr, name, sizeof(ipaddr)) != -1)
+    {
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(ipaddr), RVAL_TYPE_SCALAR }
+        };
+    }
+    else
+    {
+        /* Retain legacy behaviour,
+           return hostname in case resolution fails. */
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(name), RVAL_TYPE_SCALAR }
+        };
+    }
+
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallIP2Host(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-/* begin fn specific content */
+    char hostname[MAXHOSTNAMELEN];
     char *ip = RlistScalarValue(finalargs);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IPString2Hostname(ip)), RVAL_TYPE_SCALAR } };
+    if (IPString2Hostname(hostname, ip, sizeof(hostname)) != -1)
+    {
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(hostname), RVAL_TYPE_SCALAR }
+        };
+    }
+    else
+    {
+        /* Retain legacy behaviour,
+           return ip address in case resolution fails. */
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(ip), RVAL_TYPE_SCALAR }
+        };
+    }
 }
 
 /*********************************************************************/
@@ -3795,7 +3832,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 // Read once to validate structure of file in itemlist
 
     CfDebug("Read string data from file %s\n", filename);
-    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", CF_DATATYPES[type]);
+    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -3891,11 +3928,11 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */
@@ -3994,11 +4031,11 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */

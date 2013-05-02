@@ -724,6 +724,7 @@ typedef struct
     FnCallResult (*impl)(EvalContext *ctx, FnCall *, Rlist *);
     const char *description;
     bool varargs;
+    SyntaxStatus status;
 } FnCallType;
 
 #define UNKNOWN_FUNCTION -1

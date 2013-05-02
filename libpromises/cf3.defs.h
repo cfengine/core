@@ -627,6 +627,8 @@ typedef enum
 
 /*************************************************************************/
 
+typedef struct EvalContext_ EvalContext;
+
 typedef enum
 {
     RVAL_TYPE_SCALAR = 's',
@@ -695,11 +697,17 @@ typedef struct
     SyntaxStatus status;
 } PromiseTypeSyntax;
 
-/*************************************************************************/
+typedef enum FnCallStatus
+{
+    FNCALL_SUCCESS,
+    FNCALL_FAILURE
+} FnCallStatus;
 
-typedef struct EvalContext_ EvalContext;
-
-typedef struct FnCallResult_ FnCallResult;
+typedef struct
+{
+    FnCallStatus status;
+    Rval rval;
+} FnCallResult;
 
 typedef struct
 {
@@ -713,14 +721,14 @@ typedef struct
     const char *name;
     DataType dtype;
     const FnCallArg *args;
-    FnCallResult(*impl) (EvalContext *ctx, FnCall *, Rlist *);
+    FnCallResult (*impl)(EvalContext *ctx, FnCall *, Rlist *);
     const char *description;
     bool varargs;
 } FnCallType;
 
-/*************************************************************************/
-
 #define UNKNOWN_FUNCTION -1
+
+/*************************************************************************/
 
 typedef struct Constraint_ Constraint;
 
@@ -748,27 +756,6 @@ typedef struct Scope_
     AssocHashTable *hashtable;
     struct Scope_ *next;
 } Scope;
-
-/*******************************************************************/
-/* Return value signalling                                         */
-/*******************************************************************/
-
-typedef enum FnCallStatus
-{
-    FNCALL_SUCCESS,
-    FNCALL_FAILURE,
-} FnCallStatus;
-
-/* from builtin functions */
-struct FnCallResult_
-{
-    FnCallStatus status;
-    Rval rval;
-};
-
-/*******************************************************************/
-/* Return value signalling                                         */
-/*******************************************************************/
 
 typedef enum
 {

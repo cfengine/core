@@ -51,37 +51,32 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 
 /*********************************************************/
 
-const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name)
+static const PromiseTypeSyntax *PromiseTypeSyntaxGetStrict(const char *bundle_type, const char *promise_type)
 {
-    for (int i = 0; i < CF3_MODULES; i++)
+    for (int module_index = 0; module_index < CF3_MODULES; module_index++)
     {
-        const PromiseTypeSyntax *syntax = NULL;
-
-        if ((syntax = CF_ALL_PROMISE_TYPES[i]) == NULL)
+        for (int promise_type_index = 0; CF_ALL_PROMISE_TYPES[module_index][promise_type_index].promise_type; promise_type_index++)
         {
-            continue;
-        }
+            const PromiseTypeSyntax *promise_type_syntax = &CF_ALL_PROMISE_TYPES[module_index][promise_type_index];
 
-        for (int j = 0; syntax[j].bundle_type != NULL; j++)
-        {
-            if (strcmp(bundle_type, syntax[j].bundle_type) == 0)
+            if (strcmp(bundle_type, promise_type_syntax->bundle_type) == 0
+                && strcmp(promise_type, promise_type_syntax->promise_type) == 0)
             {
-                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
-                {
-                    return &syntax[j];
-                }
-            }
-            else if (strcmp("*", syntax[j].bundle_type) == 0)
-            {
-                if (strcmp(promise_type_name, syntax[j].promise_type) == 0)
-                {
-                    return &syntax[j];
-                }
+                return promise_type_syntax;
             }
         }
     }
-
     return NULL;
+}
+
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type)
+{
+    const PromiseTypeSyntax *pts = PromiseTypeSyntaxGetStrict(bundle_type, promise_type);
+    if (!pts)
+    {
+        pts = PromiseTypeSyntaxGetStrict("*", promise_type);
+    }
+    return pts;
 }
 
 static const ConstraintSyntax *GetCommonConstraint(const char *lval)

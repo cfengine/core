@@ -76,7 +76,7 @@ DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *strin
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
 
-const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type_name);
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type);
 const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
 
 const BodySyntax *BodySyntaxGet(const char *body_type);

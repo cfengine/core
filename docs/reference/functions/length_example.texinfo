@@ -1,0 +1,24 @@
+
+@verbatim
+
+bundle agent test
+
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                      };
+
+      "length" int => length("test");
+      "test_str" string => join(",", "test");
+
+  reports:
+      "The test list is $(test_str)";
+      "The test list has $(length) elements";
+}
+
+@end verbatim

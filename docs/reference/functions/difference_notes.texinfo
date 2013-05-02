@@ -1,0 +1,3 @@
+
+Returns the unique elements in the list variable specified in arg1 that
+are @emph{not} in the list variable specified in arg2.

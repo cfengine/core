@@ -1,0 +1,56 @@
+#######################################################
+#
+# Test length()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+  "a" slist => { "b", "c", "a" };
+  "b" slist => { "100", "9", "10" };
+  "c" slist => { };
+  "d" slist => { "", "a", "", "b" };
+  "e" slist => { "a", "1", "b" };
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "lengths" ilist => { length("init.a"), length("init.b"), length("init.c"), length("init.d"), length("init.e"), };
+}
+
+
+#######################################################
+
+bundle agent check
+{
+vars:
+      "j" string => join(",", "test.lengths");
+
+      "e" string => "3,3,0,4,3";
+
+classes:
+    any::
+      "ok" expression => strcmp($(e), $(j));
+
+reports:
+    DEBUG::
+        "lengths check '$(j)' <> '$(e)'";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

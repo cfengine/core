@@ -57,6 +57,7 @@
 #include "audit.h"
 #include "sort.h"
 #include "logging.h"
+#include "set.h"
 
 #include <libgen.h>
 #include <assert.h>
@@ -1316,7 +1317,6 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     double sum = 0;
 
 /* begin fn specific content */
@@ -1354,7 +1354,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
 
@@ -1379,7 +1379,6 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     double product = 1.0;
 
 /* begin fn specific content */
@@ -1418,7 +1417,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
         if (!DoubleFromString(rp->item, &x))
@@ -1443,7 +1442,6 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char lval[CF_MAXVARSIZE], *joined;
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     int size = 0;
 
 /* begin fn specific content */
@@ -1485,7 +1483,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         if (strcmp(rp->item, CF_NULL_VALUE) == 0)
         {
@@ -1498,7 +1496,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     joined = xcalloc(1, size + 1);
     size = 0;
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         if (strcmp(rp->item, CF_NULL_VALUE) == 0)
         {
@@ -1822,7 +1820,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
-    Rlist *rp, *newlist = NULL;
+    Rlist *newlist = NULL;
     Rval rval;
     DataType retype;
 
@@ -1873,7 +1871,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
         ScopeNewSpecialScalar(ctx, "this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
@@ -2412,7 +2410,7 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
 {
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2423,7 +2421,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     long match_count = 0;
     long total = 0;
-    for (rp = (Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
         int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
 
@@ -2493,7 +2491,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     long max = IntFromString(RlistScalarValue(finalargs->next->next)); // max results
 
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2505,7 +2503,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     if (head)
     {
         long count = 0;
-        for (rp = (Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
+        for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
         {
             RlistAppendScalar(&returnlist, rp->item);
             count++;
@@ -2513,7 +2511,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     }
     else if (max > 0) // tail mode
     {
-        rp = (Rlist *) rval2.item;
+        const Rlist *rp = (const Rlist *) rval2.item;
         int length = RlistLen((const Rlist *) rp);
 
         int offset = max >= length ? 0 : length-max;
@@ -2532,12 +2530,103 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 /*********************************************************************/
 
+static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    bool difference = (0 == strcmp(fp->name, "difference"));
+
+    const char *name_a = RlistScalarValue(finalargs);
+    const char *name_b = RlistScalarValue(finalargs->next);
+
+    Rval rval_a;
+    if (!GetListReferenceArgument(ctx, fp, name_a, &rval_a, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Rval rval_b;
+    if (!GetListReferenceArgument(ctx, fp, name_b, &rval_b, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Rlist *returnlist = NULL;
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    StringSet *set_b = StringSetNew();
+    for (const Rlist *rp_b = rval_b.item; rp_b != NULL; rp_b = rp_b->next)
+    {
+        StringSetAdd(set_b, xstrdup(rp_b->item));
+    }
+
+    for (const Rlist *rp_a = rval_a.item; rp_a != NULL; rp_a = rp_a->next)
+    {
+        if (strcmp(rp_a->item, CF_NULL_VALUE) == 0)
+        {
+            continue;
+        }
+
+        // Yes, this is an XOR.  But it's more legible this way.
+        if (difference && StringSetContains(set_b, rp_a->item))
+        {
+            continue;
+        }
+
+        if (!difference && !StringSetContains(set_b, rp_a->item))
+        {
+            continue;
+        }
+                
+        RlistAppendScalarIdemp(&returnlist, rp_a->item);
+    }
+
+    StringSetDestroy(set_b);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char *name = RlistScalarValue(finalargs);
+
+    Rval rval2;
+    char buffer[CF_BUFSIZE];
+    int count = 0;
+
+    if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    bool null_seen = false;
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    {
+        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        {
+            null_seen = true;
+        }
+        count++;
+    }
+
+    if (count == 1 && null_seen)
+    {
+        count = 0;
+    }
+
+    snprintf(buffer, CF_MAXVARSIZE, "%d", count);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *name = RlistScalarValue(finalargs);
 
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2546,7 +2635,7 @@ static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         RlistAppendScalarIdemp(&returnlist, rp->item);
     }
@@ -2562,14 +2651,14 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     long offset = IntFromString(RlistScalarValue(finalargs->next)); // offset
 
     Rval rval2;
-    Rlist *rp = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
+    const Rlist *rp;
+    for (rp = (const Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
 
     if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
 
@@ -5545,6 +5634,19 @@ FnCallArg SHUFFLE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg LENGTH_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+FnCallArg SETOP_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine base list identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine filter list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5565,6 +5667,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching, "Count the number of defined classes matching regex arg1", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching, "Count the number of lines matching regex arg1 in file arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("difference", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("dirname", DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string", false, SYNTAX_STATUS_NORMAL),
@@ -5594,6 +5697,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("hostswithclass", DATA_TYPE_STRING_LIST, HOSTSWITHCLASS_ARGS, &FnCallHostsWithClass, "Extract the list of hosts with the given class set from the hub database (commercial extension)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge, "Read global knowledge from the hub host by id (commercial extension)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("intersection", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory", false, SYNTAX_STATUS_NORMAL),
@@ -5610,6 +5714,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("ldaparray", DATA_TYPE_CONTEXT, LDAPARRAY_ARGS, &FnCallLDAPArray, "Extract all values from an ldap record", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ldaplist", DATA_TYPE_STRING_LIST, LDAPLIST_ARGS, &FnCallLDAPList, "Extract all named values from multiple ldap records", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("length", DATA_TYPE_INT, LENGTH_ARGS, &FnCallLength, "Return the length of a list", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)", false, SYNTAX_STATUS_NORMAL),

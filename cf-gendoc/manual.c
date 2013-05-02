@@ -38,6 +38,7 @@
 #include "assoc.h"
 #include "logging_old.h"
 #include "rlist.h"
+#include "conversion.h"
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
@@ -479,18 +480,18 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
         if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n\n@b{Type}: %s (Separate Bundle) \n", bs[i].lval,
-                    context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+                    context, bs[i].lval, DataTypeToString(bs[i].dtype));
         }
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s} (body template)\n@noindent @b{Type}: %s\n\n",
-                    bs[i].lval, context, bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+                    bs[i].lval, context, bs[i].lval, DataTypeToString(bs[i].dtype));
             TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {
             fprintf(fout, "\n\n@node %s in %s\n@subsection @code{%s}\n@noindent @b{Type}: %s\n\n", bs[i].lval, context,
-                    bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+                    bs[i].lval, DataTypeToString(bs[i].dtype));
             TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
 
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
@@ -654,16 +655,16 @@ static void TexinfoSubBodyParts(const char *source_dir, FILE *fout, const Constr
         if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
             fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n (Separate Bundle) \n\n", bs[i].lval,
-                    CF_DATATYPES[bs[i].dtype]);
+                    DataTypeToString(bs[i].dtype));
         }
         else if (bs[i].dtype == DATA_TYPE_BODY)
         {
-            fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+            fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, DataTypeToString(bs[i].dtype));
             TexinfoSubBodyParts(source_dir, fout, bs[i].range.body_type_syntax->constraints);
         }
         else
         {
-            fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, CF_DATATYPES[bs[i].dtype]);
+            fprintf(fout, "@item @code{%s}\n@b{Type}: %s\n\n", bs[i].lval, DataTypeToString(bs[i].dtype));
             TexinfoShowRange(fout, bs[i].range.validation_string, bs[i].dtype);
             fprintf(fout, "\n@noindent @b{Synopsis}: %s\n\n", bs[i].description);
 
@@ -802,7 +803,7 @@ static void TexinfoSpecialFunction(const char *source_dir, FILE *fout, FnCallTyp
         fprintf(fout, "...");
     }
 
-    fprintf(fout, ") returns type @b{%s}\n\n@*\n", CF_DATATYPES[fn.dtype]);
+    fprintf(fout, ") returns type @b{%s}\n\n@*\n", DataTypeToString(fn.dtype));
 
     for (i = 0; args[i].pattern != NULL; i++)
     {

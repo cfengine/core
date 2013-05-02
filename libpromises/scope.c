@@ -696,9 +696,6 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
                 if (rp->state_ptr)
                 {
-                    CfDebug("Rewriting expanded type for %s from %s to %s\n", assoc->lval, CF_DATATYPES[assoc->dtype],
-                            (char *) rp->state_ptr->item);
-
                     // must first free existing rval in scope, then allocate new (should always be string)
                     RvalDestroy(assoc->rval);
 
@@ -724,8 +721,6 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
                     /* Only lists need to be converted */
                     break;
                 }
-
-                CfDebug(" to %s\n", CF_DATATYPES[assoc->dtype]);
             }
         }
     }
@@ -761,8 +756,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
                   (char *) rpt->item);
-            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, CF_DATATYPES[dtg],
-                  (char *) rpt->item, CF_DATATYPES[dtt]);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, DataTypeToString(dtg),
+                  (char *) rpt->item, DataTypeToString(dtt));
         }
 
         switch (rpg->type)

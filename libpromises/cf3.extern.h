@@ -91,7 +91,6 @@ extern int CF_PERSISTENCE;
 extern int LOOKUP;
 extern int BOOTSTRAP;
 
-extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;

@@ -3795,7 +3795,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 // Read once to validate structure of file in itemlist
 
     CfDebug("Read string data from file %s\n", filename);
-    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", CF_DATATYPES[type]);
+    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -3891,11 +3891,11 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */
@@ -3994,11 +3994,11 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */

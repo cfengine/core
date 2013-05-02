@@ -279,19 +279,6 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
     Rlist *rp;
     Item *checklist;
 
-    CfDebug(" ------------------------------------------------\n");
-
-    if (dt == DATA_TYPE_BUNDLE || dt == DATA_TYPE_BODY)
-    {
-        CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (bundle/body)\n", lval, CF_DATATYPES[dt]);
-    }
-    else
-    {
-        CfDebug(" - Checking inline constraint/arg %s[%s] => mappedval (%c) %s\n", lval, CF_DATATYPES[dt], rval.type,
-                range);
-    }
-    CfDebug(" ------------------------------------------------\n");
-
 /* Get type of lval */
 
     switch (rval.type)
@@ -1001,7 +988,7 @@ static JsonElement *ExportAttributesSyntaxAsJson(const ConstraintSyntax attribut
         {
             JsonElement *attribute = JsonObjectCreate(10);
 
-            JsonObjectAppendString(attribute, "datatype", CF_DATATYPES[attributes[i].dtype]);
+            JsonObjectAppendString(attribute, "datatype", DataTypeToString(attributes[i].dtype));
 
             if (strlen(attributes[i].range.validation_string) == 0)
             {

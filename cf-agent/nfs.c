@@ -139,6 +139,7 @@ bool LoadMountInfo(Rlist **list)
     for (;;)
     {
         vbuff[0] = buf1[0] = buf2[0] = buf3[0] = source[0] = '\0';
+        nfs = false;
 
         ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
 

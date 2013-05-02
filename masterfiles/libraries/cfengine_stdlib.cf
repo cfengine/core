@@ -1783,6 +1783,43 @@ have_aptitude::
 
 }
 
+# Ignore aptitude because:
+#  1) aptitude will remove "unneeded" packages unexpectly
+#  2) aptitude return codes are useless
+#  3) aptitude is a high level interface
+#  4) aptitude provides little benefit
+#  5) have_aptitude is a hard class and thus cannot be unset
+body package_method apt_get_release(release)
+{
+      package_changes => "bulk";
+      package_list_command => "$(debian_knowledge.call_dpkg) -l";
+      package_list_name_regex    => ".i\s+([^\s]+).*";
+      package_list_version_regex => ".i\s+[^\s]+\s+([^\s]+).*";
+      package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
+      package_name_convention => "$(name)";
+
+      # set it to "0" to avoid caching of list during upgrade
+      package_list_update_ifelapsed => "240";
+
+      # Target a specific release, such as backports
+      package_add_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_list_update_command => "$(debian_knowledge.call_apt_get) update";
+      package_delete_command => "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes -q remove";
+      package_update_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_patch_command =>  "$(debian_knowledge.call_apt_get) $(debian_knowledge.dpkg_options) --yes --target-release $(release) install";
+      package_verify_command => "$(debian_knowledge.call_dpkg) -s";
+      package_noverify_returncode => "1";
+
+      package_patch_list_command => "$(debian_knowledge.call_apt_get) --just-print dist-upgrade";
+      package_patch_name_regex => "^Inst\s+(\S+)\s+.*";
+      package_patch_version_regex => "^Inst\s+\S+\s+\[?\(?([^\],\s]+).*";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+
+}
+
 ##
 
 body package_method dpkg_version(repo)

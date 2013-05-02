@@ -97,23 +97,40 @@ bundle agent check
       "verify_intersection_b_e" string => "";
       "verify_difference_b_e" string => "$(joined_b)";
 
-      "myclasses" slist => classesmatching("ok_(difference|intersection)_($(or_joined_list_names))_($(or_joined_list_names))");
-      "myclasses_size" int => length("myclasses");
-      "expected_sizes" ilist => { length("list1"), length("list2"), 2 };
-      "expected_size" real => product("expected_sizes");
-
   classes:
       "ok_$(call)_$(list1)_$(list2)" expression => strcmp("$(check_$(call)_$(list1)_$(list2))",
                                                           "$(verify_$(call)_$(list1)_$(list2))");
 
-      "count_ok" expression => strcmp(length("myclasses"), $(expected_size));
-      "ok" and => { count_ok };
+      "ok" and => { ok_difference_a_a, ok_difference_a_b,
+                    ok_difference_a_c, ok_difference_a_d,
+                    ok_difference_a_e, ok_difference_b_a,
+                    ok_difference_b_b, ok_difference_b_c,
+                    ok_difference_b_d, ok_difference_b_e,
+                    ok_difference_c_a, ok_difference_c_b,
+                    ok_difference_c_c, ok_difference_c_d,
+                    ok_difference_c_e, ok_difference_d_a,
+                    ok_difference_d_b, ok_difference_d_c,
+                    ok_difference_d_d, ok_difference_d_e,
+                    ok_difference_e_a, ok_difference_e_b,
+                    ok_difference_e_c, ok_difference_e_d,
+                    ok_difference_e_e,
+
+                    ok_intersection_a_a, ok_intersection_a_b,
+                    ok_intersection_a_c, ok_intersection_a_d,
+                    ok_intersection_a_e, ok_intersection_b_a,
+                    ok_intersection_b_b, ok_intersection_b_c,
+                    ok_intersection_b_d, ok_intersection_b_e,
+                    ok_intersection_c_a, ok_intersection_c_b,
+                    ok_intersection_c_c, ok_intersection_c_d,
+                    ok_intersection_c_e, ok_intersection_d_a,
+                    ok_intersection_d_b, ok_intersection_d_c,
+                    ok_intersection_d_d, ok_intersection_d_e,
+                    ok_intersection_e_a, ok_intersection_e_b,
+                    ok_intersection_e_c, ok_intersection_e_d,
+                    ok_intersection_e_e };
 
   reports:
     DEBUG::
-      "matching class count: $(myclasses_size)";
-      "matching classes: $(myclasses)";
-
       "OK: ok_$(call)_$(list1)_$(list2) '$(check_$(call)_$(list1)_$(list2))' == '$(verify_$(call)_$(list1)_$(list2))'"
       ifvarclass => "ok_$(call)_$(list1)_$(list2)";
       "FAIL: ok_$(call)_$(list1)_$(list2) '$(check_$(call)_$(list1)_$(list2))' <> '$(verify_$(call)_$(list1)_$(list2))'"
@@ -123,4 +140,16 @@ bundle agent check
       "$(this.promise_filename) Pass";
     !ok::
       "$(this.promise_filename) FAIL";
+}
+
+body classes always(x)
+
+# Define a class no matter what the outcome of the promise is
+
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "$(x)" };
+  repair_denied => { "$(x)" };
+  repair_timeout => { "$(x)" };
 }

@@ -31,7 +31,7 @@
  * This module provides implementation of UDP syslog protocol
  */
 
-void SetSyslogHost(const char *host);
+bool SetSyslogHost(const char *host);
 void SetSyslogPort(uint16_t port);
 void SetSyslogFacility(int facility);
 

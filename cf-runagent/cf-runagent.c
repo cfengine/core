@@ -370,7 +370,7 @@ static void ThisAgentInit(void)
 static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
+    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE],
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
@@ -379,8 +379,15 @@ static int HailServer(EvalContext *ctx, char *host)
         .portnumber = (short) ParseHostname(host, peer),
     };
 
-    snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
-    Address2Hostkey(ipv4, digest);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, peer, sizeof(ipaddr)) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+            "HailServer: ERROR, could not resolve %s", peer);
+        return false;
+    }
+
+    Address2Hostkey(ipaddr, digest);
     GetCurrentUserName(user, CF_SMALLBUF);
 
     if (INTERACTIVE)
@@ -391,12 +398,13 @@ static int HailServer(EvalContext *ctx, char *host)
 
         if (!gotkey)
         {
-            gotkey = HavePublicKey(user, ipv4, digest) != NULL;
+            gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
         }
 
         if (!gotkey)
         {
-            printf("WARNING - You do not have a public key from host %s = %s\n", host, ipv4);
+            printf("WARNING - You do not have a public key from host %s = %s\n",
+                   host, ipaddr);
             printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
 
             while (true)

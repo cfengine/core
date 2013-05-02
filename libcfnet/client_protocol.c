@@ -27,15 +27,19 @@
 #include "communication.h"
 #include "net.h"
 
+/* libutils */
+#include "logging.h"                                            /* Log */
+
 /* TODO remove all includes from libpromises. */
-extern char VIPADDRESS[];
+extern char VIPADDRESS[CF_MAX_IP_LEN];
 extern char VDOMAIN[];
 extern char VFQNAME[];
 #include "sysinfo.h"                           /* GetCurrentUsername */
 #include "lastseen.h"                          /* LastSaw */
 #include "crypto.h"                            /* PublicKeyFile */
 #include "files_hashes.h" /* HashString,HashesMatch,HashPubKey,HashPrintSafe */
-#include "logging.h"
+
+#include <assert.h>
 
 
 static bool SetSessionKey(AgentConnection *conn);
@@ -53,15 +57,11 @@ void SetSkipIdentify(bool enabled)
 
 /*********************************************************************/
 
-int IdentifyAgent(int sd, char *localip)
+int IdentifyAgent(int sd)
 {
-    char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE], dnsname[CF_BUFSIZE];
-    struct sockaddr_storage myaddr = {0};
-    socklen_t myaddr_len = sizeof(myaddr);
+    char uname[CF_BUFSIZE], sendbuff[CF_BUFSIZE];
+    char dnsname[CF_MAXVARSIZE], localip[CF_MAX_IP_LEN];
     int ret;
-
-    memset(sendbuff, 0, CF_BUFSIZE);
-    memset(dnsname, 0, CF_BUFSIZE);
 
     if ((!SKIPIDENTIFY) && (strcmp(VDOMAIN, CF_START_DOMAIN) == 0))
     {
@@ -76,6 +76,8 @@ int IdentifyAgent(int sd, char *localip)
            the machine has a different uname from its IP name (!) This can
            happen on poorly set up machines or on hosts with multiple
            interfaces, with different names on each interface ... */
+        struct sockaddr_storage myaddr = {0};
+        socklen_t myaddr_len = sizeof(myaddr);
 
         if (getsockname(sd, (struct sockaddr *) &myaddr, &myaddr_len) == -1)
         {
@@ -84,35 +86,64 @@ int IdentifyAgent(int sd, char *localip)
         }
 
         /* No lookup, just convert the bound address to string. */
-        getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
-                    localip, CF_MAX_IP_LEN,
-                    NULL, 0, NI_NUMERICHOST);
-
-        /* dnsname: Reverse lookup of the bound IP address. */
         ret = getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
-                          dnsname, CF_MAXVARSIZE, NULL, 0, 0);
+                          localip, sizeof(localip),
+                          NULL, 0, NI_NUMERICHOST);
         if (ret != 0)
         {
             Log(LOG_LEVEL_ERR,
-                  "Couldn't look up address for %s: %s",
-                  dnsname, gai_strerror(ret));
+                  "IdentifyAgent: getnameinfo(NI_NUMERICHOST) ERROR: %s",
+                  gai_strerror(ret));
             return false;
+        }
+
+        /* dnsname: Reverse lookup of the bound IP address. */
+        ret = getnameinfo((struct sockaddr *) &myaddr, myaddr_len,
+                          dnsname, sizeof(dnsname), NULL, 0, 0);
+        if (ret != 0)
+        {
+            /* getnameinfo doesn't fail on resolution failure, it just prints
+             * the IP, so here something else is wrong. */
+            Log(LOG_LEVEL_ERR,
+                  "getnameinfo ERROR for %s: %s",
+                  localip, gai_strerror(ret));
+            return false;
+        }
+
+        /* getnameinfo() should always return FQDN. Some resolvers will not
+         * return FQNAME and missing PTR will give numerical result */
+        if ((strlen(VDOMAIN) > 0)                      /* TODO true always? */
+            && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
+        {
+            strcat(dnsname, ".");
+            strncat(dnsname, VDOMAIN, CF_MAXVARSIZE / 2);
+        }
+
+        /* Seems to be a bug in some resolvers that adds garbage, when it just
+         * returns the input. */
+        if (strncmp(dnsname, localip, strlen(localip)) == 0
+            && dnsname[strlen(localip)] != '\0')
+        {
+            dnsname[strlen(localip)] = '\0';
+            Log(LOG_LEVEL_WARNING,
+                "WARNING getnameinfo() seems to append garbage to unresolvable IPs, bug mitigated by CFEngine but please report your platform!");
         }
     }
     else
     {
+        assert(sizeof(localip) >= sizeof(VIPADDRESS));
         strcpy(localip, VIPADDRESS);
 
+        Log(LOG_LEVEL_VERBOSE,
+            "skipidentify was promised, so we are trusting and simply announcing the identity as \"%s\" for this host",
+            strlen(VFQNAME) > 0 ? VFQNAME : "skipident");
         if (strlen(VFQNAME) > 0)
         {
-            Log(LOG_LEVEL_VERBOSE,
-                  "skipidentify was promised, so we are trusting and simply announcing the identity as (%s) for this host",
-                  VFQNAME);
-            strcat(dnsname, VFQNAME);
+            strcpy(dnsname, VFQNAME);
         }
         else
         {
-            strcat(dnsname, "skipident");
+            strcpy(dnsname, "skipident");
         }
     }
 
@@ -123,27 +154,7 @@ int IdentifyAgent(int sd, char *localip)
     GetCurrentUserName(uname, sizeof(uname));
 #endif
 
-/* Some resolvers will not return FQNAME and missing PTR will give numerical result */
-
-    if ((strlen(VDOMAIN) > 0) && (!IsIPV6Address(dnsname)) && (!strchr(dnsname, '.')))
-    {
-        strcat(dnsname, ".");
-        strncat(dnsname, VDOMAIN, CF_MAXVARSIZE / 2);
-    }
-
-    if (strncmp(dnsname, localip, strlen(localip)) == 0)
-    {
-        /* Seems to be a bug in some resolvers that adds garbage, when it just
-         * returns the input */
-        strcpy(dnsname, localip);
-    }
-
-    if (strlen(dnsname) == 0)
-    {
-        strcpy(dnsname, localip);
-    }
-
-    snprintf(sendbuff, CF_BUFSIZE - 1, "CAUTH %s %s %s %d",
+    snprintf(sendbuff, sizeof(sendbuff), "CAUTH %s %s %s %d",
              localip, dnsname, uname, 0);
 
     if (SendTransaction(sd, sendbuff, 0, CF_DONE) == -1)

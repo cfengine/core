@@ -60,7 +60,7 @@ Rlist *CF_STCK = NULL; // TODO: consider renaming to something comprehesible
 
 int LASTSEENEXPIREAFTER = SECONDS_PER_WEEK;
 
-char POLICY_SERVER[CF_BUFSIZE] = { 0 };
+char POLICY_SERVER[CF_MAX_IP_LEN] = { 0 };
 
 /*****************************************************************************/
 /* Compatability infrastructure                                              */
@@ -86,7 +86,7 @@ RSA *PRIVKEY = NULL, *PUBKEY = NULL;
 char PUBKEY_DIGEST[CF_MAXVARSIZE] = { 0 };
 
 
-char VIPADDRESS[18] = { 0 };
+char VIPADDRESS[CF_MAX_IP_LEN] = { 0 };
 
 Item *IPADDRESSES = NULL;
 

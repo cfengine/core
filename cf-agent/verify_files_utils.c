@@ -2407,15 +2407,21 @@ int ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, 
         }
     }
 
+    /* conn == NULL means local copy. */
     CopyFileSources(ctx, destination, attr, pp, conn);
 
-    if (attr.transaction.background)
+    if (conn != NULL)
     {
-        DisconnectServer(conn);
-    }
-    else
-    {
-        ServerNotBusy(conn);
+        /* If it's a background connection then it's not cached in
+         * client_code.c:SERVERLIST, so just close it right after transaction. */
+        if (attr.transaction.background)
+        {
+            DisconnectServer(conn);
+        }
+        else
+        {
+            ServerNotBusy(conn);
+        }
     }
 
     return true;

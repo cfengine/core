@@ -476,7 +476,18 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
-        SetSyslogHost(Hostname2IPString(retval.item));
+        /* Don't resolve syslog_host now, better do it per log request. */
+        if (!SetSyslogHost(retval.item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "FAILed to set syslog_host, ""\"%s\" too long",
+                  (char *) retval.item);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s",
+                  (char *) retval.item);
+        }
     }
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))

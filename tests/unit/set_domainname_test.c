@@ -343,6 +343,6 @@ char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
 const char *CLASSTEXT[1] = { };
 
-char VIPADDRESS[18];
+char VIPADDRESS[CF_MAX_IP_LEN];
 
 /* LCOV_EXCL_STOP */

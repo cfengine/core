@@ -1185,6 +1185,51 @@ static JsonElement *BodyTypesToJson(void)
     return body_types;
 }
 
+static JsonElement *FnCallTypeToJson(const FnCallType *fn_syntax)
+{
+    JsonElement *json_fn = JsonObjectCreate(10);
+
+    JsonObjectAppendString(json_fn, "status", SyntaxStatusToString(fn_syntax->status));
+    JsonObjectAppendString(json_fn, "returnType", DataTypeToString(fn_syntax->dtype));
+
+    {
+        JsonElement *params = JsonArrayCreate(10);
+        for (int i = 0; fn_syntax->args[i].pattern; i++)
+        {
+            const FnCallArg *param = &fn_syntax->args[i];
+
+            JsonElement *json_param = JsonObjectCreate(2);
+            JsonObjectAppendString(json_param, "type", DataTypeToString(param->dtype));
+            JsonObjectAppendString(json_param, "range", param->pattern);
+            JsonArrayAppendObject(params, json_param);
+        }
+        JsonObjectAppendArray(json_fn, "parameters", params);
+    }
+
+    JsonObjectAppendBool(json_fn, "variadic", fn_syntax->varargs);
+
+    return json_fn;
+}
+
+static JsonElement *FunctionsToJson(void)
+{
+    JsonElement *functions = JsonObjectCreate(500);
+
+    for (int i = 0; CF_FNCALL_TYPES[i].name; i++)
+    {
+        const FnCallType *fn_syntax = &CF_FNCALL_TYPES[i];
+
+        if (fn_syntax->status == SYNTAX_STATUS_REMOVED)
+        {
+            continue;
+        }
+
+        JsonObjectAppendObject(functions, fn_syntax->name, FnCallTypeToJson(fn_syntax));
+    }
+
+    return functions;
+}
+
 JsonElement *SyntaxToJson(void)
 {
     JsonElement *syntax_tree = JsonObjectCreate(3);
@@ -1192,6 +1237,7 @@ JsonElement *SyntaxToJson(void)
     JsonObjectAppendObject(syntax_tree, "bundleTypes", BundleTypesToJson());
     JsonObjectAppendObject(syntax_tree, "promiseTypes", PromiseTypesToJson());
     JsonObjectAppendObject(syntax_tree, "bodyTypes", BodyTypesToJson());
+    JsonObjectAppendObject(syntax_tree, "functions", FunctionsToJson());
 
     return syntax_tree;
 }

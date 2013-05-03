@@ -1,0 +1,111 @@
+#######################################################
+#
+# Test isbetween()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "dummy" string => "";
+}
+
+#######################################################
+
+bundle common test
+{
+  vars:
+      "values1" slist => { 1, "2.9", "hello", "-200" };
+      "values2" slist => { @(values1) };
+      "values3" slist => { @(values1) };
+      "canon[$(values1)]" string => canonify($(values1));
+
+  classes:
+      "between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])" expression => isbetween($(values1), $(values2), $(values3));
+      "not_between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])" not => isbetween($(values1), $(values2), $(values3));
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "values1" slist => { 1, "2.9", "hello", "-200" };
+      "values2" slist => { @(values1) };
+      "values3" slist => { @(values1) };
+      "canon[$(values1)]" string => canonify($(values1));
+
+  classes:
+
+      "ok" and => { between_1_1_1, between_1_1_2_9, between_1_1_hello,
+                    between_1_1__200, between_1_2_9_2_9,
+                    between_1_2_9_hello, between_1_hello_hello,
+                    between_1__200__200, between_2_9_1_1,
+                    between_2_9_1__200, between_2_9_2_9_1,
+                    between_2_9_2_9_2_9, between_2_9_2_9_hello,
+                    between_2_9_2_9__200, between_2_9_hello_hello,
+                    between_2_9__200__200, between_hello_hello_hello,
+                    between__200_1_1, between__200_1_2_9,
+                    between__200_1_hello, between__200_2_9_2_9,
+                    between__200_2_9_hello, between__200_hello_hello,
+                    between__200__200_1, between__200__200_2_9,
+                    between__200__200_hello, between__200__200__200,
+
+                    not_between_1_2_9_1, not_between_1_2_9__200,
+                    not_between_1_hello_1, not_between_1_hello_2_9,
+                    not_between_1_hello__200, not_between_1__200_1,
+                    not_between_1__200_2_9, not_between_1__200_hello,
+                    not_between_2_9_1_2_9, not_between_2_9_1_hello,
+                    not_between_2_9_hello_1,
+                    not_between_2_9_hello_2_9,
+                    not_between_2_9_hello__200,
+                    not_between_2_9__200_1, not_between_2_9__200_2_9,
+                    not_between_2_9__200_hello, not_between_hello_1_1,
+                    not_between_hello_1_2_9,
+                    not_between_hello_1_hello,
+                    not_between_hello_1__200, not_between_hello_2_9_1,
+                    not_between_hello_2_9_2_9,
+                    not_between_hello_2_9_hello,
+                    not_between_hello_2_9__200,
+                    not_between_hello_hello_1,
+                    not_between_hello_hello_2_9,
+                    not_between_hello_hello__200,
+                    not_between_hello__200_1,
+                    not_between_hello__200_2_9,
+                    not_between_hello__200_hello,
+                    not_between_hello__200__200,
+                    not_between__200_1__200, not_between__200_2_9_1,
+                    not_between__200_2_9__200,
+                    not_between__200_hello_1,
+                    not_between__200_hello_2_9,
+                    not_between__200_hello__200, };
+
+  reports:
+    DEBUG::
+      "YES: between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)]) says $(values2) is in [$(values1), $(values3)]"
+      ifvarclass => "between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])";
+
+      "NO: not_between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)]) says $(values2) is NOT in [$(values1), $(values3)]"
+      ifvarclass => "not_between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])";
+
+      "between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])"
+      ifvarclass => "between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])";
+
+      "not_between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])"
+      ifvarclass => "not_between_$(canon[$(values1)])_$(canon[$(values2)])_$(canon[$(values3)])";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

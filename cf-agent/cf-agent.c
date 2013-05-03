@@ -385,47 +385,23 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 OpenNetwork();
 
                 char mapped_policy_server[CF_MAX_IP_LEN] = "";
-                if (Hostname2IPString(mapped_policy_server, optarg, sizeof(mapped_policy_server)) == -1)
+                if (Hostname2IPString(mapped_policy_server, optarg,
+                                      sizeof(mapped_policy_server)) == -1)
                 {
-                    Log(LOG_LEVEL_ERR, "Could not resolve address '%s', unable to bootstrap", optarg);
+                    Log(LOG_LEVEL_ERR,
+                        "Could not resolve hostname '%s', unable to bootstrap",
+                        optarg);
                     exit(EXIT_FAILURE);
                 }
 
                 CloseNetwork();
 
-                bool alpha = false, v6 = false;
-                for (const char *sp = mapped_policy_server; *sp != '\0'; sp++)
-                {
-                    if (isalpha((int)*sp))
-                    {
-                        alpha = true;
-                    }
-
-                    if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
-                    {
-                        alpha = true;
-                    }
-
-                    if (*sp == ':')
-                    {
-                        v6 = true;
-                    }
-                }
-
-                if (alpha && !v6)
-                {
-                    Log(LOG_LEVEL_ERR, "Error specifying policy server to --boostrap (-B). "
-                        "The policy server's address could not be looked up. "
-                        "Please use the IP address instead if there is no error. "
-                        "Note that the --policy-server (-s) option is deprecated, "
-                        "the argument is taken in --bootstrap (-B) instead.");
-                    exit(EXIT_FAILURE);
-                }
-
                 MINUSF = true;
                 IGNORELOCK = true;
-                GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
-                config->agent_specific.agent.bootstrap_policy_server = xstrdup(mapped_policy_server);
+                GenericAgentConfigSetInputFile(config, GetWorkDir(),
+                                               "promises.cf");
+                config->agent_specific.agent.bootstrap_policy_server =
+                    xstrdup(mapped_policy_server);
             }
             break;
 

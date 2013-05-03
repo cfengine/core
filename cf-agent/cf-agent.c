@@ -322,12 +322,12 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
    Support rewrite from some common old bootstrap options (until community version 3.6.0?).
  */
 
-    int argc_bootstrap_options_new = argc;
-    char **argv_bootstrap_options_tmp = TranslateOldBootstrapOptionsSeparate(&argc_bootstrap_options_new, argv);
-    char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
-    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
+    int argc_new = argc;
+    char **argv_tmp = TranslateOldBootstrapOptionsSeparate(&argc_new, argv);
+    char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
+    FreeStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -471,13 +471,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         }
     }
 
-    if (!GenericAgentConfigParseArguments(config, argc - optind, argv_bootstrap_options_new + optind))
+    if (!GenericAgentConfigParseArguments(config, argc - optind,
+                                          argv_new + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
 
-    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
+    FreeStringArray(argc_new, argv_new);
 
     return config;
 }

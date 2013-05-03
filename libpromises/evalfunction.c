@@ -2709,6 +2709,13 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char buffer[CF_BUFSIZE], *range = RlistScalarValue(finalargs);
     Item *ip;
 
+    char* theip = NULL;
+
+    if (strcmp(fp->name, "iprange2") == 0)
+    {
+        theip =  RlistScalarValue(finalargs->next);
+    }
+
     buffer[0] = '\0';
 
 /* begin fn specific content */
@@ -2720,26 +2727,37 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
+    if (NULL == theip)
     {
-        CfDebug("Checking IP Range against RDNS %s\n", VIPADDRESS);
-
-        if (FuzzySetMatch(range, VIPADDRESS) == 0)
+        for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
         {
-            CfDebug("IPRange Matched\n");
-            strcpy(buffer, "any");
-            break;
-        }
-        else
-        {
-            CfDebug("Checking IP Range against iface %s\n", ip->name);
+            CfDebug("Checking IP Range against RDNS %s\n", VIPADDRESS);
 
-            if (FuzzySetMatch(range, ip->name) == 0)
+            if (FuzzySetMatch(range, VIPADDRESS) == 0)
             {
                 CfDebug("IPRange Matched\n");
                 strcpy(buffer, "any");
                 break;
             }
+            else
+            {
+                CfDebug("Checking IP Range against iface %s\n", ip->name);
+
+                if (FuzzySetMatch(range, ip->name) == 0)
+                {
+                    CfDebug("IPRange Matched\n");
+                    strcpy(buffer, "any");
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (FuzzySetMatch(range, theip) == 0)
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Address %s matched range %s\n", theip, range);
+            strcpy(buffer, "any");
         }
     }
 
@@ -5191,6 +5209,13 @@ FnCallArg IPRANGE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg IPRANGE2_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "IP address range syntax"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Host name or IP address to test"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg IRANGE_ARGS[] =
 {
     {CF_INTRANGE, DATA_TYPE_INT, "Integer"},
@@ -5698,7 +5723,8 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge, "Read global knowledge from the hub host by id (commercial extension)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("intersection", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2", false, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified in arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange2", DATA_TYPE_CONTEXT, IPRANGE2_ARGS, &FnCallIPRange, "True if the given host arg2 lies in the range of IP addresses specified in arg1", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isexecutable", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object has execution rights for the current user", false, SYNTAX_STATUS_NORMAL),

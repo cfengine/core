@@ -1,0 +1,63 @@
+#######################################################
+#
+# Test iprange2()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+}
+
+#######################################################
+
+bundle common test
+{
+  vars:
+      "addresses" slist => { "127.0.0.1", "1.2.3.4" };
+      "ranges" slist => { "127.0.0.1", "1.2.3.0/24", "1.2.3.0", "1.2.3.0-255" };
+      "canon[$(addresses)]" string => canonify($(addresses));
+      "canon[$(ranges)]" string => canonify($(ranges));
+
+  classes:
+      "inrange_$(canon[$(addresses)])_$(canon[$(ranges)])" expression => iprange2($(ranges), $(addresses));
+      "not_inrange_$(canon[$(addresses)])_$(canon[$(ranges)])" not => iprange2($(ranges), $(addresses));
+
+  reports:
+    DEBUG::
+      "YES: inrange_$(canon[$(addresses)])_$(canon[$(ranges)]) says $(addresses) is in $(ranges)"
+      ifvarclass => "inrange_$(canon[$(addresses)])_$(canon[$(ranges)])";
+
+      "NO: not_inrange_$(canon[$(addresses)])_$(canon[$(ranges)]) says $(addresses) is NOT in $(ranges)"
+      ifvarclass => "not_inrange_$(canon[$(addresses)])_$(canon[$(ranges)])";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  classes:
+      "ok" and => { inrange_127_0_0_1_127_0_0_1,
+                    inrange_1_2_3_4_1_2_3_0_24,
+                    inrange_1_2_3_4_1_2_3_0_255,
+                    not_inrange_127_0_0_1_1_2_3_0_24,
+                    not_inrange_127_0_0_1_1_2_3_0,
+                    not_inrange_127_0_0_1_1_2_3_0_255,
+                    not_inrange_1_2_3_4_127_0_0_1,
+                    not_inrange_1_2_3_4_1_2_3_0, };
+
+  reports:
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

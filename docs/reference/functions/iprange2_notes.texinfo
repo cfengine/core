@@ -1,0 +1,5 @@
+
+Pattern matching based on a given IP address.
+
+The format for the pattern is either @code{a.b.c.d} or
+@code{a.b.c.d/MASK} or @code{a.b.c.d-e}.

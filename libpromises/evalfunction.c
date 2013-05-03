@@ -3440,7 +3440,7 @@ static FnCallResult FnCallIsBetweenLessGreaterThan(EvalContext *ctx, FnCall *fp,
 
         if (parsed == 3)
         {
-            CfDebug("%s, %s, and %s are all numerical\n", argv0, argv1, argv2);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s, %s, and %s are all numerical\n", argv0, argv1, argv2);
 
             if (a > c)                  // the function is BETWEEN so we need to handle an inverted range
             {
@@ -3453,7 +3453,7 @@ static FnCallResult FnCallIsBetweenLessGreaterThan(EvalContext *ctx, FnCall *fp,
         }
         else
         {
-            CfDebug("%s, %s, and %s are NOT all numerical\n", argv0, argv1, argv2);
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s, %s, and %s are NOT all numerical\n", argv0, argv1, argv2);
             between = (strcmp(argv0, argv1) <= 0 && strcmp(argv1, argv2) <= 0);
         }
 

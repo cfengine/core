@@ -166,6 +166,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->has_subbundles = pp->has_subbundles;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
+    pcopy->offset = pp->offset;
 
     CfDebug("Copying promise constraints\n\n");
 
@@ -220,7 +221,11 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
             /* Keep the referent body type as a boolean for convenience when checking later */
 
-            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
+                cp_copy->offset = cp->offset;
+            }
+
 
             CfDebug("Handling body-lval \"%s\"\n", cp->lval);
 
@@ -247,7 +252,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                     CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval(ctx, "body", scp->rval);
-                    PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
+                    {
+                        Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
+                        scp_copy->offset = scp->offset;
+                    }
                 }
 
                 ScopeClear("body");
@@ -278,7 +286,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                             newrv.item = new_list;
                         }
 
-                        PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
+                        {
+                            Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
+                            scp_copy->offset = scp->offset;
+                        }
                     }
                 }
             }
@@ -304,7 +315,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 newrv.item = new_list;
             }
 
-            PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
+                cp_copy->offset = cp->offset;
+            }
         }
     }
 
@@ -373,7 +387,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             RvalDestroy(returnval);
         }
 
-        PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
+        {
+            Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
+            cp_copy->offset = cp->offset;
+        }
 
         if (strcmp(cp->lval, "comment") == 0)
         {

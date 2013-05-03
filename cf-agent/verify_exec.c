@@ -321,11 +321,6 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
                 return ACTION_RESULT_FAILED;
             }
 
-            if (strstr(line, "cfengine-die"))
-            {
-                break;
-            }
-
             if (a.contain.preview)
             {
                 PreviewProtocolLine(line, cmdline);

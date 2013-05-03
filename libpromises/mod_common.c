@@ -223,6 +223,7 @@ const ConstraintSyntax CFG_CONTROLBODY[] =
     ConstraintSyntaxNewBool("ignore_missing_bundles", "If any bundles in the bundlesequence do not exist, ignore and continue. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ignore_missing_inputs", "If any input files do not exist, ignore and continue. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewStringList("inputs", ".*", "List of additional filenames to parse for promises", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("wildcard_inputs", ".*", "List of additional filenames to parse for promises.  Wildcards are accepted but the filenames must be non-absolute.", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("version", "", "Scalar version string for this configuration", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewInt("lastseenexpireafter", CF_VALRANGE, "Number of minutes after which last-seen entries are purged. Default value: one week", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewString("output_prefix", "", "The string prefix for standard output", SYNTAX_STATUS_NORMAL),

@@ -64,6 +64,7 @@
 
 #include <assert.h>
 
+#include <glob.h>
 static pthread_once_t pid_cleanup_once = PTHREAD_ONCE_INIT;
 
 static char PIDFILE[CF_BUFSIZE];
@@ -982,7 +983,43 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy)
     Constraint *cp = EffectiveConstraint(ctx, potential_inputs);
     SeqDestroy(potential_inputs);
 
-    return cp ? cp->rval.item : NULL;
+    Seq *potential_wildcard_inputs = BodyGetConstraint(body_common_control, "wildcard_inputs");
+    Constraint *wildcard_cp = EffectiveConstraint(ctx, potential_wildcard_inputs);
+    SeqDestroy(potential_wildcard_inputs);
+
+    // TODO: this means that wildcard_inputs only work if inputs are specified
+    if (cp)
+    {
+        if (wildcard_cp)
+        {
+            for (Rlist* wilds = (Rlist *) wildcard_cp->rval.item; wilds != NULL; wilds = wilds->next)
+            {
+                char buffer[CF_BUFSIZE];
+                char *wild = RlistScalarValue(wilds);
+                snprintf(buffer, CF_BUFSIZE, "%s/inputs/%s", CFWORKDIR, wild);
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Including wildcard_inputs %s (globbed as %s)\n", wild, buffer);
+
+                glob_t globbuf;
+                if (0 == glob(buffer, GLOB_NOSORT, NULL, &globbuf))
+                {
+                    for (int i = 0; i < globbuf.gl_pathc; i++)
+                    {
+                        char* found = globbuf.gl_pathv[i];
+                        char fname[CF_BUFSIZE];
+                        snprintf(fname, CF_BUFSIZE, "%s", found);
+                        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Including input file %s that matches wildcard_inputs %s (globbed as %s)\n", fname, wild, buffer);
+                        RlistAppendScalarIdemp((Rlist **) &(cp->rval.item), xstrdup(fname));
+                    }
+
+                    globfree(&globbuf);
+                }
+            }
+        }
+
+        return cp->rval.item;
+    }
+
+    return NULL;
 }
 
 /*******************************************************************/

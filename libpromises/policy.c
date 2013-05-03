@@ -41,6 +41,7 @@
 #include "item_lib.h"
 #include "files_hashes.h"
 #include "audit.h"
+#include "logging.h"
 
 #include <assert.h>
 
@@ -996,6 +997,14 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error)
 
     // FIX: need to track columns in SourceOffset
     WriterWriteF(writer, "%s:%d:%d: error: %s\n", path, (int)offset.line, 0, error->message);
+}
+
+static char *PolicyErrorToString(const PolicyError *error)
+{
+    SourceOffset offset = PolicyElementSourceOffset(error->type, error->subject);
+    const char *path = PolicyElementSourceFile(error->type, error->subject);
+
+    return StringFormat("%s:%d:%d: error: %s\n", path, (int)offset.line, 0, error->message);
 }
 
 /*************************************************************************/
@@ -2667,9 +2676,6 @@ void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Pro
 void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 {
     static Item *EDIT_ANCHORS = NULL;
-    Item *ptr;
-
-/* Special promise type checks */
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
@@ -2688,7 +2694,14 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
         SyntaxTypeMatch err = ConstraintCheckType(cp);
         if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
         {
-            FatalError(ctx, "%s: %s", cp->lval, SyntaxTypeMatchToString(err));
+            PolicyError *error = PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, cp, "In attribute '%s', %s", cp->lval, SyntaxTypeMatchToString(err));
+            char *error_str = PolicyErrorToString(error);
+            PolicyErrorDestroy(error);
+
+            Log(LOG_LEVEL_ERR, "%s", error_str);
+            free(error_str);
+
+            FatalError(ctx, "Cannot continue");
         }
     }
 
@@ -2698,6 +2711,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 
         if ((sp = ConstraintGetRvalValue(ctx, "select_line_matching", pp, RVAL_TYPE_SCALAR)))
         {
+            const Item *ptr = NULL;
             if ((ptr = ReturnItemIn(EDIT_ANCHORS, sp)))
             {
                 if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)

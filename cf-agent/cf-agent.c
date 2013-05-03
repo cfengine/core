@@ -1818,7 +1818,7 @@ static int AutomaticBootstrap()
         printf("Autodiscovered hub installed on:"
                " Hostname \"%s\", IP Address %s\n",
                hostname, ipaddr);
-        if (strlen((ipaddr) < sizeof(POLICY_SERVER))
+        if (strlen(ipaddr) < sizeof(POLICY_SERVER))
         {
             strcpy(POLICY_SERVER, ipaddr);
             ret = 0;

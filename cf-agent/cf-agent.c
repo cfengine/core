@@ -471,7 +471,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         }
     }
 
-    if (!GenericAgentConfigParseArguments(config, argc - optind,
+    if (!GenericAgentConfigParseArguments(config, argc_new - optind,
                                           argv_new + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");

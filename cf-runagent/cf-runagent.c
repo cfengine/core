@@ -324,7 +324,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
+            Syntax("cf-runagent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
@@ -336,7 +336,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
+            Syntax("cf-runagent", OPTIONS, HINTS, true);
             exit(1);
 
         }

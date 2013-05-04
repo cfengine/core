@@ -107,7 +107,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'h':
-            Syntax("cf-gendoc", OPTIONS, HINTS, ID, false);
+            Syntax("cf-gendoc", OPTIONS, HINTS, false);
             exit(0);
 
         case 'x':
@@ -122,7 +122,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            Syntax("cf-gendoc", OPTIONS, HINTS, ID, false);
+            Syntax("cf-gendoc", OPTIONS, HINTS, false);
             exit(1);
         }
     }

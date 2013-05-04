@@ -33,6 +33,9 @@
 #include "parser.h"
 #include "sysinfo.h"
 #include "logging_old.h"
+#include "man.h"
+
+#include <time.h>
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
@@ -40,9 +43,13 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The promise agent is a validator and analysis tool for\n"
-    "configuration files belonging to any of the components\n"
-    "of Cfengine. Configurations that make changes must be\n" "approved by this validator before being executed.";
+static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
+
+static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
+        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
+        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+        "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
+        "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
 static const struct option OPTIONS[] =
 {
@@ -262,12 +269,20 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
+            Syntax("cf-promises", OPTIONS, HINTS, CF_PROMISES_MANPAGE_LONG_DESCRIPTION, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-promises", time(NULL),
+                             CF_PROMISES_SHORT_DESCRIPTION,
+                             CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'r':
             SHOWREPORTS = true;
@@ -286,7 +301,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
+            Syntax("cf-promises", OPTIONS, HINTS, CF_PROMISES_SHORT_DESCRIPTION, true);
             exit(1);
 
         }

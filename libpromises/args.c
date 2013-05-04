@@ -69,10 +69,10 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
 
     if (!fn->varargs)
     {
-        if (len != FnNumArgs(fn))
+        if (len < FnMinArgs(fn) || len > FnMaxArgs(fn))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Arguments to function %s(.) do not tally. Expect %d not %d",
-                  fp->name, FnNumArgs(fn), len);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "Arguments to function %s(.) do not tally. Expected at least %d and at most %d but got %d",
+                  fp->name, FnMinArgs(fn), FnMaxArgs(fn), len);
             PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             exit(1);
         }
@@ -95,6 +95,13 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
         RlistAppend(&newargs, rval.item, rval.type);
         RvalDestroy(rval);
     }
+
+    for (int filled = RlistLen(newargs); filled < FnMaxArgs(fn); filled++)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Filling default arguments to function %s at position %d = %s\n",
+              fp->name, filled, FnDefaultArg(fn, filled));
+        RlistAppendScalar(&newargs, xstrdup(FnDefaultArg(fn, filled)));
+    };
 
     return newargs;
 }
@@ -134,15 +141,16 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
         rp = rp->next;
     }
 
-    if (argnum != RlistLen(realargs) && !fn->varargs)
+    if (FnMaxArgs(fn) != RlistLen(realargs) && !fn->varargs)
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
+        fprintf(stderr, "%s", output);
         RlistShow(stderr, realargs);
         fprintf(stderr, ")\n");
 
         for (i = 0, rp = realargs; i < argnum; i++)
         {
-            printf("  arg[%d] range %s\t", i, argtemplate[i].pattern);
+            fprintf(stderr, "  arg[%d] range %s\t", i, argtemplate[i].pattern);
             if (rp != NULL)
             {
                 RvalShow(stdout, (Rval) {rp->item, rp->type});
@@ -150,12 +158,12 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
             }
             else
             {
-                printf(" ? ");
+                fprintf(stderr, " ? ");
             }
-            printf("\n");
+            fprintf(stderr, "\n");
         }
 
-        FatalError(ctx, "Bad arguments");
+        FatalError(ctx, "Bad arguments: expected %d, got %d for a non-variadic function", argnum, RlistLen(realargs));
     }
 
     for (rp = realargs; rp != NULL; rp = rp->next)

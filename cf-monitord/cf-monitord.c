@@ -63,11 +63,10 @@ extern const ConstraintSyntax CFM_CONTROLBODY[];
 
 static const char *CF_MONITORD_SHORT_DESCRIPTION = "monitoring daemon for CFEngine";
 
-static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION = "The monitoring agent is a machine-learning, sampling\n"
-    "daemon which learns the normal state of the current\n"
-    "host and classifies new observations in terms of the\n"
-    "patterns formed by previous ones. The data are made\n"
-    "available to and read by cf-agent for classification\n" "of responses to anomalous states.";
+static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
+        "cf-monitord is the monitoring daemon for CFEngine. It samples probes defined in policy code and attempts to learn the "
+        "normal system state based on current and past observations. Current estimates are made available as "
+        "special variables (e.g. $(mon.av_cpu)) to cf-agent, which may use them to inform policy decisions.";
 
 static const struct option OPTIONS[14] =
 {

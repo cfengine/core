@@ -1,0 +1,126 @@
+#######################################################
+#
+# Test eval()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "values[0]" string => "x";
+      "values[1]" string => "+ 200";
+      "values[2]" string => "+ 200 100";
+      "values[3]" string => "- 200 100";
+      "values[4]" string => "- - -";
+      "values[5]" string => "+ - 2 3 1";
+      "values[6]" string => "";
+      "values[7]" string => "/ 3 0";
+      "values[8]" string => "** 3 3";
+      "values[9]" string => "** -1 2.1";
+      "values[10]" string => "sin 20";
+      "values[11]" string => "cos 20";
+      "values[12]" string => "asin 0.2";
+      "values[13]" string => "acos 0.2";
+      "values[14]" string => "tan 20";
+      "values[15]" string => "atan 0.2";
+      "values[16]" string => "log 0.2";
+      "values[17]" string => "log2 0.2";
+      "values[18]" string => "log10 0.2";
+      "values[19]" string => "% 20 3";
+      "values[20]" string => "sqrt 0.2";
+      "values[21]" string => "ceil 3.5";
+      "values[22]" string => "floor 3.4";
+      "values[23]" string => "abs -3.4";
+      "values[24]" string => "== -3.4 -3.4";
+      "values[25]" string => "== -3.400000 -3.400001";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "indices" slist => getindices("init.values");
+
+      "eval[$(indices)]" string => eval("$(init.values[$(indices)])", "math", "prefix");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      # note this test will be MUCH more accurate when we have sprintf and rounding
+      "verify[0]" string => '';
+      "verify[1]" string => '';
+      "verify[2]" string => '300.000000';
+      "verify[3]" string => '100.000000';
+      "verify[4]" string => '';
+      "verify[5]" string => '0.000000';
+      "verify[6]" string => '';
+      "verify[7]" string => '';
+      "verify[8]" string => '27.000000';
+      "verify[9]" string => '-nan';
+      "verify[10]" string => '0.912945';
+      "verify[11]" string => '0.408082';
+      "verify[12]" string => '0.201358';
+      "verify[13]" string => '1.369438';
+      "verify[14]" string => '2.237161';
+      "verify[15]" string => '0.197396';
+      "verify[16]" string => '-1.609438';
+      "verify[17]" string => '-2.321928';
+      "verify[18]" string => '-0.698970';
+      "verify[19]" string => '2.000000';
+      "verify[20]" string => '0.447214';
+      "verify[21]" string => '4.000000';
+      "verify[22]" string => '3.000000';
+      "verify[23]" string => '3.400000';
+      "verify[24]" string => '1.000000';
+      "verify[25]" string => '0.000000';
+
+      "indices" slist => getindices("verify");
+
+  classes:
+      "ok_$(indices)" expression => strcmp("$(test.eval[$(indices)])", "$(verify[$(indices)])");
+      "not_ok_$(indices)" not => strcmp("$(test.eval[$(indices)])", "$(verify[$(indices)])");
+
+      "ok" and => { ok_0, ok_1, ok_3, ok_4, ok_5, ok_6, ok_7, ok_8,
+                    ok_9, ok_10, ok_11, ok_13, ok_14, ok_15, ok_16,
+                    ok_17, ok_18, ok_19, ok_20, ok_21, ok_23, ok_24,
+                    ok_25 };
+
+  reports:
+    DEBUG::
+      "OK math/prefix eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])'"
+      ifvarclass => "ok_$(indices)";
+
+      "FAIL math/prefix eval('$(init.values[$(indices)])') = '$(test.eval[$(indices)])'"
+      ifvarclass => "not_ok_$(indices)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes always(x)
+
+# Define a class no matter what the outcome of the promise is
+
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "$(x)" };
+  repair_denied => { "$(x)" };
+  repair_timeout => { "$(x)" };
+}

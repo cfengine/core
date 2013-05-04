@@ -80,10 +80,11 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
 static const char *CF_EXECD_SHORT_DESCRIPTION = "scheduling daemon for cf-agent";
 
-static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION = "The executor daemon is a scheduler and wrapper for\n"
-    "execution of cf-agent. It collects the output of the\n"
-    "agent and can email it to a specified address. It can\n"
-    "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
+static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION =
+        "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
+        "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
+        "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
+        "execution schedule to prevent synchronized cf-agent runs across a network.";
 
 static const struct option OPTIONS[] =
 {

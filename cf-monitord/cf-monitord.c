@@ -176,7 +176,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-monitord", OPTIONS, HINTS, true);
+            PrintHelp("cf-monitord", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
@@ -188,7 +188,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-monitord", OPTIONS, HINTS, true);
+            PrintHelp("cf-monitord", OPTIONS, HINTS, true);
             exit(1);
         }
     }

@@ -269,7 +269,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-promises", OPTIONS, HINTS, true);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
@@ -301,7 +301,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-promises", OPTIONS, HINTS, true);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(1);
 
         }

@@ -191,7 +191,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-serverd", OPTIONS, HINTS, true);
+            PrintHelp("cf-serverd", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
@@ -218,7 +218,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 #endif
 
         default:
-            Syntax("cf-serverd", OPTIONS, HINTS, true);
+            PrintHelp("cf-serverd", OPTIONS, HINTS, true);
             exit(1);
 
         }

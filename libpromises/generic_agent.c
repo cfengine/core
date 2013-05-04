@@ -1351,7 +1351,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
 /*******************************************************************/
 
-void Syntax(const char *component, const struct option options[], const char *hints[], bool accepts_file_argument)
+void PrintHelp(const char *component, const struct option options[], const char *hints[], bool accepts_file_argument)
 {
     printf("Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
 

@@ -441,7 +441,7 @@ int main(int argc, char *argv[])
             /*         break; */
 
         default:
-            Syntax("mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
+            PrintHelp("mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
             exit(1);
         }
 

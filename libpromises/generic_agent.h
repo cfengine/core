@@ -76,7 +76,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
-void Syntax(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
+void PrintHelp(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
 void PrintVersion(void);
 int CheckPromises(const GenericAgentConfig *config);

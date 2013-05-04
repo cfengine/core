@@ -448,7 +448,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-agent", OPTIONS, HINTS, true);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
@@ -470,7 +470,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-agent", OPTIONS, HINTS, true);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(1);
         }
     }

@@ -201,7 +201,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            Syntax("cf-key", OPTIONS, HINTS, false);
+            PrintHelp("cf-key", OPTIONS, HINTS, false);
             exit(0);
 
         case 'M':
@@ -209,7 +209,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-key", OPTIONS, HINTS, false);
+            PrintHelp("cf-key", OPTIONS, HINTS, false);
             exit(1);
 
         }

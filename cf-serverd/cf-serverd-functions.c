@@ -48,10 +48,11 @@ int NO_FORK = false;
 
 static const char *CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
 
-static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION = "The server daemon provides two services: it acts as a\n"
-    "file server for remote file copying and it allows an\n"
-    "authorized cf-runagent to start a cf-agent process and\n"
-    "set certain additional classes with role-based access control.\n";
+static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION =
+        "cf-serverd is a socket listening daemon providing two services: it acts as a file server for remote file copying "
+        "and it allows an authorized cf-runagent to start a cf-agent run. cf-agent typically connects to a "
+        "cf-serverd instance to request updated policy code, but may also request additional files for download. "
+        "cf-serverd employs role based access control (defined in policy code) to authorize requests.";
 
 static const struct option OPTIONS[16] =
 {

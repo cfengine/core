@@ -474,7 +474,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, fp);
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, fp);
         if (res == 0)
         {
             break;

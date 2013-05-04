@@ -76,15 +76,15 @@ static void DeleteStream(FILE *fp);
 
 static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
 
-static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION = "The run agent connects to a list of running instances of\n"
-    "the cf-serverd service. The agent allows a user to\n"
-    "forego the usual scheduling interval for the agent and\n"
-    "activate cf-agent on a remote host. Additionally, a user\n"
-    "can send additional classes to be defined on the remote\n"
-    "host. Two kinds of classes may be sent: classes to decide\n"
-    "on which hosts the agent will be started, and classes that\n"
-    "the user requests the agent should define on execution.\n"
-    "The latter type is regulated by cf-serverd's role based\n" "access control.";
+static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
+    "cf-runagent connects to a list of running instances of "
+    "cf-serverd. It allows foregoing the usual cf-execd schedule "
+    "to activate cf-agent. Additionally, a user "
+    "may send classes to be defined on the remote\n"
+    "host. Two kinds of classes may be sent: classes to decide "
+    "on which hosts cf-agent will be started, and classes that "
+    "the user requests cf-agent should define on execution. "
+    "The latter type is regulated by cf-serverd's role based access control.";
 
 static const struct option OPTIONS[17] =
 {

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -4673,7 +4673,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 
         if (lcount++ > CF_HASHTABLESIZE)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Array is too big to be read into Cfengine (max 4000)");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Array is too big to be read into CFEngine (max 4000)");
             break;
         }
 
@@ -5082,7 +5082,7 @@ FnCallArg GETFIELDS_ARGS[] =
 
 FnCallArg GETINDICES_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "Cfengine array identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -5436,7 +5436,7 @@ FnCallArg READTCP_ARGS[] =
 
 FnCallArg REGARRAY_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "Cfengine array identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
@@ -5472,7 +5472,7 @@ FnCallArg REGLINE_ARGS[] =
 
 FnCallArg REGLIST_ARGS[] =
 {
-    {CF_NAKEDLRANGE, DATA_TYPE_STRING, "Cfengine list identifier"},
+    {CF_NAKEDLRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };

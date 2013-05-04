@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -344,7 +344,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
             }
             else
             {
-                CfDebug("Cfengine: I recognize %s but not %s\n", VSYSNAME.sysname, VSYSNAME.machine);
+                CfDebug("CFEngine: I recognize %s but not %s\n", VSYSNAME.sysname, VSYSNAME.machine);
                 continue;
             }
         }
@@ -585,7 +585,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (!found)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Cfengine: I don't understand what architecture this is!");
+        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine: I don't understand what architecture this is!");
     }
 
     strcpy(workbuf, "compiled_on_");
@@ -628,11 +628,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (strcmp(zone, "global") == 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cfengine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cfengine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
     }
 #endif
 }

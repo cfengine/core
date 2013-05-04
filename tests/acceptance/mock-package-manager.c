@@ -12,9 +12,6 @@ static const int MAX_PACKAGE_ENTRY_LENGTH = 256;
 
 #define Error(msg) fprintf(stderr, "%s:%d: %s", __FILE__, __LINE__, msg)
 
-static const char *ID = "The CFEngine mock package manager tricks cf-agent into thinking\n"
-    "it has actually installed something on the system. Knock yourself out!";
-
 static const struct option OPTIONS[] =
 {
     {"clear-installed", no_argument, 0, 'c'},

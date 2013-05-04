@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -125,8 +125,8 @@ static int CheckPosixLinuxInheritACEs(EvalContext *ctx, Rlist *aces, AclMethod m
 }
 
 /*
-   Takes as input Cfengine-syntax ACEs and a path to a file.
-   Checks if the Cfengine-syntax ACL translates to the POSIX Linux ACL
+   Takes as input CFEngine-syntax ACEs and a path to a file.
+   Checks if the CFEngine-syntax ACL translates to the POSIX Linux ACL
    set on the given file. If it doesn't, the ACL on the file is updated.
 */
 
@@ -349,7 +349,7 @@ static int CheckPosixLinuxACEs(EvalContext *ctx, Rlist *aces, AclMethod method, 
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action");
+            ProgrammingError("CFEngine: internal error: illegal file action");
         }
 
     }
@@ -434,7 +434,7 @@ static int CheckDefaultEqualsAccessACL(EvalContext *ctx, char *file_path, Attrib
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action");
+            ProgrammingError("CFEngine: internal error: illegal file action");
             result = false;
         }
 
@@ -519,7 +519,7 @@ int CheckDefaultClearACL(EvalContext *ctx, char *file_path, Attributes a, Promis
             break;
 
         default:
-            ProgrammingError("Cfengine: internal error: illegal file action");
+            ProgrammingError("CFEngine: internal error: illegal file action");
             result = false;
         }
 
@@ -930,7 +930,7 @@ static int ParseEntityPosixLinux(char **str, acl_entry_t ace, int *is_mask)
 }
 
 /*
-  Takes a Cfengine-syntax mode string and existing Posix
+  Takes a CFEngine-syntax mode string and existing Posix
   Linux-formatted permissions on the file system object as
   arguments. The mode-string will be applied on the permissions.
   Returns true on success, false otherwise.

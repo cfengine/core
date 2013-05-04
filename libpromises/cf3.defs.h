@@ -714,6 +714,7 @@ typedef struct
     const char *pattern;
     DataType dtype;
     const char *description;
+    const char *scalar_default;
 } FnCallArg;
 
 typedef struct

@@ -533,7 +533,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     int linenumber = 0;
     for(;;)
     {
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {

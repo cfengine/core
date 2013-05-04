@@ -154,7 +154,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     while ((lines < a.report.numlines))
     {
-        if (fgets(buffer, CF_BUFSIZE, fp) == NULL)
+        if (fgets(buffer, sizeof(buffer), fp) == NULL)
         {
             if (ferror(fp))
             {

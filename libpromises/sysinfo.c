@@ -1040,6 +1040,10 @@ void OSClasses(EvalContext *ctx)
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/tabs/%s", pw->pw_name);
         }
+        else if (IsDefinedClass("redhat", NULL))
+        {
+            snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/%s", pw->pw_name);
+        }
         else
         {
             snprintf(vbuff, CF_BUFSIZE, "/var/spool/cron/crontabs/%s", pw->pw_name);

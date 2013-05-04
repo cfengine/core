@@ -36,6 +36,7 @@
 #include "crypto.h"
 #include "sysinfo.h"
 #include "logging_old.h"
+#include "man.h"
 
 #include "cf-key-functions.h"
 
@@ -54,7 +55,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The CFEngine key generator makes key pairs for remote authentication.\n";
+static const char *CF_KEY_SHORT_DESCRIPTION = "make private/public key-pairs for CFEngine authentication";
+
+static const char *CF_KEY_MANPAGE_LONG_DESCRIPTION = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[17] =
 {
@@ -205,8 +208,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-key", time(NULL),
+                             CF_KEY_SHORT_DESCRIPTION,
+                             CF_KEY_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             false);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         default:
             PrintHelp("cf-key", OPTIONS, HINTS, false);

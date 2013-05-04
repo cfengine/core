@@ -1373,51 +1373,6 @@ void PrintHelp(const char *component, const struct option options[], const char 
     printf("This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
 }
 
-/*******************************************************************/
-
-void ManPage(const char *component, const struct option options[], const char *hints[], const char *id)
-{
-    int i;
-
-    printf(".TH %s 8 \"Maintenance Commands\"\n", CommandArg0(component));
-    printf(".SH NAME\n%s\n\n", component);
-
-    printf(".SH SYNOPSIS:\n\n %s [options]\n\n.SH DESCRIPTION:\n\n%s\n", CommandArg0(component), id);
-
-    printf(".B cfengine\n"
-           "is a self-healing configuration and change management based system. You can think of"
-           ".B cfengine\n"
-           "as a very high level language, much higher level than Perl or shell. A"
-           "single statement is called a promise, and compliance can result in many hundreds of files"
-           "being created, or the permissions of many hundreds of"
-           "files being set. The idea of "
-           ".B cfengine\n"
-           "is to create a one or more sets of configuration files which will"
-           "classify and describe the setup of every host in a network.\n");
-
-    printf(".SH COMMAND LINE OPTIONS:\n");
-
-    for (i = 0; options[i].name != NULL; i++)
-    {
-        if (options[i].has_arg)
-        {
-            printf(".IP \"--%s, -%c\" value\n%s\n", options[i].name, (char) options[i].val, hints[i]);
-        }
-        else
-        {
-            printf(".IP \"--%s, -%c\"\n%s\n", options[i].name, (char) options[i].val, hints[i]);
-        }
-    }
-
-    printf(".SH AUTHOR\n" "Mark Burgess and CFEngine AS\n" ".SH INFORMATION\n");
-
-    printf("\nBug reports: http://bug.cfengine.com, ");
-    printf(".pp\nCommunity help: http://forum.cfengine.com\n");
-    printf(".pp\nCommunity info: http://www.cfengine.com/pages/community\n");
-    printf(".pp\nSupport services: http://www.cfengine.com\n");
-    printf(".pp\nThis software is Copyright (C) 2008-%d CFEngine AS.\n", BUILD_YEAR);
-}
-
 void PrintVersion(void)
 {
     printf("%s\n", NameVersion());

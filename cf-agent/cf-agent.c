@@ -68,6 +68,7 @@
 #include "sysinfo.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "syslog_client.h"
+#include "man.h"
 
 #include "mod_common.h"
 
@@ -174,7 +175,9 @@ static int AutomaticBootstrap();
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The main Cfengine agent is the instigator of change\n"
+static const char *CF_AGENT_SHORT_DESCRIPTION = "evaluate CFEngine policy code and actuate change to the system.";
+
+static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION = "The main Cfengine agent is the instigator of change\n"
     "in the system. In that sense it is the most important\n" "part of the CFEngine suite.\n";
 
 static const struct option OPTIONS[15] =
@@ -452,8 +455,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-agent", time(NULL),
+                             CF_AGENT_SHORT_DESCRIPTION,
+                             CF_AGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             {

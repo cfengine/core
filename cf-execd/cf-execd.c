@@ -44,6 +44,7 @@
 #include "exec_tools.h"
 #include "rlist.h"
 #include "processes_select.h"
+#include "man.h"
 
 #include <assert.h>
 
@@ -77,7 +78,9 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
+static const char *CF_EXECD_SHORT_DESCRIPTION = "scheduling daemon for cf-agent";
+
+static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION = "The executor daemon is a scheduler and wrapper for\n"
     "execution of cf-agent. It collects the output of the\n"
     "agent and can email it to a specified address. It can\n"
     "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
@@ -263,8 +266,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-execd", time(NULL),
+                             CF_EXECD_SHORT_DESCRIPTION,
+                             CF_EXECD_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");

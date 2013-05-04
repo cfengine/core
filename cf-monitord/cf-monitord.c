@@ -34,6 +34,7 @@
 #include "signals.h"
 #include "scope.h"
 #include "sysinfo.h"
+#include "man.h"
 
 typedef enum
 {
@@ -60,7 +61,9 @@ extern const ConstraintSyntax CFM_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The monitoring agent is a machine-learning, sampling\n"
+static const char *CF_MONITORD_SHORT_DESCRIPTION = "monitoring daemon for CFEngine";
+
+static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION = "The monitoring agent is a machine-learning, sampling\n"
     "daemon which learns the normal state of the current\n"
     "host and classifies new observations in terms of the\n"
     "patterns formed by previous ones. The data are made\n"
@@ -180,8 +183,16 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-monitord", time(NULL),
+                             CF_MONITORD_SHORT_DESCRIPTION,
+                             CF_MONITORD_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");

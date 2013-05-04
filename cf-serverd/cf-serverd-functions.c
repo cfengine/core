@@ -35,6 +35,7 @@
 #include "locks.h"
 #include "exec_tools.h"
 #include "unix.h"
+#include "man.h"
 
 #include <assert.h>
 
@@ -45,7 +46,9 @@ int NO_FORK = false;
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The server daemon provides two services: it acts as a\n"
+static const char *CF_SERVERD_SHORT_DESCRIPTION = "CFEngine file server daemon";
+
+static const char *CF_SERVERD_MANPAGE_LONG_DESCRIPTION = "The server daemon provides two services: it acts as a\n"
     "file server for remote file copying and it allows an\n"
     "authorized cf-runagent to start a cf-agent process and\n"
     "set certain additional classes with role-based access control.\n";
@@ -195,8 +198,16 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-serverd - CFEngine's server agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-serverd", time(NULL),
+                             CF_SERVERD_SHORT_DESCRIPTION,
+                             CF_SERVERD_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");

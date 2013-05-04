@@ -42,6 +42,7 @@
 #include "scope.h"
 #include "policy.h"
 #include "audit.h"
+#include "man.h"
 
 typedef enum
 {
@@ -73,7 +74,9 @@ static void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The run agent connects to a list of running instances of\n"
+static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
+
+static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION = "The run agent connects to a list of running instances of\n"
     "the cf-serverd service. The agent allows a user to\n"
     "forego the usual scheduling interval for the agent and\n"
     "activate cf-agent on a remote host. Additionally, a user\n"
@@ -328,8 +331,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'M':
-            ManPage("cf-runagent - Run agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-runagent", time(NULL),
+                             CF_RUNAGENT_SHORT_DESCRIPTION,
+                             CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");

@@ -177,8 +177,11 @@ static int AutomaticBootstrap();
 
 static const char *CF_AGENT_SHORT_DESCRIPTION = "evaluate CFEngine policy code and actuate change to the system.";
 
-static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION = "The main Cfengine agent is the instigator of change\n"
-    "in the system. In that sense it is the most important\n" "part of the CFEngine suite.\n";
+static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION =
+        "cf-agent evaluates policy code and makes changes to the system. Policy bundles are evaluated in the order of the "
+        "provided bundlesequence (this is normally specified in the common control body). "
+        "For each bundle, cf-agent groups promise statements according to their type. Promise types are then evaluated in a preset "
+        "order to ensure fast system convergence to policy.\n";
 
 static const struct option OPTIONS[15] =
 {

@@ -115,9 +115,11 @@ int GetExecOutput(char *command, char *buffer, int useshell)
 
 /**********************************************************************/
 
-void ActAsDaemon(int preserve)
+void ActAsDaemon(int preserve, const ReportContext *report_context)
 {
     int fd, maxfd;
+    int preserve_fd[REPORT_OUTPUT_TYPE_MAX+1];
+    bool close_fd;
 
 #ifdef HAVE_SETSID
     setsid();
@@ -161,9 +163,33 @@ void ActAsDaemon(int preserve)
 # endif
 #endif
 
+    // build an array of file descriptors we need to preserve
+    for (size_t i = 0; i < REPORT_OUTPUT_TYPE_MAX; i++)
+    {
+        if (report_context->report_writers[i])
+        {
+            preserve_fd[i] = WriterFD(report_context->report_writers[i]);
+        }
+        else
+        {
+            preserve_fd[i] = 0;
+        }
+    }
+    preserve_fd[REPORT_OUTPUT_TYPE_MAX] = preserve;
+
     for (fd = STDERR_FILENO + 1; fd < maxfd; ++fd)
     {
-        if (fd != preserve)
+        close_fd = true;
+
+        for (int i = 0; i < sizeof(preserve_fd); i++)
+        {
+            if (fd == preserve_fd[i])
+            {
+                close_fd = false;
+            }
+        }
+
+        if (close_fd)
         {
             close(fd);
         }

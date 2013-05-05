@@ -59,4 +59,7 @@ char *StringWriterClose(Writer *writer);
 /* Returns the open file and destroys itself */
 FILE *FileWriterDetach(Writer *writer);
 
+/* Returns the open file descriptor for a FileWriter, otherwise 0 */
+int WriterFD(Writer *writer);
+
 #endif

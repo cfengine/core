@@ -272,7 +272,7 @@ void StartServer(Policy *policy, GenericAgentConfig config, const ReportContext 
 
     if (!NO_FORK)
     {
-        ActAsDaemon(sd);
+        ActAsDaemon(sd, report_context);
     }
 
 #endif /* NOT MINGW */

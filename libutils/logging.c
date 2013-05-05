@@ -109,53 +109,46 @@ void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level)
     lctx->report_level = report_level;
 }
 
-/* static const char *LogLevelToString(LogLevel level) */
-/* { */
-/*     switch (level) */
-/*     { */
-/*     case LOG_LEVEL_CRIT: return "!"; */
-/*     case LOG_LEVEL_ERR: return "E"; */
-/*     case LOG_LEVEL_WARNING: return "W"; */
-/*     case LOG_LEVEL_NOTICE: return "N"; */
-/*     case LOG_LEVEL_INFO: return "I"; */
-/*     case LOG_LEVEL_VERBOSE: return "V"; */
-/*     case LOG_LEVEL_DEBUG: return "D"; */
-/*     } */
-
-/*     ProgrammingError("Unknown log level passed to LogLevelToString: %d", level); */
-/* } */
+static const char *LogLevelToString(LogLevel level)
+{
+    switch (level)
+    {
+    case LOG_LEVEL_CRIT:
+        return "critical";
+    case LOG_LEVEL_ERR:
+        return "error";
+    case LOG_LEVEL_WARNING:
+        return "warning";
+    case LOG_LEVEL_NOTICE:
+        return "notice";
+    case LOG_LEVEL_INFO:
+        return "info";
+    case LOG_LEVEL_VERBOSE:
+        return "verbose";
+    case LOG_LEVEL_DEBUG:
+        return "debug";
+    default:
+        ProgrammingError("Unknown log level passed to LogLevelToString: %d", level);
+    }
+}
 
 void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 {
-    /* TODO: timestamps, logging levels in error messages */
+    struct tm now;
+    time_t now_seconds = time(NULL);
+    localtime_r(&now_seconds, &now);
 
-    /* struct tm now; */
-    /* time_t now_seconds = time(NULL); */
-    /* localtime_r(&now_seconds, &now); */
-
-    /* /\* 2000-01-01 23:01:01+0300 *\/ */
-    /* char formatted_timestamp[25]; */
-    /* if (strftime(formatted_timestamp, 25, "%Y-%m-%d %H:%M:%S%z", &now) == 0) */
-    /* { */
-    /*     /\* There was some massacre formating the timestamp. Wow *\/ */
-    /*     strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp)); */
-    /* } */
-
-    /* const char *string_level = LogLevelToString(level); */
-
-    /* printf("%s> %-24s %1s: %s\n", VPREFIX, formatted_timestamp, string_level, msg); */
-
-
-
-    /* FIXME: VPREFIX is only used in verbose mode. Is that ok? */
-    if (level >= LOG_LEVEL_VERBOSE)
+    // 2000-01-01 23:01:01+0300
+    char formatted_timestamp[25];
+    if (strftime(formatted_timestamp, 25, "%Y-%m-%d %H:%M:%S%z", &now) == 0)
     {
-        printf("%s> %s\n", VPREFIX, msg);
+        // There was some massacre formating the timestamp. Wow
+        strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
     }
-    else
-    {
-        printf("%s\n", msg);
-    }
+
+    const char *string_level = LogLevelToString(level);
+
+    printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
 }
 
 #if !defined(__MINGW32__)

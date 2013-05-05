@@ -183,6 +183,23 @@ static void WriteCFEngine(Writer *out)
     WriterWrite(out, cfengine);
 }
 
+static void WritePromiseTheory(Writer *out)
+{
+    static const char *promise_theory =
+            ".SH PROMISE THEORY\n"
+            "CFEngine is built on principles from promise theory, proposed by Mark Burgess in 2004. "
+            "Promise theory is a model of voluntary cooperation between individual, autonomous "
+            "actors or agents who publish their intentions to one another in the form of promises. "
+            "A promise is a declaration of intent whose purpose is to increase the recipient's certainty "
+            "about a claim of past, present or future behaviour. For a promise to increase certainty, "
+            "the recipient needs to trust the promiser, but trust can also be built on the verification "
+            "that previous promises have been kept, thus trust plays a symbiotic relationship with promises. \n"
+            ".br\n"
+            "For an introduction to promise theory, please see http://arxiv.org/abs/0810.3294/\n";
+
+    WriterWrite(out, promise_theory);
+}
+
 void ManPageWrite(Writer *out, const char *program, time_t last_modified, const char *short_description,
                   const char *long_description, const struct option options[], const char *option_hints[], bool accepts_file_argument)
 {
@@ -193,6 +210,7 @@ void ManPageWrite(Writer *out, const char *program, time_t last_modified, const 
     WriteDescription(out, long_description);
     WriteOptions(out, options, option_hints);
     WriteCFEngine(out);
+    WritePromiseTheory(out);
     WriteAvailability(out, program);
     WriteBugs(out);
     WriteSeeAlso(out);

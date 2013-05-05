@@ -168,6 +168,21 @@ static void WriteBugs(Writer *out)
     WriterWrite(out, bugs);
 }
 
+static void WriteCFEngine(Writer *out)
+{
+    static const char *cfengine =
+            ".SH CFENGINE\n"
+            "CFEngine provides automated configuration management of large-scale computer systems. A system administrator "
+            "describes the desired state of a system using CFEngine policy code. The program \\fBcf-agent\\fR reads policy code "
+            "and attempts to bring the current system state to the desired state described. Policy code is downloaded by "
+            "\\fBcf-agent\\fR from a \\fBcf-serverd\\fR daemon. The daemon \\fBcf-execd\\fR is responsible for running "
+            "\\fBcf-agent\\fR periodically.\n"
+            ".br\n"
+            "Documentation for CFEngine is available at http://cfengine.com/documentation/.\n";
+
+    WriterWrite(out, cfengine);
+}
+
 void ManPageWrite(Writer *out, const char *program, time_t last_modified, const char *short_description,
                   const char *long_description, const struct option options[], const char *option_hints[], bool accepts_file_argument)
 {
@@ -177,6 +192,7 @@ void ManPageWrite(Writer *out, const char *program, time_t last_modified, const 
     WriteSynopsis(out, program, accepts_file_argument);
     WriteDescription(out, long_description);
     WriteOptions(out, options, option_hints);
+    WriteCFEngine(out);
     WriteAvailability(out, program);
     WriteBugs(out);
     WriteSeeAlso(out);

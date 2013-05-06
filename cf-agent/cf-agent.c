@@ -308,9 +308,8 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
-    char *sp;
     int optindex = 0;
-    int c, alpha = false, v6 = false;
+    int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
 /* Because of the MacOS linker we have to call this from each agent
@@ -357,66 +356,77 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'B':
-            if(strcmp(optarg, ":avahi") == 0)
             {
-                if(!HasAvahiSupport())
+                if (!BootstrapAllowed())
                 {
-                    Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                    Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
                     exit(EXIT_FAILURE);
                 }
 
-                config->agent_specific.agent.bootstrap_policy_server = xstrdup(":avahi");
-                break;
-            }
-
-            if(IsLoopbackAddress(optarg))
-            {
-                Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
-                exit(EXIT_FAILURE);
-            }
-
-            MINUSF = true;
-            GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
-            IGNORELOCK = true;
-
-            // temporary assure that network functions are working
-            OpenNetwork();
-
-            if (Hostname2IPString(POLICY_SERVER, optarg,
-                                  sizeof(POLICY_SERVER)) == -1)
-            {
-                Log(LOG_LEVEL_ERR, "CheckOpts: ERROR, could not resolve %s, can't bootstrap", optarg);
-                exit(EXIT_FAILURE);
-            }
-
-            CloseNetwork();
-
-            for (sp = POLICY_SERVER; *sp != '\0'; sp++)
-            {
-                if (isalpha((int)*sp))
+                if(strcmp(optarg, ":avahi") == 0)
                 {
-                    alpha = true;
+                    if(!HasAvahiSupport())
+                    {
+                        Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    config->agent_specific.agent.bootstrap_policy_server = xstrdup(":avahi");
+                    break;
                 }
 
-                if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
+                if(IsLoopbackAddress(optarg))
                 {
-                    alpha = true;
+                    Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
+                    exit(EXIT_FAILURE);
                 }
 
-                if (*sp == ':')
+                // temporary assure that network functions are working
+                OpenNetwork();
+
+                char mapped_policy_server[CF_MAX_IP_LEN] = "";
+                if (Hostname2IPString(mapped_policy_server, optarg, sizeof(mapped_policy_server)) == -1)
                 {
-                    v6 = true;
+                    Log(LOG_LEVEL_ERR, "Could not resolve address '%s', unable to bootstrap", optarg);
+                    exit(EXIT_FAILURE);
                 }
+
+                CloseNetwork();
+
+                bool alpha = false, v6 = false;
+                for (const char *sp = mapped_policy_server; *sp != '\0'; sp++)
+                {
+                    if (isalpha((int)*sp))
+                    {
+                        alpha = true;
+                    }
+
+                    if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
+                    {
+                        alpha = true;
+                    }
+
+                    if (*sp == ':')
+                    {
+                        v6 = true;
+                    }
+                }
+
+                if (alpha && !v6)
+                {
+                    Log(LOG_LEVEL_ERR, "Error specifying policy server to --boostrap (-B). "
+                        "The policy server's address could not be looked up. "
+                        "Please use the IP address instead if there is no error. "
+                        "Note that the --policy-server (-s) option is deprecated, "
+                        "the argument is taken in --bootstrap (-B) instead.");
+                    exit(EXIT_FAILURE);
+                }
+
+                MINUSF = true;
+                IGNORELOCK = true;
+                GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
+                config->agent_specific.agent.bootstrap_policy_server = xstrdup(mapped_policy_server);
             }
-
-            if (alpha && !v6)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Error specifying policy server to --boostrap (-B). The policy server's address could not be looked up. Please use the IP address instead if there is no error. Note that the --policy-server (-s) option is deprecated, the argument is taken in --bootstrap (-B) instead.");
-                exit(EXIT_FAILURE);
-            }
-
-            config->agent_specific.agent.bootstrap_policy_server = xstrdup(POLICY_SERVER);
-
             break;
 
         case 'K':

@@ -133,10 +133,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-#ifdef HAVE_NOVA
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFEngine Enterprise\n");
-#endif
-
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);
 
@@ -150,20 +146,21 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
         CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
     {
+        SetPolicyServer(ctx, POLICY_SERVER);
         if (strlen(POLICY_SERVER) > 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found a policy server (hub) on %s", POLICY_SERVER);
+            Log(LOG_LEVEL_INFO, "This agent is bootstrapped to '%s'", POLICY_SERVER);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No policy server (hub) watch yet registered");
+            Log(LOG_LEVEL_INFO, "This agent is not bootstrapped");
         }
     }
-
-    SetPolicyServer(ctx, POLICY_SERVER);
 }
 
 static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
@@ -1705,6 +1702,7 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
+
         EvalContextHeapAddHard(ctx, "bootstrap_mode");
     }
 }

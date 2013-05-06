@@ -73,59 +73,13 @@ bool BootstrapAllowed(void)
 
 void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 {
-    if (!BootstrapAllowed())
-    {
-        FatalError(ctx, "Not enough privileges to bootstrap CFEngine");
-    }
-
-    Log(LOG_LEVEL_INFO, "Attempting to bootstrap to server '%s'", policy_server);
-
-    Log(LOG_LEVEL_NOTICE, "This host is '%s'", VSYSNAME.nodename);
-    Log(LOG_LEVEL_NOTICE, "Operating System Type is '%s'", VSYSNAME.sysname);
-    Log(LOG_LEVEL_NOTICE, "Operating System Release is '%s'", VSYSNAME.release);
-    Log(LOG_LEVEL_NOTICE, "System architecture is '%s'", VSYSNAME.machine);
-    Log(LOG_LEVEL_NOTICE, "Internal soft-class is '%s'", CLASSTEXT[VSYSTEMHARDCLASS]);
-
     {
         char failsafe_path[CF_BUFSIZE];
         snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
         MapName(failsafe_path);
 
+        Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", failsafe_path);
         CreateFailSafe(failsafe_path);
-    }
-
-    bool have_policy = false;
-    {
-        char main_policy_file[CF_BUFSIZE];
-        snprintf(main_policy_file, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
-        MapName(main_policy_file);
-
-        struct stat sb;
-        if (stat(main_policy_file, &sb) == -1)
-        {
-            Log(LOG_LEVEL_INFO, "No previous policy has been cached on this host");
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "An existing policy was cached on this host in %s/inputs", CFWORKDIR);
-            have_policy = true;
-        }
-    }
-
-    if (strlen(policy_server) > 0)
-    {
-        Log(LOG_LEVEL_INFO, "Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR, policy_server);
-    }
-    else
-    {
-        if (have_policy)
-        {
-            Log(LOG_LEVEL_INFO, "No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "No policy distribution host was defined - use --policy-server to set one\n");
-        }
     }
 
     bool am_policy_server = IsDefinedClass(ctx, CanonifyName(policy_server), NULL);
@@ -133,11 +87,6 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
         char policy_server_ipv4_class[CF_BUFSIZE];
         snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(policy_server));
         am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
-    }
-
-    if (strlen(POLICY_SERVER) == 0)
-    {
-        am_policy_server = false;
     }
 
     {
@@ -153,6 +102,7 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
         }
         else
         {
+            Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             unlink(am_policy_hub_path);
         }
     }
@@ -272,8 +222,6 @@ void CreateFailSafe(char *name)
         CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write failsafe file! (%s)", name);
         return;
     }
-
-    printf(" -> No policy failsafe discovered, assume temporary bootstrap vector\n");
 
     fprintf(fout,
             "################################################################################\n"

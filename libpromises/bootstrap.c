@@ -160,47 +160,45 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 
 /********************************************************************/
 
-void SetPolicyServer(EvalContext *ctx, char *name)
-/* 
- * If name contains a string, it's written to file,
- * if not, name is filled with the contents of file.
- */
+void SetPolicyServer(EvalContext *ctx, const char *policy_server)
 {
-    char file[CF_BUFSIZE];
-    FILE *fout, *fin;
-    char fileContents[CF_MAXVARSIZE] = { 0 };
+    char policy_server_filename[CF_BUFSIZE];
+    snprintf(policy_server_filename, CF_BUFSIZE - 1, "%s/policy_server.dat", CFWORKDIR);
+    MapName(policy_server_filename);
 
-    snprintf(file, CF_BUFSIZE - 1, "%s/policy_server.dat", CFWORKDIR);
-    MapName(file);
-
-    if ((fin = fopen(file, "r")) != NULL)
+    char policy_server_file_contents[CF_MAXVARSIZE] = { 0 };
     {
-        if (fscanf(fin, "%1023s", fileContents) != 1)
+        FILE *file = fopen(policy_server_filename, "r");
+        if (file)
         {
-            CfDebug("Couldn't read string from policy_server.dat");
+            if (fscanf(file, "%1023s", policy_server_file_contents) != 1)
+            {
+                CfDebug("Couldn't read string from policy_server.dat");
+            }
+            fclose(file);
         }
-        fclose(fin);
     }
 
     // update file if different and we know what to put there
-
-    if ((NULL_OR_EMPTY(name)) && (!NULL_OR_EMPTY(fileContents)))
+    if ((NULL_OR_EMPTY(policy_server)) && (!NULL_OR_EMPTY(policy_server_file_contents)))
     {
-        snprintf(name, CF_MAXVARSIZE, "%s", fileContents);
+        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", policy_server_file_contents);
     }
-    else if ((!NULL_OR_EMPTY(name)) && (strcmp(name, fileContents) != 0))
+    else if ((!NULL_OR_EMPTY(policy_server)) && (strcmp(policy_server, policy_server_file_contents) != 0))
     {
-        if ((fout = fopen(file, "w")) == NULL)
+        FILE *file = fopen(policy_server, "w");
+        if (!file)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write policy server file! (%s)", file);
+            Log(LOG_LEVEL_ERR, "Unable to write policy server file '%s' (fopen: %s)", policy_server_filename, GetErrorStr());
             return;
         }
 
-        fprintf(fout, "%s", name);
-        fclose(fout);
+        fprintf(file, "%s", policy_server);
+        fclose(file);
+        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", policy_server);
     }
 
-    if (NULL_OR_EMPTY(name))
+    if (NULL_OR_EMPTY(POLICY_SERVER))
     {
         // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
         // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
@@ -208,19 +206,20 @@ void SetPolicyServer(EvalContext *ctx, char *name)
     }
     else
     {
-        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", name, DATA_TYPE_STRING);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", policy_server, DATA_TYPE_STRING);
     }
 
-// Get the timestamp on policy update
-
-    snprintf(file, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
-    MapName(file);
-
+    // Get the timestamp on policy update
     struct stat sb;
-    
-    if ((stat(file, &sb)) != 0)
     {
-        return;
+        char cf_promises_validated_filename[CF_MAXVARSIZE];
+        snprintf(cf_promises_validated_filename, CF_MAXVARSIZE, "%s/masterfiles/cf_promises_validated", CFWORKDIR);
+        MapName(cf_promises_validated_filename);
+
+        if ((stat(cf_promises_validated_filename, &sb)) != 0)
+        {
+            return;
+        }
     }
     
     char timebuf[26];

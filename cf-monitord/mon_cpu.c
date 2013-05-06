@@ -59,7 +59,7 @@ void MonCPUGatherData(double *cf_this)
 
     while (!feof(fp))
     {
-        if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
+        if (fgets(buf, sizeof(buf), fp) == NULL)
         {
             break;
         }

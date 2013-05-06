@@ -454,7 +454,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     while (!feof(fp))
     {
         vbuff[0] = '\0';
-        if (fgets(vbuff, CF_BUFSIZE, fp) == NULL)
+        if (fgets(vbuff, sizeof(vbuff), fp) == NULL)
         {
             break;
         }
@@ -601,7 +601,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     while (!feof(fp))
     {
         vbuff[0] = '\0';
-        if (fgets(vbuff, CF_BUFSIZE, fp) == NULL)
+        if (fgets(vbuff, sizeof(vbuff), fp) == NULL)
         {
             break;
         }

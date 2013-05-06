@@ -420,7 +420,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
             while (true)
             {
-                if (fgets(reply, 8, stdin) == NULL)
+                if (fgets(reply, sizeof(reply), stdin) == NULL)
                 {
                     FatalError(ctx, "EOF trying to read answer from terminal");
                 }

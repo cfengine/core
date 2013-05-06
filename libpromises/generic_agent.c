@@ -1702,6 +1702,11 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         EvalContextHeapAddHard(ctx, "opt_debug");
         DEBUG = true;
     }
+
+    if (config->agent_specific.agent.bootstrap_policy_server)
+    {
+        EvalContextHeapAddHard(ctx, "bootstrap_mode");
+    }
 }
 
 void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *workdir, const char *input_file)

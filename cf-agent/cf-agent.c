@@ -380,8 +380,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
             IGNORELOCK = true;
 
-            EvalContextHeapAddHard(ctx, "bootstrap_mode");
-
             // temporary assure that network functions are working
             OpenNetwork();
 

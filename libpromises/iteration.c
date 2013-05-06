@@ -26,6 +26,7 @@
 
 #include "scope.h"
 #include "vars.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "fncall.h"
 #include "env_context.h"
@@ -109,8 +110,8 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
         dtype = DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
-            CfOut(OUTPUT_LEVEL_ERROR, "",
+            Log(LOG_LEVEL_ERR, " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR,
                   " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
         }

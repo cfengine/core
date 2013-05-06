@@ -139,7 +139,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -177,7 +177,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Setting LD_LIBRARY_PATH=%s\n", optarg);
+            Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH=%s\n", optarg);
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
             putenv(ld_library_path);
             break;
@@ -203,7 +203,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
         case 'A':
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
@@ -290,18 +290,18 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "cf-serverd starting %.24s\n", ctime(&starttime));
+    Log(LOG_LEVEL_INFO, "cf-serverd starting %.24s\n", ctime(&starttime));
 
     if (sd != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Listening for connections ...\n");
+        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...\n");
     }
 
 #ifdef __MINGW32__
 
     if (!NO_FORK)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
+        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
     }
 
 #else /* !__MINGW32__ */
@@ -373,7 +373,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
                 }
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "select", "select failed");
+                    Log(LOG_LEVEL_ERR, "select failed. (select: %s)", GetErrorStr());
                     exit(1);
                 }
             }
@@ -382,7 +382,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Accepting a connection\n");
+            Log(LOG_LEVEL_VERBOSE, " -> Accepting a connection\n");
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
@@ -410,13 +410,13 @@ int InitServer(size_t queue_size)
 
     if ((sd = OpenReceiverChannel()) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to start server");
+        Log(LOG_LEVEL_ERR, "Unable to start server");
         exit(1);
     }
 
     if (listen(sd, queue_size) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "listen", "listen failed");
+        Log(LOG_LEVEL_ERR, "listen failed. (listen: %s)", GetErrorStr());
         exit(1);
     }
 
@@ -442,7 +442,7 @@ int OpenReceiverChannel(void)
     /* Resolve listening interface. */
     if (getaddrinfo(ptr, STR_CFENGINEPORT, &query, &response) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "getaddrinfo", "DNS/service lookup failure");
+        Log(LOG_LEVEL_ERR, "DNS/service lookup failure. (getaddrinfo: %s)", GetErrorStr());
         return -1;
     }
 
@@ -458,8 +458,7 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR,
                        &yes, sizeof(yes)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
-                  "Socket option SO_REUSEADDR was not accepted");
+            Log(LOG_LEVEL_ERR, "Socket option SO_REUSEADDR was not accepted. (setsockopt: %s)", GetErrorStr());
             exit(1);
         }
 
@@ -470,8 +469,7 @@ int OpenReceiverChannel(void)
         if (setsockopt(sd, SOL_SOCKET, SO_LINGER,
                        &cflinger, sizeof(cflinger)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setsockopt",
-                  "Socket option SO_LINGER was not accepted");
+            Log(LOG_LEVEL_ERR, "Socket option SO_LINGER was not accepted. (setsockopt: %s)", GetErrorStr());
             exit(1);
         }
 
@@ -491,14 +489,14 @@ int OpenReceiverChannel(void)
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "bind", "Could not bind server address");
+            Log(LOG_LEVEL_ERR, "Could not bind server address. (bind: %s)", GetErrorStr());
             cf_closesocket(sd);
         }
     }
 
     if (sd < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open/bind a socket\n");
+        Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket\n");
         exit(1);
     }
 
@@ -516,11 +514,11 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
     if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New promises detected...\n");
+        Log(LOG_LEVEL_VERBOSE, " -> New promises detected...\n");
 
         if (CheckPromises(config))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Rereading config files %s..\n", config->input_file);
+            Log(LOG_LEVEL_INFO, "Rereading config files %s..\n", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
             
@@ -597,7 +595,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! File changes contain errors -- ignoring");
+            Log(LOG_LEVEL_INFO, " !! File changes contain errors -- ignoring");
             PROMISETIME = time(NULL);
         }
     }
@@ -616,7 +614,7 @@ static int GenerateAvahiConfig(const char *path)
     fout = fopen(path, "w+");
     if (fout == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open %s", path);
+        Log(LOG_LEVEL_ERR, "Unable to open %s", path);
         return -1;
     }
     writer = FileWriter(fout);

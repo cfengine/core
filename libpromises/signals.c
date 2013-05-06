@@ -24,6 +24,7 @@
 
 #include "signals.h"
 
+#include "logging.h"
 #include "logging_old.h"
 
 static const char *SIGNALS[] =
@@ -58,10 +59,10 @@ bool IsPendingTermination(void)
 
 void HandleSignalsForAgent(int signum)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+    Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
-    CfOut(OUTPUT_LEVEL_ERROR, "", "Logical start time %s ", ctime(&CFSTARTTIME));
-    CfOut(OUTPUT_LEVEL_ERROR, "", "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
+    Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
+    Log(LOG_LEVEL_ERR, "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -85,10 +86,10 @@ void HandleSignalsForAgent(int signum)
 
 void HandleSignalsForDaemon(int signum)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
+    Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
-    CfOut(OUTPUT_LEVEL_ERROR, "", "Logical start time %s ", ctime(&CFSTARTTIME));
-    CfOut(OUTPUT_LEVEL_ERROR, "", "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
+    Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
+    Log(LOG_LEVEL_ERR, "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)

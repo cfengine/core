@@ -32,6 +32,7 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "locks.h"
 #include "generic_agent.h" // HashVariables
@@ -159,7 +160,7 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
     {
         if (IsCf3VarString(method_name))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "",
+            Log(LOG_LEVEL_ERR,
                   " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && (bp->name))
@@ -194,7 +195,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
 
         if ((ptr = ScopeGet(scope)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! useresult was specified but the method returned no data");
+            Log(LOG_LEVEL_INFO, " !! useresult was specified but the method returned no data");
             return;
         }
     

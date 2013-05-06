@@ -25,6 +25,7 @@
 #include "cf3.defs.h"
 
 #include "mon.h"
+#include "logging.h"
 #include "logging_old.h"
 
 #ifdef HAVE_SYS_LOADAVG_H
@@ -59,7 +60,7 @@ void MonLoadGatherData(double *cf_this)
 /* Scale load average by 100 to make it visible */
 
     cf_this[ob_loadavg] = sum;
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Load Average = %.2lf\n", cf_this[ob_loadavg]);
+    Log(LOG_LEVEL_VERBOSE, "Load Average = %.2lf\n", cf_this[ob_loadavg]);
 }
 
 #else

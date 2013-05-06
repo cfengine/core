@@ -30,6 +30,7 @@
 #include "rlist.h"
 #include "env_context.h"
 #include "conversion.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "generic_agent.h" // TODO: fix
 
@@ -145,7 +146,7 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_executor", cp->lval }, &retval, NULL))
             {
                 // TODO: should've been checked before this point. change to programming error
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in exec control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval %s in exec control body", cp->lval);
                 continue;
             }
 

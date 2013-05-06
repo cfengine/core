@@ -27,6 +27,7 @@
 #include "promises.h"
 #include "policy.h"
 #include "conversion.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "chflags.h"
 #include "audit.h"
@@ -428,8 +429,8 @@ FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!ParseModeString(value, &p.plus, &p.minus))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Problem validating a mode string");
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     list = PromiseGetConstraintAsList(ctx, "bsdflags", pp);
@@ -439,8 +440,8 @@ FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (list && (!ParseFlagString(list, &p.plus_flags, &p.minus_flags)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a BSD flag string");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Problem validating a BSD flag string");
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     p.owners = Rlist2UidList((Rlist *) ConstraintGetRvalValue(ctx, "owners", pp, RVAL_TYPE_LIST), pp);
@@ -485,8 +486,8 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
         if (!ParseModeString(value, &plus, &minus))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            Log(LOG_LEVEL_ERR, "Problem validating a mode string");
+            PromiseRef(LOG_LEVEL_ERR, pp);
         }
     }
 
@@ -497,8 +498,8 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!ParseFlagString(s.bsdflags, &fplus, &fminus))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a BSD flag string");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Problem validating a BSD flag string");
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     if ((s.name) || (s.path) || (s.filetypes) || (s.issymlinkto) || (s.perms) || (s.bsdflags))
@@ -517,7 +518,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!IntegerRangeFromString(value, (long *) &s.min_size, (long *) &s.max_size))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -529,7 +530,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!IntegerRangeFromString(value, (long *) &s.min_ctime, (long *) &s.max_ctime))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -541,7 +542,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!IntegerRangeFromString(value, (long *) &s.min_atime, (long *) &s.max_atime))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "mtime", pp, RVAL_TYPE_SCALAR);
@@ -552,7 +553,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!IntegerRangeFromString(value, (long *) &s.min_mtime, (long *) &s.max_mtime))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -568,7 +569,7 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
     {
         if (!entries)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! file_select body missing its a file_result return value");
+            Log(LOG_LEVEL_ERR, " !! file_select body missing its a file_result return value");
         }
     }
 
@@ -722,8 +723,8 @@ FileRename GetRenameConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (!ParseModeString(value, &r.plus, &r.minus))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Problem validating a mode string");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Problem validating a mode string");
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     r.disable = PromiseGetConstraintAsBoolean(ctx, "disable", pp);
@@ -778,8 +779,8 @@ FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (FIPS_MODE && (c.hash == HASH_METHOD_MD5))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! FIPS mode is enabled, and md5 is not an approved algorithm");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, " !! FIPS mode is enabled, and md5 is not an approved algorithm");
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     value = (char *) ConstraintGetRvalValue(ctx, "report_changes", pp, RVAL_TYPE_SCALAR);
@@ -868,7 +869,7 @@ FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp)
     value = (char *) ConstraintGetRvalValue(ctx, "copy_size", pp, RVAL_TYPE_SCALAR);
     if (!IntegerRangeFromString(value, &min, &max))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -1104,7 +1105,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_pid, &p.max_pid))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "ppid", pp, RVAL_TYPE_SCALAR);
@@ -1116,7 +1117,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_ppid, &p.max_ppid))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "pgid", pp, RVAL_TYPE_SCALAR);
@@ -1128,7 +1129,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_pgid, &p.max_pgid))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "rsize", pp, RVAL_TYPE_SCALAR);
@@ -1140,7 +1141,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_rsize, &p.max_rsize))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "vsize", pp, RVAL_TYPE_SCALAR);
@@ -1151,7 +1152,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_vsize, &p.max_vsize))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "ttime_range", pp, RVAL_TYPE_SCALAR);
@@ -1162,7 +1163,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, (long *) &p.min_ttime, (long *) &p.max_ttime))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "stime_range", pp, RVAL_TYPE_SCALAR);
@@ -1173,7 +1174,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, (long *) &p.min_stime, (long *) &p.max_stime))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -1189,7 +1190,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_pri, &p.max_pri))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     value = (char *) ConstraintGetRvalValue(ctx, "threads", pp, RVAL_TYPE_SCALAR);
@@ -1200,7 +1201,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
 
     if (!IntegerRangeFromString(value, &p.min_thread, &p.max_thread))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
 
@@ -1213,7 +1214,7 @@ ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise 
     {
         if (entries)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! process_select body missing its a process_result return value");
+            Log(LOG_LEVEL_ERR, " !! process_select body missing its a process_result return value");
         }
     }
 
@@ -1230,7 +1231,7 @@ ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp)
     value = (char *) ConstraintGetRvalValue(ctx, "match_range", pp, RVAL_TYPE_SCALAR);
     if (!IntegerRangeFromString(value, &p.min_range, &p.max_range))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Could not make sense of integer range [%s]", value);
     }
     p.in_range_define = PromiseGetConstraintAsList(ctx, "in_range_define", pp);
@@ -1535,7 +1536,7 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
 
     if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
+        Log(LOG_LEVEL_ERR, " !! bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
     
     return r;
@@ -1624,8 +1625,8 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (value && ((d.db_server_type) == DATABASE_TYPE_NONE))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unsupported database type \"%s\" in databases promise", value);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "Unsupported database type \"%s\" in databases promise", value);
+        PromiseRef(LOG_LEVEL_ERR, pp);
     }
 
     return d;

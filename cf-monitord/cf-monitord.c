@@ -194,7 +194,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             }
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
@@ -232,7 +232,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
 
             if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_monitor", cp->lval }, &retval, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in monitor control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval %s in monitor control body", cp->lval);
                 continue;
             }
 

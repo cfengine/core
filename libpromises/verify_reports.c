@@ -124,7 +124,7 @@ static void ReportToFile(const char *logfile, const char *message)
     FILE *fp = fopen(logfile, "a");
     if (fp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open log file %s\n", logfile);
+        Log(LOG_LEVEL_ERR, "Could not open log file '%s'. (fopen: %s)", logfile, GetErrorStr());
         printf("%s\n", message);
     }
     else
@@ -142,7 +142,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (a.report.filename == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Printfile promise was incomplete, with no filename.\n");
+        Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.\n");
         return;
     }
 
@@ -166,7 +166,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
                 break;
             }
         }
-        CfOut(OUTPUT_LEVEL_ERROR, "", "R: %s", buffer);
+        Log(LOG_LEVEL_ERR, "R: %s", buffer);
         lines++;
     }
 

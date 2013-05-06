@@ -31,12 +31,12 @@
 
 void RegisterLiteralServerData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const char *handle, ARG_UNUSED Promise *pp)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
+    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise\n");
 }
 
 int ReturnLiteralData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *handle, ARG_UNUSED char *ret)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise\n");
+    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise\n");
     return 0;
 }
 
@@ -44,7 +44,7 @@ int SetServerListenState(ARG_UNUSED EvalContext *ctx, ARG_UNUSED size_t queue_si
 {
     if (!SERVER_LISTEN)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Disable listening on port is only supported in CFEngine Enterprise");
+        Log(LOG_LEVEL_VERBOSE, " !! Disable listening on port is only supported in CFEngine Enterprise");
     }
 
     return InitServer(queue_size);
@@ -52,12 +52,12 @@ int SetServerListenState(ARG_UNUSED EvalContext *ctx, ARG_UNUSED size_t queue_si
 
 void TryCollectCall(void)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, " !! Collect calling is only supported in CFEngine Enterprise");
 }
 
 int ReceiveCollectCall(ARG_UNUSED struct ServerConnectionState *conn)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "  Collect Call only supported in the CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "  Collect Call only supported in the CFEngine Enterprise");
     return false;
 }
 

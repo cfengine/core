@@ -36,6 +36,7 @@
 #include "scope.h"
 #include "files_interfaces.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "locks.h"
 #include "policy.h"
@@ -212,16 +213,16 @@ static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence 
     }
 
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
+        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context\n");
 
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", context);
+            Log(LOG_LEVEL_VERBOSE, "     ??       %s\n", context);
         }
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
     }
 
 }
@@ -237,20 +238,20 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
+        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
               pp->promiser, sp);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
@@ -1559,13 +1560,13 @@ static bool SanityCheckXPathBuild(EvalContext *ctx, Attributes a, Promise *pp)
 
     if ((strcmp("build_xpath", pp->parent_promise_type->name) == 0) && (a.xml.havebuildxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
+        Log(LOG_LEVEL_ERR, " !! Attribute: build_xpath is not allowed within bundle: build_xpath");
         return false;
     }
 
     if (a.xml.haveselectxpath && !a.xml.havebuildxpath)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! XPath build does not require select_xpath to be specified");
+        Log(LOG_LEVEL_ERR, " !! XPath build does not require select_xpath to be specified");
         return false;
     }
 
@@ -1583,7 +1584,7 @@ static bool SanityCheckTreeDeletions(Attributes a)
 {
     if (!a.xml.haveselectxpath)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Tree deletion requires select_xpath to be specified");
         return false;
     }
@@ -1602,13 +1603,13 @@ static bool SanityCheckTreeInsertions(Attributes a, EditContext *edcontext)
 {
     if ((a.xml.haveselectxpath && !a.xml.havebuildxpath && !xmlDocGetRootElement(edcontext->xmldoc)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Tree insertion into an empty file, using select_xpath, does not make sense");
         return false;
     }
     else if ((!a.xml.haveselectxpath &&  a.xml.havebuildxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               "!! Tree insertion requires select_xpath to be specified, unless inserting into an empty file");
         return false;
     }
@@ -1627,7 +1628,7 @@ static bool SanityCheckAttributeDeletions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Attribute deletion requires select_xpath to be specified");
         return false;
     }
@@ -1646,7 +1647,7 @@ static bool SanityCheckAttributeSet(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Attribute insertion requires select_xpath to be specified");
         return false;
     }
@@ -1665,7 +1666,7 @@ static bool SanityCheckTextDeletions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
@@ -1684,7 +1685,7 @@ static bool SanityCheckTextSet(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }
@@ -1703,7 +1704,7 @@ static bool SanityCheckTextInsertions(Attributes a)
 {
     if (!(a.xml.haveselectxpath))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Tree insertion requires select_xpath to be specified");
         return false;
     }

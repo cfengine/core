@@ -30,6 +30,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "scope.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "misc_lib.h"
 #include "rlist.h"
@@ -45,7 +46,7 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
+        Log(LOG_LEVEL_ERR, "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
               erroffset);
     }
 
@@ -358,10 +359,10 @@ int IsPathRegex(char *str)
 
                 if ((*sp == FILE_SEPARATOR) && (r || s))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                    Log(LOG_LEVEL_ERR,
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
                           FILE_SEPARATOR);
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Use a work-around to avoid pathological behaviour\n");
+                    Log(LOG_LEVEL_ERR, "Use a work-around to avoid pathological behaviour\n");
                     return false;
                 }
                 break;
@@ -440,8 +441,8 @@ int MatchPolicy(const char *camel, const char *haystack, Rlist *insert_match, co
             {
                 if ((rp->next != NULL) || (rp != insert_match))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", " !! Multiple policies conflict with \"exact_match\", using exact match");
-                    PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+                    Log(LOG_LEVEL_ERR, " !! Multiple policies conflict with \"exact_match\", using exact match");
+                    PromiseRef(LOG_LEVEL_ERR, pp);
                 }
 
                 ok = ok || direct_cmp;

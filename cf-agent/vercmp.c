@@ -31,6 +31,7 @@
 /* ExpandScalar */
 #include "expand.h"
 #include "vars.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "pipes.h"
 #include "misc_lib.h"
@@ -80,7 +81,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         return VERCMP_ERROR;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Executing %s", expanded_command);
+    Log(LOG_LEVEL_VERBOSE, "Executing %s", expanded_command);
 
     int retcode = cf_pclose(pfp);
 

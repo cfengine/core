@@ -35,6 +35,7 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "locks.h"
 #include "string_lib.h"
@@ -275,7 +276,7 @@ Bundle *MakeTemporaryBundleFromTemplate(EvalContext *ctx, Policy *policy, Attrib
                     //install independent promise line
                     if (StripTrailingNewline(buffer, CF_EXPANDSIZE) == -1)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
+                        Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
                     }
                     np = PromiseTypeAppendPromise(tp, buffer, (Rval) { NULL, RVAL_TYPE_NOPROMISEE }, context);
                     PromiseAppendConstraint(np, "insert_type", (Rval) { xstrdup("preserve_block"), RVAL_TYPE_SCALAR }, "any", false);
@@ -301,16 +302,16 @@ static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence ty
     }
 
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??  Private class context\n");
+        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context\n");
 
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??       %s\n", context);
+            Log(LOG_LEVEL_VERBOSE, "     ??       %s\n", context);
         }
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
     }
 }
 
@@ -324,20 +325,20 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
+        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
               pp->promiser, sp);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
@@ -457,21 +458,21 @@ static void VerifyColumnEdits(EvalContext *ctx, Promise *pp, EditContext *edcont
     if (a.column.column_separator == NULL)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, "No field_separator in promise to edit by column for %s", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
 
     if (a.column.select_column <= 0)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, "No select_field in promise to edit %s", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
 
     if (!a.column.column_value)
     {
         cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, "No field_value is promised to column_edit %s", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return;
     }
 
@@ -517,7 +518,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Looking at pattern %s\n", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, " -> Looking at pattern %s\n", pp->promiser);
 
 /* Are we working in a restricted region? */
 
@@ -839,7 +840,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 
         if (matches)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Multi-line region (%d lines) matched text in the file", matches);
+            Log(LOG_LEVEL_VERBOSE, " -> Multi-line region (%d lines) matched text in the file", matches);
         }
         else
         {
@@ -854,7 +855,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 
         if (matches)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Delete chunk of %d lines\n", matches);
+            Log(LOG_LEVEL_VERBOSE, " -> Delete chunk of %d lines\n", matches);
 
             if (a.transaction.action == cfa_warn)
             {
@@ -937,7 +938,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
     if (a.replace.occurrences && (strcmp(a.replace.occurrences, "first") == 0))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
+        Log(LOG_LEVEL_INFO, "WARNING! Setting replace-occurrences policy to \"first\" is not convergent");
         once_only = true;
     }
 
@@ -957,20 +958,20 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
         {
             if (match_len == strlen(line_buff))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Improper convergent expression matches defacto convergence, so accepting");
+                Log(LOG_LEVEL_VERBOSE, " -> Improper convergent expression matches defacto convergence, so accepting");
                 break;
             }
 
             if (cutoff++ > CF_MAX_REPLACE)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Too many replacements on this line");
+                Log(LOG_LEVEL_VERBOSE, " !! Too many replacements on this line");
                 break;
             }
 
             match_len = end_off - start_off;
             ExpandScalar(ctx, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
+            Log(LOG_LEVEL_VERBOSE, " -> Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
                   cutoff);
 
             before[0] = after[0] = '\0';
@@ -989,7 +990,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
 
             if (once_only)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
+                Log(LOG_LEVEL_VERBOSE, " -> Replace first occurrence only (warning, this is not a convergent policy)");
                 break;
             }
         }
@@ -999,9 +1000,9 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
                  " -> Promised replacement \"%s\" on line \"%s\" for pattern \"%s\" is not convergent while editing %s",
                  line_buff, ip->name, pp->promiser, edcontext->filename);
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Because the regular expression \"%s\" still matches the replacement string \"%s\"",
+            Log(LOG_LEVEL_ERR, "Because the regular expression \"%s\" still matches the replacement string \"%s\"",
                   pp->promiser, line_buff);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            PromiseRef(LOG_LEVEL_ERR, pp);
             break;
         }
 
@@ -1020,12 +1021,12 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             (edcontext->num_edits)++;
             retval = true;
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> << (%d)\"%s\"\n", cutoff, ip->name);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> >> (%d)\"%s\"\n", cutoff, line_buff);
+            Log(LOG_LEVEL_VERBOSE, " -> << (%d)\"%s\"\n", cutoff, ip->name);
+            Log(LOG_LEVEL_VERBOSE, " -> >> (%d)\"%s\"\n", cutoff, line_buff);
 
             if (once_only)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Replace first occurrence only (warning, this is not a convergent policy)");
+                Log(LOG_LEVEL_VERBOSE, " -> Replace first occurrence only (warning, this is not a convergent policy)");
                 break;
             }
 
@@ -1034,10 +1035,10 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
                 cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_INTERRUPTED, "", pp, a,
                      " -> Promised replacement \"%s\" for pattern \"%s\" is not properly convergent while editing %s",
                      ip->name, pp->promiser, edcontext->filename);
-                CfOut(OUTPUT_LEVEL_INFORM, "",
+                Log(LOG_LEVEL_INFO,
                       "Because the regular expression \"%s\" still matches the end-state replacement string \"%s\"",
                       pp->promiser, line_buff);
-                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
             }
         }
     }
@@ -1077,7 +1078,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " - Matched line (%s)\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, " - Matched line (%s)\n", ip->name);
         }
 
         if (!BlockTextMatch(a.column.column_separator, ip->name, &s, &e))
@@ -1089,7 +1090,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
 
         if (e - s > CF_MAXVARSIZE / 2)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Line split criterion matches a huge part of the line -- seems to be in error");
+            Log(LOG_LEVEL_ERR, " !! Line split criterion matches a huge part of the line -- seems to be in error");
             return false;
         }
 
@@ -1155,14 +1156,14 @@ static int SanityCheckInsertions(Attributes a)
 
     if (not > 1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Line insertion selection promise is meaningless - the alternatives are mutually exclusive (only one is allowed)");
         ok = false;
     }
 
     if (with && not)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Line insertion selection promise is meaningless - cannot mix positive and negative constraints");
         ok = false;
     }
@@ -1180,7 +1181,7 @@ static int SanityCheckInsertions(Attributes a)
             ignore_something = true;
             if (preserve_block)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Line insertion should not use whitespace policy with preserve_block");
+                Log(LOG_LEVEL_ERR, " !! Line insertion should not use whitespace policy with preserve_block");
                 ok = false;
             }
             break;
@@ -1189,7 +1190,7 @@ static int SanityCheckInsertions(Attributes a)
 
     if (exact && ignore_something)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               " !! Line insertion selection promise is meaningless - cannot mix exact_match with other ignore whitespace options");
         ok = false;
     }
@@ -1205,7 +1206,7 @@ static int SanityCheckDeletions(Attributes a, Promise *pp)
     {
         if (a.not_matching)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "",
+            Log(LOG_LEVEL_ERR,
                   " !! Makes no sense to promise multi-line delete with not_matching. Cannot be satisfied for all lines as a block.");
         }
     }
@@ -1256,7 +1257,7 @@ static int InsertFileAtLocation(EvalContext *ctx, Item **start, Item *begin_ptr,
         }
         if (StripTrailingNewline(buf, CF_EXPANDSIZE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "StripTrailingNewline was called on an overlong string");
+            Log(LOG_LEVEL_ERR, "StripTrailingNewline was called on an overlong string");
         }
         
         if (feof(fin) && strlen(buf) == 0)
@@ -1515,7 +1516,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 
         if (count == a.column.select_column)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Stopped at field %d\n", count);
+            Log(LOG_LEVEL_VERBOSE, " -> Stopped at field %d\n", count);
             break;
         }
     }
@@ -1543,7 +1544,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
                 count++;
                 if (count == a.column.select_column)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Stopped at column/field %d\n", count);
+                    Log(LOG_LEVEL_VERBOSE, " -> Stopped at column/field %d\n", count);
                     break;
                 }
             }
@@ -1754,7 +1755,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     {
         if ((found = RlistKeyIn(*columns, a.column.column_value)))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Deleting column field sub-value %s in %s", a.column.column_value,
+            Log(LOG_LEVEL_INFO, " -> Deleting column field sub-value %s in %s", a.column.column_value,
                   edcontext->filename);
             RlistDestroyEntry(columns, found);
             return true;
@@ -1771,12 +1772,12 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
         {
             if (strcmp((*columns)->item, a.column.column_value) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Field sub-value set as promised\n");
+                Log(LOG_LEVEL_VERBOSE, " -> Field sub-value set as promised\n");
                 return false;
             }
         }
 
-        CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting field sub-value %s in %s", a.column.column_value, edcontext->filename);
+        Log(LOG_LEVEL_INFO, " -> Setting field sub-value %s in %s", a.column.column_value, edcontext->filename);
         RlistDestroy(*columns);
         *columns = NULL;
         RlistPrependScalarIdemp(columns, a.column.column_value);
@@ -1788,7 +1789,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
     {
         if (RlistPrependScalarIdemp(columns, a.column.column_value))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Prepending field sub-value %s in %s", a.column.column_value, edcontext->filename);
+            Log(LOG_LEVEL_INFO, " -> Prepending field sub-value %s in %s", a.column.column_value, edcontext->filename);
             return true;
         }
         else

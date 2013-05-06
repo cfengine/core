@@ -36,6 +36,7 @@
 #include "expand.h"
 #include "scope.h"
 #include "sysinfo.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "signals.h"
 #include "locks.h"
@@ -215,7 +216,7 @@ static void LoadHistogram(void)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "fopen", "Unable to load histogram data");
+        Log(LOG_LEVEL_VERBOSE, "Unable to load histogram data. (fopen: %s)", GetErrorStr());
         return;
     }
 
@@ -228,7 +229,7 @@ static void LoadHistogram(void)
     {
         if (fscanf(fp, "%d ", &position) != 1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Format error in histogram file '%s' - aborting", filename);
+            Log(LOG_LEVEL_ERR, "Format error in histogram file '%s' - aborting", filename);
             break;
         }
 
@@ -238,7 +239,7 @@ static void LoadHistogram(void)
             {
                 if (fscanf(fp, "%lf ", &(HISTOGRAM[i][day][position])) != 1)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "fscanf", "Format error in histogram file '%s'", filename);
+                    Log(LOG_LEVEL_VERBOSE, "Format error in histogram file '%s'. (fscanf: %s)", filename, GetErrorStr());
                     HISTOGRAM[i][day][position] = 0;
                 }
 
@@ -283,14 +284,14 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
     if (!NO_FORK)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Windows does not support starting processes in the background - starting in foreground");
+        Log(LOG_LEVEL_VERBOSE, "Windows does not support starting processes in the background - starting in foreground");
     }
 
 #else /* !__MINGW32__ */
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "cf-monitord: starting\n");
+        Log(LOG_LEVEL_INFO, "cf-monitord: starting\n");
         _exit(0);
     }
 
@@ -374,7 +375,7 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
 
     if ((lastweek_vals = GetCurrentAverages(t)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading average database");
+        Log(LOG_LEVEL_ERR, "Error reading average database");
         exit(1);
     }
 
@@ -454,15 +455,15 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
             LOCALAV.Q[i].var = WAverage(newvals.Q[i].var, LOCALAV.Q[i].var, ITER);
         }
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
+        Log(LOG_LEVEL_VERBOSE, "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
               newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i], newvals.Q[i].expect,
+        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i], newvals.Q[i].expect,
               sqrt(newvals.Q[i].var), LOCALAV.Q[i].expect, sqrt(LOCALAV.Q[i].var));
 
         if (This[i] > 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Storing %.2lf in %s\n", This[i], name);
+            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s\n", This[i], name);
         }
     }
 
@@ -622,7 +623,7 @@ static void ArmClasses(Averages av, char *timekey)
         {
             anomaly[i][LDT_POS] = true; /* Remember the last anomaly value */
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "LDT(%d) in %s chi = %.2f thresh %.2f \n", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
+            Log(LOG_LEVEL_VERBOSE, "LDT(%d) in %s chi = %.2f thresh %.2f \n", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
 
             /* Last printed element is now */
 
@@ -693,7 +694,7 @@ static void ArmClasses(Averages av, char *timekey)
 
     if (ListLen(MON_TCP6) + ListLen(MON_TCP4) > 512)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
+        Log(LOG_LEVEL_INFO, "Disabling address information of TCP ports in LISTEN state: more than 512 listening ports are detected");
     }
     else
     {
@@ -773,7 +774,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "Updated averages at %s\n", timekey);
+    Log(LOG_LEVEL_INFO, "Updated averages at %s\n", timekey);
 
     WriteDB(dbp, timekey, &newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
@@ -814,7 +815,7 @@ static void UpdateDistributions(EvalContext *ctx, char *timekey, Averages *av)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to save histograms");
+            Log(LOG_LEVEL_ERR, "Unable to save histograms. (fopen: %s)", GetErrorStr());
             return;
         }
 
@@ -1114,7 +1115,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Value accepted\n");
+        Log(LOG_LEVEL_VERBOSE, "Value accepted\n");
         return new;
     }
 }
@@ -1167,21 +1168,21 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
               pp->classes);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
               sp);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 

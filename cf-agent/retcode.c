@@ -24,6 +24,8 @@
 
 #include "retcode.h"
 #include "rlist.h"
+
+#include "logging.h"
 #include "logging_old.h"
 
 int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes a, Promise *pp)
@@ -66,7 +68,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
 
         if (!matched)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
+            Log(LOG_LEVEL_VERBOSE,
                   "Command related to promiser \"%s\" returned code %d -- did not match any failed, repaired or kept lists",
                   pp->promiser, retcode);
         }

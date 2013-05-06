@@ -23,6 +23,7 @@
 */
 
 #include "ornaments.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "rlist.h"
 
@@ -40,8 +41,8 @@ void PromiseBanner(const Promise *pp)
         strcpy(handle, "(enterprise only)");
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "    .........................................................\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -65,18 +66,18 @@ void PromiseBanner(const Promise *pp)
 
     if (pp->comment)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "    Comment:  %s\n", pp->comment);
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "    Comment:  %s\n", pp->comment);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "    .........................................................\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    Log(LOG_LEVEL_VERBOSE, "    .........................................................\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 void BannerSubBundle(const Bundle *bp, const Rlist *params)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -94,24 +95,24 @@ void BannerSubBundle(const Bundle *bp, const Rlist *params)
         if (VERBOSE || DEBUG)
             printf("\n");
     }
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 void Banner(const char *s)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " %s ", s);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "***********************************************************\n");
+    Log(LOG_LEVEL_VERBOSE, "***********************************************************\n");
+    Log(LOG_LEVEL_VERBOSE, " %s ", s);
+    Log(LOG_LEVEL_VERBOSE, "***********************************************************\n");
 }
 
 void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   %s in bundle %s (%d)\n", type, bundlename, pass);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "   =========================================================\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "   =========================================================\n");
+    Log(LOG_LEVEL_VERBOSE, "   %s in bundle %s (%d)\n", type, bundlename, pass);
+    Log(LOG_LEVEL_VERBOSE, "   =========================================================\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type)
@@ -119,7 +120,7 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
     if (strcmp(type, "processes") == 0)
     {
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     ??? Local class context: \n");
+            Log(LOG_LEVEL_VERBOSE, "     ??? Local class context: \n");
 
             StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
             const char *context = NULL;
@@ -128,21 +129,21 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
                 printf("       %s\n", context);
             }
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+            Log(LOG_LEVEL_VERBOSE, "\n");
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      %s in bundle %s\n", type, bundlename);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    Log(LOG_LEVEL_VERBOSE, "      %s in bundle %s\n", type, bundlename);
+    Log(LOG_LEVEL_VERBOSE, "      = = = = = = = = = = = = = = = = = = = = = = = = = = = = \n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 void BannerBundle(Bundle *bp, Rlist *params)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
+    Log(LOG_LEVEL_VERBOSE, "*****************************************************************\n");
 
     if (VERBOSE || DEBUG)
     {
@@ -161,7 +162,7 @@ void BannerBundle(Bundle *bp, Rlist *params)
             printf("\n");
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "*****************************************************************\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+    Log(LOG_LEVEL_VERBOSE, "*****************************************************************\n");
+    Log(LOG_LEVEL_VERBOSE, "\n");
 
 }

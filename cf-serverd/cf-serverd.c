@@ -25,6 +25,7 @@
 #include "cf-serverd-functions.h"
 
 #include "server_transform.h"
+#include "logging.h"
 #include "logging_old.h"
 
 int main(int argc, char *argv[])
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);

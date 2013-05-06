@@ -28,6 +28,7 @@
 #include "syntax.h"
 #include "expand.h"
 #include "vars.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "fncall.h"
 #include "evalfunction.h"
@@ -71,9 +72,9 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
     {
         if (len != FnNumArgs(fn))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Arguments to function %s(.) do not tally. Expect %d not %d",
+            Log(LOG_LEVEL_ERR, "Arguments to function %s(.) do not tally. Expect %d not %d",
                   fp->name, FnNumArgs(fn), len);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            PromiseRef(LOG_LEVEL_ERR, pp);
             exit(1);
         }
     }

@@ -27,6 +27,7 @@
 #include "promises.h"
 #include "files_names.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "policy.h"
 #include "cf-monitord-enterprise-stubs.h"
@@ -49,11 +50,11 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
     {
         if (pp->comment)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s (%s), already done", pp->promiser, pp->comment);
+            Log(LOG_LEVEL_VERBOSE, "Skipping static observation %s (%s), already done", pp->promiser, pp->comment);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping static observation %s, already done", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Skipping static observation %s, already done", pp->promiser);
         }
 
         return;
@@ -80,16 +81,16 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if (!IsAbsPath(pp->promiser))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The promiser \"%s\" of a measurement was not an absolute path",
+        Log(LOG_LEVEL_ERR, "The promiser \"%s\" of a measurement was not an absolute path",
              pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
 
     if (m.data_type == DATA_TYPE_NONE)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The promiser \"%s\" did not specify a data type\n", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
     else
@@ -105,8 +106,8 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
                 break;
 
             default:
-                CfOut(OUTPUT_LEVEL_ERROR, "", "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
-                PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+                Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
+                PromiseRef(LOG_LEVEL_ERR, pp);
                 retval = false;
                 break;
             }
@@ -115,20 +116,20 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if ((m.select_line_matching) && (m.select_line_number != CF_NOINT))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
+        PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
 
     if (!m.extraction_regex)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No extraction regex, so assuming whole line is the value");
+        Log(LOG_LEVEL_VERBOSE, "No extraction regex, so assuming whole line is the value");
     }
     else
     {
         if ((!strchr(m.extraction_regex, '(')) && (!strchr(m.extraction_regex, ')')))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "The extraction_regex must contain a single backreference for the extraction\n");
+            Log(LOG_LEVEL_ERR, "The extraction_regex must contain a single backreference for the extraction\n");
             retval = false;
         }
     }

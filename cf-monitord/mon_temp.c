@@ -28,6 +28,7 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "pipes.h"
 
@@ -114,7 +115,7 @@ static bool GetAcpi(double *cf_this)
 
     if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
+        Log(LOG_LEVEL_VERBOSE, "Can't open directory '%s'. (opendir: %s)", path, GetErrorStr());
         return false;
     }
 
@@ -135,7 +136,7 @@ static bool GetAcpi(double *cf_this)
 
         if (fgets(buf, sizeof(buf), fp) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to read line from stream '%s'", path);
+            Log(LOG_LEVEL_ERR, "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }

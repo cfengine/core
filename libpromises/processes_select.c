@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "conversion.h"
 #include "matching.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "string_lib.h"
 #include "item_lib.h"
@@ -191,7 +192,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
 
             if (pid == -1)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to extract pid while looking for %s\n", process_name);
+                Log(LOG_LEVEL_VERBOSE, "Unable to extract pid while looking for %s\n", process_name);
                 continue;
             }
 
@@ -224,7 +225,7 @@ static int SelectProcRangeMatch(char *name1, char *name2, int min, int max, char
 
         if (value == CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to extract a valid integer from %s => \"%s\" in process list\n", names[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %s => \"%s\" in process list\n", names[i],
                   line[i]);
             return false;
         }
@@ -290,14 +291,14 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 
         if (value == CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to extract a valid integer from %c => \"%s\" in process list\n", name1[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => \"%s\" in process list\n", name1[i],
                   line[i]);
             return false;
         }
 
         if ((min <= value) && (value <= max))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Selection filter matched counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n",
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched counter range %s/%s = %s in [%jd,%jd] (= %jd secs)\n",
                   name1, name2, line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return true;
         }
@@ -330,14 +331,14 @@ static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, tim
 
         if (value == CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to extract a valid integer from %c => \"%s\" in process list\n", name1[i],
+            Log(LOG_LEVEL_INFO, "Failed to extract a valid integer from %c => \"%s\" in process list\n", name1[i],
                   line[i]);
             return false;
         }
 
         if ((min <= value) && (value <= max))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Selection filter matched absolute %s/%s = %s in [%jd,%jd]\n", name1, name2, line[i],
+            Log(LOG_LEVEL_VERBOSE, "Selection filter matched absolute %s/%s = %s in [%jd,%jd]\n", name1, name2, line[i],
                   (intmax_t)min, (intmax_t)max);
             return true;
         }
@@ -484,12 +485,12 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
         if (Chop(cols2[i], CF_EXPANDSIZE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
 
         if (strcmp(cols2[i], cols1[i]) != 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unacceptable model uncertainty examining processes");
+            Log(LOG_LEVEL_INFO, " !! Unacceptable model uncertainty examining processes");
         }
 
         line[i] = xstrdup(cols1[i]);
@@ -512,7 +513,7 @@ static int GetProcColumnIndex(char *name1, char *name2, char **names)
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " INFO - process column %s/%s was not supported on this system", name1, name2);
+    Log(LOG_LEVEL_VERBOSE, " INFO - process column %s/%s was not supported on this system", name1, name2);
     return -1;
 }
 
@@ -529,7 +530,7 @@ bool IsProcessNameRunning(char *procNameRegex)
 
     if (PROCESSTABLE == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! IsProcessNameRunning: PROCESSTABLE is empty");
+        Log(LOG_LEVEL_ERR, "IsProcessNameRunning: PROCESSTABLE is empty");
         return false;
     }
 
@@ -546,7 +547,7 @@ bool IsProcessNameRunning(char *procNameRegex)
 
         if (!SplitProcLine(ip->name, colHeaders, start, end, lineSplit))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "!! IsProcessNameRunning: Could not split process line \"%s\"", ip->name);
+            Log(LOG_LEVEL_ERR, "IsProcessNameRunning: Could not split process line \"%s\"", ip->name);
             continue;
         }
 
@@ -600,7 +601,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
                 end[col++] = offset - 1;
                 if (col > CF_PROCCOLS - 1)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Column overflow in process table");
+                    Log(LOG_LEVEL_ERR, "Column overflow in process table");
                     break;
                 }
             }
@@ -750,7 +751,7 @@ int LoadProcessTable(Item **procdata)
 
     if (PROCESSTABLE)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Reusing cached process state");
+        Log(LOG_LEVEL_VERBOSE, " -> Reusing cached process state");
         return true;
     }
 
@@ -758,11 +759,11 @@ int LoadProcessTable(Item **procdata)
 
     snprintf(pscomm, CF_MAXLINKSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], psopts);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Observe process table with %s\n", pscomm);
+    Log(LOG_LEVEL_VERBOSE, "Observe process table with %s\n", pscomm);
 
     if ((prp = cf_popen(pscomm, "r", false)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "popen", "Couldn't open the process list with command %s\n", pscomm);
+        Log(LOG_LEVEL_ERR, "Couldn't open the process list with command '%s'. (popen: %s)", pscomm, GetErrorStr());
         return false;
     }
 
@@ -776,7 +777,7 @@ int LoadProcessTable(Item **procdata)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read process list with command %s", pscomm);
+            Log(LOG_LEVEL_ERR, "Unable to read process list with command '%s'. (fread: %s)", pscomm, GetErrorStr());
             cf_pclose(prp);
             return false;
         }

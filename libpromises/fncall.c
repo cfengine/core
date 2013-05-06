@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "expand.h"
 #include "vars.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "args.h"
 #include "evalfunction.h"
@@ -157,12 +158,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
     {
         if (caller)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
                   fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
         }
 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };

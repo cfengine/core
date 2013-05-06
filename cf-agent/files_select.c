@@ -29,6 +29,7 @@
 #include "files_interfaces.h"
 #include "promises.h"
 #include "matching.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
@@ -65,19 +66,19 @@ int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
 #ifdef __MINGW32__
     if (fs.issymlinkto != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+        Log(LOG_LEVEL_VERBOSE,
               "files_select.issymlinkto is ignored on Windows (symbolic links are not supported by Windows)");
     }
 
     if (fs.groups != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
+        Log(LOG_LEVEL_VERBOSE,
               "files_select.search_groups is ignored on Windows (file groups are not supported by Windows)");
     }
 
     if (fs.bsdflags != NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "files_select.search_bsdflags is ignored on Windows");
+        Log(LOG_LEVEL_VERBOSE, "files_select.search_bsdflags is ignored on Windows");
     }
 #endif /* __MINGW32__ */
 
@@ -344,7 +345,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 
         if (!ParseModeString(rp->item, &plus, &minus))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, " !! Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
             continue;
         }
 
@@ -370,7 +371,7 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags)
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Problem validating a BSD flag string");
+        Log(LOG_LEVEL_ERR, " !! Problem validating a BSD flag string");
     }
 
     newflags = (lstatptr->st_flags & CHFLAGS_MASK);
@@ -431,7 +432,7 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
 
     if ((pp = cf_popen(buf, "r", true)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe to command %s\n", buf);
+        Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (cf_popen: %s)", buf, GetErrorStr());
         return false;
     }
 
@@ -440,7 +441,7 @@ static bool SelectExecRegexMatch(char *filename, char *crit, char *prog)
         ssize_t res = CfReadLine(line, CF_BUFSIZE, pp);
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fgets", "Error reading output from command %s", buf);
+            Log(LOG_LEVEL_ERR, "Error reading output from command '%s'. (fgets: %s)", buf, GetErrorStr());
             cf_pclose(pp);
             return false;
         }
@@ -476,7 +477,8 @@ static int SelectIsSymLinkTo(char *filename, Rlist *crit)
 
         if (readlink(filename, buffer, CF_BUFSIZE - 1) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "readlink", "Unable to read link %s in filter", filename);
+            Log(LOG_LEVEL_ERR, "Unable to read link '%s' in filter. (readlink: %s)",
+                filename, GetErrorStr());
             return false;
         }
 
@@ -527,8 +529,8 @@ int GetOwnerName(ARG_UNUSED char *path, struct stat *lstatptr, char *owner, int 
 
     if (pw == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", "!! Could not get owner name of user with uid=%ju",
-              (uintmax_t)lstatptr->st_uid);
+        Log(LOG_LEVEL_ERR, "Could not get owner name of user with 'uid=%ju'. (getpwuid: %s)",
+              (uintmax_t)lstatptr->st_uid, GetErrorStr());
         return false;
     }
 

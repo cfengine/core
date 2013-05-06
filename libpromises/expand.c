@@ -41,6 +41,7 @@
 #include "matching.h"
 #include "unix.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "fncall.h"
 #include "args.h"
@@ -560,7 +561,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
 
     if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n", str2,
               str1);
         return true;
@@ -1152,7 +1153,7 @@ void GetNaked(char *s2, const char *s1)
 {
     if (strlen(s1) < 4)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Naked variable expected, but \"%s\" is malformed", s1);
+        Log(LOG_LEVEL_ERR, "Naked variable expected, but \"%s\" is malformed", s1);
         strncpy(s2, s1, CF_MAXVARSIZE - 1);
         return;
     }

@@ -31,6 +31,7 @@
 #include "sort.h"
 #include "conversion.h"
 #include "expand.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "misc_lib.h"
 
@@ -127,7 +128,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Unexpected argument: %s\n", argv[optind]);
     }
 
     return config;
@@ -143,7 +144,7 @@ static void GenerateXml(void)
     if (OUTPUT_FILE == NULL)
     {
         /* Reconsider this once agents do not output any error messages to stdout */
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Please specify output file");
+        Log(LOG_LEVEL_ERR, "Please specify output file");
         exit(EXIT_FAILURE);
     }
     else
@@ -152,7 +153,7 @@ static void GenerateXml(void)
 
         if (out == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open %s for writing\n", OUTPUT_FILE);
+            Log(LOG_LEVEL_ERR, "Unable to open %s for writing\n", OUTPUT_FILE);
             exit(EXIT_FAILURE);
         }
         XmlManual(SOURCE_DIR, out);

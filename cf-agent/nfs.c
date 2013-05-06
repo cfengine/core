@@ -31,6 +31,7 @@
 #include "item_lib.h"
 #include "conversion.h"
 #include "matching.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
@@ -132,7 +133,7 @@ bool LoadMountInfo(Rlist **list)
 
     if ((pp = cf_popen(buf1, "r", true)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Can't open %s\n", buf1);
+        Log(LOG_LEVEL_ERR, "Can't open '%s'. (cf_popen: %s)", buf1, GetErrorStr());
         return false;
     }
 
@@ -145,7 +146,7 @@ bool LoadMountInfo(Rlist **list)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read list of mounted filesystems");
+            Log(LOG_LEVEL_ERR, "Unable to read list of mounted filesystems. (fread: %s)", GetErrorStr());
             cf_pclose(pp);
             return false;
         }
@@ -169,13 +170,13 @@ bool LoadMountInfo(Rlist **list)
 
         if (strstr(vbuff, "not responding"))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "%s\n", vbuff);
+            Log(LOG_LEVEL_ERR, "%s\n", vbuff);
         }
 
         if (strstr(vbuff, "be root"))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Mount access is denied. You must be root.\n");
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Use the -n option to run safely.");
+            Log(LOG_LEVEL_ERR, "Mount access is denied. You must be root.\n");
+            Log(LOG_LEVEL_ERR, "Use the -n option to run safely.");
         }
 
         if ((strstr(vbuff, "retrying")) || (strstr(vbuff, "denied")) || (strstr(vbuff, "backgrounding")))
@@ -190,9 +191,9 @@ bool LoadMountInfo(Rlist **list)
 
         if (strstr(vbuff, "RPC"))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "There was an RPC timeout. Aborting mount operations.\n");
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Session failed while trying to talk to remote host\n");
-            CfOut(OUTPUT_LEVEL_INFORM, "", "%s\n", vbuff);
+            Log(LOG_LEVEL_INFO, "There was an RPC timeout. Aborting mount operations.\n");
+            Log(LOG_LEVEL_INFO, "Session failed while trying to talk to remote host\n");
+            Log(LOG_LEVEL_INFO, "%s\n", vbuff);
             cf_pclose(pp);
             return false;
         }
@@ -226,7 +227,7 @@ bool LoadMountInfo(Rlist **list)
         strcpy(mounton, buf2);
         strcpy(host, buf1);
 #elif defined(sco) || defined(__SCO_DS)
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Don't understand SCO mount format, no data");
+        Log(LOG_LEVEL_ERR, "Don't understand SCO mount format, no data");
 #else
         if (IsAbsoluteFileName(buf1))
         {
@@ -335,7 +336,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
         }
         else
@@ -383,7 +384,7 @@ int VerifyInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     snprintf(fstab, CF_BUFSIZE, "/bin/mount %s:%s %s", host, rmountpt, mountpt);
 #endif
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Verifying %s in %s\n", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
+    Log(LOG_LEVEL_VERBOSE, "Verifying %s in %s\n", mountpt, VFSTAB[VSYSTEMHARDCLASS]);
 
     if (!MatchFSInFstab(mountpt))
     {
@@ -410,7 +411,7 @@ int VerifyNotInFstab(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     {
         if (!LoadFileAsItemList(&FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a.edits))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Couldn't open %s!\n", VFSTAB[VSYSTEMHARDCLASS]);
             return false;
         }
         else
@@ -532,7 +533,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+            Log(LOG_LEVEL_ERR, " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
         }
 
@@ -540,7 +541,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of mount command");
+            Log(LOG_LEVEL_ERR, "Unable to read output of mount command. (fread: %s)", GetErrorStr());
             cf_pclose(pfp);
             return 0;
         }
@@ -578,7 +579,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, " !! Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
             return 0;
         }
 
@@ -586,7 +587,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read output of unmount command");
+            Log(LOG_LEVEL_ERR, "Unable to read output of unmount command. (fread: %s)", GetErrorStr());
             cf_pclose(pfp);
             return 0;
         }
@@ -631,12 +632,12 @@ void MountAll()
 
     if (DONTDO)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Promised to mount filesystem, but not on this trial run\n");
+        Log(LOG_LEVEL_VERBOSE, "Promised to mount filesystem, but not on this trial run\n");
         return;
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Attempting to mount all filesystems.\n");
+        Log(LOG_LEVEL_VERBOSE, " -> Attempting to mount all filesystems.\n");
     }
 
 #if defined(__CYGWIN__)
@@ -659,7 +660,7 @@ void MountAll()
         {
             if (sb.st_mode & (S_IWOTH | S_IWGRP))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "File /etc/fstab was insecure. Cannot mount filesystems.\n");
+                Log(LOG_LEVEL_ERR, "File /etc/fstab was insecure. Cannot mount filesystems.\n");
                 return;
             }
         }
@@ -670,7 +671,8 @@ void MountAll()
 
     if ((pp = cf_popen(VMOUNTCOMM[VSYSTEMHARDCLASS], "r", true)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Failed to open pipe from %s\n", VMOUNTCOMM[VSYSTEMHARDCLASS]);
+        Log(LOG_LEVEL_ERR, "Failed to open pipe from '%s'. (cf_popen: %s)",
+            VMOUNTCOMM[VSYSTEMHARDCLASS], GetErrorStr());
         return;
     }
 
@@ -685,7 +687,7 @@ void MountAll()
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "ferror", "Error reading list of mounted filesystems");
+            Log(LOG_LEVEL_ERR, "Error reading list of mounted filesystems. (ferror: %s)", GetErrorStr());
             break;
         }
 
@@ -701,13 +703,13 @@ void MountAll()
 
         if ((strstr(line, "denied")) || (strstr(line, "RPC")))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "There was a mount error, trying to mount one of the filesystems on this host.\n");
+            Log(LOG_LEVEL_ERR, "There was a mount error, trying to mount one of the filesystems on this host.\n");
             break;
         }
 
         if ((strstr(line, "trying")) && (!strstr(line, "NFS version 2")) && (!strstr(line, "vers 3")))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Attempting abort because mount went into a retry loop.\n");
+            Log(LOG_LEVEL_ERR, "Attempting abort because mount went into a retry loop.\n");
             break;
         }
     }
@@ -754,7 +756,7 @@ static void DeleteThisItem(Item **liststart, Item *entry)
 void CleanupNFS(void)
 {
     Attributes a = { {0} };
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+    Log(LOG_LEVEL_VERBOSE, " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
 
     if (FSTAB_EDITS && FSTABLIST && !DONTDO)
     {

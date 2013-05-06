@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
     if (!policy)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Input files contain errors.\n");
+        Log(LOG_LEVEL_ERR, "Input files contain errors.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -175,7 +175,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -211,7 +211,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -297,7 +297,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:

@@ -31,6 +31,7 @@
 #include "files_lib.h"
 #include "files_editxml.h"
 #include "item_lib.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "policy.h"
 
@@ -42,7 +43,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (!IsAbsoluteFileName(filename))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Relative file name %s was marked for editing but has no invariant meaning\n", filename);
+        Log(LOG_LEVEL_ERR, "Relative file name %s was marked for editing but has no invariant meaning\n", filename);
         return NULL;
     }
 
@@ -68,7 +69,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
             return NULL;
         }
 #else
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Cannot edit XML files without LIBXML2\n");
+        Log(LOG_LEVEL_ERR, " !! Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -76,7 +77,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (a.edits.empty_before_use)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Build file model from a blank slate (emptying)\n");
+        Log(LOG_LEVEL_VERBOSE, " -> Build file model from a blank slate (emptying)\n");
         DeleteItemList(ec->file_start);
         ec->file_start = NULL;
     }
@@ -174,20 +175,20 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
 
     if (stat(file, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
+        Log(LOG_LEVEL_ERR, "The proposed file '%s' could not be loaded. (stat: %s)", file, GetErrorStr());
         return false;
     }
 
     if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+        Log(LOG_LEVEL_INFO, "File '%s' is bigger than the limit edit.max_file_size = '%jd' > '%d' bytes", file,
               (intmax_t) statbuf.st_size, edits.maxfilesize);
         return false;
     }
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "%s is not a plain file\n", file);
+        Log(LOG_LEVEL_INFO, "'%s' is not a plain file", file);
         return false;
     }
 
@@ -195,13 +196,13 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "xmlParseFile", "Document %s not parsed successfully\n", file);
+            Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "xmlParseFile", "Document %s not parsed successfully\n", file);
+        Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
         return false;
     }
 
@@ -220,7 +221,7 @@ bool SaveXmlCallback(const char *dest_filename, void *param)
     //saving xml to file
     if (xmlSaveFile(dest_filename, doc) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "xmlSaveFile", "Failed to write xml document to file %s after editing\n", dest_filename);
+        Log(LOG_LEVEL_ERR, "Failed to write xml document to file '%s' after editing. (xmlSaveFile: %s)", dest_filename, GetErrorStr());
         return false;
     }
 

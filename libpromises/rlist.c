@@ -267,7 +267,7 @@ Rval RvalCopy(Rval rval)
         return RvalCopyList(rval);
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unknown type %c in CopyRvalItem - should not happen", rval.type);
+        Log(LOG_LEVEL_VERBOSE, "Unknown type %c in CopyRvalItem - should not happen", rval.type);
         return ((Rval) {NULL, rval.type});
     }
 }

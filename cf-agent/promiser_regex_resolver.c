@@ -38,6 +38,7 @@
 #include "dir.h"
 #include "files_properties.h"
 #include "scope.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "item_lib.h"
 
@@ -57,13 +58,13 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
     if ((!IsPathRegex(wildpath)) || (pathtype && (strcmp(pathtype, "literal") == 0)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using literal pathtype for %s\n", wildpath);
+        Log(LOG_LEVEL_VERBOSE, " -> Using literal pathtype for %s\n", wildpath);
         (*fnptr) (ctx, wildpath, pp);
         return;
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
+        Log(LOG_LEVEL_VERBOSE, " -> Using regex pathtype for %s (see pathtype)\n", wildpath);
     }
 
     pbuffer[0] = '\0';
@@ -96,7 +97,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
         if (!JoinPath(pbuffer, ip->name))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Buffer has limited size in LocateFilePromiserGroup\n");
+            Log(LOG_LEVEL_ERR, "Buffer has limited size in LocateFilePromiserGroup\n");
             return;
         }
 
@@ -104,10 +105,10 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         {
             if ((S_ISDIR(statbuf.st_mode)) && ((statbuf.st_uid) != agentuid) && ((statbuf.st_uid) != 0))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "",
+                Log(LOG_LEVEL_INFO,
                       "Directory %s in search path %s is controlled by another user (uid %ju) - trusting its content is potentially risky (possible race)\n",
                       pbuffer, wildpath, (uintmax_t)statbuf.st_uid);
-                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
             }
         }
     }
@@ -125,7 +126,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
         if ((dirh = DirOpen(pbuffer)) == NULL)
         {
             // Could be a dummy directory to be created so this is not an error.
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
+            Log(LOG_LEVEL_VERBOSE, " -> Using best-effort expanded (but non-existent) file base path %s\n", wildpath);
             (*fnptr) (ctx, wildpath, pp);
             DeleteItemList(path);
             return;
@@ -178,7 +179,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
                 {
                     Promise *pcopy;
 
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using expanded file base path %s\n", nextbuffer);
+                    Log(LOG_LEVEL_VERBOSE, " -> Using expanded file base path %s\n", nextbuffer);
 
                     /* Now need to recompute any back references to get the complete path */
 
@@ -203,13 +204,13 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using file base path %s\n", pbuffer);
+        Log(LOG_LEVEL_VERBOSE, " -> Using file base path %s\n", pbuffer);
         (*fnptr) (ctx, pbuffer, pp);
     }
 
     if (count == 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No promiser file objects matched as regular expression %s\n", wildpath);
+        Log(LOG_LEVEL_VERBOSE, "No promiser file objects matched as regular expression %s\n", wildpath);
 
         if (create)
         {

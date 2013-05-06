@@ -72,11 +72,11 @@ static void RandomSeed(void)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for a source of entropy in %s\n", vbuff);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in %s\n", vbuff);
 
     if (!RAND_load_file(vbuff, -1))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not read sufficient randomness from %s\n", vbuff);
+        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from %s\n", vbuff);
     }
 
     /* Submit some random data to random pool */
@@ -108,7 +108,7 @@ bool LoadSecretKeys(const char *policy_server)
         if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
         {
             unsigned long err = ERR_get_error();
-            CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Error reading private key. (PEM_read_RSAPrivateKey: %s)", ERR_reason_error_string(err));
             PRIVKEY = NULL;
             fclose(fp);
             return true;
@@ -211,11 +211,11 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if (stat(newname, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Did not find new key format %s", newname);
+        Log(LOG_LEVEL_VERBOSE, " -> Did not find new key format %s", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
         MapName(oldname);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Trying old style %s", oldname);
+        Log(LOG_LEVEL_VERBOSE, " -> Trying old style %s", oldname);
 
         if (stat(oldname, &statbuf) == -1)
         {
@@ -225,18 +225,18 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
         if (strlen(digest) > 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Renaming old key from %s to %s", oldname, newname);
+            Log(LOG_LEVEL_INFO, " -> Renaming old key from %s to %s", oldname, newname);
 
             if (rename(oldname, newname) != 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "rename", "!! Could not rename from old key format (%s) to new (%s)", oldname, newname);
+                Log(LOG_LEVEL_ERR, "Could not rename from old key format '%s' to new '%s'. (rename: %s)", oldname, newname, GetErrorStr());
             }
         }
         else                    // we don't know the digest (e.g. because we are a client and
             // have no lastseen-map and/or root-SHA...pub of the server's key
             // yet) Just using old file format (root-IP.pub) without renaming for now.
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Could not map key file to new format - we have no digest yet (using %s)",
+            Log(LOG_LEVEL_VERBOSE, " -> Could not map key file to new format - we have no digest yet (using %s)",
                   oldname);
             snprintf(newname, sizeof(newname), "%s", oldname);
         }
@@ -244,14 +244,14 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if ((fp = fopen(newname, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s)", newname);
+        Log(LOG_LEVEL_ERR, "Couldn't find a public key '%s'. (fopen: %s)", newname, GetErrorStr());
         return NULL;
     }
 
     if ((newkey = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Error reading public key. (PEM_read_RSAPublicKey: %s)", ERR_reason_error_string(err));
         fclose(fp);
         return NULL;
     }
@@ -260,7 +260,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if ((BN_num_bits(newkey->e) < 2) || (!BN_is_odd(newkey->e)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        Log(LOG_LEVEL_ERR, "RSA Exponent too small or not odd");
         RSA_free(newkey);
         return NULL;
     }
@@ -287,11 +287,11 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Saving public key %s\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "Saving public key %s\n", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write a public key %s", filename);
+        Log(LOG_LEVEL_ERR, "Unable to write a public key '%s'. (fopen: %s)", filename, GetErrorStr());
         return;
     }
 
@@ -300,7 +300,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
     if (!PEM_write_RSAPublicKey(fp, key))
     {
         err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_write", "Error saving public key %s = %s\n", filename, ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Error saving public key to '%s'. (PEM_write_RSAPublicKey: %s)", filename, ERR_reason_error_string(err));
     }
 
     ThreadUnlock(cft_system);
@@ -348,7 +348,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
 
     if (!EVP_DecryptUpdate(&ctx, out, &plainlen, in, cipherlen))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Decrypt FAILED");
+        Log(LOG_LEVEL_ERR, "Decrypt FAILED");
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -357,7 +357,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
     {
         unsigned long err = ERR_get_error();
 
-        CfOut(OUTPUT_LEVEL_ERROR, "", "decryption FAILED at final of %d: %s\n", cipherlen, ERR_error_string(err, NULL));
+        Log(LOG_LEVEL_ERR, "decryption FAILED at final of %d: %s\n", cipherlen, ERR_error_string(err, NULL));
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }
@@ -391,7 +391,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
         strcat(buf, hexStr);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
+    Log(LOG_LEVEL_VERBOSE, "BinaryBuffer(%d bytes => %s) -> [%s]", len, comment, buf);
 }
 
 const char *PublicKeyFile(const char *workdir)

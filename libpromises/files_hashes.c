@@ -26,6 +26,7 @@
 
 #include "dbm_api.h"
 #include "files_interfaces.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "client_code.h"
 #include "files_lib.h"
@@ -72,7 +73,7 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMet
 
     if ((file = fopen(filename, "rb")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "%s can't be opened\n", filename);
+        Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
     }
     else
     {
@@ -105,7 +106,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     switch (type)
     {
     case HASH_METHOD_CRYPT:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use another algorithm instead");
+        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use another algorithm instead");
         memset(digest, 0, EVP_MAX_MD_SIZE + 1);
         break;
 
@@ -114,7 +115,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
         if (md == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -157,7 +158,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
     switch (type)
     {
     case HASH_METHOD_CRYPT:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "The crypt support is not presently implemented, please use sha256 instead");
+        Log(LOG_LEVEL_ERR, "The crypt support is not presently implemented, please use sha256 instead");
         break;
 
     default:
@@ -165,7 +166,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
 
         if (md == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);

@@ -307,7 +307,7 @@ static ActionResult RepairExec(EvalContext *ctx, Attributes a, Promise *pp)
 
         for (;;)
         {
-            ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, pfp);
+            ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
 
             if (res == 0)
             {

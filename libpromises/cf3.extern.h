@@ -89,7 +89,6 @@ extern Rlist *CF_STCK;
 
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
-extern int BOOTSTRAP;
 
 extern const char *CF_AGENTTYPES[];
 

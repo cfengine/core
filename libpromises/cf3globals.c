@@ -48,8 +48,6 @@ time_t PROMISETIME = 0;
 Item *PROCESSTABLE = NULL;
 Item *ROTATED = NULL;
 
-int BOOTSTRAP = false;
-
 /*****************************************************************************/
 /* Internal data structures                                                  */
 /*****************************************************************************/

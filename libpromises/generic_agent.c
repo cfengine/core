@@ -147,9 +147,9 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
-        CheckAutoBootstrap(ctx, POLICY_SERVER);
+        CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
     }
     else
     {
@@ -197,7 +197,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
         {
             bool policy_check_ok = CheckPromises(config);
 
-            if (BOOTSTRAP && !policy_check_ok)
+            if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Policy is not valid, but proceeding with bootstrap");
                 return true;
@@ -266,7 +266,7 @@ int CheckPromises(const GenericAgentConfig *config)
         strlcat(cmd, "\"", CF_BUFSIZE);
     }
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
         // avoids license complains from commercial cf-promises during bootstrap - see Nova_CheckLicensePromise
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
@@ -627,7 +627,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
     setlinebuf(stdout);
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
@@ -1638,6 +1638,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;
+
+    config->agent_specific.agent.bootstrap_policy_server = NULL;
 
     switch (agent_type)
     {

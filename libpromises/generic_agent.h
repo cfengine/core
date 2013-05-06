@@ -66,6 +66,10 @@ typedef struct
             unsigned int parser_warnings;
             unsigned int parser_warnings_error;
         } common;
+        struct
+        {
+            char *bootstrap_policy_server;
+        } agent;
     } agent_specific;
 
 } GenericAgentConfig;

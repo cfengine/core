@@ -289,7 +289,7 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap())
+    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         ret = 1;
     }
@@ -376,7 +376,6 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-            BOOTSTRAP = true;
             MINUSF = true;
             GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
             IGNORELOCK = true;
@@ -420,6 +419,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 CfOut(OUTPUT_LEVEL_ERROR, "", "Error specifying policy server to --boostrap (-B). The policy server's address could not be looked up. Please use the IP address instead if there is no error. Note that the --policy-server (-s) option is deprecated, the argument is taken in --bootstrap (-B) instead.");
                 exit(EXIT_FAILURE);
             }
+
+            config->agent_specific.agent.bootstrap_policy_server = xstrdup(POLICY_SERVER);
 
             break;
 

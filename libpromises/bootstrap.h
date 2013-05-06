@@ -27,7 +27,7 @@
 
 #include "cf3.defs.h"
 
-void CheckAutoBootstrap(EvalContext *ctx);
+void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server);
 void SetPolicyServer(EvalContext *ctx, char *name);
 char *GetPolicyServer(const char *workdir);
 bool GetAmPolicyServer(const char *workdir);

@@ -32,6 +32,7 @@
 #include "exec_tools.h"
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"
+#include "logging.h"
 
 /*
 
@@ -70,89 +71,91 @@ bool BootstrapAllowed(void)
 
 /*****************************************************************************/
 
-void CheckAutoBootstrap(EvalContext *ctx)
+void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 {
-    struct stat sb;
-    char name[CF_BUFSIZE];
-    int have_policy = false, am_appliance = false;
-
-    printf("** CFEngine BOOTSTRAP probe initiated\n");
-
-    PrintVersion();
-    printf("\n");
-
-    printf(" -> This host is: %s\n", VSYSNAME.nodename);
-    printf(" -> Operating System Type is %s\n", VSYSNAME.sysname);
-    printf(" -> Operating System Release is %s\n", VSYSNAME.release);
-    printf(" -> Architecture = %s\n", VSYSNAME.machine);
-    printf(" -> Internal soft-class is %s\n", CLASSTEXT[VSYSTEMHARDCLASS]);
-
     if (!BootstrapAllowed())
     {
-        FatalError(ctx, " !! Not enough privileges to bootstrap CFEngine");
+        FatalError(ctx, "Not enough privileges to bootstrap CFEngine");
     }
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
-    MapName(name);
+    Log(LOG_LEVEL_INFO, "Attempting to bootstrap to server '%s'", policy_server);
 
-    CreateFailSafe(name);
+    Log(LOG_LEVEL_NOTICE, "This host is '%s'", VSYSNAME.nodename);
+    Log(LOG_LEVEL_NOTICE, "Operating System Type is '%s'", VSYSNAME.sysname);
+    Log(LOG_LEVEL_NOTICE, "Operating System Release is '%s'", VSYSNAME.release);
+    Log(LOG_LEVEL_NOTICE, "System architecture is '%s'", VSYSNAME.machine);
+    Log(LOG_LEVEL_NOTICE, "Internal soft-class is '%s'", CLASSTEXT[VSYSTEMHARDCLASS]);
 
-    snprintf(name, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
-    MapName(name);
-
-    if (stat(name, &sb) == -1)
     {
-        printf(" -> No previous policy has been cached on this host\n");
-    }
-    else
-    {
-        printf(" -> An existing policy was cached on this host in %s/inputs\n", CFWORKDIR);
-        have_policy = true;
+        char failsafe_path[CF_BUFSIZE];
+        snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
+        MapName(failsafe_path);
+
+        CreateFailSafe(failsafe_path);
     }
 
-    if (strlen(POLICY_SERVER) > 0)
+    bool have_policy = false;
     {
-        printf(" -> Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR,
-              POLICY_SERVER);
+        char main_policy_file[CF_BUFSIZE];
+        snprintf(main_policy_file, CF_BUFSIZE - 1, "%s/inputs/promises.cf", CFWORKDIR);
+        MapName(main_policy_file);
+
+        struct stat sb;
+        if (stat(main_policy_file, &sb) == -1)
+        {
+            Log(LOG_LEVEL_INFO, "No previous policy has been cached on this host");
+        }
+        else
+        {
+            Log(LOG_LEVEL_INFO, "An existing policy was cached on this host in %s/inputs", CFWORKDIR);
+            have_policy = true;
+        }
+    }
+
+    if (strlen(policy_server) > 0)
+    {
+        Log(LOG_LEVEL_INFO, "Assuming the policy distribution point at: %s:%s/masterfiles\n", CFWORKDIR, policy_server);
     }
     else
     {
         if (have_policy)
         {
-            printf(" -> No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
+            Log(LOG_LEVEL_INFO, "No policy distribution host was discovered - it might be contained in the existing policy, otherwise this will function autonomously\n");
         }
         else
         {
-            printf(" -> No policy distribution host was defined - use --policy-server to set one\n");
+            Log(LOG_LEVEL_INFO, "No policy distribution host was defined - use --policy-server to set one\n");
         }
     }
 
-    printf(" -> Attempting to initiate promised autonomous services...\n\n");
-
-    am_appliance = IsDefinedClass(ctx, CanonifyName(POLICY_SERVER), NULL);
-    snprintf(name, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(POLICY_SERVER));
-    am_appliance |= IsDefinedClass(ctx, name, NULL);
+    bool am_policy_server = IsDefinedClass(ctx, CanonifyName(policy_server), NULL);
+    {
+        char policy_server_ipv4_class[CF_BUFSIZE];
+        snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(policy_server));
+        am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
+    }
 
     if (strlen(POLICY_SERVER) == 0)
     {
-        am_appliance = false;
+        am_policy_server = false;
     }
 
-    snprintf(name, sizeof(name), "%s/state/am_policy_hub", CFWORKDIR);
-    MapName(name);
-
-    if (am_appliance)
     {
-        EvalContextHeapAddHard(ctx, "am_policy_hub");
-        printf
-            (" ** This host recognizes itself as a CFEngine policy server, with policy distribution from %s/masterfiles.\n", WORKDIR);
-        creat(name, 0600);
-    }
-    else
-    {
-        unlink(name);
-    }
+        char am_policy_hub_path[CF_BUFSIZE];
+        snprintf(am_policy_hub_path, sizeof(am_policy_hub_path), "%s/state/am_policy_hub", CFWORKDIR);
+        MapName(am_policy_hub_path);
 
+        if (am_policy_server)
+        {
+            EvalContextHeapAddHard(ctx, "am_policy_hub");
+            Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
+            creat(am_policy_hub_path, 0600);
+        }
+        else
+        {
+            unlink(am_policy_hub_path);
+        }
+    }
 }
 
 /********************************************************************/

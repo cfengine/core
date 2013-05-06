@@ -149,7 +149,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     if (BOOTSTRAP)
     {
-        CheckAutoBootstrap(ctx);
+        CheckAutoBootstrap(ctx, POLICY_SERVER);
     }
     else
     {

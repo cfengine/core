@@ -114,7 +114,6 @@ extern int PR_NOTKEPT;
 static bool ALLCLASSESREPORT;
 static bool ALWAYS_VALIDATE;
 static bool CFPARANOID = false;
-static bool BOOTSTRAP_AVAHI = false;
 
 static Rlist *ACCESSLIST;
 
@@ -232,7 +231,8 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-    if (BOOTSTRAP_AVAHI)
+    if (config->agent_specific.agent.bootstrap_policy_server
+        && strcmp(":avahi", config->agent_specific.agent.bootstrap_policy_server) == 0)
     {
         int ret = AutomaticBootstrap();
 
@@ -357,22 +357,21 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'B':
-
             if(strcmp(optarg, ":avahi") == 0)
             {
                 if(!HasAvahiSupport())
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                    Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
                     exit(EXIT_FAILURE);
                 }
 
-                BOOTSTRAP_AVAHI = true;
+                config->agent_specific.agent.bootstrap_policy_server = xstrdup(":avahi");
                 break;
             }
 
             if(IsLoopbackAddress(optarg))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Use a non-loopback address when bootstrapping");
+                Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
                 exit(EXIT_FAILURE);
             }
 
@@ -386,9 +385,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             if (Hostname2IPString(POLICY_SERVER, optarg,
                                   sizeof(POLICY_SERVER)) == -1)
             {
-                Log(LOG_LEVEL_ERR,
-                    "CheckOpts: ERROR, could not resolve %s, can't bootstrap",
-                    optarg);
+                Log(LOG_LEVEL_ERR, "CheckOpts: ERROR, could not resolve %s, can't bootstrap", optarg);
                 exit(EXIT_FAILURE);
             }
 

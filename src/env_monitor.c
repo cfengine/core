@@ -261,7 +261,7 @@ void MonitorStartServer(const Policy *policy, const ReportContext *report_contex
 
     if (!NO_FORK)
     {
-        ActAsDaemon(0);
+        ActAsDaemon(0, report_context);
     }
 
 #endif /* NOT MINGW */

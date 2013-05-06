@@ -258,7 +258,7 @@ void ModuleProtocol(char *command, char *line, int print, const char *namespace)
 int IsExecutable(const char *file);
 int ShellCommandReturnsZero(const char *comm, int useshell);
 int GetExecOutput(char *command, char *buffer, int useshell);
-void ActAsDaemon(int preserve);
+void ActAsDaemon(int preserve, const ReportContext *report_context);
 char *ShEscapeCommand(char *s);
 char **ArgSplitCommand(const char *comm);
 void ArgFree(char **args);

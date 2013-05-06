@@ -233,7 +233,7 @@ FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 
 /*****************************************************************************/
 
-FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
+FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     char **argv;
@@ -429,7 +429,7 @@ FILE *cf_popen_sh(const char *command, char *type)
 
 /******************************************************************************/
 
-FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, int background)
+FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, char *chdirv, char *chrootv, ARG_UNUSED int background)
 {
     int pd[2];
     pid_t pid;

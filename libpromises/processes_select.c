@@ -47,7 +47,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(char *name1, char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
-static int ExtractPid(char *psentry, char **names, int *start, int *end);
+static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
 
@@ -187,7 +187,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                 continue;
             }
 
-            pid_t pid = ExtractPid(ip->name, names, start, end);
+            pid_t pid = ExtractPid(ip->name, names, end);
 
             if (pid == -1)
             {
@@ -655,7 +655,7 @@ static const char *GetProcessOptions(void)
 }
 #endif
 
-static int ExtractPid(char *psentry, char **names, int *start, int *end)
+static int ExtractPid(char *psentry, char **names, int *end)
 {
     char *sp;
     int col, pid = -1, offset = 0;

@@ -326,7 +326,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 Rlist *inner_expansion = NULL;
                 Rlist *exp, *tmp;
                 char absscope[CF_MAXVARSIZE], base_scope[CF_MAXVARSIZE];
-                int base_qualified, qualified, success = 0;
+                int base_qualified, success = 0;
                 int increment;
 
                 base_qualified = IsQualifiedVariable(v);
@@ -356,14 +356,12 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                         sscanf(exp->item, "%[^.].", absscope);
                         strncpy(var, exp->item + strlen(absscope) + 1, CF_BUFSIZE - 1);
                         snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
-                        qualified = true;
                     }
                     else
                     {
                         strncpy(absscope, scopeid, CF_MAXVARSIZE - 1);
                         strncpy(finalname, exp->item, CF_BUFSIZE - 1);
                         strncpy(var, exp->item, CF_BUFSIZE - 1);
-                        qualified = false;
                     }
 
                     // var is the expanded name of the variable in its native context

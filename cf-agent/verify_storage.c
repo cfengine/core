@@ -50,7 +50,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a);
+static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
@@ -325,7 +325,7 @@ static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, A
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a)
+static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
 {
     Rlist *rp;
     Mount *mp;
@@ -445,7 +445,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 
     options = Rlist2String(a.mount.mount_options, ",");
 
-    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, options, a))
+    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, a))
     {
         if (!a.mount.unmount)
         {

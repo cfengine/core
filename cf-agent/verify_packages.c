@@ -35,6 +35,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
@@ -76,9 +77,9 @@ static void DeletePackageManagers(PackageManager *newlist);
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
 
 #ifndef HAVE_NOVA
-void ReportPatches(PackageManager *list)
+void ReportPatches(ARG_UNUSED PackageManager *list)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Patch reporting feature is only available in version Nova and above\n");
+    Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");
 }
 #endif
 

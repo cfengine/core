@@ -104,6 +104,10 @@ body package_method apt
       # set it to "0" to avoid caching of list during upgrade
       package_list_update_ifelapsed => "240";
 
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
+
     have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";
       package_list_update_command => "/usr/bin/aptitude update";
@@ -238,6 +242,10 @@ body package_method dpkg_version(repo)
       package_delete_command => "$(debian_knowledge.call_dpkg) --purge";
       package_update_command =>  "$(debian_knowledge.call_dpkg) --install";
       package_patch_command =>  "$(debian_knowledge.call_dpkg) --install";
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
 }
 
 ##
@@ -941,6 +949,10 @@ body package_method generic
       package_installed_regex => ".i.*"; # packages that have been uninstalled may be listed
       package_name_convention => "$(name)";
       package_list_update_ifelapsed => "240";		# 4 hours
+
+      # make correct version comparisons
+      package_version_less_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) lt $(v2)";
+      package_version_equal_command => "$(debian_knowledge.call_dpkg) --compare-versions $(v1) eq $(v2)";
 
     debian.have_aptitude::
       package_add_command => "$(debian_knowledge.call_aptitude) $(debian_knowledge.dpkg_options) --assume-yes install";

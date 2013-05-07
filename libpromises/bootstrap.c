@@ -178,7 +178,7 @@ void SetPolicyServer(EvalContext *ctx, const char *policy_server)
     ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
-char *GetPolicyServer(const char *workdir)
+char *ReadPolicyServerFile(const char *workdir)
 {
     char path[CF_BUFSIZE] = { 0 };
     snprintf(path, sizeof(path), "%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);

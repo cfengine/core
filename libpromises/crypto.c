@@ -29,10 +29,12 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "hashes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "pipes.h"
 #include "mutex.h"
 #include "sysinfo.h"
+#include "bootstrap.h"
 
 static void RandomSeed(void);
 
@@ -89,100 +91,89 @@ static void RandomSeed(void)
 /*********************************************************************/
 
 /**
- * @return true if successful
+ * @return true the error is not so severe that we must stop
  */
-bool LoadSecretKeys(void)
+bool LoadSecretKeys(const char *policy_server)
 {
-    FILE *fp;
-    static char *passphrase = "Cfengine passphrase", name[CF_BUFSIZE], source[CF_BUFSIZE];
-    char guard[CF_MAXVARSIZE];
-    unsigned char digest[EVP_MAX_MD_SIZE + 1];
-    unsigned long err;
-    struct stat sb;
+    static char *passphrase = "Cfengine passphrase";
 
-    if ((fp = fopen(PrivateKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't find a private key (%s) - use cf-key to get one", PrivateKeyFile(GetWorkDir()));
-        return true; // TODO: return true?
-    }
+        FILE *fp = fopen(PrivateKeyFile(GetWorkDir()), "r");
+        if (!fp)
+        {
+            Log(LOG_LEVEL_INFO, "Couldn't find a private key at '%s', use cf-key to get one. (fopen: %s)", PrivateKeyFile(GetWorkDir()), GetErrorStr());
+            return true;
+        }
 
-    if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
-        PRIVKEY = NULL;
+        if ((PRIVKEY = PEM_read_RSAPrivateKey(fp, (RSA **) NULL, NULL, passphrase)) == NULL)
+        {
+            unsigned long err = ERR_get_error();
+            CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
+            PRIVKEY = NULL;
+            fclose(fp);
+            return true;
+        }
+
         fclose(fp);
-        return true; // TODO: return true?
+        Log(LOG_LEVEL_VERBOSE, "Loaded private key at '%s'", PrivateKeyFile(GetWorkDir()));
     }
 
-    fclose(fp);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded private key %s\n", PrivateKeyFile(GetWorkDir()));
-
-    if ((fp = fopen(PublicKeyFile(GetWorkDir()), "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't find a public key (%s) - use cf-key to get one", PublicKeyFile(GetWorkDir()));
-        return true; // TODO: return true?
-    }
+        FILE *fp = fopen(PublicKeyFile(GetWorkDir()), "r");
+        if (!fp)
+        {
+            Log(LOG_LEVEL_ERR, "Couldn't find a public key at '%s', use cf-key to get one (fopen: %s)", PublicKeyFile(GetWorkDir()), GetErrorStr());
+            return true;
+        }
 
-    if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
-    {
-        err = ERR_get_error();
-        CfOut(OUTPUT_LEVEL_ERROR, "PEM_read", "Error reading Private Key = %s\n", ERR_reason_error_string(err));
-        PUBKEY = NULL;
+        if ((PUBKEY = PEM_read_RSAPublicKey(fp, NULL, NULL, passphrase)) == NULL)
+        {
+            unsigned long err = ERR_get_error();
+            Log(LOG_LEVEL_ERR, "Error reading public key at '%s'. (PEM_read_RSAPublicKey: %s)", PublicKeyFile(GetWorkDir()), ERR_reason_error_string(err));
+            PUBKEY = NULL;
+            fclose(fp);
+            return true;
+        }
+
+        Log(LOG_LEVEL_ERR, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));
         fclose(fp);
-        return true; // TODO: return true?
     }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Loaded public key %s\n", PublicKeyFile(GetWorkDir()));
-    fclose(fp);
 
     if ((BN_num_bits(PUBKEY->e) < 2) || (!BN_is_odd(PUBKEY->e)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "RSA Exponent too small or not odd");
+        Log(LOG_LEVEL_ERR, "The public key RSA exponent is too small or not odd");
         return false;
     }
 
-    if (NULL_OR_EMPTY(POLICY_SERVER))
+    if (GetAmPolicyServer(CFWORKDIR))
     {
-        snprintf(name, CF_MAXVARSIZE - 1, "%s%cpolicy_server.dat", CFWORKDIR, FILE_SEPARATOR);
+        unsigned char digest[EVP_MAX_MD_SIZE + 1];
 
-        if ((fp = fopen(name, "r")) != NULL)
+        char dst_public_key_filename[CF_BUFSIZE] = "";
         {
-            if (fscanf(fp, "%4095s", POLICY_SERVER) != 1)
-            {
-                CfDebug("Couldn't read string from policy_server.dat");
-            }
-            fclose(fp);
+            char buffer[EVP_MAX_MD_SIZE * 4];
+            HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
+            snprintf(dst_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root", HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
+            MapName(dst_public_key_filename);
         }
-    }
 
-/* Check that we have our own SHA key form of the key in the IP on the hub */
-
-    char buffer[EVP_MAX_MD_SIZE * 4];
-
-    HashPubKey(PUBKEY, digest, CF_DEFAULT_DIGEST);
-    snprintf(name, CF_MAXVARSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, "root", HashPrintSafe(CF_DEFAULT_DIGEST, digest, buffer));
-    MapName(name);
-
-    snprintf(source, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", CFWORKDIR);
-    MapName(source);
-
-// During bootstrap we need the pre-registered IP/hash pair on the hub
-
-    snprintf(guard, sizeof(guard), "%s/state/am_policy_hub", CFWORKDIR);
-    MapName(guard);
-
-// need to use cf_stat
-
-    if ((stat(name, &sb) == -1) && (stat(guard, &sb) != -1))
-        // copy localhost.pub to root-HASH.pub on policy server
-    {
-        LastSaw(POLICY_SERVER, digest, LAST_SEEN_ROLE_CONNECT);
-
-        if (!LinkOrCopy(source, name, false))
+        struct stat sb;
+        if ((stat(dst_public_key_filename, &sb) == -1))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " -> Unable to clone server's key file as %s\n", name);
+            char src_public_key_filename[CF_BUFSIZE] = "";
+            snprintf(src_public_key_filename, CF_MAXVARSIZE, "%s/ppkeys/localhost.pub", CFWORKDIR);
+            MapName(src_public_key_filename);
+
+            // copy localhost.pub to root-HASH.pub on policy server
+            if (!LinkOrCopy(src_public_key_filename, dst_public_key_filename, false))
+            {
+                Log(LOG_LEVEL_ERR, "Unable to copy policy server's own public key from '%s' to '%s'", src_public_key_filename, dst_public_key_filename);
+            }
+
+            if (policy_server)
+            {
+                LastSaw(policy_server, digest, LAST_SEEN_ROLE_CONNECT);
+            }
         }
     }
 

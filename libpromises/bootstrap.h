@@ -29,7 +29,7 @@
 
 void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server);
 void SetPolicyServer(EvalContext *ctx, const char *policy_server);
-char *GetPolicyServer(const char *workdir);
+char *ReadPolicyServerFile(const char *workdir);
 bool GetAmPolicyServer(const char *workdir);
 void CreateFailSafe(char *name);
 

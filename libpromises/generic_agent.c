@@ -607,7 +607,8 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         CheckWorkingDirectories(ctx);
     }
 
-    if (!LoadSecretKeys())
+    const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
+    if (!LoadSecretKeys(bootstrapped_policy_server))
     {
         FatalError(ctx, "Could not load secret keys");
     }

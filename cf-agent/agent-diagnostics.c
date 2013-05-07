@@ -77,7 +77,7 @@ void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[
 
 AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir)
 {
-    char *policy_server = GetPolicyServer(workdir);
+    char *policy_server = ReadPolicyServerFile(workdir);
     return AgentDiagnosticsResultNew(policy_server != NULL,
                                      policy_server != NULL ? policy_server : xstrdup("Not bootstrapped"));
 }

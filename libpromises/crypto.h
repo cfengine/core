@@ -30,7 +30,7 @@
 void CryptoInitialize(void);
 
 void DebugBinOut(char *buffer, int len, char *com);
-bool LoadSecretKeys(void);
+bool LoadSecretKeys(const char *policy_server);
 int EncryptString(char type, char *in, char *out, unsigned char *key, int len);
 int DecryptString(char type, char *in, char *out, unsigned char *key, int len);
 RSA *HavePublicKey(char *username, char *ipaddress, char *digest);

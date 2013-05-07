@@ -39,4 +39,7 @@ int ReceiveCollectCall(struct ServerConnectionState *conn);
 
 bool ReturnQueryData(struct ServerConnectionState *conn, char *menu);
 
+void KeepReportDataSelectAccessPromise(Promise *pp);
+void CleanReportBookFilterSet(void);
+
 #endif

@@ -59,8 +59,12 @@ bool RemovePolicyServerFile(const char *workdir);
  */
 bool GetAmPolicyServer(const char *workdir);
 
+bool WriteBuiltinFailsafePolicy(const char *workdir);
 
-bool WriteBuiltinFailsafePolicy(char *filename);
+/**
+ * @brief Exposed for testing. Use WriteBuiltinFailsafePolicy.
+ */
+bool WriteBuiltinFailsafePolicyToPath(const char *filename);
 
 
 

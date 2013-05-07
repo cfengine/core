@@ -106,15 +106,6 @@ static bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub)
 
 void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 {
-    {
-        char failsafe_path[CF_BUFSIZE];
-        snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", CFWORKDIR);
-        MapName(failsafe_path);
-
-        Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", failsafe_path);
-        WriteBuiltinFailsafePolicyToPath(failsafe_path);
-    }
-
     bool am_policy_server = IsDefinedClass(ctx, CanonifyName(policy_server), NULL);
     {
         char policy_server_ipv4_class[CF_BUFSIZE];
@@ -237,8 +228,10 @@ bool GetAmPolicyServer(const char *workdir)
 
 /********************************************************************/
 
-bool WriteBuiltinFailsafePolicyToPath(char *filename)
+bool WriteBuiltinFailsafePolicyToPath(const char *filename)
 {
+    Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", filename);
+
     FILE *fout = fopen(filename, "w");
     if (!fout)
     {
@@ -432,4 +425,13 @@ bool WriteBuiltinFailsafePolicyToPath(char *filename)
     }
 
     return true;
+}
+
+bool WriteBuiltinFailsafePolicy(const char *workdir)
+{
+    char failsafe_path[CF_BUFSIZE];
+    snprintf(failsafe_path, CF_BUFSIZE - 1, "%s/inputs/failsafe.cf", workdir);
+    MapName(failsafe_path);
+
+    return WriteBuiltinFailsafePolicyToPath(failsafe_path);
 }

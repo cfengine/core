@@ -145,6 +145,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
+        WriteBuiltinFailsafePolicy(GetWorkDir());
         CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
         SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);

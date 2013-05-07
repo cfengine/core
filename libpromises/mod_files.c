@@ -24,6 +24,7 @@
 
 #include "mod_files.h"
 
+#include "policy.h"
 #include "syntax.h"
 
 static const ConstraintSyntax location_constraints[] =
@@ -132,17 +133,40 @@ const ConstraintSyntax CF_COMMON_EDITBODIES[] =
     ConstraintSyntaxNewNull()
 };
 
+static bool AclCheck(const Body *body, Seq *errors)
+{
+    bool success = true;
+
+    if (BodyHasConstraint(body, "acl_directory_inherit")
+        && BodyHasConstraint(body, "acl_default"))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body, "An acl body cannot have both acl_directory_inherit and acl_default. Please use acl_default only"));
+        success = false;
+    }
+    if (BodyHasConstraint(body, "specify_inherit_aces")
+        && BodyHasConstraint(body, "specify_default_aces"))
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_BODY, body, "An acl body cannot have both specify_inherit_aces and specify_default_aces. Please use specify_default_aces only"));
+        success = false;
+    }
+
+    return success;
+}
+
 static const ConstraintSyntax acl_constraints[] =
 {
     ConstraintSyntaxNewStringList("aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewOption("acl_directory_inherit", "nochange,parent,specify,clear", "Access control list type for the affected file system", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("acl_directory_inherit", "nochange,parent,specify,clear", "Access control list type for the affected file system", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewOption("acl_default", "nochange,access,specify,clear", "How to apply default (inheritable) access control list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("acl_method", "append,overwrite", "Editing method for access control list", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("acl_type", "generic,posix,ntfs", "Access control list type for the affected file system", SYNTAX_STATUS_NORMAL),
-    ConstraintSyntaxNewStringList("specify_inherit_aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("specify_inherit_aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry", SYNTAX_STATUS_DEPRECATED),
+    ConstraintSyntaxNewStringList("specify_default_aces", "((user|group):[^:]+:[-=+,rwx()dtTabBpcoD]*(:(allow|deny))?)|((all|mask):[-=+,rwx()]*(:(allow|deny))?)", "Native settings for access control entry", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("acl_inherit", CF_BOOL ",nochange", "Whether the object inherits its ACL from the parent (Windows only)", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax acl_body = BodySyntaxNew("acl", acl_constraints, NULL, SYNTAX_STATUS_NORMAL);
+static const BodySyntax acl_body = BodySyntaxNew("acl", acl_constraints, &AclCheck, SYNTAX_STATUS_NORMAL);
 
 static const ConstraintSyntax changes_constraints[] =
 {

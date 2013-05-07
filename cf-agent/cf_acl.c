@@ -49,7 +49,7 @@ static int CheckACESyntax(char *ace, char *valid_nperms, char *valid_ops, int de
                         Promise *pp);
 static int CheckModeSyntax(char **mode_p, char *valid_nperms, char *valid_ops, Promise *pp);
 static int CheckPermTypeSyntax(char *permt, int deny_support, Promise *pp);
-static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp);
+static int CheckAclDefault(char *path, Acl *acl, Promise *pp);
 
 
 void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
@@ -156,9 +156,9 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
         break;
     }
 
-// check that acl_directory_inherit is set to a valid value
+// check that acl_default is set to a valid value
 
-    if (!CheckDirectoryInherit(file, &acl, pp))
+    if (!CheckAclDefault(file, &acl, pp))
     {
         return false;
     }
@@ -175,7 +175,7 @@ static int CheckACLSyntax(char *file, Acl acl, Promise *pp)
         }
     }
 
-    for (rp = acl.acl_inherit_entries; rp != NULL; rp = rp->next)
+    for (rp = acl.acl_default_entries; rp != NULL; rp = rp->next)
     {
         valid = CheckACESyntax(rp->item, valid_ops, valid_nperms, deny_support, mask_support, pp);
 
@@ -210,33 +210,33 @@ static void SetACLDefaults(char *path, Acl *acl)
         acl->acl_type = ACL_TYPE_GENERIC;
     }
 
-// default on directories: acl_directory_inherit => parent
+// default on directories: acl_default => nochange
 
-    if ((acl->acl_directory_inherit == ACL_INHERITANCE_NONE) && (IsDir(path)))
+    if ((acl->acl_default == ACL_DEFAULT_NONE) && (IsDir(path)))
     {
-        acl->acl_directory_inherit = ACL_INHERITANCE_NO_CHANGE;
+        acl->acl_default = ACL_DEFAULT_NO_CHANGE;
     }
 }
 
-static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp)
+static int CheckAclDefault(char *path, Acl *acl, Promise *pp)
 /*
-  Checks that acl_directory_inherit is set to a valid value for this acl type.
+  Checks that acl_default is set to a valid value for this acl type.
   Returns true if so, or false otherwise.
 */
 {
     int valid = false;
 
-    switch (acl->acl_directory_inherit)
+    switch (acl->acl_default)
     {
-    case ACL_INHERITANCE_NONE:      // unset is always valid
+    case ACL_DEFAULT_NONE:      // unset is always valid
         valid = true;
 
         break;
 
-    case ACL_INHERITANCE_SPECIFY:        // NOTE: we assume all acls support specify
+    case ACL_DEFAULT_SPECIFY:        // NOTE: we assume all acls support specify
 
         // fallthrough
-    case ACL_INHERITANCE_PARENT:
+    case ACL_DEFAULT_ACCESS:
 
         // fallthrough
     default:
@@ -247,7 +247,7 @@ static int CheckDirectoryInherit(char *path, Acl *acl, Promise *pp)
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "acl_directory_inherit can only be set on directories.");
+            CfOut(OUTPUT_LEVEL_ERROR, "", "acl_default can only be set on directories.");
             PromiseRef(OUTPUT_LEVEL_ERROR, pp);
             valid = false;
         }

@@ -948,20 +948,29 @@ typedef enum
 
 typedef enum
 {
-    ACL_INHERITANCE_NO_CHANGE,
-    ACL_INHERITANCE_SPECIFY,
-    ACL_INHERITANCE_PARENT,
-    ACL_INHERITANCE_CLEAR,
-    ACL_INHERITANCE_NONE
-} AclInheritance;
+    ACL_DEFAULT_NO_CHANGE,
+    ACL_DEFAULT_SPECIFY,
+    ACL_DEFAULT_ACCESS,
+    ACL_DEFAULT_CLEAR,
+    ACL_DEFAULT_NONE
+} AclDefault;
+
+typedef enum
+{
+    ACL_INHERIT_FALSE,
+    ACL_INHERIT_TRUE,
+    ACL_INHERIT_NOCHANGE
+} AclInherit;
 
 typedef struct
 {
     AclMethod acl_method;
     AclType acl_type;
-    AclInheritance acl_directory_inherit;
+    AclDefault acl_default;
     Rlist *acl_entries;
-    Rlist *acl_inherit_entries;
+    Rlist *acl_default_entries;
+    /* Only used on Windows */
+    AclInherit acl_inherit;
 } Acl;
 
 typedef enum

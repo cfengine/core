@@ -400,9 +400,20 @@ Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp)
 
     ac.acl_method = AclMethodFromString(ConstraintGetRvalValue(ctx, "acl_method", pp, RVAL_TYPE_SCALAR));
     ac.acl_type = AclTypeFromString(ConstraintGetRvalValue(ctx, "acl_type", pp, RVAL_TYPE_SCALAR));
-    ac.acl_directory_inherit = AclInheritanceFromString(ConstraintGetRvalValue(ctx, "acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
+    ac.acl_default = AclDefaultFromString(ConstraintGetRvalValue(ctx, "acl_default", pp, RVAL_TYPE_SCALAR));
+    if (ac.acl_default == ACL_DEFAULT_NONE)
+    {
+        /* Deprecated attribute. */
+        ac.acl_default = AclDefaultFromString(ConstraintGetRvalValue(ctx, "acl_directory_inherit", pp, RVAL_TYPE_SCALAR));
+    }
     ac.acl_entries = PromiseGetConstraintAsList(ctx, "aces", pp);
-    ac.acl_inherit_entries = PromiseGetConstraintAsList(ctx, "specify_inherit_aces", pp);
+    ac.acl_default_entries = PromiseGetConstraintAsList(ctx, "specify_default_aces", pp);
+    if (ac.acl_default_entries == NULL)
+    {
+        /* Deprecated attribute. */
+        ac.acl_default_entries = PromiseGetConstraintAsList(ctx, "specify_inherit_aces", pp);
+    }
+    ac.acl_inherit = AclInheritFromString(ConstraintGetRvalValue(ctx, "acl_inherit", pp, RVAL_TYPE_SCALAR));
     return ac;
 }
 

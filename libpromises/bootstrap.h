@@ -60,7 +60,7 @@ bool RemovePolicyServerFile(const char *workdir);
 bool GetAmPolicyServer(const char *workdir);
 
 
-bool CreateFailSafe(char *filename);
+bool WriteBuiltinFailsafePolicy(char *filename);
 
 
 

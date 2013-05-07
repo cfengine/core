@@ -66,7 +66,7 @@ static Seq *LoadAndCheckString(const char *policy_code)
 static void test_failsafe(void)
 {
     char *tmp = tempnam(NULL, "cfengine_test");
-    CreateFailSafe(tmp);
+    WriteBuiltinFailsafePolicyToPath(tmp);
 
     Policy *failsafe = ParserParseFile(tmp, PARSER_WARNING_ALL, PARSER_WARNING_ALL);
 

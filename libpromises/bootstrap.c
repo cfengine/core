@@ -112,7 +112,7 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
         MapName(failsafe_path);
 
         Log(LOG_LEVEL_INFO, "Writing built-in failsafe policy to '%s'", failsafe_path);
-        CreateFailSafe(failsafe_path);
+        WriteBuiltinFailsafePolicyToPath(failsafe_path);
     }
 
     bool am_policy_server = IsDefinedClass(ctx, CanonifyName(policy_server), NULL);
@@ -237,7 +237,7 @@ bool GetAmPolicyServer(const char *workdir)
 
 /********************************************************************/
 
-bool CreateFailSafe(char *filename)
+bool WriteBuiltinFailsafePolicyToPath(char *filename)
 {
     FILE *fout = fopen(filename, "w");
     if (!fout)

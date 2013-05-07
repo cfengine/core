@@ -1826,7 +1826,7 @@ static bool HasAvahiSupport(void)
     return false;
 }
 
-static int AutomaticBootstrap(GenericAgentConfig *config)
+static int AutomaticBootstrap(ARG_UNUSED GenericAgentConfig *config)
 {
     ProgrammingError("Attempted automated bootstrap on a non-avahi build of CFEngine");
 }

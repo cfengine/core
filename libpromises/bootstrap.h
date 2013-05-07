@@ -28,8 +28,7 @@
 #include "cf3.defs.h"
 
 /**
- * @brief If new_policy_server is not NULL, it will writes the IP to the policy_server.dat file.
- *        If new_policy_server is NULL, it will not write anything.
+ * @brief Sets classes and the POLICY_SERVER global.
  * @param ctx EvalContext is used to set related variables
  * @param new_policy_server IP of new policy server
  */
@@ -61,7 +60,7 @@ bool GetAmPolicyHub(const char *workdir);
  * @brief Set the am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.
  * @return True if successful
  */
-bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub);
+bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub);
 
 /**
  * @brief Write the builtin failsafe policy to the default location
@@ -74,6 +73,11 @@ bool WriteBuiltinFailsafePolicy(const char *workdir);
  */
 bool WriteBuiltinFailsafePolicyToPath(const char *filename);
 
-
+/**
+ * @brief Removes all files in WORKDIR/inputs
+ * @param workdir
+ * @return True if succesful
+ */
+bool RemoveAllExistingPolicyInInputs(const char *workdir);
 
 #endif

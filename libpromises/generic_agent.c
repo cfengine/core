@@ -143,9 +143,19 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    if (config->agent_specific.agent.bootstrap_policy_server)
+    if (config->agent_type == AGENT_TYPE_AGENT && config->agent_specific.agent.bootstrap_policy_server)
     {
-        WriteBuiltinFailsafePolicy(GetWorkDir());
+        if (!RemoveAllExistingPolicyInInputs(GetWorkDir()))
+        {
+            Log(LOG_LEVEL_ERR, "Error removing existing input files prior to bootstrap");
+            exit(EXIT_FAILURE);
+        }
+
+        if (!WriteBuiltinFailsafePolicy(GetWorkDir()))
+        {
+            Log(LOG_LEVEL_ERR, "Error writing builtin failsafe to inputs prior to bootstrap");
+            exit(EXIT_FAILURE);
+        }
 
         bool am_policy_server = false;
         {
@@ -157,7 +167,7 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
             }
 
-            WriteAmPolicyHub(CFWORKDIR, am_policy_server);
+            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
             if (am_policy_server)
             {
                 EvalContextHeapAddHard(ctx, "am_policy_hub");

@@ -97,22 +97,14 @@ static void KeepHardClasses(EvalContext *ctx)
     char name[CF_BUFSIZE];
     if (name != NULL)
     {
-        snprintf(name, sizeof(name), "%s%cpolicy_server.dat", CFWORKDIR, FILE_SEPARATOR);
-
-        FILE *fp = fopen(name, "r");
-
-        if (fp != NULL)
+        char *existing_policy_server = ReadPolicyServerFile(CFWORKDIR);
+        if (existing_policy_server)
         {
-            fclose(fp);
-            snprintf(name, sizeof(name), "%s/state/am_policy_hub", CFWORKDIR);
-            MapName(name);
-
-            struct stat sb;
-
-            if (stat(name, &sb) != -1)
+            if (GetAmPolicyServer(CFWORKDIR))
             {
                 EvalContextHeapAddHard(ctx, "am_policy_hub");
             }
+            free(existing_policy_server);
         }
     }
 

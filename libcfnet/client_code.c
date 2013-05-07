@@ -245,18 +245,17 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
         {
             Log(LOG_LEVEL_INFO, " !! No server is responding on this port");
 
-            if (conn->sd != SOCKET_INVALID)
-            {
-                DisconnectServer(conn);
-            }
+            DisconnectServer(conn);
 
-            *err = -1; // unreachable err
+            *err = -1;
             return NULL;
         }
 
-        if (conn->sd == SOCKET_INVALID)
+        if (conn->sd < 0)                      /* INVALID or OFFLINE socket */
         {
-            *err = -1; // unreachable err
+            UnexpectedError("ServerConnect() succeeded but socket descriptor is %d!",
+                            conn->sd);
+            *err = -1;
             return NULL;
         }
 
@@ -291,7 +290,7 @@ void DisconnectServer(AgentConnection *conn)
 {
     if (conn)
     {
-        if (conn->sd != SOCKET_INVALID)
+        if (conn->sd >= 0)                        /* Not INVALID or OFFLINE */
         {
             cf_closesocket(conn->sd);
             conn->sd = SOCKET_INVALID;
@@ -1067,7 +1066,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
               host, txtaddr, strport);
 
         conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
-        if (conn->sd == SOCKET_INVALID)
+        if (conn->sd == -1)
         {
             Log(LOG_LEVEL_ERR, " !! Couldn't open a socket: %s", GetErrorStr());
             continue;
@@ -1123,7 +1122,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     }
     else
     {
-        if (conn->sd != SOCKET_INVALID)
+        if (conn->sd >= 0)                 /* not INVALID or OFFLINE socket */
         {
             cf_closesocket(conn->sd);
             conn->sd = SOCKET_INVALID;

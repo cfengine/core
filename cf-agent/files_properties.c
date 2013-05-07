@@ -148,7 +148,7 @@ bool ConsiderAbstractFile(const char *filename, const char *directory, FileCopy 
 {
     struct stat stat;
     char buf[CF_BUFSIZE];
-    snprintf(buf, sizeof(buf), "%s/%s", filename, directory);
+    snprintf(buf, sizeof(buf), "%s/%s", directory, filename);
     MapName(buf);
 
     if (cf_lstat(buf, &stat, fc, conn) == -1)

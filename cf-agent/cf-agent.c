@@ -70,6 +70,7 @@
 #include "syslog_client.h"
 #include "man.h"
 #include "bootstrap.h"
+#include "misc_lib.h"
 
 #include "mod_common.h"
 
@@ -165,11 +166,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *c
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
 static void AllClassesReport(const EvalContext *ctx);
 static bool HasAvahiSupport(void);
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-static int AutomaticBootstrap();
-#endif
-#endif
+static int AutomaticBootstrap(GenericAgentConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
@@ -229,21 +226,6 @@ int main(int argc, char *argv[])
 
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
-
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-    if (config->agent_specific.agent.bootstrap_policy_server
-        && strcmp(":avahi", config->agent_specific.agent.bootstrap_policy_server) == 0)
-    {
-        int ret = AutomaticBootstrap();
-
-        if (ret < 0)
-        {
-            return 1;
-        }
-    }
-#endif
-#endif
 
     GenericAgentDiscoverContext(ctx, config);
 
@@ -373,7 +355,12 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                         exit(EXIT_FAILURE);
                     }
 
-                    config->agent_specific.agent.bootstrap_policy_server = xstrdup(":avahi");
+                    int err = AutomaticBootstrap(config);
+                    if (err < 0);
+                    {
+                        Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
+                        exit(EXIT_FAILURE);
+                    }
                     break;
                 }
 
@@ -1800,17 +1787,7 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     return PROMISE_RESULT_NOOP;
 }
 
-#if !defined(HAVE_AVAHI_CLIENT_CLIENT_H) || !defined(HAVE_AVAHI_COMMON_ADDRESS_H)
-
-static bool HasAvahiSupport(void)
-{
-    return false;
-}
-
-#endif
-
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
+#if defined(HAVE_AVAHI_CLIENT_CLIENT_H) && defined(HAVE_AVAHI_COMMON_ADDRESS_H)
 
 static bool HasAvahiSupport(void)
 {
@@ -1818,7 +1795,7 @@ static bool HasAvahiSupport(void)
 }
 
 
-static int AutomaticBootstrap()
+static int AutomaticBootstrap(GenericAgentConfig *config)
 {
     List *foundhubs = NULL;
     int hubcount = ListHubs(&foundhubs);
@@ -1843,7 +1820,7 @@ static int AutomaticBootstrap()
                hostname, ipaddr);
         if (strlen(ipaddr) < sizeof(POLICY_SERVER))
         {
-            strcpy(POLICY_SERVER, ipaddr);
+            config->agent_specific.agent.bootstrap_policy_server = xstrdup(ipaddr);
             ret = 0;
         }
         else
@@ -1866,5 +1843,16 @@ static int AutomaticBootstrap()
 
     return ret;
 }
-#endif
-#endif
+#else
+
+static bool HasAvahiSupport(void)
+{
+    return false;
+}
+
+static int AutomaticBootstrap(GenericAgentConfig *config)
+{
+    ProgrammingError("Attempted automated bootstrap on a non-avahi build of CFEngine");
+}
+
+#endif // Avahi

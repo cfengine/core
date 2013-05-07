@@ -70,10 +70,9 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 /*****************************************************************************/
 
-void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role)
+void LastSaw(const char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role)
 {
     char databuf[EVP_MAX_MD_SIZE * 4];
-    char *mapip;
 
     if (strlen(ipaddress) == 0)
     {
@@ -83,7 +82,7 @@ void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSee
 
     HashPrintSafe(CF_DEFAULT_DIGEST, digest, databuf);
 
-    mapip = MapAddress(ipaddress);
+    const char *mapip = MapAddress(ipaddress);
 
     UpdateLastSawHost(databuf, mapip, role == LAST_SEEN_ROLE_ACCEPT, time(NULL));
 }

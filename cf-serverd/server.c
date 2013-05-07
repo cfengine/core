@@ -3257,7 +3257,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
         conn->trust = true;
         /* conn->maproot = false; ?? */
         SendTransaction(conn->sd_reply, "OK: unknown key was accepted on trust", 0, CF_DONE);
-        SavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest, key);
+        SavePublicKey(conn->username, udigest, key);
         return true;
     }
     else

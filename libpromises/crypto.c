@@ -182,7 +182,7 @@ bool LoadSecretKeys(const char *policy_server)
 
 /*********************************************************************/
 
-RSA *HavePublicKeyByIP(char *username, char *ipaddress)
+RSA *HavePublicKeyByIP(const char *username, const char *ipaddress)
 {
     char hash[CF_MAXVARSIZE];
 
@@ -193,7 +193,7 @@ RSA *HavePublicKeyByIP(char *username, char *ipaddress)
 
 /*********************************************************************/
 
-RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
+RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest)
 {
     char keyname[CF_MAXVARSIZE], newname[CF_BUFSIZE], oldname[CF_BUFSIZE];
     struct stat statbuf;
@@ -270,14 +270,12 @@ RSA *HavePublicKey(char *username, char *ipaddress, char *digest)
 
 /*********************************************************************/
 
-void SavePublicKey(char *user, char *ipaddress, char *digest, RSA *key)
+void SavePublicKey(const char *user, const char *digest, const RSA *key)
 {
     char keyname[CF_MAXVARSIZE], filename[CF_BUFSIZE];
     struct stat statbuf;
     FILE *fp;
     int err;
-
-    CfDebug("SavePublicKey %s\n", ipaddress);
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", user, digest);
 

@@ -461,7 +461,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
         Log(LOG_LEVEL_VERBOSE, " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
               HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
-        SavePublicKey(conn->username, conn->remoteip, buffer, server_pubkey);       // FIXME: username is local
+        SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
         LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);
     }
 

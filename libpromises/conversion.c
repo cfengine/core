@@ -38,7 +38,7 @@ static int IsSpace(char *remainder);
 
 /***************************************************************/
 
-char *MapAddress(char *unspec_address)
+const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
 
     if (strncmp(unspec_address, "::ffff:", 7) == 0)

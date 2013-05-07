@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -66,6 +66,10 @@ typedef struct
             unsigned int parser_warnings;
             unsigned int parser_warnings_error;
         } common;
+        struct
+        {
+            char *bootstrap_policy_server;
+        } agent;
     } agent_specific;
 
 } GenericAgentConfig;
@@ -76,8 +80,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
-void Syntax(const char *comp, const struct option options[], const char *hints[], const char *description, bool accepts_file_argument);
-void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
+void PrintHelp(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
 void PrintVersion(void);
 int CheckPromises(const GenericAgentConfig *config);
 Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);

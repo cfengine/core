@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -34,10 +34,7 @@
 #include "signals.h"
 #include "scope.h"
 #include "sysinfo.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
+#include "man.h"
 
 typedef enum
 {
@@ -64,11 +61,12 @@ extern const ConstraintSyntax CFM_CONTROLBODY[];
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The monitoring agent is a machine-learning, sampling\n"
-    "daemon which learns the normal state of the current\n"
-    "host and classifies new observations in terms of the\n"
-    "patterns formed by previous ones. The data are made\n"
-    "available to and read by cf-agent for classification\n" "of responses to anomalous states.";
+static const char *CF_MONITORD_SHORT_DESCRIPTION = "monitoring daemon for CFEngine";
+
+static const char *CF_MONITORD_MANPAGE_LONG_DESCRIPTION =
+        "cf-monitord is the monitoring daemon for CFEngine. It samples probes defined in policy code and attempts to learn the "
+        "normal system state based on current and past observations. Current estimates are made available as "
+        "special variables (e.g. $(mon.av_cpu)) to cf-agent, which may use them to inform policy decisions.";
 
 static const struct option OPTIONS[14] =
 {
@@ -180,19 +178,27 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-monitord", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-monitord - cfengine's monitoring agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-monitord", time(NULL),
+                             CF_MONITORD_SHORT_DESCRIPTION,
+                             CF_MONITORD_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-monitord", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-monitord", OPTIONS, HINTS, true);
             exit(1);
         }
     }

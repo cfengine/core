@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -627,6 +627,8 @@ typedef enum
 
 /*************************************************************************/
 
+typedef struct EvalContext_ EvalContext;
+
 typedef enum
 {
     RVAL_TYPE_SCALAR = 's',
@@ -695,11 +697,17 @@ typedef struct
     SyntaxStatus status;
 } PromiseTypeSyntax;
 
-/*************************************************************************/
+typedef enum FnCallStatus
+{
+    FNCALL_SUCCESS,
+    FNCALL_FAILURE
+} FnCallStatus;
 
-typedef struct EvalContext_ EvalContext;
-
-typedef struct FnCallResult_ FnCallResult;
+typedef struct
+{
+    FnCallStatus status;
+    Rval rval;
+} FnCallResult;
 
 typedef struct
 {
@@ -713,14 +721,15 @@ typedef struct
     const char *name;
     DataType dtype;
     const FnCallArg *args;
-    FnCallResult(*impl) (EvalContext *ctx, FnCall *, Rlist *);
+    FnCallResult (*impl)(EvalContext *ctx, FnCall *, Rlist *);
     const char *description;
     bool varargs;
+    SyntaxStatus status;
 } FnCallType;
 
-/*************************************************************************/
-
 #define UNKNOWN_FUNCTION -1
+
+/*************************************************************************/
 
 typedef struct Constraint_ Constraint;
 
@@ -748,27 +757,6 @@ typedef struct Scope_
     AssocHashTable *hashtable;
     struct Scope_ *next;
 } Scope;
-
-/*******************************************************************/
-/* Return value signalling                                         */
-/*******************************************************************/
-
-typedef enum FnCallStatus
-{
-    FNCALL_SUCCESS,
-    FNCALL_FAILURE,
-} FnCallStatus;
-
-/* from builtin functions */
-struct FnCallResult_
-{
-    FnCallStatus status;
-    Rval rval;
-};
-
-/*******************************************************************/
-/* Return value signalling                                         */
-/*******************************************************************/
 
 typedef enum
 {

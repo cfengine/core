@@ -1,3 +1,27 @@
+/*
+   Copyright (C) CFEngine AS
+
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
 #include "agent-diagnostics.h"
 
 #include "alloc.h"
@@ -7,6 +31,7 @@
 #include "bootstrap.h"
 #include "dbm_api.h"
 #include "dbm_priv.h"
+#include "tokyo_check.h"
 
 #include <assert.h>
 
@@ -52,7 +77,7 @@ void AgentDiagnosticsRun(const char *workdir, const AgentDiagnosticCheck checks[
 
 AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir)
 {
-    char *policy_server = GetPolicyServer(workdir);
+    char *policy_server = ReadPolicyServerFile(workdir);
     return AgentDiagnosticsResultNew(policy_server != NULL,
                                      policy_server != NULL ? policy_server : xstrdup("Not bootstrapped"));
 }
@@ -111,15 +136,24 @@ static AgentDiagnosticsResult AgentDiagnosticsCheckDB(const char *workdir, dbid 
 {
     char *dbpath = DBIdToPath(workdir, id);
     char *error = DBPrivDiagnose(dbpath);
-    free(dbpath);
 
     if (error)
     {
+        free(dbpath);
         return AgentDiagnosticsResultNew(false, error);
     }
     else
     {
-        return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+        int ret = CheckTokyoDBCoherence(dbpath);
+        free(dbpath);
+        if(ret)
+        {
+            return AgentDiagnosticsResultNew(false, xstrdup("Internal DB coherence problem"));
+        } 
+        else
+        {
+            return AgentDiagnosticsResultNew(true, xstrdup("OK"));
+        }
     }
 }
 

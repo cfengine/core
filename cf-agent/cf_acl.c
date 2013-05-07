@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -31,12 +31,7 @@
 #include "string_lib.h"
 #include "rlist.h"
 #include "env_context.h"
-
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
-/*****************************************************************************/
+#include "cf-agent-enterprise-stubs.h"
 
 // Valid operations (first char of mode)
 #define CF_VALID_OPS_METHOD_OVERWRITE "=+-"
@@ -88,12 +83,7 @@ void VerifyACL(EvalContext *ctx, char *file, Attributes a, Promise *pp)
         break;
 
     case ACL_TYPE_NTFS_:
-
-#if defined(__MINGW32__)
         Nova_CheckNtACL(ctx, file, a.acl, a, pp);
-#else
-        CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are not supported on this system");
-#endif
         break;
 
     default:

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -44,11 +44,12 @@
 #include "exec_tools.h"
 #include "rlist.h"
 #include "processes_select.h"
+#include "man.h"
 
 #include <assert.h>
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #define CF_EXEC_IFELAPSED 0
@@ -77,10 +78,13 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The executor daemon is a scheduler and wrapper for\n"
-    "execution of cf-agent. It collects the output of the\n"
-    "agent and can email it to a specified address. It can\n"
-    "splay the start time of executions across the network\n" "and work as a class-based clock for scheduling.";
+static const char *CF_EXECD_SHORT_DESCRIPTION = "scheduling daemon for cf-agent";
+
+static const char *CF_EXECD_MANPAGE_LONG_DESCRIPTION =
+        "cf-execd is the scheduling daemon for cf-agent. It runs cf-agent locally according to a schedule specified in "
+        "policy code (executor control body). After a cf-agent run is completed, cf-execd gathers output from cf-agent, "
+        "and may be configured to email the output to a specified address. It may also be configured to splay (randomize) the "
+        "execution schedule to prevent synchronized cf-agent runs across a network.";
 
 static const struct option OPTIONS[] =
 {
@@ -117,7 +121,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
     "Activate internal diagnostics (developers only)",
     "Run as a foreground processes (do not fork)",
     "Run once and then exit (implies no-fork)",
-    "Do not run as a service on windows - use this when running from a command shell (Cfengine Nova only)",
+    "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     NULL
 };
@@ -259,19 +263,27 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-execd", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-execd - cfengine's execution agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-execd", time(NULL),
+                             CF_EXECD_SHORT_DESCRIPTION,
+                             CF_EXECD_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-execd", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-execd", OPTIONS, HINTS, true);
             exit(1);
 
         }

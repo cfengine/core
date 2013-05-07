@@ -1,26 +1,25 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "scope.h"
@@ -697,9 +696,6 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
                 if (rp->state_ptr)
                 {
-                    CfDebug("Rewriting expanded type for %s from %s to %s\n", assoc->lval, CF_DATATYPES[assoc->dtype],
-                            (char *) rp->state_ptr->item);
-
                     // must first free existing rval in scope, then allocate new (should always be string)
                     RvalDestroy(assoc->rval);
 
@@ -725,8 +721,6 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
                     /* Only lists need to be converted */
                     break;
                 }
-
-                CfDebug(" to %s\n", CF_DATATYPES[assoc->dtype]);
             }
         }
     }
@@ -762,8 +756,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
         {
             CfOut(OUTPUT_LEVEL_ERROR, "", "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
                   (char *) rpt->item);
-            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, CF_DATATYPES[dtg],
-                  (char *) rpt->item, CF_DATATYPES[dtt]);
+            CfOut(OUTPUT_LEVEL_ERROR, "", "%s is %s whereas %s is %s\n", (char *) rpg->item, DataTypeToString(dtg),
+                  (char *) rpt->item, DataTypeToString(dtt));
         }
 
         switch (rpg->type)

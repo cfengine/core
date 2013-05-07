@@ -4,6 +4,9 @@
        - classes promises now take an optional scope constraint.
        - new built-in functions: every, none, some, nth, sublist, uniq, filter.
 
+       - Better diagnostics of parsing errors.
+       - Error messages from parser now show the context of error.
+
        Changes:
        - parser no longer allows ',' after promiser or promisee. must be either ';' or lval
        - Version info removed from mail subject in the emails sent by cf-execd.
@@ -12,6 +15,10 @@
 
        - "outputs" promise type is retired. Their semantics was not clear, and the functionality
          is better suited for control body setting, not a promise.
+
+       - Tokyo Cabinet databases are now automatically checked for
+         correctness during opening. It should prevent a number of issues
+         with corrupted TC databases causing binaries to hang.
 
        Bugfixes:
        - bundles are allowed to be empty (Redmine #2411)

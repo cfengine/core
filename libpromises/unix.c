@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "unix.h"
@@ -321,11 +320,11 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
     if (ag != AGENT_TYPE_GENDOC)
     {
-        snprintf(name, CF_MAXVARSIZE, "hardware_mac[%s]", ifp->ifr_name);
+        snprintf(name, sizeof(name), "hardware_mac[%s]", ifp->ifr_name);
     }
     else
     {
-        snprintf(name, CF_MAXVARSIZE, "hardware_mac[interface_name]");
+        snprintf(name, sizeof(name), "hardware_mac[interface_name]");
     }
 
     // mac address on a loopback interface doesn't make sense
@@ -343,7 +342,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
         return;
     }
       
-    snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+    snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
              (unsigned char) ifr->ifr_hwaddr.sa_data[0],
              (unsigned char) ifr->ifr_hwaddr.sa_data[1],
              (unsigned char) ifr->ifr_hwaddr.sa_data[2],
@@ -355,7 +354,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
     RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
     RlistAppend(interfaces, ifp->ifr_name, RVAL_TYPE_SCALAR);
 
-    snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+    snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
     EvalContextHeapAddHard(ctx, name);
 
 # elif defined(HAVE_GETIFADDRS)
@@ -382,7 +381,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                 sdl = (struct sockaddr_dl *)ifa->ifa_addr;
                 m = (char *) LLADDR(sdl);
                 
-                snprintf(hw_mac, CF_MAXVARSIZE - 1, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
+                snprintf(hw_mac, sizeof(hw_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
                     (unsigned char) m[0],
                     (unsigned char) m[1],
                     (unsigned char) m[2],
@@ -394,7 +393,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
                 RlistAppend(hardware, hw_mac, RVAL_TYPE_SCALAR);
                 RlistAppend(interfaces, ifa->ifa_name, RVAL_TYPE_SCALAR);
 
-                snprintf(name, CF_MAXVARSIZE, "mac_%s", CanonifyName(hw_mac));
+                snprintf(name, sizeof(name), "mac_%s", CanonifyName(hw_mac));
                 EvalContextHeapAddHard(ctx, name);
             }
         }
@@ -418,11 +417,11 @@ void GetInterfaceFlags(EvalContext *ctx, AgentType ag, struct ifreq *ifr, Rlist 
 
     if (ag != AGENT_TYPE_GENDOC)
     {
-        snprintf(name, CF_MAXVARSIZE, "interface_flags[%s]", ifr->ifr_name);
+        snprintf(name, sizeof(name), "interface_flags[%s]", ifr->ifr_name);
     }
     else
     {
-        snprintf(name, CF_MAXVARSIZE, "interface_flags[interface_name]");
+        snprintf(name, sizeof(name), "interface_flags[interface_name]");
     }
 
     if (ifr->ifr_flags & IFF_UP) strcat(buffer, " up");
@@ -548,7 +547,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
             }
         }
 
-        snprintf(workbuf, CF_BUFSIZE, "net_iface_%s", CanonifyName(ifp->ifr_name));
+        snprintf(workbuf, sizeof(workbuf), "net_iface_%s", CanonifyName(ifp->ifr_name));
 
         EvalContextHeapAddHard(ctx, workbuf);
 
@@ -628,7 +627,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         if (*sp == '.')
                         {
                             *sp = '\0';
-                            snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
+                            snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(VIPADDRESS));
                             ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
                         }
                     }
@@ -665,11 +664,11 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                 if (ag != AGENT_TYPE_GENDOC)
                 {
-                    snprintf(name, CF_MAXVARSIZE - 1, "ipv4[%s]", CanonifyName(ifp->ifr_name));
+                    snprintf(name, sizeof(name), "ipv4[%s]", CanonifyName(ifp->ifr_name));
                 }
                 else
                 {
-                    snprintf(name, CF_MAXVARSIZE - 1, "ipv4[interface_name]");
+                    snprintf(name, sizeof(name), "ipv4[interface_name]");
                 }
 
                 ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
@@ -684,11 +683,11 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
 
                         if (ag != AGENT_TYPE_GENDOC)
                         {
-                            snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
+                            snprintf(name, sizeof(name), "ipv4_%d[%s]", i--, CanonifyName(ifp->ifr_name));
                         }
                         else
                         {
-                            snprintf(name, CF_MAXVARSIZE - 1, "ipv4_%d[interface_name]", i--);
+                            snprintf(name, sizeof(name), "ipv4_%d[interface_name]", i--);
                         }
 
                         ScopeNewSpecialScalar(ctx, "sys", name, ip, DATA_TYPE_STRING);
@@ -759,7 +758,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
     for(;;)
     {
-        if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
+        if (fgets(buffer, sizeof(buffer), pp) == NULL)
         {
             if (ferror(pp))
             {

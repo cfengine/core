@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,10 +17,9 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_storage.h"
@@ -43,10 +42,6 @@
 #include "ornaments.h"
 #include "env_context.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 Rlist *MOUNTEDFSLIST;
 int CF_MOUNTALL;
 
@@ -55,7 +50,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 static void VolumeScanArrivals(char *file, Attributes a, Promise *pp);
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a);
+static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a);
 static int IsForeignFileSystem(struct stat *childstat, char *dir);
 #endif
 
@@ -330,7 +325,7 @@ static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, A
 /*********************************************************************/
 
 #if !defined(__MINGW32__)
-static int FileSystemMountedCorrectly(Rlist *list, char *name, char *options, Attributes a)
+static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
 {
     Rlist *rp;
     Mount *mp;
@@ -450,7 +445,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
 
     options = Rlist2String(a.mount.mount_options, ",");
 
-    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, options, a))
+    if (!FileSystemMountedCorrectly(MOUNTEDFSLIST, name, a))
     {
         if (!a.mount.unmount)
         {

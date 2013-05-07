@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "generic_agent.h"
@@ -43,6 +42,7 @@
 #include "scope.h"
 #include "policy.h"
 #include "audit.h"
+#include "man.h"
 
 typedef enum
 {
@@ -74,15 +74,17 @@ static void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The run agent connects to a list of running instances of\n"
-    "the cf-serverd service. The agent allows a user to\n"
-    "forego the usual scheduling interval for the agent and\n"
-    "activate cf-agent on a remote host. Additionally, a user\n"
-    "can send additional classes to be defined on the remote\n"
-    "host. Two kinds of classes may be sent: classes to decide\n"
-    "on which hosts the agent will be started, and classes that\n"
-    "the user requests the agent should define on execution.\n"
-    "The latter type is regulated by cf-serverd's role based\n" "access control.";
+static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
+
+static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
+    "cf-runagent connects to a list of running instances of "
+    "cf-serverd. It allows foregoing the usual cf-execd schedule "
+    "to activate cf-agent. Additionally, a user "
+    "may send classes to be defined on the remote\n"
+    "host. Two kinds of classes may be sent: classes to decide "
+    "on which hosts cf-agent will be started, and classes that "
+    "the user requests cf-agent should define on execution. "
+    "The latter type is regulated by cf-serverd's role based access control.";
 
 static const struct option OPTIONS[17] =
 {
@@ -325,19 +327,27 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-runagent - Run agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-runagent", time(NULL),
+                             CF_RUNAGENT_SHORT_DESCRIPTION,
+                             CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-runagent", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
             exit(1);
 
         }
@@ -371,7 +381,7 @@ static void ThisAgentInit(void)
 static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
+    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE],
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
@@ -380,8 +390,15 @@ static int HailServer(EvalContext *ctx, char *host)
         .portnumber = (short) ParseHostname(host, peer),
     };
 
-    snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
-    Address2Hostkey(ipv4, digest);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, peer, sizeof(ipaddr)) == -1)
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "",
+            "HailServer: ERROR, could not resolve %s", peer);
+        return false;
+    }
+
+    Address2Hostkey(ipaddr, digest);
     GetCurrentUserName(user, CF_SMALLBUF);
 
     if (INTERACTIVE)
@@ -392,17 +409,18 @@ static int HailServer(EvalContext *ctx, char *host)
 
         if (!gotkey)
         {
-            gotkey = HavePublicKey(user, ipv4, digest) != NULL;
+            gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
         }
 
         if (!gotkey)
         {
-            printf("WARNING - You do not have a public key from host %s = %s\n", host, ipv4);
+            printf("WARNING - You do not have a public key from host %s = %s\n",
+                   host, ipaddr);
             printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
 
             while (true)
             {
-                if (fgets(reply, 8, stdin) == NULL)
+                if (fgets(reply, sizeof(reply), stdin) == NULL)
                 {
                     FatalError(ctx, "EOF trying to read answer from terminal");
                 }

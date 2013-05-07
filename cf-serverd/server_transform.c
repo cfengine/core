@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "server_transform.h"
@@ -477,7 +476,18 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
-        SetSyslogHost(Hostname2IPString(retval.item));
+        /* Don't resolve syslog_host now, better do it per log request. */
+        if (!SetSyslogHost(retval.item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "FAILed to set syslog_host, ""\"%s\" too long",
+                  (char *) retval.item);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s",
+                  (char *) retval.item);
+        }
     }
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
@@ -530,6 +540,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL, NULL);
+
+                CleanReportBookFilterSet();
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
@@ -638,6 +650,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *pa
     if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(ctx, pp, "query");
+        KeepReportDataSelectAccessPromise(pp);
         return;
     }
 

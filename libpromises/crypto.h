@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -30,12 +30,12 @@
 void CryptoInitialize(void);
 
 void DebugBinOut(char *buffer, int len, char *com);
-bool LoadSecretKeys(void);
+bool LoadSecretKeys(const char *policy_server);
 int EncryptString(char type, char *in, char *out, unsigned char *key, int len);
 int DecryptString(char type, char *in, char *out, unsigned char *key, int len);
-RSA *HavePublicKey(char *username, char *ipaddress, char *digest);
-RSA *HavePublicKeyByIP(char *username, char *ipaddress);
-void SavePublicKey(char *username, char *ipaddress, char *digest, RSA *key);
+RSA *HavePublicKey(const char *username, const char *ipaddress, const char *digest);
+RSA *HavePublicKeyByIP(const char *username, const char *ipaddress);
+void SavePublicKey(const char *username, const char *digest, const RSA *key);
 
 const char *PublicKeyFile(const char *workdir);
 const char *PrivateKeyFile(const char *workdir);

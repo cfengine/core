@@ -1,24 +1,23 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -327,7 +326,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                 Rlist *inner_expansion = NULL;
                 Rlist *exp, *tmp;
                 char absscope[CF_MAXVARSIZE], base_scope[CF_MAXVARSIZE];
-                int base_qualified, qualified, success = 0;
+                int base_qualified, success = 0;
                 int increment;
 
                 base_qualified = IsQualifiedVariable(v);
@@ -357,14 +356,12 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
                         sscanf(exp->item, "%[^.].", absscope);
                         strncpy(var, exp->item + strlen(absscope) + 1, CF_BUFSIZE - 1);
                         snprintf(finalname, CF_MAXVARSIZE, "%s%c%s", absscope, CF_MAPPEDLIST, var);
-                        qualified = true;
                     }
                     else
                     {
                         strncpy(absscope, scopeid, CF_MAXVARSIZE - 1);
                         strncpy(finalname, exp->item, CF_BUFSIZE - 1);
                         strncpy(var, exp->item, CF_BUFSIZE - 1);
-                        qualified = false;
                     }
 
                     // var is the expanded name of the variable in its native context

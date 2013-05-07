@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "promises.h"
@@ -167,6 +166,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->has_subbundles = pp->has_subbundles;
     pcopy->conlist = SeqNew(10, ConstraintDestroy);
     pcopy->org_pp = pp->org_pp;
+    pcopy->offset = pp->offset;
 
     CfDebug("Copying promise constraints\n\n");
 
@@ -221,7 +221,11 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
             /* Keep the referent body type as a boolean for convenience when checking later */
 
-            PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, (Rval) {xstrdup("true"), RVAL_TYPE_SCALAR }, cp->classes, false);
+                cp_copy->offset = cp->offset;
+            }
+
 
             CfDebug("Handling body-lval \"%s\"\n", cp->lval);
 
@@ -248,7 +252,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                     CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval(ctx, "body", scp->rval);
-                    PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
+                    {
+                        Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
+                        scp_copy->offset = scp->offset;
+                    }
                 }
 
                 ScopeClear("body");
@@ -279,7 +286,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                             newrv.item = new_list;
                         }
 
-                        PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
+                        {
+                            Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, newrv, scp->classes, false);
+                            scp_copy->offset = scp->offset;
+                        }
                     }
                 }
             }
@@ -305,7 +315,10 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 newrv.item = new_list;
             }
 
-            PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
+            {
+                Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, newrv, cp->classes, false);
+                cp_copy->offset = cp->offset;
+            }
         }
     }
 
@@ -374,7 +387,10 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
             RvalDestroy(returnval);
         }
 
-        PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
+        {
+            Constraint *cp_copy = PromiseAppendConstraint(pcopy, cp->lval, final, cp->classes, false);
+            cp_copy->offset = cp->offset;
+        }
 
         if (strcmp(cp->lval, "comment") == 0)
         {

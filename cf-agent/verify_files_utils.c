@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -59,9 +59,10 @@
 #include "verify_files_hashes.h"
 #include "audit.h"
 #include "retcode.h"
+#include "cf-agent-enterprise-stubs.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #define CF_RECURSION_LIMIT 100
@@ -98,21 +99,12 @@ static void LinkCopy(EvalContext *ctx, char *sourcefile, char *destfile, struct 
 
 #ifndef __MINGW32__
 static void VerifySetUidGid(EvalContext *ctx, char *file, struct stat *dstat, mode_t newperm, Promise *pp, Attributes attr);
-static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb);
 #endif
 #ifdef __APPLE__
 static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise *pp);
 #endif
 static void VerifyFileChanges(char *file, struct stat *sb, Attributes attr, Promise *pp);
 static void VerifyFileIntegrity(EvalContext *ctx, char *file, Attributes attr, Promise *pp);
-
-#ifndef HAVE_NOVA
-static void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
-                          ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
-{
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
-}
-#endif
 
 void SetFileAutoDefineList(Rlist *auto_define_list)
 {
@@ -2415,15 +2407,21 @@ int ScheduleCopyOperation(EvalContext *ctx, char *destination, Attributes attr, 
         }
     }
 
+    /* conn == NULL means local copy. */
     CopyFileSources(ctx, destination, attr, pp, conn);
 
-    if (attr.transaction.background)
+    if (conn != NULL)
     {
-        DisconnectServer(conn);
-    }
-    else
-    {
-        ServerNotBusy(conn);
+        /* If it's a background connection then it's not cached in
+         * client_code.c:SERVERLIST, so just close it right after transaction. */
+        if (attr.transaction.background)
+        {
+            DisconnectServer(conn);
+        }
+        else
+        {
+            ServerNotBusy(conn);
+        }
     }
 
     return true;
@@ -3037,7 +3035,7 @@ static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 
 #ifndef __MINGW32__
 
-static int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb)
+int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, struct stat *sb)
 {
     struct passwd *pw;
     struct group *gp;

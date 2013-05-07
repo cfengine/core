@@ -7,6 +7,7 @@ or a name, please adjust .mailmap file in top level directory.
 
 Authors (people with more than 10 commits registered), sorted alphabetically:
 
+Kristian Amlie
 Nick Anderson
 Dimitrios Apostolou
 Mark Burgess
@@ -15,20 +16,27 @@ Volker Hilsheimer
 Maciej Mrowiec
 Geir Nygård
 Maciej Patucha
+Loic Pefferkorn
+Bryce Petrini
 Nakarin Phooripoom
 Bishwa Shrestha
 Eystein Måløy Stenberg
 Sigurd Teigen
 Shauna Thomas
 Carlos Manuel Duclos Vergara
+Bas van der Vlies
 Diego Zamboni
 Ted Zlatanov
 
 Contributors (people with less than 10 commits registered), sorted alphabetically:
 
+Trond Hasle Amundsen
+Cédric Cabessa
+Matthieu CERDA
 P. Christeas
 Jonathan CLARKE
 Jeramey Crawford
+Remi Debay
 dolanor
 Brian Bennett
 Franz Bettag
@@ -36,19 +44,23 @@ Gonéri Le Bouder
 Bernard Brandl
 Melinda Fancsal
 George Gensure
+hicham
 Klaus Kämpf
 Daniel V. Klein
 jkrabbe
 Kuba
+David Lee
 Matt Lesko
 Riccardo Murri
 William Orr
-Loic Pefferkorn
 Michael V. Pelletier
+Russ Poyner
 Frerich Raabe
 Laurent Raufaste
-Bas van der Vlies
+Jean Remond
+James Thompson
 Neil H Watson
+yac
 
 Copyright
 =========

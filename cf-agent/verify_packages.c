@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "verify_packages.h"
@@ -36,6 +35,7 @@
 #include "vercmp.h"
 #include "matching.h"
 #include "attributes.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
@@ -77,9 +77,9 @@ static void DeletePackageManagers(PackageManager *newlist);
 static char *PrefixLocalRepository(Rlist *repositories, char *package);
 
 #ifndef HAVE_NOVA
-void ReportPatches(PackageManager *list)
+void ReportPatches(ARG_UNUSED PackageManager *list)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Patch reporting feature is only available in version Nova and above\n");
+    Log(LOG_LEVEL_VERBOSE, "Patch reporting feature is only available in the enterprise version");
 }
 #endif
 
@@ -534,7 +534,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
     int linenumber = 0;
     for(;;)
     {
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {
@@ -855,7 +855,7 @@ static const char *PackageAction2String(PackageAction pa)
     case PACKAGE_ACTION_VERIFY:
         return "verifying";
     default:
-        ProgrammingError("Cfengine: internal error: illegal package action");
+        ProgrammingError("CFEngine: internal error: illegal package action");
     }
 }
 
@@ -879,7 +879,7 @@ static void AddPackageToSchedule(EvalContext *ctx, const Attributes *a, char *mg
         break;
 
     default:
-        ProgrammingError("Cfengine: internal error: illegal file action");
+        ProgrammingError("CFEngine: internal error: illegal file action");
     }
 }
 
@@ -903,7 +903,7 @@ static void AddPatchToSchedule(EvalContext *ctx, const Attributes *a, char *mgr,
         break;
 
     default:
-        ProgrammingError("Cfengine: internal error: illegal file action");
+        ProgrammingError("CFEngine: internal error: illegal file action");
     }
 }
 
@@ -2222,7 +2222,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
 
     for (;;)
     {
-        ssize_t res = CfReadLine(line, CF_BUFSIZE - 1, pfp);
+        ssize_t res = CfReadLine(line, CF_BUFSIZE, pfp);
 
         if (res == 0)
         {

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -38,7 +38,7 @@ static int IsSpace(char *remainder);
 
 /***************************************************************/
 
-char *MapAddress(char *unspec_address)
+const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
 
     if (strncmp(unspec_address, "::ffff:", 7) == 0)
@@ -234,24 +234,44 @@ FileComparator FileComparatorFromString(const char *s)
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-DataType DataTypeFromString(const char *name)
-/* convert abstract data type names: int, ilist etc */
+static const char *datatype_strings[] =
 {
-    int i;
+    [DATA_TYPE_STRING] = "string",
+    [DATA_TYPE_INT] = "int",
+    [DATA_TYPE_REAL] = "real",
+    [DATA_TYPE_STRING_LIST] = "slist",
+    [DATA_TYPE_INT_LIST] = "ilist",
+    [DATA_TYPE_REAL_LIST] = "rlist",
+    [DATA_TYPE_OPTION] = "option",
+    [DATA_TYPE_OPTION_LIST] = "olist",
+    [DATA_TYPE_BODY] = "body",
+    [DATA_TYPE_BUNDLE] = "bundle",
+    [DATA_TYPE_CONTEXT] = "context",
+    [DATA_TYPE_CONTEXT_LIST] = "clist",
+    [DATA_TYPE_INT_RANGE] = "irange",
+    [DATA_TYPE_REAL_RANGE] = "rrange",
+    [DATA_TYPE_COUNTER] = "counter",
+    [DATA_TYPE_NONE] = "none"
+};
 
-    CfDebug("typename2type(%s)\n", name);
-
-    for (i = 0; i < (int) DATA_TYPE_NONE; i++)
+DataType DataTypeFromString(const char *name)
+{
+    for (int i = 0; i < DATA_TYPE_NONE; i++)
     {
-        if (name && (strcmp(CF_DATATYPES[i], name) == 0))
+        if (strcmp(datatype_strings[i], name) == 0)
         {
-            break;
+            return i;
         }
     }
 
-    return (DataType) i;
+    return DATA_TYPE_NONE;
 }
 
+const char *DataTypeToString(DataType type)
+{
+    assert(type < DATA_TYPE_NONE);
+    return datatype_strings[type];
+}
 
 DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval)
 {
@@ -693,32 +713,6 @@ ServicePolicy ServicePolicyFromString(const char *string)
 
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }
-
-const char *DataTypeToString(DataType dtype)
-{
-    switch (dtype)
-    {
-    case DATA_TYPE_STRING:
-        return "s";
-    case DATA_TYPE_STRING_LIST:
-        return "sl";
-    case DATA_TYPE_INT:
-        return "i";
-    case DATA_TYPE_INT_LIST:
-        return "il";
-    case DATA_TYPE_REAL:
-        return "r";
-    case DATA_TYPE_REAL_LIST:
-        return "rl";
-    case DATA_TYPE_OPTION:
-        return "m";
-    case DATA_TYPE_OPTION_LIST:
-        return "ml";
-    default:
-        return "D?";
-    }
-}
-
 
 const char *DataTypeShortToType(char *short_type)
 {

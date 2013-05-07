@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -26,7 +26,7 @@
 
 #include "logging_old.h"
 
-static char SYSLOG_HOST[CF_BUFSIZE] = "localhost";
+static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
 static uint16_t SYSLOG_PORT = 514;
 int FACILITY;
 
@@ -35,9 +35,17 @@ void SetSyslogFacility(int facility)
     FACILITY = facility;
 }
 
-void SetSyslogHost(const char *host)
+bool SetSyslogHost(const char *host)
 {
-    strlcpy(SYSLOG_HOST, host, CF_BUFSIZE);
+    if (strlen(host) < sizeof(SYSLOG_HOST))
+    {
+        strcpy(SYSLOG_HOST, host);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 void SetSyslogPort(uint16_t port)

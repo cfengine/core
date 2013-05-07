@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,16 +17,16 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "mutex.h"
 
 static pthread_mutex_t MUTEXES[] =
 {
+    PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
     PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP,
@@ -41,12 +41,13 @@ pthread_mutex_t *cft_count = &MUTEXES[2];
 pthread_mutex_t *cft_getaddr = &MUTEXES[3];
 pthread_mutex_t *cft_vscope = &MUTEXES[4];
 pthread_mutex_t *cft_server_children = &MUTEXES[5];
+pthread_mutex_t *cft_server_filter = &MUTEXES[6];
 
 #define MUTEX_NAME_SIZE 32
 
 static void GetMutexName(const pthread_mutex_t *mutex, char *mutexname)
 {
-    if (mutex >= cft_system && mutex <= cft_server_children)
+    if (mutex >= cft_system && mutex <= cft_server_filter)
     {
         sprintf(mutexname, "mutex %ld", (long) (mutex - cft_system));
     }

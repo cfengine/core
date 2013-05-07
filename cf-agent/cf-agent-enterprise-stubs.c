@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -25,11 +25,22 @@
 #include "cf-agent-enterprise-stubs.h"
 #include "logging_old.h"
 
-void VerifyWindowsService(EvalContext *ctx, Attributes a, Promise *pp)
+void VerifyWindowsService(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     CfOut(OUTPUT_LEVEL_ERROR, "", "!! Windows service management is only supported in CFEngine Enterprise");
 }
 
-void LastSawBundle(const Bundle *bundle, double comp)
+void LastSawBundle(ARG_UNUSED const Bundle *bundle, ARG_UNUSED double comp)
 {
+}
+
+void LogFileChange(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file,
+                   ARG_UNUSED int change, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+{
+    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Logging file differences requires version Nova or above");
+}
+
+void Nova_CheckNtACL(ARG_UNUSED EvalContext *ctx, ARG_UNUSED char *file_path, ARG_UNUSED Acl acl, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
+{
+    CfOut(OUTPUT_LEVEL_INFORM, "", "!! NTFS ACLs are only supported in CFEngine Enterprise");
 }

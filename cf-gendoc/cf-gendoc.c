@@ -1,24 +1,23 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -44,8 +43,6 @@ char SOURCE_DIR[CF_BUFSIZE];
 char OUTPUT_FILE[CF_BUFSIZE];
 
 int GENERATE_XML = false;
-
-static const char *ID = "The documentation generation tool produces reference manual for CFEngine.";
 
 static const struct option OPTIONS[] =
 {
@@ -108,7 +105,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
         switch ((char) c)
         {
         case 'h':
-            Syntax("cf-gendoc", OPTIONS, HINTS, ID, false);
+            PrintHelp("cf-gendoc", OPTIONS, HINTS, false);
             exit(0);
 
         case 'x':
@@ -123,7 +120,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         default:
-            Syntax("cf-gendoc", OPTIONS, HINTS, ID, false);
+            PrintHelp("cf-gendoc", OPTIONS, HINTS, false);
             exit(1);
         }
     }

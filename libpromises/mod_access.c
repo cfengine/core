@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -34,6 +34,8 @@
 #include "mod_access.h"
 
 #include "syntax.h"
+#include "string_lib.h"
+#include "policy.h"
 
 /*
   Read this module file backwards, as dependencies have to be defined first -
@@ -47,6 +49,27 @@
   like in a body "sub-routine"
 */
 
+static const char *POLICY_ERROR_WRONG_RESOURCE_FOR_DATA_SELECT = "Constraint report_data_select is allowed only for 'query' resource_type";
+
+static bool AccessParseTreeCheck(const Promise *pp, Seq *errors);
+
+static const ConstraintSyntax report_data_select_constraints[] =
+{
+    ConstraintSyntaxNewStringList("classes_include", CF_ANYSTRING, "List of regex filters for class names to be included into class report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("classes_exclude", CF_ANYSTRING, "List of regex filters for class names to be excluded from class report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("variables_include", CF_ANYSTRING, "List of regex filters for variable full qielified path to be included into variables report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("variables_exclude", CF_ANYSTRING, "List of regex filters for variable full qielified path to be excluded from variables report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_notkept_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise not kept log report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_notkept_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise not kept log report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_repaired_log_include", CF_ANYSTRING, "List of regex filters for handle name to be included into promise repaired log report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("promise_repaired_log_exclude", CF_ANYSTRING, "List of regex filters for handle name to be excluded from promise repaired log report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("monitoring_include", CF_ANYSTRING, "List of regex filters for slot name to be included from monitoring report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewStringList("monitoring_exclude", CF_ANYSTRING, "List of regex filters for slot name to be excluded from monitoring report", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
+};
+
+static const BodySyntax report_data_select_body = BodySyntaxNew("report_data_select", report_data_select_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
 const ConstraintSyntax CF_REMACCESS_BODIES[] =
 {
     ConstraintSyntaxNewStringList("admit", "", "List of host names or IP addresses to grant access to file objects", SYNTAX_STATUS_NORMAL),
@@ -54,6 +77,7 @@ const ConstraintSyntax CF_REMACCESS_BODIES[] =
     ConstraintSyntaxNewStringList("maproot", "", "List of host names or IP addresses to grant full read-privilege on the server", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewBool("ifencrypted", "true/false whether the current file access promise is conditional on the connection from the client being encrypted. Default value: false", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewOption("resource_type", "path,literal,context,query,variable", "The type of object being granted access (the default grants access to files)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("report_data_select", &report_data_select_body, "Report content filter", SYNTAX_STATUS_NORMAL),
     ConstraintSyntaxNewNull()
 };
 
@@ -65,7 +89,48 @@ const ConstraintSyntax CF_REMROLE_BODIES[] =
 
 const PromiseTypeSyntax CF_REMACCESS_PROMISE_TYPES[] =
 {
-    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNew("server", "access", CF_REMACCESS_BODIES, &AccessParseTreeCheck, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNew("server", "roles", CF_REMROLE_BODIES, NULL, SYNTAX_STATUS_NORMAL),
     PromiseTypeSyntaxNewNull()
 };
+
+static bool AccessParseTreeCheck(const Promise *pp, Seq *errors)
+{
+    bool success = true;
+
+    bool isResourceType = false;
+    bool isReportDataSelect = false;
+    Constraint *data_select_const = NULL;
+
+    for (size_t i = 0; i <SeqLength(pp->conlist); i++)
+    {
+        Constraint *con = SeqAt(pp->conlist, i);
+
+        if (StringSafeCompare("resource_type", con->lval) == 0)
+        {
+            if (con->rval.type == RVAL_TYPE_SCALAR)
+            {
+                if (StringSafeCompare("query", (char*)con->rval.item) == 0)
+                {
+                    isResourceType = true;
+                }
+            }
+        }
+        else if (StringSafeCompare("report_data_select", con->lval) == 0)
+        {
+            data_select_const = con;
+            isReportDataSelect = true;
+        }
+
+    }
+
+    if (isReportDataSelect && !isResourceType)
+    {
+        SeqAppend(errors, PolicyErrorNew(POLICY_ELEMENT_TYPE_CONSTRAINT, data_select_const,
+                                         POLICY_ERROR_WRONG_RESOURCE_FOR_DATA_SELECT));
+        success = false;
+    }
+
+    return success;
+}
+

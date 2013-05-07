@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,10 +17,9 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "generic_agent.h"
@@ -60,7 +59,7 @@
 #include "verify_vars.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 #include <assert.h>
@@ -87,7 +86,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
 
 static void SanitizeEnvironment()
 {
-    /* ps(1) and other utilities invoked by Cfengine may be affected */
+    /* ps(1) and other utilities invoked by CFEngine may be affected */
     unsetenv("COLUMNS");
 
     /* Make sure subprocesses output is not localized */
@@ -134,10 +133,6 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     THIS_AGENT_TYPE = config->agent_type;
     EvalContextHeapAddHard(ctx, CF_AGENTTYPES[config->agent_type]);
 
-#ifdef HAVE_NOVA
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is CFEngine Enterprise\n");
-#endif
-
     GetNameInfo3(ctx, config->agent_type);
     GetInterfacesInfo(ctx, config->agent_type);
 
@@ -148,23 +143,24 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     EvalContextHeapPersistentLoadAll(ctx);
     LoadSystemConstants(ctx);
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
-        CheckAutoBootstrap(ctx);
+        CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
     {
+        SetPolicyServer(ctx, POLICY_SERVER);
         if (strlen(POLICY_SERVER) > 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found a policy server (hub) on %s", POLICY_SERVER);
+            Log(LOG_LEVEL_INFO, "This agent is bootstrapped to '%s'", POLICY_SERVER);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No policy server (hub) watch yet registered");
+            Log(LOG_LEVEL_INFO, "This agent is not bootstrapped");
         }
     }
-
-    SetPolicyServer(ctx, POLICY_SERVER);
 }
 
 static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config, bool force_validation)
@@ -198,7 +194,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
         {
             bool policy_check_ok = CheckPromises(config);
 
-            if (BOOTSTRAP && !policy_check_ok)
+            if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
             {
                 CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Policy is not valid, but proceeding with bootstrap");
                 return true;
@@ -267,7 +263,7 @@ int CheckPromises(const GenericAgentConfig *config)
         strlcat(cmd, "\"", CF_BUFSIZE);
     }
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
         // avoids license complains from commercial cf-promises during bootstrap - see Nova_CheckLicensePromise
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
@@ -611,7 +607,8 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         CheckWorkingDirectories(ctx);
     }
 
-    if (!LoadSecretKeys())
+    const char *bootstrapped_policy_server = ReadPolicyServerFile(CFWORKDIR);
+    if (!LoadSecretKeys(bootstrapped_policy_server))
     {
         FatalError(ctx, "Could not load secret keys");
     }
@@ -628,7 +625,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
     setlinebuf(stdout);
 
-    if (BOOTSTRAP)
+    if (config->agent_specific.agent.bootstrap_policy_server)
     {
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cfailsafe.cf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
 
@@ -1352,11 +1349,9 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
 /*******************************************************************/
 
-void Syntax(const char *component, const struct option options[], const char *hints[], const char *description, bool accepts_file_argument)
+void PrintHelp(const char *component, const struct option options[], const char *hints[], bool accepts_file_argument)
 {
     printf("Usage: %s [OPTION]...%s\n", component, accepts_file_argument ? " [FILE]" : "");
-
-    printf("\n%s\n", description);
 
     printf("\nOptions:\n");
 
@@ -1374,51 +1369,6 @@ void Syntax(const char *component, const struct option options[], const char *hi
 
     printf("\nWebsite: http://www.cfengine.com\n");
     printf("This software is Copyright (C) 2008,2010-present CFEngine AS.\n");
-}
-
-/*******************************************************************/
-
-void ManPage(const char *component, const struct option options[], const char *hints[], const char *id)
-{
-    int i;
-
-    printf(".TH %s 8 \"Maintenance Commands\"\n", CommandArg0(component));
-    printf(".SH NAME\n%s\n\n", component);
-
-    printf(".SH SYNOPSIS:\n\n %s [options]\n\n.SH DESCRIPTION:\n\n%s\n", CommandArg0(component), id);
-
-    printf(".B cfengine\n"
-           "is a self-healing configuration and change management based system. You can think of"
-           ".B cfengine\n"
-           "as a very high level language, much higher level than Perl or shell. A"
-           "single statement is called a promise, and compliance can result in many hundreds of files"
-           "being created, or the permissions of many hundreds of"
-           "files being set. The idea of "
-           ".B cfengine\n"
-           "is to create a one or more sets of configuration files which will"
-           "classify and describe the setup of every host in a network.\n");
-
-    printf(".SH COMMAND LINE OPTIONS:\n");
-
-    for (i = 0; options[i].name != NULL; i++)
-    {
-        if (options[i].has_arg)
-        {
-            printf(".IP \"--%s, -%c\" value\n%s\n", options[i].name, (char) options[i].val, hints[i]);
-        }
-        else
-        {
-            printf(".IP \"--%s, -%c\"\n%s\n", options[i].name, (char) options[i].val, hints[i]);
-        }
-    }
-
-    printf(".SH AUTHOR\n" "Mark Burgess and CFEngine AS\n" ".SH INFORMATION\n");
-
-    printf("\nBug reports: http://bug.cfengine.com, ");
-    printf(".pp\nCommunity help: http://forum.cfengine.com\n");
-    printf(".pp\nCommunity info: http://www.cfengine.com/pages/community\n");
-    printf(".pp\nSupport services: http://www.cfengine.com\n");
-    printf(".pp\nThis software is Copyright (C) 2008-%d CFEngine AS.\n", BUILD_YEAR);
 }
 
 void PrintVersion(void)
@@ -1687,6 +1637,8 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->heap_soft = NULL;
     config->heap_negated = NULL;
 
+    config->agent_specific.agent.bootstrap_policy_server = NULL;
+
     switch (agent_type)
     {
     case AGENT_TYPE_COMMON:
@@ -1747,6 +1699,12 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
     {
         EvalContextHeapAddHard(ctx, "opt_debug");
         DEBUG = true;
+    }
+
+    if (config->agent_specific.agent.bootstrap_policy_server)
+    {
+
+        EvalContextHeapAddHard(ctx, "bootstrap_mode");
     }
 }
 

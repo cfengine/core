@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "generic_agent.h"
@@ -69,6 +68,7 @@
 #include "sysinfo.h"
 #include "cf-agent-enterprise-stubs.h"
 #include "syslog_client.h"
+#include "man.h"
 
 #include "mod_common.h"
 
@@ -114,7 +114,6 @@ extern int PR_NOTKEPT;
 static bool ALLCLASSESREPORT;
 static bool ALWAYS_VALIDATE;
 static bool CFPARANOID = false;
-static bool BOOTSTRAP_AVAHI = false;
 
 static Rlist *ACCESSLIST;
 
@@ -175,8 +174,13 @@ static int AutomaticBootstrap();
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The main Cfengine agent is the instigator of change\n"
-    "in the system. In that sense it is the most important\n" "part of the CFEngine suite.\n";
+static const char *CF_AGENT_SHORT_DESCRIPTION = "evaluate CFEngine policy code and actuate change to the system.";
+
+static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION =
+        "cf-agent evaluates policy code and makes changes to the system. Policy bundles are evaluated in the order of the "
+        "provided bundlesequence (this is normally specified in the common control body). "
+        "For each bundle, cf-agent groups promise statements according to their type. Promise types are then evaluated in a preset "
+        "order to ensure fast system convergence to policy.\n";
 
 static const struct option OPTIONS[15] =
 {
@@ -227,7 +231,8 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_AVAHI_CLIENT_CLIENT_H
 #ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-    if (BOOTSTRAP_AVAHI)
+    if (config->agent_specific.agent.bootstrap_policy_server
+        && strcmp(":avahi", config->agent_specific.agent.bootstrap_policy_server) == 0)
     {
         int ret = AutomaticBootstrap();
 
@@ -284,7 +289,7 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap())
+    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         ret = 1;
     }
@@ -303,9 +308,8 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
-    char *sp;
     int optindex = 0;
-    int c, alpha = false, v6 = false;
+    int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
 /* Because of the MacOS linker we have to call this from each agent
@@ -352,63 +356,77 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'B':
-
-            if(strcmp(optarg, ":avahi") == 0)
             {
-                if(!HasAvahiSupport())
+                if (!BootstrapAllowed())
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                    Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
                     exit(EXIT_FAILURE);
                 }
 
-                BOOTSTRAP_AVAHI = true;
-                break;
-            }
-
-            if(IsLoopbackAddress(optarg))
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Use a non-loopback address when bootstrapping");
-                exit(EXIT_FAILURE);
-            }
-
-            BOOTSTRAP = true;
-            MINUSF = true;
-            GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
-            IGNORELOCK = true;
-
-            EvalContextHeapAddHard(ctx, "bootstrap_mode");
-
-            // temporary assure that network functions are working
-            OpenNetwork();
-
-            strncpy(POLICY_SERVER, Hostname2IPString(optarg), CF_BUFSIZE - 1);
-
-            CloseNetwork();
-
-            for (sp = POLICY_SERVER; *sp != '\0'; sp++)
-            {
-                if (isalpha((int)*sp))
+                if(strcmp(optarg, ":avahi") == 0)
                 {
-                    alpha = true;
+                    if(!HasAvahiSupport())
+                    {
+                        Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    config->agent_specific.agent.bootstrap_policy_server = xstrdup(":avahi");
+                    break;
                 }
 
-                if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
+                if(IsLoopbackAddress(optarg))
                 {
-                    alpha = true;
+                    Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
+                    exit(EXIT_FAILURE);
                 }
 
-                if (*sp == ':')
+                // temporary assure that network functions are working
+                OpenNetwork();
+
+                char mapped_policy_server[CF_MAX_IP_LEN] = "";
+                if (Hostname2IPString(mapped_policy_server, optarg, sizeof(mapped_policy_server)) == -1)
                 {
-                    v6 = true;
+                    Log(LOG_LEVEL_ERR, "Could not resolve address '%s', unable to bootstrap", optarg);
+                    exit(EXIT_FAILURE);
                 }
-            }
 
-            if (alpha && !v6)
-            {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Error specifying policy server to --boostrap (-B). The policy server's address could not be looked up. Please use the IP address instead if there is no error. Note that the --policy-server (-s) option is deprecated, the argument is taken in --bootstrap (-B) instead.");
-                exit(EXIT_FAILURE);
-            }
+                CloseNetwork();
 
+                bool alpha = false, v6 = false;
+                for (const char *sp = mapped_policy_server; *sp != '\0'; sp++)
+                {
+                    if (isalpha((int)*sp))
+                    {
+                        alpha = true;
+                    }
+
+                    if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
+                    {
+                        alpha = true;
+                    }
+
+                    if (*sp == ':')
+                    {
+                        v6 = true;
+                    }
+                }
+
+                if (alpha && !v6)
+                {
+                    Log(LOG_LEVEL_ERR, "Error specifying policy server to --boostrap (-B). "
+                        "The policy server's address could not be looked up. "
+                        "Please use the IP address instead if there is no error. "
+                        "Note that the --policy-server (-s) option is deprecated, "
+                        "the argument is taken in --bootstrap (-B) instead.");
+                    exit(EXIT_FAILURE);
+                }
+
+                MINUSF = true;
+                IGNORELOCK = true;
+                GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
+                config->agent_specific.agent.bootstrap_policy_server = xstrdup(mapped_policy_server);
+            }
             break;
 
         case 'K':
@@ -442,12 +460,20 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-agent", time(NULL),
+                             CF_AGENT_SHORT_DESCRIPTION,
+                             CF_AGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
             {
@@ -464,7 +490,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-agent", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(1);
         }
     }
@@ -1020,8 +1046,18 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
-        SetSyslogHost(Hostname2IPString(retval.item));
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
+        /* Don't resolve syslog_host now, better do it per log request. */
+        if (!SetSyslogHost(retval.item))
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "FAILed to set syslog_host, ""\"%s\" too long",
+                  (char *) retval.item);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s",
+                  (char *) retval.item);
+        }
     }
 
 #ifdef HAVE_NOVA
@@ -1783,38 +1819,49 @@ static int AutomaticBootstrap()
 {
     List *foundhubs = NULL;
     int hubcount = ListHubs(&foundhubs);
-    
+    int ret;
+
     switch(hubcount)
     {
     case -1:
         CfOut(OUTPUT_LEVEL_ERROR, "", "Error while trying to find a Policy Server");
-        ListDestroy(&foundhubs);
-        return -1;
+        ret = -1;
+        break;
     case 0:
         printf("No hubs were found. Exiting.\n");
-        ListDestroy(&foundhubs);
-        return -1;
-    case 1:
-        printf("Found hub installed on:"
-               "Hostname: %s"
-               "IP Address: %s\n",
-               ((HostProperties*)foundhubs)->Hostname,
-               ((HostProperties*)foundhubs)->IPAddress);
-        strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
-        dlclose(avahi_handle);
+        ret = -1;
         break;
+    case 1:
+    {
+        char *hostname = ((HostProperties*)foundhubs)->Hostname;
+        char *ipaddr = ((HostProperties*)foundhubs)->IPAddress;
+        printf("Autodiscovered hub installed on:"
+               " Hostname \"%s\", IP Address %s\n",
+               hostname, ipaddr);
+        if (strlen(ipaddr) < sizeof(POLICY_SERVER))
+        {
+            strcpy(POLICY_SERVER, ipaddr);
+            ret = 0;
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_ERROR, "",
+                  "Invalid autodiscovered hub IP address \"%s\"", ipaddr);
+            ret = -1;
+        }
+        break;
+    }
     default:
         printf("Found more than one hub registered in the network.\n"
                "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
-        dlclose(avahi_handle);
-        ListDestroy(&foundhubs);
-        return -1;
+        ret = -1;
     };
 
+    dlclose(avahi_handle);
     ListDestroy(&foundhubs);
 
-    return 0;
+    return ret;
 }
 #endif
 #endif

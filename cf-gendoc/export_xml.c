@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -31,6 +31,7 @@
 #include "scope.h"
 #include "assoc.h"
 #include "rlist.h"
+#include "conversion.h"
 
 static char *MANUAL_DIRECTORY;
 
@@ -175,7 +176,7 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
 
 /* START XML ELEMENT -- FUNCTION */
     XmlAttribute fun_name_attr = { "name", fn.name };
-    XmlAttribute fun_returntype_attr = { "return-type", CF_DATATYPES[fn.dtype] };
+    XmlAttribute fun_returntype_attr = { "return-type", DataTypeToString(fn.dtype) };
     XmlAttribute fun_varargs_attr = { "varargs", NULL };
 
     if (fn.varargs)
@@ -195,7 +196,7 @@ static void XmlExportFunction(Writer *writer, FnCallType fn)
     for (i = 0; fn.args[i].pattern != NULL; i++)
     {
         /* START XML ELEMENT -- ARGUMENT */
-        XmlAttribute argument_type_attr = { "type", CF_DATATYPES[fn.args[i].dtype] };
+        XmlAttribute argument_type_attr = { "type", DataTypeToString(fn.args[i].dtype) };
         XmlStartTag(writer, XMLTAG_ARGUMENT, 1, argument_type_attr);
 
         /* XML ELEMENT -- DESCRIPTION */
@@ -388,7 +389,7 @@ static void XmlExportType(Writer *writer, const ConstraintSyntax *constraint_syn
     Rlist *rp = NULL;
 
 /* START XML ELEMENT -- TYPE */
-    XmlAttribute type_name_attr = { "name", CF_DATATYPES[constraint_syntax->dtype] };
+    XmlAttribute type_name_attr = { "name", DataTypeToString(constraint_syntax->dtype) };
     XmlStartTag(writer, XMLTAG_TYPE, 1, type_name_attr);
 
     switch (constraint_syntax->dtype)

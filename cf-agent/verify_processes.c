@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -40,21 +40,10 @@
 #include "scope.h"
 #include "ornaments.h"
 
-#ifdef HAVE_NOVA
-#include "cf.nova.h"
-#endif
-
 static void VerifyProcesses(EvalContext *ctx, Attributes a, Promise *pp);
 static int ProcessSanityChecks(Attributes a, Promise *pp);
 static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Promise *pp);
 static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const char *promiser);
-
-#ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp);
-#endif
-
-
-/*****************************************************************************/
 
 void VerifyProcessesPromise(EvalContext *ctx, Promise *pp)
 {
@@ -259,7 +248,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 }
 
 #ifndef __MINGW32__
-static int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
+int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 {
     Item *ip;
     Rlist *rp;

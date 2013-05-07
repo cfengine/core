@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -80,7 +80,7 @@ extern int VEXPIREAFTER;
 extern const char *OBS[CF_OBSERVABLES][2];
 
 extern int FIPS_MODE;
-extern char POLICY_SERVER[CF_BUFSIZE];
+extern char POLICY_SERVER[CF_MAX_IP_LEN];
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;
 
@@ -89,9 +89,7 @@ extern Rlist *CF_STCK;
 
 extern int CF_PERSISTENCE;
 extern int LOOKUP;
-extern int BOOTSTRAP;
 
-extern const char *CF_DATATYPES[];
 extern const char *CF_AGENTTYPES[];
 
 extern int CFA_MAXTHREADS;

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -57,10 +57,7 @@
 #include "audit.h"
 #include "sort.h"
 #include "logging.h"
-
-#ifdef HAVE_NOVA
-# include "cf.nova.h"
-#endif
+#include "set.h"
 
 #include <libgen.h>
 #include <assert.h>
@@ -155,7 +152,16 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         }
         else
         {
-            snprintf(address, sizeof(address), "%s", IPString2Hostname(ip->name));
+            char hostname[MAXHOSTNAMELEN];
+            if (IPString2Hostname(hostname, ip->name, sizeof(hostname)) != -1)
+            {
+                snprintf(address, sizeof(address), "%s", hostname);
+            }
+            else
+            {
+                /* Not numeric address was requested, but IP was unresolvable. */
+                snprintf(address, sizeof(address), "%s", ip->name);
+            }
         }
 
         if (entrytime < now - horizon)
@@ -436,18 +442,46 @@ static FnCallResult FnCallEscape(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 static FnCallResult FnCallHost2IP(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char *name = RlistScalarValue(finalargs);
+    char ipaddr[CF_MAX_IP_LEN];
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(Hostname2IPString(name)), RVAL_TYPE_SCALAR } };
+    if (Hostname2IPString(ipaddr, name, sizeof(ipaddr)) != -1)
+    {
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(ipaddr), RVAL_TYPE_SCALAR }
+        };
+    }
+    else
+    {
+        /* Retain legacy behaviour,
+           return hostname in case resolution fails. */
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(name), RVAL_TYPE_SCALAR }
+        };
+    }
+
 }
 
 /*********************************************************************/
 
 static FnCallResult FnCallIP2Host(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-/* begin fn specific content */
+    char hostname[MAXHOSTNAMELEN];
     char *ip = RlistScalarValue(finalargs);
 
-    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(IPString2Hostname(ip)), RVAL_TYPE_SCALAR } };
+    if (IPString2Hostname(hostname, ip, sizeof(hostname)) != -1)
+    {
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(hostname), RVAL_TYPE_SCALAR }
+        };
+    }
+    else
+    {
+        /* Retain legacy behaviour,
+           return ip address in case resolution fails. */
+        return (FnCallResult) {
+            FNCALL_SUCCESS, { xstrdup(ip), RVAL_TYPE_SCALAR }
+        };
+    }
 }
 
 /*********************************************************************/
@@ -1283,7 +1317,6 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     double sum = 0;
 
 /* begin fn specific content */
@@ -1321,7 +1354,7 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
 
@@ -1346,7 +1379,6 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     char lval[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE];
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     double product = 1.0;
 
 /* begin fn specific content */
@@ -1385,7 +1417,7 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         double x;
         if (!DoubleFromString(rp->item, &x))
@@ -1410,7 +1442,6 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     char lval[CF_MAXVARSIZE], *joined;
     char scopeid[CF_MAXVARSIZE];
     Rval rval2;
-    Rlist *rp;
     int size = 0;
 
 /* begin fn specific content */
@@ -1452,7 +1483,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         if (strcmp(rp->item, CF_NULL_VALUE) == 0)
         {
@@ -1465,7 +1496,7 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     joined = xcalloc(1, size + 1);
     size = 0;
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         if (strcmp(rp->item, CF_NULL_VALUE) == 0)
         {
@@ -1510,7 +1541,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
     {
         char line[CF_BUFSIZE];
 
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {
@@ -1582,7 +1613,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
     for (;;)
     {
         char line[CF_BUFSIZE];
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {
@@ -1789,7 +1820,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char expbuf[CF_EXPANDSIZE], lval[CF_MAXVARSIZE], scopeid[CF_MAXVARSIZE];
-    Rlist *rp, *newlist = NULL;
+    Rlist *newlist = NULL;
     Rval rval;
     DataType retype;
 
@@ -1840,7 +1871,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval.item; rp != NULL; rp = rp->next)
     {
         ScopeNewSpecialScalar(ctx, "this", "this", (char *) rp->item, DATA_TYPE_STRING);
 
@@ -2379,7 +2410,7 @@ static bool GetListReferenceArgument(const EvalContext *ctx, const FnCall *fp, c
 static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, char *name, int do_regex, int invert, long max)
 {
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2390,7 +2421,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     long match_count = 0;
     long total = 0;
-    for (rp = (Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
         int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
 
@@ -2460,7 +2491,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     long max = IntFromString(RlistScalarValue(finalargs->next->next)); // max results
 
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2472,7 +2503,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     if (head)
     {
         long count = 0;
-        for (rp = (Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
+        for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && count < max; rp = rp->next)
         {
             RlistAppendScalar(&returnlist, rp->item);
             count++;
@@ -2480,7 +2511,7 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     }
     else if (max > 0) // tail mode
     {
-        rp = (Rlist *) rval2.item;
+        const Rlist *rp = (const Rlist *) rval2.item;
         int length = RlistLen((const Rlist *) rp);
 
         int offset = max >= length ? 0 : length-max;
@@ -2499,12 +2530,103 @@ static FnCallResult FnCallSublist(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 /*********************************************************************/
 
+static FnCallResult FnCallSetop(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    bool difference = (0 == strcmp(fp->name, "difference"));
+
+    const char *name_a = RlistScalarValue(finalargs);
+    const char *name_b = RlistScalarValue(finalargs->next);
+
+    Rval rval_a;
+    if (!GetListReferenceArgument(ctx, fp, name_a, &rval_a, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Rval rval_b;
+    if (!GetListReferenceArgument(ctx, fp, name_b, &rval_b, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Rlist *returnlist = NULL;
+    RlistAppendScalar(&returnlist, CF_NULL_VALUE);
+
+    StringSet *set_b = StringSetNew();
+    for (const Rlist *rp_b = rval_b.item; rp_b != NULL; rp_b = rp_b->next)
+    {
+        StringSetAdd(set_b, xstrdup(rp_b->item));
+    }
+
+    for (const Rlist *rp_a = rval_a.item; rp_a != NULL; rp_a = rp_a->next)
+    {
+        if (strcmp(rp_a->item, CF_NULL_VALUE) == 0)
+        {
+            continue;
+        }
+
+        // Yes, this is an XOR.  But it's more legible this way.
+        if (difference && StringSetContains(set_b, rp_a->item))
+        {
+            continue;
+        }
+
+        if (!difference && !StringSetContains(set_b, rp_a->item))
+        {
+            continue;
+        }
+                
+        RlistAppendScalarIdemp(&returnlist, rp_a->item);
+    }
+
+    StringSetDestroy(set_b);
+
+    return (FnCallResult) { FNCALL_SUCCESS, (Rval) { returnlist, RVAL_TYPE_LIST } };
+}
+
+/*********************************************************************/
+
+static FnCallResult FnCallLength(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    const char *name = RlistScalarValue(finalargs);
+
+    Rval rval2;
+    char buffer[CF_BUFSIZE];
+    int count = 0;
+
+    if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
+    {
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    bool null_seen = false;
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    {
+        if (strcmp(rp->item, CF_NULL_VALUE) == 0)
+        {
+            null_seen = true;
+        }
+        count++;
+    }
+
+    if (count == 1 && null_seen)
+    {
+        count = 0;
+    }
+
+    snprintf(buffer, CF_MAXVARSIZE, "%d", count);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
+
 static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     const char *name = RlistScalarValue(finalargs);
 
     Rval rval2;
-    Rlist *rp, *returnlist = NULL;
+    Rlist *returnlist = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
@@ -2513,7 +2635,7 @@ static FnCallResult FnCallUniq(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     RlistAppendScalar(&returnlist, CF_NULL_VALUE);
 
-    for (rp = (Rlist *) rval2.item; rp != NULL; rp = rp->next)
+    for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL; rp = rp->next)
     {
         RlistAppendScalarIdemp(&returnlist, rp->item);
     }
@@ -2529,14 +2651,14 @@ static FnCallResult FnCallNth(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     long offset = IntFromString(RlistScalarValue(finalargs->next)); // offset
 
     Rval rval2;
-    Rlist *rp = NULL;
 
     if (!GetListReferenceArgument(ctx, fp, name, &rval2, NULL))
     {
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    for (rp = (Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
+    const Rlist *rp;
+    for (rp = (const Rlist *) rval2.item; rp != NULL && offset--; rp = rp->next);
 
     if (NULL == rp) return (FnCallResult) { FNCALL_FAILURE };
 
@@ -3265,7 +3387,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         {
             char line[CF_BUFSIZE];
 
-            if (fgets(line, CF_BUFSIZE, fin) == NULL)
+            if (fgets(line, sizeof(line), fin) == NULL)
             {
                 if (ferror(fin))
                 {
@@ -3799,7 +3921,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 // Read once to validate structure of file in itemlist
 
     CfDebug("Read string data from file %s\n", filename);
-    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", CF_DATATYPES[type]);
+    snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
@@ -3895,11 +4017,11 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */
@@ -3998,11 +4120,11 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
     if (intIndex)
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarrayidx", DataTypeToString(type));
     }
     else
     {
-        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", CF_DATATYPES[type]);
+        snprintf(fnname, CF_MAXVARSIZE - 1, "read%sarray", DataTypeToString(type));
     }
 
 /* begin fn specific content */
@@ -4313,7 +4435,7 @@ static FnCallResult FnCallDiskFree(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 #if !defined(__MINGW32__)
 
-static FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
     struct passwd *pw;
@@ -4350,7 +4472,7 @@ static FnCallResult FnCallUserExists(EvalContext *ctx, FnCall *fp, Rlist *finala
 
 /*********************************************************************/
 
-static FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+FnCallResult FnCallGroupExists(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
     struct group *gr;
@@ -4551,7 +4673,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 
         if (lcount++ > CF_HASHTABLESIZE)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Array is too big to be read into Cfengine (max 4000)");
+            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Array is too big to be read into CFEngine (max 4000)");
             break;
         }
 
@@ -4960,7 +5082,7 @@ FnCallArg GETFIELDS_ARGS[] =
 
 FnCallArg GETINDICES_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "Cfengine array identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -5314,7 +5436,7 @@ FnCallArg READTCP_ARGS[] =
 
 FnCallArg REGARRAY_ARGS[] =
 {
-    {CF_IDRANGE, DATA_TYPE_STRING, "Cfengine array identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine array identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
@@ -5350,7 +5472,7 @@ FnCallArg REGLINE_ARGS[] =
 
 FnCallArg REGLIST_ARGS[] =
 {
-    {CF_NAKEDLRANGE, DATA_TYPE_STRING, "Cfengine list identifier"},
+    {CF_NAKEDLRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
     {CF_ANYSTRING, DATA_TYPE_STRING, "Regular expression"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
@@ -5512,6 +5634,19 @@ FnCallArg SHUFFLE_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg LENGTH_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
+FnCallArg SETOP_ARGS[] =
+{
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine base list identifier"},
+    {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine filter list identifier"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5520,183 +5655,118 @@ FnCallArg SHUFFLE_ARGS[] =
 
 const FnCallType CF_FNCALL_TYPES[] =
 {
-    {"accessedbefore", DATA_TYPE_CONTEXT, ACCESSEDBEFORE_ARGS, &FnCallIsAccessedBefore,
-     "True if arg1 was accessed before arg2 (atime)"},
-    {"accumulated", DATA_TYPE_INT, ACCUM_ARGS, &FnCallAccumulatedDate,
-     "Convert an accumulated amount of time into a system representation"},
-    {"ago", DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation"},
-    {"and", DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true", true},
-    {"canonify", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name"},
-    {"concat", DATA_TYPE_STRING, CONCAT_ARGS, &FnCallConcat, "Concatenate all arguments into string", true},
-    {"changedbefore", DATA_TYPE_CONTEXT, CHANGEDBEFORE_ARGS, &FnCallIsChangedBefore,
-     "True if arg1 was changed before arg2 (ctime)"},
-    {"classify", DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify,
-     "True if the canonicalization of the argument is a currently defined class"},
-    {"classmatch", DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch,
-     "True if the regular expression matches any currently defined class"},
-    {"classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching,
-     "List the defined classes matching regex arg1"},
-    {"countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching,
-     "Count the number of defined classes matching regex arg1"},
-    {"countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching,
-     "Count the number of lines matching regex arg1 in file arg2"},
-    {"dirname", DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path"},
-    {"diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree,
-     "Return the free space (in KB) available on the directory's current partition (0 if not found)"},
-    {"escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string"},
-    {"every", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
-     "True if every element in the named list matches the given regular expression"},
-    {"execresult", DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable"},
-    {"fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed"},
-    {"filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed"},
-    {"filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file"},
-    {"filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file"},
-    {"filter", DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter,
-     "Similarly to grep(), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5."},
-    {"getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv,
-     "Return the environment variable named arg1, truncated at arg2 characters"},
-    {"getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields,
-     "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4"},
-    {"getgid", DATA_TYPE_INT, GETGID_ARGS, &FnCallGetGid, "Return the integer group id of the named group on this host"},
-    {"getindices", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetIndices,
-     "Get a list of keys to the array whose id is the argument and assign to variable"},
-    {"getuid", DATA_TYPE_INT, GETUID_ARGS, &FnCallGetUid, "Return the integer user id of the named user on this host"},
-    {"getusers", DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers,
-     "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2"},
-    {"getvalues", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues,
-     "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable"},
-    {"grep", DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep,
-     "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2"},
-    {"groupexists", DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists,
-     "True if group or numerical id exists on this host"},
-    {"hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHash, "Return the hash of arg1, type arg2 and assign to a variable"},
-    {"hashmatch", DATA_TYPE_CONTEXT, HASHMATCH_ARGS, &FnCallHashMatch,
-     "Compute the hash of arg1, of type arg2 and test if it matches the value in arg3"},
-    {"host2ip", DATA_TYPE_STRING, HOST2IP_ARGS, &FnCallHost2IP, "Returns the primary name-service IP address for the named host"},
-    {"ip2host", DATA_TYPE_STRING, IP2HOST_ARGS, &FnCallIP2Host, "Returns the primary name-service host name for the IP address"},
-    {"hostinnetgroup", DATA_TYPE_CONTEXT, HOSTINNETGROUP_ARGS, &FnCallHostInNetgroup,
-     "True if the current host is in the named netgroup"},
-    {"hostrange", DATA_TYPE_CONTEXT, HOSTRANGE_ARGS, &FnCallHostRange,
-     "True if the current host lies in the range of enumerated hostnames specified"},
-    {"hostsseen", DATA_TYPE_STRING_LIST, HOSTSSEEN_ARGS, &FnCallHostsSeen,
-     "Extract the list of hosts last seen/not seen within the last arg1 hours"},
-    {"hostswithclass", DATA_TYPE_STRING_LIST, HOSTSWITHCLASS_ARGS, &FnCallHostsWithClass,
-     "Extract the list of hosts with the given class set from the hub database (commercial extension)"},
-    {"hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge,
-     "Read global knowledge from the hub host by id (commercial extension)"},
-    {"ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true},
-    {"iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange,
-     "True if the current host lies in the range of IP addresses specified"},
-    {"irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use"},
-    {"isdir", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory"},
-    {"isexecutable", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat,
-     "True if the named object has execution rights for the current user"},
-    {"isgreaterthan", DATA_TYPE_CONTEXT, ISGREATERTHAN_ARGS, &FnCallIsLessGreaterThan,
-     "True if arg1 is numerically greater than arg2, else compare strings like strcmp"},
-    {"islessthan", DATA_TYPE_CONTEXT, ISLESSTHAN_ARGS, &FnCallIsLessGreaterThan,
-     "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp"},
-    {"islink", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link"},
-    {"isnewerthan", DATA_TYPE_CONTEXT, ISNEWERTHAN_ARGS, &FnCallIsNewerThan,
-     "True if arg1 is newer (modified later) than arg2 (mtime)"},
-    {"isplain", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a plain/regular file"},
-    {"isvariable", DATA_TYPE_CONTEXT, ISVARIABLE_ARGS, &FnCallIsVariable, "True if the named variable is defined"},
-    {"join", DATA_TYPE_STRING, JOIN_ARGS, &FnCallJoin, "Join the items of arg2 into a string, using the conjunction in arg1"},
-    {"lastnode", DATA_TYPE_STRING, LASTNODE_ARGS, &FnCallLastNode,
-     "Extract the last of a separated string, e.g. filename from a path"},
-    {"laterthan", DATA_TYPE_CONTEXT, LATERTHAN_ARGS, &FnCallLaterThan, "True if the current time is later than the given date"},
-    {"ldaparray", DATA_TYPE_CONTEXT, LDAPARRAY_ARGS, &FnCallLDAPArray, "Extract all values from an ldap record"},
-    {"ldaplist", DATA_TYPE_STRING_LIST, LDAPLIST_ARGS, &FnCallLDAPList, "Extract all named values from multiple ldap records"},
-    {"ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap"},
-    {"lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir,
-     "Return a list of files in a directory matching a regular expression"},
-    {"maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray,
-     "Return a list with each element modified by a pattern based $(this.k) and $(this.v)"},
-    {"maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList,
-     "Return a list with each element modified by a pattern based $(this)"},
-    {"none", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
-     "True if no element in the named list matches the given regular expression"},
-    {"not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false"},
-    {"now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation"},
-    {"nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list arg1"},
-    {"on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation"},
-    {"or", DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true", true},
-    {"parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray,
-     "Read an array of integers from a file and assign the dimension to a variable"},
-    {"parserealarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseRealArray,
-     "Read an array of real numbers from a file and assign the dimension to a variable"},
-    {"parsestringarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArray,
-     "Read an array of strings from a file and assign the dimension to a variable"},
-    {"parsestringarrayidx", DATA_TYPE_INT, PARSESTRINGARRAYIDX_ARGS, &FnCallParseStringArrayIndex,
-     "Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
-    {"peers", DATA_TYPE_STRING_LIST, PEERS_ARGS, &FnCallPeers,
-     "Get a list of peers (not including ourself) from the partition to which we belong"},
-    {"peerleader", DATA_TYPE_STRING, PEERLEADER_ARGS, &FnCallPeerLeader,
-     "Get the assigned peer-leader of the partition to which we belong"},
-    {"peerleaders", DATA_TYPE_STRING_LIST, PEERLEADERS_ARGS, &FnCallPeerLeaders,
-     "Get a list of peer leaders from the named partitioning"},
-    {"product", DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallProduct, "Return the product of a list of reals"},
-    {"randomint", DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits"},
-    {"readfile", DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile,
-     "Read max number of bytes from named file and assign to variable"},
-    {"readintarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray,
-     "Read an array of integers from a file and assign the dimension to a variable"},
-    {"readintlist", DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList,
-     "Read and assign a list variable from a file of separated ints"},
-    {"readrealarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray,
-     "Read an array of real numbers from a file and assign the dimension to a variable"},
-    {"readreallist", DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList,
-     "Read and assign a list variable from a file of separated real numbers"},
-    {"readstringarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArray,
-     "Read an array of strings from a file and assign the dimension to a variable"},
-    {"readstringarrayidx", DATA_TYPE_INT, READSTRINGARRAYIDX_ARGS, &FnCallReadStringArrayIndex,
-     "Read an array of strings from a file and assign the dimension to a variable with integer indeces"},
-    {"readstringlist", DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList,
-     "Read and assign a list variable from a file of separated strings"},
-    {"readtcp", DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable"},
-    {"regarray", DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegArray,
-     "True if arg1 matches any item in the associative array with id=arg2"},
-    {"regcmp", DATA_TYPE_CONTEXT, REGCMP_ARGS, &FnCallRegCmp,
-     "True if arg1 is a regular expression matching that matches string arg2"},
-    {"regextract", DATA_TYPE_CONTEXT, REGEXTRACT_ARGS, &FnCallRegExtract,
-     "True if the regular expression in arg 1 matches the string in arg2 and sets a non-empty array of backreferences named arg3"},
-    {"registryvalue", DATA_TYPE_STRING, REGISTRYVALUE_ARGS, &FnCallRegistryValue,
-     "Returns a value for an MS-Win registry key,value pair"},
-    {"regline", DATA_TYPE_CONTEXT, REGLINE_ARGS, &FnCallRegLine,
-     "True if the regular expression in arg1 matches a line in file arg2"},
-    {"reglist", DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList,
-     "True if the regular expression in arg2 matches any item in the list whose id is arg1"},
-    {"regldap", DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP,
-     "True if the regular expression in arg6 matches a value item in an ldap search"},
-    {"remotescalar", DATA_TYPE_STRING, REMOTESCALAR_ARGS, &FnCallRemoteScalar,
-     "Read a scalar value from a remote cfengine server"},
-    {"remoteclassesmatching", DATA_TYPE_CONTEXT, REMOTECLASSESMATCHING_ARGS, &FnCallRemoteClassesMatching,
-     "Read persistent classes matching a regular expression from a remote cfengine server and add them into local context with prefix"},
-    {"returnszero", DATA_TYPE_CONTEXT, RETURNSZERO_ARGS, &FnCallReturnsZero, "True if named shell command has exit status zero"},
-    {"rrange", DATA_TYPE_REAL_RANGE, RRANGE_ARGS, &FnCallRRange, "Define a range of real numbers for cfengine internal use"},
-    {"reverse", DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a string list"},
-    {"selectservers", DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers,
-     "Select tcp servers which respond correctly to a query and return their number, set array of names"},
-    {"shuffle", DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle a string list"},
-    {"some", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone,
-     "True if an element in the named list matches the given regular expression"},
-    {"sort", DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort,
-     "Sort a string list"},
-    {"splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass,
-     "True if the first argument's time-slot has arrived, according to a policy in arg2"},
-    {"splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString,
-     "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2"},
-    {"strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly"},
-    {"strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string"},
-    {"sublist", DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist,
-     "Returns arg3 element from either the head or the tail (according to arg2) of list arg1."},
-    {"sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals"},
-    {"translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath,
-     "Translate path separators from Unix style to the host's native"},
-    {"uniq", DATA_TYPE_STRING_LIST, UNIQ_ARGS, &FnCallUniq,
-     "Returns all the unique elements of list arg1"},
-    {"usemodule", DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule,
-     "Execute cfengine module script and set class if successful"},
-    {"userexists", DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists,
-     "True if user name or numerical id exists on this host"},
-    {NULL}
+    FnCallTypeNew("accessedbefore", DATA_TYPE_CONTEXT, ACCESSEDBEFORE_ARGS, &FnCallIsAccessedBefore, "True if arg1 was accessed before arg2 (atime)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("accumulated", DATA_TYPE_INT, ACCUM_ARGS, &FnCallAccumulatedDate, "Convert an accumulated amount of time into a system representation", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ago", DATA_TYPE_INT, AGO_ARGS, &FnCallAgoDate, "Convert a time relative to now to an integer system representation", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("and", DATA_TYPE_STRING, AND_ARGS, &FnCallAnd, "Calculate whether all arguments evaluate to true", true, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("canonify", DATA_TYPE_STRING, CANONIFY_ARGS, &FnCallCanonify, "Convert an abitrary string into a legal class name", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("concat", DATA_TYPE_STRING, CONCAT_ARGS, &FnCallConcat, "Concatenate all arguments into string", true, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("changedbefore", DATA_TYPE_CONTEXT, CHANGEDBEFORE_ARGS, &FnCallIsChangedBefore, "True if arg1 was changed before arg2 (ctime)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classify", DATA_TYPE_CONTEXT, CLASSIFY_ARGS, &FnCallClassify, "True if the canonicalization of the argument is a currently defined class", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classmatch", DATA_TYPE_CONTEXT, CLASSMATCH_ARGS, &FnCallClassMatch, "True if the regular expression matches any currently defined class", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("classesmatching", DATA_TYPE_STRING_LIST, CLASSMATCH_ARGS, &FnCallClassesMatching, "List the defined classes matching regex arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("countclassesmatching", DATA_TYPE_INT, COUNTCLASSESMATCHING_ARGS, &FnCallCountClassesMatching, "Count the number of defined classes matching regex arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("countlinesmatching", DATA_TYPE_INT, COUNTLINESMATCHING_ARGS, &FnCallCountLinesMatching, "Count the number of lines matching regex arg1 in file arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("difference", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are not in list arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("dirname", DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("every", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("execresult", DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("filesexist", DATA_TYPE_CONTEXT, FILESEXIST_ARGS, &FnCallFileSexist, "True if the named list of files can ALL be accessed", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("filesize", DATA_TYPE_INT, FILESTAT_ARGS, &FnCallFileStat, "Returns the size in bytes of the file", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("filestat", DATA_TYPE_STRING, FILESTAT_DETAIL_ARGS, &FnCallFileStatDetails, "Returns stat() details of the file", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("filter", DATA_TYPE_STRING_LIST, FILTER_ARGS, &FnCallFilter, "Similarly to grep(, SYNTAX_STATUS_NORMAL), filter the list arg2 for matches to arg2.  The matching can be as a regular expression or exactly depending on arg3.  The matching can be inverted with arg4.  A maximum on the number of matches returned can be set with arg5.", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getenv", DATA_TYPE_STRING, GETENV_ARGS, &FnCallGetEnv, "Return the environment variable named arg1, truncated at arg2 characters", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getfields", DATA_TYPE_INT, GETFIELDS_ARGS, &FnCallGetFields, "Get an array of fields in the lines matching regex arg1 in file arg2, split on regex arg3 as array name arg4", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getgid", DATA_TYPE_INT, GETGID_ARGS, &FnCallGetGid, "Return the integer group id of the named group on this host", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getindices", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetIndices, "Get a list of keys to the array whose id is the argument and assign to variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getuid", DATA_TYPE_INT, GETUID_ARGS, &FnCallGetUid, "Return the integer user id of the named user on this host", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getusers", DATA_TYPE_STRING_LIST, GETUSERS_ARGS, &FnCallGetUsers, "Get a list of all system users defined, minus those names defined in arg1 and uids in arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("getvalues", DATA_TYPE_STRING_LIST, GETINDICES_ARGS, &FnCallGetValues, "Get a list of values corresponding to the right hand sides in an array whose id is the argument and assign to variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("grep", DATA_TYPE_STRING_LIST, GREP_ARGS, &FnCallGrep, "Extract the sub-list if items matching the regular expression in arg1 of the list named in arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("groupexists", DATA_TYPE_CONTEXT, GROUPEXISTS_ARGS, &FnCallGroupExists, "True if group or numerical id exists on this host", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hash", DATA_TYPE_STRING, HASH_ARGS, &FnCallHash, "Return the hash of arg1, type arg2 and assign to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hashmatch", DATA_TYPE_CONTEXT, HASHMATCH_ARGS, &FnCallHashMatch, "Compute the hash of arg1, of type arg2 and test if it matches the value in arg3", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("host2ip", DATA_TYPE_STRING, HOST2IP_ARGS, &FnCallHost2IP, "Returns the primary name-service IP address for the named host", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ip2host", DATA_TYPE_STRING, IP2HOST_ARGS, &FnCallIP2Host, "Returns the primary name-service host name for the IP address", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hostinnetgroup", DATA_TYPE_CONTEXT, HOSTINNETGROUP_ARGS, &FnCallHostInNetgroup, "True if the current host is in the named netgroup", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hostrange", DATA_TYPE_CONTEXT, HOSTRANGE_ARGS, &FnCallHostRange, "True if the current host lies in the range of enumerated hostnames specified", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hostsseen", DATA_TYPE_STRING_LIST, HOSTSSEEN_ARGS, &FnCallHostsSeen, "Extract the list of hosts last seen/not seen within the last arg1 hours", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hostswithclass", DATA_TYPE_STRING_LIST, HOSTSWITHCLASS_ARGS, &FnCallHostsWithClass, "Extract the list of hosts with the given class set from the hub database (commercial extension)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("hubknowledge", DATA_TYPE_STRING, HUB_KNOWLEDGE_ARGS, &FnCallHubKnowledge, "Read global knowledge from the hub host by id (commercial extension)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ifelse", DATA_TYPE_STRING, IFELSE_ARGS, &FnCallIfElse, "Do If-ElseIf-ElseIf-...-Else evaluation of arguments", true, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("intersection", DATA_TYPE_STRING_LIST, SETOP_ARGS, &FnCallSetop, "Returns all the unique elements of list arg1 that are also in list arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("iprange", DATA_TYPE_CONTEXT, IPRANGE_ARGS, &FnCallIPRange, "True if the current host lies in the range of IP addresses specified", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isdir", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isexecutable", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object has execution rights for the current user", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isgreaterthan", DATA_TYPE_CONTEXT, ISGREATERTHAN_ARGS, &FnCallIsLessGreaterThan, "True if arg1 is numerically greater than arg2, else compare strings like strcmp", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("islessthan", DATA_TYPE_CONTEXT, ISLESSTHAN_ARGS, &FnCallIsLessGreaterThan, "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("islink", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isnewerthan", DATA_TYPE_CONTEXT, ISNEWERTHAN_ARGS, &FnCallIsNewerThan, "True if arg1 is newer (modified later) than arg2 (mtime)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isplain", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a plain/regular file", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isvariable", DATA_TYPE_CONTEXT, ISVARIABLE_ARGS, &FnCallIsVariable, "True if the named variable is defined", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("join", DATA_TYPE_STRING, JOIN_ARGS, &FnCallJoin, "Join the items of arg2 into a string, using the conjunction in arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("lastnode", DATA_TYPE_STRING, LASTNODE_ARGS, &FnCallLastNode, "Extract the last of a separated string, e.g. filename from a path", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("laterthan", DATA_TYPE_CONTEXT, LATERTHAN_ARGS, &FnCallLaterThan, "True if the current time is later than the given date", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ldaparray", DATA_TYPE_CONTEXT, LDAPARRAY_ARGS, &FnCallLDAPArray, "Extract all values from an ldap record", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ldaplist", DATA_TYPE_STRING_LIST, LDAPLIST_ARGS, &FnCallLDAPList, "Extract all named values from multiple ldap records", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("ldapvalue", DATA_TYPE_STRING, LDAPVALUE_ARGS, &FnCallLDAPValue, "Extract the first matching named value from ldap", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("length", DATA_TYPE_INT, LENGTH_ARGS, &FnCallLength, "Return the length of a list", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("lsdir", DATA_TYPE_STRING_LIST, LSDIRLIST_ARGS, &FnCallLsDir, "Return a list of files in a directory matching a regular expression", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("maparray", DATA_TYPE_STRING_LIST, MAPARRAY_ARGS, &FnCallMapArray, "Return a list with each element modified by a pattern based $(this.k) and $(this.v)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("maplist", DATA_TYPE_STRING_LIST, MAPLIST_ARGS, &FnCallMapList, "Return a list with each element modified by a pattern based $(this)", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("none", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if no element in the named list matches the given regular expression", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("not", DATA_TYPE_STRING, NOT_ARGS, &FnCallNot, "Calculate whether argument is false", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("now", DATA_TYPE_INT, NOW_ARGS, &FnCallNow, "Convert the current time into system representation", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("nth", DATA_TYPE_STRING, NTH_ARGS, &FnCallNth, "Get the element at arg2 in list arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("on", DATA_TYPE_INT, DATE_ARGS, &FnCallOn, "Convert an exact date/time to an integer system representation", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("or", DATA_TYPE_STRING, OR_ARGS, &FnCallOr, "Calculate whether any argument evaluates to true", true, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parseintarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseIntArray, "Read an array of integers from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parserealarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseRealArray, "Read an array of real numbers from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parsestringarray", DATA_TYPE_INT, PARSESTRINGARRAY_ARGS, &FnCallParseStringArray, "Read an array of strings from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("parsestringarrayidx", DATA_TYPE_INT, PARSESTRINGARRAYIDX_ARGS, &FnCallParseStringArrayIndex, "Read an array of strings from a file and assign the dimension to a variable with integer indeces", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("peers", DATA_TYPE_STRING_LIST, PEERS_ARGS, &FnCallPeers, "Get a list of peers (not including ourself) from the partition to which we belong", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("peerleader", DATA_TYPE_STRING, PEERLEADER_ARGS, &FnCallPeerLeader, "Get the assigned peer-leader of the partition to which we belong", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("peerleaders", DATA_TYPE_STRING_LIST, PEERLEADERS_ARGS, &FnCallPeerLeaders, "Get a list of peer leaders from the named partitioning", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("product", DATA_TYPE_REAL, PRODUCT_ARGS, &FnCallProduct, "Return the product of a list of reals", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("randomint", DATA_TYPE_INT, RANDOMINT_ARGS, &FnCallRandomInt, "Generate a random integer between the given limits", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readfile", DATA_TYPE_STRING, READFILE_ARGS, &FnCallReadFile, "Read max number of bytes from named file and assign to variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readintarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadIntArray, "Read an array of integers from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readintlist", DATA_TYPE_INT_LIST, READSTRINGLIST_ARGS, &FnCallReadIntList, "Read and assign a list variable from a file of separated ints", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readrealarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadRealArray, "Read an array of real numbers from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readreallist", DATA_TYPE_REAL_LIST, READSTRINGLIST_ARGS, &FnCallReadRealList, "Read and assign a list variable from a file of separated real numbers", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readstringarray", DATA_TYPE_INT, READSTRINGARRAY_ARGS, &FnCallReadStringArray, "Read an array of strings from a file and assign the dimension to a variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readstringarrayidx", DATA_TYPE_INT, READSTRINGARRAYIDX_ARGS, &FnCallReadStringArrayIndex, "Read an array of strings from a file and assign the dimension to a variable with integer indeces", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readstringlist", DATA_TYPE_STRING_LIST, READSTRINGLIST_ARGS, &FnCallReadStringList, "Read and assign a list variable from a file of separated strings", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("readtcp", DATA_TYPE_STRING, READTCP_ARGS, &FnCallReadTcp, "Connect to tcp port, send string and assign result to variable", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regarray", DATA_TYPE_CONTEXT, REGARRAY_ARGS, &FnCallRegArray, "True if arg1 matches any item in the associative array with id=arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regcmp", DATA_TYPE_CONTEXT, REGCMP_ARGS, &FnCallRegCmp, "True if arg1 is a regular expression matching that matches string arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regextract", DATA_TYPE_CONTEXT, REGEXTRACT_ARGS, &FnCallRegExtract, "True if the regular expression in arg 1 matches the string in arg2 and sets a non-empty array of backreferences named arg3", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("registryvalue", DATA_TYPE_STRING, REGISTRYVALUE_ARGS, &FnCallRegistryValue, "Returns a value for an MS-Win registry key,value pair", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regline", DATA_TYPE_CONTEXT, REGLINE_ARGS, &FnCallRegLine, "True if the regular expression in arg1 matches a line in file arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("reglist", DATA_TYPE_CONTEXT, REGLIST_ARGS, &FnCallRegList, "True if the regular expression in arg2 matches any item in the list whose id is arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("regldap", DATA_TYPE_CONTEXT, REGLDAP_ARGS, &FnCallRegLDAP, "True if the regular expression in arg6 matches a value item in an ldap search", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("remotescalar", DATA_TYPE_STRING, REMOTESCALAR_ARGS, &FnCallRemoteScalar, "Read a scalar value from a remote cfengine server", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("remoteclassesmatching", DATA_TYPE_CONTEXT, REMOTECLASSESMATCHING_ARGS, &FnCallRemoteClassesMatching, "Read persistent classes matching a regular expression from a remote cfengine server and add them into local context with prefix", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("returnszero", DATA_TYPE_CONTEXT, RETURNSZERO_ARGS, &FnCallReturnsZero, "True if named shell command has exit status zero", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("rrange", DATA_TYPE_REAL_RANGE, RRANGE_ARGS, &FnCallRRange, "Define a range of real numbers for cfengine internal use", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("reverse", DATA_TYPE_STRING_LIST, REVERSE_ARGS, &FnCallReverse, "Reverse a string list", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("selectservers", DATA_TYPE_INT, SELECTSERVERS_ARGS, &FnCallSelectServers, "Select tcp servers which respond correctly to a query and return their number, set array of names", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("shuffle", DATA_TYPE_STRING_LIST, SHUFFLE_ARGS, &FnCallShuffle, "Shuffle a string list", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("some", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if an element in the named list matches the given regular expression", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("sort", DATA_TYPE_STRING_LIST, SORT_ARGS, &FnCallSort, "Sort a string list", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("splayclass", DATA_TYPE_CONTEXT, SPLAYCLASS_ARGS, &FnCallSplayClass, "True if the first argument's time-slot has arrived, according to a policy in arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("splitstring", DATA_TYPE_STRING_LIST, SPLITSTRING_ARGS, &FnCallSplitString, "Convert a string in arg1 into a list of max arg3 strings by splitting on a regular expression in arg2", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("strcmp", DATA_TYPE_CONTEXT, STRCMP_ARGS, &FnCallStrCmp, "True if the two strings match exactly", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("strftime", DATA_TYPE_STRING, STRFTIME_ARGS, &FnCallStrftime, "Format a date and time string", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("sublist", DATA_TYPE_STRING_LIST, SUBLIST_ARGS, &FnCallSublist, "Returns arg3 element from either the head or the tail (according to arg2) of list arg1.", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("sum", DATA_TYPE_REAL, SUM_ARGS, &FnCallSum, "Return the sum of a list of reals", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("translatepath", DATA_TYPE_STRING, TRANSLATEPATH_ARGS, &FnCallTranslatePath, "Translate path separators from Unix style to the host's native", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("uniq", DATA_TYPE_STRING_LIST, UNIQ_ARGS, &FnCallUniq, "Returns all the unique elements of list arg1", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("usemodule", DATA_TYPE_CONTEXT, USEMODULE_ARGS, &FnCallUseModule, "Execute cfengine module script and set class if successful", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("userexists", DATA_TYPE_CONTEXT, USEREXISTS_ARGS, &FnCallUserExists, "True if user name or numerical id exists on this host", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNewNull()
 };

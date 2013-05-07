@@ -1,24 +1,23 @@
 /*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -34,6 +33,9 @@
 #include "parser.h"
 #include "sysinfo.h"
 #include "logging_old.h"
+#include "man.h"
+
+#include <time.h>
 
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
@@ -41,9 +43,13 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The promise agent is a validator and analysis tool for\n"
-    "configuration files belonging to any of the components\n"
-    "of Cfengine. Configurations that make changes must be\n" "approved by this validator before being executed.";
+static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
+
+static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
+        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
+        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+        "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
+        "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
 static const struct option OPTIONS[] =
 {
@@ -60,6 +66,7 @@ static const struct option OPTIONS[] =
     {"diagnostic", no_argument, 0, 'x'},
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
+    {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
     {NULL, 0, 0, '\0'}
@@ -80,6 +87,7 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
+    "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
     NULL
@@ -155,7 +163,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:hW:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
@@ -208,6 +216,27 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             }
             break;
 
+        case 's':
+            if (strcmp("none", optarg) == 0)
+            {
+                break;
+            }
+            else if (strcmp("json", optarg) == 0)
+            {
+                JsonElement *json_syntax = SyntaxToJson();
+                Writer *out = FileWriter(stdout);
+                JsonElementPrint(out, json_syntax, 0);
+                FileWriterDetach(out);
+                JsonElementDestroy(json_syntax);
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Invalid syntax description output format: '%s'. Possible values are 'none', 'json'", optarg);
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         case 'K':
             IGNORELOCK = true;
             break;
@@ -240,12 +269,20 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         case 'h':
-            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-promises", time(NULL),
+                             CF_PROMISES_SHORT_DESCRIPTION,
+                             CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'r':
             SHOWREPORTS = true;
@@ -264,7 +301,7 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             exit(0);
 
         default:
-            Syntax("cf-promises", OPTIONS, HINTS, ID, true);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(1);
 
         }

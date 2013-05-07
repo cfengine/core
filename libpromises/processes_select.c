@@ -1,23 +1,23 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -47,7 +47,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
 static int SelectProcTimeAbsRangeMatch(char *name1, char *name2, time_t min, time_t max, char **names, char **line);
 static int GetProcColumnIndex(char *name1, char *name2, char **names);
 static void GetProcessColumnNames(char *proc, char **names, int *start, int *end);
-static int ExtractPid(char *psentry, char **names, int *start, int *end);
+static int ExtractPid(char *psentry, char **names, int *end);
 
 /***************************************************************************/
 
@@ -187,7 +187,7 @@ Item *SelectProcesses(const Item *processes, const char *process_name, ProcessSe
                 continue;
             }
 
-            pid_t pid = ExtractPid(ip->name, names, start, end);
+            pid_t pid = ExtractPid(ip->name, names, end);
 
             if (pid == -1)
             {
@@ -655,7 +655,7 @@ static const char *GetProcessOptions(void)
 }
 #endif
 
-static int ExtractPid(char *psentry, char **names, int *start, int *end)
+static int ExtractPid(char *psentry, char **names, int *end)
 {
     char *sp;
     int col, pid = -1, offset = 0;

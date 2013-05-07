@@ -36,7 +36,6 @@ libpromises_la_SOURCES = \
         dbm_quick.c \
         dbm_tokyocab.c \
         dir.h dir_priv.h \
-        enterprise_stubs.c \
         env_context.c env_context.h \
         evalfunction.c evalfunction.h \
         exec_tools.c exec_tools.h \
@@ -103,6 +102,11 @@ libpromises_la_SOURCES = \
         verify_reports.c \
         verify_vars.c verify_vars.h
 
+if !HAVE_NOVA
+libpromises_la_SOURCES += \
+	enterprise_stubs.c
+endif
+
 if !NT
 
 libpromises_la_SOURCES += \
@@ -156,7 +160,7 @@ MOSTLYCLEANFILES = *~ *.orig *.rej
 # libutils dependency
 
 # Automake need to be guided due to symlinking
-libpromises_la_DEPENDENCIES = ../libutils/libutils.la $(NOVA_LDADD)
+libpromises_la_DEPENDENCIES = ../libutils/libutils.la ../libcfnet/libcfnet.la $(NOVA_LDADD)
 
 .PRECIOUS: ../libutils/libutils.la
 

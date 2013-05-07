@@ -2,6 +2,6 @@
 @verbatim
 body acl template
 {
-specify_inherit_aces => {  "all:r" };
+specify_default_aces => {  "all:r" };
 }
 @end verbatim

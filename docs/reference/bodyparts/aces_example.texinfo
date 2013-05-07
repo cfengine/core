@@ -6,7 +6,7 @@ body acl template
 {
 acl_method => "overwrite";
 acl_type => "posix";
-acl_directory_inherit => "parent";
+acl_default => "access";
 
 aces => { 
         "user:*:r(wwx),-r:allow", 

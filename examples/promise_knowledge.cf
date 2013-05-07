@@ -1182,12 +1182,12 @@ body_constraints::
 body_constraints::
    "acl_type" association => a("is a body constraint of type","(menu option)","has possible body constraints"),
           comment => "Access control list type for the affected file system";
-   "acl_directory_inherit"
-   comment => "Access control list type for the affected file system",
+   "acl_default"
+   comment => "How to apply default (inheritable) access control list",
    association => a("is a possible sub-body constraint for","acl","may have sub-body constraints");
 body_constraints::
-   "acl_directory_inherit" association => a("is a body constraint of type","(menu option)","has possible body constraints"),
-          comment => "Access control list type for the affected file system";
+   "acl_default" association => a("is a body constraint of type","(menu option)","has possible body constraints"),
+          comment => "How to apply default (inheritable) access control list";
    "aces"
    comment => "Native settings for access control entry",
    association => a("is a possible sub-body constraint for","acl","may have sub-body constraints");
@@ -1195,13 +1195,13 @@ body_constraints::
    "aces" association => a("is a body constraint of type","slist","has possible body constraints"),
           comment => "Native settings for access control entry";
    "aces" association => a("is a list of type","slist","is used in");
-   "inherit_aces"
+   "default_aces"
    comment => "Native settings for access control entry",
    association => a("is a possible sub-body constraint for","acl","may have sub-body constraints");
 body_constraints::
-   "inherit_aces" association => a("is a body constraint of type","slist","has possible body constraints"),
+   "default_aces" association => a("is a body constraint of type","slist","has possible body constraints"),
           comment => "Native settings for access control entry";
-   "inherit_aces" association => a("is a list of type","slist","is used in");
+   "default_aces" association => a("is a list of type","slist","is used in");
 promise_types::
    "insert_lines";
 body_constraints::

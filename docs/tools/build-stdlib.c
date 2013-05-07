@@ -49,7 +49,7 @@ while(!feof(fin))
    control[0] = '\0';
    data[0] = '\0';
    type[0] = '\0';
-   fgets(buffer,1023,fin);
+   fgets(buffer, sizeof(buffer),fin);
 
    if (strncmp(buffer,"##",2) == 0)
       {
@@ -141,7 +141,7 @@ if ((fp = fopen(file,"r")) == NULL)
 while(!feof(fp))
    {
    buffer[0] = '\0';
-   fgets(buffer,1023,fp);
+   fgets(buffer, sizeof(buffer),fp);
    fprintf(fout,"%s",buffer);
    }
 

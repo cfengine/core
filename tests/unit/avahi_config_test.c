@@ -41,10 +41,10 @@ static void test_generateAvahiConfig(void)
 
     while (!feof(testfile) && !feof(optfile))
     {
-        memset(buffer1, 0, 256);
-        memset(buffer2, 0 ,256);
-        fgets(buffer1, 256, testfile);
-        fgets(buffer2, 256, optfile);
+        memset(buffer1, 0, sizeof(buffer1));
+        memset(buffer2, 0, sizeof(buffer2));
+        fgets(buffer1, sizeof(buffer1), testfile);
+        fgets(buffer2, sizeof(buffer2), optfile);
         assert_int_equal(strcmp(buffer1, buffer2), 0);
     }
 

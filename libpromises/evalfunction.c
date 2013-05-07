@@ -1541,7 +1541,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
     {
         char line[CF_BUFSIZE];
 
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {
@@ -1613,7 +1613,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
     for (;;)
     {
         char line[CF_BUFSIZE];
-        if (fgets(line, CF_BUFSIZE, fin) == NULL)
+        if (fgets(line, sizeof(line), fin) == NULL)
         {
             if (ferror(fin))
             {
@@ -3387,7 +3387,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         {
             char line[CF_BUFSIZE];
 
-            if (fgets(line, CF_BUFSIZE, fin) == NULL)
+            if (fgets(line, sizeof(line), fin) == NULL)
             {
                 if (ferror(fin))
                 {

@@ -758,7 +758,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
     for(;;)
     {
-        if (fgets(buffer, CF_BUFSIZE, pp) == NULL)
+        if (fgets(buffer, sizeof(buffer), pp) == NULL)
         {
             if (ferror(pp))
             {

@@ -686,7 +686,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
         name[0] = '\0';
         value[0] = '\0';
 
-        if (fgets(context, CF_BUFSIZE, fp) == NULL)
+        if (fgets(context, sizeof(context), fp) == NULL)
         {
             if (ferror(fp))
             {

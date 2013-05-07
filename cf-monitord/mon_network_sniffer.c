@@ -113,7 +113,7 @@ void MonNetworkSnifferOpen(void)
             }
 
             /* Skip first banner */
-            if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+            if (fgets(tcpbuffer, sizeof(tcpbuffer), TCPPIPE) == NULL)
             {
                 UnexpectedError("Failed to read output from '%s'", CF_TCPDUMP_COMM);
                 cf_pclose(TCPPIPE);
@@ -164,7 +164,7 @@ static void Sniff(long iteration, double *cf_this)
             break;
         }
 
-        if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+        if (fgets(tcpbuffer, sizeof(tcpbuffer), TCPPIPE) == NULL)
         {
             UnexpectedError("Unable to read data from tcpdump; closing pipe");
             cf_pclose(TCPPIPE);

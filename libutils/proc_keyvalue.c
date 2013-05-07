@@ -61,7 +61,7 @@ bool ParseKeyValue(FILE *fd, KeyValueCallback callback, void *param)
 {
     char buf[1024];
 
-    while (fgets(buf, 1024, fd))
+    while (fgets(buf, sizeof(buf), fd))
     {
         char *s = strchr(buf, ':');
 

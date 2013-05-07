@@ -31,6 +31,7 @@
 #include <assert.h>
 
 #define STRING_MATCH_OVECCOUNT 30
+#define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 
 char ToLower(char ch)
 {
@@ -839,3 +840,23 @@ char *MemSpanInverse(const char *mem, char c, size_t n)
 
     return (char *)mem;
 }
+
+bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
+{
+    if (regex)
+    {
+        if (!NULL_OR_EMPTY(compareTo) && !StringMatchFull(compareTo, value))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (!NULL_OR_EMPTY(compareTo)  && strcmp(compareTo, value) != 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+

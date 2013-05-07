@@ -292,7 +292,6 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
-    int optindex = 0;
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
@@ -306,12 +305,12 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
    Support rewrite from some common old bootstrap options (until community version 3.6.0?).
  */
 
-    int argc_bootstrap_options_new = argc;
-    char **argv_bootstrap_options_tmp = TranslateOldBootstrapOptionsSeparate(&argc_bootstrap_options_new, argv);
-    char **argv_bootstrap_options_new = TranslateOldBootstrapOptionsConcatenated(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
-    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_tmp);
+    int argc_new = argc;
+    char **argv_tmp = TranslateOldBootstrapOptionsSeparate(&argc_new, argv);
+    char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
+    FreeStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_bootstrap_options_new, argv_bootstrap_options_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
@@ -374,47 +373,23 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 OpenNetwork();
 
                 char mapped_policy_server[CF_MAX_IP_LEN] = "";
-                if (Hostname2IPString(mapped_policy_server, optarg, sizeof(mapped_policy_server)) == -1)
+                if (Hostname2IPString(mapped_policy_server, optarg,
+                                      sizeof(mapped_policy_server)) == -1)
                 {
-                    Log(LOG_LEVEL_ERR, "Could not resolve address '%s', unable to bootstrap", optarg);
+                    Log(LOG_LEVEL_ERR,
+                        "Could not resolve hostname '%s', unable to bootstrap",
+                        optarg);
                     exit(EXIT_FAILURE);
                 }
 
                 CloseNetwork();
 
-                bool alpha = false, v6 = false;
-                for (const char *sp = mapped_policy_server; *sp != '\0'; sp++)
-                {
-                    if (isalpha((int)*sp))
-                    {
-                        alpha = true;
-                    }
-
-                    if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
-                    {
-                        alpha = true;
-                    }
-
-                    if (*sp == ':')
-                    {
-                        v6 = true;
-                    }
-                }
-
-                if (alpha && !v6)
-                {
-                    Log(LOG_LEVEL_ERR, "Error specifying policy server to --boostrap (-B). "
-                        "The policy server's address could not be looked up. "
-                        "Please use the IP address instead if there is no error. "
-                        "Note that the --policy-server (-s) option is deprecated, "
-                        "the argument is taken in --bootstrap (-B) instead.");
-                    exit(EXIT_FAILURE);
-                }
-
                 MINUSF = true;
                 IGNORELOCK = true;
-                GenericAgentConfigSetInputFile(config, GetWorkDir(), "promises.cf");
-                config->agent_specific.agent.bootstrap_policy_server = xstrdup(mapped_policy_server);
+                GenericAgentConfigSetInputFile(config, GetWorkDir(),
+                                               "promises.cf");
+                config->agent_specific.agent.bootstrap_policy_server =
+                    xstrdup(mapped_policy_server);
             }
             break;
 
@@ -484,13 +459,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
         }
     }
 
-    if (!GenericAgentConfigParseArguments(config, argc - optind, argv_bootstrap_options_new + optind))
+    if (!GenericAgentConfigParseArguments(config, argc_new - optind,
+                                          argv_new + optind))
     {
         Log(LOG_LEVEL_ERR, "Too many arguments");
         exit(EXIT_FAILURE);
     }
 
-    FreeStringArray(argc_bootstrap_options_new, argv_bootstrap_options_new);
+    FreeStringArray(argc_new, argv_new);
 
     return config;
 }

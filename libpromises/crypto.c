@@ -145,7 +145,7 @@ bool LoadSecretKeys(const char *policy_server)
         return false;
     }
 
-    if (GetAmPolicyServer(CFWORKDIR))
+    if (GetAmPolicyHub(CFWORKDIR))
     {
         unsigned char digest[EVP_MAX_MD_SIZE + 1];
 

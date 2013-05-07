@@ -77,13 +77,13 @@ static char *AmPolicyHubFilename(const char *workdir)
     return StringFormat("%s%cstate%cam_policy_hub", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
 }
 
-static bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub)
+bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub)
 {
     char *filename = AmPolicyHubFilename(workdir);
     if (am_policy_hub)
     {
         Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
-        if (creat(filename, 0600) != 0)
+        if (creat(filename, 0600) == -1)
         {
             Log(LOG_LEVEL_ERR, "Error writing marker file '%s'", filename);
             free(filename);
@@ -103,24 +103,6 @@ static bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub)
     free(filename);
     return true;
 }
-
-void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
-{
-    bool am_policy_server = IsDefinedClass(ctx, CanonifyName(policy_server), NULL);
-    {
-        char policy_server_ipv4_class[CF_BUFSIZE];
-        snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", CanonifyName(policy_server));
-        am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
-    }
-
-    WriteAmPolicyHub(CFWORKDIR, am_policy_server);
-    if (am_policy_server)
-    {
-        EvalContextHeapAddHard(ctx, "am_policy_hub");
-    }
-}
-
-/********************************************************************/
 
 void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
@@ -216,7 +198,7 @@ bool RemovePolicyServerFile(const char *workdir)
     return true;
 }
 
-bool GetAmPolicyServer(const char *workdir)
+bool GetAmPolicyHub(const char *workdir)
 {
     char path[CF_BUFSIZE] = { 0 };
     snprintf(path, sizeof(path), "%s/state/am_policy_hub", workdir);

@@ -146,7 +146,24 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
         WriteBuiltinFailsafePolicy(GetWorkDir());
-        CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
+
+        bool am_policy_server = false;
+        {
+            const char *canonified_bootstrap_policy_server = CanonifyName(config->agent_specific.agent.bootstrap_policy_server);
+            am_policy_server = IsDefinedClass(ctx, canonified_bootstrap_policy_server, NULL);
+            {
+                char policy_server_ipv4_class[CF_BUFSIZE];
+                snprintf(policy_server_ipv4_class, CF_MAXVARSIZE, "ipv4_%s", canonified_bootstrap_policy_server);
+                am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
+            }
+
+            WriteAmPolicyHub(CFWORKDIR, am_policy_server);
+            if (am_policy_server)
+            {
+                EvalContextHeapAddHard(ctx, "am_policy_hub");
+            }
+        }
+
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
         SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
         Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);

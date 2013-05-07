@@ -27,8 +27,6 @@
 
 #include "cf3.defs.h"
 
-void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server);
-
 /**
  * @brief If new_policy_server is not NULL, it will writes the IP to the policy_server.dat file.
  *        If new_policy_server is NULL, it will not write anything.
@@ -57,8 +55,18 @@ bool RemovePolicyServerFile(const char *workdir);
 /**
  * @return True if the file WORKDIR/state/am_policy_hub exists
  */
-bool GetAmPolicyServer(const char *workdir);
+bool GetAmPolicyHub(const char *workdir);
 
+/**
+ * @brief Set the am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.
+ * @return True if successful
+ */
+bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub);
+
+/**
+ * @brief Write the builtin failsafe policy to the default location
+ * @return True if succesful
+ */
 bool WriteBuiltinFailsafePolicy(const char *workdir);
 
 /**

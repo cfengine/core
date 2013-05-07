@@ -84,7 +84,7 @@ AgentDiagnosticsResult AgentDiagnosticsCheckIsBootstrapped(const char *workdir)
 
 AgentDiagnosticsResult AgentDiagnosticsCheckAmPolicyServer(const char *workdir)
 {
-    bool am_policy_server = GetAmPolicyServer(workdir);
+    bool am_policy_server = GetAmPolicyHub(workdir);
     return AgentDiagnosticsResultNew(am_policy_server,
                                      am_policy_server ? xstrdup("Acting as a policy server") : xstrdup("Not acting as a policy server"));
 }

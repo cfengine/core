@@ -100,7 +100,7 @@ static void KeepHardClasses(EvalContext *ctx)
         char *existing_policy_server = ReadPolicyServerFile(CFWORKDIR);
         if (existing_policy_server)
         {
-            if (GetAmPolicyServer(CFWORKDIR))
+            if (GetAmPolicyHub(CFWORKDIR))
             {
                 EvalContextHeapAddHard(ctx, "am_policy_hub");
             }

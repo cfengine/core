@@ -28,6 +28,12 @@ AM_LDFLAGS = \
 	$(LIBACL_LDFLAGS) \
 	$(LIBXML2_LDFLAGS)
 
+if HAVE_AVAHI_COMMON
+if HAVE_AVAHI_CLIENT
+AM_LDFLAGS += -ldl
+endif
+endif
+
 LDADD = ../libpromises/libpromises.la \
 	$(LIBVIRT_LIBS) \
 	$(POSTGRESQL_LIBS) \

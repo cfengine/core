@@ -135,4 +135,6 @@ void *MemSpan(const void *mem, char c, size_t n);
  */
 void *MemSpanInverse(const void *mem, char c, size_t n);
 
+bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
+
 #endif

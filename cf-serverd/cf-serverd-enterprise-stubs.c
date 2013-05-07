@@ -27,6 +27,7 @@
 #include "server.h"
 #include "logging_old.h"
 #include "cf-serverd-functions.h"
+#include "logging.h"
 
 void RegisterLiteralServerData(ARG_UNUSED EvalContext *ctx, ARG_UNUSED const char *handle, ARG_UNUSED Promise *pp)
 {
@@ -64,3 +65,10 @@ bool ReturnQueryData(ARG_UNUSED struct ServerConnectionState *conn, ARG_UNUSED c
 {
     return false;
 }
+
+void KeepReportDataSelectAccessPromise(Promise *pp)
+{
+    Log(LOG_LEVEL_ERR, "Report data select is only available in CFEngine Enterprise");
+}
+
+void CleanReportBookFilterSet(void){}

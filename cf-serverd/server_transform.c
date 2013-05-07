@@ -541,6 +541,8 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL, NULL);
 
+                CleanReportBookFilterSet();
+
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
@@ -648,6 +650,7 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *pa
     if ((strcmp(pp->parent_promise_type->name, "access") == 0) && sp && (strcmp(sp, "query") == 0))
     {
         KeepQueryAccessPromise(ctx, pp, "query");
+        KeepReportDataSelectAccessPromise(pp);
         return;
     }
 

@@ -135,7 +135,7 @@ bool LoadSecretKeys(const char *policy_server)
             return true;
         }
 
-        Log(LOG_LEVEL_ERR, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));
+        Log(LOG_LEVEL_VERBOSE, "Loaded public key '%s'", PublicKeyFile(GetWorkDir()));
         fclose(fp);
     }
 

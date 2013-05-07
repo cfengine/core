@@ -28,10 +28,39 @@
 #include "cf3.defs.h"
 
 void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server);
-void SetPolicyServer(EvalContext *ctx, const char *policy_server);
+
+/**
+ * @brief If new_policy_server is not NULL, it will writes the IP to the policy_server.dat file.
+ *        If new_policy_server is NULL, it will not write anything.
+ * @param ctx EvalContext is used to set related variables
+ * @param new_policy_server IP of new policy server
+ */
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
+
+/**
+ * @return The contents of policy_server.dat, or NULL if file is not found. Return value must be freed.
+ */
 char *ReadPolicyServerFile(const char *workdir);
+
+/**
+ * @brief Write new_policy_server to the policy_server.dat file.
+ * @return True if successful
+ */
+bool WritePolicyServerFile(const char *workdir, const char *new_policy_server);
+
+/**
+ * @brief Remove the policy_server.dat file
+ * @return True if successful
+ */
+bool RemovePolicyServerFile(const char *workdir);
+
+/**
+ * @return True if the file WORKDIR/state/am_policy_hub exists
+ */
 bool GetAmPolicyServer(const char *workdir);
-void CreateFailSafe(char *name);
+
+
+bool CreateFailSafe(char *filename);
 
 
 

@@ -69,6 +69,7 @@
 #include "cf-agent-enterprise-stubs.h"
 #include "syslog_client.h"
 #include "man.h"
+#include "bootstrap.h"
 
 #include "mod_common.h"
 
@@ -291,6 +292,7 @@ int main(int argc, char *argv[])
 
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
+        RemovePolicyServerFile(GetWorkDir());
         ret = 1;
     }
 
@@ -1717,23 +1719,24 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 
 static bool VerifyBootstrap(void)
 {
-    struct stat sb;
-    char filePath[CF_MAXVARSIZE];
-
     if (NULL_OR_EMPTY(POLICY_SERVER))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no policy server is specified");
+        Log(LOG_LEVEL_ERR, "Bootstrapping failed, no policy server is specified");
         return false;
     }
 
     // we should at least have gotten promises.cf from the policy hub
-    snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
-    MapName(filePath);
-
-    if (stat(filePath, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
-        return false;
+        char filename[CF_MAXVARSIZE];
+        snprintf(filename, sizeof(filename), "%s/inputs/promises.cf", CFWORKDIR);
+        MapName(filename);
+
+        struct stat sb;
+        if (stat(filename, &sb) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Bootstrapping failed, no input file at '%s' after bootstrap", filename);
+            return false;
+        }
     }
 
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
@@ -1743,11 +1746,11 @@ static bool VerifyBootstrap(void)
 
     if (!IsProcessNameRunning(".*cf-execd.*"))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, cf-execd is not running");
+        Log(LOG_LEVEL_ERR, "Bootstrapping failed, cf-execd is not running");
         return false;
     }
 
-    printf("-> Bootstrap to %s completed successfully\n", POLICY_SERVER);
+    printf("Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
 
     return true;
 }

@@ -146,20 +146,22 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
         CheckAutoBootstrap(ctx, config->agent_specific.agent.bootstrap_policy_server);
+        WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);
         SetPolicyServer(ctx, config->agent_specific.agent.bootstrap_policy_server);
         Log(LOG_LEVEL_INFO, "Bootstrapping to '%s'", POLICY_SERVER);
     }
     else
     {
-        SetPolicyServer(ctx, POLICY_SERVER);
-        if (strlen(POLICY_SERVER) > 0)
+        char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+        if (existing_policy_server)
         {
-            Log(LOG_LEVEL_INFO, "This agent is bootstrapped to '%s'", POLICY_SERVER);
+            Log(LOG_LEVEL_INFO, "This agent is bootstrapped to '%s'", existing_policy_server);
         }
         else
         {
             Log(LOG_LEVEL_INFO, "This agent is not bootstrapped");
         }
+        SetPolicyServer(ctx, existing_policy_server);
     }
 }
 

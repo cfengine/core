@@ -33,6 +33,7 @@
 #include "generic_agent.h" // PrintVersionBanner
 #include "audit.h"
 #include "logging.h"
+#include "string_lib.h"
 
 /*
 
@@ -110,53 +111,17 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 
 /********************************************************************/
 
-void SetPolicyServer(EvalContext *ctx, const char *policy_server)
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
-    char policy_server_filename[CF_BUFSIZE];
-    snprintf(policy_server_filename, CF_BUFSIZE - 1, "%s/policy_server.dat", CFWORKDIR);
-    MapName(policy_server_filename);
-
-    char policy_server_file_contents[CF_MAXVARSIZE] = { 0 };
+    if (new_policy_server)
     {
-        FILE *file = fopen(policy_server_filename, "r");
-        if (file)
-        {
-            if (fscanf(file, "%1023s", policy_server_file_contents) != 1)
-            {
-                CfDebug("Couldn't read string from policy_server.dat");
-            }
-            fclose(file);
-        }
-    }
-
-    // update file if different and we know what to put there
-    if ((NULL_OR_EMPTY(policy_server)) && (!NULL_OR_EMPTY(policy_server_file_contents)))
-    {
-        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", policy_server_file_contents);
-    }
-    else if ((!NULL_OR_EMPTY(policy_server)) && (strcmp(policy_server, policy_server_file_contents) != 0))
-    {
-        FILE *file = fopen(policy_server, "w");
-        if (!file)
-        {
-            Log(LOG_LEVEL_ERR, "Unable to write policy server file '%s' (fopen: %s)", policy_server_filename, GetErrorStr());
-            return;
-        }
-
-        fprintf(file, "%s", policy_server);
-        fclose(file);
-        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", policy_server);
-    }
-
-    if (NULL_OR_EMPTY(POLICY_SERVER))
-    {
-        // avoids "Scalar item in servers => {  } in rvalue is out of bounds ..."
-        // when NovaBase is checked with unprivileged (not bootstrapped) cf-promises 
-        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
+        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", new_policy_server);
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
     }
     else
     {
-        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", policy_server, DATA_TYPE_STRING);
+        POLICY_SERVER[0] = '\0';
+        ScopeNewSpecialScalar(ctx, "sys", "policy_hub", "undefined", DATA_TYPE_STRING);
     }
 
     // Get the timestamp on policy update
@@ -178,13 +143,19 @@ void SetPolicyServer(EvalContext *ctx, const char *policy_server)
     ScopeNewSpecialScalar(ctx, "sys", "last_policy_update", timebuf, DATA_TYPE_STRING);
 }
 
+static char *PolicyServerFilename(const char *workdir)
+{
+    return StringFormat("%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
+}
+
 char *ReadPolicyServerFile(const char *workdir)
 {
-    char path[CF_BUFSIZE] = { 0 };
-    snprintf(path, sizeof(path), "%s%cpolicy_server.dat", workdir, FILE_SEPARATOR);
-    char contents[CF_BUFSIZE] = { 0 };
+    char contents[4096] = "";
 
-    FILE *fp = fopen(path, "r");
+    char *filename = PolicyServerFilename(workdir);
+    FILE *fp = fopen(filename, "r");
+    free(filename);
+
     if (fp)
     {
         if (fscanf(fp, "%4095s", contents) != 1)
@@ -201,6 +172,39 @@ char *ReadPolicyServerFile(const char *workdir)
     }
 }
 
+bool WritePolicyServerFile(const char *workdir, const char *new_policy_server)
+{
+    char *filename = PolicyServerFilename(workdir);
+
+    FILE *file = fopen(filename, "w");
+    if (!file)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to write policy server file '%s' (fopen: %s)", filename, GetErrorStr());
+        free(filename);
+        return false;
+    }
+
+    fprintf(file, "%s", new_policy_server);
+    fclose(file);
+
+    free(filename);
+    return true;
+}
+
+bool RemovePolicyServerFile(const char *workdir)
+{
+    char *filename = PolicyServerFilename(workdir);
+
+    if (unlink(filename) != 0)
+    {
+        Log(LOG_LEVEL_ERR, "Unable to remove file '%s'. (unlink: %s)", filename, GetErrorStr());
+        free(filename);
+        return false;
+    }
+
+    return true;
+}
+
 bool GetAmPolicyServer(const char *workdir)
 {
     char path[CF_BUFSIZE] = { 0 };
@@ -213,14 +217,13 @@ bool GetAmPolicyServer(const char *workdir)
 
 /********************************************************************/
 
-void CreateFailSafe(char *name)
+bool CreateFailSafe(char *filename)
 {
-    FILE *fout;
-
-    if ((fout = fopen(name, "w")) == NULL)
+    FILE *fout = fopen(filename, "w");
+    if (!fout)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to write failsafe file! (%s)", name);
-        return;
+        Log(LOG_LEVEL_ERR, "Unable to write failsafe to '%s' (fopen: %s)", filename, GetErrorStr());
+        return false;
     }
 
     fprintf(fout,
@@ -402,8 +405,11 @@ void CreateFailSafe(char *name)
 #endif /* !__MINGW32__ */
     fclose(fout);
 
-    if (chmod(name, S_IRUSR | S_IWUSR) == -1)
+    if (chmod(filename, S_IRUSR | S_IWUSR) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "chmod", "!! Failed setting permissions on bootstrap policy (%s)", name);
+        Log(LOG_LEVEL_ERR, "Failed setting permissions on generated failsafe file '%s'", filename);
+        return false;
     }
+
+    return true;
 }

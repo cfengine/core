@@ -519,12 +519,16 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         ScopeDeleteAll();
 
         strcpy(VDOMAIN, "undefined.domain");
-        POLICY_SERVER[0] = '\0';
 
         PolicyDestroy(*policy);
         *policy = NULL;
 
-        SetPolicyServer(ctx, POLICY_SERVER);
+        {
+            char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+            SetPolicyServer(ctx, existing_policy_server);
+            free(existing_policy_server);
+        }
+
         ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
 
         GetNameInfo3(ctx, AGENT_TYPE_EXECUTOR);

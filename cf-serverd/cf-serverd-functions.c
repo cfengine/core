@@ -582,8 +582,11 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
             PolicyDestroy(*policy);
             *policy = NULL;
 
-            SetPolicyServer(ctx, POLICY_SERVER);
-            ScopeNewSpecialScalar(ctx, "sys", "policy_hub", POLICY_SERVER, DATA_TYPE_STRING);
+            {
+                char *existing_policy_server = ReadPolicyServerFile(GetWorkDir());
+                SetPolicyServer(ctx, existing_policy_server);
+                free(existing_policy_server);
+            }
 
             GetNameInfo3(ctx, AGENT_TYPE_SERVER);
             GetInterfacesInfo(ctx, AGENT_TYPE_SERVER);

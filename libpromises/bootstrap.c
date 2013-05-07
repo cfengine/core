@@ -72,6 +72,38 @@ bool BootstrapAllowed(void)
 
 /*****************************************************************************/
 
+static char *AmPolicyHubFilename(const char *workdir)
+{
+    return StringFormat("%s%cstate%cam_policy_hub", workdir, FILE_SEPARATOR, FILE_SEPARATOR);
+}
+
+static bool WriteAmPolicyHub(const char *workdir, bool am_policy_hub)
+{
+    char *filename = AmPolicyHubFilename(workdir);
+    if (am_policy_hub)
+    {
+        Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
+        if (creat(filename, 0600) != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Error writing marker file '%s'", filename);
+            free(filename);
+            return false;
+        }
+    }
+    else
+    {
+        Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
+        if (unlink(filename) != 0)
+        {
+            Log(LOG_LEVEL_ERR, "Error removing marker file '%s'", filename);
+            free(filename);
+            return false;
+        }
+    }
+    free(filename);
+    return true;
+}
+
 void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
 {
     {
@@ -90,22 +122,10 @@ void CheckAutoBootstrap(EvalContext *ctx, const char *policy_server)
         am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
     }
 
+    WriteAmPolicyHub(CFWORKDIR, am_policy_server);
+    if (am_policy_server)
     {
-        char am_policy_hub_path[CF_BUFSIZE];
-        snprintf(am_policy_hub_path, sizeof(am_policy_hub_path), "%s/state/am_policy_hub", CFWORKDIR);
-        MapName(am_policy_hub_path);
-
-        if (am_policy_server)
-        {
-            EvalContextHeapAddHard(ctx, "am_policy_hub");
-            Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
-            creat(am_policy_hub_path, 0600);
-        }
-        else
-        {
-            Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
-            unlink(am_policy_hub_path);
-        }
+        EvalContextHeapAddHard(ctx, "am_policy_hub");
     }
 }
 

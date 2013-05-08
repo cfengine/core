@@ -309,6 +309,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/ioctl.h>
 # include <net/if.h>
 # include <netinet/in.h>
+# include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
@@ -323,9 +324,11 @@ char *strsep(char **stringp, const char *delim);
 # ifdef __GLIBC__
 #  include <net/route.h>
 #  include <netinet/in.h>
+#  include <netinet/ip.h>
 # else
 #  include <linux/route.h>
 #  include <linux/in.h>
+#  include <linux/ip.h>
 # endif
 #endif
 

@@ -1,0 +1,32 @@
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{
+classes:
+
+  "adhoc_group_1" expression => iprange2("128.39.89.10-15", "128.39.89.12");
+  "adhoc_group_2" expression => iprange2("128.39.74.1/23", "128.39.74.1");
+
+reports:
+
+  adhoc_group_1::
+
+    "Some numerology";
+
+  adhoc_group_2::
+
+    "The masked warriors";
+}
+
+@end verbatim
+

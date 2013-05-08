@@ -93,7 +93,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
@@ -105,18 +105,18 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             {
                 if (ec)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to file %s need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveItemListAsFile(ec->file_start, ec->filename, a))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, "-> Edit file %s", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, pp, a, "-> Edit file %s", ec->filename);
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "-> Unable to save file %s after editing", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, "-> Unable to save file %s after editing", ec->filename);
                 }
             }
         }
@@ -128,23 +128,23 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             {
                 if (ec)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, "", pp, a, " -> Edited xml file %s", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, pp, a, " -> Edited xml file %s", ec->filename);
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, "Failed to edit XML file %s", ec->filename);
+                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, "Failed to edit XML file %s", ec->filename);
                 }
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, a, " !! Cannot edit XML files without LIBXML2\n");
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, " !! Cannot edit XML files without LIBXML2\n");
 #endif
         }
     }
@@ -152,7 +152,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         if (ec)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " -> No edit changes to file %s need saving", ec->filename);
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to file %s need saving", ec->filename);
         }
     }
 

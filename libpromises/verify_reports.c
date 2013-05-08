@@ -85,12 +85,12 @@ void VerifyReportPromise(EvalContext *ctx, Promise *pp)
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, "", pp, a, "Need to repair reports promise: %s", pp->promiser);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_WARN, pp, a, "Need to repair reports promise: %s", pp->promiser);
         YieldCurrentLock(thislock);
         return;
     }
 
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "Report: %s", pp->promiser);
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Report: %s", pp->promiser);
 
     if (a.report.to_file)
     {
@@ -148,7 +148,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if ((fp = fopen(a.report.filename, "r")) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "fopen", pp, a, " !! Printing of file %s was not possible.\n", a.report.filename);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, "Printing of file '%s' was not possible. (fopen: %s)", a.report.filename, GetErrorStr());
         return;
     }
 

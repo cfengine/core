@@ -399,14 +399,14 @@ static bool VerifyXPathBuild(EvalContext *ctx, Attributes a, Promise *pp, EditCo
 
     if (!SanityCheckXPathBuild(ctx, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised XPath build: \"%s\", breaks its own promises", rawxpath);
         return false;
     }
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return false;
     }
 
@@ -449,7 +449,7 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
 
     if (!SanityCheckTreeDeletions(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree deletion:\n\"%s\"\nis inconsistent", pp->promiser);
         return;
     }
@@ -461,13 +461,13 @@ static void VerifyTreeDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -502,7 +502,7 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
 
     if (!SanityCheckTreeInsertions(a, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree insertion:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
@@ -514,14 +514,14 @@ static void VerifyTreeInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     //if file is not empty: select an edit node, for tree insertion
     if (a.xml.haveselectxpath && !XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -564,7 +564,7 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
 
     if (!SanityCheckAttributeDeletions(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute deletion: \"%s\", is inconsistent", pp->promiser);
         return;
     }
@@ -576,13 +576,13 @@ static void VerifyAttributeDeletions(EvalContext *ctx, Attributes a, Promise *pp
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -617,7 +617,7 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, Edit
 
     if (!SanityCheckAttributeSet(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute set: \"%s\", breaks its own promises", pp->promiser);
         return;
     }
@@ -629,13 +629,13 @@ static void VerifyAttributeSet(EvalContext *ctx, Attributes a, Promise *pp, Edit
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -670,7 +670,7 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
 
     if (!SanityCheckTextDeletions(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text deletion:\n\"%s\"\nis inconsistent", pp->promiser);
         return;
     }
@@ -682,13 +682,13 @@ static void VerifyTextDeletions(EvalContext *ctx, Attributes a, Promise *pp, Edi
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -723,7 +723,7 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditConte
 
     if (!SanityCheckTextSet(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text set:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
@@ -735,13 +735,13 @@ static void VerifyTextSet(EvalContext *ctx, Attributes a, Promise *pp, EditConte
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -776,7 +776,7 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
 
     if (!SanityCheckTextInsertions(a))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text insertion:\n\"%s\"\nbreaks its own promises", pp->promiser);
         return;
     }
@@ -788,13 +788,13 @@ static void VerifyTextInsertions(EvalContext *ctx, Attributes a, Promise *pp, Ed
 
     if ((doc = edcontext->xmldoc) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to load XML document");
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to load XML document");
         return;
     }
 
     if (!XmlSelectNode(ctx, a.xml.select_xpath, doc, &docnode, a, pp, edcontext))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
             " !! The promised XPath pattern: \"%s\", was NOT successful when selecting an edit node, in XML document(%s)",
              a.xml.select_xpath, edcontext->filename);
         return;
@@ -840,26 +840,26 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
 
     if (!XPathVerifyConvergence(rawxpath))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! select_xpath expression: \"%s\", is NOT convergent", rawxpath);
         return false;
     }
 
     if ((xpathExpr = CharToXmlChar(rawxpath)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to create new XPath expression: \"%s\"", rawxpath);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to create new XPath expression: \"%s\"", rawxpath);
         return false;
     }
 
     if ((xpathCtx = xmlXPathNewContext(doc)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to create new XPath context: \"%s\"", rawxpath);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to create new XPath context: \"%s\"", rawxpath);
         return false;
     }
 
     if ((xpathObj = xmlXPathEvalExpression(xpathExpr, xpathCtx)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to evaluate XPath expression \"%s\"", xpathExpr);
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to evaluate XPath expression \"%s\"", xpathExpr);
         xmlXPathFreeContext(xpathCtx); 
         return false;
     }
@@ -873,7 +873,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
 
     if (size > 1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Current select_xpath expression: \"%s\", returns (%d) edit nodes in XML document(%s), please modify expression to select a unique edit node",
              xpathExpr, size, edcontext->filename);
         valid = false;
@@ -893,7 +893,7 @@ static bool XmlSelectNode(EvalContext *ctx, char *rawxpath, xmlDocPtr doc, xmlNo
 
         if (cur == NULL)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a,
                  " !! The promised XPath pattern: \"%s\", was NOT found when selecting an edit node, in XML document(%s)",
                  xpathExpr, edcontext->filename);
             valid = false;
@@ -919,7 +919,7 @@ static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
 
     if (xmlDocGetRootElement(doc))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " !! The promised XML document (%s) already exists and contains a root element (promise kept)",
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " !! The promised XML document (%s) already exists and contains a root element (promise kept)",
              edcontext->filename);
         return false;
     }
@@ -927,24 +927,24 @@ static bool BuildXPathInFile(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
     //set rootnode
     if ((docnode = XPathHeadExtractNode(ctx, copyxpath, a, pp)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! Unable to extract root node from XPath (%s), to be inserted into an empty XML document (%s)",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! Unable to extract root node from XPath (%s), to be inserted into an empty XML document (%s)",
              rawxpath, edcontext->filename);
         return false;
     }
 
     if (docnode == NULL || (docnode->name) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The extracted root node, from XPath (%s), to be inserted into an empty XML document (%s), is empty",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! The extracted root node, from XPath (%s), to be inserted into an empty XML document (%s), is empty",
              rawxpath, edcontext->filename);
         return false;
     }
 
     //insert the content into new XML document, beginning from root node
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Building XPath: \"%s\", into an empty XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Building XPath: \"%s\", into an empty XML document (%s)",
          rawxpath, edcontext->filename);
     if (xmlDocSetRootElement(doc, docnode) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised XPath \"%s\", was NOT built successfully into an empty XML document (%s)",
              rawxpath, edcontext->filename);
         return false;
@@ -994,7 +994,7 @@ static bool BuildXPathInNode(EvalContext *ctx, char rawxpath[CF_BUFSIZE], xmlDoc
     }
 
     //insert the new tree into selected node in XML document
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Building XPath: \"%s\", in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Building XPath: \"%s\", in XML document (%s)",
          rawxpath, edcontext->filename);
     if (docnode != NULL)
     {
@@ -1020,7 +1020,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtree, edcontext->filename);
         return false;
@@ -1029,7 +1029,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), was NOT parsed successfully",
              rawtree, edcontext->filename);
         return false;
@@ -1037,7 +1037,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
 
     if (treenode == NULL || (treenode->name) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree to be inserted:\n\"%s\"\ninto an empty XML document (%s), is empty",
              rawtree, edcontext->filename);
         return false;
@@ -1048,7 +1048,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
     {
         if (!XmlNodesCompare(treenode, rootnode, a, pp))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
                  " !! The promised tree:\n\"%s\"\nis to be inserted into an empty XML document (%s),"
                  " however XML document is NOT empty and tree to be inserted does NOT match existing content."
                  " If you would like to insert into a non-empty XML document, please specify select_xpath expression",
@@ -1056,7 +1056,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " !! The promised XML document (%s) already exists and contains a root element (promise kept)",
+            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " !! The promised XML document (%s) already exists and contains a root element (promise kept)",
                  edcontext->filename);
         }
 
@@ -1065,18 +1065,18 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to insert the promised tree:\n\"%s\"\ninto an empty XML document (%s) - but only a warning was promised",
              rawtree, edcontext->filename);
         return true;
     }
 
     //insert the content into new XML document
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, "\n -> Inserting tree:\n\"%s\"\ninto an empty XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "\n -> Inserting tree:\n\"%s\"\ninto an empty XML document (%s)",
          rawtree, edcontext->filename);
     if (xmlDocSetRootElement(doc, treenode) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, into an empty XML document (%s)",
              rawtree, edcontext->filename);
         return false;
@@ -1085,7 +1085,7 @@ static bool InsertTreeInFile(EvalContext *ctx, char *rawtree, xmlDocPtr doc, Att
     //verify node was inserted
     if (((rootnode = xmlDocGetRootElement(doc)) == NULL) || !XmlNodesCompare(treenode, rootnode, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, into an empty XML document (%s)",
              rawtree, edcontext->filename);
         return false;
@@ -1105,7 +1105,7 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1114,7 +1114,7 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT parsed successfully",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1123,21 +1123,21 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //verify treenode exists inside docnode
     if ((deletetree = XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " !! The promised tree to be deleted:\n\"%s\"\ndoes NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " !! The promised tree to be deleted:\n\"%s\"\ndoes NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to delete the promised tree:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //remove the subtree from XML document
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Deleting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Deleting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)",
          rawtree, a.xml.select_xpath, edcontext->filename);
     xmlUnlinkNode(deletetree);
     xmlFreeNode(deletetree);
@@ -1145,7 +1145,7 @@ static bool DeleteTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //verify treenode no longer exists inside docnode
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree to be deleted:\n\"%s\"\nwas NOT successfully deleted, at XPath (%s) in XML document (%s)",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1164,7 +1164,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //for parsing subtree from memory
     if ((buf = CharToXmlChar(rawtree)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1173,7 +1173,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //parse the subtree
     if (xmlParseBalancedChunkMemory(doc, NULL, NULL, 0, buf, &treenode) != 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT parsed successfully",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1181,7 +1181,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
 
     if (treenode == NULL || (treenode->name) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, " !! The promised tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), is empty",
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, " !! The promised tree to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), is empty",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
     }
@@ -1189,25 +1189,25 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //verify treenode does not already exist inside docnode
     if (XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a, " !! The promised tree to be inserted:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " !! The promised tree to be inserted:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
     }
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to insert the promised tree:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //insert the subtree into XML document
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Inserting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)\n",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Inserting tree:\n\"%s\"\nat XPath (%s) in XML document (%s)\n",
          rawtree, a.xml.select_xpath, edcontext->filename);
     if (!xmlAddChild(docnode, treenode))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1216,7 +1216,7 @@ static bool InsertTreeInNode(EvalContext *ctx, char *rawtree, xmlDocPtr doc, xml
     //verify node was inserted
     if (!XmlVerifyNodeInNodeSubset(treenode, docnode, a, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised tree:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
              rawtree, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1234,7 +1234,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Name of attribute to be deleted: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1243,7 +1243,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     //verify attribute exists inside docnode
     if ((attr = xmlHasProp(docnode, name)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              " !! The promised attribute to be deleted: \"%s\", does NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1251,18 +1251,18 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to delete the promised attribute: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
              rawname, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //delete attribute from docnode
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Deleting attribute: \"%s\", at XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Deleting attribute: \"%s\", at XPath (%s) in XML document (%s)",
              rawname, a.xml.select_xpath, edcontext->filename);
     if ((xmlRemoveProp(attr)) == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s).",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1271,7 +1271,7 @@ static bool DeleteAttributeInNode(EvalContext *ctx, char *rawname, xmlNodePtr do
     //verify attribute no longer exists inside docnode
     if ((attr = xmlHasProp(docnode, name)) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute to be deleted: \"%s\", was NOT deleted successfully, at XPath (%s) in XML document (%s)",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1290,7 +1290,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
 
     if ((name = CharToXmlChar(rawname)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Name of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawname, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1298,7 +1298,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
 
     if ((value = CharToXmlChar(rawvalue)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Value of attribute to be set: \"%s\", at XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1307,7 +1307,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     //verify attribute does not already exist inside docnode
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode)) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", already exists, at XPath (%s) in XML document (%s) (promise kept)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1315,18 +1315,18 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to set the promised attribute, with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s) - but only a warning was promised",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //set attribute in docnode
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Setting attribute with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Setting attribute with name: \"%s\" and value: \"%s\", at XPath (%s) in XML document (%s)",
          rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
     if ((attr = xmlSetProp(docnode, name, value)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1335,7 +1335,7 @@ static bool SetAttributeInNode(EvalContext *ctx, char *rawname, char *rawvalue, 
     //verify attribute was inserted
     if ((attr = XmlVerifyAttributeInNode(name, value, docnode)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised attribute to be set, with name: \"%s\" and value: \"%s\", was NOT successfully set, at XPath (%s) in XML document (%s)",
              rawname, rawvalue, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1353,7 +1353,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Text to be deleted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1362,7 +1362,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     //verify text exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              " !! The promised text to be deleted:\n\"%s\"\ndoes NOT exist, at XPath (%s) in XML document (%s) (promise kept)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1370,14 +1370,14 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to delete the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //delete text from docnode
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Deleting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Deleting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
          rawtext, a.xml.select_xpath, edcontext->filename);
 
     //node contains text
@@ -1401,7 +1401,7 @@ static bool DeleteTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     //verify text no longer exists inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text:\n\"%s\"\nwas NOT deleted successfully, at XPath (%s) in XML document (%s)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1419,7 +1419,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Text to be set:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1428,7 +1428,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
     //verify text does not exist inside docnode
     if (XmlVerifyTextInNodeExact(text, docnode) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              " !! The promised text to be set:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1436,14 +1436,14 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to set the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //set text in docnode
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Setting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Setting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
          rawtext, a.xml.select_xpath, edcontext->filename);
 
     //node already contains text
@@ -1467,7 +1467,7 @@ static bool SetTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xmlNod
     //verify text was inserted
     if (XmlVerifyTextInNodeExact(text, docnode) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text:\n\"%s\"\nwas NOT set successfully, at XPath (%s) in XML document (%s)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1485,7 +1485,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if ((text = CharToXmlChar(rawtext)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Text to be inserted:\n\"%s\"\nat XPath (%s) in XML document (%s), was NOT successfully loaded into an XML buffer",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1494,7 +1494,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     //verify text does not exist inside docnode
     if (XmlVerifyTextInNodeSubstring(text, docnode) != NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
              " !! The promised text to be inserted:\n\"%s\"\nalready exists, at XPath (%s) in XML document (%s) (promise kept)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -1502,14 +1502,14 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
 
     if (a.transaction.action == cfa_warn)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, pp, a,
              " -> Need to insert the promised text:\n\"%s\"\nat XPath (%s) in XML document (%s) - but only a warning was promised",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return true;
     }
 
     //insert text into docnode
-    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, a, " -> Inserting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
+    cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Inserting text:\n\"%s\"\nat XPath (%s) in XML document (%s)",
          rawtext, a.xml.select_xpath, edcontext->filename);
 
     //node already contains text
@@ -1534,7 +1534,7 @@ static bool InsertTextInNode(EvalContext *ctx, char *rawtext, xmlDocPtr doc, xml
     //verify text was inserted
     if (XmlVerifyTextInNodeSubstring(text, docnode) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! The promised text:\n\"%s\"\nwas NOT inserted successfully, at XPath (%s) in XML document (%s)",
              rawtext, a.xml.select_xpath, edcontext->filename);
         return false;
@@ -2432,7 +2432,7 @@ xmlNodePtr XPathHeadExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attrib
 
     if ((node = XPathSegmentExtractNode(head)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a, "   !! Could not extract node: %s", head);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "   !! Could not extract node: %s", head);
     }
 
     return node;
@@ -2453,7 +2453,7 @@ xmlNodePtr XPathTailExtractNode(EvalContext *ctx, char xpath[CF_BUFSIZE], Attrib
 
     if ((node = XPathSegmentExtractNode(tail)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, "", pp, a, "   !! Could not extract node: %s", tail);
+        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "   !! Could not extract node: %s", tail);
     }
 
     return node;
@@ -2686,7 +2686,7 @@ static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attribut
     //check for convergence
     if (!XPathVerifyConvergence(xpath))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Promiser expression (%s) is not convergent", xpath);
         return false;
     }
@@ -2698,7 +2698,7 @@ static bool XPathVerifyBuildSyntax(EvalContext *ctx, const char* xpath, Attribut
 
     if (!ContainsRegex(xpath, regexp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a,
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a,
              " !! Promiser expression (%s), \ncontains syntax that is not supported for xpath_build. "
              "Please refer to users manual for supported syntax specifications.", xpath);
         return false;

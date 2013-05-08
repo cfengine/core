@@ -1803,7 +1803,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
     }
 }
 
-void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
+void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
 {
     /*
      * This stub implementation of cfPS delegates to the new logging backend.

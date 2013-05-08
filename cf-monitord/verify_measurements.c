@@ -66,7 +66,7 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
 
     if (!CheckMeasureSanity(a.measure, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, "", pp, a, "Measurement promise is not valid");
+        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, "Measurement promise is not valid");
         return;
     }
 

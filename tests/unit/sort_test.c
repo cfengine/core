@@ -148,3 +148,8 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+{
+    fail();
+    exit(42);
+}

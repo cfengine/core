@@ -1,3 +1,4 @@
+#include "cf3.defs.h"
 #include "platform.h"
 #include "compiler.h"
 #include "test.h"
@@ -357,4 +358,10 @@ int main()
     };
 
     return run_tests(tests);
+}
+
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+{
+    fail();
+    exit(42);
 }

@@ -1,3 +1,4 @@
+#include "cf3.defs.h"
 #include "test.h"
 
 #include "csv_writer.h"
@@ -112,6 +113,12 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
 }
 
 void FatalError(char *s, ...)
+{
+    fail();
+    exit(42);
+}
+
+void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
     exit(42);

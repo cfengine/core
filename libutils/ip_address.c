@@ -24,10 +24,7 @@
 
 #include <stdint.h>
 #include <ctype.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-
+#include "platform.h"
 #include "ip_address.h"
 #include "alloc.h"
 

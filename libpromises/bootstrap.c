@@ -34,8 +34,7 @@
 #include "audit.h"
 #include "logging.h"
 #include "string_lib.h"
-
-#include <ftw.h>
+#include "files_lib.h"
 
 /*
 
@@ -210,40 +209,34 @@ bool GetAmPolicyHub(const char *workdir)
     return stat(path, &sb) == 0;
 }
 
-int RemoveExistingInputFileCallback(const char *input_path, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
-{
-    switch (typeflag)
-    {
-    case FTW_F:
-        Log(LOG_LEVEL_VERBOSE, "Removing file '%s'", input_path);
-        if (unlink(input_path) != 0)
-        {
-            Log(LOG_LEVEL_ERR, "Error removing file '%s'", input_path);
-            return -1;
-        }
-        return 0;
-
-    case FTW_D:
-        return 0;
-
-    case FTW_DNR:
-        Log(LOG_LEVEL_ERR, "Cannot read directory '%s' to remove existing input files");
-        return 0;
-
-    default:
-        Log(LOG_LEVEL_ERR, "Encountered unknown file type while removing existing input files at '%s', file type '%d'", input_path, typeflag);
-        return 0;
-    }
-}
-
 bool RemoveAllExistingPolicyInInputs(const char *workdir)
 {
     char inputs_path[CF_BUFSIZE] = { 0 };
-    snprintf(inputs_path, sizeof(inputs_path), "%s/inputs/.", workdir);
+    snprintf(inputs_path, sizeof(inputs_path), "%s/inputs/", workdir);
     MapName(inputs_path);
 
     Log(LOG_LEVEL_INFO, "Removing all files in '%s'", inputs_path);
-    return nftw(inputs_path, RemoveExistingInputFileCallback, 1, FTW_MOUNT | FTW_PHYS) == 0;
+
+    struct stat sb;
+    if (stat(inputs_path, &sb) == -1)
+    {
+        if (errno == ENOENT)
+        {
+            return true;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not stat inputs directory at '%s'. (stat: %s)", inputs_path, GetErrorStr());
+            return false;
+        }
+    }
+
+    if (!S_ISDIR(sb.st_mode))
+    {
+        Log(LOG_LEVEL_ERR, "Inputs path exists at '%s', but it is not a directory", inputs_path);
+    }
+
+    return DeleteDirectoryTree(inputs_path);
 }
 
 /********************************************************************/

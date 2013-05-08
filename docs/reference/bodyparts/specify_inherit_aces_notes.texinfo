@@ -1,8 +1,8 @@
 
- @code{specify_inherit_aces} (optional) is a list of access control
+ @code{specify_default_aces} (optional) is a list of access control
   entries that are set on child objects. It is also parsed from left
   to right and allows multiple entries with same entity-type and
-  id. Only valid if @code{acl_directory_inherit} is set to
+  id. Only valid if @code{acl_default} is set to
   @code{specify}.
 
 This is an acl which makes explicit setting for the acl inherited by

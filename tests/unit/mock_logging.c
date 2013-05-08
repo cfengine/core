@@ -1,4 +1,5 @@
 #include "logging_old.h"
+#include "logging.h"
 #include "env_context.h"
 
 #include <stdarg.h>

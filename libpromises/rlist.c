@@ -29,6 +29,7 @@
 #include "expand.h"
 #include "matching.h"
 #include "scope.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "fncall.h"
 #include "string_lib.h"
@@ -607,6 +608,236 @@ Rlist *RlistParseShown(char *string)
     RlistDestroy(splitlist);
     return newlist;
 }
+
+/*******************************************************************/
+
+static Rlist *RlistParseStringBounded(char *left,
+                                      char *right, int *n)
+{
+    Rlist *newlist = NULL;
+    char str2[CF_MAXVARSIZE];
+    char *s = left;
+    char *s2 = str2;
+    bool precede = false;  //set if we just encountred escaping character
+    bool ignore = true;    //set if we're outside quotation marks
+    bool skipped = true;   //set if a separating comma is behind us
+    char *extract = NULL;
+
+    if (n!=NULL)
+    {
+        *n = 0;
+    }
+
+    memset(str2, 0, CF_MAXVARSIZE);
+
+    while (*s && s < right)
+    {
+        if (*s != '\\')
+        {
+            if (precede)
+            {
+                if (*s != '\\' && *s != '"')
+                {
+                    Log(LOG_LEVEL_ERR, "Presence of illegal %c after escaping character", *s);
+                    goto clean;
+                }
+                else
+                {
+                    *s2++ = *s;
+                }
+                precede = false;
+            }
+            else
+            {
+                if (*s == '"')
+                {
+                    if (ignore)
+                    {
+                        if (skipped != true)
+                        {
+                            Log(LOG_LEVEL_ERR, "Quotation marks \" should follow commas");
+                            goto clean;
+                        }
+                        ignore = false;
+                        extract = s2;
+                    }
+                    else
+                    {
+                        *s2='\0';
+                        Log(LOG_LEVEL_VERBOSE, "Extracted string [%s] of length (%d)", extract,
+                               (size_t) (s2 - extract));
+                        RlistAppendScalar(&newlist, extract);
+                        ignore = true;
+                        extract = NULL;
+                        if (n != NULL)
+                        {
+                            *n += 1;
+                        }
+                    }
+                    skipped = false;
+                }
+                else if (*s == ',')
+                {
+                    if (ignore)
+                    {
+                        if (skipped == false)
+                        {
+                            skipped = true;
+                        }
+                        else
+                        {
+                            Log(LOG_LEVEL_ERR, "Only one comma should separate different list elements");
+                            goto clean;
+                        }
+                    }
+                    else
+                    {
+                        *s2++ = *s;
+                    }
+                }
+                else
+                {
+                    if (ignore == true && *s != ' ')
+                    {
+                        Log(LOG_LEVEL_ERR, "Only white characters are permitted outside of list elements. Character %c is illegal.", *s);
+                        goto clean;
+                    }
+                    *s2++ = *s;
+                }
+            }
+        }
+        else
+        {
+            if (precede)
+            {
+                *s2++ = '\\';
+                precede = false;
+            }
+            else
+            {
+                precede = true;
+            }
+        }
+        s++;
+    }
+    if (ignore)
+    {
+        return newlist;
+    }
+    else
+    {
+        goto clean;
+    }
+  clean:
+    if (newlist)
+    {
+        RlistDestroy(newlist);
+    }
+    return NULL;
+}
+
+static char *TrimLeft(char *str)
+{
+    char *s = str;
+
+    bool crossed = false;
+    if (!s)
+    {
+        return NULL;
+    }
+    while (*s)
+    {
+        if (crossed == false)
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '{')
+            {
+                crossed = true;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '"')
+            {
+                return s;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        s++;
+    }
+    return NULL;
+}
+
+static char *TrimRight(char *str)
+{
+    bool crossed = false;
+    char *s = str + strlen(str) - 1;
+    while (*s && s > str)
+    {
+        if (crossed == false)
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '}')
+            {
+                crossed = true;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        else
+        {
+            if (*s == ' ')
+            {
+            }
+            else if (*s == '"')
+            {
+                return s + 1;
+            }
+            else
+            {
+                return NULL;
+            }
+        }
+        s--;
+    }
+    return NULL;
+}
+
+Rlist *RlistParseString(char *string, int *n)
+{
+    Rlist *newlist = NULL;
+
+    char *l = TrimLeft(string);
+    if (l == NULL)
+    {
+        return NULL;
+    }
+    char *r = TrimRight(l);
+    if (r == NULL)
+    {
+        return NULL;
+    }
+    newlist = RlistParseStringBounded(l, r, n);
+    return newlist;
+}
+
+/*******************************************************************/
 
 void RvalDestroy(Rval rval)
 {

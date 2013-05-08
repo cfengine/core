@@ -206,6 +206,7 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     {
         LogToSystemLog(msg, level);
     }
+    free(msg);
 }
 
 void Log(LogLevel level, const char *fmt, ...)

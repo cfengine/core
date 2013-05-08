@@ -927,6 +927,9 @@ Buffer *IPAddressGetAddress(IPAddress *address)
         result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3]);
 #elif LITTLE_ENDIAN
         result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[3], ipv4->octets[2], ipv4->octets[1], ipv4->octets[0]);
+#else
+#warning "Unrecognized endianness, assuming big endian"
+        result = BufferPrintf(buffer, "%u.%u.%u.%u", ipv4->octets[0], ipv4->octets[1], ipv4->octets[2], ipv4->octets[3]);
 #endif
     }
     else if (address->type == IP_ADDRESS_TYPE_IPV6)
@@ -939,6 +942,10 @@ Buffer *IPAddressGetAddress(IPAddress *address)
 #elif LITTLE_ENDIAN
         result = BufferPrintf(buffer, "%x:%x:%x:%x:%x:%x:%x:%x", ipv6->sixteen[7], ipv6->sixteen[6], ipv6->sixteen[5],
                               ipv6->sixteen[4], ipv6->sixteen[3], ipv6->sixteen[2], ipv6->sixteen[1], ipv6->sixteen[0]);
+#else
+#warning "Unrecognized endianness, assuming big endian"
+        result = BufferPrintf(buffer, "%x:%x:%x:%x:%x:%x:%x:%x", ipv6->sixteen[0], ipv6->sixteen[1], ipv6->sixteen[2],
+                              ipv6->sixteen[3], ipv6->sixteen[4], ipv6->sixteen[5], ipv6->sixteen[6], ipv6->sixteen[7]);
 #endif
     }
     else

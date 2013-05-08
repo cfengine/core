@@ -73,9 +73,8 @@ check_PROGRAMS = \
 	exec-config-test \
 	generic_agent_test \
 	syntax_test \
-	hashes_test
-
-#	ipaddress_test
+       ipaddress_test \
+	hashes_test 
 
 if HAVE_AVAHI_CLIENT
 if HAVE_AVAHI_COMMON

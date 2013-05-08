@@ -1164,6 +1164,7 @@ static void BundleDestroy(Bundle *bundle)
     {
         free(bundle->name);
         free(bundle->type);
+        free(bundle->ns);
 
         RlistDestroy(bundle->args);
         SeqDestroy(bundle->promise_types);
@@ -1177,6 +1178,7 @@ static void BodyDestroy(Body *body)
     {
         free(body->name);
         free(body->type);
+        free(body->ns);
 
         RlistDestroy(body->args);
         SeqDestroy(body->conlist);

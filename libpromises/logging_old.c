@@ -40,7 +40,7 @@ static LogLevel OutputLevelToLogLevel(OutputLevel level)
     ProgrammingError("Unknown output level passed to OutputLevelToLogLevel: %d", level);
 }
 
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
+void CfVOut(OutputLevel level, const char *fmt, va_list ap)
 {
     const char *GetErrorStr(void);
 
@@ -55,17 +55,12 @@ void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap)
     {
         VLog(OutputLevelToLogLevel(level), fmt, ap);
     }
-
-    if (errstr && strlen(errstr) > 0)
-    {
-        Log(OutputLevelToLogLevel(level), " !!! System reports error for %s: \"%s\"", errstr, GetErrorStr());
-    }
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+void CfOut(OutputLevel level, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    CfVOut(level, errstr, fmt, ap);
+    CfVOut(level, fmt, ap);
     va_end(ap);
 }

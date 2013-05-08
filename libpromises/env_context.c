@@ -1835,7 +1835,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
 
     va_list ap;
     va_start(ap, fmt);
-    CfVOut(level, errstr, fmt, ap);
+    CfVOut(level, fmt, ap);
     va_end(ap);
 
     if (pp)

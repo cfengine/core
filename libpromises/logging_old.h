@@ -28,7 +28,7 @@
 #include "cf3.defs.h"
 
 /* Obsolete, please use Log instead */
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...) FUNC_ATTR_PRINTF(3, 4);
-void CfVOut(OutputLevel level, const char *errstr, const char *fmt, va_list ap);
+void CfOut(OutputLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);
+void CfVOut(OutputLevel level, const char *fmt, va_list ap);
 
 #endif

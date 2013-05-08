@@ -10,7 +10,16 @@ classes:
   "temp_declared" not => strcmp(getenv("TEMP", "65536"), "");
 
 vars:
-  "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+  windows::
+    "cwd" string => execresult("C:\windows\system32\cmd.exe /C cd", "noshell");
+    # Dir separator
+    "DS" string => "\\";
+  !windows::
+    "cwd" string => execresult("/bin/pwd 2>/dev/null || /usr/bin/pwd", "useshell");
+    # Dir separator
+    "DS" string => "/";
+
+  any::
   "cmds" slist => { "sort", "touch", "grep", "gzip", "hexdump", "od", "diff", "rm", "true", "false", "mkdir", "ln", "pwd", "wc", "printf" };
 
 
@@ -25,13 +34,13 @@ vars:
 
   temp_declared::
     "testroot" string => getenv("TEMP", "65535");
-    "testdir" string => concat(getenv("TEMP", "65535"), "/TEST.cfengine");
-    "testfile" string => concat(getenv("TEMP", "65535"), "/TEST.cfengine");
+    "testdir" string => concat(getenv("TEMP", "65535"), "$(DS)TEST.cfengine");
+    "testfile" string => concat(getenv("TEMP", "65535"), "$(DS)TEST.cfengine");
 
   !temp_declared::
-    "testroot" string => "/tmp";
-    "testdir" string => "/tmp/TEST.cfengine";
-    "testfile" string => "/tmp/TEST.cfengine";
+    "testroot" string => "$(DS)tmp";
+    "testdir" string => "$(DS)tmp$(DS)TEST.cfengine";
+    "testfile" string => "$(DS)tmp$(DS)TEST.cfengine";
 
 }
 
@@ -69,7 +78,7 @@ methods:
 reports:
     !AUTO::
     "# You must either specify '-D AUTO' or run the following commands:";
-    "cf-agent -f ./$(filename) -b $(tests)";
+    "cf-agent -f .$(DS)$(filename) -b $(tests)";
 }
 
 #######################################################

@@ -661,11 +661,50 @@ AclType AclTypeFromString(const char *string)
     return FindTypeInArray(ACL_TYPES, string, ACL_TYPE_NONE, ACL_TYPE_NONE);
 }
 
-AclInheritance AclInheritanceFromString(const char *string)
+/* For the deprecated attribute acl_directory_inherit. */
+AclDefault AclInheritanceFromString(const char *string)
 {
     static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
 
-    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_INHERITANCE_NONE, ACL_INHERITANCE_NONE);
+    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_DEFAULT_NONE, ACL_DEFAULT_NONE);
+}
+
+AclDefault AclDefaultFromString(const char *string)
+{
+    static const char *ACL_DEFAULT_TYPES[5] = { "nochange", "specify", "access", "clear", NULL };
+
+    return FindTypeInArray(ACL_DEFAULT_TYPES, string, ACL_DEFAULT_NONE, ACL_DEFAULT_NONE);
+}
+
+AclInherit AclInheritFromString(const char *string)
+{
+    char *start, *end;
+    char *options = CF_BOOL ",nochange";
+    int i;
+    int size;
+
+    if (string == NULL)
+    {
+        return ACL_INHERIT_NOCHANGE;
+    }
+
+    start = options;
+    size = strlen(string);
+    for (i = 0;; i++)
+    {
+        end = strchr(start, ',');
+        if (end == NULL)
+        {
+            break;
+        }
+        if (size == end - start && strncmp(string, start, end - start) == 0)
+        {
+            // Even i is true, odd i is false (from CF_BOOL).
+            return (i & 1) ? ACL_INHERIT_FALSE : ACL_INHERIT_TRUE;
+        }
+        start = end + 1;
+    }
+    return ACL_INHERIT_NOCHANGE;
 }
 
 ServicePolicy ServicePolicyFromString(const char *string)

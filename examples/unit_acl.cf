@@ -46,7 +46,7 @@ body acl template
 {
 acl_method => "overwrite";
 acl_type => "posix";
-acl_directory_inherit => "parent";
+acl_default => "access";
 aces => { "user:*:r(wwx),-r:allow", "group:*:+rw:allow", "mask:x:allow", "all:r"};
 }
 
@@ -57,7 +57,7 @@ body acl win
 {
 acl_method => "overwrite";
 acl_type => "ntfs";
-acl_directory_inherit => "nochange";
+acl_default => "nochange";
 aces => { "user:Administrator:rw", "group:Bad:rwx(Dpo):deny" };
 }
 

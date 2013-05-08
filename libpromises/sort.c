@@ -30,6 +30,7 @@
 
 #include "rlist.h"
 #include "item_lib.h"
+#include "ip_address.h"
 
 typedef bool (*LessFn)(void *lhs, void *rhs, void *ctx);
 typedef void * (*GetNextElementFn)(void *element);
@@ -256,18 +257,33 @@ static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return RlistItemIntLess(lhs, rhs, ctx);
 }
 
-static bool RlistItemIPv4Less(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 {
-    int bytes = sizeof(struct in_addr);
-    unsigned char left[bytes], right[bytes];
-    int matched_left = 1 == inet_pton(AF_INET, ((Rlist*)lhs)->item, left);
-    int matched_right = 1 == inet_pton(AF_INET, ((Rlist*)rhs)->item, right);
+    char *left_item = ((Rlist*)lhs)->item;
+    char *right_item = ((Rlist*)rhs)->item;
+
+    Buffer *left_buffer = BufferNewFrom(left_item, strlen(left_item));
+    Buffer *right_buffer = BufferNewFrom(right_item, strlen(right_item));
+
+    IPAddress *left = IPAddressNew(left_buffer);
+    IPAddress *right = IPAddressNew(right_buffer);
+
+    bool matched_left = left != NULL;
+    bool matched_right = right != NULL;
+
+    BufferDestroy(&left_buffer);
+    BufferDestroy(&right_buffer);
 
     if (matched_left && matched_right)
     {
-        int difference = memcmp(left, right, bytes);
+        int difference = IPAddressCompare(left, right);
+        IPAddressDestroy(&left);
+        IPAddressDestroy(&right);
         if (difference != 0) return difference < 0;
     }
+
+    IPAddressDestroy(&left);
+    IPAddressDestroy(&right);
 
     if (matched_left)
     {
@@ -281,33 +297,6 @@ static bool RlistItemIPv4Less(void *lhs, void *rhs, ARG_UNUSED void *ctx)
 
     // neither item matched
     return RlistItemLess(lhs, rhs, ctx);
-}
-
-static bool RlistItemIPv6Less(void *lhs, void *rhs, ARG_UNUSED void *ctx)
-{
-    int bytes = sizeof(struct in6_addr);
-    unsigned char left[bytes], right[bytes];
-    int matched_left = 1 == inet_pton(AF_INET6, ((Rlist*)lhs)->item, left);
-    int matched_right = 1 == inet_pton(AF_INET6, ((Rlist*)rhs)->item, right);
-
-    if (matched_left && matched_right)
-    {
-        int difference = memcmp(left, right, bytes);
-        if (difference != 0) return difference < 0;
-    }
-
-    if (matched_left)
-    {
-        return false;
-    }
-
-    if (matched_right)
-    {
-        return true;
-    }
-
-    // neither item matched
-    return RlistItemIPv4Less(lhs, rhs, ctx);
 }
 
 static long ParseEtherAddress(const char* input, unsigned char *addr)
@@ -381,14 +370,9 @@ Rlist *RealSortRListNames(Rlist *list)
     return Sort(list, &RlistItemRealLess, &RlistGetNext, &RlistPutNext, NULL);
 }
 
-Rlist *IPv4SortRListNames(Rlist *list)
+Rlist *IPSortRListNames(Rlist *list)
 {
-    return Sort(list, &RlistItemIPv4Less, &RlistGetNext, &RlistPutNext, NULL);
-}
-
-Rlist *IPv6SortRListNames(Rlist *list)
-{
-    return Sort(list, &RlistItemIPv6Less, &RlistGetNext, &RlistPutNext, NULL);
+    return Sort(list, &RlistItemIPLess, &RlistGetNext, &RlistPutNext, NULL);
 }
 
 Rlist *MACSortRListNames(Rlist *list)

@@ -913,6 +913,58 @@ int IPAddressType(IPAddress *address)
     return address->type;
 }
 
+int IPAddressCompare(IPAddress *a, IPAddress *b)
+{
+    if (!a || !b)
+    {
+        return -1;
+    }
+
+    struct IPV4Address *four;
+    struct IPV6Address *left, *right;
+
+    struct IPV6Address hard_left = { { 0,0,0,0,0,0,0,0}, 0 };
+    struct IPV6Address hard_right = { { 0,0,0,0,0,0,0,0}, 0 };
+
+    // Note that a.b.c.d in 6-to-4 is 2002:ab:cd::ab:cd.  The
+    // following conversion is just for sorting!!!  It results in
+    // ::ab:cd.  I think.
+
+    // TODO: Do we want a general converter from IPv4 to IPv6?
+    // TODO: verify the below please
+
+    if (IPAddressType(a) == IP_ADDRESS_TYPE_IPV4)
+    {
+        four = (struct IPV4Address *)a->address;
+        left = &hard_left;
+        left->sixteen[1] = four->octets[3] << 8 | four->octets[2];
+        left->sixteen[0] = four->octets[1] << 8 | four->octets[0];
+    }
+    else if (IPAddressType(a) == IP_ADDRESS_TYPE_IPV6)
+    {
+        left = (struct IPV6Address *)a->address;
+    }
+
+    left->port = IPAddressGetAddress(a);
+
+
+    if (IPAddressType(b) == IP_ADDRESS_TYPE_IPV4)
+    {
+        four = (struct IPV4Address *)b->address;
+        right = &hard_right;
+        right->sixteen[1] = four->octets[3] << 8 | four->octets[2];
+        right->sixteen[0] = four->octets[1] << 8 | four->octets[0];
+    }
+    else if (IPAddressType(b) == IP_ADDRESS_TYPE_IPV6)
+    {
+        right = (struct IPV6Address *)b->address;
+    }
+
+    right->port = IPAddressGetAddress(b);
+
+    return memcmp(left, right, sizeof(struct IPV6Address));
+}
+
 Buffer *IPAddressGetAddress(IPAddress *address)
 {
     if (!address)

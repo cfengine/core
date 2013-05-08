@@ -2708,13 +2708,9 @@ static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     {
         sorted = RealSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
     }
-    else if (strcmp(sort_type, "IPv4") == 0 || strcmp(sort_type, "ipv4") == 0)
+    else if (strcmp(sort_type, "IP") == 0 || strcmp(sort_type, "ip") == 0)
     {
-        sorted = IPv4SortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
-    }
-    else if (strcmp(sort_type, "IPv6") == 0 || strcmp(sort_type, "ipv6") == 0)
-    {
-        sorted = IPv6SortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+        sorted = IPSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
     }
     else if (strcmp(sort_type, "MAC") == 0 || strcmp(sort_type, "mac") == 0)
     {
@@ -5643,7 +5639,7 @@ FnCallArg USEREXISTS_ARGS[] =
 FnCallArg SORT_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
-    {"lex,int,real,IPv4,ipv4,IPv6,ipv6,MAC,mac", DATA_TYPE_OPTION, "Sorting method: lex or int or real (floating point) or IPv4 or IPv6 or MAC address"},
+    {"lex,int,real,IP,ip,MAC,mac", DATA_TYPE_OPTION, "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 

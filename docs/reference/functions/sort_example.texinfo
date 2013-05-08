@@ -17,8 +17,8 @@ bundle agent test
       "sorted_test" slist => sort("test", "lex");
       "integer_sorted_test" slist => sort("test", "int");
       "real_sorted_test" slist => sort("test", "real"); # floating point
-      "IPv4_sorted_test" slist => sort("test", "IPv4");
-      "IPv6_sorted_test" slist => sort("test", "IPv6");
+      "IPv4_sorted_test" slist => sort("test", "ip");
+      "IPv6_sorted_test" slist => sort("test", "ip");
       "MAC_sorted_test" slist => sort("test", "MAC");
 
   reports:

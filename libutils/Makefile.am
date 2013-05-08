@@ -19,6 +19,7 @@ libutils_la_SOURCES = \
 	list.c list.h list_p.h \
 	logging.c logging.h \
 	buffer.c buffer.h \
+    ip_address.c ip_address.h \
 	map.c map.h map_common.h \
 	array_map.c array_map_priv.h \
 	hash_map.c hash_map_priv.h \

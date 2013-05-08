@@ -131,10 +131,13 @@ static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
          *check != '\0' && check - identifier < CF_BUFSIZE;
          check++)
     {
-        if (!isdigit(*check)) return 1;
+        if (!isdigit(*check))
+        {
+            return false;
+        }
     }
 
-    return 0;
+    return true;
 }
 
 static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)

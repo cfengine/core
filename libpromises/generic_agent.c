@@ -170,7 +170,12 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
             WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
             if (am_policy_server)
             {
+                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
                 EvalContextHeapAddHard(ctx, "am_policy_hub");
+            }
+            else
+            {
+                Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             }
         }
 

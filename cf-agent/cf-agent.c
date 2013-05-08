@@ -275,6 +275,7 @@ int main(int argc, char *argv[])
     if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
         RemovePolicyServerFile(GetWorkDir());
+        WriteAmPolicyHubFile(GetWorkDir(), false);
         ret = 1;
     }
 

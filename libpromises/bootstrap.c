@@ -238,9 +238,39 @@ bool RemoveAllExistingPolicyInInputs(const char *workdir)
     if (!S_ISDIR(sb.st_mode))
     {
         Log(LOG_LEVEL_ERR, "Inputs path exists at '%s', but it is not a directory", inputs_path);
+        return false;
     }
 
     return DeleteDirectoryTree(inputs_path);
+}
+
+bool MasterfileExists(const char *workdir)
+{
+    char filename[CF_BUFSIZE] = { 0 };
+    snprintf(filename, sizeof(filename), "%s/masterfiles/promises.cf", workdir);
+    MapName(filename);
+
+    struct stat sb;
+    if (stat(filename, &sb) == -1)
+    {
+        if (errno == ENOENT)
+        {
+            return false;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR, "Could not stat file '%s'. (stat: %s)", filename, GetErrorStr());
+            return false;
+        }
+    }
+
+    if (!S_ISREG(sb.st_mode))
+    {
+        Log(LOG_LEVEL_ERR, "Path exists at '%s', but it is not a regular file", filename);
+        return false;
+    }
+
+    return true;
 }
 
 /********************************************************************/

@@ -167,16 +167,23 @@ void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config)
                 am_policy_server |= IsDefinedClass(ctx, policy_server_ipv4_class, NULL);
             }
 
-            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
             if (am_policy_server)
             {
-                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", CFWORKDIR);
+                Log(LOG_LEVEL_INFO, "Assuming role as policy server, with policy distribution point at %s/masterfiles", GetWorkDir());
                 EvalContextHeapAddHard(ctx, "am_policy_hub");
+
+                if (!MasterfileExists(GetWorkDir()))
+                {
+                    Log(LOG_LEVEL_ERR, "In order to bootstrap as a policy server, the file '%s/masterfiles/promises.cf' must exist.", GetWorkDir());
+                    exit(EXIT_FAILURE);
+                }
             }
             else
             {
                 Log(LOG_LEVEL_INFO, "Not assuming role as policy server");
             }
+
+            WriteAmPolicyHubFile(CFWORKDIR, am_policy_server);
         }
 
         WritePolicyServerFile(GetWorkDir(), config->agent_specific.agent.bootstrap_policy_server);

@@ -600,7 +600,14 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
                 {
                     if (!DeleteDirectoryTree(filename))
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to purge directory %s\n", filename);
+                        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to purge directory '%s'\n", filename);
+                    }
+                    else if (rmdir(filename) == -1)
+                    {
+                        if (errno != ENOENT)
+                        {
+                            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Unable to purge directory '%s'\n", filename);
+                        }
                     }
                 }
                 else if (unlink(filename) == -1)

@@ -28,6 +28,7 @@
 #include "files_names.h"
 #include "files_copy.h"
 #include "item_lib.h"
+#include "logging.h"
 #include "logging_old.h"
 #include "promises.h"
 #include "matching.h"
@@ -535,9 +536,8 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
             return true;
         }
 
-        CfOut(OUTPUT_LEVEL_INFORM, "opendir",
-              "Unable to open directory %s during purge of directory tree %s",
-              path, basepath);
+        Log(LOG_LEVEL_INFO, "Unable to open directory '%s' during purge of directory tree '%s' (opendir: %s)",
+            path, basepath, GetErrorStr());
         return false;
     }
 
@@ -560,8 +560,7 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
                 continue;
             }
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "lstat",
-                  "Unable to stat file %s during purge of directory tree %s", path, basepath);
+            Log(LOG_LEVEL_VERBOSE, "Unable to stat file '%s' during purge of directory tree '%s' (lstat: %s)", path, basepath, GetErrorStr());
             failed = true;
         }
         else
@@ -583,9 +582,8 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
                         continue;
                     }
 
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "unlink",
-                          "Unable to remove file %s during purge of directory tree %s",
-                          subpath, basepath);
+                    Log(LOG_LEVEL_VERBOSE, "Unable to remove file '%s' during purge of directory tree '%s'. (unlink: %s)",
+                        subpath, basepath, GetErrorStr());
                     failed = true;
                 }
             }
@@ -593,19 +591,7 @@ static bool DeleteDirectoryTreeInternal(const char *basepath, const char *path)
     }
 
     DirClose(dirh);
-
-    if (!failed)
-    {
-        if (rmdir(path) == -1)
-        {
-            if (errno != ENOENT)
-            {
-                failed = true;
-            }
-        }
-    }
-
-    return failed;
+    return !failed;
 }
 
 bool DeleteDirectoryTree(const char *path)

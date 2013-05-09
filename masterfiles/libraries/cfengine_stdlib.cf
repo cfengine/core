@@ -109,7 +109,7 @@ bundle edit_line comment_lines_containing(regex,comment)
 {
 replace_patterns:
 
- "^(.*$(regex).*)$"
+ "^((?!$(comment)).*$(regex).*)$"
 
      replace_with => comment("$(comment)"),
           comment => "Comment out lines in a file";

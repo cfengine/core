@@ -26,8 +26,6 @@
 
 #include "keyring.h"
 #include "dir.h"
-#include "logging.h"
-#include "logging_old.h"
 
 /***************************************************************/
 

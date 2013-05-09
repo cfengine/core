@@ -30,8 +30,6 @@
 #include "rlist.h"
 #include "env_context.h"
 #include "conversion.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "generic_agent.h" // TODO: fix
 
 static void ExecConfigResetDefault(ExecConfig *exec_config)

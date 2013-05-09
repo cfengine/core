@@ -28,7 +28,6 @@
 #include "string_lib.h"
 #include "conversion.h"
 #include "mutex.h"
-#include "logging_old.h"
 #include "misc_lib.h"
 #include "mod_files.h"
 #include "vars.h"

@@ -24,9 +24,6 @@
 
 #include "signals.h"
 
-#include "logging.h"
-#include "logging_old.h"
-
 static const char *SIGNALS[] =
 {
     [SIGHUP] = "SIGHUP",

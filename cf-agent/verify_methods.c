@@ -32,8 +32,6 @@
 #include "hashes.h"
 #include "unix.h"
 #include "attributes.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "locks.h"
 #include "generic_agent.h" // HashVariables
 #include "fncall.h"
@@ -137,15 +135,15 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         switch (retval)
         {
         case PROMISE_RESULT_FAIL:
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, pp, a, " !! Method failed in some repairs or aborted\n");
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Method failed in some repairs or aborted\n");
             break;
 
         case PROMISE_RESULT_CHANGE:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " !! Method invoked repairs\n");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " !! Method invoked repairs\n");
             break;
 
         default:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Method verified\n");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Method verified\n");
             break;
 
         }
@@ -165,11 +163,11 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }

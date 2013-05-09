@@ -26,7 +26,6 @@
 #include "misc_lib.h"
 #include "conversion.h"
 #include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 int PR_KEPT;

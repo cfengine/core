@@ -27,8 +27,6 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "policy.h"
 

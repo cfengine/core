@@ -24,9 +24,6 @@
 
 #include "cf-agent-enterprise-stubs.h"
 
-#include "logging.h"
-#include "logging_old.h"
-
 void VerifyWindowsService(ARG_UNUSED EvalContext *ctx, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
     Log(LOG_LEVEL_ERR, "Windows service management is only supported in CFEngine Enterprise");

@@ -28,8 +28,6 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "pipes.h"
 
 /* Globals */

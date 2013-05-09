@@ -28,8 +28,6 @@
 #include "promises.h"
 #include "vars.h"
 #include "attributes.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "fncall.h"
 #include "locks.h"
 #include "rlist.h"
@@ -257,7 +255,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Service %s could not be invoked successfully\n", pp->promiser);
     }
 
     if (!DONTDO)

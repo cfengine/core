@@ -30,7 +30,6 @@
 #include "files_hashes.h"
 #include "hashes.h"
 #include "logging.h"
-#include "logging_old.h"
 #include "pipes.h"
 #include "mutex.h"
 #include "sysinfo.h"

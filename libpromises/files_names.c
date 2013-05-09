@@ -31,8 +31,6 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 #ifdef HAVE_NOVA

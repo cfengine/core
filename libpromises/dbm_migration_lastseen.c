@@ -26,7 +26,6 @@
 
 #include "lastseen.h"
 #include "logging.h"
-#include "logging_old.h"
 
 typedef struct
 {

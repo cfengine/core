@@ -28,7 +28,6 @@
 #include "policy.h"
 #include "conversion.h"
 #include "logging.h"
-#include "logging_old.h"
 #include "chflags.h"
 #include "audit.h"
 
@@ -578,6 +577,27 @@ FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp)
 
 /*******************************************************************/
 
+LogLevel ActionAttributeLogLevelFromString(const char *log_level)
+{
+    if (!log_level)
+    {
+        return LOG_LEVEL_ERR;
+    }
+
+    if (strcmp("inform", log_level) == 0)
+    {
+        return LOG_LEVEL_INFO;
+    }
+    else if (strcmp("verbose", log_level) == 0)
+    {
+        return LOG_LEVEL_VERBOSE;
+    }
+    else
+    {
+        return LOG_LEVEL_ERR;
+    }
+}
+
 TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp)
 {
     TransactionContext t;
@@ -633,10 +653,10 @@ TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promi
     }
 
     value = ConstraintGetRvalValue(ctx, "log_level", pp, RVAL_TYPE_SCALAR);
-    t.log_level = OutputLevelFromString(value);
+    t.log_level = ActionAttributeLogLevelFromString(value);
 
     value = ConstraintGetRvalValue(ctx, "report_level", pp, RVAL_TYPE_SCALAR);
-    t.report_level = OutputLevelFromString(value);
+    t.report_level = ActionAttributeLogLevelFromString(value);
 
     t.measure_id = ConstraintGetRvalValue(ctx, "measurement_class", pp, RVAL_TYPE_SCALAR);
 

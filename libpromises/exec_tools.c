@@ -26,8 +26,6 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "pipes.h"
 #include "string_lib.h"
 #include "misc_lib.h"

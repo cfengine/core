@@ -26,8 +26,6 @@
 
 #include "lastseen.h"
 #include "conversion.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "files_hashes.h"
 #include "locks.h"
 

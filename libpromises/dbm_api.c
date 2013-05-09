@@ -29,7 +29,6 @@
 #include "dbm_migration.h"
 #include "atexit.h"
 #include "logging.h"
-#include "logging_old.h"
 #include "misc_lib.h"
 
 #include <assert.h>

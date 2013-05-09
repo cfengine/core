@@ -25,7 +25,6 @@
 #include "dbm_migration.h"
 
 #include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 static bool BundlesMigrationVersion0(DBHandle *db)

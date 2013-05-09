@@ -26,8 +26,6 @@
 
 #include "attributes.h"
 #include "matching.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "files_names.h"
 #include "fncall.h"
 #include "rlist.h"
@@ -60,13 +58,13 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 
     if (a.context.nconstraints == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "No constraints for class promise %s", pp->promiser);
         return;
     }
 
     if (a.context.nconstraints > 1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Irreconcilable constraints in classes for %s", pp->promiser);
         return;
     }
 
@@ -100,7 +98,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
     {
         if (!ValidClassName(pp->promiser))
         {
-            cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
                  " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
         }
         else

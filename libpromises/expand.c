@@ -41,8 +41,6 @@
 #include "matching.h"
 #include "unix.h"
 #include "attributes.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "fncall.h"
 #include "args.h"
 #include "iteration.h"

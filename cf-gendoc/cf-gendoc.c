@@ -31,8 +31,6 @@
 #include "sort.h"
 #include "conversion.h"
 #include "expand.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "misc_lib.h"
 
 static void GenerateManual(EvalContext *ctx);

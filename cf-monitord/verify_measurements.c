@@ -27,8 +27,6 @@
 #include "promises.h"
 #include "files_names.h"
 #include "attributes.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "policy.h"
 #include "cf-monitord-enterprise-stubs.h"
 #include "env_context.h"
@@ -66,7 +64,7 @@ void VerifyMeasurementPromise(EvalContext *ctx, double *this, Promise *pp)
 
     if (!CheckMeasureSanity(a.measure, pp))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_INTERRUPTED, pp, a, "Measurement promise is not valid");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Measurement promise is not valid");
         return;
     }
 

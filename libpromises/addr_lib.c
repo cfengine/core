@@ -25,7 +25,6 @@
 #include "addr_lib.h"
 
 #include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 #define CF_ADDRSIZE 128

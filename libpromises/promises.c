@@ -30,8 +30,6 @@
 #include "files_names.h"
 #include "scope.h"
 #include "vars.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "args.h"
 #include "locks.h"
 #include "misc_lib.h"

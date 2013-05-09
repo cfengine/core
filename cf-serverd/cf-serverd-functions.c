@@ -28,8 +28,6 @@
 #include "server_transform.h"
 #include "bootstrap.h"
 #include "scope.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "signals.h"
 #include "mutex.h"
 #include "locks.h"

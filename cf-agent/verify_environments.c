@@ -30,7 +30,6 @@
 #include "vars.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "logging_old.h"
 #include "locks.h"
 #include "policy.h"
 #include "scope.h"
@@ -434,7 +433,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
 
             if (name && strcmp(name, pp->promiser) == 0)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Found a running environment called \"%s\" - promise kept\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Found a running environment called \"%s\" - promise kept\n",
                      name);
                 return true;
             }
@@ -465,7 +464,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
 
     if ((dom = virDomainCreateXML(vc, xml_file, 0)))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Created a virtual domain \"%s\"\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Created a virtual domain \"%s\"\n", pp->promiser);
 
         if (a.env.cpus != CF_NOINT)
         {
@@ -533,7 +532,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
 
         vp = virGetLastError();
 
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
              " !! Failed to create a virtual domain \"%s\" - check spec for errors: %s", pp->promiser, vp->message);
 
         Log(LOG_LEVEL_VERBOSE, "Quoted spec file: %s", xml_file);
@@ -560,19 +559,19 @@ static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise 
     {
         if (virDomainDestroy(dom) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, " !! Failed to delete virtual domain \"%s\"\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, " !! Failed to delete virtual domain \"%s\"\n", pp->promiser);
             ret = false;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Deleted virtual domain \"%s\"\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Deleted virtual domain \"%s\"\n", pp->promiser);
         }
 
         virDomainFree(dom);
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No such virtual domain called \"%s\" - promise kept\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No such virtual domain called \"%s\" - promise kept\n", pp->promiser);
     }
 
     return ret;
@@ -591,7 +590,7 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -599,17 +598,17 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise
         switch (info.state)
         {
         case VIR_DOMAIN_RUNNING:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" running - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" running - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_BLOCKED:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
                  " -> Virtual domain \"%s\" running but waiting for a resource - promise kept as far as possible\n",
                  pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
             Log(LOG_LEVEL_VERBOSE,
                   " -> It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
             break;
@@ -618,39 +617,39 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise
 
             if (virDomainResume(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to resume after suspension\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to resume after suspension\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" was suspended, resuming\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" was suspended, resuming\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
 
             if (virDomainCreate(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to resume after halting\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to resume after halting\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" was inactive, booting...\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" was inactive, booting...\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_CRASHED:
 
             if (virDomainReboot(dom, 0) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" has crashed and rebooting failed\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" has crashed and rebooting failed\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" has crashed, rebooting...\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" has crashed, rebooting...\n", pp->promiser);
             break;
 
         default:
@@ -717,7 +716,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -728,42 +727,42 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
         case VIR_DOMAIN_RUNNING:
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to suspend!\n", pp->promiser);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to suspend!\n", pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" running, suspending\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" running, suspending\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
             Log(LOG_LEVEL_VERBOSE,
                   " -> It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
             break;
 
         case VIR_DOMAIN_PAUSED:
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is suspended - promise kept\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is suspended - promise kept\n",
                  pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_CRASHED:
 
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is crashed has failed to suspend!\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is crashed has failed to suspend!\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" is in a crashed state, suspending\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" is in a crashed state, suspending\n",
                  pp->promiser);
             break;
 
@@ -777,7 +776,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
              pp->promiser);
     }
 
@@ -797,7 +796,7 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *p
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -808,22 +807,22 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *p
         case VIR_DOMAIN_RUNNING:
             if (virDomainShutdown(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to shutdown!\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" failed to shutdown!\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" running, terminating\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" running, terminating\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_PAUSED:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is suspended - ignoring promise\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is suspended - ignoring promise\n",
                  pp->promiser);
             break;
 
@@ -831,13 +830,13 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *p
 
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is crashed and failed to shutdown\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, " -> Virtual domain \"%s\" is crashed and failed to shutdown\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" is in a crashed state, terminating\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Virtual domain \"%s\" is in a crashed state, terminating\n",
                  pp->promiser);
             break;
 
@@ -851,7 +850,7 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *p
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
              pp->promiser);
     }
 
@@ -888,7 +887,7 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
     if (found)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Network \"%s\" exists - promise kept\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Network \"%s\" exists - promise kept\n", pp->promiser);
         return true;
     }
 
@@ -903,13 +902,13 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
     if ((network = virNetworkCreateXML(vc, xml_file)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, " !! Unable to create network \"%s\"\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, " !! Unable to create network \"%s\"\n", pp->promiser);
         free(xml_file);
         return false;
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, pp, a, " -> Created network \"%s\" - promise repaired\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Created network \"%s\" - promise repaired\n", pp->promiser);
     }
 
     free(xml_file);
@@ -927,18 +926,18 @@ static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, P
 
     if ((network = virNetworkLookupByName(vc, pp->promiser)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Couldn't find a network called \"%s\" - promise assumed kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Couldn't find a network called \"%s\" - promise assumed kept\n",
              pp->promiser);
         return true;
     }
 
     if (virNetworkDestroy(network) == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, PROMISE_RESULT_CHANGE, pp, a, " -> Deleted network \"%s\" - promise repaired\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Deleted network \"%s\" - promise repaired\n", pp->promiser);
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, pp, a, " !! Network deletion of \"%s\" failed\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, " !! Network deletion of \"%s\" failed\n", pp->promiser);
         ret = false;
     }
 

@@ -34,8 +34,6 @@ static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...);
-
 void *contend(void *param)
 {
     CF_DB *db;
@@ -299,7 +297,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     va_list ap;
     char buf[CF_BUFSIZE] = "";
@@ -307,7 +305,12 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
-    printf("CfOut: %s\n", buf);
+    printf("Log: %s\n", buf);
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }
 
 void FatalError(const EvalContext *ctx, char *fmt, ...)

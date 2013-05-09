@@ -38,8 +38,6 @@
 #include "vars.h"
 #include "syslog_client.h"
 #include "audit.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "promise_logging.h"
 #include "rlist.h"
 
@@ -1803,7 +1801,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
     }
 }
 
-void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
+void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
 {
     /*
      * This stub implementation of cfPS delegates to the new logging backend.
@@ -1827,7 +1825,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const Promi
         PromiseLoggingInit(ctx);
         PromiseLoggingPromiseEnter(ctx, pp);
 
-        if (level == OUTPUT_LEVEL_ERROR)
+        if (level == LOG_LEVEL_ERR)
         {
             LogPromiseContext(ctx, pp);
         }
@@ -1835,7 +1833,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const Promi
 
     va_list ap;
     va_start(ap, fmt);
-    CfVOut(level, fmt, ap);
+    VLog(level, fmt, ap);
     va_end(ap);
 
     if (pp)

@@ -43,7 +43,6 @@
 #include "matching.h"
 #include "hashes.h"
 #include "unix.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "args.h"
 #include "client_code.h"
@@ -2757,15 +2756,10 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                 {
                     if (assoc->rval.type != RVAL_TYPE_SCALAR)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "",
-                              " !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
-                        BufferDestroy(&buf);
-                        return (FnCallResult) { FNCALL_FAILURE };
+                        ProgrammingError("Pattern match was non-scalar in regextract");
                     }
                     else
                     {
-                        // CfOut(OUTPUT_LEVEL_INFORM, "", "format: matched format piece %s with data '%s'", assoc->lval, assoc->rval.item);
-
                         // this is the whole match
                         if (assoc->lval[0] == '0')
                         {
@@ -2791,8 +2785,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             }
                             else // not %% and no data
                             {
-                                CfOut(OUTPUT_LEVEL_ERROR, "",
-                                      " !! format() didn't have enough parameters, aborting");
+                                Log(LOG_LEVEL_ERR, "format() didn't have enough parameters");
                                 BufferDestroy(&buf);
                                 return (FnCallResult) { FNCALL_FAILURE };
                             }
@@ -2807,8 +2800,7 @@ static FnCallResult FnCallFormat(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
                             {
                                 if (NULL != strchr(format_piece, bad_modifiers[b]))
                                 {
-                                    CfOut(OUTPUT_LEVEL_ERROR, "",
-                                          " !! format() does not allow modifier character '%c' in format specifier %s, sorry!",
+                                    Log(LOG_LEVEL_ERR, "format() does not allow modifier character '%c' in format specifier '%s'.",
                                           bad_modifiers[b],
                                           format_piece);
                                     BufferDestroy(&buf);

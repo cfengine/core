@@ -32,8 +32,6 @@
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
@@ -334,7 +332,7 @@ bool LicenseInstall(char *path_source)
 
     if(stat(path_source, &sb) == -1)
     {
-        Log(LOG_LEVEL_ERR, "stat", "!! Can not stat input license file %s", path_source);
+        Log(LOG_LEVEL_ERR, "Can not stat input license file '%s'. (stat: %s)", path_source, GetErrorStr());
         return false;
     }
 

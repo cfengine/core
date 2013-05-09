@@ -24,8 +24,7 @@
 
 #include "syslog_client.h"
 
-#include "logging.h"
-#include "logging_old.h"
+#include "cf3.defs.h"
 
 static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
 static uint16_t SYSLOG_PORT = 514;

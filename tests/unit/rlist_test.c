@@ -433,11 +433,6 @@ void FnCallShow(FILE *fout, const FnCall *fp)
     fail();
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
-{
-    fail();
-}
-
 int IsNakedVar(const char *str, char vtype)
 {
     fail();
@@ -452,6 +447,13 @@ void GetNaked(char *s1, const char *s2)
 {
     fail();
 }
+
+/*
+void Log(LogLevel level, const char *fmt, ...)
+{
+    fail();
+}
+*/
 
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
 {

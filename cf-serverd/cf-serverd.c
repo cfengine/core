@@ -25,8 +25,6 @@
 #include "cf-serverd-functions.h"
 
 #include "server_transform.h"
-#include "logging.h"
-#include "logging_old.h"
 
 int main(int argc, char *argv[])
 {

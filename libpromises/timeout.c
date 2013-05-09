@@ -25,8 +25,6 @@
 #include "cf3.defs.h"
 
 #include "env_context.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "process_lib.h"
 
 /* Prototypes */

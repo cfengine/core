@@ -24,9 +24,6 @@
 
 #include "cf3.defs.h"
 
-#include "logging.h"
-#include "logging_old.h"
-
 /***************************************************************/
 
 enum modestate

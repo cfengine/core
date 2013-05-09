@@ -36,8 +36,6 @@
 #include "scope.h"
 #include "vars.h"
 #include "attributes.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "communication.h"
 #include "string_lib.h"
 #include "rlist.h"

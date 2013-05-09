@@ -28,8 +28,6 @@
 #include "files_names.h"
 #include "expand.h"
 #include "vars.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "args.h"
 #include "evalfunction.h"
 #include "policy.h"

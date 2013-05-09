@@ -30,7 +30,6 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 #ifdef QDB
@@ -69,7 +68,7 @@ static bool Lock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_lock", "Unable to lock QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to lock QDBM database. (pthread_mutex_lock: %s)", GetErrorStr());
         return false;
     }
     return true;
@@ -81,7 +80,7 @@ static void Unlock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_unlock", "Unable to unlock QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to unlock QDBM database. (pthread_mutex_unlock: %s)", GetErrorStr());
     }
 }
 
@@ -91,7 +90,7 @@ static bool LockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_lock", "Unable to obtain cursor lock for QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to obtain cursor lock for QDBM database. (pthread_mutex_lock: %s)", GetErrorStr());
         return false;
     }
     return true;
@@ -103,7 +102,7 @@ static void UnlockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_unlock", "Unable to release cursor lock for QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to release cursor lock for QDBM database. (pthread_mutex_unlock: %s)", GetErrorStr());
     }
 }
 
@@ -158,15 +157,13 @@ void DBPrivCloseDB(DBPriv *db)
     if ((ret = pthread_mutex_destroy(&db->lock)) != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_destroy",
-              "Lock is still active during QDBM database handle close");
+        Log(LOG_LEVEL_ERR, "Lock is still active during QDBM database handle close. (pthread_mutex_destroy: %s)", GetErrorStr());
     }
 
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
         errno = ret;
-        Log(LOG_LEVEL_ERR, "pthread_mutex_destroy",
-              "Cursor lock is still active during QDBM database handle close");
+        Log(LOG_LEVEL_ERR, "Cursor lock is still active during QDBM database handle close. (pthread_mutex_destroy: %s)", GetErrorStr());
     }
 
     if (!dpclose(db->depot))

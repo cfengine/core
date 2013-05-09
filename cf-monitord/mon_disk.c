@@ -26,8 +26,6 @@
 
 #include "mon.h"
 #include "files_interfaces.h"
-#include "logging.h"
-#include "logging_old.h"
 
 /* Globals */
 

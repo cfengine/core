@@ -181,16 +181,17 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
-    if (errstr)
-    {
-        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
-    }
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }

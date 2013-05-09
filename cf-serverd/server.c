@@ -34,8 +34,6 @@
 #include "dir.h"
 #include "conversion.h"
 #include "matching.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "pipes.h"
 #include "signals.h"
@@ -3148,7 +3146,7 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "GetNamedSecurityInfo", "!! Could not retreive existing owner of \"%s\"", filename);
+        Log(LOG_LEVEL_ERR, "Could not retreive existing owner of '%s'. (GetNamedSecurityInfo)", filename);
         return false;
     }
 

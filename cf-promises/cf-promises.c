@@ -26,13 +26,10 @@
 
 #include "env_context.h"
 #include "conversion.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
 #include "sysinfo.h"
-#include "logging_old.h"
 #include "man.h"
 
 #include <time.h>

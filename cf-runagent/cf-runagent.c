@@ -32,8 +32,6 @@
 #include "promises.h"
 #include "conversion.h"
 #include "vars.h"
-#include "logging_old.h"
-#include "logging.h"
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"

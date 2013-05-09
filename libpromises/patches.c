@@ -32,8 +32,6 @@
 
 #include "cf3.defs.h"
 
-#include "logging.h"
-#include "logging_old.h"
 #include "audit.h"
 
 static char *cf_format_strtimestamp(struct tm *tm, char *buf);

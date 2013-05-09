@@ -30,7 +30,6 @@
 
 #include "dbm_priv.h"
 #include "logging.h"
-#include "logging_old.h"
 #include "string_lib.h"
 
 #ifdef TCDB

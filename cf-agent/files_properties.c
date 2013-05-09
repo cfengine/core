@@ -27,8 +27,6 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "item_lib.h"
-#include "logging.h"
-#include "logging_old.h"
 
 static Item *SUSPICIOUSLIST = NULL;
 

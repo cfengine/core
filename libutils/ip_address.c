@@ -983,3 +983,62 @@ int IPAddressGetPort(IPAddress *address)
     }
     return port;
 }
+
+/*
+ * Comparison for IPV4 addresses
+ */
+static int IPV4Compare(struct IPV4Address *a, struct IPV4Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 4; ++i)
+    {
+        if (a->octets[i] != b->octets[i])
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/*
+ * Comparison for IPV6 addresses
+ */
+static int IPV6Compare(struct IPV6Address *a, struct IPV6Address *b)
+{
+    int i = 0;
+    for (i = 0; i < 8; ++i)
+    {
+        if (a->sixteen[i] != b->sixteen[i])
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int IPAddressIsEqual(IPAddress *a, IPAddress *b)
+{
+    /*
+     * We do not support IPV4 versus IPV6 comparisons.
+     * This is trickier than what it seems, since even the IPV6 representation of an IPV6 address is not
+     * clear yet.
+     */
+     if (!a || !b)
+     {
+         return -1;
+     }
+     if (a->type != b->type)
+     {
+         return -1;
+     }
+     if (a->type == IP_ADDRESS_TYPE_IPV4)
+     {
+         return IPV4Compare((struct IPV4Address *)a->address, (struct IPV4Address *)b->address);
+     }
+     else if (a->type == IP_ADDRESS_TYPE_IPV6)
+     {
+         return IPV6Compare((struct IPV6Address *)a->address, (struct IPV6Address *)b->address);
+     }
+     return -1;
+}
+

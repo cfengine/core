@@ -34,6 +34,7 @@ int INFORM;
 int VERBOSE;
 int DEBUG;
 char VPREFIX[1024];
+bool LEGACY_OUTPUT = false;
 
 typedef struct
 {

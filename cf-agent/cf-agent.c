@@ -194,6 +194,7 @@ static const struct option OPTIONS[15] =
     {"no-lock", no_argument, 0, 'K'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -212,6 +213,7 @@ static const char *HINTS[15] =
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
+    "Use legacy output format",
     NULL
 };
 
@@ -310,10 +312,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
     FreeStringArray(argc_new, argv_tmp);
 
-    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:h", OPTIONS, NULL)) != EOF)
+    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hl", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
             if (optarg && strlen(optarg) < 5)
             {

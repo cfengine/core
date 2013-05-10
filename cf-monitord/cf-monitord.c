@@ -80,6 +80,7 @@ static const struct option OPTIONS[14] =
     {"no-fork", no_argument, 0, 'F'},
     {"histograms", no_argument, 0, 'H'},
     {"tcpdump", no_argument, 0, 'T'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -97,6 +98,7 @@ static const char *HINTS[14] =
     "Run process in foreground, not as a daemon",
     "Ignored for backward compatibility",
     "Interface with tcpdump if available to collect data about network",
+    "Use legacy output format",
     NULL
 };
 
@@ -133,10 +135,14 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_MONITOR);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFh", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:VSxHTKMFhl", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
             GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;

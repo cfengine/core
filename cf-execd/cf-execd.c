@@ -101,6 +101,7 @@ static const struct option OPTIONS[] =
     {"once", no_argument, 0, 'O'},
     {"no-winsrv", no_argument, 0, 'W'},
     {"ld-library-path", required_argument, 0, 'L'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -121,6 +122,7 @@ static const char *HINTS[sizeof(OPTIONS)/sizeof(OPTIONS[0])] =
     "Run once and then exit (implies no-fork)",
     "Do not run as a service on windows - use this when running from a command shell (CFEngine Nova only)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
+    "Use legacy output format",
     NULL
 };
 
@@ -189,10 +191,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     char ld_library_path[CF_BUFSIZE];
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_EXECUTOR);
 
-    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMW", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnKIf:D:N:VxL:hFOV1gMWl", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
 
             if (optarg && strlen(optarg) < 5)

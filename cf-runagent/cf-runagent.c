@@ -101,6 +101,7 @@ static const struct option OPTIONS[17] =
     {"hail", required_argument, 0, 'H'},
     {"interactive", no_argument, 0, 'i'},
     {"timeout", required_argument, 0, 't'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -121,6 +122,7 @@ static const char *HINTS[17] =
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
     "Connection timeout, seconds",
+    "Use legacy output format",
     NULL
 };
 
@@ -245,10 +247,14 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
             GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;

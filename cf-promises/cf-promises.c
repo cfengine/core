@@ -66,6 +66,7 @@ static const struct option OPTIONS[] =
     {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
     {"warn", optional_argument, 0, 'W'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -87,6 +88,7 @@ static const char *HINTS[] =
     "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
     "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
+    "Use legacy output format",
     NULL
 };
 
@@ -160,10 +162,14 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'c':
             config->check_runnable = true;
             break;

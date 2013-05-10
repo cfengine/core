@@ -67,6 +67,7 @@ static const struct option OPTIONS[16] =
     {"no-fork", no_argument, 0, 'F'},
     {"ld-library-path", required_argument, 0, 'L'},
     {"generate-avahi-conf", no_argument, 0, 'A'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -85,6 +86,7 @@ static const char *HINTS[16] =
     "Run as a foreground processes (do not fork)",
     "Set the internal value of LD_LIBRARY_PATH for child processes",
     "Generates avahi configuration file to enable policy server to be discovered in the network",
+    "Use legacy output format",
     NULL
 };
 
@@ -129,10 +131,14 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_SERVER);
 
-    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhA", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvIKf:D:N:VSxLFMhAl", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
 
             if (optarg && (strlen(optarg) < 5))

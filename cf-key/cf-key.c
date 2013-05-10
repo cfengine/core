@@ -35,7 +35,6 @@
 #include "env_context.h"
 #include "crypto.h"
 #include "sysinfo.h"
-#include "logging_old.h"
 #include "man.h"
 
 #include "cf-key-functions.h"

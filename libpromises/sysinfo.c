@@ -34,7 +34,6 @@
 #include "item_lib.h"
 #include "matching.h"
 #include "unix.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "rlist.h"
@@ -294,7 +293,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (uname(&VSYSNAME) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "uname", "!!! Couldn't get kernel name info!");
+        Log(LOG_LEVEL_ERR, "Couldn't get kernel name info!. (uname: %s)", GetErrorStr());
         memset(&VSYSNAME, 0, sizeof(VSYSNAME));
     }
 
@@ -375,21 +374,27 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s", NameVersion());
+    Log(LOG_LEVEL_VERBOSE, "%s", NameVersion());
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Host name is: %s\n", VSYSNAME.nodename);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Type is %s\n", VSYSNAME.sysname);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Operating System Release is %s\n", VSYSNAME.release);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Architecture = %s\n\n\n", VSYSNAME.machine);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "The time is now %s\n\n", ctime(&tloc));
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------------\n\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    }
+    Log(LOG_LEVEL_VERBOSE, "Host name is: %s\n", VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s\n", VSYSNAME.sysname);
+    Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s\n", VSYSNAME.release);
+    Log(LOG_LEVEL_VERBOSE, "Architecture = %s\n\n\n", VSYSNAME.machine);
+    Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
+    Log(LOG_LEVEL_VERBOSE, "The time is now %s\n\n", ctime(&tloc));
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    }
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
     if (Chop(workbuf, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
     ScopeNewSpecialScalar(ctx, "sys", "date", workbuf, DATA_TYPE_STRING);
@@ -521,45 +526,45 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     sprintf(workbuf, "%u_bit", (unsigned) sizeof(void*) * 8);
     EvalContextHeapAddHard(ctx, workbuf);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.release);
     EvalContextHeapAddHard(ctx, workbuf);
 
     EvalContextHeapAddHard(ctx, VSYSNAME.machine);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s", VSYSNAME.sysname, VSYSNAME.machine);
     EvalContextHeapAddHard(ctx, workbuf);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
     snprintf(workbuf, CF_BUFSIZE, "%s_%s_%s", VSYSNAME.sysname, VSYSNAME.machine, VSYSNAME.release);
     EvalContextHeapAddHard(ctx, workbuf);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", CanonifyName(workbuf));
+    Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", CanonifyName(workbuf));
 
 #ifdef HAVE_SYSINFO
 # ifdef SI_ARCHITECTURE
     sz = sysinfo(SI_ARCHITECTURE, workbuf, CF_BUFSIZE);
     if (sz == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: sysinfo returned -1\n");
+        Log(LOG_LEVEL_VERBOSE, "cfengine internal: sysinfo returned -1\n");
     }
     else
     {
         EvalContextHeapAddHard(ctx, workbuf);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
+        Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
 # ifdef SI_PLATFORM
     sz = sysinfo(SI_PLATFORM, workbuf, CF_BUFSIZE);
     if (sz == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: sysinfo returned -1\n");
+        Log(LOG_LEVEL_VERBOSE, "cfengine internal: sysinfo returned -1\n");
     }
     else
     {
         EvalContextHeapAddHard(ctx, workbuf);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", workbuf);
+        Log(LOG_LEVEL_VERBOSE, "Additional hard class defined as: %s\n", workbuf);
     }
 # endif
 #endif
@@ -569,7 +574,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (strlen(workbuf) > CF_MAXVARSIZE - 2)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
+        Log(LOG_LEVEL_VERBOSE, "cfengine internal: $(arch) overflows CF_MAXVARSIZE! Truncating\n");
     }
 
     sp = xstrdup(CanonifyName(workbuf));
@@ -585,26 +590,26 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (!found)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine: I don't understand what architecture this is!");
+        Log(LOG_LEVEL_ERR, "CFEngine: I don't understand what architecture this is!");
     }
 
     strcpy(workbuf, "compiled_on_");
     strcat(workbuf, CanonifyName(AUTOCONF_SYSNAME));
     EvalContextHeapAddHard(ctx, workbuf);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "GNU autoconf class from compile time: %s", workbuf);
+    Log(LOG_LEVEL_VERBOSE, "GNU autoconf class from compile time: %s", workbuf);
 
 /* Get IP address from nameserver */
 
     if ((hp = gethostbyname(VFQNAME)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Hostname lookup failed on node name \"%s\"\n", VSYSNAME.nodename);
+        Log(LOG_LEVEL_VERBOSE, "Hostname lookup failed on node name \"%s\"\n", VSYSNAME.nodename);
         return;
     }
     else
     {
         memset(&cin, 0, sizeof(cin));
         cin.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Address given by nameserver: %s\n", inet_ntoa(cin.sin_addr));
+        Log(LOG_LEVEL_VERBOSE, "Address given by nameserver: %s\n", inet_ntoa(cin.sin_addr));
         strcpy(VIPADDRESS, inet_ntoa(cin.sin_addr));
 
         for (i = 0; hp->h_aliases[i] != NULL; i++)
@@ -628,11 +633,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (strcmp(zone, "global") == 0)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
     }
 #endif
 }
@@ -646,20 +651,20 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     struct stat statbuf;
     time_t now = time(NULL);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for environment from cf-monitord...\n");
+    Log(LOG_LEVEL_VERBOSE, "Looking for environment from cf-monitord...\n");
 
     snprintf(env, CF_BUFSIZE, "%s/state/%s", CFWORKDIR, CF_ENV_FILE);
     MapName(env);
 
     if (stat(env, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to detect environment from cf-monitord\n\n");
+        Log(LOG_LEVEL_VERBOSE, "Unable to detect environment from cf-monitord\n\n");
         return;
     }
 
     if (statbuf.st_mtime < (now - 60 * 60))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Environment data are too old - discarding\n");
+        Log(LOG_LEVEL_VERBOSE, "Environment data are too old - discarding\n");
         unlink(env);
         return;
     }
@@ -667,17 +672,17 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     snprintf(value, CF_MAXVARSIZE - 1, "%s", ctime(&statbuf.st_mtime));
     if (Chop(value, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
     ScopeDeleteSpecialScalar("mon", "env_time");
     ScopeNewSpecialScalar(ctx, "mon", "env_time", value, DATA_TYPE_STRING);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Loading environment...\n");
+    Log(LOG_LEVEL_VERBOSE, "Loading environment...\n");
 
     if ((fp = fopen(env, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\nUnable to detect environment from cf-monitord\n\n");
+        Log(LOG_LEVEL_VERBOSE, "\nUnable to detect environment from cf-monitord\n\n");
         return;
     }
 
@@ -705,7 +710,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             Rlist *list = NULL;
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
-            CfDebug(" -> Setting new monitoring list %s => %s", name, value);
+            CfDebug("Setting new monitoring list %s => %s", name, value);
             list = RlistParseShown(value);
             ScopeNewSpecialList(ctx, "mon", name, list, DATA_TYPE_STRING_LIST);
 
@@ -722,7 +727,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             {
                 ScopeDeleteSpecialScalar("mon", name);
                 ScopeNewSpecialScalar(ctx, "mon", name, value, DATA_TYPE_STRING);
-                CfDebug(" -> Setting new monitoring scalar %s => %s", name, value);
+                CfDebug("Setting new monitoring scalar %s => %s", name, value);
             }
         }
         else
@@ -732,7 +737,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
     }
 
     fclose(fp);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Environment data loaded\n\n");
+    Log(LOG_LEVEL_VERBOSE, "Environment data loaded\n\n");
 }
 
 /*******************************************************************/
@@ -833,7 +838,7 @@ void OSClasses(EvalContext *ctx)
 
     if (stat("/etc/generic-release", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a sun cobalt system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a sun cobalt system.\n");
         SetFlavour(ctx, "SunCobalt");
     }
 
@@ -860,31 +865,31 @@ void OSClasses(EvalContext *ctx)
 
     if (stat("/usr/bin/aptitude", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This system seems to have the aptitude package system\n");
+        Log(LOG_LEVEL_VERBOSE, "This system seems to have the aptitude package system\n");
         EvalContextHeapAddHard(ctx, "have_aptitude");
     }
 
     if (stat("/etc/UnitedLinux-release", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a UnitedLinux system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a UnitedLinux system.\n");
         SetFlavour(ctx, "UnitedLinux");
     }
 
     if (stat("/etc/alpine-release", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an AlpineLinux system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an AlpineLinux system.\n");
         SetFlavour(ctx, "alpinelinux");
     }
 
     if (stat("/etc/gentoo-release", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a gentoo system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a gentoo system.\n");
         SetFlavour(ctx, "gentoo");
     }
 
     if (stat("/etc/arch-release", &statbuf) != -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be an Arch Linux system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be an Arch Linux system.\n");
         SetFlavour(ctx, "archlinux");
     }
 
@@ -916,7 +921,7 @@ void OSClasses(EvalContext *ctx)
 #ifdef XEN_CPUID_SUPPORT
     else if (Xen_Hv_Check())
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen hv system.\n");
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a xen hv system.\n");
         EvalContextHeapAddHard(ctx, "xen");
         EvalContextHeapAddHard(ctx, "xen_domu_hv");
     }
@@ -953,31 +958,31 @@ void OSClasses(EvalContext *ctx)
             sp++;
             if (strncmp(sp, "5.0", 3) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows 2000\n");
+                Log(LOG_LEVEL_VERBOSE, "This appears to be Windows 2000\n");
                 EvalContextHeapAddHard(ctx, "Win2000");
             }
 
             if (strncmp(sp, "5.1", 3) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows XP\n");
+                Log(LOG_LEVEL_VERBOSE, "This appears to be Windows XP\n");
                 EvalContextHeapAddHard(ctx, "WinXP");
             }
 
             if (strncmp(sp, "5.2", 3) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2003\n");
+                Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2003\n");
                 EvalContextHeapAddHard(ctx, "WinServer2003");
             }
 
             if (strncmp(sp, "6.1", 3) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Vista\n");
+                Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Vista\n");
                 EvalContextHeapAddHard(ctx, "WinVista");
             }
 
             if (strncmp(sp, "6.3", 3) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Windows Server 2008\n");
+                Log(LOG_LEVEL_VERBOSE, "This appears to be Windows Server 2008\n");
                 EvalContextHeapAddHard(ctx, "WinServer2008");
             }
         }
@@ -1017,7 +1022,7 @@ void OSClasses(EvalContext *ctx)
     struct passwd *pw;
     if ((pw = getpwuid(getuid())) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", " !! Unable to get username for uid %ju", (uintmax_t)getuid());
+        Log(LOG_LEVEL_ERR, "Unable to get username for uid '%ju'. (getpwuid: %s)", (uintmax_t)getuid(), GetErrorStr());
     }
     else
     {
@@ -1081,7 +1086,7 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 #define ORACLE_VM_SERVER_REL_FILENAME "/etc/ovs-release"
 #define ORACLE_VM_SERVER_ID "Oracle VM server"
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle VM Server");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle VM Server");
     EvalContextHeapAddHard(ctx, "redhat");
     EvalContextHeapAddHard(ctx, "oraclevmserver");
 
@@ -1092,13 +1097,13 @@ static void Linux_Oracle_VM_Server_Version(EvalContext *ctx)
 
     if (strncmp(relstring, ORACLE_VM_SERVER_ID, strlen(ORACLE_VM_SERVER_ID)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify distribution from %s\n", ORACLE_VM_SERVER_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify distribution from %s\n", ORACLE_VM_SERVER_REL_FILENAME);
         return;
     }
 
     if ((r = strstr(relstring, "release ")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find distribution version in %s\n", ORACLE_VM_SERVER_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not find distribution version in %s\n", ORACLE_VM_SERVER_REL_FILENAME);
         return;
     }
 
@@ -1140,7 +1145,7 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 #define ORACLE_REL_FILENAME "/etc/oracle-release"
 #define ORACLE_ID "Oracle Linux Server"
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be Oracle Linux");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be Oracle Linux");
     EvalContextHeapAddHard(ctx, "oracle");
 
     if (!ReadLine(ORACLE_REL_FILENAME, relstring, sizeof(relstring)))
@@ -1150,13 +1155,13 @@ static void Linux_Oracle_Version(EvalContext *ctx)
 
     if (strncmp(relstring, ORACLE_ID, strlen(ORACLE_ID)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify distribution from %s\n", ORACLE_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify distribution from %s\n", ORACLE_REL_FILENAME);
         return;
     }
 
     if ((r = strstr(relstring, "release ")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find distribution version in %s\n", ORACLE_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not find distribution version in %s\n", ORACLE_REL_FILENAME);
         return;
     }
 
@@ -1195,7 +1200,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
     int major = -1;
     char strmajor[CF_MAXVARSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a fedora system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a fedora system.\n");
     EvalContextHeapAddHard(ctx, "redhat");
     EvalContextHeapAddHard(ctx, "fedora");
 
@@ -1206,7 +1211,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
         return 1;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for fedora core linux info...\n");
+    Log(LOG_LEVEL_VERBOSE, "Looking for fedora core linux info...\n");
 
     if (!strncmp(relstring, FEDORA_ID, strlen(FEDORA_ID)))
     {
@@ -1214,7 +1219,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s\n", FEDORA_REL_FILENAME);
         return 2;
     }
 
@@ -1226,7 +1231,7 @@ static int Linux_Fedora_Version(EvalContext *ctx)
 
     if (release == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", FEDORA_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s\n", FEDORA_REL_FILENAME);
         return 2;
     }
     else
@@ -1309,7 +1314,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     int minor = -1;
     char strminor[CF_MAXVARSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a redhat (or redhat-based) system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a redhat (or redhat-based) system.\n");
     EvalContextHeapAddHard(ctx, "redhat");
 
 /* Grab the first line from the file and then close it. */
@@ -1319,7 +1324,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
         return 1;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for redhat linux info in \"%s\"\n", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for redhat linux info in \"%s\"\n", relstring);
 
 /* First, try to grok the vendor and the edition (if any) */
     if (!strncmp(relstring, REDHAT_ES_ID, strlen(REDHAT_ES_ID)))
@@ -1396,7 +1401,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", RH_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s\n", RH_REL_FILENAME);
         return 2;
     }
 
@@ -1418,7 +1423,7 @@ static int Linux_Redhat_Version(EvalContext *ctx)
     release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", RH_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s\n", RH_REL_FILENAME);
         return 2;
     }
     else
@@ -1513,7 +1518,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
     char strminor[CF_MAXVARSIZE];
     FILE *fp;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a SuSE system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a SuSE system.\n");
     EvalContextHeapAddHard(ctx, "SuSE");
 
 /* Grab the first line from the file and then close it. */
@@ -1559,7 +1564,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     /* Check if it's a SuSE Enterprise version  */
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for SuSE enterprise info in \"%s\"\n", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for SuSE enterprise info in \"%s\"\n", relstring);
 
     /* Convert relstring to lowercase to handle rename of SuSE to
      * SUSE with SUSE 10.0.
@@ -1638,7 +1643,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
 
     if (release == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
         return 2;
     }
     else
@@ -1660,7 +1665,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, strminor);
                 EvalContextHeapAddHard(ctx, classbuf);
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
+                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
@@ -1682,13 +1687,13 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 SetFlavour(ctx, classbuf);
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered SuSE version %s", classbuf);
+                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
+    Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s\n", SUSE_REL_FILENAME);
 
     return 0;
 }
@@ -1703,7 +1708,7 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
     char classname[CF_MAXVARSIZE] = "";
     char buffer[CF_MAXVARSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a slackware system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a slackware system.\n");
     EvalContextHeapAddHard(ctx, "slackware");
 
     if (!ReadLine(filename, buffer, sizeof(buffer)))
@@ -1711,26 +1716,26 @@ static int Linux_Slackware_Version(EvalContext *ctx, char *filename)
         return 1;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Slackware version...\n");
+    Log(LOG_LEVEL_VERBOSE, "Looking for Slackware version...\n");
     switch (sscanf(buffer, "Slackware %d.%d.%d", &major, &minor, &release))
     {
     case 3:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u.%u system.", major, minor, release);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u_%u", major, minor, release);
         EvalContextHeapAddHard(ctx, classname);
         /* Fall-through */
     case 2:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u.%u system.", major, minor);
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u.%u system.", major, minor);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u_%u", major, minor);
         EvalContextHeapAddHard(ctx, classname);
         /* Fall-through */
     case 1:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Slackware %u system.", major);
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Slackware %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "slackware_%u", major);
         EvalContextHeapAddHard(ctx, classname);
         break;
     case 0:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No Slackware version number found.\n");
+        Log(LOG_LEVEL_VERBOSE, "No Slackware version number found.\n");
         return 2;
     }
     return 0;
@@ -1747,12 +1752,12 @@ static int Linux_Debian_Version(EvalContext *ctx)
     int result;
     char classname[CF_MAXVARSIZE], buffer[CF_MAXVARSIZE], os[CF_MAXVARSIZE], version[CF_MAXVARSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a debian system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a debian system.\n");
     EvalContextHeapAddHard(ctx, "debian");
 
     buffer[0] = classname[0] = '\0';
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Debian version...\n");
+    Log(LOG_LEVEL_VERBOSE, "Looking for Debian version...\n");
 
     if (!ReadLine(DEBIAN_VERSION_FILENAME, buffer, sizeof(buffer)))
     {
@@ -1764,7 +1769,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
     switch (result)
     {
     case 2:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u.%u system.", major, release);
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u.%u system.", major, release);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u_%u", major, release);
         EvalContextHeapAddHard(ctx, classname);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
@@ -1772,7 +1777,7 @@ static int Linux_Debian_Version(EvalContext *ctx)
         break;
         /* Fall-through */
     case 1:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a Debian %u system.", major);
+        Log(LOG_LEVEL_VERBOSE, "This appears to be a Debian %u system.", major);
         snprintf(classname, CF_MAXVARSIZE, "debian_%u", major);
         SetFlavour(ctx, classname);
         break;
@@ -1833,7 +1838,7 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandrake system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a mandrake system.\n");
     EvalContextHeapAddHard(ctx, "Mandrake");
 
     if (!ReadLine(MANDRAKE_REL_FILENAME, relstring, sizeof(relstring)))
@@ -1841,7 +1846,7 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
         return 1;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Mandrake linux info in \"%s\"\n", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandrake linux info in \"%s\"\n", relstring);
 
 /* Older Mandrakes had the 'Mandrake Linux' string in reverse order */
 
@@ -1860,7 +1865,7 @@ static int Linux_Mandrake_Version(EvalContext *ctx)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s\n", MANDRAKE_REL_FILENAME);
         return 2;
     }
 
@@ -1879,7 +1884,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
     char relstring[CF_MAXVARSIZE];
     char *vendor = NULL;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a mandriva system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a mandriva system.\n");
     EvalContextHeapAddHard(ctx, "Mandrake");
     EvalContextHeapAddHard(ctx, "Mandriva");
 
@@ -1888,7 +1893,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
         return 1;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Looking for Mandriva linux info in \"%s\"\n", relstring);
+    Log(LOG_LEVEL_VERBOSE, "Looking for Mandriva linux info in \"%s\"\n", relstring);
 
     if (!strncmp(relstring, MANDRIVA_ID, strlen(MANDRIVA_ID)))
     {
@@ -1896,7 +1901,7 @@ static int Linux_Mandriva_Version(EvalContext *ctx)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not identify OS distro from %s\n", MANDRIVA_REL_FILENAME);
+        Log(LOG_LEVEL_VERBOSE, "Could not identify OS distro from %s\n", MANDRIVA_REL_FILENAME);
         return 2;
     }
 
@@ -1919,7 +1924,7 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
     release = strstr(relstring, RELEASE_FLAG);
     if (release == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not find a numeric OS release in %s\n", filename);
+        Log(LOG_LEVEL_VERBOSE, "Could not find a numeric OS release in %s\n", filename);
         return 2;
     }
     else
@@ -1932,7 +1937,7 @@ static int Linux_Mandriva_Version_Real(EvalContext *ctx, char *filename, char *r
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Could not break down release version numbers in %s\n", filename);
+            Log(LOG_LEVEL_VERBOSE, "Could not break down release version numbers in %s\n", filename);
         }
     }
 
@@ -2017,7 +2022,7 @@ static int VM_Version(EvalContext *ctx)
     int major, minor, bug;
     int sufficient = 0;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a VMware Server ESX/xSX system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a VMware Server ESX/xSX system.\n");
     EvalContextHeapAddHard(ctx, "VMware");
 
 /* VMware Server ESX >= 3 has version info in /proc */
@@ -2069,7 +2074,7 @@ static int Xen_Domain(EvalContext *ctx)
     char buffer[CF_BUFSIZE];
     int sufficient = 0;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "This appears to be a xen pv system.\n");
+    Log(LOG_LEVEL_VERBOSE, "This appears to be a xen pv system.\n");
     EvalContextHeapAddHard(ctx, "xen");
 
 /* xen host will have "control_d" in /proc/xen/capabilities, xen guest will not */
@@ -2253,7 +2258,7 @@ const char *GetWorkDir(void)
 static void GetCPUInfo(EvalContext *ctx)
 {
 #if defined(MINGW) || defined(NT)
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "!! cpu count not implemented on Windows platform\n");
+    Log(LOG_LEVEL_VERBOSE, "!! cpu count not implemented on Windows platform\n");
     return;
 #else
     char buf[CF_SMALLBUF] = "1_cpu";
@@ -2274,7 +2279,7 @@ static void GetCPUInfo(EvalContext *ctx)
     len = sizeof(count);
     if(sysctl(mib, 2, &count, &len, NULL, 0) < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
+        Log(LOG_LEVEL_ERR, "sysctl", "!! failed to get cpu count: %s\n", strerror(errno));
     }
 #endif
 
@@ -2302,10 +2307,10 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count < 1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! invalid processor count: %d\n", count);
+        Log(LOG_LEVEL_VERBOSE, "invalid processor count: %d\n", count);
         return;
     }
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
+    Log(LOG_LEVEL_VERBOSE, "Found %d processor%s\n", count, count > 1 ? "s" : "");
 
     if (count == 1) {
         EvalContextHeapAddHard(ctx, buf);  // "1_cpu" from init - change if buf is ever used above

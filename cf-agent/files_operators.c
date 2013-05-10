@@ -40,7 +40,6 @@
 #include "scope.h"
 #include "matching.h"
 #include "attributes.h"
-#include "logging_old.h"
 #include "client_code.h"
 #include "pipes.h"
 #include "locks.h"
@@ -60,7 +59,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
     {
         if (!attr.move_obstructions)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, "", pp, attr, " !! Object %s exists and is obstructing our promise\n", from);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, attr, "Object %s exists and is obstructing our promise\n", from);
             return false;
         }
 
@@ -82,11 +81,11 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             strcat(saved, CF_SAVED);
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving file object %s to %s\n", from, saved);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving file object %s to %s\n", from, saved);
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, " !! Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)", from, saved, GetErrorStr());
                 return false;
             }
 
@@ -100,7 +99,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
         if (S_ISDIR(sb.st_mode))
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Moving directory %s to %s%s\n", from, from, CF_SAVED);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, attr, "Moving directory %s to %s%s\n", from, from, CF_SAVED);
 
             if (DONTDO)
             {
@@ -117,15 +116,16 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
 
             if (stat(saved, &sb) != -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, " !! Couldn't save directory %s, since %s exists already\n", from,
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory %s, since %s exists already\n", from,
                      saved);
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to force link to existing directory %s\n", from);
+                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory %s\n", from);
                 return false;
             }
 
             if (rename(from, saved) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "rename", pp, attr, "Can't rename %s to %s\n", from, saved);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't rename '%s' to '%s'. (rename: %s)",
+                     from, saved, GetErrorStr());
                 return false;
             }
         }
@@ -161,7 +161,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     if (stat(file, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Can no longer access file %s, which needed editing!\n", file);
+        Log(LOG_LEVEL_ERR, "Can no longer access file '%s', which needed editing. (stat: %s)", file, GetErrorStr());
         return false;
     }
 
@@ -186,8 +186,8 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     if (rename(file, backup) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "rename",
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", file, backup);
+        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
+            file, backup, GetErrorStr());
         return false;
     }
 
@@ -212,8 +212,8 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
 
     if (rename(new, file) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "rename",
-             " !! Can't rename %s to %s - so promised edits could not be moved into place\n", new, file);
+        Log(LOG_LEVEL_ERR, "Can't rename '%s' to '%s' - so promised edits could not be moved into place. (rename: %s)",
+            new, file, GetErrorStr());
         return false;
     }
 
@@ -221,7 +221,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
     if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to restore file permissions for '%s'\n", file);
+        Log(LOG_LEVEL_ERR, "Failed to restore file permissions for '%s'\n", file);
     }
     umask(mask);
 
@@ -246,7 +246,8 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
     //saving list to file
     if ((fp = fopen(dest_filename, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Unable to open destination file %s for writing", dest_filename);
+        Log(LOG_LEVEL_ERR, "Unable to open destination file '%s' for writing. (fopen: %s)",
+            dest_filename, GetErrorStr());
         return false;
     }
 
@@ -254,14 +255,16 @@ static bool SaveItemListCallback(const char *dest_filename, void *param)
     {
         if (fprintf(fp, "%s\n", ip->name) < 0)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fprintf", "Unable to write into destination file %s", dest_filename);
+            Log(LOG_LEVEL_ERR, "Unable to write into destination file '%s'. (fprintf: %s)",
+                dest_filename, GetErrorStr());
             return false;
         }
     }
 
     if (fclose(fp) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fclose", "Unable to close file %s after writing", dest_filename);
+        Log(LOG_LEVEL_ERR, "Unable to close file '%s' after writing. (fclose: %s)",
+            dest_filename, GetErrorStr());
         return false;
     }
 
@@ -309,20 +312,20 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 if ((ip1 == list1) || (ip2 == list2))
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
                          " ! File content wants to change from from/to full/empty but only a warning promised");
                 }
                 else
                 {
                     if (ip1 != NULL)
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (remove) %s",
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (remove) %s",
                              ip1->name);
                     }
 
                     if (ip2 != NULL)
                     {
-                        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
+                        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line change warning promised: (add) %s", ip2->name);
                     }
                 }
             }
@@ -352,8 +355,8 @@ static int ItemListsEqual(EvalContext *ctx, const Item *list1, const Item *list2
             {
                 // If we want to see warnings, we need to scan the whole file
 
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: - %s", ip1->name);
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, a, " ! edit_line warning promised: + %s", ip2->name);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line warning promised: - %s", ip1->name);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " ! edit_line warning promised: + %s", ip2->name);
                 retval = false;
             }
         }

@@ -34,6 +34,7 @@
 #endif
 
 #include "sequence.h"
+#include "logging.h"
 
 /*******************************************************************/
 /* Preprocessor tricks                                             */
@@ -566,13 +567,6 @@ typedef enum
 
 typedef enum
 {
-    OUTPUT_LEVEL_INFORM,
-    OUTPUT_LEVEL_VERBOSE,
-    OUTPUT_LEVEL_ERROR,
-} OutputLevel;
-
-typedef enum
-{
     EDIT_ORDER_BEFORE,
     EDIT_ORDER_AFTER
 } EditOrder;
@@ -1044,8 +1038,8 @@ typedef struct
     double value_notkept;
     double value_repaired;
     int audit;
-    OutputLevel report_level;
-    OutputLevel log_level;
+    LogLevel report_level;
+    LogLevel log_level;
 } TransactionContext;
 
 /*************************************************************************/

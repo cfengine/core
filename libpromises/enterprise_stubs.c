@@ -26,7 +26,6 @@
 
 #include "prototypes3.h"
 #include "syntax.h"
-#include "logging_old.h"
 
 /*
  * This module contains numeruous functions which don't use all their parameters
@@ -62,7 +61,7 @@ void EnterpriseContext(ARG_UNUSED EvalContext *ctx)
 
 void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Extended system discovery is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "# Extended system discovery is only available in CFEngine Enterprise");
 }
 
 /* all agents: cfstream.c, expand.c, generic_agent.c */
@@ -98,7 +97,7 @@ void LogTotalCompliance(const char *version, int background_tasks)
              (double) PR_REPAIRED / total,
              (double) PR_NOTKEPT / total);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Total: %s", string);
+    Log(LOG_LEVEL_VERBOSE, "Total: %s", string);
 
     char filename[CF_BUFSIZE];
     snprintf(filename, CF_BUFSIZE, "%s/%s", CFWORKDIR, CF_PROMISE_LOG);
@@ -107,7 +106,7 @@ void LogTotalCompliance(const char *version, int background_tasks)
     FILE *fout = fopen(filename, "a");
     if (fout == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not open %s", filename);
+        Log(LOG_LEVEL_ERR, "Could not open '%s'. (fopen: %s)", filename, GetErrorStr());
     }
     else
     {
@@ -139,18 +138,18 @@ const EVP_CIPHER *CfengineCipher(char type)
 
 char *GetRemoteScalar(EvalContext *ctx, char *proto, char *handle, char *server, int encrypted, char *rcv)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Access to server literals is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "# Access to server literals is only available in CFEngine Enterprise");
     return "";
 }
 
 void CacheUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "# Value fault-tolerance only available in CFEngine Enterprise");
 }
 
 int RetrieveUnreliableValue(char *caller, char *handle, char *buffer)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "# Value fault-tolerance only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "# Value fault-tolerance only available in CFEngine Enterprise");
     return false;
 }
 
@@ -163,31 +162,31 @@ int GetRegistryValue(char *key, char *name, char *buf, int bufSz)
 
 void *CfLDAPValue(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPList(char *uri, char *dn, char *filter, char *name, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfLDAPArray(EvalContext *ctx, const Bundle *caller, char *array, char *uri, char *dn, char *filter, char *scope, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 void *CfRegLDAP(char *uri, char *dn, char *filter, char *name, char *scope, char *regex, char *sec)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "LDAP support only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "LDAP support only available in CFEngine Enterprise");
     return NULL;
 }
 
 bool CFDB_HostsWithClass(EvalContext *ctx, Rlist **return_list, char *class_name, char *return_format)
 {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! Host class counting is only available in CFEngine Enterprise");
+    Log(LOG_LEVEL_ERR, "Host class counting is only available in CFEngine Enterprise");
     return false;
 }
 

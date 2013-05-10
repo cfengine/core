@@ -24,7 +24,6 @@
 
 #include "pipes.h"
 
-#include "logging_old.h"
 #include "mutex.h"
 #include "exec_tools.h"
 #include "rlist.h"
@@ -78,7 +77,7 @@ static void SetChildFD(int fd, pid_t pid)
 
     if (fd >= MAX_FD)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
                 "File descriptor %d of child %jd higher than MAX_FD, check for defunct children",
                 fd, (intmax_t)pid);
         new_fd = fd + 32;
@@ -193,7 +192,7 @@ FILE *cf_popen(const char *command, char *type, bool capture_stderr)
 
         if (execv(argv[0], argv) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "execv", "Couldn't run %s", argv[0]);
+            Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
         }
 
         _exit(1);
@@ -283,7 +282,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
         {
             if (chroot(chrootv) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "chroot", "Couldn't chroot to %s\n", chrootv);
+                Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
                 ArgFree(argv);
                 return NULL;
             }
@@ -293,7 +292,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
         {
             if (chdir(chdirv) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Couldn't chdir to %s\n", chdirv);
+                Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
                 ArgFree(argv);
                 return NULL;
             }
@@ -306,7 +305,7 @@ FILE *cf_popensetuid(const char *command, char *type, uid_t uid, gid_t gid, char
 
         if (execv(argv[0], argv) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "execv", "Couldn't run %s", argv[0]);
+            Log(LOG_LEVEL_ERR, "Couldn't run '%s'. (execv: %s)", argv[0], GetErrorStr());
         }
 
         _exit(1);
@@ -476,7 +475,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
         {
             if (chroot(chrootv) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "chroot", "Couldn't chroot to %s\n", chrootv);
+                Log(LOG_LEVEL_ERR, "Couldn't chroot to '%s'. (chroot: %s)", chrootv, GetErrorStr());
                 return NULL;
             }
         }
@@ -485,7 +484,7 @@ FILE *cf_popen_shsetuid(const char *command, char *type, uid_t uid, gid_t gid, c
         {
             if (chdir(chdirv) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "chdir", "Couldn't chdir to %s\n", chdirv);
+                Log(LOG_LEVEL_ERR, "Couldn't chdir to '%s'. (chdir: %s)", chdirv, GetErrorStr());
                 return NULL;
             }
         }
@@ -580,7 +579,7 @@ int cf_pclose(FILE *pp)
 
     if (fd >= MAX_FD)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               "File descriptor %d of child higher than MAX_FD in cf_pclose, check for defunct children", fd);
         pid = -1;
     }
@@ -633,11 +632,11 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (gid != (gid_t) - 1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Changing gid to %ju\n", (uintmax_t)gid);
+        Log(LOG_LEVEL_VERBOSE, "Changing gid to %ju\n", (uintmax_t)gid);
 
         if (setgid(gid) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setgid", "Couldn't set gid to %ju\n", (uintmax_t)gid);
+            Log(LOG_LEVEL_ERR, "Couldn't set gid to '%ju'. (setgid: %s)", (uintmax_t)gid, GetErrorStr());
             return false;
         }
 
@@ -645,25 +644,25 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
         if ((pw = getpwuid(uid)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "getpwuid", "Unable to get login groups when dropping privilege to %jd", (uintmax_t)uid);
+            Log(LOG_LEVEL_ERR, "Unable to get login groups when dropping privilege to '%jd'. (getpwuid: %s)", (uintmax_t)uid, GetErrorStr());
             return false;
         }
 
         if (initgroups(pw->pw_name, pw->pw_gid) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "initgroups", "Unable to set login groups when dropping privilege to %s=%ju", pw->pw_name,
-                  (uintmax_t)uid);
+            Log(LOG_LEVEL_ERR, "Unable to set login groups when dropping privilege to '%s=%ju'. (initgroups: %s)", pw->pw_name,
+                  (uintmax_t)uid, GetErrorStr());
             return false;
         }
     }
 
     if (uid != (uid_t) - 1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Changing uid to %ju\n", (uintmax_t)uid);
+        Log(LOG_LEVEL_VERBOSE, "Changing uid to '%ju'", (uintmax_t)uid);
 
         if (setuid(uid) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "setuid", "Couldn't set uid to %ju\n", (uintmax_t)uid);
+            Log(LOG_LEVEL_ERR, "Couldn't set uid to '%ju'. (setuid: %s)", (uintmax_t)uid, GetErrorStr());
             return false;
         }
     }

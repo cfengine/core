@@ -26,7 +26,6 @@
 
 #include "keyring.h"
 #include "dir.h"
-#include "logging_old.h"
 
 /***************************************************************/
 
@@ -68,7 +67,7 @@ int RemovePublicKey(const char *id)
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Unable to open keys directory");
+            Log(LOG_LEVEL_ERR, "Unable to open keys directory at '%s'. (opendir: %s)", keysdir, GetErrorStr());
             return -1;
         }
     }
@@ -90,7 +89,7 @@ int RemovePublicKey(const char *id)
             {
                 if (errno != ENOENT)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "unlink", "Unable to remove key file %s", dirp->d_name);
+                    Log(LOG_LEVEL_ERR, "Unable to remove key file '%s'. (unlink: %s)", dirp->d_name, GetErrorStr());
                     DirClose(dirh);
                     return -1;
                 }
@@ -104,7 +103,7 @@ int RemovePublicKey(const char *id)
 
     if (errno)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "ReadDir", "Unable to enumerate files in keys directory");
+        Log(LOG_LEVEL_ERR, "Unable to enumerate files in keys directory. (ReadDir: %s)", GetErrorStr());
         DirClose(dirh);
         return -1;
     }

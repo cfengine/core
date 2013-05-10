@@ -38,10 +38,9 @@
 #include "vars.h"
 #include "syslog_client.h"
 #include "audit.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "promise_logging.h"
 #include "rlist.h"
+#include "buffer.h"
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
@@ -141,7 +140,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     strcpy(canonified_context, context);
     if (Chop(canonified_context, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(canonified_context);
     
@@ -163,13 +162,13 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
@@ -184,7 +183,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -195,7 +194,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -212,7 +211,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     strcpy(context_copy, context);
     if (Chop(context_copy, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(context_copy);
 
@@ -225,13 +224,13 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"\n", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"\n", context_copy);
         exit(1);
     }
 
@@ -246,7 +245,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -257,7 +256,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -291,7 +290,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
 
     if (Chop(copy, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
     if (strlen(copy) == 0)
@@ -303,19 +302,19 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle %s aborted on defined class \"%s\"\n", frame.owner->name, copy);
+        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class \"%s\"\n", frame.owner->name, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
         exit(1);
     }
 
     if (EvalContextHeapContainsSoft(ctx, copy))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
+        Log(LOG_LEVEL_ERR, "WARNING - private class \"%s\" in bundle \"%s\" shadows a global class - you should choose a different name to avoid conflicts",
               copy, frame.owner->name);
     }
 
@@ -330,7 +329,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
             exit(1);
         }
     }
@@ -341,7 +340,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -437,7 +436,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
     if (!res.result)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to parse class expression: %s", context);
+        Log(LOG_LEVEL_ERR, "Unable to parse class expression: %s", context);
         return false;
     }
     else
@@ -476,7 +475,7 @@ static bool EvalWithTokenFromList(const char *expr, StringSet *token_set)
 
     if (!res.result)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Syntax error in expression: %s", expr);
+        Log(LOG_LEVEL_ERR, "Syntax error in expression: %s", expr);
         return false;           /* FIXME: return error */
     }
     else
@@ -533,7 +532,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go\n",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -542,7 +541,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> New persistent state %s\n", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent state %s\n", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -596,7 +595,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan persistence cache");
+        Log(LOG_LEVEL_INFO, "Unable to scan persistence cache");
         return;
     }
 
@@ -608,13 +607,13 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
         if (now > q.expires)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Persistent class %s expired\n", key);
+            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired\n", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " Adding persistent class %s to heap\n", key);
+            Log(LOG_LEVEL_VERBOSE, " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, " Adding persistent class %s to heap\n", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
@@ -741,10 +740,10 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 
         if (!StringSetContains(ctx->dependency_handles, d))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
 
             return true;
         }
@@ -1179,6 +1178,36 @@ const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
     return NULL;
 }
 
+char *EvalContextStackPath(const EvalContext *ctx)
+{
+    Writer *path = StringWriter();
+
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        WriterWriteChar(path, '/');
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            WriterWrite(path, frame->data.body.owner->name);
+            break;
+
+        case STACK_FRAME_TYPE_BUNDLE:
+            WriterWrite(path, frame->data.bundle.owner->name);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            WriterWriteF(path, "'%s'", frame->data.promise.owner->promiser);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE:
+            break;
+        }
+    }
+
+    return StringWriterClose(path);
+}
+
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)
 {
     assert(type != DATA_TYPE_NONE);
@@ -1209,7 +1238,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
         case RVAL_TYPE_SCALAR:
             if (StringContainsVar((char *) rval.item, lval.lval))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
+                Log(LOG_LEVEL_ERR, "Scalar variable %s.%s contains itself (non-convergent): %s", lval.scope, lval.lval,
                       (char *) rval.item);
                 return false;
             }
@@ -1220,7 +1249,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
             {
                 if (StringContainsVar(rp->item, lval.lval))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "List variable %s contains itself (non-convergent)", lval.lval);
+                    Log(LOG_LEVEL_ERR, "List variable %s contains itself (non-convergent)", lval.lval);
                     return false;
                 }
             }
@@ -1258,7 +1287,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
             if (listvars != NULL)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                Log(LOG_LEVEL_ERR, "Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
                       lval.lval, ScopeGetCurrent()->scope);
             }
 
@@ -1471,7 +1500,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
 
         if (EvalContextHeapContainsHard(ctx, classname))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class \"%s\" as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
         }
 
@@ -1479,16 +1508,16 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
         {
             if (context_scope != CONTEXT_SCOPE_NAMESPACE)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
+                Log(LOG_LEVEL_INFO, "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
             }
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining persistent promise result class %s\n", classname);
+            Log(LOG_LEVEL_VERBOSE, " ?> defining persistent promise result class %s\n", classname);
             EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining promise result class %s\n", classname);
+            Log(LOG_LEVEL_VERBOSE, " ?> defining promise result class %s\n", classname);
 
             switch (context_scope)
             {
@@ -1516,13 +1545,13 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class \"%s\" in post-condition classes",
                   RlistScalarValue(rp));
         }
 
         const char *string = (char *) (rp->item);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Cancelling class %s\n", string);
+        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s\n", string);
 
         EvalContextHeapPersistentRemove(string);
 
@@ -1658,7 +1687,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "L: %s\n", buffer);
+            Log(LOG_LEVEL_INFO, "L: %s\n", buffer);
         }
         else
         {
@@ -1666,11 +1695,11 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
 
             if (fout == NULL)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open private log %s", logname);
+                Log(LOG_LEVEL_ERR, "Unable to open private log %s", logname);
                 return;
             }
 
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Logging string \"%s\" to %s\n", buffer, logname);
+            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s\n", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);
@@ -1803,7 +1832,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
     }
 }
 
-void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char *errstr, const Promise *pp, Attributes attr, const char *fmt, ...)
+void cfPS(EvalContext *ctx, LogLevel level, PromiseResult status, const Promise *pp, Attributes attr, const char *fmt, ...)
 {
     /*
      * This stub implementation of cfPS delegates to the new logging backend.
@@ -1827,7 +1856,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
         PromiseLoggingInit(ctx);
         PromiseLoggingPromiseEnter(ctx, pp);
 
-        if (level == OUTPUT_LEVEL_ERROR)
+        if (level == LOG_LEVEL_ERR)
         {
             LogPromiseContext(ctx, pp);
         }
@@ -1835,7 +1864,7 @@ void cfPS(EvalContext *ctx, OutputLevel level, PromiseResult status, const char 
 
     va_list ap;
     va_start(ap, fmt);
-    CfVOut(level, errstr, fmt, ap);
+    VLog(level, fmt, ap);
     va_end(ap);
 
     if (pp)

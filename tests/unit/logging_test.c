@@ -75,3 +75,10 @@ int main()
 
     return run_tests(tests);
 }
+
+// STUBS
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
+}

@@ -25,7 +25,7 @@
 #include "dbm_migration.h"
 
 #include "lastseen.h"
-#include "logging_old.h"
+#include "logging.h"
 
 typedef struct
 {
@@ -64,7 +64,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
     {
         if (ksize == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "LastseenMigrationVersion0: Database structure error -- zero-length key.");
+            Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: Database structure error -- zero-length key.");
             continue;
         }
 
@@ -75,7 +75,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
             if ((key[0] != 'q') && (key[0] != 'k') && (key[0] != 'a'))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", "LastseenMigrationVersion0: Malformed key found: %s", key);
+                Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: Malformed key found: %s", key);
             }
 
             continue;
@@ -93,7 +93,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (vsize != QPOINT0_OFFSET + sizeof(QPoint0))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "LastseenMigrationVersion0: invalid value size for key %s, entry is deleted",
+            Log(LOG_LEVEL_INFO, "LastseenMigrationVersion0: invalid value size for key %s, entry is deleted",
                   key);
             DBCursorDeleteEntry(cursor);
             continue;
@@ -104,7 +104,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, hostkey_key, old_data_address, strlen(old_data_address) + 1))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write version 1 lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 lastseen entry for %s", key);
             errors = true;
             continue;
         }
@@ -114,7 +114,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, address_key, hostkey, strlen(hostkey) + 1))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write version 1 reverse lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 reverse lastseen entry for %s", key);
             errors = true;
             continue;
         }
@@ -131,7 +131,7 @@ static bool LastseenMigrationVersion0(DBHandle *db)
             || (!isfinite(old_data_q.expect))
             || (!isfinite(old_data_q.var)))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Ignoring malformed connection quality data for %s", key);
+            Log(LOG_LEVEL_INFO, "Ignoring malformed connection quality data for %s", key);
             DBCursorDeleteEntry(cursor);
             continue;
         }
@@ -155,21 +155,21 @@ static bool LastseenMigrationVersion0(DBHandle *db)
 
         if (!WriteDB(db, quality_key, &data, sizeof(data)))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write version 1 connection quality key for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 connection quality key for %s", key);
             errors = true;
             continue;
         }
 
         if (!DBCursorDeleteEntry(cursor))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to delete version 0 lastseen entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to delete version 0 lastseen entry for %s", key);
             errors = true;
         }
     }
 
     if (DeleteDBCursor(cursor) == false)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "LastseenMigrationVersion0: Unable to close cursor");
+        Log(LOG_LEVEL_ERR, "LastseenMigrationVersion0: Unable to close cursor");
         errors = true;
     }
 

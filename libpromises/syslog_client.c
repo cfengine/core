@@ -24,7 +24,7 @@
 
 #include "syslog_client.h"
 
-#include "logging_old.h"
+#include "cf3.defs.h"
 
 static char SYSLOG_HOST[MAXHOSTNAMELEN] = "localhost";
 static uint16_t SYSLOG_PORT = 514;
@@ -71,7 +71,7 @@ void RemoteSysLog(int log_priority, const char *log_string)
 
     if ((err = getaddrinfo(SYSLOG_HOST, strport, &query, &response)) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "",
+        Log(LOG_LEVEL_INFO,
               "Unable to find syslog_host or service: (%s/%s) %s",
               SYSLOG_HOST, strport, gai_strerror(err));
         return;
@@ -84,13 +84,13 @@ void RemoteSysLog(int log_priority, const char *log_string)
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     txtaddr, sizeof(txtaddr),
                     NULL, 0, NI_NUMERICHOST);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              " -> Connect to syslog %s = %s on port %s\n",
+        Log(LOG_LEVEL_VERBOSE,
+              "Connect to syslog %s = %s on port %s\n",
               SYSLOG_HOST, txtaddr, strport);
 
         if ((sd = socket(ap->ai_family, ap->ai_socktype, IPPROTO_UDP)) == -1)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a socket");
+            Log(LOG_LEVEL_INFO, "Couldn't open a socket. (socket: %s)", GetErrorStr());
             continue;
         }
         else
@@ -104,15 +104,12 @@ void RemoteSysLog(int log_priority, const char *log_string)
                          0, ap->ai_addr, ap->ai_addrlen);
             if (err == -1)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "sendto",
-                      " -> Couldn't send \"%s\" to syslog server \"%s\"\n",
-                      message, SYSLOG_HOST);
+                Log(LOG_LEVEL_VERBOSE, "Couldn't send '%s' to syslog server '%s'. (sendto: %s)",
+                      message, SYSLOG_HOST, GetErrorStr());
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                      " -> Syslog message: \"%s\" to server \"%s\"\n",
-                      message, SYSLOG_HOST);
+                Log(LOG_LEVEL_VERBOSE, "Syslog message: '%s' to server '%s'", message, SYSLOG_HOST);
             }
             close(sd);
         }

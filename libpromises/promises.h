@@ -27,10 +27,11 @@
 
 #include "cf3.defs.h"
 
+#include "logging.h"
 #include "sequence.h"
 
 Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp);
 Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise *pp);
-void PromiseRef(OutputLevel level, const Promise *pp);
+void PromiseRef(LogLevel level, const Promise *pp);
 
 #endif

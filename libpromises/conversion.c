@@ -29,7 +29,7 @@
 #include "dbm_api.h"
 #include "mod_access.h"
 #include "item_lib.h"
-#include "logging_old.h"
+#include "logging.h"
 #include "rlist.h"
 
 #include <assert.h>
@@ -212,13 +212,6 @@ ContextScope ContextScopeFromString(const char *scope_str)
     return FindTypeInArray(CONTEXT_SCOPES, scope_str, CONTEXT_SCOPE_NAMESPACE, CONTEXT_SCOPE_NONE);
 }
 
-OutputLevel OutputLevelFromString(const char *level)
-{
-    static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
-
-    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_ERROR, OUTPUT_LEVEL_ERROR);
-}
-
 FileLinkType FileLinkTypeFromString(const char *s)
 {
     static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
@@ -350,11 +343,11 @@ long IntFromString(const char *s)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
+            Log(LOG_LEVEL_INFO, "Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
                   s, "non-value", remainder);
             if (strchr(s, '$'))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! The variable might not yet be expandable - not necessarily an error");
+                Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
             }
         }
     }
@@ -383,7 +376,7 @@ long IntFromString(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%ld)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%ld)", a);
                 return CF_NOINT;
             }
             else
@@ -553,7 +546,7 @@ bool DoubleFromString(const char *s, double *value_out)
 
     if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
+        Log(LOG_LEVEL_ERR, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
         return false;
     }
     else
@@ -581,7 +574,7 @@ bool DoubleFromString(const char *s, double *value_out)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%.2lf)", a);
                 return false;
             }
             else
@@ -1029,11 +1022,11 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user in promise \'%s\'\n", ip->name);
+                Log(LOG_LEVEL_INFO, "Unknown user in promise \'%s\'\n", ip->name);
 
                 if (pp != NULL)
                 {
-                    PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                    PromiseRef(LOG_LEVEL_INFO, pp);
                 }
 
                 uid = CF_UNKNOWN_OWNER; /* signal user not found */
@@ -1066,7 +1059,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user %s in promise\n", uidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown user %s in promise\n", uidbuff);
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1103,11 +1096,11 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown group \'%s\' in promise\n", gidbuff);
 
             if (pp)
             {
-                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
             }
 
             gid = CF_UNKNOWN_GROUP;

@@ -315,12 +315,12 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
         {
             if (trust_key)
             {
-                Log(LOG_LEVEL_VERBOSE, " -> Trusting server identity, promise to accept key from %s=%s", conn->this_server,
+                Log(LOG_LEVEL_VERBOSE, "Trusting server identity, promise to accept key from %s=%s", conn->this_server,
                       conn->remoteip);
             }
             else
             {
-                Log(LOG_LEVEL_ERR, " !! Not authorized to trust the server=%s's public key (trustkey=false)",
+                Log(LOG_LEVEL_ERR, "Not authorized to trust the server=%s's public key (trustkey=false)",
                       conn->this_server);
                 RSA_free(server_pubkey);
                 return false;
@@ -386,7 +386,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         RSA *newkey = RSA_new();
 
-        Log(LOG_LEVEL_VERBOSE, " -> Collecting public key from server!");
+        Log(LOG_LEVEL_VERBOSE, "Collecting public key from server!");
 
         /* proposition S4 - conditional */
         if ((len = ReceiveTransaction(conn->sd, in, NULL)) <= 0)
@@ -459,7 +459,7 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
         HashPubKey(server_pubkey, conn->digest, CF_DEFAULT_DIGEST);
-        Log(LOG_LEVEL_VERBOSE, " -> Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
+        Log(LOG_LEVEL_VERBOSE, "Public key identity of host \"%s\" is \"%s\"", conn->remoteip,
               HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
         SavePublicKey(conn->username, buffer, server_pubkey);       // FIXME: username is local
         LastSaw(conn->remoteip, conn->digest, LAST_SEEN_ROLE_CONNECT);

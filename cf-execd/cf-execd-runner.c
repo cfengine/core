@@ -27,7 +27,6 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "logging_old.h"
 #include "hashes.h"
 #include "string_lib.h"
 #include "pipes.h"
@@ -127,7 +126,7 @@ static bool IsReadReady(int fd, int timeout_sec)
 
     if(ret < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Failed checking for data");
+        Log(LOG_LEVEL_ERR, "IsReadReady: Failed checking for data. (select: %s)", GetErrorStr());
         return false;
     }
 
@@ -142,7 +141,7 @@ static bool IsReadReady(int fd, int timeout_sec)
     }
 
     // can we get here?
-    CfOut(OUTPUT_LEVEL_ERROR, "select", "!! IsReadReady: Unknown outcome (ret > 0 but our only fd is not set)");
+    Log(LOG_LEVEL_ERR, "IsReadReady: Unknown outcome (ret > 0 but our only fd is not set). (select: %s)", GetErrorStr());
 
     return false;
 }
@@ -159,9 +158,16 @@ void LocalExec(const ExecConfig *config)
         char starttime_str[64];
         cf_strtimestamp_local(starttime, starttime_str);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "------------------------------------------------------------------\n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n\n");
+            Log(LOG_LEVEL_VERBOSE, "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+        }
     }
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */
@@ -205,7 +211,7 @@ void LocalExec(const ExecConfig *config)
     FILE *fp = fopen(filename, "w");
     if (!fp)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "!! Couldn't open \"%s\" - aborting exec\n", filename);
+        Log(LOG_LEVEL_ERR, "Couldn't open '%s' - aborting exec. (fopen: %s)", filename, GetErrorStr());
         return;
     }
 
@@ -220,17 +226,17 @@ void LocalExec(const ExecConfig *config)
     }
 #endif
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command => %s\n", cmd);
+    Log(LOG_LEVEL_VERBOSE, "Command => %s\n", cmd);
 
     FILE *pp = cf_popen_sh(esc_command, "r");
     if (!pp)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "!! Couldn't open pipe to command \"%s\"\n", cmd);
+        Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (cf_popen: %s)", cmd, GetErrorStr());
         fclose(fp);
         return;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is executing...%s\n", esc_command);
+    Log(LOG_LEVEL_VERBOSE, "Command is executing...%s\n", esc_command);
 
     int count = 0;
     for (;;)
@@ -241,7 +247,7 @@ void LocalExec(const ExecConfig *config)
             snprintf(errmsg, sizeof(errmsg), "cf-execd: !! Timeout waiting for output from agent (agent_expireafter=%d) - terminating it",
                      config->agent_expireafter);
 
-            CfOut(OUTPUT_LEVEL_ERROR, "", "%s", errmsg);
+            Log(LOG_LEVEL_ERR, "%s", errmsg);
             fprintf(fp, "%s\n", errmsg);
             count++;
 
@@ -253,7 +259,7 @@ void LocalExec(const ExecConfig *config)
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not get PID of agent");
+                Log(LOG_LEVEL_ERR, "Could not get PID of agent");
             }
 
             break;
@@ -268,7 +274,7 @@ void LocalExec(const ExecConfig *config)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "cfread", "Unable to read output from command %s", cmd);
+            Log(LOG_LEVEL_ERR, "Unable to read output from command '%s'. (cfread: %s)", cmd, GetErrorStr());
             cf_pclose(pp);
             return;
         }
@@ -305,7 +311,7 @@ void LocalExec(const ExecConfig *config)
                     line_escaped[sizeof(line_escaped) - 2] = '\n';
                 }
 
-                CfOut(OUTPUT_LEVEL_INFORM, "", "%s", line_escaped);
+                Log(LOG_LEVEL_INFO, "%s", line_escaped);
             }
 
             line[0] = '\0';
@@ -317,23 +323,23 @@ void LocalExec(const ExecConfig *config)
     CfDebug("Closing fp\n");
     fclose(fp);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Command is complete\n");
+    Log(LOG_LEVEL_VERBOSE, "Command is complete\n");
 
     if (count)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mailing result\n");
+        Log(LOG_LEVEL_VERBOSE, "Mailing result\n");
         MailResult(config, filename);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No output\n");
+        Log(LOG_LEVEL_VERBOSE, "No output\n");
         unlink(filename);
     }
 }
 
 static int CompareResult(const char *filename, const char *prev_file)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Comparing files  %s with %s\n", prev_file, filename);
+    Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s\n", prev_file, filename);
 
     int rtn = 0;
 
@@ -372,7 +378,7 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     if (!ThreadLock(cft_count))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Severe lock error when mailing in exec");
+        Log(LOG_LEVEL_ERR, "Severe lock error when mailing in exec");
         return 1;
     }
 
@@ -382,7 +388,7 @@ static int CompareResult(const char *filename, const char *prev_file)
 
     if (!LinkOrCopy(filename, prev_file, true))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not symlink or copy %s to %s", filename, prev_file);
+        Log(LOG_LEVEL_INFO, "Could not symlink or copy %s to %s", filename, prev_file);
         rtn = 1;
     }
 
@@ -395,7 +401,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Mail result...\n");
+    Log(LOG_LEVEL_VERBOSE, "Mail result...\n");
 
     {
         struct stat statbuf;
@@ -419,7 +425,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
         if (CompareResult(file, prev_file) == 0)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Previous output is the same as current so do not mail it\n");
+            Log(LOG_LEVEL_VERBOSE, "Previous output is the same as current so do not mail it\n");
             return;
         }
     }
@@ -427,7 +433,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     if ((strlen(config->mail_server) == 0) || (strlen(config->mail_to_address) == 0))
     {
         /* Syslog should have done this */
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Empty mail server or address - skipping");
+        Log(LOG_LEVEL_VERBOSE, "Empty mail server or address - skipping");
         return;
     }
 
@@ -444,7 +450,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     FILE *fp = fopen(file, "r");
     if (!fp)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "!! Couldn't open file %s", file);
+        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
 
@@ -470,11 +476,9 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't open file %s", file);
+        Log(LOG_LEVEL_INFO, "Couldn't open file '%s'. (fopen: %s)", file, GetErrorStr());
         return;
     }
-
-    CfDebug("Looking up hostname %s\n\n", config->mail_server);
 
     struct hostent *hp = gethostbyname(config->mail_server);
     if (!hp)
@@ -488,7 +492,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     struct servent *server = getservbyname("smtp", "tcp");
     if (!server)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "getservbyname", "Unable to lookup smtp service");
+        Log(LOG_LEVEL_INFO, "Unable to lookup smtp service. (getservbyname: %s)", GetErrorStr());
         fclose(fp);
         return;
     }
@@ -505,14 +509,15 @@ static void MailResult(const ExecConfig *config, const char *file)
     int sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "socket", "Couldn't open a socket");
+        Log(LOG_LEVEL_INFO, "Couldn't open a socket. (socket: %s)", GetErrorStr());
         fclose(fp);
         return;
     }
 
     if (connect(sd, (void *) &raddr, sizeof(raddr)) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "connect", "Couldn't connect to host %s\n", config->mail_server);
+        Log(LOG_LEVEL_INFO, "Couldn't connect to host '%s'. (connect: %s)",
+            config->mail_server, GetErrorStr());
         fclose(fp);
         cf_closesocket(sd);
         return;
@@ -640,7 +645,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     fclose(fp);
     cf_closesocket(sd);
-    CfOut(OUTPUT_LEVEL_INFORM, "", "Cannot mail to %s.", config->mail_to_address);
+    Log(LOG_LEVEL_INFO, "Cannot mail to %s.", config->mail_to_address);
 }
 
 static int Dialogue(int sd, const char *s)

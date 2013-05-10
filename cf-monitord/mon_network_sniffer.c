@@ -29,7 +29,6 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "logging_old.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"
@@ -142,7 +141,7 @@ static void CfenvTimeOut(ARG_UNUSED int signum)
 {
     alarm(0);
     TCPPAUSE = true;
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out\n");
+    Log(LOG_LEVEL_VERBOSE, "Time out\n");
 }
 
 /******************************************************************************/
@@ -151,7 +150,7 @@ static void Sniff(long iteration, double *cf_this)
 {
     char tcpbuffer[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reading from tcpdump...\n");
+    Log(LOG_LEVEL_VERBOSE, "Reading from tcpdump...\n");
     memset(tcpbuffer, 0, CF_BUFSIZE);
     signal(SIGALRM, CfenvTimeOut);
     alarm(SLEEPTIME);
@@ -224,7 +223,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
 
     if (Chop(arrival, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
 /* Most hosts have only a few dominant services, so anomalies will
@@ -411,11 +410,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
     FILE *fp;
     char filename[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", TCPNAMES[i]);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", TCPNAMES[i]);
 
     if (list == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No %s-%s events\n", TCPNAMES[i], inout);
+        Log(LOG_LEVEL_VERBOSE, "No %s-%s events\n", TCPNAMES[i], inout);
         return;
     }
 
@@ -428,11 +427,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
         snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to write datafile %s\n", filename);
+        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile %s\n", filename);
         return;
     }
 
@@ -464,7 +463,7 @@ void MonNetworkSnifferGatherData(void)
         {
             if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETIN_DIST[i]);
                 NETIN_DIST[i] = NULL;
                 continue;
@@ -492,7 +491,7 @@ void MonNetworkSnifferGatherData(void)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETOUT_DIST[i]);
                 NETOUT_DIST[i] = NULL;
                 continue;

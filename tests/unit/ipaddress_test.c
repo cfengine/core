@@ -8,7 +8,7 @@
 #include "ip_address.c"
 #include "ip_address.h"
 
-static void test_ipv4(void **state)
+static void test_ipv4(void)
 {
     /*
      * This test will check the ipv4 parser. We will directly call to it, we will not check
@@ -126,7 +126,7 @@ static void test_ipv4(void **state)
     assert_int_equal(-1, IPV4_parser("a.b.c.d", &ipv4));
 }
 
-static void test_char2hex(void **state)
+static void test_char2hex(void)
 {
     /*
      * Even if this routine is pretty simple, this is a sanity
@@ -145,7 +145,7 @@ static void test_char2hex(void **state)
         assert_int_equal(i - 'a' + 0x0A, Char2Hex(0, i));
 }
 
-static void test_ipv6(void **state)
+static void test_ipv6(void)
 {
     /*
      * This test will check the ipv6 parser. We will directly call to it, we will not check
@@ -269,7 +269,7 @@ static void test_ipv6(void **state)
     assert_int_equal(-1, IPV6_parser("A:B:C:D:E:F:0:1", &ipv6));
 }
 
-static void test_generic_interface(void **state)
+static void test_generic_interface(void)
 {
     /*
      * This test might seem short, but it is intentional.
@@ -317,6 +317,252 @@ static void test_generic_interface(void **state)
     assert_int_equal(0, BufferDestroy(&buffer));
 }
 
+static void test_ipv4_address_comparison(void)
+{
+    /*
+     * We test different IPV4 combinations:
+     * 1.1.1.1 vs 1.1.1.1         -> equal
+     * 1.2.3.4 vs 1.1.1.1         -> not equal
+     * 1.2.3.4 vs 1.2.1.1         -> not equal
+     * 1.2.3.4 vs 1.2.3.1         -> not equal
+     * 2.2.3.4 vs 1.2.3.4         -> not equal
+     * 1.2.3.4 vs 1.2.3.4         -> equal
+     * 1.2.3.4 vs NULL            -> error
+     * 1.2.3.4 vs 1:2:3:4:5:6:7:8 -> error
+     */
+    IPAddress *a = NULL;
+    IPAddress *b = NULL;
+    Buffer *bufferA = NULL;
+    Buffer *bufferB = NULL;
+            
+    bufferA = BufferNew();
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1.1.1.1", strlen("1.1.1.1")) > 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    bufferB = BufferNew();
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1.1.1.1", strlen("1.1.1.1")) > 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+    
+    assert_true(IPAddressIsEqual(a, b));
+    
+    assert_true(BufferSet(bufferA, "1.2.3.4", strlen("1.2.3.4")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+    
+    assert_false(IPAddressIsEqual(a, b));       
+
+    assert_true(BufferSet(bufferB, "1.2.1.1", strlen("1.2.1.1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(BufferSet(bufferB, "1.2.3.1", strlen("1.2.3.1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(BufferSet(bufferA, "2.2.3.4", strlen("2.2.3.4")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_true(BufferSet(bufferB, "1.2.3.4", strlen("1.2.3.4")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(BufferSet(bufferA, "1.2.3.4", strlen("1.2.3.4")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_true(IPAddressIsEqual(a, b));
+
+    assert_int_equal(IPAddressIsEqual(a, NULL), -1);
+    assert_int_equal(IPAddressIsEqual(NULL, a), -1);
+
+    assert_true(BufferSet(bufferA, "1:2:3:4:5:6:7:8", strlen("1:2:3:4:5:6:7:8")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_int_equal(IPAddressIsEqual(a, b), -1);
+    assert_int_equal(IPAddressIsEqual(b, a), -1);
+}
+
+static void test_ipv6_address_comparison(void)
+{
+    /*
+     * We test different IPV6 combinations:
+     * 1:1:1:1:1:1:1:1 vs 1:1:1:1:1:1:1:1 -> equal
+     * 1:2:3:4:5:6:7:8 vs 1:1:1:1:1:1:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:1:1:1:1:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:1:1:1:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:4:1:1:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:4:5:1:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:4:5:6:1:1 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:4:5:6:7:1 -> not equal
+     * 2:2:3:4:5:6:7:8 vs 1:2:3:4:5:6:7:8 -> not equal
+     * 1:2:3:4:5:6:7:8 vs 1:2:3:4:5:6:7:8 -> equal
+     * Exotic variants
+     * 1:0:0:0:0:0:0:1 vs 1::1            -> equal
+     * 1:1:0:0:0:0:0:1 vs 1::1            -> not equal
+     * 1:1:0:0:0:0:0:1 vs 1:1::1          -> equal
+     * 1:0:0:0:0:0:1:1 vs 1::1:1          -> equal
+     * Error conditions
+     * 1::1:1 vs NULL                     -> error
+     * 1::1:1 vs 1.2.3.4                  -> error
+     */
+
+    IPAddress *a = NULL;
+    IPAddress *b = NULL;
+    Buffer *bufferA = NULL;
+    Buffer *bufferB = NULL;
+
+    bufferA = BufferNew();
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1:1:1:1:1:1:1:1", strlen("1:1:1:1:1:1:1:1")) > 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    bufferB = BufferNew();
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:1:1:1:1:1:1:1", strlen("1:1:1:1:1:1:1:1")) > 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_true(IPAddressIsEqual(a, b));
+
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1:2:3:4:5:6:7:8", strlen("1:1:1:1:1:1:1:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:1:1:1:1:1:1", strlen("1:2:1:1:1:1:1:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:3:1:1:1:1:1", strlen("1:2:3:1:1:1:1:1")) > 0); 
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:3:4:1:1:1:1", strlen("1:2:3:4:1:1:1:1")) > 0); 
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:3:4:5:1:1:1", strlen("1:2:3:4:5:1:1:1")) > 0); 
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:3:4:5:6:1:1", strlen("1:2:3:4:5:6:1:1")) > 0); 
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:2:3:4:5:6:7:1", strlen("1:2:3:4:5:6:7:1")) > 0); 
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "2:2:3:4:5:6:7:8", strlen("2:2:3:4:5:6:7:8")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1:0:0:0:0:0:0:1", strlen("1:0:0:0:0:0:0:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1::1", strlen("1::1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_true(IPAddressIsEqual(a, b));
+
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1:1:0:0:0:0:0:1", strlen("1:1:0:0:0:0:0:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_false(IPAddressIsEqual(a, b));
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:1::1", strlen("1:1::1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_true(IPAddressIsEqual(a, b));
+
+    assert_true(bufferA != NULL);
+    assert_true(BufferSet(bufferA, "1::1:1", strlen("1::1:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&a), 0);
+    a = IPAddressNew(bufferA);
+    assert_true(a != NULL);
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1:0:0:0:0:0:1:1", strlen("1:0:0:0:0:0:1:1")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_true(IPAddressIsEqual(a, b));
+
+    assert_int_equal(IPAddressIsEqual(a, NULL), -1);
+
+    assert_true(bufferB != NULL);
+    assert_true(BufferSet(bufferB, "1.2.3.4", strlen("1.2.3.4")) > 0);
+    assert_int_equal(IPAddressDestroy(&b), 0);
+    b = IPAddressNew(bufferB);
+    assert_true(b != NULL);
+
+    assert_int_equal(IPAddressIsEqual(a, b), -1);
+}
+
 int main()
 {
     PRINT_TEST_BANNER();
@@ -326,6 +572,8 @@ int main()
         , unit_test(test_char2hex)
         , unit_test(test_ipv6)
         , unit_test(test_generic_interface)
+        , unit_test(test_ipv4_address_comparison)
+        , unit_test(test_ipv6_address_comparison)
     };
 
     return run_tests(tests);

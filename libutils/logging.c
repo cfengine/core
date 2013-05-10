@@ -88,6 +88,11 @@ LogLevel LoggingPrivGetGlobalLogLevel(void)
         return LOG_LEVEL_INFO;
     }
 
+    if (DEBUG)
+    {
+        return LOG_LEVEL_DEBUG;
+    }
+
     return LOG_LEVEL_NOTICE;
 }
 

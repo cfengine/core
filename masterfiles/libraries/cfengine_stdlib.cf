@@ -3454,6 +3454,9 @@ bundle common paths
       # Common full pathname of commands for OS
       #
 
+    any::
+      "path[getfacl]"  string => "/usr/bin/getfacl";
+
     aix::
 
       "path[awk]"      string => "/usr/bin/awk";

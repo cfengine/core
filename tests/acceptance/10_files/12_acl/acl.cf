@@ -32,7 +32,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" not => regcmp(".*failed.*", "$(test.result)");
+    "ok" not => regcmp(".*(error|failed).*", "$(test.result)");
   reports:
     DEBUG::
         "Tests various ACL features";

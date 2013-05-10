@@ -426,7 +426,7 @@ field_edits:
 		comment    => "Match a line starting like key = something";
 
 insert_lines:
-	'$(index)="$($(v)[$(index)])"',
+        '$(index)="$($(v)[$(index)])"'
 		comment    => "Insert a variable definition",
 		ifvarclass => "!$(cindex[$(index)])_in_file";
 }
@@ -1609,7 +1609,7 @@ file_result => "leaf_name";
 
 body file_select older_than(years, months, days, hours, minutes, seconds)
 # Generic older_than selection body, aimed to have a common definition handy
-# for every case possible.
+# for every case possible.
 {
 mtime       => irange(0,ago("$(years)","$(months)","$(days)","$(hours)","$(minutes)","$(seconds)"));
 file_result => "mtime";

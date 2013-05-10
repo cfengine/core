@@ -65,14 +65,14 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
     dbmeta = (DBMeta *) xcalloc(1, sizeof(DBMeta));
     if (!dbmeta)
     {
-        Log(LOG_LEVEL_ERR, "Error allocating memory : %s\n", strerror(errno));
+        Log(LOG_LEVEL_ERR, "Error allocating memory : %s", strerror(errno));
         return NULL;
     }
 
     realpath(dbfilename, dbmeta->dbpath);
     if (-1 == (dbmeta->fd = open(dbmeta->dbpath, O_RDONLY)))
     {
-        Log(LOG_LEVEL_ERR, "Failure opening file [%s] : %s\n", dbmeta->dbpath,
+        Log(LOG_LEVEL_ERR, "Failure opening file [%s] : %s", dbmeta->dbpath,
                 strerror(errno));
         if (dbmeta)
         {
@@ -83,7 +83,7 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
 
     if (256 != read(dbmeta->fd, hbuf, 256))
     {
-        Log(LOG_LEVEL_ERR, "Failure reading from database [%s] : %s\n",
+        Log(LOG_LEVEL_ERR, "Failure reading from database [%s] : %s",
                 dbmeta->dbpath, strerror(errno));
         close(dbmeta->fd);
         if (dbmeta)
@@ -106,18 +106,18 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
     dbmeta->offset_map = StringMapNew();
     dbmeta->record_map = StringMapNew();
 
-    Log(LOG_LEVEL_VERBOSE, "Database            : %s\n", dbmeta->dbpath);
-    Log(LOG_LEVEL_VERBOSE, "  number of buckets : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "Database            : %s", dbmeta->dbpath);
+    Log(LOG_LEVEL_VERBOSE, "  number of buckets : %llu",
             (long long unsigned) dbmeta->bucket_count);
-    Log(LOG_LEVEL_VERBOSE, "  offset of buckets : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "  offset of buckets : %llu",
             (long long unsigned) dbmeta->bucket_offset);
-    Log(LOG_LEVEL_VERBOSE, "  bytes per pointer : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "  bytes per pointer : %llu",
             (long long unsigned) dbmeta->bytes_per);
-    Log(LOG_LEVEL_VERBOSE, "  alignment power   : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "  alignment power   : %llu",
             (long long unsigned) dbmeta->alignment_pow);
-    Log(LOG_LEVEL_VERBOSE, "  number of records : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "  number of records : %llu",
             (long long unsigned) dbmeta->record_count);
-    Log(LOG_LEVEL_VERBOSE, "  offset of records : %llu\n",
+    Log(LOG_LEVEL_VERBOSE, "  offset of records : %llu",
             (long long unsigned) dbmeta->record_offset);
 
     return dbmeta;
@@ -179,7 +179,7 @@ static int DBMetaPopulateOffsetMap(DBMeta * dbmeta)
 
         if (b != dbmeta->bytes_per)
         {
-            Log(LOG_LEVEL_ERR, "Read the wrong number of bytes (%d)\n", b);
+            Log(LOG_LEVEL_ERR, "Read the wrong number of bytes (%d)", b);
             return 2;
         }
 
@@ -194,7 +194,7 @@ static int DBMetaPopulateOffsetMap(DBMeta * dbmeta)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Found %llu buckets with offsets\n",
+    Log(LOG_LEVEL_VERBOSE, "Found %llu buckets with offsets",
             (long long unsigned) StringMapSize(dbmeta->offset_map));
     return 0;
 }
@@ -236,7 +236,7 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
 {
     if (lseek(dbmeta->fd, rec->offset, SEEK_SET) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Error traversing record section to find records : \n");
+        Log(LOG_LEVEL_ERR, "Error traversing record section to find records : ");
     }
 
     while (true)
@@ -251,14 +251,14 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
 
         if (1 != read(dbmeta->fd, &(rec->magic), 1))
         {
-            Log(LOG_LEVEL_ERR, "ERROR: Failure reading 1 byte, %s\n",
+            Log(LOG_LEVEL_ERR, "ERROR: Failure reading 1 byte, %s",
                     strerror(errno));
             return false;
         }
 
         if (MAGIC_DATA_BLOCK == rec->magic)
         {
-            Log(LOG_LEVEL_VERBOSE, "off=%zu[c8]\n", rec->offset);
+            Log(LOG_LEVEL_VERBOSE, "off=%zu[c8]", rec->offset);
             int length = 1;
 
             length += read(dbmeta->fd, &(rec->hash), 1);
@@ -280,7 +280,7 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
         }
         else if (MAGIC_FREE_BLOCK == rec->magic)
         {
-            Log(LOG_LEVEL_VERBOSE, "off=%zu[b0]\n", rec->offset);
+            Log(LOG_LEVEL_VERBOSE, "off=%zu[b0]", rec->offset);
             uint32_t length;
             rec->length = 1;
             rec->length += read(dbmeta->fd, &length, sizeof(length));
@@ -290,10 +290,10 @@ static bool DBMetaReadOneRecord(DBMeta * dbmeta, TokyoCabinetRecord * rec)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "\nread a non-magic byt (skip it)\n");
+            Log(LOG_LEVEL_VERBOSE, "\nread a non-magic byt (skip it)");
         }
     }
-    Log(LOG_LEVEL_ERR, "\nERROR : read loop reached here.\n");
+    Log(LOG_LEVEL_ERR, "\nERROR : read loop reached here.");
     return false;
 }
 
@@ -307,7 +307,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
     offset = dbmeta->record_offset;
     if (fstat(dbmeta->fd, &st) == -1)
     {
-        Log(LOG_LEVEL_ERR, "Error getting file stats :%s\n", strerror(errno));
+        Log(LOG_LEVEL_ERR, "Error getting file stats :%s", strerror(errno));
         return 1;
     }
 
@@ -321,7 +321,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
         // read a variable-length record
         if (!DBMetaReadOneRecord(dbmeta, &new_rec))
         {
-            Log(LOG_LEVEL_ERR, "Unable to fetch a new record from DB file\n");
+            Log(LOG_LEVEL_ERR, "Unable to fetch a new record from DB file");
             return 2;
         }
         else
@@ -367,7 +367,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
 
             if (new_rec.left > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, ">>> handle left %zu\n", new_rec.left);
+                Log(LOG_LEVEL_VERBOSE, ">>> handle left %zu", new_rec.left);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.left, -1))
                 {
@@ -377,7 +377,7 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
 
             if (new_rec.right > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, ">>> handle right %zu\n", new_rec.right);
+                Log(LOG_LEVEL_VERBOSE, ">>> handle right %zu", new_rec.right);
                 if (AddOffsetToMapUnlessExists
                     (&(dbmeta->offset_map), new_rec.right, -1))
                 {
@@ -394,14 +394,14 @@ static int DBMetaPopulateRecordMap(DBMeta * dbmeta)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "NO record found at offset %llu\n",
+            Log(LOG_LEVEL_ERR, "NO record found at offset %llu",
                     (long long unsigned) new_rec.offset);
         }
     }
 
     // if we are not at the end of the file, output the current file offset
     // with an appropriate message and return
-    Log(LOG_LEVEL_VERBOSE, "Found %zu data records and %zu free block records\n",
+    Log(LOG_LEVEL_VERBOSE, "Found %zu data records and %zu free block records",
             data_blocks, free_blocks);
 
     return 0;
@@ -443,14 +443,14 @@ int CheckTokyoDBCoherence(const char *path)
         return 1;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Populating with bucket section offsets\n");
+    Log(LOG_LEVEL_VERBOSE, "Populating with bucket section offsets");
     ret = DBMetaPopulateOffsetMap(dbmeta);
     if (ret)
     {
         goto clean;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Populating with record section offsets\n");
+    Log(LOG_LEVEL_VERBOSE, "Populating with record section offsets");
     ret = DBMetaPopulateRecordMap(dbmeta);
     if (ret)
     {

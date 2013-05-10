@@ -44,9 +44,9 @@ void MonDiskGatherData(double *cf_this)
     char syslog[CF_BUFSIZE];
     char messages[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Gathering disk data\n");
+    Log(LOG_LEVEL_VERBOSE, "Gathering disk data");
     cf_this[ob_diskfree] = GetDiskUsage("/", cfpercent);
-    Log(LOG_LEVEL_VERBOSE, "Disk free = %.0lf%%\n", cf_this[ob_diskfree]);
+    Log(LOG_LEVEL_VERBOSE, "Disk free = %.0lf%%", cf_this[ob_diskfree]);
 
 /* Here would should have some detection based on OS type VSYSTEMHARDCLASS */
 
@@ -56,13 +56,13 @@ void MonDiskGatherData(double *cf_this)
     strcpy(messages, "/var/log/messages");
 
     cf_this[ob_webaccess] = GetFileGrowth(accesslog, ob_webaccess);
-    Log(LOG_LEVEL_VERBOSE, "Webaccess = %.2lf%%\n", cf_this[ob_webaccess]);
+    Log(LOG_LEVEL_VERBOSE, "Webaccess = %.2lf%%", cf_this[ob_webaccess]);
     cf_this[ob_weberrors] = GetFileGrowth(errorlog, ob_weberrors);
-    Log(LOG_LEVEL_VERBOSE, "Web error = %.2lf%%\n", cf_this[ob_weberrors]);
+    Log(LOG_LEVEL_VERBOSE, "Web error = %.2lf%%", cf_this[ob_weberrors]);
     cf_this[ob_syslog] = GetFileGrowth(syslog, ob_syslog);
-    Log(LOG_LEVEL_VERBOSE, "Syslog = %.2lf%%\n", cf_this[ob_syslog]);
+    Log(LOG_LEVEL_VERBOSE, "Syslog = %.2lf%%", cf_this[ob_syslog]);
     cf_this[ob_messages] = GetFileGrowth(messages, ob_messages);
-    Log(LOG_LEVEL_VERBOSE, "Messages = %.2lf%%\n", cf_this[ob_messages]);
+    Log(LOG_LEVEL_VERBOSE, "Messages = %.2lf%%", cf_this[ob_messages]);
 }
 
 /****************************************************************************/
@@ -80,7 +80,7 @@ static int GetFileGrowth(const char *filename, enum observables index)
 
     q = statbuf.st_size;
 
-    Log(LOG_LEVEL_VERBOSE, "GetFileGrowth(%s) = %zu\n", filename, q);
+    Log(LOG_LEVEL_VERBOSE, "GetFileGrowth(%s) = %zu", filename, q);
 
     dq = (double) q - LASTQ[index];
 

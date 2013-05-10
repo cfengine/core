@@ -162,7 +162,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
                 }
                 else
                 {
-                    Log(LOG_LEVEL_ERR, "Must remove incorrect link %s\n", destination);
+                    Log(LOG_LEVEL_ERR, "Must remove incorrect link %s", destination);
                     return PROMISE_RESULT_NOOP;
                 }
             }
@@ -212,7 +212,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
     {
         if (!ExpandLinks(expand, absto, 0))     /* begin at level 1 and beam out at 15 */
         {
-            Log(LOG_LEVEL_ERR, "Failed to make absolute link in\n");
+            Log(LOG_LEVEL_ERR, "Failed to make absolute link in");
             PromiseRef(LOG_LEVEL_ERR, pp);
             return PROMISE_RESULT_FAIL;
         }
@@ -362,8 +362,8 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if ((dsb.st_ino != ssb.st_ino) && (dsb.st_dev != ssb.st_dev))
     {
-        Log(LOG_LEVEL_VERBOSE, "If this is POSIX, unable to determine if %s is hard link is correct\n", destination);
-        Log(LOG_LEVEL_VERBOSE, "since it points to a different filesystem!\n");
+        Log(LOG_LEVEL_VERBOSE, "If this is POSIX, unable to determine if %s is hard link is correct", destination);
+        Log(LOG_LEVEL_VERBOSE, "since it points to a different filesystem!");
 
         if ((dsb.st_mode == ssb.st_mode) && (dsb.st_size == ssb.st_size))
         {
@@ -379,7 +379,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         return PROMISE_RESULT_NOOP;
     }
 
-    Log(LOG_LEVEL_INFO, "%s does not appear to be a hard link to %s\n", destination, to);
+    Log(LOG_LEVEL_INFO, "%s does not appear to be a hard link to %s", destination, to);
 
     if (!MoveObstruction(ctx, destination, attr, pp))
     {
@@ -417,7 +417,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
 
     if (readlink(name, linkbuf, CF_BUFSIZE - 1) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "(Can't read link %s while checking for deadlinks)\n", name);
+        Log(LOG_LEVEL_VERBOSE, "(Can't read link %s while checking for deadlinks)", name);
         return true;            /* ignore */
     }
 
@@ -438,7 +438,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     {
         if ((attr.link.when_no_file == cfa_delete) || (attr.recursion.rmdeadlinks))
         {
-            Log(LOG_LEVEL_VERBOSE, "%s is a link which points to %s, but that file doesn't seem to exist\n", name,
+            Log(LOG_LEVEL_VERBOSE, "%s is a link which points to %s, but that file doesn't seem to exist", name,
                   linkbuf);
 
             if (!DONTDO)
@@ -462,7 +462,7 @@ static int MakeLink(EvalContext *ctx, const char *from, const char *to, Attribut
 {
     if (DONTDO || (attr.transaction.action == cfa_warn))
     {
-        Log(LOG_LEVEL_ERR, "Need to link files %s -> %s\n", from, to);
+        Log(LOG_LEVEL_ERR, "Need to link files %s -> %s", from, to);
         return false;
     }
     else
@@ -499,7 +499,7 @@ int MakeHardLink(EvalContext *ctx, const char *from, const char *to, Attributes 
 {
     if (DONTDO)
     {
-        Log(LOG_LEVEL_ERR, "Need to hard link files %s -> %s\n", from, to);
+        Log(LOG_LEVEL_ERR, "Need to hard link files %s -> %s", from, to);
         return false;
     }
     else
@@ -546,7 +546,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
     if (level >= CF_MAXLINKLEVEL)
     {
-        Log(LOG_LEVEL_ERR, "Too many levels of symbolic links to evaluate absolute path\n");
+        Log(LOG_LEVEL_ERR, "Too many levels of symbolic links to evaluate absolute path");
         return false;
     }
 

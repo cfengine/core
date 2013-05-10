@@ -1405,7 +1405,7 @@ static void FlushFileStream(int sd, int toget)
     int i;
     char buffer[2];
 
-    Log(LOG_LEVEL_INFO, "Flushing rest of file...%d bytes\n", toget);
+    Log(LOG_LEVEL_INFO, "Flushing rest of file...%d bytes", toget);
 
     for (i = 0; i < toget; i++)
     {

@@ -314,7 +314,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (!EvalContextVariablePut(ctx, (VarRef) { NULL, BufferData(qualified_scope), pp->promiser }, rval, DataTypeFromString(opts.cp_save->lval)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)\n", BufferData(qualified_scope), pp->promiser);
+            Log(LOG_LEVEL_VERBOSE, "Unable to converge %s.%s value (possibly empty or infinite regression)", BufferData(qualified_scope), pp->promiser);
             PromiseRef(LOG_LEVEL_VERBOSE, pp);
             promise_result = PROMISE_RESULT_FAIL;
         }
@@ -325,8 +325,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "Variable %s has no promised value\n", pp->promiser);
-        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
+        Log(LOG_LEVEL_ERR, "Variable %s has no promised value", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
         promise_result = PROMISE_RESULT_FAIL;
     }
 

@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
         while (count > 1)
         {
             pid = wait(&status);
-            Log(LOG_LEVEL_VERBOSE, "Child = %d ended, number = %d\n", pid, count);
+            Log(LOG_LEVEL_VERBOSE, "Child = %d ended, number = %d", pid, count);
             count--;
         }
     }
@@ -281,7 +281,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                Log(LOG_LEVEL_ERR, "Argument too long\n");
+                Log(LOG_LEVEL_ERR, "Argument too long");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -291,7 +291,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                Log(LOG_LEVEL_ERR, "Argument too long\n");
+                Log(LOG_LEVEL_ERR, "Argument too long");
                 exit(EXIT_FAILURE);
             }
             break;
@@ -407,7 +407,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
     if (INTERACTIVE)
     {
-        Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...\n");
+        Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...");
 
         gotkey = HavePublicKey(user, peer, digest) != NULL;
 
@@ -458,24 +458,24 @@ static int HailServer(EvalContext *ctx, char *host)
 
 #ifdef __MINGW32__
 
-    Log(LOG_LEVEL_INFO, "...........................................................................\n");
-    Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
+    Log(LOG_LEVEL_INFO, "...........................................................................");
+    Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
           REMOTE_AGENT_OPTIONS);
-    Log(LOG_LEVEL_INFO, "...........................................................................\n");
+    Log(LOG_LEVEL_INFO, "...........................................................................");
 
 #else /* !__MINGW32__ */
 
     if (BACKGROUND)
     {
-        Log(LOG_LEVEL_INFO, "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, fc.portnumber,
+        Log(LOG_LEVEL_INFO, "Hailing %s : %u, with options \"%s\" (parallel)", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "...........................................................................\n");
-        Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
+        Log(LOG_LEVEL_INFO, "...........................................................................");
+        Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
-        Log(LOG_LEVEL_INFO, "...........................................................................\n");
+        Log(LOG_LEVEL_INFO, "...........................................................................");
     }
 
 #endif /* !__MINGW32__ */
@@ -495,7 +495,7 @@ static int HailServer(EvalContext *ctx, char *host)
         if (conn == NULL)
         {
             RlistDestroy(fc.servers);
-            Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail\n");
+            Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail");
             return false;
         }
     }
@@ -545,28 +545,28 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
                 RUNATTR.copy.force_ipv4 = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
+                Log(LOG_LEVEL_VERBOSE, "SET force_ipv4 = %d", RUNATTR.copy.force_ipv4);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TRUSTKEY].lval) == 0)
             {
                 RUNATTR.copy.trustkey = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET trustkey = %d\n", RUNATTR.copy.trustkey);
+                Log(LOG_LEVEL_VERBOSE, "SET trustkey = %d", RUNATTR.copy.trustkey);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_ENCRYPT].lval) == 0)
             {
                 RUNATTR.copy.encrypt = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET encrypt = %d\n", RUNATTR.copy.encrypt);
+                Log(LOG_LEVEL_VERBOSE, "SET encrypt = %d", RUNATTR.copy.encrypt);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
                 RUNATTR.copy.portnumber = (short) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
+                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u", (int) RUNATTR.copy.portnumber);
                 continue;
             }
 
@@ -605,7 +605,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 if (IsAbsPath(retval.item))
                 {
                     strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
-                    Log(LOG_LEVEL_VERBOSE, "SET output direcory to = %s\n", OUTPUT_DIRECTORY);
+                    Log(LOG_LEVEL_VERBOSE, "SET output direcory to = %s", OUTPUT_DIRECTORY);
                 }
                 continue;
             }
@@ -774,7 +774,7 @@ static FILE *NewStream(char *name)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to open file %s\n", filename);
+            Log(LOG_LEVEL_ERR, "Unable to open file %s", filename);
             fp = stdout;
         }
     }

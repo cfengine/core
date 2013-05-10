@@ -118,7 +118,7 @@ int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Couldn't save directory %s, since %s exists already\n", from,
                      saved);
-                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory %s\n", from);
+                Log(LOG_LEVEL_ERR, "Unable to force link to existing directory %s", from);
                 return false;
             }
 
@@ -221,7 +221,7 @@ int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attribute
     chmod(file, statbuf.st_mode);    /* Restore file permissions etc */
     if (chown(file, statbuf.st_uid, statbuf.st_gid) != 0)
     {
-        Log(LOG_LEVEL_ERR, "Failed to restore file permissions for '%s'\n", file);
+        Log(LOG_LEVEL_ERR, "Failed to restore file permissions for '%s'", file);
     }
     umask(mask);
 

@@ -98,18 +98,18 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         if ((a.mount.mount_source))
         {
-            Log(LOG_LEVEL_VERBOSE, "An unmount promise indicates a mount-source information - probably an error\n");
+            Log(LOG_LEVEL_VERBOSE, "An unmount promise indicates a mount-source information - probably an error");
         }
         if ((a.mount.mount_server))
         {
-            Log(LOG_LEVEL_VERBOSE, "An unmount promise indicates a mount-server information - probably an error\n");
+            Log(LOG_LEVEL_VERBOSE, "An unmount promise indicates a mount-server information - probably an error");
         }
     }
     else if (a.havemount)
     {
         if ((a.mount.mount_source == NULL) || (a.mount.mount_server == NULL))
         {
-            Log(LOG_LEVEL_ERR, "Insufficient specification in mount promise - need source and server\n");
+            Log(LOG_LEVEL_ERR, "Insufficient specification in mount promise - need source and server");
             return;
         }
     }
@@ -126,7 +126,7 @@ void VerifyStoragePromise(EvalContext *ctx, char *path, Promise *pp)
 #ifndef __MINGW32__
     if ((!MOUNTEDFSLIST) && (!LoadMountInfo(&MOUNTEDFSLIST)))
     {
-        Log(LOG_LEVEL_ERR, "Couldn't obtain a list of mounted filesystems - aborting\n");
+        Log(LOG_LEVEL_ERR, "Couldn't obtain a list of mounted filesystems - aborting");
         YieldCurrentLock(thislock);
         return;
     }
@@ -170,7 +170,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
     long filecount = 0;
     char buff[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Checking required filesystem %s\n", name);
+    Log(LOG_LEVEL_VERBOSE, "Checking required filesystem %s", name);
 
     if (stat(name, &statbuf) == -1)
     {
@@ -228,7 +228,7 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         if (sizeinbytes < 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Internal error: count of byte size was less than zero!\n");
+            Log(LOG_LEVEL_VERBOSE, "Internal error: count of byte size was less than zero!");
             return true;
         }
 
@@ -314,7 +314,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
 static void VolumeScanArrivals(ARG_UNUSED char *file, ARG_UNUSED Attributes a, ARG_UNUSED Promise *pp)
 {
-    Log(LOG_LEVEL_VERBOSE, "Scan arrival sequence . not yet implemented\n");
+    Log(LOG_LEVEL_VERBOSE, "Scan arrival sequence . not yet implemented");
 }
 
 /*******************************************************************/
@@ -349,13 +349,13 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
 
             if ((a.mount.mount_source) && (strcmp(mp->source, a.mount.mount_source) != 0))
             {
-                Log(LOG_LEVEL_INFO, "A different file system (%s:%s) is mounted on %s than what is promised\n",
+                Log(LOG_LEVEL_INFO, "A different file system (%s:%s) is mounted on %s than what is promised",
                       mp->host, mp->source, name);
                 return false;
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "File system %s seems to be mounted correctly\n", mp->source);
+                Log(LOG_LEVEL_VERBOSE, "File system %s seems to be mounted correctly", mp->source);
                 break;
             }
         }
@@ -365,7 +365,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
     {
         if (!a.mount.unmount)
         {
-            Log(LOG_LEVEL_VERBOSE, "File system %s seems not to be mounted correctly\n", name);
+            Log(LOG_LEVEL_VERBOSE, "File system %s seems not to be mounted correctly", name);
             CF_MOUNTALL = true;
         }
     }
@@ -432,7 +432,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
     char dir[CF_BUFSIZE];
     int changes = 0;
 
-    Log(LOG_LEVEL_VERBOSE, "Verifying mounted file systems on %s\n", name);
+    Log(LOG_LEVEL_VERBOSE, "Verifying mounted file systems on %s", name);
 
     snprintf(dir, CF_BUFSIZE, "%s/.", name);
 
@@ -507,7 +507,7 @@ void DeleteStorageContext(void)
 
     if (!DONTDO && CF_MOUNTALL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Mounting all filesystems\n");
+        Log(LOG_LEVEL_VERBOSE, "Mounting all filesystems");
         MountAll();
     }
 #endif /* !__MINGW32__ */

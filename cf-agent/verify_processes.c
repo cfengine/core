@@ -263,7 +263,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 
     if (a.signals == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No signals to send for %s\n", pp->promiser);
+        Log(LOG_LEVEL_VERBOSE, "No signals to send for %s", pp->promiser);
         return 0;
     }
 
@@ -317,11 +317,11 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
     {
         if (a.transaction.action == cfa_warn)
         {
-            Log(LOG_LEVEL_ERR, "Matched: %s\n", ip->name);
+            Log(LOG_LEVEL_ERR, "Matched: %s", ip->name);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Matched: %s\n", ip->name);
+            Log(LOG_LEVEL_INFO, "Matched: %s", ip->name);
         }
 
         pid_t pid = ip->counter;
@@ -330,7 +330,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
         {
             if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
             {
-                Log(LOG_LEVEL_VERBOSE, "(Okay to send only HUP to init)\n");
+                Log(LOG_LEVEL_VERBOSE, "(Okay to send only HUP to init)");
             }
             else
             {
@@ -340,7 +340,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((pid < 4) && (a.signals))
         {
-            Log(LOG_LEVEL_VERBOSE, "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)\n",
+            Log(LOG_LEVEL_VERBOSE, "Will not signal or restart processes 0,1,2,3 (occurred while looking for %s)",
                   promiser);
             continue;
         }
@@ -349,14 +349,14 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((a.transaction.action == cfa_warn) && promised_zero)
         {
-            Log(LOG_LEVEL_ERR, "Process alert: %s\n", procdata->name);     /* legend */
-            Log(LOG_LEVEL_ERR, "Process alert: %s\n", ip->name);
+            Log(LOG_LEVEL_ERR, "Process alert: %s", procdata->name);     /* legend */
+            Log(LOG_LEVEL_ERR, "Process alert: %s", ip->name);
             continue;
         }
 
         if ((pid == cfengine_pid) && (a.signals))
         {
-            Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!\n");
+            Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!");
             continue;
         }
 

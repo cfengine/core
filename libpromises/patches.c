@@ -193,7 +193,7 @@ int seteuid(uid_t uid)
 # ifdef HAVE_SETREUID
     return setreuid(-1, uid);
 # else
-    Log(LOG_LEVEL_VERBOSE, "(This system does not have setreuid (patches.c)\n");
+    Log(LOG_LEVEL_VERBOSE, "(This system does not have setreuid (patches.c)");
     return -1;
 # endif
 }
@@ -209,7 +209,7 @@ int setegid(gid_t gid)
 # ifdef HAVE_SETREGID
     return setregid(-1, gid);
 # else
-    Log(LOG_LEVEL_VERBOSE, "(This system does not have setregid (patches.c)\n");
+    Log(LOG_LEVEL_VERBOSE, "(This system does not have setregid (patches.c)");
     return -1;
 # endif
 }

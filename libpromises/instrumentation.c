@@ -163,7 +163,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
+        Log(LOG_LEVEL_VERBOSE, "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf", eventname, value, newe.Q.expect,
               sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }

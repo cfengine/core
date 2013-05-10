@@ -160,13 +160,13 @@ void LocalExec(const ExecConfig *config)
 
         if (LEGACY_OUTPUT)
         {
-            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n\n");
-            Log(LOG_LEVEL_VERBOSE, "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
-            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n");
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------");
+            Log(LOG_LEVEL_VERBOSE, "  LocalExec(%sscheduled) at %s", config->scheduled_run ? "" : "not ", starttime_str);
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------");
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+            Log(LOG_LEVEL_VERBOSE, "LocalExec(%sscheduled) at %s", config->scheduled_run ? "" : "not ", starttime_str);
         }
     }
 
@@ -226,7 +226,7 @@ void LocalExec(const ExecConfig *config)
     }
 #endif
 
-    Log(LOG_LEVEL_VERBOSE, "Command => %s\n", cmd);
+    Log(LOG_LEVEL_VERBOSE, "Command => %s", cmd);
 
     FILE *pp = cf_popen_sh(esc_command, "r");
     if (!pp)
@@ -236,7 +236,7 @@ void LocalExec(const ExecConfig *config)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Command is executing...%s\n", esc_command);
+    Log(LOG_LEVEL_VERBOSE, "Command is executing...%s", esc_command);
 
     int count = 0;
     for (;;)
@@ -323,23 +323,23 @@ void LocalExec(const ExecConfig *config)
     CfDebug("Closing fp\n");
     fclose(fp);
 
-    Log(LOG_LEVEL_VERBOSE, "Command is complete\n");
+    Log(LOG_LEVEL_VERBOSE, "Command is complete");
 
     if (count)
     {
-        Log(LOG_LEVEL_VERBOSE, "Mailing result\n");
+        Log(LOG_LEVEL_VERBOSE, "Mailing result");
         MailResult(config, filename);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "No output\n");
+        Log(LOG_LEVEL_VERBOSE, "No output");
         unlink(filename);
     }
 }
 
 static int CompareResult(const char *filename, const char *prev_file)
 {
-    Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s\n", prev_file, filename);
+    Log(LOG_LEVEL_VERBOSE, "Comparing files  %s with %s", prev_file, filename);
 
     int rtn = 0;
 
@@ -401,7 +401,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 #if defined __linux__ || defined __NetBSD__ || defined __FreeBSD__ || defined __OpenBSD__
     time_t now = time(NULL);
 #endif
-    Log(LOG_LEVEL_VERBOSE, "Mail result...\n");
+    Log(LOG_LEVEL_VERBOSE, "Mail result...");
 
     {
         struct stat statbuf;
@@ -425,7 +425,7 @@ static void MailResult(const ExecConfig *config, const char *file)
 
         if (CompareResult(file, prev_file) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Previous output is the same as current so do not mail it\n");
+            Log(LOG_LEVEL_VERBOSE, "Previous output is the same as current so do not mail it");
             return;
         }
     }

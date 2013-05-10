@@ -161,7 +161,7 @@ char *JoinPath(char *path, const char *leaf)
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        Log(LOG_LEVEL_ERR, "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }
@@ -184,7 +184,7 @@ char *JoinSuffix(char *path, char *leaf)
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s",
               leaf, path);
         return NULL;
     }

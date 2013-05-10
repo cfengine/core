@@ -122,7 +122,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
             || (st == CF_MEASUREMENT_PROMISE_TYPES))
 
         {
-            Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type %s\n", st->bundle_type);
+            Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type %s", st->bundle_type);
             fprintf(fout, "@c *****************************************************\n");
             fprintf(fout, "@c * CHAPTER \n");
             fprintf(fout, "@c *****************************************************\n");
@@ -193,7 +193,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 /* Special functions */
 
-    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - special functions\n");
+    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - special functions");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -222,7 +222,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 /* Special variables */
 
-    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - special variables\n");
+    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - special variables");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -260,7 +260,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
 // Log files
 
-    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - Logs and records\n");
+    Log(LOG_LEVEL_VERBOSE, "Dealing with chapter / bundle type - Logs and records");
     fprintf(fout, "@c *****************************************************\n");
     fprintf(fout, "@c * CHAPTER \n");
     fprintf(fout, "@c *****************************************************\n");
@@ -398,7 +398,7 @@ static void TexinfoPromiseTypesFor(const char *source_dir, FILE *fout, const Pro
 
     for (j = 0; st[j].bundle_type != NULL; j++)
     {
-        Log(LOG_LEVEL_VERBOSE, " - Dealing with promise type %s\n", st[j].promise_type);
+        Log(LOG_LEVEL_VERBOSE, " - Dealing with promise type %s", st[j].promise_type);
 
         if ((strcmp("*", st[j].promise_type) == 0) && (strcmp("*", st[j].bundle_type) == 0))
         {
@@ -474,7 +474,7 @@ static void TexinfoBodyParts(const char *source_dir, FILE *fout, const Constrain
 
     for (i = 0; bs[i].lval != NULL; i++)
     {
-        Log(LOG_LEVEL_VERBOSE, " - -  Dealing with body type %s\n", bs[i].lval);
+        Log(LOG_LEVEL_VERBOSE, " - -  Dealing with body type %s", bs[i].lval);
 
         if (bs[i].range.validation_string == (void *) CF_BUNDLE)
         {
@@ -687,7 +687,7 @@ static bool GenerateStub(const char *filename)
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Could not write to manual source %s\n", filename);
+        Log(LOG_LEVEL_INFO, "Could not write to manual source %s", filename);
         return false;
     }
 
@@ -698,7 +698,7 @@ static bool GenerateStub(const char *filename)
 #endif
     fprintf(fp, "\n@verbatim\n\nFill me in (%s)\n\"\"\n@end verbatim\n", filename);
     fclose(fp);
-    Log(LOG_LEVEL_VERBOSE, "Created %s template\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "Created %s template", filename);
     return true;
 }
 
@@ -734,7 +734,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     if ((fp = fopen(filename, "r")) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Could not read manual source %s\n", filename);
+        Log(LOG_LEVEL_INFO, "Could not read manual source %s", filename);
         free(filename);
         return NULL;
     }
@@ -749,7 +749,7 @@ char *ReadTexinfoFileF(const char *source_dir, const char *fmt, ...)
 
     if ((ferror(fp)) || (cnt != file_size))
     {
-        Log(LOG_LEVEL_INFO, "Could not read manual source %s\n", filename);
+        Log(LOG_LEVEL_INFO, "Could not read manual source %s", filename);
         free(buffer);
         fclose(fp);
         free(filename);

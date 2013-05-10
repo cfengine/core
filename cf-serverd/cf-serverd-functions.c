@@ -181,7 +181,7 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'L':
-            Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH=%s\n", optarg);
+            Log(LOG_LEVEL_VERBOSE, "Setting LD_LIBRARY_PATH=%s", optarg);
             snprintf(ld_library_path, CF_BUFSIZE - 1, "LD_LIBRARY_PATH=%s", optarg);
             putenv(ld_library_path);
             break;
@@ -294,11 +294,11 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
         return;
     }
 
-    Log(LOG_LEVEL_INFO, "cf-serverd starting %.24s\n", ctime(&starttime));
+    Log(LOG_LEVEL_INFO, "cf-serverd starting %.24s", ctime(&starttime));
 
     if (sd != -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...\n");
+        Log(LOG_LEVEL_VERBOSE, "Listening for connections ...");
     }
 
 #ifdef __MINGW32__
@@ -386,7 +386,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Accepting a connection\n");
+            Log(LOG_LEVEL_VERBOSE, "Accepting a connection");
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
@@ -500,7 +500,7 @@ int OpenReceiverChannel(void)
 
     if (sd < 0)
     {
-        Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket\n");
+        Log(LOG_LEVEL_ERR, "Couldn't open/bind a socket");
         exit(1);
     }
 
@@ -518,11 +518,11 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
     if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
-        Log(LOG_LEVEL_VERBOSE, "New promises detected...\n");
+        Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
         if (CheckPromises(config))
         {
-            Log(LOG_LEVEL_INFO, "Rereading config files %s..\n", config->input_file);
+            Log(LOG_LEVEL_INFO, "Rereading config files %s..", config->input_file);
 
             /* Free & reload -- lock this to avoid access errors during reload */
             

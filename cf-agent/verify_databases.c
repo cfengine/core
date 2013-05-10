@@ -173,7 +173,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if ((a.database.operation) && (strcmp(a.database.operation, "create") != 0))
         {
-            Log(LOG_LEVEL_ERR, "Could not connect an existing database %s - check server configuration?\n", database);
+            Log(LOG_LEVEL_ERR, "Could not connect an existing database %s - check server configuration?", database);
             PromiseRef(LOG_LEVEL_ERR, pp);
             CfCloseDB(&cfdb);
             YieldCurrentLock(thislock);
@@ -190,7 +190,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
         if (!cfdb.connected)
         {
-            Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for %s\n", database);
+            Log(LOG_LEVEL_ERR, "Could not connect to the sql_db server for %s", database);
             return;
         }
 
@@ -219,7 +219,7 @@ static void VerifySQLPromise(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (!cfdb.connected)
     {
-        Log(LOG_LEVEL_INFO, "Database %s is not connected\n", database);
+        Log(LOG_LEVEL_INFO, "Database %s is not connected", database);
     }
     else
     {
@@ -257,7 +257,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
     if (!cfdb->connected)
     {
-        Log(LOG_LEVEL_INFO, "Database %s is not connected\n", database);
+        Log(LOG_LEVEL_INFO, "Database %s is not connected", database);
         return false;
     }
 
@@ -267,7 +267,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
 
     if (cfdb->maxcolumns < 1)
     {
-        Log(LOG_LEVEL_ERR, "The schema did not promise the expected number of fields - got %d expected >= %d\n",
+        Log(LOG_LEVEL_ERR, "The schema did not promise the expected number of fields - got %d expected >= %d",
               cfdb->maxcolumns, 1);
         return false;
     }
@@ -305,7 +305,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to delete the database %s but only a warning was promised\n", database);
+            Log(LOG_LEVEL_ERR, "Need to delete the database %s but only a warning was promised", database);
             return false;
         }
     }
@@ -321,7 +321,7 @@ static int VerifyDatabasePromise(CfdbConn *cfdb, char *database, Attributes a)
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "Need to create the database %s but only a warning was promised\n", database);
+            Log(LOG_LEVEL_ERR, "Need to create the database %s but only a warning was promised", database);
             return false;
         }
     }
@@ -518,7 +518,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
 
     if (!TableExists(cfdb, table))
     {
-        Log(LOG_LEVEL_ERR, "The database did not contain the promised table \"%s\"\n", table_path);
+        Log(LOG_LEVEL_ERR, "The database did not contain the promised table \"%s\"", table_path);
 
         if ((a.database.operation) && (strcmp(a.database.operation, "create") == 0))
         {
@@ -530,7 +530,7 @@ static int VerifyTablePromise(EvalContext *ctx, CfdbConn *cfdb, char *table_path
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Database.table %s doesn't seem to exist, but only a warning was promised\n",
+                Log(LOG_LEVEL_ERR, "Database.table %s doesn't seem to exist, but only a warning was promised",
                       table_path);
             }
         }
@@ -723,7 +723,7 @@ static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
     char **name_table, **type_table;
     int no_of_cols = RlistLen(columns);
 
-    Log(LOG_LEVEL_ERR, "Trying to create table %s\n", table);
+    Log(LOG_LEVEL_ERR, "Trying to create table %s", table);
 
     if (!NewSQLColumns(table, columns, &name_table, &type_table, &size_table, &done))
     {
@@ -736,7 +736,7 @@ static int CreateTableColumns(CfdbConn *cfdb, char *table, Rlist *columns)
 
         for (i = 0; i < no_of_cols; i++)
         {
-            Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d\n", name_table[i], type_table[i],
+            Log(LOG_LEVEL_VERBOSE, "Forming column template %s %s %d", name_table[i], type_table[i],
                   size_table[i]);;
 
             if (size_table[i] > 0)

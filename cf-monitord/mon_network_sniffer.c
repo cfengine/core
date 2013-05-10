@@ -141,7 +141,7 @@ static void CfenvTimeOut(ARG_UNUSED int signum)
 {
     alarm(0);
     TCPPAUSE = true;
-    Log(LOG_LEVEL_VERBOSE, "Time out\n");
+    Log(LOG_LEVEL_VERBOSE, "Time out");
 }
 
 /******************************************************************************/
@@ -150,7 +150,7 @@ static void Sniff(long iteration, double *cf_this)
 {
     char tcpbuffer[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Reading from tcpdump...\n");
+    Log(LOG_LEVEL_VERBOSE, "Reading from tcpdump...");
     memset(tcpbuffer, 0, CF_BUFSIZE);
     signal(SIGALRM, CfenvTimeOut);
     alarm(SLEEPTIME);
@@ -410,11 +410,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
     FILE *fp;
     char filename[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", TCPNAMES[i]);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s", TCPNAMES[i]);
 
     if (list == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No %s-%s events\n", TCPNAMES[i], inout);
+        Log(LOG_LEVEL_VERBOSE, "No %s-%s events", TCPNAMES[i], inout);
         return;
     }
 
@@ -427,11 +427,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
         snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile %s\n", filename);
+        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile %s", filename);
         return;
     }
 
@@ -463,7 +463,7 @@ void MonNetworkSnifferGatherData(void)
         {
             if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer", TCPNAMES[i]);
                 DeleteItemList(NETIN_DIST[i]);
                 NETIN_DIST[i] = NULL;
                 continue;
@@ -491,7 +491,7 @@ void MonNetworkSnifferGatherData(void)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer", TCPNAMES[i]);
                 DeleteItemList(NETOUT_DIST[i]);
                 NETOUT_DIST[i] = NULL;
                 continue;

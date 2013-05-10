@@ -211,13 +211,13 @@ static void EditXmlClassBanner(const EvalContext *ctx, enum editxmltypesequence 
     }
 
     {
-        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context\n");
+        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context");
 
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            Log(LOG_LEVEL_VERBOSE, "     ??       %s\n", context);
+            Log(LOG_LEVEL_VERBOSE, "     ??       %s", context);
         }
 
         Log(LOG_LEVEL_VERBOSE, "\n");
@@ -236,20 +236,34 @@ static void KeepEditXmlPromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-        Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
-        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
+            Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant", pp->classes);
+            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next XML edit promise, as context '%s' is not relevant", pp->classes);
+        }
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
-              pp->promiser, sp);
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant",
+                  pp->promiser, sp);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
+        }
         return;
     }
 

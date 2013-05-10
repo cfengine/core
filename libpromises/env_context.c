@@ -162,13 +162,13 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
         exit(1);
     }
 
@@ -183,7 +183,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         if (IsDefinedClass(ctx, ip->name, ns))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -224,13 +224,13 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
 
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "Bundle aborted on defined class \"%s\"", context_copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, context_copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"\n", context_copy);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\"", context_copy);
         exit(1);
     }
 
@@ -245,7 +245,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, NULL))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", ip->name, StackFrameOwnerName(LastStackFrame(ctx, 0)));
             exit(1);
         }
     }
@@ -302,13 +302,13 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
-        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class \"%s\"\n", frame.owner->name, copy);
+        Log(LOG_LEVEL_ERR, "Bundle %s aborted on defined class \"%s\"", frame.owner->name, copy);
         ABORTBUNDLE = true;
     }
 
     if (IsRegexItemIn(ctx, ctx->heap_abort, copy))
     {
-        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
+        Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
         exit(1);
     }
 
@@ -329,7 +329,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
         {
-            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s\n", copy, frame.owner->name);
+            Log(LOG_LEVEL_ERR, "cf-agent aborted on defined class \"%s\" defined in bundle %s", copy, frame.owner->name);
             exit(1);
         }
     }
@@ -532,7 +532,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -541,7 +541,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "New persistent state %s\n", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent state %s", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -607,13 +607,13 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired\n", key);
+            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s for %jd more minutes\n", key, (intmax_t)((q.expires - now) / 60));
-            Log(LOG_LEVEL_VERBOSE, " Adding persistent class %s to heap\n", key);
+            Log(LOG_LEVEL_VERBOSE, " Persistent class %s for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, " Adding persistent class %s to heap", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];
@@ -740,10 +740,17 @@ int MissingDependencies(EvalContext *ctx, const Promise *pp)
 
         if (!StringSetContains(ctx->dependency_handles, d))
         {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept\n", pp->promiser, d);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as promise dependency %s has not yet been kept", pp->promiser, d);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as promise dependency '%s' has not yet been kept", pp->promiser, d);
+            }
 
             return true;
         }
@@ -1185,19 +1192,19 @@ char *EvalContextStackPath(const EvalContext *ctx)
     for (size_t i = 0; i < SeqLength(ctx->stack); i++)
     {
         StackFrame *frame = SeqAt(ctx->stack, i);
-        WriterWriteChar(path, '/');
         switch (frame->type)
         {
         case STACK_FRAME_TYPE_BODY:
-            WriterWrite(path, frame->data.body.owner->name);
+            WriterWriteF(path, "/%s", frame->data.body.owner->name);
             break;
 
         case STACK_FRAME_TYPE_BUNDLE:
-            WriterWrite(path, frame->data.bundle.owner->name);
+            WriterWriteF(path, "/%s", frame->data.bundle.owner->name);
             break;
 
         case STACK_FRAME_TYPE_PROMISE_ITERATION:
-            WriterWriteF(path, "'%s'", frame->data.promise.owner->promiser);
+            WriterWriteF(path, "/%s", frame->data.promise.owner->parent_promise_type->name);
+            WriterWriteF(path, "/'%s'", frame->data.promise.owner->promiser);
             break;
 
         case STACK_FRAME_TYPE_PROMISE:
@@ -1511,13 +1518,13 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
                 Log(LOG_LEVEL_INFO, "Automatically promoting context scope for '%s' to namespace visibility, due to persistence", classname);
             }
 
-            Log(LOG_LEVEL_VERBOSE, " ?> defining persistent promise result class %s\n", classname);
+            Log(LOG_LEVEL_VERBOSE, " ?> defining persistent promise result class %s", classname);
             EvalContextHeapPersistentSave(CanonifyName(rp->item), ns, persist, policy);
             EvalContextHeapAddSoft(ctx, classname, ns);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " ?> defining promise result class %s\n", classname);
+            Log(LOG_LEVEL_VERBOSE, " ?> defining promise result class %s", classname);
 
             switch (context_scope)
             {
@@ -1551,7 +1558,7 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         const char *string = (char *) (rp->item);
 
-        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s\n", string);
+        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s", string);
 
         EvalContextHeapPersistentRemove(string);
 
@@ -1687,7 +1694,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
         }
         else if (strcmp(logname, "stdout") == 0)
         {
-            Log(LOG_LEVEL_INFO, "L: %s\n", buffer);
+            Log(LOG_LEVEL_INFO, "L: %s", buffer);
         }
         else
         {
@@ -1699,7 +1706,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
                 return;
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s\n", buffer, logname);
+            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);
@@ -1828,7 +1835,7 @@ static void LogPromiseContext(const EvalContext *ctx, const Promise *pp)
 
     if (pp->comment)
     {
-        Log(LOG_LEVEL_INFO, "I: Comment: %s\n", pp->comment);
+        Log(LOG_LEVEL_INFO, "I: Comment: %s", pp->comment);
     }
 }
 

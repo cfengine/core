@@ -126,7 +126,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
 
     if (argv[optind] != NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unexpected argument: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Unexpected argument: %s", argv[optind]);
     }
 
     return config;
@@ -151,7 +151,7 @@ static void GenerateXml(void)
 
         if (out == NULL)
         {
-            Log(LOG_LEVEL_ERR, "Unable to open %s for writing\n", OUTPUT_FILE);
+            Log(LOG_LEVEL_ERR, "Unable to open %s for writing", OUTPUT_FILE);
             exit(EXIT_FAILURE);
         }
         XmlManual(SOURCE_DIR, out);

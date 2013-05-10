@@ -57,7 +57,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 {
     DbMysqlConn *c;
 
-    Log(LOG_LEVEL_VERBOSE, "This is a MySQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a MySQL database");
 
     c = xcalloc(1, sizeof(DbMysqlConn));
 
@@ -65,7 +65,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 
     if (!mysql_real_connect(&c->conn, host, user, password, database, 0, NULL, 0))
     {
-        Log(LOG_LEVEL_ERR, "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing MySQL database: %s", mysql_error(&c->conn));
         free(c);
         return NULL;
     }
@@ -89,7 +89,7 @@ static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 
     if (mysql_query(&mc->conn, query) != 0)
     {
-        Log(LOG_LEVEL_INFO, "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
+        Log(LOG_LEVEL_INFO, "MySQL query failed: %s, (%s)", query, mysql_error(&mc->conn));
     }
     else
     {
@@ -187,7 +187,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
     DbPostgresqlConn *c;
     char format[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "This is a PotsgreSQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a PotsgreSQL database");
 
     c = xcalloc(1, sizeof(DbPostgresqlConn));
 
@@ -219,7 +219,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
 
     if (PQstatus(c->conn) == CONNECTION_BAD)
     {
-        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database: %s", PQerrorMessage(c->conn));
         free(c);
         return NULL;
     }
@@ -245,7 +245,7 @@ static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 
     if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
     {
-        Log(LOG_LEVEL_INFO, "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
+        Log(LOG_LEVEL_INFO, "PostgreSQL query failed: %s, %s", query, PQerrorMessage(pc->conn));
     }
     else
     {
@@ -332,7 +332,7 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         db = "no db specified";
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
+    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)", db, dbuser, remotehost,
           dbtype);
 
     switch (dbtype)

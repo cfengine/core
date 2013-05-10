@@ -44,7 +44,7 @@ static pcre *CompileRegExp(const char *regexp)
 
     if (rx == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Regular expression error \"%s\" in expression \"%s\" at %d\n", errorstr, regexp,
+        Log(LOG_LEVEL_ERR, "Regular expression error \"%s\" in expression \"%s\" at %d", errorstr, regexp,
               erroffset);
     }
 
@@ -360,7 +360,7 @@ int IsPathRegex(char *str)
                     Log(LOG_LEVEL_ERR,
                           "Path regular expression %s seems to use expressions containing the directory symbol %c", str,
                           FILE_SEPARATOR);
-                    Log(LOG_LEVEL_ERR, "Use a work-around to avoid pathological behaviour\n");
+                    Log(LOG_LEVEL_ERR, "Use a work-around to avoid pathological behaviour");
                     return false;
                 }
                 break;

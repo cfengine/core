@@ -234,7 +234,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp == NULL || fp->args == NULL)
                 {
-                    Log(LOG_LEVEL_ERR, "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
+                    Log(LOG_LEVEL_ERR, "Argument mismatch for body reference \"%s\" in promise at line %zu of %s",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 

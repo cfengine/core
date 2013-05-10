@@ -59,7 +59,7 @@ void HandleSignalsForAgent(int signum)
     Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
     Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
-    Log(LOG_LEVEL_ERR, "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
+    Log(LOG_LEVEL_ERR, "This sub-task started really at %s", ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT))
@@ -86,7 +86,7 @@ void HandleSignalsForDaemon(int signum)
     Log(LOG_LEVEL_ERR, "Received signal %d (%s) while doing [%s]", signum, SIGNALS[signum] ? SIGNALS[signum] : "NOSIG",
           CFLOCK);
     Log(LOG_LEVEL_ERR, "Logical start time %s ", ctime(&CFSTARTTIME));
-    Log(LOG_LEVEL_ERR, "This sub-task started really at %s\n", ctime(&CFINITSTARTTIME));
+    Log(LOG_LEVEL_ERR, "This sub-task started really at %s", ctime(&CFINITSTARTTIME));
     fflush(stdout);
 
     if ((signum == SIGTERM) || (signum == SIGINT) || (signum == SIGHUP) || (signum == SIGSEGV) || (signum == SIGKILL)

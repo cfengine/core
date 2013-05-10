@@ -255,7 +255,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
         ChopLastNode(basedir);
         if (chdir(basedir))
         {
-            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'\n", basedir);
+            Log(LOG_LEVEL_ERR, "Failed to chdir into '%s'", basedir);
         }
     }
 
@@ -456,7 +456,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             method_deref = edit_bundle_name;
         }        
 
-        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle %s\n", method_deref);
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle %s", method_deref);
 
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
@@ -509,7 +509,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             method_deref = edit_bundle_name;
         }
         
-        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle %s\n", method_deref);
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle %s", method_deref);
 
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))

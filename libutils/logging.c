@@ -138,9 +138,8 @@ void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
     time_t now_seconds = time(NULL);
     localtime_r(&now_seconds, &now);
 
-    // 2000-01-01 23:01:01+0300
     char formatted_timestamp[25];
-    if (strftime(formatted_timestamp, 25, "%Y-%m-%d %H:%M:%S%z", &now) == 0)
+    if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
     {
         // There was some massacre formating the timestamp. Wow
         strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));

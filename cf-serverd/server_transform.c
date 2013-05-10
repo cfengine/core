@@ -540,8 +540,6 @@ static void KeepContextBundles(EvalContext *ctx, Policy *policy)
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL, NULL);
 
-                CleanReportBookFilterSet();
-
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {
                     Promise *pp = SeqAt(sp->promises, ppi);
@@ -587,6 +585,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL, NULL);
+
+                CleanReportBookFilterSet();
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

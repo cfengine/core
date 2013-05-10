@@ -263,7 +263,7 @@ bundle agent test_check(testname, file)
 {
   vars:
     linux::
-      "cmd" string => execresult("/usr/bin/getfacl $(file)", "noshell");
+      "cmd" string => execresult("/var/cfengine/bin/getfacl $(file)", "noshell");
     windows::
       "cmd" string => execresult("C:\windows\system32\cmd.exe /C cacls $(file)", "noshell");
 

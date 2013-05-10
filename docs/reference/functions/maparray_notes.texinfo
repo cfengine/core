@@ -1,0 +1,4 @@
+
+The @var{this.k} and @var{this.v} variables will be available for
+expansion in the string scope, similar to the way @var{this} is
+available for @code{maplist}.

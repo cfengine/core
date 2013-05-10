@@ -222,7 +222,7 @@ AvahiServiceBrowser *avahi_service_browser_new(AvahiClient *c, AvahiIfIndex inde
     return browser;
 }
 
-static void test_noHubsFound(void **state)
+static void test_noHubsFound(void)
 {
     List *list = NULL;
     
@@ -234,7 +234,7 @@ static void test_noHubsFound(void **state)
     ListDestroy(&list);
 }
 
-static void test_oneHubFound(void **state)
+static void test_oneHubFound(void)
 {
     List *list = NULL;
 
@@ -256,7 +256,7 @@ static void test_oneHubFound(void **state)
     ListDestroy(&list);
 }
 
-static void test_multipleHubsFound(void **state)
+static void test_multipleHubsFound(void)
 {
     List *list = NULL;
 
@@ -290,7 +290,7 @@ static void test_multipleHubsFound(void **state)
     ListDestroy(&list);
 }
 
-static void test_errorOccurred(void **state)
+static void test_errorOccurred(void)
 {
     List *list = NULL;
 

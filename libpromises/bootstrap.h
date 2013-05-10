@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,7 +27,62 @@
 
 #include "cf3.defs.h"
 
-void CheckAutoBootstrap(EvalContext *ctx);
-void SetPolicyServer(char *name);
+/**
+ * @brief Sets classes and the POLICY_SERVER global.
+ * @param ctx EvalContext is used to set related variables
+ * @param new_policy_server IP of new policy server
+ */
+void SetPolicyServer(EvalContext *ctx, const char *new_policy_server);
+
+/**
+ * @return The contents of policy_server.dat, or NULL if file is not found. Return value must be freed.
+ */
+char *ReadPolicyServerFile(const char *workdir);
+
+/**
+ * @brief Write new_policy_server to the policy_server.dat file.
+ * @return True if successful
+ */
+bool WritePolicyServerFile(const char *workdir, const char *new_policy_server);
+
+/**
+ * @brief Remove the policy_server.dat file
+ * @return True if successful
+ */
+bool RemovePolicyServerFile(const char *workdir);
+
+/**
+ * @return True if the file WORKDIR/state/am_policy_hub exists
+ */
+bool GetAmPolicyHub(const char *workdir);
+
+/**
+ * @brief Set the am_policy_hub marker file. If am_policy_hub is true, create the file. If false, delete it.
+ * @return True if successful
+ */
+bool WriteAmPolicyHubFile(const char *workdir, bool am_policy_hub);
+
+/**
+ * @brief Write the builtin failsafe policy to the default location
+ * @return True if succesful
+ */
+bool WriteBuiltinFailsafePolicy(const char *workdir);
+
+/**
+ * @brief Exposed for testing. Use WriteBuiltinFailsafePolicy.
+ */
+bool WriteBuiltinFailsafePolicyToPath(const char *filename);
+
+/**
+ * @brief Removes all files in WORKDIR/inputs
+ * @param workdir
+ * @return True if succesful
+ */
+bool RemoveAllExistingPolicyInInputs(const char *workdir);
+
+/**
+ * @return True if the file WORKDIR/masterfiles/promises.cf exists
+ */
+bool MasterfileExists(const char *workdir);
 
 #endif

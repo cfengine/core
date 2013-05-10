@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,24 +17,23 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "args.h"
 
 #include "promises.h"
 #include "syntax.h"
-#include "reporting.h"
 #include "expand.h"
 #include "vars.h"
-#include "cfstream.h"
-#include "fncall.h"
 #include "logging.h"
+#include "fncall.h"
 #include "evalfunction.h"
 #include "misc_lib.h"
+#include "scope.h"
+#include "audit.h"
 
 /******************************************************************/
 /* Argument propagation                                           */
@@ -72,9 +71,9 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
     {
         if (len != FnNumArgs(fn))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Arguments to function %s(.) do not tally. Expect %d not %d",
+            Log(LOG_LEVEL_ERR, "Arguments to function %s(.) do not tally. Expect %d not %d",
                   fp->name, FnNumArgs(fn), len);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            PromiseRef(LOG_LEVEL_ERR, pp);
             exit(1);
         }
     }
@@ -88,11 +87,11 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
             rval = FnCallEvaluate(ctx, subfp, pp).rval;
             break;
         default:
-            rval = ExpandPrivateRval(CONTEXTID, (Rval) {rp->item, rp->type});
+            rval = ExpandPrivateRval(ctx, ScopeGetCurrent()->scope, (Rval) {rp->item, rp->type});
             break;
         }
 
-        CfDebug("EXPARG: %s.%s\n", CONTEXTID, (char *) rval.item);
+        CfDebug("EXPARG: %s.%s\n", ScopeGetCurrent()->scope, (char *) rval.item);
         RlistAppend(&newargs, rval.item, rval.type);
         RvalDestroy(rval);
     }
@@ -111,7 +110,7 @@ void DeleteExpArgs(Rlist *args)
 
 /******************************************************************/
 
-void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
+void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
 {
     int argnum, i;
     Rlist *rp = fp->args;
@@ -128,7 +127,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
             SyntaxTypeMatch err = CheckConstraintTypeMatch(id, (Rval) {rp->item, rp->type}, argtemplate[argnum].dtype, argtemplate[argnum].pattern, 1);
             if (err != SYNTAX_TYPE_MATCH_OK && err != SYNTAX_TYPE_MATCH_ERROR_UNEXPANDED)
             {
-                FatalError("in %s: %s", id, SyntaxTypeMatchToString(err));
+                FatalError(ctx, "in %s: %s", id, SyntaxTypeMatchToString(err));
             }
         }
 
@@ -138,7 +137,6 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
     if (argnum != RlistLen(realargs) && !fn->varargs)
     {
         snprintf(output, CF_BUFSIZE, "Argument template mismatch handling function %s(", fp->name);
-        ReportError(output);
         RlistShow(stderr, realargs);
         fprintf(stderr, ")\n");
 
@@ -157,7 +155,7 @@ void ArgTemplate(FnCall *fp, const FnCallArg *argtemplate, Rlist *realargs)
             printf("\n");
         }
 
-        FatalError("Bad arguments");
+        FatalError(ctx, "Bad arguments");
     }
 
     for (rp = realargs; rp != NULL; rp = rp->next)

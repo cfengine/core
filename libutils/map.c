@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -51,7 +51,7 @@ struct Map_
     };
 };
 
-static unsigned IdentityHashFn(const void *ptr, unsigned int max)
+static unsigned IdentityHashFn(const void *ptr, ARG_UNUSED unsigned int max)
 {
     return (unsigned)(uintptr_t)ptr;
 }
@@ -61,7 +61,7 @@ static bool IdentityEqualFn(const void *p1, const void *p2)
     return p1 == p2;
 }
 
-static void NopDestroyFn(void *p1)
+static void NopDestroyFn(ARG_UNUSED void *p1)
 {
 }
 
@@ -104,6 +104,26 @@ Map *MapNew(MapHashFn hash_fn,
     map->arraymap = ArrayMapNew(equal_fn, destroy_key_fn, destroy_value_fn);
     map->hash_fn = hash_fn;
     return map;
+}
+
+size_t MapSize(const Map *map)
+{
+    if (IsArrayMap(map))
+    {
+        return map->arraymap->size;
+    }
+    else
+    {
+        MapIterator i = MapIteratorInit((Map*)map);
+        size_t size = 0;
+
+        while (MapIteratorNext(&i))
+        {
+            size++;
+        }
+
+        return size;
+    }
 }
 
 static void ConvertToHashMap(Map *map)

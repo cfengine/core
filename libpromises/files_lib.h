@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -30,19 +30,25 @@
 bool FileCanOpen(const char *path, const char *modes);
 void PurgeItemList(Item **list, char *name);
 ssize_t FileRead(const char *filename, char *buffer, size_t bufsize);
-ssize_t FileReadMax(char **output, char *filename, size_t size_max);
+ssize_t FileReadMax(char **output, const char *filename, size_t size_max);
 bool FileWriteOver(char *filename, char *contents);
 
-int LoadFileAsItemList(EvalContext *ctx, Item **liststart, const char *file, Attributes a, const Promise *pp);
+int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits);
 
 int MakeParentDirectory(char *parentandchild, int force);
 int MakeParentDirectory2(char *parentandchild, int force, bool enforce_promise);
 
-int FileSanityChecks(char *path, Attributes a, Promise *pp);
-
 void RotateFiles(char *name, int number);
 void CreateEmptyFile(char *name);
 
-void LogHashChange(EvalContext *ctx, char *file, FileState status, char *msg, Promise *pp);
+/**
+ * @brief Deletes directory path recursively. Symlinks are not followed.
+ *        Note that this function only deletes the contents of the directory, not the directory itself.
+ * @param path
+ * @return true if directory was deleted succesfully, false if one or more files were not deleted.
+ */
+bool DeleteDirectoryTree(const char *path);
+
+#include "file_lib.h"
 
 #endif

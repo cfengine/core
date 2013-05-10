@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -60,6 +60,8 @@ void *MapGet(Map *map, const void *key);
  * map.
  */
 bool MapRemove(Map *map, const void *key);
+
+size_t MapSize(const Map *map);
 
 /*
  * MapIterator i = MapIteratorInit(map);
@@ -108,7 +110,8 @@ void MapDestroy(Map *map);
     ValueType Prefix##MapGet(const Prefix##Map *map, const KeyType key); \
     bool Prefix##MapRemove(const Prefix##Map *map, const KeyType key);  \
     void Prefix##MapClear(Prefix##Map *map);                            \
-    void Prefix##MapDestroy(Prefix##Map *map);                   \
+    size_t Prefix##MapSize(const Prefix##Map *map);                            \
+    void Prefix##MapDestroy(Prefix##Map *map);                          \
 
 #define TYPED_MAP_DEFINE(Prefix, KeyType, ValueType, hash_fn, equal_fn, \
                          destroy_key_fn, destroy_value_fn)              \
@@ -144,6 +147,11 @@ void MapDestroy(Map *map);
     void Prefix##MapClear(Prefix##Map *map)                             \
     {                                                                   \
         MapClear(map->impl);                                            \
+    }                                                                   \
+                                                                        \
+    size_t Prefix##MapSize(const Prefix##Map *map)                      \
+    {                                                                   \
+        return MapSize(map->impl);                                      \
     }                                                                   \
                                                                         \
     void Prefix##MapDestroy(Prefix##Map *map)                           \

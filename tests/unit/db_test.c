@@ -18,7 +18,7 @@ void tests_teardown(void)
     system(cmd);
 }
 
-void test_iter_modify_entry(void **state)
+void test_iter_modify_entry(void)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
 
@@ -37,20 +37,20 @@ void test_iter_modify_entry(void **state)
     void *value;
     int vsize;
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
     assert_int_equal(DBCursorWriteEntry(cursor, "eee", 3), true);
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }
 
 
-void test_iter_delete_entry(void **state)
+void test_iter_delete_entry(void)
 {
     /* Test that deleting entry under cursor does not interrupt iteration */
 
@@ -69,14 +69,14 @@ void test_iter_delete_entry(void **state)
     void *value;
     int vsize;
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
     assert_int_equal(DBCursorDeleteEntry(cursor), true);
 
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
-    assert_int_equal(NextDB(db, cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
+    assert_int_equal(NextDB(cursor, &key, &ksize, &value, &vsize), true);
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }
@@ -91,7 +91,7 @@ static void CreateGarbage(const char *filename)
     fclose(fh);
 }
 
-void test_recreate(void **state)
+void test_recreate(void)
 {
     /* Test that recreating database works properly */
 
@@ -141,18 +141,19 @@ void FatalError(char *s, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
-    if (errstr)
-    {
-        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
-    }
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }
 
 const char *DAY_TEXT[] = {};

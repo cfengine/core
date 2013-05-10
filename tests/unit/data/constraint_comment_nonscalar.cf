@@ -1,0 +1,6 @@
+bundle agent foo
+{
+reports:
+  "hello"
+     comment => { "a" };
+}

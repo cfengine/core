@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -56,12 +56,11 @@ char *RlistScalarValue(const Rlist *rlist);
 FnCall *RlistFnCallValue(const Rlist *rlist);
 Rlist *RlistRlistValue(const Rlist *rlist);
 Rlist *RlistParseShown(char *string);
+Rlist *RlistParseString(char *string, int *n);
 bool RlistIsStringIn(const Rlist *list, const char *s);
 bool RlistIsIntIn(const Rlist *list, int i);
 Rlist *RlistKeyIn(Rlist *list, const char *key);
 int RlistLen(const Rlist *start);
-void RlistPopStack(Rlist **liststart, void **item, size_t size);
-void RlistPushStack(Rlist **liststart, void *item);
 bool RlistIsInListOfRegex(const Rlist *list, const char *str);
 
 Rlist *RlistAppendAlien(Rlist **start, void *item);
@@ -84,5 +83,11 @@ void RlistShow(FILE *fp, const Rlist *list);
 void RlistWrite(Writer *writer, const Rlist *list);
 Rlist *RlistLast(Rlist *start);
 void RlistFilter(Rlist **list, bool (*KeepPredicate)(void *item, void *predicate_data), void *predicate_user_data, void (*DestroyItem)(void *item));
+void RlistReverse(Rlist **list);
+
+/**
+ * @brief Flattens an Rlist by expanding naked scalar list-variable members. Flattening is only one-level deep.
+ */
+void RlistFlatten(EvalContext *ctx, Rlist **list);
 
 #endif

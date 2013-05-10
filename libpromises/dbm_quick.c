@@ -1,8 +1,7 @@
 /*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
-
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -18,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -31,8 +30,7 @@
 
 #include "dbm_api.h"
 #include "dbm_priv.h"
-#include "dbm_lib.h"
-#include "cfstream.h"
+#include "string_lib.h"
 
 #ifdef QDB
 # include <depot.h>
@@ -70,7 +68,7 @@ static bool Lock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock", "Unable to lock QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to lock QDBM database. (pthread_mutex_lock: %s)", GetErrorStr());
         return false;
     }
     return true;
@@ -82,7 +80,7 @@ static void Unlock(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock", "Unable to unlock QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to unlock QDBM database. (pthread_mutex_unlock: %s)", GetErrorStr());
     }
 }
 
@@ -92,7 +90,7 @@ static bool LockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock", "Unable to obtain cursor lock for QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to obtain cursor lock for QDBM database. (pthread_mutex_lock: %s)", GetErrorStr());
         return false;
     }
     return true;
@@ -104,7 +102,7 @@ static void UnlockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock", "Unable to release cursor lock for QDBM database");
+        Log(LOG_LEVEL_ERR, "Unable to release cursor lock for QDBM database. (pthread_mutex_unlock: %s)", GetErrorStr());
     }
 }
 
@@ -124,16 +122,16 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if ((db->depot == NULL) && (dpecode == DP_EBROKEN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Database \"%s\" is broken, trying to repair...", filename);
+        Log(LOG_LEVEL_ERR, "Database \"%s\" is broken, trying to repair...", filename);
 
         if (dprepair(filename))
         {
-            CfOut(OUTPUT_LEVEL_LOG, "", "Successfully repaired database \"%s\"", filename);
+            Log(LOG_LEVEL_INFO, "Successfully repaired database \"%s\"", filename);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Failed to repair database %s, recreating...", filename);
-            DBPathMoveBroken(filename);
+            Log(LOG_LEVEL_ERR, "Failed to repair database %s, recreating...", filename);
+            return DB_PRIV_DATABASE_BROKEN;
         }
 
         db->depot = dpopen(filename, DP_OWRITER | DP_OCREAT, -1);
@@ -141,7 +139,7 @@ DBPriv *DBPrivOpenDB(const char *filename)
 
     if (db->depot == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpopen: Opening database \"%s\" failed: %s",
+        Log(LOG_LEVEL_ERR, "dpopen: Opening database \"%s\" failed: %s",
               filename, dperrmsg(dpecode));
         pthread_mutex_destroy(&db->cursor_lock);
         pthread_mutex_destroy(&db->lock);
@@ -159,20 +157,18 @@ void DBPrivCloseDB(DBPriv *db)
     if ((ret = pthread_mutex_destroy(&db->lock)) != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
-              "Lock is still active during QDBM database handle close");
+        Log(LOG_LEVEL_ERR, "Lock is still active during QDBM database handle close. (pthread_mutex_destroy: %s)", GetErrorStr());
     }
 
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
-              "Cursor lock is still active during QDBM database handle close");
+        Log(LOG_LEVEL_ERR, "Cursor lock is still active during QDBM database handle close. (pthread_mutex_destroy: %s)", GetErrorStr());
     }
 
     if (!dpclose(db->depot))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to close QDBM database: %s", dperrmsg(dpecode));
+        Log(LOG_LEVEL_ERR, "Unable to close QDBM database: %s", dperrmsg(dpecode));
     }
 
     free(db);
@@ -210,7 +206,7 @@ bool DBPrivWrite(DBPriv *db, const void *key, int key_size, const void *value, i
     if (!dpput(db->depot, key, key_size, value, value_size, DP_DOVER))
     {
         char *db_name = dpname(db->depot);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpput: Could not write key to DB \"%s\": %s",
+        Log(LOG_LEVEL_ERR, "dpput: Could not write key to DB \"%s\": %s",
               db_name, dperrmsg(dpecode));
         free(db_name);
         Unlock(db);
@@ -280,7 +276,7 @@ DBCursorPriv *DBPrivOpenCursor(DBPriv *db)
 
     if (!dpiterinit(db->depot))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
+        Log(LOG_LEVEL_ERR, "dpiterinit: Could not initialize iterator: %s", dperrmsg(dpecode));
         Unlock(db);
         UnlockCursor(db);
         return NULL;
@@ -352,6 +348,11 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
     Unlock(db);
     /* Cursor lock was obtained in DBPrivOpenCursor */
     UnlockCursor(db);
+}
+
+char *DBPrivDiagnose(const char *dbpath)
+{
+    return StringFormat("Unable to diagnose QuickDB file (not implemented) for '%s'", dbpath);
 }
 
 #endif

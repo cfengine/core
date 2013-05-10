@@ -1,41 +1,43 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-  
 */
 
 #include "generic_agent.h"
 
+#include "audit.h"
 #include "env_context.h"
+#include "verify_classes.h"
 #include "verify_databases.h"
 #include "verify_environments.h"
 #include "verify_exec.h"
 #include "verify_methods.h"
 #include "verify_processes.h"
 #include "verify_packages.h"
-#include "verify_outputs.h"
 #include "verify_services.h"
 #include "verify_storage.h"
+#include "verify_files.h"
 #include "verify_files_utils.h"
+#include "verify_vars.h"
 #include "addr_lib.h"
 #include "files_names.h"
 #include "files_interfaces.h"
@@ -46,21 +48,30 @@
 #include "vars.h"
 #include "conversion.h"
 #include "expand.h"
-#include "transaction.h"
+#include "locks.h"
 #include "scope.h"
 #include "matching.h"
 #include "instrumentation.h"
+#include "promises.h"
 #include "unix.h"
 #include "attributes.h"
-#include "cfstream.h"
 #include "communication.h"
 #include "signals.h"
-#include "logging.h"
 #include "nfs.h"
 #include "processes_select.h"
 #include "list.h"
 #include "fncall.h"
 #include "rlist.h"
+#include "agent-diagnostics.h"
+#include "sysinfo.h"
+#include "cf-agent-enterprise-stubs.h"
+#include "syslog_client.h"
+#include "man.h"
+#include "bootstrap.h"
+#include "misc_lib.h"
+#include "buffer.h"
+
+#include "mod_common.h"
 
 typedef enum
 {
@@ -68,7 +79,6 @@ typedef enum
     TYPE_SEQUENCE_VARS,
     TYPE_SEQUENCE_DEFAULTS,
     TYPE_SEQUENCE_CONTEXTS,
-    TYPE_SEQUENCE_OUTPUTS,
     TYPE_SEQUENCE_INTERFACES,
     TYPE_SEQUENCE_FILES,
     TYPE_SEQUENCE_PACKAGES,
@@ -90,11 +100,13 @@ typedef enum
 #endif
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
 #include "agent_reports.h"
-#else
-#include "reporting.h"
+#include "nova-agent-diagnostics.h"
 #endif
+
+#include "ornaments.h"
+
+#include <assert.h>
 
 extern int PR_KEPT;
 extern int PR_REPAIRED;
@@ -117,7 +129,6 @@ static const char *AGENT_TYPESEQUENCE[] =
     "vars",
     "defaults",
     "classes",                  /* Maelstrom order 2 */
-    "outputs",
     "interfaces",
     "files",
     "packages",
@@ -138,73 +149,73 @@ static const char *AGENT_TYPESEQUENCE[] =
 
 static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
+static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv);
+static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv);
+static void FreeStringArray(int size, char **array);
 static void CheckAgentAccess(Rlist *list, const Rlist *input_files);
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, void *param);
 static int NewTypeContext(TypeSequence type);
-static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context);
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type);
 static void ClassBanner(EvalContext *ctx, TypeSequence type);
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context);
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp);
 static bool VerifyBootstrap(void);
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save_pr_repaired, int save_pr_notkept);
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-static int AutomaticBootstrap();
-#endif
-#endif
+static void AllClassesReport(const EvalContext *ctx);
+static bool HasAvahiSupport(void);
+static int AutomaticBootstrap(GenericAgentConfig *config);
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The main Cfengine agent is the instigator of change\n"
-    "in the system. In that sense it is the most important\n" "part of the CFEngine suite.\n";
+static const char *CF_AGENT_SHORT_DESCRIPTION = "evaluate CFEngine policy code and actuate change to the system.";
+
+static const char *CF_AGENT_MANPAGE_LONG_DESCRIPTION =
+        "cf-agent evaluates policy code and makes changes to the system. Policy bundles are evaluated in the order of the "
+        "provided bundlesequence (this is normally specified in the common control body). "
+        "For each bundle, cf-agent groups promise statements according to their type. Promise types are then evaluated in a preset "
+        "order to ensure fast system convergence to policy.\n";
 
 static const struct option OPTIONS[15] =
 {
-    {"bootstrap", no_argument, 0, 'B'},
+    {"bootstrap", required_argument, 0, 'B'},
     {"bundlesequence", required_argument, 0, 'b'},
     {"debug", no_argument, 0, 'd'},
     {"define", required_argument, 0, 'D'},
-    {"diagnostic", optional_argument, 0, 'x'},
+    {"self-diagnostics", optional_argument, 0, 'x'},
     {"dry-run", no_argument, 0, 'n'},
     {"file", required_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
     {"inform", no_argument, 0, 'I'},
     {"negate", required_argument, 0, 'N'},
     {"no-lock", no_argument, 0, 'K'},
-    {"policy-server", required_argument, 0, 's'},
     {"verbose", no_argument, 0, 'v'},
     {"version", no_argument, 0, 'V'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
 static const char *HINTS[15] =
 {
-    "Bootstrap/repair a cfengine configuration from failsafe file in the WORKDIR else in current directory",
+    "Bootstrap CFEngine to the given policy server IP, hostname or :avahi (automatic detection)",
     "Set or override bundlesequence from command line",
     "Enable debugging output",
     "Define a list of comma separated classes to be defined at the start of execution",
-    "Do internal diagnostic (developers only) level in optional argument",
+    "Run checks to diagnose a CFEngine agent installation",
     "All talk and no action mode - make no changes, only inform of promises not kept",
     "Specify an alternative input file than the default",
     "Print the help message",
     "Print basic information about changes made to the system, i.e. promises repaired",
     "Define a list of comma separated classes to be undefined at the start of execution",
     "Ignore locking constraints during execution (ifelapsed/expireafter) if \"too soon\" to run",
-    "Define the server name or IP address of the a policy server (for use with bootstrap)",
     "Output verbose information about the behaviour of the agent",
     "Output the version of the software",
+    "Use legacy output format",
     NULL
 };
-
-#ifndef HAVE_NOVA
-void NoteEfficiency(double e)
-{
-}
-#endif
 
 /*******************************************************************/
 
@@ -217,50 +228,38 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-    if (NULL_OR_EMPTY(POLICY_SERVER) && BOOTSTRAP)
-    {
-        int ret = AutomaticBootstrap();
-
-        if (ret < 0)
-        {
-            return 1;
-        }
-    }
-#endif
-#endif
-
-    ReportContext *report_context = OpenReports(config->agent_type);
-
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     Policy *policy = NULL;
     if (GenericAgentCheckPolicy(ctx, config, ALWAYS_VALIDATE))
     {
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
     else if (config->tty_interactive)
     {
-        FatalError("CFEngine was not able to get confirmation of promises from cf-promises, please verify input file\n");
+        exit(EXIT_FAILURE);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
-        GenericAgentConfigSetInputFile(config, "failsafe.cf");
-        policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+        GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
+        policy = GenericAgentLoadPolicy(ctx, config);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     BeginAudit();
-    KeepPromises(ctx, policy, config, report_context);
-    CloseReports("agent", report_context);
+    KeepPromises(ctx, policy, config);
+
+    if (ALLCLASSESREPORT)
+    {
+        AllClassesReport(ctx);
+    }
 
     // only note class usage when default policy is run
-    if (!config->input_file)
+    if (!MINUSF)
     {
         StringSetIterator soft_iter = EvalContextHeapIteratorSoft(ctx);
         NoteClassUsage(soft_iter, true);
@@ -274,12 +273,14 @@ int main(int argc, char *argv[])
 #endif
     PurgeLocks();
 
-    if (BOOTSTRAP && !VerifyBootstrap())
+    if (config->agent_specific.agent.bootstrap_policy_server && !VerifyBootstrap())
     {
+        RemovePolicyServerFile(GetWorkDir());
+        WriteAmPolicyHubFile(GetWorkDir(), false);
         ret = 1;
     }
 
-    EndAudit(CFA_BACKGROUND);
+    EndAudit(ctx, CFA_BACKGROUND);
     EvalContextDestroy(ctx);
     GenericAgentConfigDestroy(config);
 
@@ -293,9 +294,7 @@ int main(int argc, char *argv[])
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 {
     extern char *optarg;
-    char *sp;
-    int optindex = 0;
-    int c, alpha = false, v6 = false;
+    int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_AGENT);
 
 /* Because of the MacOS linker we have to call this from each agent
@@ -303,79 +302,101 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
     POLICY_SERVER[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "rdvnKIf:D:N:Vs:x:MBb:h", OPTIONS, &optindex)) != EOF)
+/* DEPRECATED:
+   --policy-server (-s) is deprecated in community version 3.5.0.
+   Support rewrite from some common old bootstrap options (until community version 3.6.0?).
+ */
+
+    int argc_new = argc;
+    char **argv_tmp = TranslateOldBootstrapOptionsSeparate(&argc_new, argv);
+    char **argv_new = TranslateOldBootstrapOptionsConcatenated(argc_new, argv_tmp);
+    FreeStringArray(argc_new, argv_tmp);
+
+    while ((c = getopt_long(argc_new, argv_new, "dvnKIf:D:N:VxMB:b:hl", OPTIONS, NULL)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
             if (optarg && strlen(optarg) < 5)
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, "-f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
         case 'b':
             if (optarg)
             {
-                config->bundlesequence = RlistFromSplitString(optarg, ',');
-                CBUNDLESEQUENCE_STR = optarg;
+                Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
+                GenericAgentConfigSetBundleSequence(config, bundlesequence);
+                RlistDestroy(bundlesequence);
             }
             break;
 
         case 'd':
-            EvalContextHeapAddHard(ctx, "opt_debug");
-            DEBUG = true;
+            config->debug_mode = true;
             break;
 
         case 'B':
-            BOOTSTRAP = true;
-            MINUSF = true;
-            GenericAgentConfigSetInputFile(config, "promises.cf");
-            IGNORELOCK = true;
-            EvalContextHeapAddHard(ctx, "bootstrap_mode");
-            break;
-
-        case 's':
-            
-            if(IsLoopbackAddress(optarg))
             {
-                FatalError("Use a non-loopback address when bootstrapping");
-            }
-
-            // temporary assure that network functions are working
-            OpenNetwork();
-
-            strncpy(POLICY_SERVER, Hostname2IPString(optarg), CF_BUFSIZE - 1);
-
-            CloseNetwork();
-
-            for (sp = POLICY_SERVER; *sp != '\0'; sp++)
-            {
-                if (isalpha((int)*sp))
+                if (!BootstrapAllowed())
                 {
-                    alpha = true;
+                    Log(LOG_LEVEL_ERR, "Not enough privileges to bootstrap CFEngine");
+                    exit(EXIT_FAILURE);
                 }
 
-                if (ispunct((int)*sp) && *sp != ':' && *sp != '.')
+                if(strcmp(optarg, ":avahi") == 0)
                 {
-                    alpha = true;
+                    if(!HasAvahiSupport())
+                    {
+                        Log(LOG_LEVEL_ERR, "Avahi support is not built in, please see options to the configure script and rebuild CFEngine");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    int err = AutomaticBootstrap(config);
+                    if (err < 0);
+                    {
+                        Log(LOG_LEVEL_ERR, "Automatic bootstrap failed, error code '%d'", err);
+                        exit(EXIT_FAILURE);
+                    }
+                    break;
                 }
 
-                if (*sp == ':')
+                if(IsLoopbackAddress(optarg))
                 {
-                    v6 = true;
+                    Log(LOG_LEVEL_ERR, "Cannot bootstrap to a loopback address");
+                    exit(EXIT_FAILURE);
                 }
-            }
 
-            if (alpha && !v6)
-            {
-                FatalError
-                    ("Error specifying policy server. The policy server's IP address could not be looked up. Please use the IP address instead if there is no error.");
-            }
+                // temporary assure that network functions are working
+                OpenNetwork();
 
+                char mapped_policy_server[CF_MAX_IP_LEN] = "";
+                if (Hostname2IPString(mapped_policy_server, optarg,
+                                      sizeof(mapped_policy_server)) == -1)
+                {
+                    Log(LOG_LEVEL_ERR,
+                        "Could not resolve hostname '%s', unable to bootstrap",
+                        optarg);
+                    exit(EXIT_FAILURE);
+                }
+
+                CloseNetwork();
+
+                MINUSF = true;
+                IGNORELOCK = true;
+                GenericAgentConfigSetInputFile(config, GetWorkDir(),
+                                               "promises.cf");
+                config->agent_specific.agent.bootstrap_policy_server =
+                    xstrdup(mapped_policy_server);
+            }
             break;
 
         case 'K':
@@ -405,40 +426,183 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-agent");
+            PrintVersion();
             exit(0);
 
         case 'h':
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-agent", time(NULL),
+                             CF_AGENT_SHORT_DESCRIPTION,
+                             CF_AGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired");
+            {
+                const char *workdir = GetWorkDir();
+                Writer *out = FileWriter(stdout);
+                WriterWriteF(out, "self-diagnostics for agent using workdir '%s'\n", workdir);
+
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecks(), out);
+#ifdef HAVE_NOVA
+                AgentDiagnosticsRun(workdir, AgentDiagnosticsAllChecksNova(), out);
+#endif
+                FileWriterDetach(out);
+            }
             exit(0);
 
-        case 'r':
-            SHOWREPORTS = true;
-            break;
-
         default:
-            Syntax("cf-agent - cfengine's change agent", OPTIONS, HINTS, ID);
+            PrintHelp("cf-agent", OPTIONS, HINTS, true);
             exit(1);
         }
     }
 
-    if (argv[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc_new - optind,
+                                          argv_new + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
-        FatalError("Aborted");
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
     }
 
-    CfDebug("Set debugging\n");
+    FreeStringArray(argc_new, argv_new);
 
     return config;
+}
+
+
+static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv)
+{
+    int i;
+    int policy_server_argnum = 0;
+    int server_address_argnum = 0;
+    int bootstrap_argnum = 0;
+    int argc = *argc_new;
+
+    for(i = 0; i < argc; i++)
+    {
+        CfDebug("Argument %d:\"%s\"\n", i, argv[i]);
+
+        if(strcmp(argv[i], "--policy-server") == 0 || strcmp(argv[i], "-s") == 0)
+        {
+            policy_server_argnum = i;
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server option found at argument %d (%s)\n", 
+                   policy_server_argnum, argv[policy_server_argnum]);
+        }
+
+        if(strcmp(argv[i], "--bootstrap") == 0 || strcmp(argv[i], "-B") == 0)
+        {
+            bootstrap_argnum = i;
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Bootstrap option found at argument %d (%s)\n", 
+                   bootstrap_argnum, argv[bootstrap_argnum]);
+        }
+    }
+
+    if(policy_server_argnum > 0)
+    {
+        if(policy_server_argnum + 1 < argc)
+        {
+            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server address assumed to be at argument %d (%s)\n", 
+                   server_address_argnum, argv[server_address_argnum]);
+
+            server_address_argnum = policy_server_argnum + 1;
+        }
+    }
+
+    char **argv_new;
+
+    if(bootstrap_argnum > 0 && server_address_argnum > 0)
+    {
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        printf("!! DEPRECATED BOOTSTRAP OPTIONS DETECTED\n");
+        printf("!! The --policy-server (-s) option is deprecated from CFEngine community version 3.5.0.\n");
+        printf("!! Please provide the address argument to --bootstrap (-B) instead.\n");
+        printf("!! Rewriting your arguments now, but you need to adjust them as this support will be removed soon.\n");
+        printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+        *argc_new = argc - 1;  // --policy-server deprecated
+        argv_new = xcalloc(1, sizeof(char *) * (*argc_new + 1));
+
+        int new_i = 0;
+
+        for(i = 0; i < argc; i++)
+        {
+            if(i == bootstrap_argnum)
+            {
+                argv_new[new_i++] = xstrdup(argv[bootstrap_argnum]);
+                argv_new[new_i++] = xstrdup(argv[server_address_argnum]);
+            }
+            else if(i == server_address_argnum)
+            {
+                // skip: handled above
+            }
+            else if(i == policy_server_argnum)
+            {
+                // skip: deprecated
+            }
+            else
+            {
+                argv_new[new_i++] = xstrdup(argv[i]);
+            }
+        }
+    }
+    else
+    {
+        argv_new = xcalloc(1, sizeof(char *) * (*argc_new + 1));
+
+        for(i = 0; i < argc; i++)
+        {
+            argv_new[i] = xstrdup(argv[i]);
+        }
+    }
+
+    return argv_new;
+}
+
+
+static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv)
+{
+    char **argv_new = xcalloc(1, sizeof(char *) * (argc + 1));
+
+    for(int i = 0; i < argc; i++)
+    {
+        if(strcmp(argv[i], "-Bs") == 0)
+        {
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            printf("!! DEPRECATED BOOTSTRAP OPTIONS DETECTED\n");
+            printf("!! The --policy-server (-s) option is deprecated from CFEngine community version 3.5.0.\n");
+            printf("!! Please provide the address argument to --bootstrap (-B) instead.\n");
+            printf("!! Rewriting your arguments now, but you need to adjust them as this support will be removed soon.\n");
+            printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+            CfDebug("TranslateOldBootstrapOptionsConcatenated: Detected old bootstrap option '-Bs', replacing with '-B'\n");
+            argv_new[i] = xstrdup("-B");
+        }
+        else
+        {
+            argv_new[i] = xstrdup(argv[i]);
+        }
+    }
+
+    return argv_new;
+}
+
+
+static void FreeStringArray(int size, char **array)
+{
+    for(int i = 0; i < size; i++)
+    {
+        free(array[i]);
+    }
+
+    free(array);
 }
 
 /*******************************************************************/
@@ -449,7 +613,7 @@ static void ThisAgentInit(void)
     char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Immunizing against parental death");
+    Log(LOG_LEVEL_VERBOSE, "Immunizing against parental death");
     setsid();
 #endif
 
@@ -480,24 +644,10 @@ static void ThisAgentInit(void)
 
 /*******************************************************************/
 
-static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
-    double efficiency, model;
-
     KeepControlPromises(ctx, policy);
-    KeepPromiseBundles(ctx, policy, config, report_context);
-
-// TOPICS counts the number of currently defined promises
-// OCCUR counts the number of objects touched while verifying config
-
-    efficiency = 100.0 * CF_OCCUR / (double) (CF_OCCUR + CF_TOPICS);
-    model = 100.0 * (1.0 - CF_TOPICS / (double)(PR_KEPT + PR_NOTKEPT + PR_REPAIRED));
-    
-    NoteEfficiency(efficiency);
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Checked %d objects with %d promises, i.e. model efficiency %.2lf%%", CF_OCCUR, CF_TOPICS, efficiency);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> The %d declared promise patterns actually expanded into %d individual promises, i.e. declaration efficiency %.2lf%%", (int) CF_TOPICS, PR_KEPT + PR_NOTKEPT + PR_REPAIRED, model);
-
+    KeepPromiseBundles(ctx, policy, config);
 }
 
 /*******************************************************************/
@@ -521,29 +671,29 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable("control_common", cp->lval, &retval) != DATA_TYPE_NONE)
+            if (EvalContextVariableControlCommonGet(ctx, CommonControlFromString(cp->lval), &retval))
             {
                 /* Already handled in generic_agent */
                 continue;
             }
 
-            if (ScopeGetVariable("control_agent", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_agent", cp->lval }, &retval, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in agent control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval %s in agent control body", cp->lval);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_MAXCONNECTIONS].lval) == 0)
             {
                 CFA_MAXTHREADS = (int) IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET maxconnections = %d\n", CFA_MAXTHREADS);
+                Log(LOG_LEVEL_VERBOSE, "SET maxconnections = %d\n", CFA_MAXTHREADS);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_CHECKSUM_ALERT_TIME].lval) == 0)
             {
                 CF_PERSISTENCE = (int) IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET checksum_alert_time = %d\n", CF_PERSISTENCE);
+                Log(LOG_LEVEL_VERBOSE, "SET checksum_alert_time = %d\n", CF_PERSISTENCE);
                 continue;
             }
 
@@ -584,7 +734,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Abort classes from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Abort classes from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -602,7 +752,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET Abort bundle classes from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Abort bundle classes from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -619,11 +769,11 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "-> Add classes ...\n");
+                Log(LOG_LEVEL_VERBOSE, "Add classes ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> ... %s\n", RlistScalarValue(rp));
+                    Log(LOG_LEVEL_VERBOSE, "... %s\n", RlistScalarValue(rp));
                     EvalContextHeapAddSoft(ctx, rp->item, NULL);
                 }
 
@@ -632,40 +782,40 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_AUDITING].lval) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "This option does nothing and is retained for compatibility reasons");
+                Log(LOG_LEVEL_VERBOSE, "This option does nothing and is retained for compatibility reasons");
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_ALWAYSVALIDATE].lval) == 0)
             {
                 ALWAYS_VALIDATE = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET alwaysvalidate = %d\n", ALWAYS_VALIDATE);
+                Log(LOG_LEVEL_VERBOSE, "SET alwaysvalidate = %d\n", ALWAYS_VALIDATE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_ALLCLASSESREPORT].lval) == 0)
             {
                 ALLCLASSESREPORT = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET allclassesreport = %d\n", ALLCLASSESREPORT);
+                Log(LOG_LEVEL_VERBOSE, "SET allclassesreport = %d\n", ALLCLASSESREPORT);
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SECUREINPUT].lval) == 0)
             {
                 CFPARANOID = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET secure input = %d\n", CFPARANOID);
+                Log(LOG_LEVEL_VERBOSE, "SET secure input = %d\n", CFPARANOID);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_BINARYPADDINGCHAR].lval) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "binarypaddingchar is obsolete and does nothing\n");
+                Log(LOG_LEVEL_VERBOSE, "binarypaddingchar is obsolete and does nothing\n");
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_BINDTOINTERFACE].lval) == 0)
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET bindtointerface = %s\n", BINDINTERFACE);
+                Log(LOG_LEVEL_VERBOSE, "SET bindtointerface = %s\n", BINDINTERFACE);
                 continue;
             }
 
@@ -674,13 +824,13 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 bool enabled = BooleanFromString(retval.item);
 
                 SetChecksumUpdates(enabled);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ChecksumUpdates %d\n", enabled);
+                Log(LOG_LEVEL_VERBOSE, "SET ChecksumUpdates %d\n", enabled);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_EXCLAMATION].lval) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "exclamation control is deprecated and does not do anything\n");
+                Log(LOG_LEVEL_VERBOSE, "exclamation control is deprecated and does not do anything\n");
                 continue;
             }
 
@@ -691,7 +841,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 snprintf(output, CF_BUFSIZE, "LD_LIBRARY_PATH=%s", (char *) retval.item);
                 if (putenv(xstrdup(output)) == 0)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Setting %s\n", output);
+                    Log(LOG_LEVEL_VERBOSE, "Setting %s\n", output);
                 }
                 continue;
             }
@@ -699,49 +849,49 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_DEFAULTCOPYTYPE].lval) == 0)
             {
                 DEFAULT_COPYTYPE = (char *) retval.item;
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET defaultcopytype = %s\n", DEFAULT_COPYTYPE);
+                Log(LOG_LEVEL_VERBOSE, "SET defaultcopytype = %s\n", DEFAULT_COPYTYPE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FSINGLECOPY].lval) == 0)
             {
                 SINGLE_COPY_LIST = (Rlist *) retval.item;
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET file single copy list\n");
+                Log(LOG_LEVEL_VERBOSE, "SET file single copy list\n");
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_FAUTODEFINE].lval) == 0)
             {
                 SetFileAutoDefineList(RvalRlistValue(retval));
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET file auto define list\n");
+                Log(LOG_LEVEL_VERBOSE, "SET file auto define list\n");
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_DRYRUN].lval) == 0)
             {
                 DONTDO = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET dryrun = %c\n", DONTDO);
+                Log(LOG_LEVEL_VERBOSE, "SET dryrun = %c\n", DONTDO);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_INFORM].lval) == 0)
             {
                 INFORM = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET inform = %c\n", INFORM);
+                Log(LOG_LEVEL_VERBOSE, "SET inform = %c\n", INFORM);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_VERBOSE].lval) == 0)
             {
                 VERBOSE = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET inform = %c\n", VERBOSE);
+                Log(LOG_LEVEL_VERBOSE, "SET inform = %c\n", VERBOSE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_REPOSITORY].lval) == 0)
             {
                 SetRepositoryLocation(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET repository = %s\n", RvalScalarValue(retval));
+                Log(LOG_LEVEL_VERBOSE, "SET repository = %s\n", RvalScalarValue(retval));
                 continue;
             }
 
@@ -750,7 +900,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 bool enabled = BooleanFromString(retval.item);
 
                 SetSkipIdentify(enabled);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET skipidentify = %d\n", (int) enabled);
+                Log(LOG_LEVEL_VERBOSE, "SET skipidentify = %d\n", (int) enabled);
                 continue;
             }
 
@@ -760,7 +910,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     AddFilenameToListOfSuspicious(RlistScalarValue(rp));
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "-> Considering %s as suspicious file", RlistScalarValue(rp));
+                    Log(LOG_LEVEL_VERBOSE, "Considering %s as suspicious file", RlistScalarValue(rp));
                 }
 
                 continue;
@@ -771,52 +921,52 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 char c = *(char *) retval.item;
 
                 SetRepositoryChar(c);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET repchar = %c\n", c);
+                Log(LOG_LEVEL_VERBOSE, "SET repchar = %c\n", c);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_MOUNTFILESYSTEMS].lval) == 0)
             {
                 CF_MOUNTALL = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET mountfilesystems = %d\n", CF_MOUNTALL);
+                Log(LOG_LEVEL_VERBOSE, "SET mountfilesystems = %d\n", CF_MOUNTALL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_EDITFILESIZE].lval) == 0)
             {
                 EDITFILESIZE = IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET EDITFILESIZE = %d\n", EDITFILESIZE);
+                Log(LOG_LEVEL_VERBOSE, "SET EDITFILESIZE = %d\n", EDITFILESIZE);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_IFELAPSED].lval) == 0)
             {
                 VIFELAPSED = IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ifelapsed = %d\n", VIFELAPSED);
+                Log(LOG_LEVEL_VERBOSE, "SET ifelapsed = %d\n", VIFELAPSED);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_EXPIREAFTER].lval) == 0)
             {
                 VEXPIREAFTER = IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET ifelapsed = %d\n", VEXPIREAFTER);
+                Log(LOG_LEVEL_VERBOSE, "SET ifelapsed = %d\n", VEXPIREAFTER);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_TIMEOUT].lval) == 0)
             {
                 CONNTIMEOUT = IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET timeout = %jd\n", (intmax_t) CONNTIMEOUT);
+                Log(LOG_LEVEL_VERBOSE, "SET timeout = %jd\n", (intmax_t) CONNTIMEOUT);
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_MAX_CHILDREN].lval) == 0)
             {
                 CFA_BACKGROUND_LIMIT = IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET MAX_CHILDREN = %d\n", CFA_BACKGROUND_LIMIT);
+                Log(LOG_LEVEL_VERBOSE, "SET MAX_CHILDREN = %d\n", CFA_BACKGROUND_LIMIT);
                 if (CFA_BACKGROUND_LIMIT > 10)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Silly value for max_children in agent control promise (%d > 10)",
+                    Log(LOG_LEVEL_ERR, "Silly value for max_children in agent control promise (%d > 10)",
                           CFA_BACKGROUND_LIMIT);
                     CFA_BACKGROUND_LIMIT = 1;
                 }
@@ -825,7 +975,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_SYSLOG].lval) == 0)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog = %d\n", BooleanFromString(retval.item));
+                Log(LOG_LEVEL_VERBOSE, "SET syslog = %d\n", BooleanFromString(retval.item));
                 continue;
             }
 
@@ -833,13 +983,14 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET environment variables from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET environment variables from ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     if (putenv(rp->item) != 0)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "putenv", "Failed to set environment variable %s", RlistScalarValue(rp));
+                        Log(LOG_LEVEL_ERR, "Failed to set environment variable '%s'. (putenv: %s)",
+                            RlistScalarValue(rp), GetErrorStr());
                     }
                 }
 
@@ -848,37 +999,47 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_FIPS_MODE].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET FIPS_MODE = %d\n", FIPS_MODE);
+        Log(LOG_LEVEL_VERBOSE, "SET FIPS_MODE = %d\n", FIPS_MODE);
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_PORT].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_PORT, &retval))
     {
         SetSyslogPort(IntFromString(retval.item));
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_port to %s", RvalScalarValue(retval));
+        Log(LOG_LEVEL_VERBOSE, "SET syslog_port to %s", RvalScalarValue(retval));
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_SYSLOG_HOST].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_SYSLOG_HOST, &retval))
     {
-        SetSyslogHost(Hostname2IPString(retval.item));
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET syslog_host to %s", Hostname2IPString(retval.item));
+        /* Don't resolve syslog_host now, better do it per log request. */
+        if (!SetSyslogHost(retval.item))
+        {
+            Log(LOG_LEVEL_ERR,
+                  "FAILed to set syslog_host, ""\"%s\" too long",
+                  (char *) retval.item);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "SET syslog_host to %s",
+                  (char *) retval.item);
+        }
     }
 
 #ifdef HAVE_NOVA
-    Nova_Initialize();
+    Nova_Initialize(ctx);
 #endif
 }
 
 /*********************************************************************/
 
-static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context)
+static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
 {
     Bundle *bp;
     Rlist *rp, *params;
@@ -889,15 +1050,15 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     if (config->bundlesequence)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", " >> Using command line specified bundlesequence");
+        Log(LOG_LEVEL_INFO, " >> Using command line specified bundlesequence");
         retval = (Rval) { config->bundlesequence, RVAL_TYPE_LIST };
     }
-    else if (ScopeGetVariable("control_common", "bundlesequence", &retval) == DATA_TYPE_NONE)
+    else if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         // TODO: somewhat frenzied way of telling user about an error
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! No bundlesequence in the common control body");
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        Log(LOG_LEVEL_ERR, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        Log(LOG_LEVEL_ERR, "No bundlesequence in the common control body");
+        Log(LOG_LEVEL_ERR, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         exit(1);
     }
 
@@ -924,7 +1085,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         default:
             name = NULL;
             params = NULL;
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Illegal item found in bundlesequence: ");
+            Log(LOG_LEVEL_ERR, "Illegal item found in bundlesequence: ");
             RvalShow(stdout, (Rval) {rp->item, rp->type});
             printf(" = %c\n", rp->type);
             ok = false;
@@ -935,7 +1096,7 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         {
             if (!(PolicyGetBundle(policy, NULL, "agent", name) || (PolicyGetBundle(policy, NULL, "common", name))))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Bundle \"%s\" listed in the bundlesequence was not found\n", name);
+                Log(LOG_LEVEL_ERR, "Bundle \"%s\" listed in the bundlesequence was not found\n", name);
                 ok = false;
             }
         }
@@ -943,14 +1104,25 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     if (!ok)
     {
-        FatalError("Errors in agent bundles");
+        FatalError(ctx, "Errors in agent bundles");
     }
 
     if (VERBOSE || DEBUG)
     {
-        printf("%s> -> Bundlesequence => ", VPREFIX);
-        RvalShow(stdout, retval);
-        printf("\n");
+        if (LEGACY_OUTPUT)
+        {
+            printf("%s> -> Bundlesequence => ", VPREFIX);
+            RvalShow(stdout, retval);
+            printf("\n");
+        }
+        else
+        {
+            Writer *w = StringWriter();
+            WriterWrite(w, "Using bundlesequence => ");
+            RvalWrite(w, retval);
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            WriterClose(w);
+        }
     }
 
 /* If all is okay, go ahead and evaluate */
@@ -972,33 +1144,61 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
         if ((bp = PolicyGetBundle(policy, NULL, "agent", name)) || (bp = PolicyGetBundle(policy, NULL, "common", name)))
         {
-            char ns[CF_BUFSIZE];
-            snprintf(ns,CF_BUFSIZE,"%s_meta", name);
-            ScopeNew(ns);
-
-            SetBundleOutputs(bp->name);
-            ScopeAugment(ctx, bp->name, bp->ns, bp->args, params);
             BannerBundle(bp, params);
-            THIS_BUNDLE = bp->name;
 
-            EvalContextStackFrameClear(ctx);
+            EvalContextStackPushBundleFrame(ctx, bp, false);
+            ScopeAugment(ctx, bp, NULL, params);
 
-            ScheduleAgentOperations(ctx, bp, report_context);
-            ResetBundleOutputs(bp->name);
+            ScheduleAgentOperations(ctx, bp);
+
+            EvalContextStackPopFrame(ctx);
         }
     }
 }
 
-/*********************************************************************/
-/* Level 3                                                           */
-/*********************************************************************/
+static void SaveClassEnvironment(const EvalContext *ctx, Writer *writer)
+{
+    SetIterator it = EvalContextHeapIteratorHard(ctx);
+    const char *context;
+    while ((context = SetIteratorNext(&it)))
+    {
+        if (!EvalContextHeapContainsNegated(ctx, context))
+        {
+            WriterWriteF(writer, "%s\n", context);
+        }
+    }
 
-int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *report_context)
+    it = EvalContextHeapIteratorSoft(ctx);
+    while ((context = SetIteratorNext(&it)))
+    {
+        if (!EvalContextHeapContainsNegated(ctx, context))
+        {
+            WriterWriteF(writer, "%s\n", context);
+        }
+    }
+}
+
+static void AllClassesReport(const EvalContext *ctx)
+{
+    char context_report_file[CF_BUFSIZE];
+    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
+
+    FILE *fp = NULL;
+    if ((fp = fopen(context_report_file, "w")) == NULL)
+    {
+        Log(LOG_LEVEL_INFO, "Could not open allclasses cache file");
+    }
+    else
+    {
+        Writer *writer = FileWriter(fp);
+        SaveClassEnvironment(ctx, writer);
+        WriterClose(writer);
+    }
+}
+
+int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp)
 // NB - this function can be called recursively through "methods"
 {
-    SubType *sp;
-    TypeSequence type;
-    int pass;
     int save_pr_kept = PR_KEPT;
     int save_pr_repaired = PR_REPAIRED;
     int save_pr_notkept = PR_NOTKEPT;
@@ -1009,19 +1209,20 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
         PROCESSTABLE = NULL;
     }
 
-    for (pass = 1; pass < CF_DONEPASSES; pass++)
+    for (int pass = 1; pass < CF_DONEPASSES; pass++)
     {
-        for (type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
+        for (TypeSequence type = 0; AGENT_TYPESEQUENCE[type] != NULL; type++)
         {
             ClassBanner(ctx, type);
 
-            if ((sp = BundleGetSubType(bp, AGENT_TYPESEQUENCE[type])) == NULL)
+            PromiseType *sp = BundleGetPromiseType(bp, AGENT_TYPESEQUENCE[type]);
+
+            if (sp == NULL)
             {
                 continue;
             }
 
-            BannerSubType(bp->name, sp->name, pass);
-            ScopeSet(bp->name);
+            BannerPromiseType(bp->name, sp->name, pass);
 
             if (!NewTypeContext(type))
             {
@@ -1032,45 +1233,23 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
             {
                 Promise *pp = SeqAt(sp->promises, ppi);
 
-                if (ALLCLASSESREPORT)
-                {
-                    char context_report_file[CF_BUFSIZE];
-                    snprintf(context_report_file, CF_BUFSIZE, "%s/state/allclasses.txt", CFWORKDIR);
-
-                    FILE *fp = NULL;
-                    if ((fp = fopen(context_report_file, "w")) == NULL)
-                    {
-                        CfOut(OUTPUT_LEVEL_INFORM, "", "Could not open allclasses cache file");
-                    }
-                    else
-                    {
-                        Writer *writer = FileWriter(fp);
-                        SaveClassEnvironment(ctx, writer);
-                        WriterClose(writer);
-                    }
-                }
-
-                if (pass == 1)  // Count the number of promises modelled for efficiency
-                {
-                    CF_TOPICS++;
-                }
-
-                ExpandPromise(ctx, AGENT_TYPE_AGENT, bp->name, pp, KeepAgentPromise, report_context);
+                ExpandPromise(ctx, pp, KeepAgentPromise, NULL);
 
                 if (Abort())
                 {
                     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
-                    DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
+                    DeleteTypeContext(ctx, bp, type);
                     NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
                     return false;
                 }
             }
 
-            DeleteTypeContext(ctx, bp->parent_policy, type, report_context);
+            DeleteTypeContext(ctx, bp, type);
         }
     }
 
     NoteClassUsage(EvalContextStackFrameIteratorSoft(ctx) , false);
+
     return NoteBundleCompliance(bp, save_pr_kept, save_pr_repaired, save_pr_notkept);
 }
 
@@ -1078,7 +1257,7 @@ int ScheduleAgentOperations(EvalContext *ctx, Bundle *bp, const ReportContext *r
 
 #ifdef __MINGW32__
 
-static void CheckAgentAccess(Rlist *list)
+static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 {
 }
 
@@ -1102,7 +1281,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
     for (const Rlist *rp = input_files; rp != NULL; rp = rp->next)
     {
-        cfstat(rp->item, &sb);
+        stat(rp->item, &sb);
 
         if (ACCESSLIST)
         {
@@ -1117,7 +1296,7 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
 
             if (!access)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "File %s is not owned by an authorized user (security exception)",
+                Log(LOG_LEVEL_ERR, "File %s is not owned by an authorized user (security exception)",
                       RlistScalarValue(rp));
                 exit(1);
             }
@@ -1126,14 +1305,15 @@ static void CheckAgentAccess(Rlist *list, const Rlist *input_files)
         {
             if (sb.st_uid != getuid())
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "File %s is not owned by uid %ju (security exception)", RlistScalarValue(rp),
+                Log(LOG_LEVEL_ERR, "File %s is not owned by uid %ju (security exception)", RlistScalarValue(rp),
                       (uintmax_t)getuid());
                 exit(1);
             }
         }
     }
 
-    FatalError("You are denied access to run this policy");
+    Log(LOG_LEVEL_ERR, "You are denied access to run this policy");
+    exit(1);
 }
 #endif /* !__MINGW32__ */
 
@@ -1149,7 +1329,7 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
     Rlist *rp;
     bool okay = true;
 
-    dt = ScopeGetVariable("this", pp->promiser, &rval);
+    EvalContextVariableGet(ctx, (VarRef) { NULL, "this", pp->promiser }, &rval, &dt);
 
     switch (dt)
        {
@@ -1196,37 +1376,39 @@ static void DefaultVarPromise(EvalContext *ctx, const Promise *pp)
            break;
        }
 
-    ScopeDeleteScalar(pp->bundle, pp->promiser);
-    ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
+    ScopeDeleteScalar((VarRef) { NULL, PromiseGetBundle(pp)->name, pp->promiser });
+    VerifyVarPromise(ctx, pp, true);
 }
 
-static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void KeepAgentPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
 {
+    assert(param == NULL);
+
     char *sp = NULL;
     struct timespec start = BeginMeasure();
 
-    if (!IsDefinedClass(ctx, pp->classes, pp->ns))
+    if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
               pp->classes);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
-    if (pp->done)
+    if (EvalContextPromiseIsDone(ctx, pp))
     {
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
               sp);
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
         return;
     }
 
@@ -1238,119 +1420,89 @@ static void KeepAgentPromise(EvalContext *ctx, Promise *pp, const ReportContext 
     
 // Record promises examined for efficiency calc
 
-    if (strcmp("meta", pp->agentsubtype) == 0)
+    if (strcmp("meta", pp->parent_promise_type->name) == 0 || strcmp("vars", pp->parent_promise_type->name) == 0)
     {
-        char ns[CF_BUFSIZE];
-        snprintf(ns,CF_BUFSIZE,"%s_meta",pp->bundle);
-        ScopeNew(ns);
-        ConvergeVarHashPromise(ctx, ns, pp, true);
+        VerifyVarPromise(ctx, pp, true);
         return;
     }
 
-    if (strcmp("vars", pp->agentsubtype) == 0)
-    {
-        ConvergeVarHashPromise(ctx, pp->bundle, pp, true);
-        return;
-    }
-
-    if (strcmp("defaults", pp->agentsubtype) == 0)
+    if (strcmp("defaults", pp->parent_promise_type->name) == 0)
     {
         DefaultVarPromise(ctx, pp);
         return;
     }
 
     
-    if (strcmp("classes", pp->agentsubtype) == 0)
+    if (strcmp("classes", pp->parent_promise_type->name) == 0)
     {
-        KeepClassContextPromise(ctx, pp);
+        VerifyClassPromise(ctx, pp, NULL);
         return;
     }
 
-    if (strcmp("outputs", pp->agentsubtype) == 0)
-    {
-        VerifyOutputsPromise(ctx, pp);
-        return;
-    }
-
-    SetPromiseOutputs(ctx, pp);
-
-    if (strcmp("interfaces", pp->agentsubtype) == 0)
-    {
-        VerifyInterfacesPromise(ctx, pp);
-        return;
-    }
-
-    if (strcmp("processes", pp->agentsubtype) == 0)
+    if (strcmp("processes", pp->parent_promise_type->name) == 0)
     {
         VerifyProcessesPromise(ctx, pp);
         return;
     }
 
-    if (strcmp("storage", pp->agentsubtype) == 0)
+    if (strcmp("storage", pp->parent_promise_type->name) == 0)
     {
-        FindAndVerifyStoragePromises(ctx, pp, report_context);
+        FindAndVerifyStoragePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("packages", pp->agentsubtype) == 0)
+    if (strcmp("packages", pp->parent_promise_type->name) == 0)
     {
         VerifyPackagesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("files", pp->agentsubtype) == 0)
+    if (strcmp("files", pp->parent_promise_type->name) == 0)
     {
-        if (PromiseGetConstraintAsBoolean(ctx, "background", pp))
-        {
-            ParallelFindAndVerifyFilesPromises(ctx, pp, report_context);
-        }
-        else
-        {
-            FindAndVerifyFilesPromises(ctx, pp, report_context);
-        }
+        ParallelFindAndVerifyFilesPromises(ctx, pp);
 
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("commands", pp->agentsubtype) == 0)
+    if (strcmp("commands", pp->parent_promise_type->name) == 0)
     {
         VerifyExecPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("databases", pp->agentsubtype) == 0)
+    if (strcmp("databases", pp->parent_promise_type->name) == 0)
     {
         VerifyDatabasePromises(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("methods", pp->agentsubtype) == 0)
+    if (strcmp("methods", pp->parent_promise_type->name) == 0)
     {
-        VerifyMethodsPromise(ctx, pp, report_context);
+        VerifyMethodsPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("services", pp->agentsubtype) == 0)
+    if (strcmp("services", pp->parent_promise_type->name) == 0)
     {
-        VerifyServicesPromise(ctx, pp, report_context);
+        VerifyServicesPromise(ctx, pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("guest_environments", pp->agentsubtype) == 0)
+    if (strcmp("guest_environments", pp->parent_promise_type->name) == 0)
     {
         VerifyEnvironmentsPromise(pp);
         EndMeasurePromise(ctx, start, pp);
         return;
     }
 
-    if (strcmp("reports", pp->agentsubtype) == 0)
+    if (strcmp("reports", pp->parent_promise_type->name) == 0)
     {
         VerifyReportPromise(ctx, pp);
         return;
@@ -1380,7 +1532,7 @@ static int NewTypeContext(TypeSequence type)
 
         if (!LoadProcessTable(&PROCESSTABLE))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to read the process table - cannot keep process promises\n");
+            Log(LOG_LEVEL_ERR, "Unable to read the process table - cannot keep process promises\n");
             return false;
         }
         break;
@@ -1407,12 +1559,12 @@ static int NewTypeContext(TypeSequence type)
 
 /*********************************************************************/
 
-static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence type, const ReportContext *report_context)
+static void DeleteTypeContext(EvalContext *ctx, Bundle *bp, TypeSequence type)
 {
     switch (type)
     {
     case TYPE_SEQUENCE_CONTEXTS:
-        HashVariables(ctx, policy, THIS_BUNDLE, report_context);
+        BundleHashVariables(ctx, bp);
         break;
 
     case TYPE_SEQUENCE_ENVIRONMENTS:
@@ -1428,29 +1580,7 @@ static void DeleteTypeContext(EvalContext *ctx, Policy *policy, TypeSequence typ
         break;
 
     case TYPE_SEQUENCE_STORAGE:
-#ifndef __MINGW32__
-    {
-        Attributes a = { {0} };
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
-
-        if (FSTAB_EDITS && FSTABLIST && !DONTDO)
-        {
-            if (FSTABLIST)
-            {
-                SaveItemListAsFile(ctx, FSTABLIST, VFSTAB[VSYSTEMHARDCLASS], a, NULL);
-                DeleteItemList(FSTABLIST);
-                FSTABLIST = NULL;
-            }
-            FSTAB_EDITS = 0;
-        }
-
-        if (!DONTDO && CF_MOUNTALL)
-        {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Mounting all filesystems\n");
-            MountAll();
-        }
-    }
-#endif /* !__MINGW32__ */
+        DeleteStorageContext();
         break;
 
     case TYPE_SEQUENCE_PACKAGES:
@@ -1477,33 +1607,65 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         return;
     }
 
+    if (LEGACY_OUTPUT)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +  Private classes augmented:\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "     +  Private classes augmented:\n");
 
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     +       %s\n", context);
+            Log(LOG_LEVEL_VERBOSE, "     +       %s\n", context);
         }
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+    else
+    {
+        Writer *w = StringWriter();
+        WriterWrite(w, "Private classes augmented:");
+        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            WriterWriteChar(w, ' ');
+            WriterWrite(w, context);
+        }
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -  Private classes diminished:\n");
-
+    if (LEGACY_OUTPUT)
     {
+        Log(LOG_LEVEL_VERBOSE, "     -  Private classes diminished:\n");
+
+        {
+            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+            const char *context = NULL;
+            while ((context = StringSetIteratorNext(&it)))
+            {
+                Log(LOG_LEVEL_VERBOSE, "     -       %s\n", context);
+            }
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+    else
+    {
+        Writer *w = StringWriter();
+        WriterWrite(w, "Private classes diminished:");
         StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "     -       %s\n", context);
+            WriterWriteChar(w, ' ');
+            WriterWrite(w, context);
         }
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
     }
-
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "\n");
 }
 
 /**************************************************************/
@@ -1512,51 +1674,55 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
 #ifdef __MINGW32__
 
-static void ParallelFindAndVerifyFilesPromises(Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
-    int background = GetBooleanConstraint("background", pp);
+    int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
 
     if (background)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Background processing of files promises is not supported on Windows");
+        Log(LOG_LEVEL_VERBOSE, "Background processing of files promises is not supported on Windows");
     }
 
-    FindAndVerifyFilesPromises(pp, report_context);
+    FindAndVerifyFilesPromises(ctx, pp);
 }
 
 #else /* !__MINGW32__ */
 
-static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, const ReportContext *report_context)
+static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 {
     int background = PromiseGetConstraintAsBoolean(ctx, "background", pp);
     pid_t child = 1;
 
-    if (background && (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT))
+    if (background)
     {
-        CFA_BACKGROUND++;
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Spawning new process...\n");
-        child = fork();
-
-        if (child == 0)
+        if (CFA_BACKGROUND < CFA_BACKGROUND_LIMIT)
         {
-            ALARM_PID = -1;
-            AM_BACKGROUND_PROCESS = true;
+            CFA_BACKGROUND++;
+            Log(LOG_LEVEL_VERBOSE, "Spawning new process...\n");
+            child = fork();
+
+            if (child == 0)
+            {
+                ALARM_PID = -1;
+
+                FindAndVerifyFilesPromises(ctx, pp);
+
+                Log(LOG_LEVEL_VERBOSE, "Exiting backgrounded promise");
+                PromiseRef(LOG_LEVEL_VERBOSE, pp);
+                _exit(0);
+            }
         }
         else
         {
-            AM_BACKGROUND_PROCESS = false;
+            Log(LOG_LEVEL_VERBOSE,
+                  " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
+            background = 0;
         }
     }
-    else if (CFA_BACKGROUND >= CFA_BACKGROUND_LIMIT)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "",
-              " !> Promised parallel execution promised but exceeded the max number of promised background tasks, so serializing");
-        background = 0;
-    }
 
-    if (child == 0 || !background)
+    if (!background)
     {
-        FindAndVerifyFilesPromises(ctx, pp, report_context);
+        FindAndVerifyFilesPromises(ctx, pp);
     }
 }
 
@@ -1566,23 +1732,24 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp, co
 
 static bool VerifyBootstrap(void)
 {
-    struct stat sb;
-    char filePath[CF_MAXVARSIZE];
-
     if (NULL_OR_EMPTY(POLICY_SERVER))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no policy server is specified");
+        Log(LOG_LEVEL_ERR, "Bootstrapping failed, no policy server is specified");
         return false;
     }
 
     // we should at least have gotten promises.cf from the policy hub
-    snprintf(filePath, sizeof(filePath), "%s/inputs/promises.cf", CFWORKDIR);
-    MapName(filePath);
-
-    if (cfstat(filePath, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, no input file at %s after bootstrap", filePath);
-        return false;
+        char filename[CF_MAXVARSIZE];
+        snprintf(filename, sizeof(filename), "%s/inputs/promises.cf", CFWORKDIR);
+        MapName(filename);
+
+        struct stat sb;
+        if (stat(filename, &sb) == -1)
+        {
+            Log(LOG_LEVEL_ERR, "Bootstrapping failed, no input file at '%s' after bootstrap", filename);
+            return false;
+        }
     }
 
     // embedded failsafe.cf (bootstrap.c) contains a promise to start cf-execd (executed while running this cf-agent)
@@ -1592,11 +1759,11 @@ static bool VerifyBootstrap(void)
 
     if (!IsProcessNameRunning(".*cf-execd.*"))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Bootstrapping failed, cf-execd is not running");
+        Log(LOG_LEVEL_ERR, "Bootstrapping failed, cf-execd is not running");
         return false;
     }
 
-    CfOut(OUTPUT_LEVEL_CMDOUT, "", "-> Bootstrap to %s completed successfully", POLICY_SERVER);
+    printf("Bootstrap to '%s' completed successfully!\n", POLICY_SERVER);
 
     return true;
 }
@@ -1616,18 +1783,18 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
 
     if (delta_pr_kept + delta_pr_notkept + delta_pr_repaired <= 0)
        {
-       CfOut(OUTPUT_LEVEL_VERBOSE, "", " ==> Zero promises executed for bundle \"%s\"", bundle->name);
-       return CF_NOP;
+       Log(LOG_LEVEL_VERBOSE, " ==> Zero promises executed for bundle \"%s\"", bundle->name);
+       return PROMISE_RESULT_NOOP;
        }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE,""," ==> == Bundle Accounting Summary for \"%s\" ==", bundle->name);
-    CfOut(OUTPUT_LEVEL_VERBOSE,""," ==> Promises kept in \"%s\" = %.0lf", bundle->name, delta_pr_kept);
-    CfOut(OUTPUT_LEVEL_VERBOSE,""," ==> Promises not kept in \"%s\" = %.0lf", bundle->name, delta_pr_notkept);
-    CfOut(OUTPUT_LEVEL_VERBOSE,""," ==> Promises repaired in \"%s\" = %.0lf", bundle->name, delta_pr_repaired);
+    Log(LOG_LEVEL_VERBOSE," ==> == Bundle Accounting Summary for \"%s\" ==", bundle->name);
+    Log(LOG_LEVEL_VERBOSE," ==> Promises kept in \"%s\" = %.0lf", bundle->name, delta_pr_kept);
+    Log(LOG_LEVEL_VERBOSE," ==> Promises not kept in \"%s\" = %.0lf", bundle->name, delta_pr_notkept);
+    Log(LOG_LEVEL_VERBOSE," ==> Promises repaired in \"%s\" = %.0lf", bundle->name, delta_pr_repaired);
     
     bundle_compliance = (delta_pr_kept + delta_pr_repaired) / (delta_pr_kept + delta_pr_notkept + delta_pr_repaired);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%",
+    Log(LOG_LEVEL_VERBOSE, " ==> Aggregate compliance (promises kept/repaired) for bundle \"%s\" = %.1lf%%",
           bundle->name, bundle_compliance * 100.0);
     LastSawBundle(bundle, bundle_compliance);
 
@@ -1635,55 +1802,83 @@ static int NoteBundleCompliance(const Bundle *bundle, int save_pr_kept, int save
     
     if (delta_pr_notkept > 0)
     {
-        return CF_FAIL;
+        return PROMISE_RESULT_FAIL;
     }
 
     if (delta_pr_repaired > 0)
     {
-        return CF_CHG;
+        return PROMISE_RESULT_CHANGE;
     }
 
-    return CF_NOP;
+    return PROMISE_RESULT_NOOP;
 }
 
-#ifdef HAVE_AVAHI_CLIENT_CLIENT_H
-#ifdef HAVE_AVAHI_COMMON_ADDRESS_H
-static int AutomaticBootstrap()
+#if defined(HAVE_AVAHI_CLIENT_CLIENT_H) && defined(HAVE_AVAHI_COMMON_ADDRESS_H)
+
+static bool HasAvahiSupport(void)
+{
+    return true;
+}
+
+
+static int AutomaticBootstrap(GenericAgentConfig *config)
 {
     List *foundhubs = NULL;
     int hubcount = ListHubs(&foundhubs);
-    
+    int ret;
+
     switch(hubcount)
     {
     case -1:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Error while trying to find a Policy Server");
-        ListDestroy(&foundhubs);
-        return -1;
-    case 0:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "No hubs were found. Exiting.");
-        ListDestroy(&foundhubs);
-        return -1;
-    case 1:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found hub installed on:"
-                                                      "Hostname: %s"
-                                                      "IP Address: %s",
-                                                      ((HostProperties*)foundhubs)->Hostname,
-                                                      ((HostProperties*)foundhubs)->IPAddress);
-        strncpy(POLICY_SERVER, ((HostProperties*)foundhubs)->IPAddress, CF_BUFSIZE);
-        dlclose(avahi_handle);
+        Log(LOG_LEVEL_ERR, "Error while trying to find a Policy Server");
+        ret = -1;
         break;
+    case 0:
+        printf("No hubs were found. Exiting.\n");
+        ret = -1;
+        break;
+    case 1:
+    {
+        char *hostname = ((HostProperties*)foundhubs)->Hostname;
+        char *ipaddr = ((HostProperties*)foundhubs)->IPAddress;
+        printf("Autodiscovered hub installed on:"
+               " Hostname \"%s\", IP Address %s\n",
+               hostname, ipaddr);
+        if (strlen(ipaddr) < sizeof(POLICY_SERVER))
+        {
+            config->agent_specific.agent.bootstrap_policy_server = xstrdup(ipaddr);
+            ret = 0;
+        }
+        else
+        {
+            Log(LOG_LEVEL_ERR,
+                  "Invalid autodiscovered hub IP address \"%s\"", ipaddr);
+            ret = -1;
+        }
+        break;
+    }
     default:
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "Found more than one hub registered in the network.\n"
-                                                      "Please bootstrap manually using IP from the list below:");
+        printf("Found more than one hub registered in the network.\n"
+               "Please bootstrap manually using IP from the list below:\n");
         PrintList(foundhubs);
-        dlclose(avahi_handle);
-        ListDestroy(&foundhubs);
-        return -1;
+        ret = -1;
     };
 
+    dlclose(avahi_handle);
     ListDestroy(&foundhubs);
 
-    return 0;
+    return ret;
 }
-#endif
-#endif
+#else
+
+static bool HasAvahiSupport(void)
+{
+    return false;
+}
+
+static int AutomaticBootstrap(ARG_UNUSED GenericAgentConfig *config)
+{
+    ProgrammingError("Attempted automated bootstrap on a non-avahi build of CFEngine");
+}
+
+#endif // Avahi

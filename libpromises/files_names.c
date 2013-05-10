@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "files_names.h"
@@ -32,22 +31,18 @@
 #include "item_lib.h"
 #include "assert.h"
 #include "files_interfaces.h"
-#include "files_properties.h"
-#include "cfstream.h"
-#include "logging.h"
 #include "string_lib.h"
 
 #ifdef HAVE_NOVA
-#include "cf.nova.h"
+# include "cf.nova.h"
 #endif
 
 /*********************************************************************/
 
-int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
+int IsNewerFileTree(char *dir, time_t reftime)
 {
     const struct dirent *dirp;
     char path[CF_BUFSIZE] = { 0 };
-    Attributes dummyattr = { {0} };
     Dir *dirh;
     struct stat sb;
 
@@ -55,7 +50,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
 
     if (lstat(dir, &sb) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Unable to stat directory %s in IsNewerFileTree", dir);
+        Log(LOG_LEVEL_ERR, "Unable to stat directory '%s' in IsNewerFileTree. (stat: %s)", dir, GetErrorStr());
         // return true to provoke update
         return true;
     }
@@ -64,21 +59,21 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
     {
         if (sb.st_mtime > reftime)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " >> Detected change in %s", dir);
+            Log(LOG_LEVEL_VERBOSE, " >> Detected change in %s", dir);
             return true;
         }
     }
 
-    if ((dirh = OpenDirLocal(dir)) == NULL)
+    if ((dirh = DirOpen(dir)) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "opendir", " !! Unable to open directory '%s' in IsNewerFileTree", dir);
+        Log(LOG_LEVEL_ERR, "Unable to open directory '%s' in IsNewerFileTree. (opendir: %s)", dir, GetErrorStr());
         return false;
     }
     else
     {
-        for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+        for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
         {
-            if (!ConsiderFile(ctx, dirp->d_name, dir, dummyattr, NULL))
+            if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
             {
                 continue;
             }
@@ -87,16 +82,16 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
 
             if (!JoinPath(path, dirp->d_name))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
+                Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space adding %s to %s in IsNewerFileTree", dir,
                       path);
-                CloseDir(dirh);
+                DirClose(dirh);
                 return false;
             }
 
             if (lstat(path, &sb) == -1)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "stat", " !! Unable to stat directory %s in IsNewerFileTree", path);
-                CloseDir(dirh);
+                Log(LOG_LEVEL_ERR, "Unable to stat directory '%s' in IsNewerFileTree. (lstat: %s)", path, GetErrorStr());
+                DirClose(dirh);
                 // return true to provoke update
                 return true;
             }
@@ -105,15 +100,15 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
             {
                 if (sb.st_mtime > reftime)
                 {
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", " >> Detected change in %s", path);
-                    CloseDir(dirh);
+                    Log(LOG_LEVEL_VERBOSE, " >> Detected change in %s", path);
+                    DirClose(dirh);
                     return true;
                 }
                 else
                 {
-                    if (IsNewerFileTree(ctx, path, reftime))
+                    if (IsNewerFileTree(path, reftime))
                     {
-                        CloseDir(dirh);
+                        DirClose(dirh);
                         return true;
                     }
                 }
@@ -121,7 +116,7 @@ int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime)
         }
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return false;
 }
 
@@ -138,7 +133,7 @@ Returns true if so, false otherwise.
 #else
     struct stat sb;
 
-    if (cfstat(path, &sb) != -1)
+    if (stat(path, &sb) != -1)
     {
         if (S_ISDIR(sb.st_mode))
         {
@@ -160,13 +155,13 @@ char *JoinPath(char *path, const char *leaf)
 
     if (Chop(path, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     AddSlash(path);
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 1: Buffer ran out of space constructing string. Tried to add %s to %s\n",
               leaf, path);
         return NULL;
     }
@@ -183,13 +178,13 @@ char *JoinSuffix(char *path, char *leaf)
 
     if (Chop(path, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     DeleteSlash(path);
 
     if ((strlen(path) + len) > (CF_BUFSIZE - CF_BUFFERMARGIN))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s\n",
+        Log(LOG_LEVEL_ERR, "Internal limit 2: Buffer ran out of space constructing string. Tried to add %s to %s\n",
               leaf, path);
         return NULL;
     }
@@ -285,7 +280,9 @@ char *GetParentDirectoryCopy(const char *path)
 
     if(!sp)
     {
-        FatalError("Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        Log(LOG_LEVEL_ERR, "Path %s does not contain file separators (GetParentDirectory())", path_copy);
+        free(path_copy);
+        return NULL;
     }
 
     if(sp == FirstFileSeparator(path_copy))  // don't chop off first path separator
@@ -376,7 +373,7 @@ const char *LastFileSeparator(const char *str)
 
 /*********************************************************************/
 
-int ChopLastNode(char *str)
+bool ChopLastNode(char *str)
   /* Chop off trailing node name (possible blank) starting from
      last character and removing up to the first / encountered 
      e.g. /a/b/c -> /a/b
@@ -529,7 +526,7 @@ int CompressPath(char *dest, const char *src)
         {
             if (nodelen > CF_MAXLINKSIZE)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Link in path suspiciously large");
+                Log(LOG_LEVEL_ERR, "Link in path suspiciously large");
                 return false;
             }
         }
@@ -599,6 +596,22 @@ int IsAbsoluteFileName(const char *f)
     return false;
 }
 
+FilePathType FilePathGetType(const char *file_path)
+{
+    if (IsAbsoluteFileName(file_path))
+    {
+        return FILE_PATH_TYPE_ABSOLUTE;
+    }
+    else if (IsFileOutsideDefaultRepository(file_path))
+    {
+        return FILE_PATH_TYPE_RELATIVE;
+    }
+    else
+    {
+        return FILE_PATH_TYPE_NON_ANCHORED;
+    }
+}
+
 bool IsFileOutsideDefaultRepository(const char *f)
 {
     return (*f == '.') || (IsAbsoluteFileName(f));
@@ -617,7 +630,7 @@ static int UnixRootDirLength(const char *f)
 }
 
 #ifdef _WIN32
-static int NTRootDirLength(char *f)
+static int NTRootDirLength(const char *f)
 {
     int len;
 

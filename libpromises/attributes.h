@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,59 +27,57 @@
 
 #include "cf3.defs.h"
 
-Attributes GetClassContextAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetColumnAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetDatabaseAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetDeletionAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetEnvironmentsAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetExecAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetFilesAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetInferencesAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetInsertionAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetInterfacesAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetMeasurementAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetMethodAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetOccurrenceAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetOutputsAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetPackageAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetProcessAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetReplaceAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetReportsAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetServicesAttributes(EvalContext *ctx, const Promise *pp);
-Attributes GetStorageAttributes(EvalContext *ctx, const Promise *pp);
+Attributes GetClassContextAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetColumnAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetDatabaseAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetDeletionAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetEnvironmentsAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetExecAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetFilesAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetInferencesAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetInsertionAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetMeasurementAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetMethodAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetOccurrenceAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetOutputsAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetPackageAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetProcessAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetReplaceAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetReportsAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetServicesAttributes(const EvalContext *ctx, const Promise *pp);
+Attributes GetStorageAttributes(const EvalContext *ctx, const Promise *pp);
 
-Acl GetAclConstraints(EvalContext *ctx, const Promise *pp);
-ContextConstraint GetContextConstraints(EvalContext *ctx, const Promise *pp);
-Database GetDatabaseConstraints(EvalContext *ctx, const Promise *pp);
-DefineClasses GetClassDefinitionConstraints(EvalContext *ctx, const Promise *pp);
-EditColumn GetColumnConstraints(EvalContext *ctx, const Promise *pp);
-EditDefaults GetEditDefaults(EvalContext *ctx, const Promise *pp);
-EditLocation GetLocationAttributes(EvalContext *ctx, const Promise *pp);
-EditXml GetXmlConstraints(EvalContext *ctx, const Promise *pp);
-EditRegion GetRegionConstraints(EvalContext *ctx, const Promise *pp);
-EditReplace GetReplaceConstraints(EvalContext *ctx, const Promise *pp);
-Environments GetEnvironmentsConstraints(EvalContext *ctx, const Promise *pp);
-ExecContain GetExecContainConstraints(EvalContext *ctx, const Promise *pp);
-FileChange GetChangeMgtConstraints(EvalContext *ctx, const Promise *pp);
-FileCopy GetCopyConstraints(EvalContext *ctx, const Promise *pp);
-FileDelete GetDeleteConstraints(EvalContext *ctx, const Promise *pp);
-FileLink GetLinkConstraints(EvalContext *ctx, const Promise *pp);
-FilePerms GetPermissionConstraints(EvalContext *ctx, const Promise *pp);
-FileRename GetRenameConstraints(EvalContext *ctx, const Promise *pp);
-FileSelect GetSelectConstraints(EvalContext *ctx, const Promise *pp);
-LineSelect GetDeleteSelectConstraints(EvalContext *ctx, const Promise *pp);
-LineSelect GetInsertSelectConstraints(EvalContext *ctx, const Promise *pp);
-Measurement GetMeasurementConstraint(EvalContext *ctx, const Promise *pp);
-Packages GetPackageConstraints(EvalContext *ctx, const Promise *pp);
-ProcessCount GetMatchesConstraints(EvalContext *ctx, const Promise *pp);
-ProcessSelect GetProcessFilterConstraints(EvalContext *ctx, const Promise *pp);
-Recursion GetRecursionConstraints(EvalContext *ctx, const Promise *pp);
-Report GetReportConstraints(EvalContext *ctx, const Promise *pp);
-Services GetServicesConstraints(EvalContext *ctx, const Promise *pp);
-StorageMount GetMountConstraints(EvalContext *ctx, const Promise *pp);
-StorageVolume GetVolumeConstraints(EvalContext *ctx, const Promise *pp);
-TcpIp GetTCPIPAttributes(EvalContext *ctx, const Promise *pp);
-TransactionContext GetTransactionConstraints(EvalContext *ctx, const Promise *pp);
+Acl GetAclConstraints(const EvalContext *ctx, const Promise *pp);
+ContextConstraint GetContextConstraints(const EvalContext *ctx, const Promise *pp);
+Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp);
+DefineClasses GetClassDefinitionConstraints(const EvalContext *ctx, const Promise *pp);
+EditColumn GetColumnConstraints(const EvalContext *ctx, const Promise *pp);
+EditDefaults GetEditDefaults(const EvalContext *ctx, const Promise *pp);
+EditLocation GetLocationAttributes(const EvalContext *ctx, const Promise *pp);
+EditXml GetXmlConstraints(const EvalContext *ctx, const Promise *pp);
+EditRegion GetRegionConstraints(const EvalContext *ctx, const Promise *pp);
+EditReplace GetReplaceConstraints(const EvalContext *ctx, const Promise *pp);
+Environments GetEnvironmentsConstraints(const EvalContext *ctx, const Promise *pp);
+ExecContain GetExecContainConstraints(const EvalContext *ctx, const Promise *pp);
+FileChange GetChangeMgtConstraints(const EvalContext *ctx, const Promise *pp);
+FileCopy GetCopyConstraints(const EvalContext *ctx, const Promise *pp);
+FileDelete GetDeleteConstraints(const EvalContext *ctx, const Promise *pp);
+FileLink GetLinkConstraints(const EvalContext *ctx, const Promise *pp);
+FilePerms GetPermissionConstraints(const EvalContext *ctx, const Promise *pp);
+FileRename GetRenameConstraints(const EvalContext *ctx, const Promise *pp);
+FileSelect GetSelectConstraints(const EvalContext *ctx, const Promise *pp);
+LineSelect GetDeleteSelectConstraints(const EvalContext *ctx, const Promise *pp);
+LineSelect GetInsertSelectConstraints(const EvalContext *ctx, const Promise *pp);
+Measurement GetMeasurementConstraint(const EvalContext *ctx, const Promise *pp);
+Packages GetPackageConstraints(const EvalContext *ctx, const Promise *pp);
+ProcessCount GetMatchesConstraints(const EvalContext *ctx, const Promise *pp);
+ProcessSelect GetProcessFilterConstraints(const EvalContext *ctx, const Promise *pp);
+Recursion GetRecursionConstraints(const EvalContext *ctx, const Promise *pp);
+Report GetReportConstraints(const EvalContext *ctx, const Promise *pp);
+Services GetServicesConstraints(const EvalContext *ctx, const Promise *pp);
+StorageMount GetMountConstraints(const EvalContext *ctx, const Promise *pp);
+StorageVolume GetVolumeConstraints(const EvalContext *ctx, const Promise *pp);
+TransactionContext GetTransactionConstraints(const EvalContext *ctx, const Promise *pp);
 
 /* Default values for attributes */
 

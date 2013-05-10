@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,10 +17,9 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_FILES_OPERATORS_H
@@ -28,9 +27,12 @@
 
 #include "cf3.defs.h"
 
-int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, Promise *pp);
+int MoveObstruction(EvalContext *ctx, char *from, Attributes attr, const Promise *pp);
 
-typedef bool (*SaveCallbackFn)(EvalContext *ctx, const char *dest_filename, const char *orig_filename, void *param, Attributes a, Promise *pp);
-int SaveAsFile(EvalContext *ctx, SaveCallbackFn callback, void *param, const char *file, Attributes a, Promise *pp);
+typedef bool (*SaveCallbackFn)(const char *dest_filename, void *param);
+int SaveAsFile(SaveCallbackFn callback, void *param, const char *file, Attributes a);
+int SaveItemListAsFile(Item *liststart, const char *file, Attributes a);
+
+int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Attributes a, const Promise *pp);
 
 #endif

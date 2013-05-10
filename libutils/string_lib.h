@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -95,5 +95,46 @@ int Chop(char *str, size_t max_length);
  * @return True if suffix matches
  */
 bool StringEndsWith(const char *str, const char *suffix);
+
+/**
+ * @brief Check if a string starts with the given prefix
+ * @param str
+ * @param prefix
+ * @return True if prefix matches
+ */
+bool StringStartsWith(const char *str, const char *prefix);
+
+/**
+ * @brief Format string like vsprintf and return formatted string allocated
+ * on heap as a return value.
+ */
+char *StringVFormat(const char *fmt, va_list ap);
+
+/**
+ * @brief Format string like sprintf and return formatted string allocated on
+ * heap as a return value.
+ *
+ * @param format Formatting string
+
+ * @return formatted string (on heap) or NULL in case of error. errno is set in
+ * the latter case (see errno codes for sprintf).
+ */
+char *StringFormat(const char *fmt, ...) FUNC_ATTR_PRINTF(1, 2);
+
+/**
+ * @brief Find the initial segment of memory (up to #n bytes) consisting of character #c.
+ *
+ * @return first byte which is not #c, or #mem + #n if all bytes in memory segment are #c
+ */
+void *MemSpan(const void *mem, char c, size_t n);
+
+/**
+ * @brief Find the initial segment of memory (up to #n bytes) consisting not of character #c.
+ *
+ * @return first byte which is #c, or #mem + #n if none of bytes in memory segment are #c
+ */
+void *MemSpanInverse(const void *mem, char c, size_t n);
+
+bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex);
 
 #endif

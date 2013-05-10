@@ -69,6 +69,13 @@ Copyright @copyright{} July 2010 CFEngine AS
 @contents
 @end iftex
 
+@ifhtml
+@html
+<a href="#Contents"><h1>COMPLETE TABLE OF CONTENTS</h1></a>
+<h2>Summary of contents</h2>
+@end html
+@end ifhtml
+
 @menu
 * Architecture Principles::     
 * Security Principles::         
@@ -702,5 +709,28 @@ possibly greater problem is that this configuration will unleash an
 avalanche of messages if a change is detected. This makes messages
 visible at least.
 
+
+@ifhtml
+@html
+<a name="Contents">
+@contents
+@end html
+@end ifhtml
+
+@ifhtml
+@html
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https:// 
+ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google- 
+analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-2576171-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+@end html
+@end ifhtml
 
 @bye

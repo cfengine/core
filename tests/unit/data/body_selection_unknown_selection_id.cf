@@ -1,0 +1,8 @@
+body classes surfsara_all_classes(x)
+{
+ promise_repaired => { "$(x)_repaired" };
+ promise_kpt     => { "$(x)_kept"     };
+ repair_failed    => { "$(x)_failed"   };
+ repair_denied    => { "$(x)_denied"   };
+ repair_timeout   => { "$(x)_timeout"  };
+}

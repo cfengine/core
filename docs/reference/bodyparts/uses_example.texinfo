@@ -1,8 +1,0 @@
-
-@verbatim
-
-things:
-
-  "apache 2.3" uses => { "mysql 4.5" };
-
-@end verbatim

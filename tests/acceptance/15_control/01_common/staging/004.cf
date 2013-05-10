@@ -9,9 +9,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { "missing", default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
-
   ignore_missing_bundles => "on";        # Order should not matter!
 }
 

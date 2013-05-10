@@ -4,7 +4,7 @@
 #include "list.h"
 
 // Simple initialization test
-static void test_initList(void **state)
+static void test_initList(void)
 {
     List *list = NULL;
     list = ListNew(NULL, NULL, NULL);
@@ -29,7 +29,7 @@ void testDestroyer(void *element) {
     printf("element: %s \n", s);
 }
 
-static void test_destroyer(void **state)
+static void test_destroyer(void)
 {
     List *list = NULL;
     list = ListNew(NULL, NULL, testDestroyer);
@@ -62,7 +62,7 @@ static void test_destroyer(void **state)
     assert_int_equal(ListDestroy(&list), 0);
 }
 
-static void test_prependToList(void **state)
+static void test_prependToList(void)
 {
     List *list = NULL;
     list = ListNew(NULL, NULL, testDestroyer);
@@ -115,7 +115,7 @@ static void test_prependToList(void **state)
     // know that it works.
 }
 
-static void test_appendToList(void **state)
+static void test_appendToList(void)
 {
     List *list = NULL;
     list = ListNew(NULL, NULL, NULL);
@@ -180,7 +180,7 @@ static void copyFunction(const void *s, void **d)
 }
 
 
-static void test_removeFromList(void **state)
+static void test_removeFromList(void)
 {
     List *list = NULL;
     list = ListNew(compareFunction, NULL, testDestroyer);
@@ -325,7 +325,7 @@ static void test_removeFromList(void **state)
     assert_int_equal(ListDestroy(&list), 0);
 }
 
-static void test_destroyList(void **state)
+static void test_destroyList(void)
 {
     List *list = NULL;
     list = ListNew(NULL, NULL, NULL);
@@ -342,7 +342,7 @@ static void test_destroyList(void **state)
     assert_int_equal(list, NULL);
 }
 
-static void test_copyList(void **state)
+static void test_copyList(void)
 {
     /*
      * First try the normal path, i.e. with a copy function. Then try it without a copy function.
@@ -451,7 +451,7 @@ static void test_copyList(void **state)
     assert_false(list8->ref_count == list7->ref_count);
 }
 
-static void test_iterator(void **state)
+static void test_iterator(void)
 {
     List *list = NULL;
     list = ListNew(compareFunction, NULL, testDestroyer);
@@ -625,7 +625,7 @@ static void test_iterator(void **state)
     assert_int_equal(ListDestroy(&list), 0);
 }
 
-static void test_mutableIterator(void **state)
+static void test_mutableIterator(void)
 {
     List *list = NULL;
     list = ListNew(compareFunction, NULL, testDestroyer);

@@ -1,0 +1,81 @@
+#######################################################
+#
+# Test uniq()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+                           "starting list = 1,2,3,one,two,three,long string,four,fix,six,one,two,three",
+                           "uniq list = 1,2,3,one,two,three,long string,four,fix,six",
+      };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                      };
+      "test_str" string => join(",", "test");
+
+      "test_uniq" slist => uniq("test");
+      "uniq_str" string => join(",", "test_uniq");
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "starting list = $(test.test_str)";
+      "uniq list = $(test.uniq_str)";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

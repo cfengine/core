@@ -1,0 +1,101 @@
+#######################################################
+#
+# Test nth()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "results" slist => {
+                           "starting list = 1",
+                           "starting list = 2",
+                           "starting list = 3",
+                           "starting list = one",
+                           "starting list = two",
+                           "starting list = three",
+                           "starting list = long string",
+                           "starting list = four",
+                           "starting list = fix",
+                           "starting list = six",
+                           "starting list = one",
+                           "starting list = two",
+                           "starting list = three",
+                           "element #0 of the test list: 1",
+                           "element #1 of the test list: 2",
+                           "element #10 of the test list: one",
+                           "element #1000 of the test list: $(test#test[1000])",
+                           "element #11 of the test list: two",
+                           "element #2 of the test list: 3",
+                           "element #6 of the test list: long string",
+      };
+
+  files:
+      "$(G.testfile).expected"
+      create => "true",
+      edit_defaults => init_empty,
+      edit_line => init_insert;
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+bundle edit_line init_insert
+{
+  insert_lines:
+      "$(init.results)";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "test" slist => {
+                        1,2,3,
+                        "one", "two", "three",
+                        "long string",
+                        "four", "fix", "six",
+                        "one", "two", "three",
+                      };
+
+      "nth" slist => { 1, 2, 6, 10, 11, 1000 };
+
+      "test[$(nth)]" string => nth("test", $(nth));
+      "test[0]" string => nth("test", 0);
+
+  files:
+      "$(G.testfile).actual"
+      create => "true",
+      edit_line => test_insert;
+}
+
+bundle edit_line test_insert
+{
+  insert_lines:
+      "starting list = $(test.test)";
+      "element #$(test.nth) of the test list: $(test.test[$(test.nth)])";
+      "element #0 of the test list: $(test.test[0])";
+}
+
+#######################################################
+
+bundle agent check
+{
+  methods:
+      "any" usebundle => sorted_check_diff("$(G.testfile).actual",
+                                           "$(G.testfile).expected",
+                                           "$(this.promise_filename)");
+}

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -33,8 +33,18 @@ typedef struct DBCursorPriv_ DBCursorPriv;
 
 const char *DBPrivGetFileExtension(void);
 
+#define DB_PRIV_DATABASE_BROKEN ((DBPriv *)-1)
+
 /*
  * These two functions will always be called with a per-database lock held.
+ */
+
+/*
+ * Should return either
+ * - NULL in case of generic error
+ * - DB_PRIV_DATABASE_BROKEN in case database file is broken, need to be moved
+      away and attempt to open database again should be performed.
+ * - valid pointer to DBPriv * in case database was opened succesfully.
  */
 DBPriv *DBPrivOpenDB(const char *dbpath);
 void DBPrivCloseDB(DBPriv *hdbp);
@@ -59,5 +69,12 @@ bool DBPrivAdvanceCursor(DBCursorPriv *cursor, void **key, int *key_size,
 bool DBPrivDeleteCursorEntry(DBCursorPriv *cursor);
 bool DBPrivWriteCursorEntry(DBCursorPriv *cursor, const void *value, int value_size);
 void DBPrivCloseCursor(DBCursorPriv *cursor);
+
+/**
+ * @brief Check a database file for consistency
+ * @param dbpath Path to database file
+ * @return NULL if successful, else an error string that must be freed
+ */
+char *DBPrivDiagnose(const char *dbpath);
 
 #endif

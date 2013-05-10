@@ -6,6 +6,7 @@
 #include "rlist.h"
 
 #include "assoc.h"
+#include "env_context.h"
 
 /* Stubs */
 
@@ -17,7 +18,7 @@ void FatalError(char *s, ...)
 
 /* Test cases */
 
-static void test_prepend_scalar(void **state)
+static void test_prepend_scalar(void)
 {
     Rlist *list = NULL;
 
@@ -29,7 +30,7 @@ static void test_prepend_scalar(void **state)
     RlistDestroy(list);
 }
 
-static void test_length(void **state)
+static void test_length(void)
 {
     Rlist *list = NULL;
 
@@ -44,7 +45,7 @@ static void test_length(void **state)
     RlistDestroy(list);
 }
 
-static void test_prepend_scalar_idempotent(void **state)
+static void test_prepend_scalar_idempotent(void)
 {
     Rlist *list = NULL;
 
@@ -57,7 +58,7 @@ static void test_prepend_scalar_idempotent(void **state)
     RlistDestroy(list);
 }
 
-static void test_copy(void **state)
+static void test_copy(void)
 {
     Rlist *list = NULL, *copy = NULL;
 
@@ -73,43 +74,43 @@ static void test_copy(void **state)
     RlistDestroy(copy);
 }
 
-static void test_rval_to_scalar(void **state)
+static void test_rval_to_scalar(void)
 {
     Rval rval = { "abc", RVAL_TYPE_SCALAR };
     assert_string_equal("abc", RvalScalarValue(rval));
 }
 
-static void test_rval_to_scalar2(void **state)
+static void test_rval_to_scalar2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
     expect_assert_failure(RvalScalarValue(rval));
 }
 
-static void test_rval_to_list(void **state)
+static void test_rval_to_list(void)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
     expect_assert_failure(RvalRlistValue(rval));
 }
 
-static void test_rval_to_list2(void **state)
+static void test_rval_to_list2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_LIST };
     assert_false(RvalRlistValue(rval));
 }
 
-static void test_rval_to_fncall(void **state)
+static void test_rval_to_fncall(void)
 {
     Rval rval = { NULL, RVAL_TYPE_SCALAR };
     expect_assert_failure(RvalFnCallValue(rval));
 }
 
-static void test_rval_to_fncall2(void **state)
+static void test_rval_to_fncall2(void)
 {
     Rval rval = { NULL, RVAL_TYPE_FNCALL };
     assert_false(RvalFnCallValue(rval));
 }
 
-static void test_last(void **state)
+static void test_last(void)
 {
     Rlist *l = NULL;
     assert_true(RlistLast(l) == NULL);
@@ -128,7 +129,7 @@ static bool is_even(void *item, void *data)
     return *i % 2 == *d;
 }
 
-static void test_filter(void **state)
+static void test_filter(void)
 {
     Rlist *list = NULL;
     for (int i = 0; i < 10; i++)
@@ -157,7 +158,7 @@ static void test_filter(void **state)
     RlistDestroy(list);
 }
 
-static void test_filter_everything(void **state)
+static void test_filter_everything(void)
 {
     Rlist *list = NULL;
     for (int i = 1; i < 10; i += 2)
@@ -172,6 +173,197 @@ static void test_filter_everything(void **state)
     assert_int_equal(0, RlistLen(list));
 
     assert_true(list == NULL);
+}
+
+static void test_reverse(void)
+{
+    Rlist *list = RlistFromSplitString("a,b,c", ',');
+
+    RlistReverse(&list);
+    assert_string_equal("c", list->item);
+    assert_string_equal("b", list->next->item);
+    assert_string_equal("a", list->next->next->item);
+
+    RlistDestroy(list);
+}
+/***************************************************************************/
+static struct ParseRoulette
+{
+    int nfields;
+    char *str;
+} PR[] =
+{
+        /*Simple */
+    {
+    1, "{\"a\"}"},
+    {
+    2, "{\"a\",\"b\"}"},
+    {
+    3, "{\"a\",\"b\",\"c\"}"},
+        /*Simple empty */
+    {
+    1, "{\"\"}"},
+    {
+    2, "{\"\",\"\"}"},
+    {
+    3, "{\"\",\"\",\"\"}"},
+        /*Single escaped */
+    {
+    1, "{\"\\\"\"}"},
+    {
+    1, "{\",\"}"},
+    {
+    1, "{\"\\\\\"}"},
+    {
+    1, "{\"}\"}"},
+    {
+    1, "{\"{\"}"},
+    {
+    1, "{\"'\"}"},
+        /*Couple double-escaped */
+    {
+    1, "{\"\\\",\"}"},          /*   [",]    */
+    {
+    1, "{\",\\\"\"}"},          /*   [,"]    */
+    {
+    1, "{\",,\"}"},             /*   [\\]    */
+    {
+    1, "{\"\\\\\\\\\"}"},       /*   [\\]    */
+    {
+    1, "{\"\\\\\\\"\"}"},       /*   [\"]    */
+    {
+    1, "{\"\\\"\\\\\"}"},       /*   ["\]    */
+        /*Very long */
+    {
+    1, "{\"AaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"}"},
+    {
+    2, "{\"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaA\"  ,  \"Bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbb\\\\bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbB\" }"},
+        /*Inner space (inside elements) */
+    {
+    1, "{\" \"}"},
+    {
+    1, "{\"  \"}"},
+    {
+    1, "{\"   \"}"},
+    {
+    1, "{\"\t\"}"},
+        /*Outer space (outside elements) */
+    {
+    1, "     {\"\"}       "},
+    {
+    1, "     {\"a\"}       "},
+    {
+    2, "     {\"a\",\"b\"}       "},
+    {
+    1, "{    \"a\"      }"},
+    {
+    2, "{    \"a\",\"b\"      }"},
+    {
+    2, "{    \"a\"    ,\"b\"      }"},
+    {
+    2, "{    \"a\",    \"b\"      }"},
+    {
+    2, "{    \"a\",    \"b\"}       "},
+        /*Normal */
+    {
+    4, "   { \" ab,c,d\\\\ \" ,  \" e,f\\\"g \" ,\"hi\\\\jk\", \"l''m \" }   "},
+    {
+    21, "   { \"A\\\"\\\\    \", \"    \\\\\",   \"}B\",   \"\\\\\\\\\"  ,   \"   \\\\C\\\"\"  ,   \"\\\",\"  ,   \",\\\"D\"  ,   \"   ,,    \", \"E\\\\\\\\F\", \"\", \"{\",   \"   G    '\"  ,   \"\\\\\\\"\", \" \\\"  H \\\\    \", \",   ,\"  ,   \"I\", \"  \",   \"\\\"    J  \",   \"\\\",\", \",\\\"\", \",\"  }   "},
+    {
+    -1, (char *)NULL}
+};
+
+static char *PFR[] = {
+    /* trim left failure */
+    "",
+    " ",
+    "a",
+    "\"",
+    "\"\"",
+    /* trim right failure */
+    "{",
+    "{ ",
+    "{a",
+    "{\"",
+    "{\"\"",
+    /* parse failure */
+    /* un-even number of quotation marks */
+    "{\"\"\"}",
+    "{\"\",\"}",
+    "{\"\"\"\"}",
+    "{\"\"\"\"\"}",
+    "{\"\",\"\"\"}",
+    "{\"\"\"\",\"}",
+    "{\"\",\"\",\"}",
+    /* Misplaced commas*/
+    "{\"a\",}",
+    "{,\"a\"}",
+    "{,,\"a\"}",
+    "{\"a\",,\"b\"}",
+    " {,}",
+    " {,,}",
+    " {,,,}",
+    " {,\"\"}",
+    " {\"\",}",
+    " {,\"\",}",
+    " {\"\",,}",
+    " {\"\",,,}",
+    " {,,\"\",,}",
+    " {\"\",\"\",}",
+    " {\"\",\"\",,}",
+    " {   \"\"  ,  \"\" ,  , }",
+    /*Ignore space's oddities */
+    "\" {\"\"}",
+    "{ {\"\"}",
+    "{\"\"}\"",
+    "{\"\"}\\",
+    "{\"\"} } ",
+    "a{\"\"}",
+    " a {\"\"}",
+    "{a\"\"}",
+    "{ a \"\"}",
+    "{\"\"}a",
+    "{\"\"}  a ",
+    "{\"\"a}",
+    "{\"\" a }",
+    "a{\"\"}b",
+    "{a\"\"b}",
+    "a{\"\"b}",
+    "{a\"\"}b",
+    "{\"\"a\"\"}",
+    "{\"\",\"\"a\"\"}",
+    /*Incomplete */
+    NULL
+};
+
+
+static void test_new_parser_success()
+{
+    Rlist *list = NULL;
+    int i = 0;
+    while (PR[i].nfields != -1)
+    {
+        list = RlistParseString(PR[i].str, NULL);
+        assert_int_equal(PR[i].nfields, RlistLen(list));
+        if (list != NULL)
+        {
+            RlistDestroy(list);
+        }
+        i++;
+    }
+}
+
+static void test_new_parser_failure()
+{
+    int i = 0;
+    Rlist *list = NULL;
+    while (PFR[i] != NULL)
+    {
+        list = RlistParseString(PFR[i], NULL);
+        assert_true(RlistLast(list) == NULL);
+        if(list) RlistDestroy(list);
+        i++;
+    }
 }
 
 int main()
@@ -191,7 +383,10 @@ int main()
         unit_test(test_rval_to_fncall2),
         unit_test(test_last),
         unit_test(test_filter),
-        unit_test(test_filter_everything)
+        unit_test(test_filter_everything),
+        unit_test(test_reverse),
+        unit_test(test_new_parser_success),
+        unit_test(test_new_parser_failure),
     };
 
     return run_tests(tests);
@@ -212,8 +407,17 @@ int FullTextMatch(const char *regptr, const char *cmpptr)
     fail();
 }
 
+bool EvalContextVariableGet(const EvalContext *ctx, VarRef lval, Rval *rval_out, DataType *type_out)
+{
+    fail();
+}
+
+Scope *ScopeGetCurrent(void)
+{
+    fail();
+}
+
 pthread_mutex_t *cft_lock;
-pthread_mutex_t *cft_system;
 int ThreadLock(pthread_mutex_t *name)
 {
     return true;
@@ -225,11 +429,6 @@ int ThreadUnlock(pthread_mutex_t *name)
 }
 
 void FnCallShow(FILE *fout, const FnCall *fp)
-{
-    fail();
-}
-
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
 {
     fail();
 }
@@ -248,6 +447,13 @@ void GetNaked(char *s1, const char *s2)
 {
     fail();
 }
+
+/*
+void Log(LogLevel level, const char *fmt, ...)
+{
+    fail();
+}
+*/
 
 DataType ScopeGetVariable(const char *scope, const char *lval, Rval *returnv)
 {

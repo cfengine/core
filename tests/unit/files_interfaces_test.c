@@ -47,7 +47,7 @@ static void CreateCorruptedGarbage(const char *filename)
     fclose(fh);
 }
 
-static void test_cfreadline_valid(void **state)
+static void test_cfreadline_valid(void)
 {
     int read = 0;
     char output[CF_BUFSIZE] = { 0 };
@@ -57,7 +57,7 @@ static void test_cfreadline_valid(void **state)
     fin = fopen(FILE_NAME, "r");
 
     //test with non-empty file and valid file pointer
-    read = CfReadLine(output, CF_BUFSIZE - 1, fin);
+    read = CfReadLine(output, CF_BUFSIZE, fin);
     assert_true(read > 0);
     assert_string_equal(output, FILE_LINE);
 
@@ -67,7 +67,7 @@ static void test_cfreadline_valid(void **state)
     }
 }
 
-static void test_cfreadline_corrupted(void **state)
+static void test_cfreadline_corrupted(void)
 {
     int read = 0;
     char output[CF_BUFSIZE] = { 0 };
@@ -77,7 +77,7 @@ static void test_cfreadline_corrupted(void **state)
     fin = fopen(FILE_NAME, "r");
 
     //test with non-empty file and valid file pointer
-    read = CfReadLine(output, CF_BUFSIZE - 1, fin);
+    read = CfReadLine(output, CF_BUFSIZE, fin);
     assert_true(read > 0);
     assert_string_not_equal(output, FILE_LINE);
 

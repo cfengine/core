@@ -3,7 +3,7 @@
 #include "refcount.h"
 
 // Simple initialization test
-static void test_initRefCount(void **state)
+static void test_initRefCount(void)
 {
     RefCount *refCount = NULL;
     RefCountNew(&refCount);
@@ -13,7 +13,7 @@ static void test_initRefCount(void **state)
 }
 
 // Simple deletion test
-static void test_destroyRefCount(void **state)
+static void test_destroyRefCount(void)
 {
     RefCount *refCount = NULL;
     RefCountNew(&refCount);
@@ -29,7 +29,7 @@ static void test_destroyRefCount(void **state)
     RefCountDestroy(&refCount);
 }
 
-static void test_attachRefCount(void **state)
+static void test_attachRefCount(void)
 {
     int data1 = 0xdeadbeef;
     int data2 = 0xbad00bad;
@@ -82,7 +82,7 @@ static void test_attachRefCount(void **state)
     assert_true(refCount->last->user == (void *)&data2);
 }
 
-static void test_detachRefCount(void **state)
+static void test_detachRefCount(void)
 {
     int data1 = 0xdeadbeef;
     int data2 = 0xbad00bad;
@@ -193,7 +193,7 @@ static void test_detachRefCount(void **state)
     assert_true(refCount->last->user == (void *)&data2);
 }
 
-static void test_isSharedRefCount(void **state)
+static void test_isSharedRefCount(void)
 {
     int data1 = 0xdeadbeef;
     int data2 = 0xbad00bad;
@@ -245,7 +245,7 @@ static void test_isSharedRefCount(void **state)
     assert_false(RefCountIsShared(NULL));
 }
 
-static void test_isEqualRefCount(void **state)
+static void test_isEqualRefCount(void)
 {
     int data2 = 0xbad00bad;
     RefCount *refCount1 = NULL;

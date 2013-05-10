@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -26,7 +26,6 @@
 
 #include "keyring.h"
 #include "dir.h"
-#include "cfstream.h"
 
 /***************************************************************/
 
@@ -60,7 +59,7 @@ int RemovePublicKey(const char *id)
     snprintf(keysdir, CF_BUFSIZE, "%s/ppkeys", CFWORKDIR);
     MapName(keysdir);
 
-    if ((dirh = OpenDirLocal(keysdir)) == NULL)
+    if ((dirh = DirOpen(keysdir)) == NULL)
     {
         if (errno == ENOENT)
         {
@@ -68,14 +67,14 @@ int RemovePublicKey(const char *id)
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "opendir", "Unable to open keys directory");
+            Log(LOG_LEVEL_ERR, "Unable to open keys directory at '%s'. (opendir: %s)", keysdir, GetErrorStr());
             return -1;
         }
     }
 
     snprintf(suffix, CF_BUFSIZE, "-%s.pub", id);
 
-    while ((dirp = ReadDir(dirh)) != NULL)
+    while ((dirp = DirRead(dirh)) != NULL)
     {
         char *c = strstr(dirp->d_name, suffix);
 
@@ -90,8 +89,8 @@ int RemovePublicKey(const char *id)
             {
                 if (errno != ENOENT)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "unlink", "Unable to remove key file %s", dirp->d_name);
-                    CloseDir(dirh);
+                    Log(LOG_LEVEL_ERR, "Unable to remove key file '%s'. (unlink: %s)", dirp->d_name, GetErrorStr());
+                    DirClose(dirh);
                     return -1;
                 }
             }
@@ -104,12 +103,12 @@ int RemovePublicKey(const char *id)
 
     if (errno)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "ReadDir", "Unable to enumerate files in keys directory");
-        CloseDir(dirh);
+        Log(LOG_LEVEL_ERR, "Unable to enumerate files in keys directory. (ReadDir: %s)", GetErrorStr());
+        DirClose(dirh);
         return -1;
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return removed;
 }
 /***************************************************************/

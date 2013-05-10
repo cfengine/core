@@ -8,8 +8,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 #######################################################
@@ -34,10 +32,10 @@ bundle agent test
 files:
         "$(G.testfile)"
             create => "true",
-            action => test_action;
+            classes => test_action;
 }
 
-body action test_action
+body classes test_action
 {
 promise_repaired => { "ok" };
 persist_time => "10";

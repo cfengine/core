@@ -1,0 +1,66 @@
+#######################################################
+#
+# Check that $(match.1) works
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "testfile" string => concat("$(G.testdir)", "/dummy_file");
+
+files:
+    "$(testfile)"
+      create => "true";
+
+reports:
+  DEBUG::
+    "Creating file $(testfile)";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "foo" string => "foo";
+
+files:
+   "$(G.testdir)/([^_]*)_(.*)"
+      delete => test_delete,
+      classes => test_classes;
+}
+
+body classes test_classes
+{
+  promise_repaired => { "$(match.1)", "$(match.2)" };
+}
+
+body delete test_delete
+{
+        dirlinks => "delete";
+        rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+        "ok" and => { "dummy", "file" };
+
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

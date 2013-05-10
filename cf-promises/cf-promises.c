@@ -1,24 +1,23 @@
 /*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,25 +26,27 @@
 
 #include "env_context.h"
 #include "conversion.h"
-#include "reporting.h"
-#include "cfstream.h"
-#include "logging.h"
 #include "syntax.h"
 #include "rlist.h"
 #include "parser.h"
+#include "sysinfo.h"
+#include "man.h"
 
-/*******************************************************************/
+#include <time.h>
 
-static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 /*******************************************************************/
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The promise agent is a validator and analysis tool for\n"
-    "configuration files belonging to any of the components\n"
-    "of Cfengine. Configurations that make changes must be\n" "approved by this validator before being executed.";
+static const char *CF_PROMISES_SHORT_DESCRIPTION = "validate and analyze CFEngine policy code";
+
+static const char *CF_PROMISES_MANPAGE_LONG_DESCRIPTION = "cf-promises is a tool for checking CFEngine policy code. "
+        "It operates by first parsing policy code checing for syntax errors. Second, it validates the integrity of "
+        "policy consisting of multiple files. Third, it checks for semantic errors, e.g. specific attribute set rules. "
+        "Finally, cf-promises attempts to expose errors by partially evaluating the policy, resolving as many variable and "
+        "classes promise statements as possible. At no point does cf-promises make any changes to the system.";
 
 static const struct option OPTIONS[] =
 {
@@ -62,7 +63,10 @@ static const struct option OPTIONS[] =
     {"diagnostic", no_argument, 0, 'x'},
     {"reports", no_argument, 0, 'r'},
     {"policy-output-format", required_argument, 0, 'p'},
+    {"syntax-description", required_argument, 0, 's'},
     {"full-check", no_argument, 0, 'c'},
+    {"warn", optional_argument, 0, 'W'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -81,7 +85,10 @@ static const char *HINTS[] =
     "Activate internal diagnostics (developers only)",
     "Generate reports about configuration and insert into CFDB",
     "Output the parsed policy. Possible values: 'none', 'cf', 'json'. Default is 'none'. (experimental)",
+    "Output a document describing the available syntax elements of CFEngine. Possible values: 'none', 'json'. Default is 'none'.",
     "Ensure full policy integrity checks",
+    "Pass comma-separated <warnings>|all to enable non-default warnings, or error=<warnings>|all",
+    "Use legacy output format",
     NULL
 };
 
@@ -95,23 +102,27 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
-    
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
+    if (!policy)
+    {
+        Log(LOG_LEVEL_ERR, "Input files contain errors.\n");
+        exit(EXIT_FAILURE);
+    }
 
     if (SHOWREPORTS)
     {
-        CompilationReport(ctx, policy, config->input_file);
+        ShowPromises(policy->bundles, policy->bodies);
     }
 
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     switch (config->agent_specific.common.policy_output_format)
     {
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             Writer *writer = FileWriter(stdout);
             PolicyToString(policy, writer);
             WriterClose(writer);
@@ -121,7 +132,8 @@ int main(int argc, char *argv[])
 
     case GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON:
         {
-            Policy *output_policy = ParserParseFile(GenericAgentResolveInputPath(config->input_file, config->input_file));
+            Policy *output_policy = ParserParseFile(config->input_file, config->agent_specific.common.parser_warnings,
+                                                    config->agent_specific.common.parser_warnings_error);
             JsonElement *json_policy = PolicyToJson(output_policy);
             Writer *writer = FileWriter(stdout);
             JsonElementPrint(writer, json_policy, 2);
@@ -135,22 +147,8 @@ int main(int argc, char *argv[])
         break;
     }
 
-    ThisAgentInit();
-
     GenericAgentConfigDestroy(config);
-    CloseReports("commmon", report_context);
     EvalContextDestroy(ctx);
-
-    if (ERRORCOUNT > 0)
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Inputs are invalid\n");
-        exit(1);
-    }
-    else
-    {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Inputs are valid\n");
-        exit(0);
-    }
 }
 
 /*******************************************************************/
@@ -164,10 +162,14 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     int c;
     GenericAgentConfig *config = GenericAgentConfigNewDefault(AGENT_TYPE_COMMON);
 
-    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:cg:h", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "dvnIf:D:N:VSrxMb:i:p:s:cg:hW:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'c':
             config->check_runnable = true;
             break;
@@ -176,16 +178,16 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && (strlen(optarg) < 5))
             {
-                FatalError(" -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
+                exit(EXIT_FAILURE);
             }
 
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
         case 'd':
-            EvalContextHeapAddHard(ctx, "opt_debug");
-            DEBUG = true;
+            config->debug_mode = true;
             break;
 
         case 'b':
@@ -194,7 +196,6 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
                 Rlist *bundlesequence = RlistFromSplitString(optarg, ',');
                 GenericAgentConfigSetBundleSequence(config, bundlesequence);
                 RlistDestroy(bundlesequence);
-                CBUNDLESEQUENCE_STR = optarg; // TODO: wtf is this
             }
             break;
 
@@ -213,7 +214,28 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                Log(LOG_LEVEL_ERR, "Invalid policy output format: '%s'. Possible values are 'none', 'cf', 'json'", optarg);
+                exit(EXIT_FAILURE);
+            }
+            break;
+
+        case 's':
+            if (strcmp("none", optarg) == 0)
+            {
+                break;
+            }
+            else if (strcmp("json", optarg) == 0)
+            {
+                JsonElement *json_syntax = SyntaxToJson();
+                Writer *out = FileWriter(stdout);
+                JsonElementPrint(out, json_syntax, 0);
+                FileWriterDetach(out);
+                JsonElementDestroy(json_syntax);
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                Log(LOG_LEVEL_ERR, "Invalid syntax description output format: '%s'. Possible values are 'none', 'json'", optarg);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -246,47 +268,53 @@ GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-promises");
+            PrintVersion();
             exit(0);
 
         case 'h':
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-promises", time(NULL),
+                             CF_PROMISES_SHORT_DESCRIPTION,
+                             CF_PROMISES_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'r':
             SHOWREPORTS = true;
             break;
 
+        case 'W':
+            if (!GenericAgentConfigParseWarningOptions(config, optarg))
+            {
+                Log(LOG_LEVEL_ERR, "Error parsing warning option");
+                exit(EXIT_FAILURE);
+            }
+            break;
+
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-promises - cfengine's promise analyzer", OPTIONS, HINTS, ID);
+            PrintHelp("cf-promises", OPTIONS, HINTS, true);
             exit(1);
 
         }
     }
 
-    if (argv[optind] != NULL)
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Unexpected argument with no preceding option: %s\n", argv[optind]);
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
     }
-
-    CfDebug("Set debugging\n");
 
     return config;
 }
-
-/*******************************************************************/
-
-static void ThisAgentInit(void)
-{
-    SHOWREPORTS = false;
-}
-
-/* EOF */

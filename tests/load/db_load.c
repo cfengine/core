@@ -1,8 +1,6 @@
 #include "cf3.defs.h"
 
 #include "dbm_api.h"
-#include "cfstream.h"
-#include "logging.h"
 
 #include <assert.h>
 
@@ -133,8 +131,9 @@ static void TestCursorIteration(CF_DB *db)
 
     if(!NewDBCursor(db, &dbc))
     {
-        FatalError("Test: could not create cursor");
+        fprintf(stderr, "Test: could not create cursor");
         pthread_exit((void*)STATUS_ERROR);
+        exit(1);
     }
 
     char *key;
@@ -142,7 +141,7 @@ static void TestCursorIteration(CF_DB *db)
     int key_sz, value_sz;
 
     int count = 0;
-    while(NextDB(db, dbc, &key, &key_sz, &value, &value_sz))
+    while(NextDB(dbc, &key, &key_sz, &value, &value_sz))
     {
         int key_num = *(int *)key;
         int value_num = *(int *)value;
@@ -177,9 +176,10 @@ static void TestCursorIteration(CF_DB *db)
         printf("Error: During iteration count was %d (expected %d)\n", count, RECORD_COUNT_TOTAL);
     }
 
-    if(!DeleteDBCursor(db, dbc))
+    if(!DeleteDBCursor(dbc))
     {
-        FatalError("Test: could not delete cursor");
+        fprintf(stderr, "Test: could not delete cursor");
+        exit(1);
     }
 
 }
@@ -282,7 +282,7 @@ static void DBWriteTestData(CF_DB *db)
 
         if (!WriteComplexKeyDB(db, (const char *)&i, sizeof(i), &value_num, sizeof(value_num)))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write data to database");
+            Log(LOG_LEVEL_ERR, "Unable to write data to database");
             pthread_exit((void*)STATUS_ERROR);
         }
     }
@@ -297,7 +297,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     va_list ap;
     char buf[CF_BUFSIZE] = "";
@@ -305,10 +305,15 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
-    printf("CfOut: %s\n", buf);
+    printf("Log: %s\n", buf);
 }
 
-void FatalError(char *fmt, ...)
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
+}
+
+void FatalError(const EvalContext *ctx, char *fmt, ...)
 {
     if (fmt)
     {
@@ -318,11 +323,11 @@ void FatalError(char *fmt, ...)
         va_start(ap, fmt);
         vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
         va_end(ap);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
+        Log(LOG_LEVEL_ERR, "Fatal CFEngine error: %s", buf);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error (no description)");
+        Log(LOG_LEVEL_ERR, "Fatal CFEngine error (no description)");
     }
 
     exit(1);
@@ -337,7 +342,7 @@ int ThreadLock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not lock mutex");
+        fprintf(stderr, "Could not lock mutex");
     }
 
     return true;
@@ -349,7 +354,7 @@ int ThreadUnlock(pthread_mutex_t *t)
 
     if (result != 0)
     {
-        FatalError("Could not unlock mutex");
+        fprintf(stderr, "Could not unlock mutex");
     }
 
     return true;

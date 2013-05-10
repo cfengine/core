@@ -1,0 +1,73 @@
+#######################################################
+#
+# Test getfields()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+        "$(G.testfile)"
+            create => "true",
+            edit_line => init_fill_in;
+
+reports:
+  DEBUG::
+    "Created $(G.testfile)";
+}
+
+bundle edit_line init_fill_in
+{
+insert_lines:
+        "one:data1";
+	"two:data2";
+	"three:data3";
+}
+
+body delete init_delete
+{
+        dirlinks => "delete";
+        rmdirs   => "true";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+vars:
+  "num_matching" int => getfields("t.*", "$(G.testfile)", ":", "fields");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+    any::
+        "ok" and => {
+                    strcmp("$(test.fields[1])", "two"),
+                    strcmp("$(test.fields[2])", "data2"),
+                    strcmp("$(test.num_matching)", "2")
+                    };
+
+reports:
+    DEBUG::
+        "got field $(test.fields[1])";
+        "got field $(test.fields[2])";
+        "num_matching is $(test.num_matching)";
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

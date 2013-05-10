@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -29,8 +29,6 @@
 #include "files_interfaces.h"
 #include "mon.h"
 #include "item_lib.h"
-#include "cfstream.h"
-#include "communication.h"
 #include "pipes.h"
 #include "signals.h"
 #include "string_lib.h"
@@ -106,15 +104,15 @@ void MonNetworkSnifferOpen(void)
 
         sscanf(CF_TCPDUMP_COMM, "%s", buffer);
 
-        if (cfstat(buffer, &statbuf) != -1)
+        if (stat(buffer, &statbuf) != -1)
         {
-            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r")) == NULL)
+            if ((TCPPIPE = cf_popen(CF_TCPDUMP_COMM, "r", true)) == NULL)
             {
                 TCPDUMP = false;
             }
 
             /* Skip first banner */
-            if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+            if (fgets(tcpbuffer, sizeof(tcpbuffer), TCPPIPE) == NULL)
             {
                 UnexpectedError("Failed to read output from '%s'", CF_TCPDUMP_COMM);
                 cf_pclose(TCPPIPE);
@@ -139,11 +137,11 @@ void MonNetworkSnifferEnable(bool enable)
 
 /******************************************************************************/
 
-static void CfenvTimeOut(int signum)
+static void CfenvTimeOut(ARG_UNUSED int signum)
 {
     alarm(0);
     TCPPAUSE = true;
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Time out\n");
+    Log(LOG_LEVEL_VERBOSE, "Time out\n");
 }
 
 /******************************************************************************/
@@ -152,7 +150,7 @@ static void Sniff(long iteration, double *cf_this)
 {
     char tcpbuffer[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Reading from tcpdump...\n");
+    Log(LOG_LEVEL_VERBOSE, "Reading from tcpdump...\n");
     memset(tcpbuffer, 0, CF_BUFSIZE);
     signal(SIGALRM, CfenvTimeOut);
     alarm(SLEEPTIME);
@@ -165,7 +163,7 @@ static void Sniff(long iteration, double *cf_this)
             break;
         }
 
-        if (fgets(tcpbuffer, CF_BUFSIZE - 1, TCPPIPE) == NULL)
+        if (fgets(tcpbuffer, sizeof(tcpbuffer), TCPPIPE) == NULL)
         {
             UnexpectedError("Unable to read data from tcpdump; closing pipe");
             cf_pclose(TCPPIPE);
@@ -225,7 +223,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
 
     if (Chop(arrival, CF_EXPANDSIZE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+        Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
 
 /* Most hosts have only a few dominant services, so anomalies will
@@ -412,11 +410,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
     FILE *fp;
     char filename[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", TCPNAMES[i]);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", TCPNAMES[i]);
 
     if (list == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No %s-%s events\n", TCPNAMES[i], inout);
+        Log(LOG_LEVEL_VERBOSE, "No %s-%s events\n", TCPNAMES[i], inout);
         return;
     }
 
@@ -429,11 +427,11 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
         snprintf(filename, CF_BUFSIZE - 1, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "TCP Save %s\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "TCP Save %s\n", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Unable to write datafile %s\n", filename);
+        Log(LOG_LEVEL_VERBOSE, "Unable to write datafile %s\n", filename);
         return;
     }
 
@@ -447,7 +445,7 @@ static void SaveTCPEntropyData(Item *list, int i, char *inout)
 
 /******************************************************************************/
 
-void MonNetworkSnifferGatherData(double *cf_this)
+void MonNetworkSnifferGatherData(void)
 {
     int i;
     char vbuff[CF_BUFSIZE];
@@ -461,11 +459,11 @@ void MonNetworkSnifferGatherData(double *cf_this)
         CfDebug("save incoming %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(NETIN_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETIN_DIST[i]);
                 NETIN_DIST[i] = NULL;
                 continue;
@@ -489,11 +487,11 @@ void MonNetworkSnifferGatherData(double *cf_this)
         CfDebug("save outgoing %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(NETOUT_DIST[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", TCPNAMES[i]);
                 DeleteItemList(NETOUT_DIST[i]);
                 NETOUT_DIST[i] = NULL;
                 continue;

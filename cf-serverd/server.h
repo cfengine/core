@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,16 +17,16 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #ifndef CFENGINE_SERVER_H
 #define CFENGINE_SERVER_H
 
 #include "cf3.defs.h"
+#include "cfnet.h"                                       /* AgentConnection */
 
 #include "generic_agent.h"
 
@@ -34,16 +34,46 @@
 // TYPES
 //*******************************************************************
 
+typedef struct Auth_ Auth;
+
+struct Auth_
+{
+    char *path;
+    Item *accesslist;
+    Item *maproot;              /* which hosts should have root read access */
+    int encrypt;                /* which files HAVE to be transmitted securely */
+    int literal;
+    int classpattern;
+    int variable;
+    Auth *next;
+};
+
 typedef struct
 {
-   Item *nonattackerlist;
-   Item *attackerlist;
-   Item *connectionlist;
-   Item *allowuserlist;
-   Item *multiconnlist;
-   Item *trustkeylist;
-   Item *skipverify;
-   int logconns;
+    Item *nonattackerlist;
+    Item *attackerlist;
+    Item *connectionlist;
+    Item *allowuserlist;
+    Item *multiconnlist;
+    Item *trustkeylist;
+    Item *skipverify;
+
+    Auth *admit;
+    Auth *admittop;
+
+    Auth *deny;
+    Auth *denytop;
+
+    Auth *varadmit;
+    Auth *varadmittop;
+
+    Auth *vardeny;
+    Auth *vardenytop;
+
+    Auth *roles;
+    Auth *rolestop;
+
+    int logconns;
 } ServerAccess;
 
 typedef struct ServerConnectionState
@@ -80,22 +110,16 @@ typedef struct
 } ServerFileGetState;
 
 
-#ifdef HAVE_NOVA
+void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config);
 
-int Nova_ReturnQueryData(ServerConnectionState *conn, char *menu);
-
-#endif
-
-void KeepPromises(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, const ReportContext *report_context);
-
-void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr, ServerAccess sv);
+void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr);
 void TryCollectCall(void);
 int SetServerListenState(EvalContext *ctx, size_t queue_size);
 void DeleteAuthList(Auth *ap);
 void PurgeOldConnections(Item **list, time_t now);
 
 
-AgentConnection *ExtractCallBackChannel(EvalContext *ctx, ServerConnectionState *conn);
+AgentConnection *ExtractCallBackChannel(ServerConnectionState *conn);
 
 
 //*******************************************************************
@@ -108,28 +132,13 @@ extern int CLOCK_DRIFT;
 extern int ACTIVE_THREADS;
 
 extern int CFD_MAXPROCESSES;
-extern int CFD_INTERVAL;
 extern int DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGCONNS;
 extern int LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
 
-extern Auth *ROLES;
-extern Auth *ROLESTOP;
-
 extern ServerAccess SV;
-
-extern Auth *VADMIT;
-extern Auth *VADMITTOP;
-extern Auth *VDENY;
-extern Auth *VDENYTOP;
-
-extern Auth *VARADMIT;
-extern Auth *VARADMITTOP;
-extern Auth *VARDENY;
-extern Auth *VARDENYTOP;
 
 extern char CFRUNCOMMAND[];
 

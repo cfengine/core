@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -36,8 +36,14 @@ typedef struct
     char blockid[CF_MAXVARSIZE];
 
     char filename[CF_MAXVARSIZE];
+    char *current_line;
     int line_pos;
     int line_no;
+    int error_count;
+
+    int warning_count;
+    int warnings; // bitfield of warnings not considered to be an error
+    int warnings_error; // bitfield of warnings considered to be an error
 
     int arg_nesting;
     int list_nesting;
@@ -60,7 +66,7 @@ typedef struct
     Bundle *currentbundle;
     Body *currentbody;
     Promise *currentpromise;
-    SubType *currentstype;
+    PromiseType *currentstype;
     Rlist *useargs;
 
     Rlist *currentRlist;
@@ -75,7 +81,7 @@ typedef struct
         size_t last_id;
         size_t last_string;
         size_t last_block_id;
-        size_t last_subtype_id;
+        size_t last_promise_type_id;
         size_t last_class_id;
     } offsets;
 } ParserState;

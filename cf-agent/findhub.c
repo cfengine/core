@@ -1,7 +1,30 @@
+/*
+   Copyright (C) CFEngine AS
+
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
+   This program is free software; you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation; version 3.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
+
+  To the extent this program is licensed as part of the Enterprise
+  versions of CFEngine, the applicable Commerical Open Source License
+  (COSL) may apply to this file if you as a licensee so wish it. See
+  included file COSL.txt.
+*/
+
 #include "findhub.h"
 #include "atexit.h"
 #include "string_lib.h"
-#include "cfstream.h"
 #include "misc_lib.h"
 
 List *hublist = NULL; 
@@ -17,7 +40,7 @@ void client_callback(AvahiClient *c,
 
     if (state == AVAHI_CLIENT_FAILURE)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Server connection failure %s", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+        Log(LOG_LEVEL_ERR, "Server connection failure %s", avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         avahi_simple_poll_quit_ptr(spoll);
     }
 }
@@ -38,14 +61,14 @@ void browse_callback(AvahiServiceBrowser *b,
     switch(event)
     {
     case AVAHI_BROWSER_FAILURE:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi browser error: %s", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
+        Log(LOG_LEVEL_ERR, "Avahi browser error: %s", avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_browser_get_client_ptr(b))));
         avahi_simple_poll_quit_ptr(spoll);
         return;
 
     case AVAHI_BROWSER_NEW:
         if (!(avahi_service_resolver_new_ptr(c, interface, protocol, name ,type, domain, AVAHI_PROTO_UNSPEC, 0, resolve_callback, c)))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to resolve service: '%s': %s", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
+            Log(LOG_LEVEL_ERR, "Failed to resolve service: '%s': %s", name, avahi_strerror_ptr(avahi_client_errno_ptr(c)));
         }
         break;
 
@@ -82,7 +105,7 @@ void resolve_callback(AvahiServiceResolver *r,
     switch(event)
     {
     case AVAHI_RESOLVER_FAILURE:
-        CfOut(OUTPUT_LEVEL_ERROR, "", "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s",
+        Log(LOG_LEVEL_ERR, "(Resolver) Failed to resolve service '%s' of type '%s' in domain '%s': %s",
               name, type, domain, avahi_strerror_ptr(avahi_client_errno_ptr(avahi_service_resolver_get_client_ptr(r))));
         break;
 
@@ -114,13 +137,13 @@ void PrintList(List *list)
     {
         HostProperties *hostprop = (HostProperties *)ListIteratorData(i);
 
-        CfOut(OUTPUT_LEVEL_REPORTING, "", "\nCFEngine Policy Server:\n"
-                                "Hostname: %s\n"
-                                "IP Address: %s\n"
-                                "Port: %d\n",
-                                hostprop->Hostname,
-                                hostprop->IPAddress,
-                                hostprop->Port);
+        printf("\nCFEngine Policy Server:\n"
+               "Hostname: %s\n"
+               "IP Address: %s\n"
+               "Port: %d\n",
+               hostprop->Hostname,
+               hostprop->IPAddress,
+               hostprop->Port);
     } while (ListIteratorNext(i) != -1);
 
     ListIteratorDestroy(&i);
@@ -145,13 +168,13 @@ int ListHubs(List **list)
 
     if (loadavahi() == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Avahi was not found");
+        Log(LOG_LEVEL_ERR, "Avahi was not found");
         return -1;
     }
 
     if (!(spoll = avahi_simple_poll_new_ptr()))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create simple poll object.");
+        Log(LOG_LEVEL_ERR, "Failed to create simple poll object.");
 
         if (spoll)
         {
@@ -164,7 +187,7 @@ int ListHubs(List **list)
 
     if (!client)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create client %s", avahi_strerror_ptr(error));
+        Log(LOG_LEVEL_ERR, "Failed to create client %s", avahi_strerror_ptr(error));
 
         if (client)
         {
@@ -181,7 +204,7 @@ int ListHubs(List **list)
 
     if (!(sb = avahi_service_browser_new_ptr(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_cfenginehub._tcp", NULL, 0, browse_callback, client)))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to create service browser: %s", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
+        Log(LOG_LEVEL_ERR, "Failed to create service browser: %s", avahi_strerror_ptr(avahi_client_errno_ptr(client)));
         
         if (spoll)
         {

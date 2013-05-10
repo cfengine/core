@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -26,7 +26,6 @@
 
 #include "files_names.h"
 #include "vercmp_internal.h"
-#include "cfstream.h"
 #include "rlist.h"
 
 static void ParsePackageVersion(char *version, Rlist **num, Rlist **sep);
@@ -48,7 +47,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
 /* If the format of the version string doesn't match, we're already doomed */
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
+    Log(LOG_LEVEL_VERBOSE, "Check for compatible versioning model in (%s,%s)\n", v1, v2);
 
     for (rp_pr = separators_pr, rp_in = separators_in; (rp_pr != NULL) && (rp_in != NULL);
          rp_pr = rp_pr->next, rp_in = rp_in->next)
@@ -68,11 +67,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
     if (result)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verified that versioning models are compatible\n");
+        Log(LOG_LEVEL_VERBOSE, "Verified that versioning models are compatible\n");
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Versioning models for (%s,%s) were incompatible\n", v1, v2);
+        Log(LOG_LEVEL_VERBOSE, "Versioning models for (%s,%s) were incompatible\n", v1, v2);
     }
 
     int version_equal = (strcmp(v2, v1) == 0);
@@ -174,11 +173,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
     if (version_matched)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Verified version constraint promise kept\n");
+        Log(LOG_LEVEL_VERBOSE, "Verified version constraint promise kept\n");
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Versions did not match\n");
+        Log(LOG_LEVEL_VERBOSE, "Versions did not match\n");
     }
 
     return version_matched;

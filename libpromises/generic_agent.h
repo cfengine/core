@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -35,9 +35,14 @@ typedef struct
     AgentType agent_type;
 
     Rlist *bundlesequence;
+
+    char *original_input_file;
     char *input_file;
+    char *input_dir;
+
     bool check_not_writable_by_others;
     bool check_runnable;
+    bool debug_mode;
 
     StringSet *heap_soft;
     StringSet *heap_negated;
@@ -58,25 +63,32 @@ typedef struct
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_CF,
                 GENERIC_AGENT_CONFIG_COMMON_POLICY_OUTPUT_FORMAT_JSON
             } policy_output_format;
+            unsigned int parser_warnings;
+            unsigned int parser_warnings_error;
         } common;
+        struct
+        {
+            char *bootstrap_policy_server;
+        } agent;
     } agent_specific;
 
 } GenericAgentConfig;
 
-const char *GenericAgentResolveInputPath(const char *filename, const char *base_input_file);
-void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config, ReportContext *report_context);
+const char *GenericAgentResolveInputPath(const GenericAgentConfig *config, const char *input_file);
+void GenericAgentDiscoverContext(EvalContext *ctx, GenericAgentConfig *config);
 bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool force_validation);
-Policy *GenericAgentLoadPolicy(EvalContext *ctx, AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
+Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config);
 
 void InitializeGA(EvalContext *ctx, GenericAgentConfig *config);
-void Syntax(const char *comp, const struct option options[], const char *hints[], const char *id);
-void ManPage(const char *component, const struct option options[], const char *hints[], const char *id);
-void PrintVersionBanner(const char *component);
-int CheckPromises(const char *input_file);
-Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config, const ReportContext *report_context);
-int NewPromiseProposals(EvalContext *ctx, const char *input_file, const Rlist *input_files);
-void CompilationReport(EvalContext *ctx, Policy *policy, char *fname);
-void HashVariables(EvalContext *ctx, Policy *policy, const char *name, const ReportContext *report_context);
+void PrintHelp(const char *comp, const struct option options[], const char *hints[], bool accepts_file_argument);
+void PrintVersion(void);
+int CheckPromises(const GenericAgentConfig *config);
+Policy *ReadPromises(AgentType agent_type, GenericAgentConfig *config);
+int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, const Rlist *input_files);
+
+void BundleHashVariables(EvalContext *ctx, Bundle *bundle);
+void PolicyHashVariables(EvalContext *ctx, Policy *policy);
+
 void HashControls(EvalContext *ctx, const Policy *policy, GenericAgentConfig *config);
 void CloseLog(void);
 Seq *ControlBodyConstraints(const Policy *policy, AgentType agent);
@@ -91,24 +103,18 @@ const Rlist *InputFiles(EvalContext *ctx, Policy *policy);
 
 void SetFacility(const char *retval);
 void CheckBundleParameters(char *scope, Rlist *args);
-void PromiseBanner(EvalContext *ctx, Promise *pp);
-void BannerBundle(Bundle *bp, Rlist *args);
-void BannerSubBundle(Bundle *bp, Rlist *args);
 void WritePID(char *filename);
-ReportContext *OpenCompilationReportFiles(const char *fname);
-void CheckLicenses(EvalContext *ctx);
+void CheckForPolicyHub(EvalContext *ctx);
 void ReloadPromises(AgentType ag);
 
-ReportContext *OpenReports(AgentType agent_type);
-void CloseReports(const char *agents, ReportContext *report_context);
+bool GenericAgentConfigParseArguments(GenericAgentConfig *config, int argc, char **argv);
+bool GenericAgentConfigParseWarningOptions(GenericAgentConfig *config, const char *warning_options);
 
 GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type);
 void GenericAgentConfigDestroy(GenericAgentConfig *config);
 void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config);
 
-const char *AgentTypeToString(AgentType agent_type);
-
-void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *input_file);
+void GenericAgentConfigSetInputFile(GenericAgentConfig *config, const char *workdir, const char *input_file);
 void GenericAgentConfigSetBundleSequence(GenericAgentConfig *config, const Rlist *bundlesequence);
 
 #endif

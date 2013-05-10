@@ -1,4 +1,0 @@
-
-If this is set to true, CFEngine Nova computes additional graphical
-representations in its knowledge map, representing causal dependencies
- between CFEngine promises.

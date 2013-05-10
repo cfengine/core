@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "generic_agent.h"
@@ -32,22 +31,16 @@
 #include "files_names.h"
 #include "promises.h"
 #include "conversion.h"
-#include "reporting.h"
 #include "vars.h"
-#include "cfstream.h"
 #include "client_code.h"
 #include "communication.h"
 #include "net.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "rlist.h"
 #include "scope.h"
 #include "policy.h"
-
-#ifdef HAVE_NOVA
-#include "runagent.h"
-#endif
-
+#include "audit.h"
+#include "man.h"
 
 typedef enum
 {
@@ -68,7 +61,7 @@ static void ThisAgentInit(void);
 static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv);
 
 static void KeepControlPromises(EvalContext *ctx, Policy *policy);
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp);
+static int HailServer(EvalContext *ctx, char *host);
 static int ParseHostname(char *hostname, char *new_hostname);
 static void SendClassData(AgentConnection *conn);
 static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *sendbuffer);
@@ -79,15 +72,17 @@ static void DeleteStream(FILE *fp);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The run agent connects to a list of running instances of\n"
-    "the cf-serverd service. The agent allows a user to\n"
-    "forego the usual scheduling interval for the agent and\n"
-    "activate cf-agent on a remote host. Additionally, a user\n"
-    "can send additional classes to be defined on the remote\n"
-    "host. Two kinds of classes may be sent: classes to decide\n"
-    "on which hosts the agent will be started, and classes that\n"
-    "the user requests the agent should define on execution.\n"
-    "The latter type is regulated by cf-serverd's role based\n" "access control.";
+static const char *CF_RUNAGENT_SHORT_DESCRIPTION = "activate cf-agent on a remote host";
+
+static const char *CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION =
+    "cf-runagent connects to a list of running instances of "
+    "cf-serverd. It allows foregoing the usual cf-execd schedule "
+    "to activate cf-agent. Additionally, a user "
+    "may send classes to be defined on the remote\n"
+    "host. Two kinds of classes may be sent: classes to decide "
+    "on which hosts cf-agent will be started, and classes that "
+    "the user requests cf-agent should define on execution. "
+    "The latter type is regulated by cf-serverd's role based access control.";
 
 static const struct option OPTIONS[17] =
 {
@@ -105,8 +100,8 @@ static const struct option OPTIONS[17] =
     {"diagnostic", no_argument, 0, 'x'},
     {"hail", required_argument, 0, 'H'},
     {"interactive", no_argument, 0, 'i'},
-    {"query", optional_argument, 0, 'q'},
     {"timeout", required_argument, 0, 't'},
+    {"legacy-output", no_argument, 0, 'l'},
     {NULL, 0, 0, '\0'}
 };
 
@@ -126,12 +121,12 @@ static const char *HINTS[17] =
     "Activate internal diagnostics (developers only)",
     "Hail the following comma-separated lists of hosts, overriding default list",
     "Enable interactive mode for key trust",
-    "Query a server for a knowledge menu",
     "Connection timeout, seconds",
+    "Use legacy output format",
     NULL
 };
 
-extern const BodySyntax CFR_CONTROLBODY[];
+extern const ConstraintSyntax CFR_CONTROLBODY[];
 
 int INTERACTIVE = false;
 int OUTPUT_TO_FILE = false;
@@ -144,7 +139,6 @@ Attributes RUNATTR = { {0} };
 Rlist *HOSTLIST = NULL;
 char SENDCLASSES[CF_MAXVARSIZE];
 char DEFINECLASSES[CF_MAXVARSIZE];
-char MENU[CF_MAXVARSIZE];
 
 /*****************************************************************************/
 
@@ -162,32 +156,18 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(ctx, argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    ReportContext *report_context = OpenReports(config->agent_type);
+    GenericAgentDiscoverContext(ctx, config);
+    Policy *policy = GenericAgentLoadPolicy(ctx, config);
 
-    GenericAgentDiscoverContext(ctx, config, report_context);
-    Policy *policy = GenericAgentLoadPolicy(ctx, config->agent_type, config, report_context);
-
-    CheckLicenses(ctx);
+    CheckForPolicyHub(ctx);
 
     ThisAgentInit();
     KeepControlPromises(ctx, policy);      // Set RUNATTR using copy
 
     if (BACKGROUND && INTERACTIVE)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! You cannot specify background mode and interactive mode together");
+        Log(LOG_LEVEL_ERR, "You cannot specify background mode and interactive mode together");
         exit(1);
-    }
-
-    Policy *runagent_adhoc_policy = PolicyNew();
-    Promise *pp = NULL;
-    {
-        Bundle *bp = PolicyAppendBundle(policy, NamespaceDefault(), "runagent_adhoc_bundle", "agent", NULL, NULL);
-        SubType *tp = BundleAppendSubType(bp, "runagent");
-
-        pp = SubTypeAppendPromise(tp, "runagent_adhoc_promise", (Rval) {NULL, RVAL_TYPE_NOPROMISEE }, "any");
-
-        // TODO: wat?
-        pp->donep = &(pp->done);
     }
 
 /* HvB */
@@ -201,7 +181,7 @@ int main(int argc, char *argv[])
 #ifdef __MINGW32__
             if (BACKGROUND)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "",
+                Log(LOG_LEVEL_VERBOSE,
                       "Windows does not support starting processes in the background - starting in foreground");
                 BACKGROUND = false;
             }
@@ -212,7 +192,7 @@ int main(int argc, char *argv[])
                 {
                     if (fork() == 0)    /* child process */
                     {
-                        HailServer(ctx, rp->item, RUNATTR, pp);
+                        HailServer(ctx, rp->item);
                         exit(0);
                     }
                     else        /* parent process */
@@ -231,7 +211,7 @@ int main(int argc, char *argv[])
             else                /* serial */
 #endif /* __MINGW32__ */
             {
-                HailServer(ctx, rp->item, RUNATTR, pp);
+                HailServer(ctx, rp->item);
                 rp = rp->next;
             }
         }                       /* end while */
@@ -244,16 +224,13 @@ int main(int argc, char *argv[])
         while (count > 1)
         {
             pid = wait(&status);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "Child = %d ended, number = %d\n", pid, count);
+            Log(LOG_LEVEL_VERBOSE, "Child = %d ended, number = %d\n", pid, count);
             count--;
         }
     }
 #endif
 
-    PolicyDestroy(runagent_adhoc_policy);
-
     GenericAgentConfigDestroy(config);
-    ReportContextDestroy(report_context);
 
     return 0;
 }
@@ -270,12 +247,16 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
     DEFINECLASSES[0] = '\0';
     SENDCLASSES[0] = '\0';
 
-    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:", OPTIONS, &optindex)) != EOF)
+    while ((c = getopt_long(argc, argv, "t:q:db:vnKhIif:D:VSxo:s:MH:l", OPTIONS, &optindex)) != EOF)
     {
         switch ((char) c)
         {
+        case 'l':
+            LEGACY_OUTPUT = true;
+            break;
+
         case 'f':
-            GenericAgentConfigSetInputFile(config, optarg);
+            GenericAgentConfigSetInputFile(config, GetWorkDir(), optarg);
             MINUSF = true;
             break;
 
@@ -288,21 +269,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            EvalContextHeapAddHard(ctx, "opt_debug");
-            DEBUG = true;
-            break;
-
-        case 'q':
-
-            if (optarg == NULL)
-            {
-                strcpy(MENU, "delta");
-            }
-            else
-            {
-                strncpy(MENU, optarg, CF_MAXVARSIZE);
-            }
-
+            config->debug_mode = true;
             break;
 
         case 'K':
@@ -314,7 +281,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                Log(LOG_LEVEL_ERR, "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -323,7 +291,8 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (strlen(optarg) > CF_MAXVARSIZE)
             {
-                FatalError("Argument too long\n");
+                Log(LOG_LEVEL_ERR, "Argument too long\n");
+                exit(EXIT_FAILURE);
             }
             break;
 
@@ -358,29 +327,41 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-runagent");
+            PrintVersion();
             exit(0);
 
         case 'h':
-            Syntax("cf-runagent - Run agent", OPTIONS, HINTS, ID);
+            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
             exit(0);
 
         case 'M':
-            ManPage("cf-runagent - Run agent", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-runagent", time(NULL),
+                             CF_RUNAGENT_SHORT_DESCRIPTION,
+                             CF_RUNAGENT_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             true);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         case 'x':
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Self-diagnostic functionality is retired.");
+            Log(LOG_LEVEL_ERR, "Self-diagnostic functionality is retired.");
             exit(0);
 
         default:
-            Syntax("cf-runagent - Run agent", OPTIONS, HINTS, ID);
+            PrintHelp("cf-runagent", OPTIONS, HINTS, true);
             exit(1);
 
         }
     }
 
-    CfDebug("Set debugging\n");
+    if (!GenericAgentConfigParseArguments(config, argc - optind, argv + optind))
+    {
+        Log(LOG_LEVEL_ERR, "Too many arguments");
+        exit(EXIT_FAILURE);
+    }
 
     return config;
 }
@@ -393,7 +374,7 @@ static void ThisAgentInit(void)
 
     if (strstr(REMOTE_AGENT_OPTIONS, "--file") || strstr(REMOTE_AGENT_OPTIONS, "-f"))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "",
+        Log(LOG_LEVEL_ERR,
               "The specified remote options include a useless --file option. The remote server has promised to ignore this, thus it is disallowed.\n");
         exit(1);
     }
@@ -401,63 +382,73 @@ static void ThisAgentInit(void)
 
 /********************************************************************/
 
-static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
+static int HailServer(EvalContext *ctx, char *host)
 {
     AgentConnection *conn;
-    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE], ipv4[CF_MAXVARSIZE],
+    char sendbuffer[CF_BUFSIZE], recvbuffer[CF_BUFSIZE], peer[CF_MAXVARSIZE],
         digest[CF_MAXVARSIZE], user[CF_SMALLBUF];
     bool gotkey;
     char reply[8];
 
-    a.copy.portnumber = (short) ParseHostname(host, peer);
+    FileCopy fc = {
+        .portnumber = (short) ParseHostname(host, peer),
+    };
 
-    snprintf(ipv4, CF_MAXVARSIZE, "%s", Hostname2IPString(peer));
-    Address2Hostkey(ipv4, digest);
+    char ipaddr[CF_MAX_IP_LEN];
+    if (Hostname2IPString(ipaddr, peer, sizeof(ipaddr)) == -1)
+    {
+        Log(LOG_LEVEL_ERR,
+            "HailServer: ERROR, could not resolve %s", peer);
+        return false;
+    }
+
+    Address2Hostkey(ipaddr, digest);
     GetCurrentUserName(user, CF_SMALLBUF);
 
     if (INTERACTIVE)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Using interactive key trust...\n");
+        Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...\n");
 
         gotkey = HavePublicKey(user, peer, digest) != NULL;
 
         if (!gotkey)
         {
-            gotkey = HavePublicKey(user, ipv4, digest) != NULL;
+            gotkey = HavePublicKey(user, ipaddr, digest) != NULL;
         }
 
         if (!gotkey)
         {
-            printf("WARNING - You do not have a public key from host %s = %s\n", host, ipv4);
+            printf("WARNING - You do not have a public key from host %s = %s\n",
+                   host, ipaddr);
             printf("          Do you want to accept one on trust? (yes/no)\n\n--> ");
 
             while (true)
             {
-                if (fgets(reply, 8, stdin) == NULL)
+                if (fgets(reply, sizeof(reply), stdin) == NULL)
                 {
-                    FatalError("EOF trying to read answer from terminal");
+                    FatalError(ctx, "EOF trying to read answer from terminal");
                 }
 
                 if (Chop(reply, CF_EXPANDSIZE) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+                    Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
                 }
 
                 if (strcmp(reply, "yes") == 0)
                 {
-                    printf(" -> Will trust the key...\n");
-                    a.copy.trustkey = true;
+                    printf("Will trust the key...\n");
+                    fc.trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
-                    printf(" -> Will not trust the key...\n");
-                    a.copy.trustkey = false;
+                    printf("Will not trust the key...\n");
+                    fc.trustkey = false;
                     break;
                 }
                 else
                 {
-                    printf(" !! Please reply yes or no...(%s)\n", reply);
+                    printf("Please reply yes or no...(%s)\n", reply);
                 }
             }
         }
@@ -467,69 +458,53 @@ static int HailServer(EvalContext *ctx, char *host, Attributes a, Promise *pp)
 
 #ifdef __MINGW32__
 
-    CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-    CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+    Log(LOG_LEVEL_INFO, "...........................................................................\n");
+    Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
           REMOTE_AGENT_OPTIONS);
-    CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
+    Log(LOG_LEVEL_INFO, "...........................................................................\n");
 
 #else /* !__MINGW32__ */
 
     if (BACKGROUND)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, a.copy.portnumber,
+        Log(LOG_LEVEL_INFO, "Hailing %s : %u, with options \"%s\" (parallel)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
-        CfOut(OUTPUT_LEVEL_INFORM, "", " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, a.copy.portnumber,
+        Log(LOG_LEVEL_INFO, "...........................................................................\n");
+        Log(LOG_LEVEL_INFO, " * Hailing %s : %u, with options \"%s\" (serial)\n", peer, fc.portnumber,
               REMOTE_AGENT_OPTIONS);
-        CfOut(OUTPUT_LEVEL_INFORM, "", "...........................................................................\n");
+        Log(LOG_LEVEL_INFO, "...........................................................................\n");
     }
 
 #endif /* !__MINGW32__ */
 
-    a.copy.servers = RlistFromSplitString(peer, '*');
+    fc.servers = RlistFromSplitString(peer, '*');
 
-    if (a.copy.servers == NULL || strcmp(a.copy.servers->item, "localhost") == 0)
+    if (fc.servers == NULL || strcmp(fc.servers->item, "localhost") == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_NOP, "", pp, a, "No hosts are registered to connect to");
+        Log(LOG_LEVEL_INFO, "No hosts are registered to connect to");
         return false;
     }
     else
     {
         int err = 0;
-        conn = NewServerConnection(ctx, a, pp, &err);
+        conn = NewServerConnection(fc, false, &err);
 
         if (conn == NULL)
         {
-            RlistDestroy(a.copy.servers);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> No suitable server responded to hail\n");
+            RlistDestroy(fc.servers);
+            Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail\n");
             return false;
         }
     }
 
 /* Check trust interaction*/
 
-    pp->cache = NULL;
+    HailExec(conn, peer, recvbuffer, sendbuffer);
 
-    if (strlen(MENU) > 0)
-    {
-#if defined(HAVE_NOVA)
-        if (!ExecuteRunagent(conn, MENU))
-        {
-            DisconnectServer(conn);
-            RlistDestroy(a.copy.servers);
-            return false;
-        }
-#endif
-    }
-    else
-    {
-        HailExec(conn, peer, recvbuffer, sendbuffer);
-    }
-
-    RlistDestroy(a.copy.servers);
+    RlistDestroy(fc.servers);
 
     return true;
 }
@@ -561,37 +536,37 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 continue;
             }
 
-            if (ScopeGetVariable("control_runagent", cp->lval, &retval) == DATA_TYPE_NONE)
+            if (!EvalContextVariableGet(ctx, (VarRef) { NULL, "control_runagent", cp->lval }, &retval, NULL))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown lval %s in runagent control body", cp->lval);
+                Log(LOG_LEVEL_ERR, "Unknown lval %s in runagent control body", cp->lval);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_FORCE_IPV4].lval) == 0)
             {
                 RUNATTR.copy.force_ipv4 = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
+                Log(LOG_LEVEL_VERBOSE, "SET force_ipv4 = %d\n", RUNATTR.copy.force_ipv4);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_TRUSTKEY].lval) == 0)
             {
                 RUNATTR.copy.trustkey = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET trustkey = %d\n", RUNATTR.copy.trustkey);
+                Log(LOG_LEVEL_VERBOSE, "SET trustkey = %d\n", RUNATTR.copy.trustkey);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_ENCRYPT].lval) == 0)
             {
                 RUNATTR.copy.encrypt = BooleanFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET encrypt = %d\n", RUNATTR.copy.encrypt);
+                Log(LOG_LEVEL_VERBOSE, "SET encrypt = %d\n", RUNATTR.copy.encrypt);
                 continue;
             }
 
             if (strcmp(cp->lval, CFR_CONTROLBODY[RUNAGENT_CONTROL_PORT_NUMBER].lval) == 0)
             {
                 RUNATTR.copy.portnumber = (short) IntFromString(retval.item);
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
+                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u\n", (int) RUNATTR.copy.portnumber);
                 continue;
             }
 
@@ -603,7 +578,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                  */
                 if (BACKGROUND || INTERACTIVE)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                    Log(LOG_LEVEL_ERR,
                           "Warning: 'background_children' setting from 'body runagent control' is overriden by command-line option.");
                 }
                 else
@@ -630,7 +605,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 if (IsAbsPath(retval.item))
                 {
                     strncpy(OUTPUT_DIRECTORY, retval.item, CF_BUFSIZE - 1);
-                    CfOut(OUTPUT_LEVEL_VERBOSE, "", "SET output direcory to = %s\n", OUTPUT_DIRECTORY);
+                    Log(LOG_LEVEL_VERBOSE, "SET output direcory to = %s\n", OUTPUT_DIRECTORY);
                 }
                 continue;
             }
@@ -653,7 +628,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy)
         }
     }
 
-    if (ScopeGetVariable("control_common", CFG_CONTROLBODY[COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER].lval, &retval) != DATA_TYPE_NONE)
+    if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
     {
         LASTSEENEXPIREAFTER = IntFromString(retval.item) * 60;
     }
@@ -691,7 +666,7 @@ static void SendClassData(AgentConnection *conn)
     {
         if (SendTransaction(conn->sd, rp->item, 0, CF_DONE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "send", "Transaction failed");
+            Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
             return;
         }
     }
@@ -700,7 +675,7 @@ static void SendClassData(AgentConnection *conn)
 
     if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "send", "Transaction failed");
+        Log(LOG_LEVEL_ERR, "Transaction failed. (send: %s)", GetErrorStr());
         return;
     }
 }
@@ -724,7 +699,7 @@ static void HailExec(AgentConnection *conn, char *peer, char *recvbuffer, char *
 
     if (SendTransaction(conn->sd, sendbuffer, 0, CF_DONE) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "send", "Transmission rejected");
+        Log(LOG_LEVEL_ERR, "Transmission rejected. (send: %s)", GetErrorStr());
         DisconnectServer(conn);
         return;
     }
@@ -799,7 +774,7 @@ static FILE *NewStream(char *name)
 
         if ((fp = fopen(filename, "w")) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open file %s\n", filename);
+            Log(LOG_LEVEL_ERR, "Unable to open file %s\n", filename);
             fp = stdout;
         }
     }

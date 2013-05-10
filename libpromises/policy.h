@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -36,7 +36,7 @@ typedef enum
     POLICY_ELEMENT_TYPE_POLICY,
     POLICY_ELEMENT_TYPE_BUNDLE,
     POLICY_ELEMENT_TYPE_BODY,
-    POLICY_ELEMENT_TYPE_SUBTYPE,
+    POLICY_ELEMENT_TYPE_PROMISE_TYPE,
     POLICY_ELEMENT_TYPE_PROMISE,
     POLICY_ELEMENT_TYPE_CONSTRAINT
 } PolicyElementType;
@@ -71,7 +71,7 @@ struct Bundle_
     char *ns;
     Rlist *args;
 
-    Seq *subtypes;
+    Seq *promise_types;
 
     char *source_path;
     SourceOffset offset;
@@ -92,7 +92,7 @@ struct Body_
     SourceOffset offset;
 };
 
-struct SubType_
+struct PromiseType_
 {
     Bundle *parent_bundle;
 
@@ -104,32 +104,15 @@ struct SubType_
 
 struct Promise_
 {
-    SubType *parent_subtype;
+    PromiseType *parent_promise_type;
 
     char *classes;
-    char *ref;                  /* comment */
-    char ref_alloc;
+    char *comment;
     char *promiser;
     Rval promisee;
-    char *bundle;
-    Audit *audit;
-
     Seq *conlist;
+    bool has_subbundles;
 
-    /* Runtime bus for private flags and work space */
-    char *agentsubtype;         /* cache the promise subtype */
-    char *bundletype;           /* cache the agent type */
-    char *ns;                   /* cache the namespace */
-    int done;                   /* this needs to be preserved across runs */
-    int *donep;                 /* used by locks to mark as done */
-    int makeholes;
-    char *this_server;
-    int has_subbundles;
-    Stat *cache;
-    AgentConnection *conn;
-    CompressedArray *inode_cache;
-    EditContext *edcontext;
-    dev_t rootdevice;           /* for caching during work */
     const Promise *org_pp;            /* A ptr to the unexpanded raw promise */
 
     SourceOffset offset;
@@ -148,7 +131,6 @@ struct Constraint_
 
     char *classes;              /* only used within bodies */
     bool references_body;
-    Audit *audit;
 
     SourceOffset offset;
 };
@@ -212,7 +194,7 @@ void PolicyErrorWrite(Writer *writer, const PolicyError *error);
  * @param errors Sequence of PolicyError to append errors to
  * @return True if no new errors are found
  */
-bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors);
+bool PolicyCheckPartial(const Policy *policy, Seq *errors);
 
 /**
  * @brief Check a runnable policy DOM for errors
@@ -221,7 +203,7 @@ bool PolicyCheckPartial(EvalContext *ctx, const Policy *policy, Seq *errors);
  * @param ignore_missing_bundles Whether to ignore missing bundle references
  * @return True if no new errors are found
  */
-bool PolicyCheckRunnable(EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
+bool PolicyCheckRunnable(const EvalContext *ctx, const Policy *policy, Seq *errors, bool ignore_missing_bundles);
 
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
 Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args, const char *source_path);
@@ -247,8 +229,8 @@ Policy *PolicyFromJson(JsonElement *json_policy);
  */
 void PolicyToString(const Policy *policy, Writer *writer);
 
-SubType *BundleAppendSubType(Bundle *bundle, const char *name);
-SubType *BundleGetSubType(Bundle *bp, const char *name);
+PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name);
+PromiseType *BundleGetPromiseType(Bundle *bp, const char *name);
 
 Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const char *classes, bool references_body);
 
@@ -260,16 +242,26 @@ Constraint *BodyAppendConstraint(Body *body, const char *lval, Rval rval, const 
  */
 Seq *BodyGetConstraint(Body *body, const char *lval);
 
+bool BodyHasConstraint(const Body *body, const char *lval);
+
 const char *ConstraintGetNamespace(const Constraint *cp);
 
-Promise *SubTypeAppendPromise(SubType *type, const char *promiser, Rval promisee, const char *classes);
-void SubTypeDestroy(SubType *subtype);
+Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval promisee, const char *classes);
+void PromiseTypeDestroy(PromiseType *promise_type);
 
 void PromiseDestroy(Promise *pp);
 
-void PromiseHash(const Promise *pp, const char *salt, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type);
-
 Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rval, const char *classes, bool references_body);
+
+const char *PromiseGetNamespace(const Promise *pp);
+const Bundle *PromiseGetBundle(const Promise *pp);
+
+/**
+ * @brief Return handle of the promise.
+ * @param pp
+ * @return Promise handle or NULL if no handle is provided
+ */
+const char *PromiseGetHandle(const Promise *pp);
 
 /**
  * @brief Get the int value of the first effective constraint found matching, from a promise
@@ -277,15 +269,13 @@ Constraint *PromiseAppendConstraint(Promise *promise, const char *lval, Rval rva
  * @param pp
  * @return Int value, or CF_NOINT
  */
-int PromiseGetConstraintAsInt(EvalContext *ctx, const char *lval, const Promise *pp);
+int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Promise *pp);
 
 /**
  * @brief Get the real value of the first effective constraint found matching, from a promise
- * @param lval
- * @param list
- * @return Double value, or CF_NODOUBLE
+ * @return true if value could be extracted
  */
-double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Promise *list);
+bool PromiseGetConstraintAsReal(const EvalContext *ctx, const char *lval, const Promise *list, double *value_out);
 
 /**
  * @brief Get the octal value of the first effective constraint found matching, from a promise
@@ -293,7 +283,7 @@ double PromiseGetConstraintAsReal(EvalContext *ctx, const char *lval, const Prom
  * @param list
  * @return Double value, or 077 if not found
  */
-mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Promise *list);
+mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, const Promise *list);
 
 /**
  * @brief Get the uid value of the first effective constraint found matching, from a promise
@@ -301,7 +291,7 @@ mode_t PromiseGetConstraintAsOctal(EvalContext *ctx, const char *lval, const Pro
  * @param pp
  * @return Uid value, or CF_SAME_OWNER if not found
  */
-uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promise *pp);
+uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const Promise *pp);
 
 /**
  * @brief Get the uid value of the first effective constraint found matching, from a promise
@@ -309,7 +299,7 @@ uid_t PromiseGetConstraintAsUid(EvalContext *ctx, const char *lval, const Promis
  * @param pp
  * @return Gid value, or CF_SAME_GROUP if not found
  */
-gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp);
+gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promise *pp);
 
 /**
  * @brief Get the Rlist value of the first effective constraint found matching, from a promise
@@ -317,9 +307,9 @@ gid_t PromiseGetConstraintAsGid(EvalContext *ctx, char *lval, const Promise *pp)
  * @param list
  * @return Rlist or NULL if not found (note: same as empty list)
  */
-Rlist *PromiseGetConstraintAsList(EvalContext *ctx, const char *lval, const Promise *pp);
+Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, const Promise *pp);
 
-bool PromiseBundleConstraintExists(EvalContext *ctx, const char *lval, const Promise *pp);
+bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, const Promise *pp);
 
 void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp);
 
@@ -329,7 +319,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp);
  * @param list
  * @return True/false, or CF_UNDEFINED if not found
  */
-int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Promise *list);
+int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, const Promise *list);
 
 /**
  * @brief Get the first effective constraint from the promise, also does some checking
@@ -337,7 +327,19 @@ int PromiseGetConstraintAsBoolean(EvalContext *ctx, const char *lval, const Prom
  * @param lval
  * @return Effective constraint if found, otherwise NULL
  */
-Constraint *PromiseGetConstraint(EvalContext *ctx, const Promise *promise, const char *lval);
+Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *promise, const char *lval);
+
+/**
+ * @brief Get the first constraint from the promise. Checks that constraint does
+ * not have any classes attached to it.
+ *
+ * Kill this function with fire once we have separated promise constraints and body constraints.
+ *
+ * @param promise
+ * @param lval
+ * @return Constraint if found, otherwise NULL
+ */
+Constraint *PromiseGetImmediateConstraint(const Promise *promise, const char *lval);
 
 
 void ConstraintDestroy(Constraint *cp);
@@ -356,15 +358,7 @@ const char *ConstraintContext(const Constraint *cp);
  * @param constraints The list of potential candidates
  * @return The effective constraint, or NULL if none are found.
  */
-Constraint *EffectiveConstraint(EvalContext *ctx, Seq *constraints);
-
-/**
- * @brief Replace the rval of a scalar constraint (copies rval)
- * @param conlist
- * @param lval
- * @param rval
- */
-void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
+Constraint *EffectiveConstraint(const EvalContext *ctx, Seq *constraints);
 
 /**
  * @brief Get the Rval value of the first effective constraint that matches the given type
@@ -373,7 +367,21 @@ void ConstraintSetScalarValue(Seq *conlist, const char *lval, const char *rval);
  * @param type
  * @return Rval value if found, NULL otherwise
  */
-void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *promise, RvalType type);
+void *ConstraintGetRvalValue(const EvalContext *ctx, const char *lval, const Promise *promise, RvalType type);
+
+/**
+ * @brief Get the Rval value of the first constraint that matches the given
+ * type. Checks that this constraint does not have any contexts attached.
+ *
+ * Kill this function with fire once we have separated body constraints and bundle constraints.
+ *
+ * @param lval
+ * @param promise
+ * @param type
+ * @return Rval value if found, NULL otherwise
+ */
+void *PromiseGetImmediateRvalValue(const char *lval, const Promise *pp, RvalType rtype);
+
 
 /**
  * @brief Get the trinary boolean value of the first effective constraint found matching
@@ -381,17 +389,22 @@ void *ConstraintGetRvalValue(EvalContext *ctx, const char *lval, const Promise *
  * @param constraints
  * @return True/false, or CF_UNDEFINED if not found
  */
-int ConstraintsGetAsBoolean(EvalContext *ctx, const char *lval, const Seq *constraints);
+int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq *constraints);
 
 
 /**
- * @return A copy of the namespace compoent of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
+ * @return A copy of the namespace component of a qualified name, or NULL. e.g. "foo:bar" -> "foo"
  */
 char *QualifiedNameNamespaceComponent(const char *qualified_name);
 
 /**
  * @return A copy of the symbol compoent of a qualified name, or NULL. e.g. "foo:bar" -> "bar"
  */
-char *QualifiedNameSymbolComponent(const char *qualified_name);
+char *QualifiedNameScopeComponent(const char *qualified_name);
+
+/**
+ * @brief Check whether the promise type is allowed one
+ */
+bool BundleTypeCheck(const char *name);
 
 #endif

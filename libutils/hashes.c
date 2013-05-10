@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,19 +17,12 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
 
 #include "hashes.h"
-
-int GetHash(const char *key, unsigned int max)
-{
-    return OatHash(key, max);
-}
-
-/*****************************************************************************/
 
 int OatHash(const char *key, unsigned int max)
 {
@@ -51,42 +44,38 @@ int OatHash(const char *key, unsigned int max)
     return (h & (max - 1));
 }
 
-/*****************************************************************************/
-
-int RefHash(char *name, unsigned int max)         // This function wants max to be prime
+int FileChecksum(const char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1])
 {
-    int i, slot = 0;
-    unsigned int macro_alphabet_size = 61;
-
-    for (i = 0; name[i] != '\0'; i++)
+    FILE *file = fopen(filename, "rb");
+    if (!file)
     {
-        slot = (macro_alphabet_size * slot + name[i]) % max;
+        printf("%s can't be opened\n", filename);
+        return 0;
     }
-
-    return slot;
-}
-
-/*****************************************************************************/
-
-int ElfHash(char *key, unsigned int max)
-{
-    unsigned char *p = key;
-    int len = strlen(key);
-    unsigned h = 0, g;
-    int i;
-
-    for (i = 0; i < len; i++)
+    else
     {
-        h = (h << 4) + p[i];
-        g = h & 0xf0000000L;
+        const EVP_MD *md = EVP_get_digestbyname("md5");
 
-        if (g != 0)
+        if (!md)
         {
-            h ^= g >> 24;
+            fclose(file);
+            return 0;
         }
 
-        h &= ~g;
-    }
+        EVP_MD_CTX context;
+        EVP_DigestInit(&context, md);
 
-    return (h & (max - 1));
+        int len = 0;
+        unsigned char buffer[1024];
+        while ((len = fread(buffer, 1, 1024, file)))
+        {
+            EVP_DigestUpdate(&context, buffer, len);
+        }
+
+        unsigned int md_len = 0;
+        EVP_DigestFinal(&context, digest, &md_len);
+        fclose(file);
+
+        return md_len;
+    }
 }

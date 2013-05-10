@@ -10,13 +10,19 @@ bundle agent main
 {
 reports:
   cfengine::
+    "Hello, CFEngine"
+      friend_pattern => hash("abc", "md5");
+  any::
     "Hello, world"
       friend_pattern => hash("abc", "md5");
 
 files:
-  "/tmp/stuff"
+  "/tmp/stuff" -> { "stakeholder" }
     create => "true",
     perms => myperms;
+
+processes:
+  "/bin/stuff" -> { "stakeholder" };
 }
 
 body perms myperms

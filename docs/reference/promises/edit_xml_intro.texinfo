@@ -3,3 +3,8 @@ The use of XML documents in systems configuration is widespread. XML documents
 represent data that is complex and can be structured in various ways. The XML
 based editing offers a powerful environment for editing hierarchical and
 structured XML datasets.
+
+Please Note: Using edit_xml promise types will modify whitespace and tag format
+in the resulting edited document. This is standard behavior of an XML parser, and
+cannot be avoided. Please take this behavior into consideration when using the
+edit_xml promise types.

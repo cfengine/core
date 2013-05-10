@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-graph_directory => "/tmp/output";
-}
-
-@end verbatim

@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -37,7 +37,7 @@ Set *SetNew(MapHashFn element_hash_fn,
     return MapNew(element_hash_fn, element_equal_fn, element_destroy_fn, NULL);
 }
 
-void SetDestroy(void *set)
+void SetDestroy(Set *set)
 {
     MapDestroy(set);
 }
@@ -62,6 +62,11 @@ void SetClear(Set *set)
     MapClear(set);
 }
 
+size_t SetSize(const Set *set)
+{
+    return MapSize(set);
+}
+
 SetIterator SetIteratorInit(Set *set)
 {
     return MapIteratorInit(set);
@@ -81,11 +86,11 @@ StringSet *StringSetFromString(const char *str, char delimiter)
     delimiters[0] = delimiter;
 
     char *copy = xstrdup(str);
-    char *curr = strtok(copy, delimiters);
-    while (curr)
+    char *curr = NULL;
+
+    while ((curr = strsep(&copy, delimiters)))
     {
         StringSetAdd(set, xstrdup(curr));
-        curr = strtok(NULL, delimiters);
     }
 
     free(copy);

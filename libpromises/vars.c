@@ -1,88 +1,50 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "vars.h"
 
 #include "conversion.h"
-#include "reporting.h"
 #include "expand.h"
 #include "scope.h"
 #include "matching.h"
 #include "hashes.h"
 #include "unix.h"
-#include "cfstream.h"
-#include "logging.h"
 #include "misc_lib.h"
 #include "rlist.h"
 #include "policy.h"
 
 static int IsCf3Scalar(char *str);
 
-void LoadSystemConstants()
+void LoadSystemConstants(EvalContext *ctx)
 {
-    ScopeNewScalar("const", "dollar", "$", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "n", "\n", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "r", "\r", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "t", "\t", DATA_TYPE_STRING);
-    ScopeNewScalar("const", "endl", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "dollar", "$", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "n", "\n", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "r", "\r", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "t", "\t", DATA_TYPE_STRING);
+    ScopeNewSpecialScalar(ctx, "const", "endl", "\n", DATA_TYPE_STRING);
 /* NewScalar("const","0","\0",cf_str);  - this cannot work */
 
-}
-
-/*******************************************************************/
-
-int UnresolvedVariables(CfAssoc *ap, char rtype)
-{
-    Rlist *list, *rp;
-
-    if (ap == NULL)
-    {
-        return false;
-    }
-
-    switch (rtype)
-    {
-    case RVAL_TYPE_SCALAR:
-        return IsCf3VarString(ap->rval.item);
-
-    case RVAL_TYPE_LIST:
-        list = (Rlist *) ap->rval.item;
-
-        for (rp = list; rp != NULL; rp = rp->next)
-        {
-            if (IsCf3VarString(rp->item))
-            {
-                return true;
-            }
-        }
-
-        return false;
-
-    default:
-        return false;
-    }
 }
 
 /*******************************************************************/
@@ -100,9 +62,12 @@ int UnresolvedArgs(Rlist *args)
 
         if (IsCf3Scalar(rp->item))
         {
-            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}"))
+            if (strstr(rp->item, "$(this)") || strstr(rp->item, "${this}") ||
+                strstr(rp->item, "$(this.k)") || strstr(rp->item, "${this.k}") ||
+                strstr(rp->item, "$(this.v)") || strstr(rp->item, "${this.v}"))
             {
                 // We should allow this in function args for substitution in maplist() etc
+                // We should allow this.k and this.v in function args for substitution in maparray() etc
             }
             else
             {
@@ -359,13 +324,13 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             break;
 
         default:
-            if (isalnum((int) *sp) || strchr("_[]$.:-", *sp))
+            if (isalnum((int) *sp) || strchr("_[]$.:-# ", *sp))
             {
             }
             else
             {
                 CfDebug("Illegal character found: '%c'\n", *sp);
-                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion", str);
+                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
             }
         }
 

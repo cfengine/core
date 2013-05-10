@@ -1,24 +1,23 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,16 +26,14 @@
 
 #include "files_names.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
 #include "string_lib.h"
 #include "misc_lib.h"
 #include "generic_agent.h" // CloseLog
 
 /********************************************************************/
 
-int GetExecOutput(const char *command, char *buffer, int useshell)
+bool GetExecOutput(const char *command, char *buffer, bool useshell)
 /* Buffer initially contains whole exec string */
 {
     int offset = 0;
@@ -51,39 +48,35 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
     }
     else
     {
-        pp = cf_popen(command, "r");
+        pp = cf_popen(command, "r", true);
     }
 
     if (pp == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "cf_popen", "Couldn't open pipe to command %s\n", command);
+        Log(LOG_LEVEL_ERR, "Couldn't open pipe to command '%s'. (cf_popen: %s)", command, GetErrorStr());
         return false;
     }
 
     memset(buffer, 0, CF_EXPANDSIZE);
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (ferror(pp))         /* abortable */
+        ssize_t res = CfReadLine(line, CF_EXPANDSIZE, pp);
+        if (res == 0)
         {
-            fflush(pp);
             break;
         }
 
-        if (CfReadLine(line, CF_EXPANDSIZE, pp) == -1)
+        if (res == -1)
         {
-            FatalError("Error in CfReadLine");
-        }
-
-        if (ferror(pp))         /* abortable */
-        {
-            fflush(pp);
-            break;
+            Log(LOG_LEVEL_ERR, "Unable to read output of command '%s'. (fread: %s)", command, GetErrorStr());
+            cf_pclose(pp);
+            return false;
         }
 
         if (strlen(line) + offset > CF_EXPANDSIZE - 10)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Buffer exceeded %d bytes in exec %s\n", CF_EXPANDSIZE, command);
+            Log(LOG_LEVEL_ERR, "Buffer exceeded %d bytes in exec '%s'", CF_EXPANDSIZE, command);
             break;
         }
 
@@ -96,7 +89,7 @@ int GetExecOutput(const char *command, char *buffer, int useshell)
     {
         if (Chop(buffer, CF_EXPANDSIZE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
     }
 
@@ -126,12 +119,12 @@ void ActAsDaemon(int preserve)
     {
         if (dup2(fd, STDIN_FILENO) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "dup2", "Could not dup");
+            Log(LOG_LEVEL_ERR, "Could not dup. (dup2: %s)", GetErrorStr());
         }
 
         if (dup2(fd, STDOUT_FILENO) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "dup2", "Could not dup");
+            Log(LOG_LEVEL_ERR, "Could not dup. (dup2: %s)", GetErrorStr());
         }
 
         dup2(fd, STDERR_FILENO);

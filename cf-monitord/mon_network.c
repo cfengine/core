@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -29,9 +29,7 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
-#include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
 
 /* Globals */
 
@@ -197,19 +195,29 @@ void MonNetworkGatherData(double *cf_this)
 
     strcat(comm, " -an");
 
-    if ((pp = cf_popen(comm, "r")) == NULL)
+    if ((pp = cf_popen(comm, "r", true)) == NULL)
     {
+        /* FIXME: no logging */
         return;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
         memset(local, 0, CF_BUFSIZE);
         memset(remote, 0, CF_BUFSIZE);
 
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        size_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
+            cf_pclose(pp);
+            return;
         }
 
         if (strstr(vbuff, "UNIX"))
@@ -372,11 +380,11 @@ void MonNetworkGatherData(double *cf_this)
 
         CfDebug("save incoming %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(in[i]);
                 continue;
             }
@@ -396,11 +404,11 @@ void MonNetworkGatherData(double *cf_this)
         CfDebug("save outgoing %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
 
-        if (cfstat(vbuff, &statbuf) != -1)
+        if (stat(vbuff, &statbuf) != -1)
         {
             if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(out[i]);
                 continue;
             }

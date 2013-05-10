@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -52,6 +52,12 @@ typedef enum
     VARREF
 } StringOp;
 
+typedef enum
+{
+    VAR_REF_TYPE_SCALAR,
+    VAR_REF_TYPE_LIST
+} VarRefType;
+
 typedef struct StringExpression_ StringExpression;
 
 struct StringExpression_
@@ -73,6 +79,7 @@ struct StringExpression_
         struct
         {
             StringExpression *name;
+            VarRefType type;
         } varref;
     } val;
 };
@@ -101,7 +108,7 @@ StringParseResult ParseStringExpression(const char *expr, int start, int end);
  * evaluation will be aborted and NULL will be returned from
  * EvalStringExpression.
  */
-typedef char *(*VarRefEvaluator) (const char *varname, void *param);
+typedef char *(*VarRefEvaluator) (const char *varname, VarRefType type, void *param);
 
 /*
  * Result is heap-allocated. In case evalfn() returns NULL whole

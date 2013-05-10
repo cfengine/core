@@ -1,0 +1,51 @@
+#######################################################
+#
+# Check that we can use ifvarclass in common bundle class expressions
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle common init
+{
+classes:
+    "initclass" expression => "any";
+}
+
+#######################################################
+
+bundle common test
+{
+classes:
+    "shouldset" expression => "any", ifvarclass => "initclass";
+    "shouldnot" expression => "any", ifvarclass => "notaclass";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+    "classes" slist => { "shouldset", "shouldnot" };
+
+classes:
+     shouldset.!shouldnot::
+        "ok" expression => "any";
+
+reports:
+    DEBUG::
+        "$(classes) is set" ifvarclass => "$(classes)";
+        "$(classes) is not" ifvarclass => "!$(classes)";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

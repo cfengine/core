@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -31,7 +31,8 @@ struct FnCall_
 {
     char *name;
     Rlist *args;
-    char *ns;
+
+    const Promise *caller;
 };
 
 bool FnCallIsBuiltIn(Rval rval);
@@ -39,9 +40,11 @@ bool FnCallIsBuiltIn(Rval rval);
 FnCall *FnCallNew(const char *name, Rlist *args);
 FnCall *FnCallCopy(const FnCall *f);
 void FnCallDestroy(FnCall *fp);
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp);
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller);
 
 const FnCallType *FnCallTypeGet(const char *name);
+
+FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f);
 
 // TODO: should probably demolish this eventually
 void FnCallShow(FILE *fout, const FnCall *fp);

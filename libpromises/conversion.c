@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -29,8 +29,6 @@
 #include "dbm_api.h"
 #include "mod_access.h"
 #include "item_lib.h"
-#include "reporting.h"
-#include "cfstream.h"
 #include "logging.h"
 #include "rlist.h"
 
@@ -40,7 +38,7 @@ static int IsSpace(char *remainder);
 
 /***************************************************************/
 
-char *MapAddress(char *unspec_address)
+const char *MapAddress(const char *unspec_address)
 {                               /* Is the address a mapped ipv4 over ipv6 address */
 
     if (strncmp(unspec_address, "::ffff:", 7) == 0)
@@ -214,13 +212,6 @@ ContextScope ContextScopeFromString(const char *scope_str)
     return FindTypeInArray(CONTEXT_SCOPES, scope_str, CONTEXT_SCOPE_NAMESPACE, CONTEXT_SCOPE_NONE);
 }
 
-OutputLevel OutputLevelFromString(const char *level)
-{
-    static const char *REPORT_LEVEL_TYPES[] = { "inform", "verbose", "error", "log", NULL };
-
-    return FindTypeInArray(REPORT_LEVEL_TYPES, level, OUTPUT_LEVEL_NONE, OUTPUT_LEVEL_NONE);
-}
-
 FileLinkType FileLinkTypeFromString(const char *s)
 {
     static const char *LINK_TYPES[] = { "symlink", "hardlink", "relative", "absolute", NULL };
@@ -236,30 +227,50 @@ FileComparator FileComparatorFromString(const char *s)
     return FindTypeInArray(FILE_COMPARISON_TYPES, s, FILE_COMPARATOR_NONE, FILE_COMPARATOR_NONE);
 }
 
-DataType DataTypeFromString(const char *name)
-/* convert abstract data type names: int, ilist etc */
+static const char *datatype_strings[] =
 {
-    int i;
+    [DATA_TYPE_STRING] = "string",
+    [DATA_TYPE_INT] = "int",
+    [DATA_TYPE_REAL] = "real",
+    [DATA_TYPE_STRING_LIST] = "slist",
+    [DATA_TYPE_INT_LIST] = "ilist",
+    [DATA_TYPE_REAL_LIST] = "rlist",
+    [DATA_TYPE_OPTION] = "option",
+    [DATA_TYPE_OPTION_LIST] = "olist",
+    [DATA_TYPE_BODY] = "body",
+    [DATA_TYPE_BUNDLE] = "bundle",
+    [DATA_TYPE_CONTEXT] = "context",
+    [DATA_TYPE_CONTEXT_LIST] = "clist",
+    [DATA_TYPE_INT_RANGE] = "irange",
+    [DATA_TYPE_REAL_RANGE] = "rrange",
+    [DATA_TYPE_COUNTER] = "counter",
+    [DATA_TYPE_NONE] = "none"
+};
 
-    CfDebug("typename2type(%s)\n", name);
-
-    for (i = 0; i < (int) DATA_TYPE_NONE; i++)
+DataType DataTypeFromString(const char *name)
+{
+    for (int i = 0; i < DATA_TYPE_NONE; i++)
     {
-        if (name && (strcmp(CF_DATATYPES[i], name) == 0))
+        if (strcmp(datatype_strings[i], name) == 0)
         {
-            break;
+            return i;
         }
     }
 
-    return (DataType) i;
+    return DATA_TYPE_NONE;
 }
 
+const char *DataTypeToString(DataType type)
+{
+    assert(type < DATA_TYPE_NONE);
+    return datatype_strings[type];
+}
 
-DataType BodySyntaxGetDataType(const BodySyntax *body_syntax, const char *lval)
+DataType ConstraintSyntaxGetDataType(const ConstraintSyntax *body_syntax, const char *lval)
 {
     int i = 0;
 
-    for (i = 0; body_syntax[i].range != NULL; i++)
+    for (i = 0; body_syntax[i].lval != NULL; i++)
     {
         if (lval && (strcmp(body_syntax[i].lval, lval) == 0))
         {
@@ -332,11 +343,11 @@ long IntFromString(const char *s)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
+            Log(LOG_LEVEL_INFO, "Error reading assumed integer value \"%s\" => \"%s\" (found remainder \"%s\")\n",
                   s, "non-value", remainder);
             if (strchr(s, '$'))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! The variable might not yet be expandable - not necessarily an error");
+                Log(LOG_LEVEL_INFO, "The variable might not yet be expandable - not necessarily an error");
             }
         }
     }
@@ -365,7 +376,7 @@ long IntFromString(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%ld)", a);
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%ld)", a);
                 return CF_NOINT;
             }
             else
@@ -453,7 +464,7 @@ long TimeAbs2Int(const char *s)
 
     cftime += (year - 1970) * 365 * 24 * 3600;
 
-    CfDebug("Time %s CORRESPONDS %s\n", s, cf_ctime(&cftime));
+    CfDebug("Time %s CORRESPONDS %s\n", s, ctime(&cftime));
     return (long) cftime;
 }
 
@@ -516,26 +527,27 @@ int Day2Number(const char *datestring)
 
 /****************************************************************************/
 
-double DoubleFromString(const char *s)
+bool DoubleFromString(const char *s, double *value_out)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+
+    double a = NO_DOUBLE;
     char remainder[CF_BUFSIZE];
-    char output[CF_BUFSIZE];
     char c = 'X';
 
     if (s == NULL)
     {
-        return CF_NODOUBLE;
+        return false;
     }
 
     remainder[0] = '\0';
 
     sscanf(s, "%lf%c%s", &a, &c, remainder);
 
-    if ((a == CF_NODOUBLE) || (!IsSpace(remainder)))
+    if ((a == NO_DOUBLE) || (!IsSpace(remainder)))
     {
-        snprintf(output, CF_BUFSIZE, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
-        ReportError(output);
+        Log(LOG_LEVEL_ERR, "Error reading assumed real value %s (anomalous remainder %s)\n", s, remainder);
+        return false;
     }
     else
     {
@@ -562,8 +574,8 @@ double DoubleFromString(const char *s)
         case '%':
             if ((a < 0) || (a > 100))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "", "Percentage out of range (%.2lf)", a);
-                return CF_NOINT;
+                Log(LOG_LEVEL_ERR, "Percentage out of range (%.2lf)", a);
+                return false;
             }
             else
             {
@@ -580,12 +592,16 @@ double DoubleFromString(const char *s)
         }
     }
 
-    return a;
+    *value_out = a;
+    return true;
 }
 
 /****************************************************************************/
 
-void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
+/**
+ * @return true if successful
+ */
+bool IntegerRangeFromString(const char *intrange, long *min_out, long *max_out)
 {
     Item *split;
     long lmax = CF_LOWINIT, lmin = CF_HIGHINIT;
@@ -594,9 +610,9 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if (intrange == NULL)
     {
-        *min = CF_NOINT;
-        *max = CF_NOINT;
-        return;
+        *min_out = CF_NOINT;
+        *max_out = CF_NOINT;
+        return true;
     }
 
     split = SplitString(intrange, ',');
@@ -616,12 +632,12 @@ void IntRange2Int(char *intrange, long *min, long *max, const Promise *pp)
 
     if ((lmin == CF_HIGHINIT) || (lmax == CF_LOWINIT))
     {
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
-        FatalError("Could not make sense of integer range [%s]", intrange);
+        return false;
     }
 
-    *min = lmin;
-    *max = lmax;
+    *min_out = lmin;
+    *max_out = lmax;
+    return true;
 }
 
 AclMethod AclMethodFromString(const char *string)
@@ -638,45 +654,58 @@ AclType AclTypeFromString(const char *string)
     return FindTypeInArray(ACL_TYPES, string, ACL_TYPE_NONE, ACL_TYPE_NONE);
 }
 
-AclInheritance AclInheritanceFromString(const char *string)
+/* For the deprecated attribute acl_directory_inherit. */
+AclDefault AclInheritanceFromString(const char *string)
 {
     static const char *ACL_INHERIT_TYPES[5] = { "nochange", "specify", "parent", "clear", NULL };
 
-    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_INHERITANCE_NONE, ACL_INHERITANCE_NONE);
+    return FindTypeInArray(ACL_INHERIT_TYPES, string, ACL_DEFAULT_NONE, ACL_DEFAULT_NONE);
+}
+
+AclDefault AclDefaultFromString(const char *string)
+{
+    static const char *ACL_DEFAULT_TYPES[5] = { "nochange", "specify", "access", "clear", NULL };
+
+    return FindTypeInArray(ACL_DEFAULT_TYPES, string, ACL_DEFAULT_NONE, ACL_DEFAULT_NONE);
+}
+
+AclInherit AclInheritFromString(const char *string)
+{
+    char *start, *end;
+    char *options = CF_BOOL ",nochange";
+    int i;
+    int size;
+
+    if (string == NULL)
+    {
+        return ACL_INHERIT_NOCHANGE;
+    }
+
+    start = options;
+    size = strlen(string);
+    for (i = 0;; i++)
+    {
+        end = strchr(start, ',');
+        if (end == NULL)
+        {
+            break;
+        }
+        if (size == end - start && strncmp(string, start, end - start) == 0)
+        {
+            // Even i is true, odd i is false (from CF_BOOL).
+            return (i & 1) ? ACL_INHERIT_FALSE : ACL_INHERIT_TRUE;
+        }
+        start = end + 1;
+    }
+    return ACL_INHERIT_NOCHANGE;
 }
 
 ServicePolicy ServicePolicyFromString(const char *string)
 {
-    static const char *SERVICE_POLICY_TYPES[5] = { "start", "stop", "disable", "restart", NULL };
+    static const char *SERVICE_POLICY_TYPES[] = { "start", "stop", "disable", "restart", "reload", NULL };
 
     return FindTypeInArray(SERVICE_POLICY_TYPES, string, SERVICE_POLICY_START, SERVICE_POLICY_START);
 }
-
-const char *DataTypeToString(DataType dtype)
-{
-    switch (dtype)
-    {
-    case DATA_TYPE_STRING:
-        return "s";
-    case DATA_TYPE_STRING_LIST:
-        return "sl";
-    case DATA_TYPE_INT:
-        return "i";
-    case DATA_TYPE_INT_LIST:
-        return "il";
-    case DATA_TYPE_REAL:
-        return "r";
-    case DATA_TYPE_REAL_LIST:
-        return "rl";
-    case DATA_TYPE_OPTION:
-        return "m";
-    case DATA_TYPE_OPTION_LIST:
-        return "ml";
-    default:
-        return "D?";
-    }
-}
-
 
 const char *DataTypeShortToType(char *short_type)
 {
@@ -725,18 +754,7 @@ const char *DataTypeShortToType(char *short_type)
     return "unknown type";
 }
 
-/*********************************************************************/
-/* Level                                                             */
-/*********************************************************************/
-
 int Month2Int(const char *string)
-{
-    return MonthLen2Int(string, MAX_MONTH_NAME);
-}
-
-/*************************************************************/
-
-int MonthLen2Int(const char *string, int len)
 {
     int i;
 
@@ -767,7 +785,7 @@ void TimeToDateStr(time_t t, char *outStr, int outStrSz)
     char month[CF_SMALLBUF], day[CF_SMALLBUF], year[CF_SMALLBUF];
     char tmp[CF_SMALLBUF];
 
-    snprintf(tmp, sizeof(tmp), "%s", cf_ctime(&t));
+    snprintf(tmp, sizeof(tmp), "%s", ctime(&t));
     sscanf(tmp, "%*s %5s %3s %*s %5s", month, day, year);
     snprintf(outStr, outStrSz, "%s %s %s", day, month, year);
 }
@@ -847,13 +865,14 @@ static int IsSpace(char *remainder)
 
 /*******************************************************************/
 
-int IsRealNumber(const char *s)
+bool IsRealNumber(const char *s)
 {
-    double a = CF_NODOUBLE;
+    static const double NO_DOUBLE = -123.45;
+    double a = NO_DOUBLE;
 
     sscanf(s, "%lf", &a);
 
-    if (a == CF_NODOUBLE)
+    if (a == NO_DOUBLE)
     {
         return false;
     }
@@ -1003,11 +1022,11 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         {
             if ((pw = getpwnam(ip->name)) == NULL)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user in promise \'%s\'\n", ip->name);
+                Log(LOG_LEVEL_INFO, "Unknown user in promise \'%s\'\n", ip->name);
 
                 if (pp != NULL)
                 {
-                    PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                    PromiseRef(LOG_LEVEL_INFO, pp);
                 }
 
                 uid = CF_UNKNOWN_OWNER; /* signal user not found */
@@ -1040,7 +1059,7 @@ uid_t Str2Uid(char *uidbuff, char *usercopy, const Promise *pp)
         }
         else if ((pw = getpwnam(uidbuff)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown user %s in promise\n", uidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown user %s in promise\n", uidbuff);
             uid = CF_UNKNOWN_OWNER;     /* signal user not found */
 
             if (usercopy != NULL)
@@ -1077,11 +1096,11 @@ gid_t Str2Gid(char *gidbuff, char *groupcopy, const Promise *pp)
         }
         else if ((gr = getgrnam(gidbuff)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unknown group \'%s\' in promise\n", gidbuff);
+            Log(LOG_LEVEL_INFO, "Unknown group \'%s\' in promise\n", gidbuff);
 
             if (pp)
             {
-                PromiseRef(OUTPUT_LEVEL_INFORM, pp);
+                PromiseRef(LOG_LEVEL_INFO, pp);
             }
 
             gid = CF_UNKNOWN_GROUP;

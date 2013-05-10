@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "fncall.h"
@@ -29,7 +28,6 @@
 #include "files_names.h"
 #include "expand.h"
 #include "vars.h"
-#include "cfstream.h"
 #include "args.h"
 #include "evalfunction.h"
 #include "policy.h"
@@ -96,26 +94,18 @@ void FnCallDestroy(FnCall *fp)
 {
     if (fp)
     {
-        if (fp->name)
-        {
-            free(fp->name);
-        }
-
-        if (fp->args)
-        {
-            RlistDestroy(fp->args);
-        }
-
-        free(fp);
+        free(fp->name);
+        RlistDestroy(fp->args);
     }
+    free(fp);
 }
 
 /*********************************************************************/
 
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked)
+FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
 {
     CfDebug("ExpandFnCall()\n");
-    return FnCallNew(f->name, ExpandList(contextid, f->args, false));
+    return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
 }
 
 
@@ -148,12 +138,12 @@ void FnCallShow(FILE *fout, const FnCall *fp)
 
 /*******************************************************************/
 
-FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
+FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
 {
     Rlist *expargs;
-    const FnCallType *this = FnCallTypeGet(fp->name);
+    const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
-    if (this)
+    if (fp_type)
     {
         if (DEBUG)
         {
@@ -164,14 +154,14 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
     }
     else
     {
-        if (pp)
+        if (caller)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
-                  fp->name, pp->audit->filename, pp->offset.line);
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
+                  fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
         }
 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
@@ -179,12 +169,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
 
 /* If the container classes seem not to be defined at this stage, then don't try to expand the function */
 
-    if ((pp != NULL) && !IsDefinedClass(ctx, pp->classes, pp->ns))
+    if ((caller != NULL) && !IsDefinedClass(ctx, caller->classes, PromiseGetNamespace(caller)))
     {
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    expargs = NewExpArgs(ctx, fp, pp);
+    expargs = NewExpArgs(ctx, fp, caller);
 
     if (UnresolvedArgs(expargs))
     {
@@ -192,16 +182,9 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *pp)
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };
     }
 
-    if (pp != NULL)
-    {
-        fp->ns = pp->ns;
-    }
-    else
-    {
-        fp->ns = "default";
-    }
-    
-    FnCallResult result = CallFunction(ctx, this, fp, expargs);
+    fp->caller = caller;
+
+    FnCallResult result = CallFunction(ctx, fp_type, fp, expargs);
 
     if (result.status == FNCALL_FAILURE)
     {

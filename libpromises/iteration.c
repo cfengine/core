@@ -1,24 +1,23 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,8 +26,8 @@
 
 #include "scope.h"
 #include "vars.h"
-#include "cfstream.h"
 #include "fncall.h"
+#include "env_context.h"
 
 static void DeleteReferenceRlist(Rlist *list);
 
@@ -94,7 +93,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     CfDebug("\n*\nNewIterationContext(from %s)\n*\n", scopeid);
 
-    ScopeCopy("this", scopeid);
+    ScopeCopy("this", ScopeGet(scopeid));
 
     ScopeGet("this");
 
@@ -106,13 +105,12 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     for (Rlist *rp = namelist; rp != NULL; rp = rp->next)
     {
-        dtype = ScopeGetVariable(scopeid, rp->item, &retval);
-
-        if (dtype == DATA_TYPE_NONE)
+        dtype = DATA_TYPE_NONE;
+        if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
-            CfOut(OUTPUT_LEVEL_ERROR, "",
-                  " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR,
+                  "Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
         }
 
@@ -158,7 +156,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
 void DeleteIterationContext(Rlist *deref)
 {
-    ScopeDelete("this");
+    ScopeClear("this");
 
     if (deref != NULL)
     {
@@ -191,7 +189,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
 /* Go ahead and increment */
 
-    CfDebug(" -> Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
+    CfDebug("Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
 
     if (state->next == NULL)
     {

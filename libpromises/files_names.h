@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,7 +27,16 @@
 
 #include "cf3.defs.h"
 
-int IsNewerFileTree(EvalContext *ctx, char *dir, time_t reftime);
+typedef enum
+{
+    FILE_PATH_TYPE_ABSOLUTE, // /foo.cf
+    FILE_PATH_TYPE_RELATIVE, // ./../foo.cf
+    FILE_PATH_TYPE_NON_ANCHORED, // foo.cf
+} FilePathType;
+
+FilePathType FilePathGetType(const char *file_path);
+
+int IsNewerFileTree(char *dir, time_t reftime);
 int CompareCSVName(const char *s1, const char *s2);
 int IsDir(char *path);
 char *JoinPath(char *path, const char *leaf);
@@ -38,7 +47,7 @@ char *GetParentDirectoryCopy(const char *path);
 void DeleteSlash(char *str);
 const char *FirstFileSeparator(const char *str);
 const char *LastFileSeparator(const char *str);
-int ChopLastNode(char *str);
+bool ChopLastNode(char *str);
 char *CanonifyName(const char *str);
 void CanonifyNameInPlace(char *str);
 void TransformNameInPlace(char *s, char from, char to);

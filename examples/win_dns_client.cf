@@ -5,7 +5,6 @@
 body common control
 {
 bundlesequence => { "windows_dns" };
-host_licenses_paid => "1";
 }
 
 bundle agent windows_dns

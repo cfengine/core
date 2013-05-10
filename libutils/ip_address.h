@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -63,4 +63,12 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   @return A valid port for connections or -1 if it was not available.
   */
 int IPAddressGetPort(IPAddress *address);
+/**
+  @brief Compares two ip addresses.
+  @param a IP address of the first object.
+  @param b IP address of the second object.
+  @return 1 if both addresses are equal, 0 if they are not and -1 in case of error.
+  */
+int IPAddressIsEqual(IPAddress *a, IPAddress *b);
+
 #endif // CFENGINE_IP_ADDRESS_H

@@ -6,11 +6,9 @@
 /*                                                                           */
 /*****************************************************************************/
 
-#define true 1
-
+#include "platform.h"
 #include <stdio.h>
 #include <string.h>
-#include "platform.h"
 
 struct Item
    {
@@ -32,6 +30,12 @@ int main(int argc, char *argv[])
   struct Item *ip,*contents = NULL;
   char buffer[1024],type[1024],control[1024],data[1024],name[1024];
 
+  if (argc != 2)
+  {
+      fprintf(stderr, "Usage: build-stdlib <cfengine-stdlib.cf>\n");
+      return 1;
+  }
+
 if ((fin = fopen(argv[1],"r")) == NULL)
    {
    printf("Could not open the %s file\n", argv[1]);
@@ -45,7 +49,7 @@ while(!feof(fin))
    control[0] = '\0';
    data[0] = '\0';
    type[0] = '\0';
-   fgets(buffer,1023,fin);
+   fgets(buffer, sizeof(buffer),fin);
 
    if (strncmp(buffer,"##",2) == 0)
       {
@@ -137,7 +141,7 @@ if ((fp = fopen(file,"r")) == NULL)
 while(!feof(fp))
    {
    buffer[0] = '\0';
-   fgets(buffer,1023,fp);
+   fgets(buffer, sizeof(buffer),fp);
    fprintf(fout,"%s",buffer);
    }
 
@@ -197,7 +201,7 @@ else
 
 struct Item *SortItemListNames(struct Item *list) /* Alphabetical */
 
-{ struct Item *p, *q, *e, *tail, *oldhead;
+{ struct Item *p, *q, *e, *tail;
   int insize, nmerges, psize, qsize, i;
 
 if (list == NULL)
@@ -210,7 +214,6 @@ insize = 1;
 while (true)
    {
    p = list;
-   oldhead = list;                /* only used for circular linkage */
    list = NULL;
    tail = NULL;
    

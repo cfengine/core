@@ -1,11 +1,12 @@
 #include "cf3.defs.h"
 
-#include "transaction.h"
+#include "locks.h"
 
 #include "test.h"
 
 static void tests_setup(void)
 {
+    /* FIXME: get rid of hardcoded filenames */
     snprintf(CFWORKDIR, CF_BUFSIZE, "/tmp/persistent_lock_test.XXXXXX");
     mkdtemp(CFWORKDIR);
 
@@ -21,7 +22,7 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-static void test_lock_acquire_by_id(void **state)
+static void test_lock_acquire_by_id(void)
 {
     bool result;
     char *lock_id = "testlock1";
@@ -38,7 +39,7 @@ static void test_lock_acquire_by_id(void **state)
     assert_true(result);
 }
 
-static void test_lock_invalidate(void **state)
+static void test_lock_invalidate(void)
 {
     bool result;
     time_t lock_time;

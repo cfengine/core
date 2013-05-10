@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -30,11 +30,10 @@
 #include "vars.h"
 #include "conversion.h"
 #include "attributes.h"
-#include "cfstream.h"
-#include "transaction.h"
-#include "logging.h"
+#include "locks.h"
 #include "policy.h"
 #include "scope.h"
+#include "ornaments.h"
 
 #ifdef HAVE_LIBVIRT
 /*****************************************************************************/
@@ -76,16 +75,16 @@ static int EnvironmentsSanityChecks(Attributes a, Promise *pp);
 static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp);
 static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
 static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors envtype, Attributes a, Promise *pp);
-static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
-static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp);
+static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
+static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static void EnvironmentErrorHandler(void);
 static void ShowRunList(virConnectPtr vc);
-static void ShowDormant(virConnectPtr vc);
+static void ShowDormant(void);
 static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp);
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp);
 static enum cfhypervisors Str2Hypervisors(char *s);
 
 /*****************************************************************************/
@@ -127,17 +126,15 @@ void VerifyEnvironmentsPromise(EvalContext *ctx, Promise *pp)
 
     if (EnvironmentsSanityChecks(a, pp))
     {
-        thislock = AcquireLock("virtual", VUQNAME, CFSTARTTIME, a, pp, false);
+        thislock = AcquireLock(ctx, "virtual", VUQNAME, CFSTARTTIME, a.transaction, pp, false);
 
         if (thislock.lock == NULL)
         {
             return;
         }
 
-        CF_OCCUR++;
-
-        PromiseBanner(ctx, pp);
-        ScopeNewScalar("this", "promiser", pp->promiser, DATA_TYPE_STRING);
+        PromiseBanner(pp);
+        ScopeNewSpecialScalar(ctx, "this", "promiser", pp->promiser, DATA_TYPE_STRING);
 
         pexp = ExpandDeRefPromise(ctx, "this", pp);
         VerifyEnvironments(ctx, a, pp);
@@ -155,15 +152,15 @@ static int EnvironmentsSanityChecks(Attributes a, Promise *pp)
     {
         if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Conflicting promise of both a spec and cpu/memory/disk resources");
+            Log(LOG_LEVEL_ERR, "Conflicting promise of both a spec and cpu/memory/disk resources");
             return false;
         }
     }
 
     if (a.env.host == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! No environment_host defined for environment promise");
-        PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+        Log(LOG_LEVEL_ERR, "No environment_host defined for environment promise");
+        PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
@@ -176,9 +173,9 @@ static int EnvironmentsSanityChecks(Attributes a, Promise *pp)
         if (a.env.cpus != CF_NOINT || a.env.memory != CF_NOINT || a.env.disk != CF_NOINT || a.env.name
             || a.env.addresses)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Network environment promises computational resources (%d,%d,%d,%s)", a.env.cpus,
+            Log(LOG_LEVEL_ERR, "Network environment promises computational resources (%d,%d,%d,%s)", a.env.cpus,
                   a.env.memory, a.env.disk, a.env.name);
-            PromiseRef(OUTPUT_LEVEL_ERROR, pp);
+            PromiseRef(LOG_LEVEL_ERR, pp);
         }
         break;
     default:
@@ -231,12 +228,12 @@ static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp)
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_ERROR, "", " !! Environment type \"%s\" not currently supported", a.env.type);
+        Log(LOG_LEVEL_ERR, "Environment type \"%s\" not currently supported", a.env.type);
         return;
         break;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Selecting environment type \"%s\" -> \"%s\"", a.env.type, hyper_uri);
+    Log(LOG_LEVEL_VERBOSE, "Selecting environment type \"%s\"\"%s\"", a.env.type, hyper_uri);
 
     if (!IsDefinedClass(ctx, a.env.host, NULL))
     {
@@ -244,14 +241,14 @@ static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp)
         {
         case ENVIRONMENT_STATE_CREATE:
         case ENVIRONMENT_STATE_RUNNING:
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  " -> This host (\"%s\") is not the promised host for the environment (\"%s\"), so setting its intended state to \"down\"",
+            Log(LOG_LEVEL_VERBOSE,
+                  "This host (\"%s\") is not the promised host for the environment (\"%s\"), so setting its intended state to \"down\"",
                   VFQNAME, a.env.host);
             a.env.state = ENVIRONMENT_STATE_DOWN;
             break;
         default:
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  " -> This is not the promised host for the environment, but it does not promise a run state, so take promise as valid");
+            Log(LOG_LEVEL_VERBOSE,
+                  "This is not the promised host for the environment, but it does not promise a run state, so take promise as valid");
         }
     }
 
@@ -306,7 +303,7 @@ static void VerifyEnvironments(EvalContext *ctx, Attributes a, Promise *pp)
         break;
     }
 #else
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Unable to resolve an environment supervisor/monitor for this platform, aborting");
+    Log(LOG_LEVEL_VERBOSE, "Unable to resolve an environment supervisor/monitor for this platform, aborting");
 #endif
 }
 
@@ -325,7 +322,7 @@ static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors env
     {
         if ((CFVC[envtype] = virConnectOpenAuth(uri, virConnectAuthPtrDefault, 0)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to connect to virtualization monitor \"%s\"", uri);
+            Log(LOG_LEVEL_ERR, "Failed to connect to virtualization monitor \"%s\"", uri);
             return;
         }
     }
@@ -337,31 +334,31 @@ static void VerifyVirtDomain(EvalContext *ctx, char *uri, enum cfhypervisors env
     }
 
     num = virConnectListDomains(CFVC[envtype], CF_RUNNING, CF_MAX_CONCURRENT_ENVIRONMENTS);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found %d running guest environments on this host (including enclosure)", num);
+    Log(LOG_LEVEL_VERBOSE, "Found %d running guest environments on this host (including enclosure)", num);
     ShowRunList(CFVC[envtype]);
     num = virConnectListDefinedDomains(CFVC[envtype], CF_SUSPENDED, CF_MAX_CONCURRENT_ENVIRONMENTS);
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found %d dormant guest environments on this host", num);
-    ShowDormant(CFVC[envtype]);
+    Log(LOG_LEVEL_VERBOSE, "Found %d dormant guest environments on this host", num);
+    ShowDormant();
 
     switch (a.env.state)
     {
     case ENVIRONMENT_STATE_CREATE:
-        CreateVirtDom(ctx, CFVC[envtype], uri, a, pp);
+        CreateVirtDom(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_DELETE:
-        DeleteVirt(ctx, CFVC[envtype], uri, a, pp);
+        DeleteVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_RUNNING:
-        RunningVirt(ctx, CFVC[envtype], uri, a, pp);
+        RunningVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_SUSPENDED:
-        SuspendedVirt(ctx, CFVC[envtype], uri, a, pp);
+        SuspendedVirt(ctx, CFVC[envtype], a, pp);
         break;
     case ENVIRONMENT_STATE_DOWN:
-        DownVirt(ctx, CFVC[envtype], uri, a, pp);
+        DownVirt(ctx, CFVC[envtype], a, pp);
         break;
     default:
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! No state specified for this environment");
+        Log(LOG_LEVEL_INFO, "No state specified for this environment");
         break;
     }
 }
@@ -377,7 +374,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
     {
         if ((CFVC[envtype] = virConnectOpenAuth(uri, virConnectAuthPtrDefault, 0)) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", " !! Failed to connect to virtualization monitor \"%s\"", uri);
+            Log(LOG_LEVEL_ERR, "Failed to connect to virtualization monitor \"%s\"", uri);
             return;
         }
     }
@@ -389,7 +386,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
 
     num = virConnectListNetworks(CFVC[envtype], networks, CF_MAX_CONCURRENT_ENVIRONMENTS);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Detected %d active networks", num);
+    Log(LOG_LEVEL_VERBOSE, "Detected %d active networks", num);
 
     switch (a.env.state)
     {
@@ -398,11 +395,11 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
         break;
 
     case ENVIRONMENT_STATE_DELETE:
-        DeleteVirtNetwork(ctx, CFVC[envtype], networks, a, pp);
+        DeleteVirtNetwork(ctx, CFVC[envtype], a, pp);
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! No recogized state specified for this network environment");
+        Log(LOG_LEVEL_INFO, "No recogized state specified for this network environment");
         break;
     }
 }
@@ -411,7 +408,7 @@ static void VerifyVirtNetwork(EvalContext *ctx, char *uri, enum cfhypervisors en
 /* Level                                                                     */
 /*****************************************************************************/
 
-static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     int alloc_file = false;
     char *xml_file;
@@ -436,7 +433,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
             if (name && strcmp(name, pp->promiser) == 0)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Found a running environment called \"%s\" - promise kept\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Found a running environment called \"%s\" - promise kept\n",
                      name);
                 return true;
             }
@@ -449,7 +446,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
     {
         if (strcmp(CF_SUSPENDED[i], pp->promiser) == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " -> Found an existing, but suspended, environment id = %s, called \"%s\"\n",
+            Log(LOG_LEVEL_INFO, "Found an existing, but suspended, environment id = %s, called \"%s\"\n",
                   CF_SUSPENDED[i], CF_SUSPENDED[i]);
         }
     }
@@ -461,13 +458,13 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No spec file is promised, so reverting to default settings");
+        Log(LOG_LEVEL_VERBOSE, "No spec file is promised, so reverting to default settings");
         xml_file = defaultxml;
     }
 
     if ((dom = virDomainCreateXML(vc, xml_file, 0)))
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Created a virtual domain \"%s\"\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Created a virtual domain \"%s\"\n", pp->promiser);
 
         if (a.env.cpus != CF_NOINT)
         {
@@ -475,23 +472,23 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
             if ((maxcpus = virConnectGetMaxVcpus(vc, virConnectGetType(vc))) == -1)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Can't determine the available CPU resources");
+                Log(LOG_LEVEL_VERBOSE, "Can't determine the available CPU resources");
             }
             else
             {
                 if (a.env.cpus > maxcpus)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "",
-                          " !! The promise to allocate %d CPUs in domain \"%s\" cannot be kept - only %d exist on the host",
+                    Log(LOG_LEVEL_INFO,
+                          "The promise to allocate %d CPUs in domain \"%s\" cannot be kept - only %d exist on the host",
                           a.env.cpus, pp->promiser, maxcpus);
                 }
                 else if (virDomainSetVcpus(dom, (unsigned int) a.env.cpus) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "", " -> Unable to adjust CPU count to %d", a.env.cpus);
+                    Log(LOG_LEVEL_INFO, "Unable to adjust CPU count to %d", a.env.cpus);
                 }
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "", " -> Verified that environment CPU count is now %d", a.env.cpus);
+                    Log(LOG_LEVEL_INFO, "Verified that environment CPU count is now %d", a.env.cpus);
                 }
             }
         }
@@ -502,29 +499,29 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
             if ((maxmem = virDomainGetMaxMemory(dom)) == -1)
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Can't determine the available CPU resources");
+                Log(LOG_LEVEL_VERBOSE, "Can't determine the available CPU resources");
             }
             else
             {
                 if (virDomainSetMaxMemory(dom, (unsigned long) a.env.memory) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "", " !!! Unable to set the memory limit to %d", a.env.memory);
+                    Log(LOG_LEVEL_INFO, " Unable to set the memory limit to %d", a.env.memory);
                 }
                 else
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting the memory limit to %d", a.env.memory);
+                    Log(LOG_LEVEL_INFO, "Setting the memory limit to %d", a.env.memory);
                 }
 
                 if (virDomainSetMemory(dom, (unsigned long) a.env.memory) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "", " !!! Unable to set the current memory to %d", a.env.memory);
+                    Log(LOG_LEVEL_INFO, " Unable to set the current memory to %d", a.env.memory);
                 }
             }
         }
 
         if (a.env.disk != CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Info: env_disk parameter is not currently supported on this platform");
+            Log(LOG_LEVEL_VERBOSE, "Info: env_disk parameter is not currently supported on this platform");
         }
 
         virDomainFree(dom);
@@ -535,10 +532,10 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
         vp = virGetLastError();
 
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a,
-             " !! Failed to create a virtual domain \"%s\" - check spec for errors: %s", pp->promiser, vp->message);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
+             "Failed to create a virtual domain \"%s\" - check spec for errors: %s", pp->promiser, vp->message);
 
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Quoted spec file: %s", xml_file);
+        Log(LOG_LEVEL_VERBOSE, "Quoted spec file: %s", xml_file);
     }
 
     if (alloc_file)
@@ -551,7 +548,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
 /*****************************************************************************/
 
-static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     int ret = true;
@@ -562,19 +559,19 @@ static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes 
     {
         if (virDomainDestroy(dom) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_FAIL, "", pp, a, " !! Failed to delete virtual domain \"%s\"\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Failed to delete virtual domain \"%s\"\n", pp->promiser);
             ret = false;
         }
         else
         {
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Deleted virtual domain \"%s\"\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Deleted virtual domain \"%s\"\n", pp->promiser);
         }
 
         virDomainFree(dom);
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> No such virtual domain called \"%s\" - promise kept\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No such virtual domain called \"%s\" - promise kept\n", pp->promiser);
     }
 
     return ret;
@@ -582,7 +579,7 @@ static int DeleteVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes 
 
 /*****************************************************************************/
 
-static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int RunningVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -593,7 +590,7 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -601,62 +598,62 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
         switch (info.state)
         {
         case VIR_DOMAIN_RUNNING:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" running - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" running - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_BLOCKED:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a,
-                 " -> Virtual domain \"%s\" running but waiting for a resource - promise kept as far as possible\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a,
+                 "Virtual domain \"%s\" running but waiting for a resource - promise kept as far as possible\n",
                  pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  " -> It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" is shutting down\n", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE,
+                  "It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
             break;
 
         case VIR_DOMAIN_PAUSED:
 
             if (virDomainResume(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" failed to resume after suspension\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" failed to resume after suspension\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" was suspended, resuming\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" was suspended, resuming\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
 
             if (virDomainCreate(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" failed to resume after halting\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" failed to resume after halting\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" was inactive, booting...\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" was inactive, booting...\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_CRASHED:
 
             if (virDomainReboot(dom, 0) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" has crashed and rebooting failed\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" has crashed and rebooting failed\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" has crashed, rebooting...\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" has crashed, rebooting...\n", pp->promiser);
             break;
 
         default:
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Virtual domain \"%s\" is reported as having no state, whatever that means",
+            Log(LOG_LEVEL_VERBOSE, "Virtual domain \"%s\" is reported as having no state, whatever that means",
                   pp->promiser);
             break;
         }
@@ -665,11 +662,11 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
         {
             if (virDomainSetVcpus(dom, a.env.cpus) == -1)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !!! Unable to set the number of cpus to %d", a.env.cpus);
+                Log(LOG_LEVEL_INFO, " Unable to set the number of cpus to %d", a.env.cpus);
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting the number of virtual cpus to %d", a.env.cpus);
+                Log(LOG_LEVEL_INFO, "Setting the number of virtual cpus to %d", a.env.cpus);
             }
         }
 
@@ -677,30 +674,30 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
         {
             if (virDomainSetMaxMemory(dom, (unsigned long) a.env.memory) == -1)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !!! Unable to set the memory limit to %d", a.env.memory);
+                Log(LOG_LEVEL_INFO, " Unable to set the memory limit to %d", a.env.memory);
             }
             else
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " -> Setting the memory limit to %d", a.env.memory);
+                Log(LOG_LEVEL_INFO, "Setting the memory limit to %d", a.env.memory);
             }
 
             if (virDomainSetMemory(dom, (unsigned long) a.env.memory) == -1)
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "", " !!! Unable to set the current memory to %d", a.env.memory);
+                Log(LOG_LEVEL_INFO, " Unable to set the current memory to %d", a.env.memory);
             }
         }
 
         if (a.env.disk != CF_NOINT)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Info: env_disk parameter is not currently supported on this platform");
+            Log(LOG_LEVEL_VERBOSE, "Info: env_disk parameter is not currently supported on this platform");
         }
 
         virDomainFree(dom);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Virtual domain \"%s\" cannot be located, attempting to recreate", pp->promiser);
-        CreateVirtDom(ctx, vc, uri, a, pp);
+        Log(LOG_LEVEL_VERBOSE, "Virtual domain \"%s\" cannot be located, attempting to recreate", pp->promiser);
+        CreateVirtDom(ctx, vc, a, pp);
     }
 
     return true;
@@ -708,7 +705,7 @@ static int RunningVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes
 
 /*****************************************************************************/
 
-static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -719,7 +716,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -730,47 +727,47 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
         case VIR_DOMAIN_RUNNING:
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" failed to suspend!\n", pp->promiser);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" failed to suspend!\n", pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" running, suspending\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" running, suspending\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" is shutting down\n", pp->promiser);
-            CfOut(OUTPUT_LEVEL_VERBOSE, "",
-                  " -> It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" is shutting down\n", pp->promiser);
+            Log(LOG_LEVEL_VERBOSE,
+                  "It is currently impossible to know whether it will reboot or not - deferring promise check until it has completed its shutdown");
             break;
 
         case VIR_DOMAIN_PAUSED:
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" is suspended - promise kept\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" is suspended - promise kept\n",
                  pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_CRASHED:
 
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" is crashed has failed to suspend!\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" is crashed has failed to suspend!\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" is in a crashed state, suspending\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" is in a crashed state, suspending\n",
                  pp->promiser);
             break;
 
         default:
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Virtual domain \"%s\" is reported as having no state, whatever that means",
+            Log(LOG_LEVEL_VERBOSE, "Virtual domain \"%s\" is reported as having no state, whatever that means",
                   pp->promiser);
             break;
         }
@@ -779,7 +776,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" cannot be found - take promise as kept\n",
              pp->promiser);
     }
 
@@ -788,7 +785,7 @@ static int SuspendedVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attribut
 
 /*****************************************************************************/
 
-static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a, Promise *pp)
+static int DownVirt(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virDomainPtr dom;
     virDomainInfo info;
@@ -799,7 +796,7 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a,
     {
         if (virDomainGetInfo(dom, &info) == -1)
         {
-            cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_FAIL, "", pp, a, " !! Unable to probe virtual domain \"%s\"", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Unable to probe virtual domain \"%s\"", pp->promiser);
             virDomainFree(dom);
             return false;
         }
@@ -810,22 +807,22 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a,
         case VIR_DOMAIN_RUNNING:
             if (virDomainShutdown(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" failed to shutdown!\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" failed to shutdown!\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" running, terminating\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" running, terminating\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_SHUTOFF:
         case VIR_DOMAIN_SHUTDOWN:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" is down - promise kept\n", pp->promiser);
             break;
 
         case VIR_DOMAIN_PAUSED:
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" is suspended - ignoring promise\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" is suspended - ignoring promise\n",
                  pp->promiser);
             break;
 
@@ -833,18 +830,18 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a,
 
             if (virDomainSuspend(dom) == -1)
             {
-                cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_INTERPT, "", pp, a, " -> Virtual domain \"%s\" is crashed and failed to shutdown\n",
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_INTERRUPTED, pp, a, "Virtual domain \"%s\" is crashed and failed to shutdown\n",
                      pp->promiser);
                 virDomainFree(dom);
                 return false;
             }
 
-            cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_CHG, "", pp, a, " -> Virtual domain \"%s\" is in a crashed state, terminating\n",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Virtual domain \"%s\" is in a crashed state, terminating\n",
                  pp->promiser);
             break;
 
         default:
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " !! Virtual domain \"%s\" is reported as having no state, whatever that means",
+            Log(LOG_LEVEL_VERBOSE, "Virtual domain \"%s\" is reported as having no state, whatever that means",
                   pp->promiser);
             break;
         }
@@ -853,7 +850,7 @@ static int DownVirt(EvalContext *ctx, virConnectPtr vc, char *uri, Attributes a,
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Virtual domain \"%s\" cannot be found - take promise as kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Virtual domain \"%s\" cannot be found - take promise as kept\n",
              pp->promiser);
     }
 
@@ -880,7 +877,7 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
     for (i = 0; networks[i] != NULL; i++)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Discovered a running network \"%s\"", networks[i]);
+        Log(LOG_LEVEL_VERBOSE, "Discovered a running network \"%s\"", networks[i]);
 
         if (strcmp(networks[i], pp->promiser) == 0)
         {
@@ -890,7 +887,7 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
     if (found)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Network \"%s\" exists - promise kept\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Network \"%s\" exists - promise kept\n", pp->promiser);
         return true;
     }
 
@@ -905,13 +902,13 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
     if ((network = virNetworkCreateXML(vc, xml_file)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Unable to create network \"%s\"\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to create network \"%s\"\n", pp->promiser);
         free(xml_file);
         return false;
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Created network \"%s\" - promise repaired\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Created network \"%s\" - promise repaired\n", pp->promiser);
     }
 
     free(xml_file);
@@ -922,25 +919,25 @@ static int CreateVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks
 
 /*****************************************************************************/
 
-static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, char **networks, Attributes a, Promise *pp)
+static int DeleteVirtNetwork(EvalContext *ctx, virConnectPtr vc, Attributes a, Promise *pp)
 {
     virNetworkPtr network;
     int ret = true;
 
     if ((network = virNetworkLookupByName(vc, pp->promiser)) == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, CF_NOP, "", pp, a, " -> Couldn't find a network called \"%s\" - promise assumed kept\n",
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Couldn't find a network called \"%s\" - promise assumed kept\n",
              pp->promiser);
         return true;
     }
 
     if (virNetworkDestroy(network) == 0)
     {
-        cfPS(ctx, OUTPUT_LEVEL_INFORM, CF_CHG, "", pp, a, " -> Deleted network \"%s\" - promise repaired\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Deleted network \"%s\" - promise repaired\n", pp->promiser);
     }
     else
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, CF_FAIL, "", pp, a, " !! Network deletion of \"%s\" failed\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Network deletion of \"%s\" failed\n", pp->promiser);
         ret = false;
     }
 
@@ -971,12 +968,12 @@ static void ShowRunList(virConnectPtr vc)
         {
             if ((dom = virDomainLookupByID(vc, CF_RUNNING[i])))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Found a running virtual domain with id %d\n", CF_RUNNING[i]);
+                Log(LOG_LEVEL_VERBOSE, "Found a running virtual domain with id %d\n", CF_RUNNING[i]);
             }
 
             if ((name = virDomainGetName(dom)))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", " ---> Found a running virtual domain called \"%s\"\n", name);
+                Log(LOG_LEVEL_VERBOSE, " ---> Found a running virtual domain called \"%s\"\n", name);
             }
 
             virDomainFree(dom);
@@ -986,13 +983,13 @@ static void ShowRunList(virConnectPtr vc)
 
 /*****************************************************************************/
 
-static void ShowDormant(virConnectPtr vc)
+static void ShowDormant(void)
 {
     int i;
 
     for (i = 0; CF_SUSPENDED[i] != NULL; i++)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", " ---> Found a suspended, domain environment called \"%s\"\n", CF_SUSPENDED[i]);
+        Log(LOG_LEVEL_VERBOSE, " ---> Found a suspended, domain environment called \"%s\"\n", CF_SUSPENDED[i]);
     }
 }
 
@@ -1032,7 +1029,7 @@ void DeleteEnvironmentsContext(void)
 {
 }
 
-void VerifyEnvironmentsPromise(Promise *pp)
+void VerifyEnvironmentsPromise(ARG_UNUSED Promise *pp)
 {
 }
 

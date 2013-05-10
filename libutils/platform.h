@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -195,6 +195,8 @@ struct utsname
 # include <sys/statvfs.h>
 # undef nfstype
 
+#include <sys/mkdev.h>
+
 #ifndef timersub
 # define timersub(a, b, result)                             \
     do                                                      \
@@ -307,6 +309,7 @@ char *strsep(char **stringp, const char *delim);
 # include <sys/ioctl.h>
 # include <net/if.h>
 # include <netinet/in.h>
+# include <netinet/ip.h>
 # include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
@@ -321,9 +324,11 @@ char *strsep(char **stringp, const char *delim);
 # ifdef __GLIBC__
 #  include <net/route.h>
 #  include <netinet/in.h>
+#  include <netinet/ip.h>
 # else
 #  include <linux/route.h>
 #  include <linux/in.h>
+#  include <linux/ip.h>
 # endif
 #endif
 
@@ -376,6 +381,15 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 #ifndef HAVE_SETEGID
 int setegid(gid_t gid);
 #endif
+#if !HAVE_DECL_UNAME
+int uname(struct utsname *buf);
+#endif
+#if !HAVE_DECL_GETUID
+uid_t getuid(void);
+#endif
+#if !HAVE_DECL_GETGID
+gid_t getgid(void);
+#endif
 #if !HAVE_DECL_DRAND48
 double drand48(void);
 #endif
@@ -385,11 +399,20 @@ void srand48(long seed);
 #if !HAVE_DECL_CLOCK_GETTIME
 int clock_gettime(clockid_t clock_id, struct timespec *tp);
 #endif
-#ifdef __MINGW32__
-unsigned int alarm(unsigned int seconds);
-#endif
 #if !HAVE_DECL_REALPATH
 char *realpath(const char *path, char *resolved_path);
+#endif
+#if !HAVE_DECL_LSTAT
+int lstat(const char *file_name, struct stat *buf);
+#endif
+#if !HAVE_DECL_SLEEP
+unsigned int sleep(unsigned int seconds);
+#endif
+#if !HAVE_DECL_CHOWN
+int chown(const char *path, uid_t owner, gid_t group);
+#endif
+#if !HAVE_DECL_FCHMOD
+int fchmod(int fd, mode_t mode);
 #endif
 
 #if !HAVE_DECL_GETNETGRENT
@@ -404,9 +427,6 @@ int setnetgrent(const char *netgroup);
 int endnetgrent(void);
 #endif
 
-#ifndef HAVE_UNAME
-int uname(struct utsname *name);
-#endif
 #if !HAVE_DECL_STRSTR
 char *strstr(const char *haystack, const char *needle);
 #endif
@@ -430,9 +450,6 @@ void *memdup(const void *mem, size_t size);
 #endif
 #if !HAVE_DECL_STRERROR
 char *strerror(int err);
-#endif
-#ifndef HAVE_PUTENV
-int putenv(char *s);
 #endif
 #if !HAVE_DECL_UNSETENV
 int unsetenv(const char *name);
@@ -470,11 +487,65 @@ struct tm *gmtime_r(const time_t *timep, struct tm *result);
 #if !HAVE_DECL_LOCALTIME_R
 struct tm *localtime_r(const time_t *timep, struct tm *result);
 #endif
+#if !HAVE_DECL_CHMOD
+int chmod(const char *path, mode_t mode);
+#endif
+#if !HAVE_DECL_ALARM
+unsigned int alarm(unsigned int seconds);
+#endif
 #if !HAVE_DECL_MKDTEMP
 char *mkdtemp(char *template);
 #endif
 #if !HAVE_DECL_STRRSTR
 char *strrstr(const char *haystack, const char *needle);
+#endif
+#if !HAVE_DECL_INET_NTOP
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+#endif
+#if !HAVE_DECL_INET_PTON
+int inet_pton(int af, const char *src, void *dst);
+#endif
+#if !HAVE_DECL_GETADDRINFO
+int getaddrinfo(const char *node, const char *service,
+                const struct addrinfo *hints, struct addrinfo **res);
+void freeaddrinfo(struct addrinfo *res);
+int getnameinfo(const struct sockaddr *sa, socklen_t salen,
+                char *node, socklen_t nodelen,
+                char *service, socklen_t servicelen, int flags);
+const char *gai_strerror(int errcode);
+#endif
+#if !HAVE_STRUCT_SOCKADDR_STORAGE
+    #ifdef AF_INET6
+        #define sockaddr_storage sockaddr_in6
+    #else
+        #define sockaddr_storage sockaddr
+    #endif
+#endif
+#ifndef AF_INET6
+    /* if the platform doesn't have it, it's useless, but define it as -1
+     * since we need it in our code... */
+    #define AF_INET6 -1
+#endif
+#ifndef AI_NUMERICSERV
+    /* Not portable to MinGW so don't use it. */
+    #define AI_NUMERICSERV -1
+#endif
+
+#if !defined(HAVE_MKDIR_PROPER)
+int rpl_mkdir(const char *pathname, mode_t mode);
+#endif
+
+#if !defined(HAVE_STAT_PROPER)
+int rpl_stat(const char *path, struct stat *buf);
+#define _stat64(name, st) rpl_stat(name, st)
+#endif
+
+#if !defined(HAVE_RENAME_PROPER)
+int rpl_rename(const char *oldpath, const char *newpath);
+#endif
+
+#if !defined(HAVE_CTIME_PROPER)
+char *rpl_ctime(const time_t *t);
 #endif
 
 #ifndef NGROUPS
@@ -705,5 +776,12 @@ struct timespec
 #if !defined O_BINARY
 # define O_BINARY 0
 #endif
+
+#if defined(__MINGW32__)
+/* _mkdir(3) */
+#include <direct.h>
+#endif
+
+#include "config.post.h"
 
 #endif

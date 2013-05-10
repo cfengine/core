@@ -8,7 +8,7 @@ acl_method => "overwrite";
 
 acl_type => "specify";
 
-acl_directory_inherit => "parent";
+acl_default => "access";
 
 aces         => { 
                 "user:*:r(wwx),-r:allow", 
@@ -17,7 +17,7 @@ aces         => {
                 "all:r"
                 };
 
-inherit_aces => { 
+default_aces => { 
                 "user:*:r(wwx),-r:allow", 
                 "group:*:+rw:allow", 
                 "mask:x:allow", 

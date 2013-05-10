@@ -1,31 +1,28 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
 
 #include "cf_sql.h"
-
-#include "cfstream.h"
 
 #ifdef HAVE_MYSQL_H
 # include <mysql.h>
@@ -39,7 +36,7 @@
 # include <libpq-fe.h>
 #endif
 
-/* Cfengine connectors for sql databases. Note that there are significant
+/* CFEngine connectors for sql databases. Note that there are significant
    differences in db admin functions in the various implementations. e.g.
    sybase/mysql "use database, create database" not in postgres.
 */
@@ -60,7 +57,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 {
     DbMysqlConn *c;
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is a MySQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a MySQL database\n");
 
     c = xcalloc(1, sizeof(DbMysqlConn));
 
@@ -68,7 +65,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 
     if (!mysql_real_connect(&c->conn, host, user, password, database, 0, NULL, 0))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing MySQL database: %s\n", mysql_error(&c->conn));
         free(c);
         return NULL;
     }
@@ -92,7 +89,7 @@ static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 
     if (mysql_query(&mc->conn, query) != 0)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
+        Log(LOG_LEVEL_INFO, "MySQL query failed: %s, (%s)\n", query, mysql_error(&mc->conn));
     }
     else
     {
@@ -150,25 +147,25 @@ static void CfDeleteMysqlQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectMysqlDB(const char *host, const char *user, const char *password, const char *database)
+static void *CfConnectMysqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
 {
-    CfOut(OUTPUT_LEVEL_INFORM, "", "There is no MySQL support compiled into this version");
+    Log(LOG_LEVEL_INFO, "There is no MySQL support compiled into this version");
     return NULL;
 }
 
-static void CfCloseMysqlDB(void *c)
+static void CfCloseMysqlDB(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryMysqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchMysqlRow(CfdbConn *c)
+static void CfFetchMysqlRow(ARG_UNUSED CfdbConn *c)
 {
 }
 
-static void CfDeleteMysqlQuery(CfdbConn *c)
+static void CfDeleteMysqlQuery(ARG_UNUSED CfdbConn *c)
 {
 }
 
@@ -190,7 +187,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
     DbPostgresqlConn *c;
     char format[CF_BUFSIZE];
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> This is a PotsgreSQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a PotsgreSQL database\n");
 
     c = xcalloc(1, sizeof(DbPostgresqlConn));
 
@@ -222,7 +219,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
 
     if (PQstatus(c->conn) == CONNECTION_BAD)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database: %s\n", PQerrorMessage(c->conn));
         free(c);
         return NULL;
     }
@@ -248,7 +245,7 @@ static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 
     if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
+        Log(LOG_LEVEL_INFO, "PostgreSQL query failed: %s, %s\n", query, PQerrorMessage(pc->conn));
     }
     else
     {
@@ -295,25 +292,25 @@ static void CfDeletePostgresqlQuery(CfdbConn *c)
 
 #else
 
-static void *CfConnectPostgresqlDB(const char *host, const char *user, const char *password, const char *database)
+static void *CfConnectPostgresqlDB(ARG_UNUSED const char *host, ARG_UNUSED const char *user, ARG_UNUSED const char *password, ARG_UNUSED const char *database)
 {
-    CfOut(OUTPUT_LEVEL_INFORM, "", "There is no PostgreSQL support compiled into this version");
+    Log(LOG_LEVEL_INFO, "There is no PostgreSQL support compiled into this version");
     return NULL;
 }
 
-static void CfClosePostgresqlDb(void *c)
+static void CfClosePostgresqlDb(ARG_UNUSED void *c)
 {
 }
 
-static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
+static void CfNewQueryPostgresqlDb(ARG_UNUSED CfdbConn *c, ARG_UNUSED const char *query)
 {
 }
 
-static void CfFetchPostgresqlRow(CfdbConn *c)
+static void CfFetchPostgresqlRow(ARG_UNUSED CfdbConn *c)
 {
 }
 
-static void CfDeletePostgresqlQuery(CfdbConn *c)
+static void CfDeletePostgresqlQuery(ARG_UNUSED CfdbConn *c)
 {
 }
 
@@ -335,7 +332,7 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         db = "no db specified";
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
+    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)\n", db, dbuser, remotehost,
           dbtype);
 
     switch (dbtype)
@@ -349,7 +346,7 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
+        Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 
@@ -380,7 +377,7 @@ void CfCloseDB(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
+        Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 
@@ -426,7 +423,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
+        Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 
@@ -448,7 +445,7 @@ char **CfFetchRow(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
+        Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 
@@ -485,7 +482,7 @@ void CfDeleteQuery(CfdbConn *cfdb)
         break;
 
     default:
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "There is no SQL database selected");
+        Log(LOG_LEVEL_VERBOSE, "There is no SQL database selected");
         break;
     }
 

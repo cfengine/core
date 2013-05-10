@@ -1,0 +1,247 @@
+
+Note that @code{strftime} is a standard C function and you should
+consult its reference to be sure of the specifiers it allows.  The below
+is from the documentation of the standard @code{strftime} implementation
+in the glibc manual at
+@uref{http://www.gnu.org/software/libc/manual/html_node/Formatting-Calendar-Time.html#Formatting-Calendar-Time}.
+
+This function takes a @var{mode}, a @var{template} and a @var{time}.
+
+The @var{mode} is either @code{gmtime} (to get GMT times and dates) or
+@code{localtime} (to get times and dates according to the local
+timezone).
+
+The conversion specifications that can appear in the format template
+@var{template} are specialized for printing components of the date and
+time according to the system locale.  The @var{time} is simply an
+integer (Unix epoch time); you can get the current time with the
+@code{now()} function.
+
+Ordinary characters appearing in the @var{template} are copied to the
+output.  Conversion specifiers are introduced by a @samp{%} character
+and end with a format specifier taken from the following list.  The
+whole @samp{%} sequence is replaced in the output string as follows:
+
+@table @code
+@item %a
+The abbreviated weekday name according to the current locale.
+
+@item %A
+The full weekday name according to the current locale.
+
+@item %b
+The abbreviated month name according to the current locale.
+
+@item %B
+The full month name according to the current locale.
+
+Using @code{%B} together with @code{%d} produces grammatically
+incorrect results for some locales.
+
+@item %c
+The preferred calendar time representation for the current locale.
+
+@item %C
+The century of the year.  This is equivalent to the greatest integer not
+greater than the year divided by 100.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %d
+The day of the month as a decimal number (range @code{01} through @code{31}).
+
+@item %D
+The date using the format @code{%m/%d/%y}.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %e
+The day of the month like with @code{%d}, but padded with blank (range
+@code{ 1} through @code{31}).
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %F
+The date using the format @code{%Y-%m-%d}.  This is the form specified
+in the @w{ISO 8601} standard and is the preferred form for all uses.
+
+This format was first standardized by @w{ISO C99} and by POSIX.1-2001.
+
+@item %g
+The year corresponding to the ISO week number, but without the century
+(range @code{00} through @code{99}).  This has the same format and value
+as @code{%y}, except that if the ISO week number (see @code{%V}) belongs
+to the previous or next year, that year is used instead.
+
+This format was first standardized by @w{ISO C99} and by POSIX.1-2001.
+
+@item %G
+The year corresponding to the ISO week number.  This has the same format
+and value as @code{%Y}, except that if the ISO week number (see
+@code{%V}) belongs to the previous or next year, that year is used
+instead.
+
+This format was first standardized by @w{ISO C99} and by POSIX.1-2001
+but was previously available as a GNU extension.
+
+@item %h
+The abbreviated month name according to the current locale.  The action
+is the same as for @code{%b}.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %H
+The hour as a decimal number, using a 24-hour clock (range @code{00} through
+@code{23}).
+
+@item %I
+The hour as a decimal number, using a 12-hour clock (range @code{01} through
+@code{12}).
+
+@item %j
+The day of the year as a decimal number (range @code{001} through @code{366}).
+
+@item %k
+The hour as a decimal number, using a 24-hour clock like @code{%H}, but
+padded with blank (range @code{ 0} through @code{23}).
+
+This format is a GNU extension.
+
+@item %l
+The hour as a decimal number, using a 12-hour clock like @code{%I}, but
+padded with blank (range @code{ 1} through @code{12}).
+
+This format is a GNU extension.
+
+@item %m
+The month as a decimal number (range @code{01} through @code{12}).
+
+@item %M
+The minute as a decimal number (range @code{00} through @code{59}).
+
+@item %n
+A single @samp{\n} (newline) character.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %p
+Either @samp{AM} or @samp{PM}, according to the given time value; or the
+corresponding strings for the current locale.  Noon is treated as
+@samp{PM} and midnight as @samp{AM}.  In most locales
+@samp{AM}/@samp{PM} format is not supported, in such cases @code{"%p"}
+yields an empty string.
+
+@ignore
+We currently have a problem with makeinfo.  Write @samp{AM} and @samp{am}
+both results in `am'.  I.e., the difference in case is not visible anymore.
+@end ignore
+@item %P
+Either @samp{am} or @samp{pm}, according to the given time value; or the
+corresponding strings for the current locale, printed in lowercase
+characters.  Noon is treated as @samp{pm} and midnight as @samp{am}.  In
+most locales @samp{AM}/@samp{PM} format is not supported, in such cases
+@code{"%P"} yields an empty string.
+
+This format is a GNU extension.
+
+@item %r
+The complete calendar time using the AM/PM format of the current locale.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+In the POSIX locale, this format is equivalent to @code{%I:%M:%S %p}.
+
+@item %R
+The hour and minute in decimal numbers using the format @code{%H:%M}.
+
+This format was first standardized by @w{ISO C99} and by POSIX.1-2001
+but was previously available as a GNU extension.
+
+@item %s
+The number of seconds since the epoch, i.e., since 1970-01-01 00:00:00 UTC.
+Leap seconds are not counted unless leap second support is available.
+
+This format is a GNU extension.
+
+@item %S
+The seconds as a decimal number (range @code{00} through @code{60}).
+
+@item %t
+A single @samp{\t} (tabulator) character.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %T
+The time of day using decimal numbers using the format @code{%H:%M:%S}.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %u
+The day of the week as a decimal number (range @code{1} through
+@code{7}), Monday being @code{1}.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %U
+The week number of the current year as a decimal number (range @code{00}
+through @code{53}), starting with the first Sunday as the first day of
+the first week.  Days preceding the first Sunday in the year are
+considered to be in week @code{00}.
+
+@item %V
+The @w{ISO 8601:1988} week number as a decimal number (range @code{01}
+through @code{53}).  ISO weeks start with Monday and end with Sunday.
+Week @code{01} of a year is the first week which has the majority of its
+days in that year; this is equivalent to the week containing the year's
+first Thursday, and it is also equivalent to the week containing January
+4.  Week @code{01} of a year can contain days from the previous year.
+The week before week @code{01} of a year is the last week (@code{52} or
+@code{53}) of the previous year even if it contains days from the new
+year.
+
+This format was first standardized by POSIX.2-1992 and by @w{ISO C99}.
+
+@item %w
+The day of the week as a decimal number (range @code{0} through
+@code{6}), Sunday being @code{0}.
+
+@item %W
+The week number of the current year as a decimal number (range @code{00}
+through @code{53}), starting with the first Monday as the first day of
+the first week.  All days preceding the first Monday in the year are
+considered to be in week @code{00}.
+
+@item %x
+The preferred date representation for the current locale.
+
+@item %X
+The preferred time of day representation for the current locale.
+
+@item %y
+The year without a century as a decimal number (range @code{00} through
+@code{99}).  This is equivalent to the year modulo 100.
+
+@item %Y
+The year as a decimal number, using the Gregorian calendar.  Years
+before the year @code{1} are numbered @code{0}, @code{-1}, and so on.
+
+@item %z
+@w{RFC 822}/@w{ISO 8601:1988} style numeric time zone (e.g.,
+@code{-0600} or @code{+0100}), or nothing if no time zone is
+determinable.
+
+This format was first standardized by @w{ISO C99} and by POSIX.1-2001
+but was previously available as a GNU extension.
+
+In the POSIX locale, a full @w{RFC 822} timestamp is generated by the format
+@w{@samp{"%a, %d %b %Y %H:%M:%S %z"}} (or the equivalent
+@w{@samp{"%a, %d %b %Y %T %z"}}).
+
+@item %Z
+The time zone abbreviation (empty if the time zone can't be determined).
+
+@item %%
+A literal @samp{%} character.
+@end table
+
+According to POSIX.1 every call to @code{strftime} checks the contents
+of the environment variable @code{TZ} before any output is produced.

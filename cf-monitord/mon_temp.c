@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -28,10 +28,7 @@
 #include "dir.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "files_properties.h"
-#include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
 
 /* Globals */
 
@@ -41,7 +38,7 @@ static bool LMSENSORS;
 /* Prototypes */
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this);
+static bool GetAcpi(double *cf_this);
 static bool GetLMSensors(double *cf_this);
 #endif
 
@@ -53,12 +50,13 @@ static bool GetLMSensors(double *cf_this);
  * temperature is generally available. Several temperatures exist too ...
  ******************************************************************************/
 
-void MonTempGatherData(EvalContext *ctx, double *cf_this)
+#if defined(__linux__)
+
+void MonTempGatherData(double *cf_this)
 {
     CfDebug("GatherSensorData()\n");
 
-#if defined(__linux__)
-    if (ACPI && GetAcpi(ctx, cf_this))
+    if (ACPI && GetAcpi(cf_this))
     {
         return;
     }
@@ -67,8 +65,15 @@ void MonTempGatherData(EvalContext *ctx, double *cf_this)
     {
         return;
     }
-#endif
 }
+
+#else
+
+void MonTempGatherData(ARG_UNUSED double *cf_this)
+{
+}
+
+#endif
 
 /******************************************************************************/
 
@@ -76,13 +81,13 @@ void MonTempInit(void)
 {
     struct stat statbuf;
 
-    if (cfstat("/proc/acpi/thermal_zone", &statbuf) != -1)
+    if (stat("/proc/acpi/thermal_zone", &statbuf) != -1)
     {
         CfDebug("Found an acpi service\n");
         ACPI = true;
     }
 
-    if (cfstat("/usr/bin/sensors", &statbuf) != -1)
+    if (stat("/usr/bin/sensors", &statbuf) != -1)
     {
         if (statbuf.st_mode & 0111)
         {
@@ -95,7 +100,7 @@ void MonTempInit(void)
 /******************************************************************************/
 
 #if defined(__linux__)
-static bool GetAcpi(EvalContext *ctx, double *cf_this)
+static bool GetAcpi(double *cf_this)
 {
     Dir *dirh;
     FILE *fp;
@@ -103,22 +108,18 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
     int count = 0;
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
-    Attributes attr;
-
-    memset(&attr, 0, sizeof(attr));
-    attr.transaction.audit = false;
 
     CfDebug("ACPI temperature\n");
 
-    if ((dirh = OpenDirLocal("/proc/acpi/thermal_zone")) == NULL)
+    if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "opendir", "Can't open directory %s\n", path);
+        Log(LOG_LEVEL_VERBOSE, "Can't open directory '%s'. (opendir: %s)", path, GetErrorStr());
         return false;
     }
 
-    for (dirp = ReadDir(dirh); dirp != NULL; dirp = ReadDir(dirh))
+    for (dirp = DirRead(dirh); dirp != NULL; dirp = DirRead(dirh))
     {
-        if (!ConsiderFile(ctx, dirp->d_name, path, attr, NULL))
+        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
         {
             continue;
         }
@@ -131,9 +132,9 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
             continue;
         }
 
-        if (fgets(buf, CF_BUFSIZE - 1, fp) == NULL)
+        if (fgets(buf, sizeof(buf), fp) == NULL)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Failed to read line from stream '%s'", path);
+            Log(LOG_LEVEL_ERR, "Failed to read line from stream '%s'", path);
             fclose(fp);
             continue;
         }
@@ -168,7 +169,7 @@ static bool GetAcpi(EvalContext *ctx, double *cf_this)
         fclose(fp);
     }
 
-    CloseDir(dirh);
+    DirClose(dirh);
     return true;
 }
 
@@ -188,22 +189,34 @@ static bool GetLMSensors(double *cf_this)
     cf_this[ob_temp2] = 0.0;
     cf_this[ob_temp3] = 0.0;
 
-    if ((pp = cf_popen("/usr/bin/sensors", "r")) == NULL)
+    if ((pp = cf_popen("/usr/bin/sensors", "r", true)) == NULL)
     {
         LMSENSORS = false;      /* Broken */
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        FatalError("Error in CfReadLine");
+        /* FIXME: do we need to log anything here? */
+        cf_pclose(pp);
+        return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
+        }
+
+        if (res == -1)
+        {
+            /* FIXME: Do we need to log anything here? */
+            cf_pclose(pp);
+            return false;
         }
 
         if (strstr(vbuff, "Temp") || strstr(vbuff, "temp"))

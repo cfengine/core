@@ -8,8 +8,6 @@ body common control
 {
   bundlesequence  => { test };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 bundle agent test

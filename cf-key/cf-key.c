@@ -1,24 +1,23 @@
-/* 
+/*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -28,20 +27,15 @@
 #include "dbm_api.h"
 #include "lastseen.h"
 #include "dir.h"
-#include "reporting.h"
 #include "scope.h"
 #include "files_copy.h"
 #include "files_interfaces.h"
 #include "files_hashes.h"
 #include "keyring.h"
-#include "cfstream.h"
-#include "communication.h"
 #include "env_context.h"
 #include "crypto.h"
-
-#ifdef HAVE_NOVA
-#include "license.h"
-#endif
+#include "sysinfo.h"
+#include "man.h"
 
 #include "cf-key-functions.h"
 
@@ -60,7 +54,9 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv);
 /* Command line options                                            */
 /*******************************************************************/
 
-static const char *ID = "The CFEngine key generator makes key pairs for remote authentication.\n";
+static const char *CF_KEY_SHORT_DESCRIPTION = "make private/public key-pairs for CFEngine authentication";
+
+static const char *CF_KEY_MANPAGE_LONG_DESCRIPTION = "The CFEngine key generator makes key pairs for remote authentication.\n";
 
 static const struct option OPTIONS[17] =
 {
@@ -101,10 +97,7 @@ int main(int argc, char *argv[])
     GenericAgentConfig *config = CheckOpts(argc, argv);
     GenericAgentConfigApply(ctx, config);
 
-    THIS_AGENT_TYPE = config->agent_type;
-
-    ReportContext *report_context = OpenReports(config->agent_type);
-    GenericAgentDiscoverContext(ctx, config, report_context);
+    GenericAgentDiscoverContext(ctx, config);
 
     if (SHOWHOSTS)
     {
@@ -142,8 +135,8 @@ int main(int argc, char *argv[])
     }
     else
     {
-        public_key_file = xstrdup(PublicKeyFile());
-        private_key_file = xstrdup(PrivateKeyFile());
+        public_key_file = xstrdup(PublicKeyFile(GetWorkDir()));
+        private_key_file = xstrdup(PrivateKeyFile(GetWorkDir()));
     }
 
     KeepKeyPromises(public_key_file, private_key_file);
@@ -151,7 +144,6 @@ int main(int argc, char *argv[])
     free(public_key_file);
     free(private_key_file);
 
-    ReportContextDestroy(report_context);
     GenericAgentConfigDestroy(config);
     EvalContextDestroy(ctx);
     return 0;
@@ -181,7 +173,7 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'V':
-            PrintVersionBanner("cf-key");
+            PrintVersion();
             exit(0);
 
         case 'v':
@@ -211,15 +203,23 @@ static GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'h':
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            PrintHelp("cf-key", OPTIONS, HINTS, false);
             exit(0);
 
         case 'M':
-            ManPage("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
-            exit(0);
+            {
+                Writer *out = FileWriter(stdout);
+                ManPageWrite(out, "cf-key", time(NULL),
+                             CF_KEY_SHORT_DESCRIPTION,
+                             CF_KEY_MANPAGE_LONG_DESCRIPTION,
+                             OPTIONS, HINTS,
+                             false);
+                FileWriterDetach(out);
+                exit(EXIT_SUCCESS);
+            }
 
         default:
-            Syntax("cf-key - CFEngine's key generator", OPTIONS, HINTS, ID);
+            PrintHelp("cf-key", OPTIONS, HINTS, false);
             exit(1);
 
         }

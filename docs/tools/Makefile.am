@@ -1,5 +1,6 @@
 
 AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../../libutils
+LDADD = ../../libcompat/libcompat.la
 
 noinst_PROGRAMS = build-solutions-guide build-stdlib
 

@@ -1,9 +1,0 @@
-
-@verbatim
-
-body reporter control
-{
-aggregation_point => "/srv/www/htdocs/reports";
-}
-
-@end verbatim

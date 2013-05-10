@@ -1,6 +1,9 @@
 sbin_PROGRAMS = cf-execd
 
-AM_CPPFLAGS = @CPPFLAGS@ -I$(srcdir)/../libpromises -I$(srcdir)/../libutils \
+AM_CPPFLAGS = @CPPFLAGS@ \
+	-I$(srcdir)/../libpromises \
+	-I$(srcdir)/../libutils \
+	-I$(srcdir)/../libcfnet \
 	$(NOVA_CPPFLAGS)
 
 if HAVE_NOVA
@@ -17,7 +20,8 @@ endif
 
 cf_execd_SOURCES = \
         cf-execd.c \
-        cf-execd-runner.c cf-execd-runner.h
+        cf-execd-runner.c cf-execd-runner.h \
+        exec-config.c exec-config.h
 
 CLEANFILES = *.gcno *.gcda
 

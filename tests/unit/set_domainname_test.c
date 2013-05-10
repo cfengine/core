@@ -18,7 +18,11 @@ static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };
 
+#ifdef SOLARIS
+int gethostname(char *name, int len)
+#else
 int gethostname(char *name, size_t len)
+#endif
 {
     strcpy(name, "laptop.intra");
     return 0;
@@ -75,7 +79,7 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void ScopeNewScalar(const char *ns, const char *varname, const char *value, DataType type)
+void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
@@ -95,7 +99,12 @@ void ScopeNewScalar(const char *ns, const char *varname, const char *value, Data
     fail();                     /* LCOV_EXCL_LINE */
 }
 
-static void test_set_names(void **state)
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+{
+    ScopeNewScalar(ctx, ns, varname, value, type);
+}
+
+static void test_set_names(void)
 {
     int i = 0;
 
@@ -183,11 +192,6 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     fail();
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
-{
-    fail();
-}
-
 const char *NameVersion(void)
 {
     fail();
@@ -203,11 +207,6 @@ void Unix_FindV6InterfaceInfo(void)
     fail();
 }
 
-int cfstat(const char *path, struct stat *buf)
-{
-    fail();
-}
-
 void FatalError(char *s, ...)
 {
     fail();
@@ -215,11 +214,6 @@ void FatalError(char *s, ...)
 }
 
 Item *SplitString(const char *string, char sep)
-{
-    fail();
-}
-
-char *cf_ctime(const time_t *timep)
 {
     fail();
 }
@@ -254,17 +248,12 @@ char *Constellation_Version(void)
     fail();
 }
 
-void LoadSlowlyVaryingObservations(void)
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     fail();
 }
 
 void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
-{
-    fail();
-}
-
-char *MapName(char *s)
 {
     fail();
 }
@@ -299,17 +288,28 @@ bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
     fail();
 }
 
+void ScopeDeleteSpecialScalar(const char *scope, const char *id)
+{
+    fail();
+}
+
 void ScopeDeleteVariable(const char *scope, const char *id)
 {
     fail();
 }
+
 
 Rlist *RlistParseShown(char *string)
 {
     fail();
 }
 
-void ScopeNewList(const char *scope, const char *lval, void *rval, DataType dt)
+void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
+{
+    fail();
+}
+
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
 {
     fail();
 }
@@ -338,6 +338,6 @@ char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
 const char *CLASSTEXT[1] = { };
 
-char VIPADDRESS[18];
+char VIPADDRESS[CF_MAX_IP_LEN];
 
 /* LCOV_EXCL_STOP */

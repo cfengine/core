@@ -1,0 +1,40 @@
+
+@verbatim
+
+body common control
+
+{
+bundlesequence  => { "example" };
+}
+
+###########################################################
+
+bundle agent example
+
+{     
+  classes:
+      "myclass" expression => "any";
+      "myclass2" expression => "any";
+      "secondpass" expression => "any";
+  vars:
+      # result: { "1", "single string parameter", "hardclass OK", "bundle class OK", "5 parameters OK" }
+
+      # we need to use the secondpass class because on the first pass,
+      # myclass and myclass2 are not defined yet
+
+    secondpass::
+      "mylist" slist => {
+                          ifelse(1),
+                          ifelse("single string parameter"),
+                          ifelse("cfengine", "hardclass OK", "hardclass broken"),
+                          ifelse("myclass.myclass2", "bundle class OK", "bundle class broken"),
+                          ifelse("this is not true", "5 parameters broken",
+                                 "this is also not true", "5 parameters broken 2",
+                                 "5 parameters OK"),
+                        };
+
+  reports:
+      "ifelse result list: $(mylist)";
+}
+
+@end verbatim

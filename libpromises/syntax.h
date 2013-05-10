@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -28,9 +28,14 @@
 #include "cf3.defs.h"
 
 #include "sequence.h"
-#include "writer.h"
+#include "json.h"
 
 #include <stdio.h>
+
+/*
+ * WARNING: This file is in need of serious cleanup.
+ */
+
 
 typedef enum
 {
@@ -67,12 +72,49 @@ const char *SyntaxTypeMatchToString(SyntaxTypeMatch result);
 int CheckParseVariableName(const char *name);
 SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType dt, const char *range, int level);
 SyntaxTypeMatch CheckParseContext(const char *context, const char *range);
-DataType StringDataType(const char *scopeid, const char *string);
+DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *string);
 DataType ExpectedDataType(const char *lvalname);
 bool IsDataType(const char *s);
-SubTypeSyntax SubTypeSyntaxLookup(const char *bundle_type, const char *subtype_name);
 
-/* print a specification of the CFEngine language */
-void SyntaxPrintAsJson(Writer *writer);
+const PromiseTypeSyntax *PromiseTypeSyntaxGet(const char *bundle_type, const char *promise_type);
+const ConstraintSyntax *PromiseTypeSyntaxGetConstraintSyntax(const PromiseTypeSyntax *promise_type_syntax, const char *lval);
+
+const BodySyntax *BodySyntaxGet(const char *body_type);
+const ConstraintSyntax *BodySyntaxGetConstraintSyntax(const ConstraintSyntax *body_syntax, const char *lval);
+
+const char *SyntaxStatusToString(SyntaxStatus status);
+
+JsonElement *SyntaxToJson(void);
+
+#define ConstraintSyntaxNewNull() { NULL, DATA_TYPE_NONE, .range.validation_string = NULL, .status = SYNTAX_STATUS_NORMAL }
+#define ConstraintSyntaxNewBool(lval, description, status) { lval, DATA_TYPE_OPTION, .range.validation_string = CF_BOOL, description, status }
+
+#define ConstraintSyntaxNewOption(lval, options, description, status) { lval, DATA_TYPE_OPTION, .range.validation_string = options, description, status }
+#define ConstraintSyntaxNewOptionList(lval, item_range, description, status) { lval, DATA_TYPE_OPTION_LIST, .range.validation_string = item_range, description, status }
+
+#define ConstraintSyntaxNewString(lval, regex, description, status) { lval, DATA_TYPE_STRING, .range.validation_string = regex, description, status }
+#define ConstraintSyntaxNewStringList(lval, item_range, description, status) { lval, DATA_TYPE_STRING_LIST, .range.validation_string = item_range, description, status }
+
+#define ConstraintSyntaxNewInt(lval, int_range, description, status) { lval, DATA_TYPE_INT, .range.validation_string = int_range, description, status }
+#define ConstraintSyntaxNewIntRange(lval, int_range, description, status ) { lval , DATA_TYPE_INT_RANGE, .range.validation_string = int_range, description, status }
+#define ConstraintSyntaxNewIntList(lval, description, status) { lval, DATA_TYPE_INT_LIST, .range.validation_string = CF_INTRANGE, description, status }
+
+#define ConstraintSyntaxNewReal(lval, real_range, description, status) { lval, DATA_TYPE_REAL, .range.validation_string = real_range, description, status }
+#define ConstraintSyntaxNewRealList(lval, description, status) { lval, DATA_TYPE_REAL_LIST, .range.validation_string = CF_REALRANGE, description, status }
+
+#define ConstraintSyntaxNewContext(lval, description, status) { lval, DATA_TYPE_CONTEXT, .range.validation_string = CF_CLASSRANGE, description, status }
+#define ConstraintSyntaxNewContextList(lval, description, status) { lval, DATA_TYPE_CONTEXT_LIST, .range.validation_string = CF_CLASSRANGE, description, status }
+
+#define ConstraintSyntaxNewBody(lval, body_syntax, description, status) { lval, DATA_TYPE_BODY, .range.body_type_syntax = body_syntax, description, status }
+#define ConstraintSyntaxNewBundle(lval, description, status) { lval, DATA_TYPE_BUNDLE, .range.validation_string = CF_BUNDLE, description, status }
+
+#define BodySyntaxNew(body_type, constraints, check_fn, status) { body_type, constraints, check_fn, status }
+#define BodySyntaxNewNull() { NULL, NULL, NULL, SYNTAX_STATUS_NORMAL }
+
+#define PromiseTypeSyntaxNew(agent_type, promise_type, constraints, check_fn, status) { agent_type, promise_type, constraints, check_fn, status }
+#define PromiseTypeSyntaxNewNull() PromiseTypeSyntaxNew(NULL, NULL, NULL, NULL, SYNTAX_STATUS_NORMAL)
+
+#define FnCallTypeNew(name, return_type, arguments, implementation, description, is_varargs, status) { name, return_type, arguments, implementation, description, is_varargs, status }
+#define FnCallTypeNewNull() FnCallTypeNew(NULL, DATA_TYPE_NONE, NULL, NULL, NULL, false, SYNTAX_STATUS_NORMAL)
 
 #endif

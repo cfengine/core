@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,7 +27,7 @@
 
 /* Compiler-specific options/defines */
 
-#if defined(__GNUC__) && (__GNUC__ * 100 >= 3)
+#if defined(__GNUC__) && (__GNUC__ >= 3)
 # define FUNC_ATTR_NORETURN  __attribute__((noreturn))
 #else /* not gcc >= 3.0 */
 # define FUNC_ATTR_NORETURN
@@ -50,6 +50,19 @@
     __attribute__((deprecated))
 #else
 #  define FUNC_DEPRECATED(warning_text)
+#endif
+
+#if defined(__GNUC__) && ((__GNUC__ * 100 +  __GNUC_MINOR__ * 10) >= 240)
+# define ARG_UNUSED __attribute__((unused))
+#else
+# define ARG_UNUSED
+#endif
+
+#if defined(__GNUC__)
+#  define FUNC_WARN_UNUSED_RESULT \
+    __attribute__((warn_unused_result))
+#else
+#  define FUNC_WARN_UNUSED_RESULT
 #endif
 
 #endif

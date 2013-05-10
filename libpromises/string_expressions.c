@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -26,7 +26,6 @@
 
 #include "bool.h"
 #include "string_expressions.h"
-#include "logging.h"
 #include "misc_lib.h"
 
 #include <stdlib.h>
@@ -81,7 +80,7 @@ static StringParseResult ParseQname(const char *expr, int start, int end)
 
 static StringParseResult ParseVarRef(const char *expr, int start, int end)
 {
-    if (start + 1 < end && expr[start] == '$')
+    if (start + 1 < end && (expr[start] == '$' || expr[start] == '@'))
     {
         if (expr[start + 1] == '(' || expr[start + 1] == '{')
         {
@@ -96,6 +95,19 @@ static StringParseResult ParseVarRef(const char *expr, int start, int end)
 
                     ret->op = VARREF;
                     ret->val.varref.name = res.result;
+
+                    if (expr[start] == '$')
+                    {
+                        ret->val.varref.type = VAR_REF_TYPE_SCALAR;
+                    }
+                    else if (expr[start] == '@')
+                    {
+                        ret->val.varref.type = VAR_REF_TYPE_LIST;
+                    }
+                    else
+                    {
+                        ProgrammingError("Unrecognized var ref type");
+                    }
 
                     return (StringParseResult) {ret, res.position + 1};
                 }
@@ -254,7 +266,7 @@ static char *EvalVarRef(const StringExpression *expr, VarRefEvaluator evalfn, vo
         return NULL;
     }
 
-    eval = (*evalfn) (name, param);
+    eval = (*evalfn) (name, expr->val.varref.type, param);
     free(name);
     return eval;
 }

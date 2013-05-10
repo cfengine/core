@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -27,14 +27,16 @@
 #include "mon.h"
 #include "item_lib.h"
 #include "files_interfaces.h"
-#include "cfstream.h"
 #include "pipes.h"
-#include "logging.h"
+
+#ifdef HAVE_NOVA
+# include "cf.nova.h"
+#endif
 
 /* Prototypes */
 
 #ifndef __MINGW32__
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs);
 #endif
 
 /* Implementation */
@@ -62,13 +64,13 @@ void MonProcessesGatherData(double *cf_this)
 
     DeleteItemList(userList);
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "(Users,root,other) = (%d,%d,%d)\n", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
+    Log(LOG_LEVEL_VERBOSE, "(Users,root,other) = (%d,%d,%d)\n", (int) cf_this[ob_users], (int) cf_this[ob_rootprocs],
           (int) cf_this[ob_otherprocs]);
 }
 
 #ifndef __MINGW32__
 
-static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
+static bool GatherProcessUsers(Item **userList, int *userListSz, int *numRootProcs, int *numOtherProcs)
 {
     FILE *pp;
     char pscomm[CF_BUFSIZE];
@@ -77,22 +79,36 @@ static int GatherProcessUsers(Item **userList, int *userListSz, int *numRootProc
 
     snprintf(pscomm, CF_BUFSIZE, "%s %s", VPSCOMM[VSYSTEMHARDCLASS], VPSOPTS[VSYSTEMHARDCLASS]);
 
-    if ((pp = cf_popen(pscomm, "r")) == NULL)
+    if ((pp = cf_popen(pscomm, "r", true)) == NULL)
     {
+        /* FIXME: no logging */
         return false;
     }
 
-    if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+    /* Ignore first line -- header */
+    ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+    if (res == -1 || res == 0)
     {
-        FatalError("Error in CfReadLine");
+        /* FIXME: no logging */
+        cf_pclose(pp);
+        return false;
     }
 
-    while (!feof(pp))
+    for (;;)
     {
-        if (CfReadLine(vbuff, CF_BUFSIZE, pp) == -1)
+        ssize_t res = CfReadLine(vbuff, CF_BUFSIZE, pp);
+        if (res == 0)
         {
-            FatalError("Error in CfReadLine");
+            break;
         }
+
+        if (res == -1)
+        {
+            /* FIXME: no logging */
+            cf_pclose(pp);
+            return false;
+        }
+
         sscanf(vbuff, "%s", user);
 
         if (strcmp(user, "USER") == 0)

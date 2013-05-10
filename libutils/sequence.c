@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -235,3 +235,20 @@ size_t SeqLength(const Seq *seq)
     return seq->length;
 }
 
+void SeqShuffle(Seq *seq, unsigned int seed)
+{
+    /* Store current random number state for being reset at the end of function */
+    int rand_state = rand();
+
+    srand(seed);
+
+    for (size_t i = SeqLength(seq) - 1; i > 0; i--)
+    {
+        size_t j = rand() % (i + 1);
+
+        Swap(seq->data + i, seq->data + j);
+    }
+
+    /* Restore previous random number state */
+    srand(rand_state);
+}

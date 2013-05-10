@@ -1,2 +1,0 @@
-
-Automatic scaling is the default.

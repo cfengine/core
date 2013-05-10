@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -31,6 +31,7 @@
 #include <assert.h>
 
 #define STRING_MATCH_OVECCOUNT 30
+#define NULL_OR_EMPTY(str) ((str == NULL) || (str[0] == '\0'))
 
 char ToLower(char ch)
 {
@@ -768,3 +769,94 @@ bool StringEndsWith(const char *str, const char *suffix)
 
     return true;
 }
+
+bool StringStartsWith(const char *str, const char *prefix)
+{
+    int str_len = strlen(str);
+    int prefix_len = strlen(prefix);
+
+    if (prefix_len > str_len)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < prefix_len; i++)
+    {
+        if (str[i] != prefix[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+char *StringVFormat(const char *fmt, va_list ap)
+{
+    char *value;
+    int ret = xvasprintf(&value, fmt, ap);
+    if (ret < 0)
+    {
+        return NULL;
+    }
+    else
+    {
+        return value;
+    }
+}
+
+char *StringFormat(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *res = StringVFormat(fmt, ap);
+    va_end(ap);
+    return res;
+}
+
+char *MemSpan(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem != c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
+}
+
+char *MemSpanInverse(const char *mem, char c, size_t n)
+{
+    const char *end = mem + n;
+    for (; mem < end; ++mem)
+    {
+        if (*mem == c)
+        {
+            return (char *)mem;
+        }
+    }
+
+    return (char *)mem;
+}
+
+bool CompareStringOrRegex(const char *value, const char *compareTo, bool regex)
+{
+    if (regex)
+    {
+        if (!NULL_OR_EMPTY(compareTo) && !StringMatchFull(compareTo, value))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (!NULL_OR_EMPTY(compareTo)  && strcmp(compareTo, value) != 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+

@@ -1,8 +1,7 @@
 /*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
-
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -18,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -28,19 +27,21 @@
 
 #include "cf3.defs.h"
 
-#include "reporting.h"
+typedef void PromiseActuator(EvalContext *ctx, Promise *pp, void *param);
 
-void ExpandPromise(EvalContext *ctx, AgentType ag, const char *scopeid, Promise *pp, void *fnptr, const ReportContext *report_context);
+void CommonEvalPromise(EvalContext *ctx, Promise *pp, void *param);
+
+void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise, void *param);
 
 Rval ExpandDanglers(EvalContext *ctx, const char *scope, Rval rval, const Promise *pp);
-void MapIteratorsFromRval(const char *scope, Rlist **los, Rlist **lol, Rval rval, const Promise *pp);
+void MapIteratorsFromRval(EvalContext *ctx, const char *scope, Rlist **lol, Rlist **los, Rval rval);
 
 int IsExpandable(const char *str);
-int ExpandScalar(const char *string, char buffer[CF_EXPANDSIZE]);
-Rval ExpandBundleReference(const char *scopeid, Rval rval);
-FnCall *ExpandFnCall(const char *contextid, FnCall *f, int expandnaked);
-Rval ExpandPrivateRval(const char *contextid, Rval rval);
-Rlist *ExpandList(const char *scopeid, const Rlist *list, int expandnaked);
+
+bool ExpandScalar(const EvalContext *ctx, const char *scope, const char *string, char buffer[CF_EXPANDSIZE]);
+Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval);
+Rval ExpandPrivateRval(EvalContext *ctx, const char *contextid, Rval rval);
+Rlist *ExpandList(EvalContext *ctx, const char *scopeid, const Rlist *list, int expandnaked);
 Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int forcelist, const Promise *pp);
 int IsNakedVar(const char *str, char vtype);
 /**
@@ -59,7 +60,5 @@ void GetNaked(char *s1, const char *s2);
   @return True if the variable is a list, False otherwise.
   */
 bool IsVarList(const char *var);
-void ConvergeVarHashPromise(EvalContext *ctx, char *scope, const Promise *pp, int checkdup);
-int ExpandPrivateScalar(const char *contextid, const char *string, char buffer[CF_EXPANDSIZE]);
 
 #endif

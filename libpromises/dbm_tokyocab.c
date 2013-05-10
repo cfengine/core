@@ -1,8 +1,7 @@
 /*
+   Copyright (C) CFEngine AS
 
-   Copyright (C) Cfengine AS
-
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -18,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -30,8 +29,8 @@
 #include "cf3.defs.h"
 
 #include "dbm_priv.h"
-#include "dbm_lib.h"
-#include "cfstream.h"
+#include "logging.h"
+#include "string_lib.h"
 
 #ifdef TCDB
 
@@ -77,8 +76,7 @@ static bool LockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_lock",
-              "Unable to obtain cursor lock for Tokyo Cabinet database");
+        Log(LOG_LEVEL_ERR, "Unable to obtain cursor lock for Tokyo Cabinet database. (pthread_mutex_lock: %s)", GetErrorStr());
         return false;
     }
     return true;
@@ -90,8 +88,8 @@ static void UnlockCursor(DBPriv *db)
     if (ret != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_unlock",
-              "Unable to release cursor lock for Tokyo Cabinet database");
+        Log(LOG_LEVEL_ERR, "Unable to release cursor lock for Tokyo Cabinet database. (pthread_mutex_unlock: %s)",
+            GetErrorStr());
     }
 }
 
@@ -119,6 +117,12 @@ static bool OpenTokyoDatabase(const char *filename, TCHDB **hdb)
         return false;
     }
 
+    if (!tchdboptimize(*hdb, -1, -1, -1, false))
+    {
+        tchdbclose(*hdb);
+        return false;
+    }
+
     return true;
 }
 
@@ -130,7 +134,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
     if (!OpenTokyoDatabase(dbpath, &db->hdb))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not open database %s: %s",
+        Log(LOG_LEVEL_ERR, "Could not open database %s: %s",
               dbpath, ErrorMessage(db->hdb));
 
         int errcode = tchdbecode(db->hdb);
@@ -142,16 +146,7 @@ DBPriv *DBPrivOpenDB(const char *dbpath)
 
         tchdbdel(db->hdb);
 
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! Database \"%s\" is broken, recreating...", dbpath);
-
-        DBPathMoveBroken(dbpath);
-
-        if (!OpenTokyoDatabase(dbpath, &db->hdb))
-        {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "!! Could not open database %s after recreate: %s",
-                  dbpath, ErrorMessage(db->hdb));
-            goto err;
-        }
+        return DB_PRIV_DATABASE_BROKEN;
     }
 
     return db;
@@ -170,14 +165,13 @@ void DBPrivCloseDB(DBPriv *db)
     if ((ret = pthread_mutex_destroy(&db->cursor_lock)) != 0)
     {
         errno = ret;
-        CfOut(OUTPUT_LEVEL_ERROR, "pthread_mutex_destroy",
-              "Unable to destroy mutex during Tokyo Cabinet database handle close");
+        Log(LOG_LEVEL_ERR, "Unable to destroy mutex during Tokyo Cabinet database handle close. (pthread_mutex_destroy: %s)",
+            GetErrorStr());
     }
 
     if (!tchdbclose(db->hdb))
     {
-    CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbclose: Closing database failed: %s",
-              ErrorMessage(db->hdb));
+        Log(LOG_LEVEL_ERR, "Closing database failed. (tchdbclose: %s)", ErrorMessage(db->hdb));
     }
 
     tchdbdel(db->hdb);
@@ -202,7 +196,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         if (tchdbecode(db->hdb) != TCENOREC)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
+            Log(LOG_LEVEL_ERR, "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
         }
         return false;
     }
@@ -241,7 +235,7 @@ static bool Write(TCHDB *hdb, const void *key, int key_size, const void *value, 
 {
     if (!tchdbput(hdb, key, key_size, value, value_size))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbput: Could not write key to DB \"%s\": %s",
+        Log(LOG_LEVEL_ERR, "tchdbput: Could not write key to DB \"%s\": %s",
               tchdbpath(hdb), ErrorMessage(hdb));
         return false;
     }
@@ -252,7 +246,7 @@ static bool Delete(TCHDB *hdb, const void *key, int key_size)
 {
     if (!tchdbout(hdb, key, key_size) && tchdbecode(hdb) != TCENOREC)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "!! tchdbout: Could not delete key: %s",
+        Log(LOG_LEVEL_ERR, "tchdbout: Could not delete key: %s",
               ErrorMessage(hdb));
         return false;
     }
@@ -362,6 +356,85 @@ void DBPrivCloseCursor(DBCursorPriv *cursor)
 
     /* Cursor lock was obtained in DBPrivOpenCursor */
     UnlockCursor(db);
+}
+
+
+char *DBPrivDiagnose(const char *dbpath)
+{
+#define SWAB64(num) \
+    ( \
+        ((num & 0x00000000000000ffULL) << 56) | \
+        ((num & 0x000000000000ff00ULL) << 40) | \
+        ((num & 0x0000000000ff0000ULL) << 24) | \
+        ((num & 0x00000000ff000000ULL) << 8) | \
+        ((num & 0x000000ff00000000ULL) >> 8) | \
+        ((num & 0x0000ff0000000000ULL) >> 24) | \
+        ((num & 0x00ff000000000000ULL) >> 40) | \
+        ((num & 0xff00000000000000ULL) >> 56) \
+    )
+
+    static const char *MAGIC="ToKyO CaBiNeT";
+
+    FILE *fp = fopen(dbpath, "r");
+    if(!fp)
+    {
+        return StringFormat("Error opening file '%s': %s", dbpath, strerror(errno));
+    }
+
+    if(fseek(fp, 0, SEEK_END) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Error seeking to end: %s\n", strerror(errno));
+    }
+
+    uint64_t size = ftell(fp);
+    if(size < 256)
+    {
+        fclose(fp);
+        return StringFormat("Seek-to-end size less than minimum required: %zd", size);
+    }
+
+    char hbuf[256];
+    memset(hbuf, 0, (size_t)256);
+
+    if(fseek(fp, 0, SEEK_SET) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Error seeking to offset 256: %s", strerror(errno));
+    }
+
+    if(fread(&hbuf, 256, 1, fp) != 1)
+    {
+        fclose(fp);
+        return StringFormat("Error reading 256 bytes: %s\n", strerror(errno));
+    }
+
+    if(strncmp(hbuf, MAGIC, strlen(MAGIC)) != 0)
+    {
+        fclose(fp);
+        return StringFormat("Magic string mismatch");
+    }
+
+    uint64_t declared_size = 0;
+    memcpy(&declared_size, hbuf+56, sizeof(uint64_t));
+    if(declared_size == size)
+    {
+        return NULL; // all is well
+    }
+    else
+    {
+        declared_size = SWAB64(declared_size);
+        if(declared_size == size)
+        {
+            fclose(fp);
+            return StringFormat("Endianness mismatch, declared size SWAB64 '%zd' equals seek-to-end size '%zd'", declared_size, size);
+        }
+        else
+        {
+            fclose(fp);
+            return StringFormat("Size mismatch, declared size SWAB64 '%zd', seek-to-end-size '%zd'", declared_size, size);
+        }
+    }
 }
 
 #endif

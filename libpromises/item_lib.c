@@ -1,26 +1,25 @@
-/* 
-   Copyright (C) Cfengine AS
+/*
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
- 
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
+
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
    Free Software Foundation; version 3.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
- 
-  You should have received a copy of the GNU General Public License  
+
+  You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
-
 */
 
 #include "item_lib.h"
@@ -28,7 +27,6 @@
 #include "files_names.h"
 #include "addr_lib.h"
 #include "matching.h"
-#include "logging.h"
 #include "misc_lib.h"
 
 /*******************************************************************/
@@ -170,11 +168,11 @@ Item *EndOfList(Item *start)
 
 /*********************************************************************/
 
-int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr, Attributes a, const Promise *pp)
+int IsItemInRegion(const char *item, const Item *begin_ptr, const Item *end_ptr, Rlist *insert_match, const Promise *pp)
 {
     for (const Item *ip = begin_ptr; ((ip != end_ptr) && (ip != NULL)); ip = ip->next)
     {
-        if (MatchPolicy(item, ip->name, a, pp))
+        if (MatchPolicy(item, ip->name, insert_match, pp))
         {
             return true;
         }
@@ -480,7 +478,7 @@ int SelectLastItemMatching(const char *regexp, Item *begin, Item *end, Item **ma
 
 /*********************************************************************/
 
-int MatchRegion(const char *chunk, const Item *start, const Item *begin, const Item *end)
+int MatchRegion(const char *chunk, const Item *begin, const Item *end, bool regex)
 /*
   Match a region in between the selection delimiters. It is
   called after SelectRegion. The end delimiter will be visible
@@ -502,7 +500,11 @@ int MatchRegion(const char *chunk, const Item *start, const Item *begin, const I
             return false;
         }
 
-        if (!FullTextMatch(buf, ip->name))
+        if (!regex && strcmp(buf, ip->name) != 0)
+        {
+            return false;
+        }
+        if (regex && !FullTextMatch(buf, ip->name))
         {
             return false;
         }
@@ -566,7 +568,7 @@ void InsertAfter(Item **filestart, Item *ptr, const char *string)
 
 /*********************************************************************/
 
-int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Attributes a,
+int NeighbourItemMatches(const Item *file_start, const Item *location, const char *string, EditOrder pos, Rlist *insert_match,
                          const Promise *pp)
 {
 /* Look for a line matching proposed insert before or after location */
@@ -577,7 +579,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if ((ip->next) && (ip->next == location))
             {
-                if (MatchPolicy(string, ip->name, a, pp))
+                if (MatchPolicy(string, ip->name, insert_match, pp))
                 {
                     return true;
                 }
@@ -592,7 +594,7 @@ int NeighbourItemMatches(const Item *file_start, const Item *location, const cha
         {
             if (ip == location)
             {
-                if ((ip->next) && (MatchPolicy(string, ip->next->name, a, pp)))
+                if ((ip->next) && (MatchPolicy(string, ip->next->name, insert_match, pp)))
                 {
                     return true;
                 }

@@ -1,0 +1,31 @@
+
+@verbatim
+
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "todo[1]" string => "2";
+      "todo[one]" string => "two";
+      "todo[3999]" slist => { "big", "small" };
+      "map" slist => maparray("yes $(this.k) $(this.v)", "todo");
+
+  reports:
+    cfengine::
+      "Hello $(map)";
+}
+
+@end verbatim
+
+Outputs:
+
+@verbatim
+R: Hello yes 1 2
+R: Hello yes one two
+R: Hello yes 3999 big
+R: Hello yes 3999 small
+@end verbatim

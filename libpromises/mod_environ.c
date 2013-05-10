@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,48 +17,49 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
 
-#include "cf3.defs.h"
 #include "mod_environ.h"
 
-static const BodySyntax CF_RESOURCE_BODY[] =
+#include "syntax.h"
+
+static const ConstraintSyntax environment_resources_constraints[] =
 {
-    {"env_cpus", DATA_TYPE_INT, CF_VALRANGE, "Number of virtual CPUs in the environment"},
-    {"env_memory", DATA_TYPE_INT, CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)"},
-    {"env_disk", DATA_TYPE_INT, CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)"},
-    {"env_baseline", DATA_TYPE_STRING, CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment"},
-    {"env_spec", DATA_TYPE_STRING, CF_ANYSTRING,
-     "A string containing a technology specific set of promises for the virtual instance"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewInt("env_cpus", CF_VALRANGE, "Number of virtual CPUs in the environment", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("env_memory", CF_VALRANGE, "Amount of primary storage (RAM) in the virtual environment (KB)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewInt("env_disk", CF_VALRANGE, "Amount of secondary storage (DISK) in the virtual environment (MB)", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("env_baseline", CF_ABSPATHRANGE, "The path to an image with which to baseline the virtual environment", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("env_spec", CF_ANYSTRING, "A string containing a technology specific set of promises for the virtual instance", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_DESIGNATION_BODY[] =
+static const BodySyntax environment_resources_body = BodySyntaxNew("environment_resources", environment_resources_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
+static const ConstraintSyntax environment_interface_constraints[] =
 {
-    {"env_addresses", DATA_TYPE_STRING_LIST, "", "The IP addresses of the environment's network interfaces"},
-    {"env_name", DATA_TYPE_STRING, "", "The hostname of the virtual environment"},
-    {"env_network", DATA_TYPE_STRING, "", "The hostname of the virtual network"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewStringList("env_addresses", "", "The IP addresses of the environment's network interfaces", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("env_name", "", "The hostname of the virtual environment", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewString("env_network", "", "The hostname of the virtual network", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
 };
 
-static const BodySyntax CF_ENVIRON_BODIES[] =
+static const BodySyntax environment_interface_body = BodySyntaxNew("environment_interface", environment_interface_constraints, NULL, SYNTAX_STATUS_NORMAL);
+
+static const ConstraintSyntax CF_ENVIRON_BODIES[] =
 {
-    {"environment_host", DATA_TYPE_STRING, "[a-zA-Z0-9_]+",
-     "A class indicating which physical node will execute this guest machine"},
-    {"environment_interface", DATA_TYPE_BODY, CF_DESIGNATION_BODY, "Virtual environment outward identity and location"},
-    {"environment_resources", DATA_TYPE_BODY, CF_RESOURCE_BODY, "Virtual environment resource description"},
-    {"environment_state", DATA_TYPE_OPTION, "create,delete,running,suspended,down",
-     "The desired dynamical state of the specified environment"},
-    {"environment_type", DATA_TYPE_OPTION, "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus",
-     "Virtual environment type"},
-    {NULL, DATA_TYPE_NONE, NULL, NULL}
+    ConstraintSyntaxNewString("environment_host", "[a-zA-Z0-9_]+", "A class indicating which physical node will execute this guest machine", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("environment_interface", &environment_interface_body, "Virtual environment outward identity and location", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewBody("environment_resources", &environment_resources_body, "Virtual environment resource description", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("environment_state", "create,delete,running,suspended,down", "The desired dynamical state of the specified environment", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewOption("environment_type", "xen,kvm,esx,vbox,test,xen_net,kvm_net,esx_net,test_net,zone,ec2,eucalyptus", "Virtual environment type", SYNTAX_STATUS_NORMAL),
+    ConstraintSyntaxNewNull()
 };
 
-const SubTypeSyntax CF_ENVIRONMENT_SUBTYPES[] =
+const PromiseTypeSyntax CF_ENVIRONMENT_PROMISE_TYPES[] =
 {
-    {"agent", "guest_environments", CF_ENVIRON_BODIES},
-    {NULL, NULL, NULL},
+    PromiseTypeSyntaxNew("agent", "guest_environments", CF_ENVIRON_BODIES, NULL, SYNTAX_STATUS_NORMAL),
+    PromiseTypeSyntaxNewNull()
 };

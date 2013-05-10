@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-manual_source => "/path/cfengine_manual_commentary";
-}
-
-@end verbatim

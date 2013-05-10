@@ -1,7 +1,7 @@
 /*
-   Copyright (C) Cfengine AS
+   Copyright (C) CFEngine AS
 
-   This file is part of Cfengine 3 - written and maintained by Cfengine AS.
+   This file is part of CFEngine 3 - written and maintained by CFEngine AS.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
 
   To the extent this program is licensed as part of the Enterprise
-  versions of Cfengine, the applicable Commerical Open Source License
+  versions of CFEngine, the applicable Commerical Open Source License
   (COSL) may apply to this file if you as a licensee so wish it. See
   included file COSL.txt.
 */
@@ -80,9 +80,11 @@ bool DeleteDB(CF_DB *dbp, const char *key);
  * key.
  */
 bool NewDBCursor(CF_DB *dbp, CF_DBC **dbcp);
-bool NextDB(CF_DB *dbp, CF_DBC *dbcp, char **key, int *ksize, void **value, int *vsize);
+bool NextDB(CF_DBC *dbcp, char **key, int *ksize, void **value, int *vsize);
 bool DBCursorDeleteEntry(CF_DBC *cursor);
 bool DBCursorWriteEntry(CF_DBC *cursor, const void *value, int value_size);
-bool DeleteDBCursor(CF_DB *dbp, CF_DBC *dbcp);
+bool DeleteDBCursor(CF_DBC *dbcp);
+
+char *DBIdToPath(const char *workdir, dbid id);
 
 #endif  /* NOT CFENGINE_DBM_API_H */

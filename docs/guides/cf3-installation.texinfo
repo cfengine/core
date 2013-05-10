@@ -141,7 +141,7 @@ The below procedure is valid for CFE Nova and CFE Community v3.2 and up (package
 This procedure applies to all hosts, but you should bootstrap the hub (policy server) first. Find the hostname or IP address of the hub, here we assume the address is '123.456.789.123' (do not bootstrap with a localhost address).
 @verbatim
 
-   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+   host# /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 
 @end verbatim
 
@@ -179,7 +179,7 @@ Find the hostname or IP address of the hub, here we assume the address is '123.4
 @verbatim
    host# /var/cfengine/bin/cf-key
    host# cp /var/cfengine/share/CoreBase/*.cf /var/cfengine/masterfiles/
-   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+   host# /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 
 @itemize
@@ -192,7 +192,7 @@ Find the hostname or IP address of the hub, here we assume the address is '123.4
 @noindent On the clients (all other machines):
 @verbatim
    host# /var/cfengine/bin/cf-key
-   host# /var/cfengine/bin/cf-agent --bootstrap --policy-server 123.456.789.123
+   host# /var/cfengine/bin/cf-agent --bootstrap 123.456.789.123
 @end verbatim
 
 @itemize

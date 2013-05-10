@@ -1,8 +1,0 @@
-@verbatim
-
-body knowledge control
-{
-id_prefix => "unique_prefix";
-}
-
-@end verbatim

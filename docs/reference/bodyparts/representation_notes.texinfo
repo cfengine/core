@@ -1,4 +1,0 @@
-
-The form of knowledge representation in a topic map occurrence reference.
-If the type @code{portal} is used it assumes that a new website should open in a new
-target window.

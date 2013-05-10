@@ -1,0 +1,113 @@
+#######################################################
+#
+# Test parsestringarray(), add some weird indices, real comments, no empty fields
+#
+# The 4xx tests are all related, and 400-419 are the readstringarray tests,
+# 420-439 the same for readstringarrayidx, 440-459 parsestringarray, and
+# 460-479 parsestringarrayidx
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+}
+
+bundle agent init
+{
+files:
+	"$(G.testfile)"
+	    delete => init_delete;
+	
+	"$(G.testfile)"
+	    create => "true",
+	    edit_line => init_fill_in;
+}
+
+bundle edit_line init_fill_in
+{
+insert_lines:
+
+"0:1:2
+1:2:3
+here is:a line: with spaces : in it
+blank:fields:::in here::
+:leading blank field
+this:is:a:test
+# A duplicate follows: this line is not always a comment
+this:also
+last:one";
+
+}
+
+body delete init_delete
+{
+	dirlinks => "delete";
+	rmdirs   => "true";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+	"teststr" string => readfile("$(G.testfile)",1000);
+	"cnt" int => parsestringarray("ary", "$(teststr)","^#.*",":+",10,14);
+	"num" int => "3";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+    	"idx" slist => getindices("test.ary");
+
+classes:
+	"bad" or => {
+	    	isvariable("test.ary[he][1]"),
+	    	isvariable("test.ary[blank][0]"),
+		};
+
+	"ok" and => {   
+		"!bad",
+
+		strcmp("$(test.num)", "$(test.cnt)"),
+
+		strcmp("$(test.ary[0][0])", "0"),
+		strcmp("$(test.ary[0][1])", "1"),
+		strcmp("$(test.ary[0][2])", "2"),
+
+		strcmp("$(test.ary[1][0])", "1"),
+		strcmp("$(test.ary[1][1])", "2"),
+		strcmp("$(test.ary[1][2])", "3"),
+
+		strcmp("$(test.ary[he][0])", "he"),
+		};
+
+reports:
+    DEBUG::
+	"expected $(test.num) entries, saw $(test.cnt)";
+
+	"saw array indices '$(idx)'";
+
+	"saw 'bad'-class things";
+
+	"expected test.ary[0][0] = '0', saw '$(test.ary[0][0])'";
+	"expected test.ary[0][1] = '1', saw '$(test.ary[0][1])'";
+	"expected test.ary[0][2] = '2', saw '$(test.ary[0][2])'";
+
+	"expected test.ary[1][0] = '1', saw '$(test.ary[1][0])'";
+	"expected test.ary[1][1] = '2', saw '$(test.ary[1][1])'";
+	"expected test.ary[1][2] = '3', saw '$(test.ary[1][2])'";
+
+	"expected test.ary[he][0] = 'he', saw '$(test.ary[he][0])'";
+
+    ok::
+	"$(this.promise_filename) Pass";
+
+    !ok::
+	"$(this.promise_filename) FAIL";
+}

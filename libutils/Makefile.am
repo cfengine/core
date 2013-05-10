@@ -17,14 +17,18 @@ libutils_la_SOURCES = \
 	json.c json.h \
 	refcount.c refcount.h refcount_p.h \
 	list.c list.h list_p.h \
+	logging.c logging.h \
 	buffer.c buffer.h \
+    ip_address.c ip_address.h \
 	map.c map.h map_common.h \
 	array_map.c array_map_priv.h \
 	hash_map.c hash_map_priv.h \
 	misc_lib.c misc_lib.h \
 	writer.c writer.h \
 	csv_writer.c csv_writer.h \
-	xml_writer.c xml_writer.h
+	xml_writer.c xml_writer.h \
+	file_lib.c file_lib.h \
+	man.c man.h
 
 CLEANFILES = *.gcno *.gcda
 

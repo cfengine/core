@@ -282,7 +282,7 @@ static time_t FindLock(char *last)
 
         if (WriteLock(last) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Unable to lock %s\n", last);
+            Log(LOG_LEVEL_ERR, "Unable to lock %s", last);
             return 0;
         }
 
@@ -358,7 +358,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     {
         if (statbuf.st_size > CFLOGSIZE)
         {
-            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file\n");
+            Log(LOG_LEVEL_VERBOSE, "Rotating lock-runlog file");
             RotateFiles(cflog, 2);
         }
     }
@@ -656,7 +656,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     if (elapsedtime < 0)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%jd)\n",
+        Log(LOG_LEVEL_VERBOSE, " XX Another cf-agent seems to have done this since I started (elapsed=%jd)",
               (intmax_t) elapsedtime);
         ReleaseCriticalSection();
         return this;
@@ -664,7 +664,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     if (elapsedtime < tc.ifelapsed)
     {
-        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)\n", cflast,
+        Log(LOG_LEVEL_VERBOSE, " XX Nothing promised here [%.40s] (%jd/%u minutes elapsed)", cflast,
               (intmax_t) elapsedtime, tc.ifelapsed);
         ReleaseCriticalSection();
         return this;
@@ -681,7 +681,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
         {
             if (elapsedtime >= tc.expireafter)
             {
-                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)\n", cflock, (intmax_t) elapsedtime,
+                Log(LOG_LEVEL_INFO, "Lock %s expired (after %jd/%u minutes)", cflock, (intmax_t) elapsedtime,
                       tc.expireafter);
 
                 pid_t pid = FindLockPid(cflock);
@@ -699,7 +699,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
             else
             {
                 ReleaseCriticalSection();
-                Log(LOG_LEVEL_VERBOSE, "Couldn't obtain lock for %s (already running!)\n", cflock);
+                Log(LOG_LEVEL_VERBOSE, "Couldn't obtain lock for %s (already running!)", cflock);
                 return this;
             }
         }
@@ -738,7 +738,7 @@ void YieldCurrentLock(CfLock this)
 
     if (RemoveLock(this.lock) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s\n", this.lock);
+        Log(LOG_LEVEL_VERBOSE, "Unable to remove lock %s", this.lock);
         free(this.last);
         free(this.lock);
         free(this.log);

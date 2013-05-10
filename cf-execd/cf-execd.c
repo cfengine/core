@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe\n");
+        Log(LOG_LEVEL_ERR, "CFEngine was not able to get confirmation of promises from cf-promises, so going to failsafe");
         EvalContextHeapAddHard(ctx, "failsafe_fallback");
         GenericAgentConfigSetInputFile(config, GetWorkDir(), "failsafe.cf");
         policy = GenericAgentLoadPolicy(ctx, config);
@@ -343,7 +343,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        Log(LOG_LEVEL_INFO, "cf-execd starting %.24s\n", ctime(&now));
+        Log(LOG_LEVEL_INFO, "cf-execd starting %.24s", ctime(&now));
         _exit(0);
     }
 
@@ -375,7 +375,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config, E
         {
             if (ScheduleRun(ctx, &policy, config, exec_config))
             {
-                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds\n\n", exec_config->splay_time);
+                Log(LOG_LEVEL_VERBOSE, "Sleeping for splaytime %d seconds", exec_config->splay_time);
                 sleep(exec_config->splay_time);
 
                 if (!LocalExecInThread(exec_config))
@@ -481,7 +481,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
 {
     if (NewPromiseProposals(ctx, config, input_files))
     {
-        Log(LOG_LEVEL_VERBOSE, "New promises detected...\n");
+        Log(LOG_LEVEL_VERBOSE, "New promises detected...");
 
         if (CheckPromises(config))
         {
@@ -503,7 +503,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
 
 static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *config, ExecConfig *exec_config)
 {
-    Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...\n", CFPULSETIME);
+    Log(LOG_LEVEL_VERBOSE, "Sleeping for pulse time %d seconds...", CFPULSETIME);
     sleep(CFPULSETIME);         /* 1 Minute resolution is enough */
 
     /*
@@ -514,7 +514,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     {
         /* Full reload */
 
-        Log(LOG_LEVEL_INFO, "Re-reading promise file %s..\n", config->input_file);
+        Log(LOG_LEVEL_INFO, "Re-reading promise file %s..", config->input_file);
 
         EvalContextHeapClear(ctx);
 
@@ -580,13 +580,13 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         {
             if (IsDefinedClass(ctx, time_context, NULL))
             {
-                Log(LOG_LEVEL_VERBOSE, "Waking up the agent at %s ~ %s \n", ctime(&CFSTARTTIME), time_context);
+                Log(LOG_LEVEL_VERBOSE, "Waking up the agent at %s ~ %s ", ctime(&CFSTARTTIME), time_context);
                 return true;
             }
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Nothing to do at %s\n", ctime(&CFSTARTTIME));
+    Log(LOG_LEVEL_VERBOSE, "Nothing to do at %s", ctime(&CFSTARTTIME));
     return false;
 }
 

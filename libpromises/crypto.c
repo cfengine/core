@@ -71,11 +71,11 @@ static void RandomSeed(void)
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in %s\n", vbuff);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in %s", vbuff);
 
     if (!RAND_load_file(vbuff, -1))
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from %s\n", vbuff);
+        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from %s", vbuff);
     }
 
     /* Submit some random data to random pool */
@@ -286,7 +286,7 @@ void SavePublicKey(const char *user, const char *digest, const RSA *key)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Saving public key %s\n", filename);
+    Log(LOG_LEVEL_VERBOSE, "Saving public key %s", filename);
 
     if ((fp = fopen(filename, "w")) == NULL)
     {
@@ -356,7 +356,7 @@ int DecryptString(char type, char *in, char *out, unsigned char *key, int cipher
     {
         unsigned long err = ERR_get_error();
 
-        Log(LOG_LEVEL_ERR, "decryption FAILED at final of %d: %s\n", cipherlen, ERR_error_string(err, NULL));
+        Log(LOG_LEVEL_ERR, "decryption FAILED at final of %d: %s", cipherlen, ERR_error_string(err, NULL));
         EVP_CIPHER_CTX_cleanup(&ctx);
         return -1;
     }

@@ -265,7 +265,7 @@ int MakeParentDirectory(char *parentandchild, int force)
 
     if (!IsAbsoluteFileName(parentandchild))
     {
-        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename (%s). Has no invariant meaning\n",
+        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename (%s). Has no invariant meaning",
               parentandchild);
         return false;
     }
@@ -296,7 +296,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     {
         if (S_ISLNK(statbuf.st_mode))
         {
-            Log(LOG_LEVEL_VERBOSE, "INFO: %s is a symbolic link, not a true directory!\n", pathbuf);
+            Log(LOG_LEVEL_VERBOSE, "INFO: %s is a symbolic link, not a true directory!", pathbuf);
         }
 
         if (force)              /* force in-the-way directories aside */
@@ -418,7 +418,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                     }
 #endif
 
-                    Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)\n", pathbuf,
+                    Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)", pathbuf,
                           currentpath);
                     return (false);
                 }
@@ -456,7 +456,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        Log(LOG_LEVEL_INFO, "%s is not a plain file\n", file);
+        Log(LOG_LEVEL_INFO, "%s is not a plain file", file);
         return false;
     }
 
@@ -619,7 +619,7 @@ void RotateFiles(char *name, int number)
 
     if (stat(name, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "No access to file %s\n", name);
+        Log(LOG_LEVEL_VERBOSE, "No access to file %s", name);
         return;
     }
 

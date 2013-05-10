@@ -87,7 +87,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if (m.data_type == DATA_TYPE_NONE)
     {
-        Log(LOG_LEVEL_ERR, "The promiser \"%s\" did not specify a data type\n", pp->promiser);
+        Log(LOG_LEVEL_ERR, "The promiser \"%s\" did not specify a data type", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
@@ -104,7 +104,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
                 break;
 
             default:
-                Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot have history type weekly as it is not a number\n", pp->promiser);
+                Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot have history type weekly as it is not a number", pp->promiser);
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 retval = false;
                 break;
@@ -114,7 +114,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
 
     if ((m.select_line_matching) && (m.select_line_number != CF_NOINT))
     {
-        Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot select both a line by pattern and by number\n", pp->promiser);
+        Log(LOG_LEVEL_ERR, "The promiser \"%s\" cannot select both a line by pattern and by number", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         retval = false;
     }
@@ -127,7 +127,7 @@ static bool CheckMeasureSanity(Measurement m, Promise *pp)
     {
         if ((!strchr(m.extraction_regex, '(')) && (!strchr(m.extraction_regex, ')')))
         {
-            Log(LOG_LEVEL_ERR, "The extraction_regex must contain a single backreference for the extraction\n");
+            Log(LOG_LEVEL_ERR, "The extraction_regex must contain a single backreference for the extraction");
             retval = false;
         }
     }

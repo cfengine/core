@@ -256,7 +256,7 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
 #endif
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to generate key: %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to generate key: %s", ERR_reason_error_string(err));
         return;
     }
 
@@ -307,12 +307,12 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Writing public key to %s\n", public_key_file);
+    Log(LOG_LEVEL_VERBOSE, "Writing public key to %s", public_key_file);
 
     if (!PEM_write_RSAPublicKey(fp, pair))
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Unable to write public key: %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Unable to write public key: %s", ERR_reason_error_string(err));
         return;
     }
 

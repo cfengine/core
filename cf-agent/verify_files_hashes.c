@@ -261,7 +261,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
             if ((bytes1 != bytes2) || (memcmp(buff1, buff2, bytes1) != 0))
             {
-                Log(LOG_LEVEL_VERBOSE, "Binary Comparison mismatch...\n");
+                Log(LOG_LEVEL_VERBOSE, "Binary Comparison mismatch...");
                 close(fd2);
                 close(fd1);
                 return true;

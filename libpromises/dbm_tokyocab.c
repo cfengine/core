@@ -196,7 +196,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         if (tchdbecode(db->hdb) != TCENOREC)
         {
-            Log(LOG_LEVEL_ERR, "ReadComplexKeyDB(%s): Could not read: %s\n", (const char *)key, ErrorMessage(db->hdb));
+            Log(LOG_LEVEL_ERR, "ReadComplexKeyDB(%s): Could not read: %s", (const char *)key, ErrorMessage(db->hdb));
         }
         return false;
     }

@@ -446,7 +446,7 @@ static int CreateVirtDom(EvalContext *ctx, virConnectPtr vc, Attributes a, Promi
     {
         if (strcmp(CF_SUSPENDED[i], pp->promiser) == 0)
         {
-            Log(LOG_LEVEL_INFO, "Found an existing, but suspended, environment id = %s, called \"%s\"\n",
+            Log(LOG_LEVEL_INFO, "Found an existing, but suspended, environment id = %s, called \"%s\"",
                   CF_SUSPENDED[i], CF_SUSPENDED[i]);
         }
     }
@@ -968,12 +968,12 @@ static void ShowRunList(virConnectPtr vc)
         {
             if ((dom = virDomainLookupByID(vc, CF_RUNNING[i])))
             {
-                Log(LOG_LEVEL_VERBOSE, "Found a running virtual domain with id %d\n", CF_RUNNING[i]);
+                Log(LOG_LEVEL_VERBOSE, "Found a running virtual domain with id %d", CF_RUNNING[i]);
             }
 
             if ((name = virDomainGetName(dom)))
             {
-                Log(LOG_LEVEL_VERBOSE, " ---> Found a running virtual domain called \"%s\"\n", name);
+                Log(LOG_LEVEL_VERBOSE, " ---> Found a running virtual domain called \"%s\"", name);
             }
 
             virDomainFree(dom);
@@ -989,7 +989,7 @@ static void ShowDormant(void)
 
     for (i = 0; CF_SUSPENDED[i] != NULL; i++)
     {
-        Log(LOG_LEVEL_VERBOSE, " ---> Found a suspended, domain environment called \"%s\"\n", CF_SUSPENDED[i]);
+        Log(LOG_LEVEL_VERBOSE, " ---> Found a suspended, domain environment called \"%s\"", CF_SUSPENDED[i]);
     }
 }
 

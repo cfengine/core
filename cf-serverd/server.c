@@ -173,18 +173,18 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     char intime[64];
     time_t now;
     
-    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of %s on socket %d from accept\n", ipaddr, sd_reply);
+    Log(LOG_LEVEL_VERBOSE, "Obtained IP address of %s on socket %d from accept", ipaddr, sd_reply);
     
     if ((SV.nonattackerlist) && (!IsMatchItemIn(SV.nonattackerlist, MapAddress(ipaddr))))
     {
-        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP %s\n", ipaddr);
+        Log(LOG_LEVEL_ERR, "Not allowing connection from non-authorized IP %s", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
     
     if (IsMatchItemIn(SV.attackerlist, MapAddress(ipaddr)))
     {
-        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP %s\n", ipaddr);
+        Log(LOG_LEVEL_ERR, "Denying connection from non-authorized IP %s", ipaddr);
         cf_closesocket(sd_reply);
         return;
     }
@@ -206,7 +206,7 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
         if (IsItemIn(SV.connectionlist, MapAddress(ipaddr)))
         {
             ThreadUnlock(cft_count);
-            Log(LOG_LEVEL_ERR, "Denying repeated connection from \"%s\"\n", ipaddr);
+            Log(LOG_LEVEL_ERR, "Denying repeated connection from \"%s\"", ipaddr);
             cf_closesocket(sd_reply);
             return;
         }
@@ -216,11 +216,11 @@ void ServerEntryPoint(EvalContext *ctx, int sd_reply, char *ipaddr)
     
     if (SV.logconns)
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"\n", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"\n", ipaddr);
+        Log(LOG_LEVEL_INFO, "Accepting connection from \"%s\"", ipaddr);
     }
     
     snprintf(intime, 63, "%d", (int) now);
@@ -273,7 +273,7 @@ void PurgeOldConnections(Item **list, time_t now)
 
         if (now > then + 7200)
         {
-            Log(LOG_LEVEL_VERBOSE, "Purging IP address %s from connection list\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Purging IP address %s from connection list", ip->name);
             DeleteItem(list, ip);
         }
     }
@@ -302,9 +302,9 @@ static void SpawnConnection(EvalContext *ctx, int sd_reply, char *ipaddr)
 
     strncpy(conn->ipaddr, ipaddr, CF_MAX_IP_LEN - 1);
 
-    Log(LOG_LEVEL_VERBOSE, "New connection...(from %s:sd %d)\n", conn->ipaddr, sd_reply);
+    Log(LOG_LEVEL_VERBOSE, "New connection...(from %s:sd %d)", conn->ipaddr, sd_reply);
 
-    Log(LOG_LEVEL_VERBOSE, "Spawning new thread...\n");
+    Log(LOG_LEVEL_VERBOSE, "Spawning new thread...");
 
     pthread_attr_init(&threadattrs);
     pthread_attr_setdetachstate(&threadattrs, PTHREAD_CREATE_DETACHED);
@@ -393,7 +393,7 @@ static void *HandleConnection(ServerConnectionState *conn)
     {
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Terminating thread...\n");
+    Log(LOG_LEVEL_VERBOSE, "Terminating thread...");
 
     if (!ThreadLock(cft_server_children))
     {
@@ -451,35 +451,35 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to incorrect identity\n");
+            Log(LOG_LEVEL_INFO, "Server refusal due to incorrect identity");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AllowedUser(conn->username))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to non-allowed user\n");
+            Log(LOG_LEVEL_INFO, "Server refusal due to non-allowed user");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!conn->rsa_auth)
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to no RSA authentication\n");
+            Log(LOG_LEVEL_INFO, "Server refusal due to no RSA authentication");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, CommandArg0(CFRUNCOMMAND), conn, false))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to denied access to requested object\n");
+            Log(LOG_LEVEL_INFO, "Server refusal due to denied access to requested object");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!MatchClasses(ctx, conn))
         {
-            Log(LOG_LEVEL_INFO, "Server refusal due to failed class/context match\n");
+            Log(LOG_LEVEL_INFO, "Server refusal due to failed class/context match");
             Terminate(conn->sd_reply);
             return false;
         }
@@ -492,7 +492,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
         }
 
@@ -506,7 +506,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
         }
 
@@ -516,14 +516,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AuthenticationDialogue(conn, recvbuffer, received))
         {
-            Log(LOG_LEVEL_INFO, "Auth dialogue error\n");
+            Log(LOG_LEVEL_INFO, "Auth dialogue error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -537,21 +537,21 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((get_args.buf_size < 0) || (get_args.buf_size > CF_BUFSIZE))
         {
-            Log(LOG_LEVEL_INFO, "GET buffer out of bounds\n");
+            Log(LOG_LEVEL_INFO, "GET buffer out of bounds");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, filename, conn, false))
         {
-            Log(LOG_LEVEL_INFO, "Access denied to get object\n");
+            Log(LOG_LEVEL_INFO, "Access denied to get object");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -579,7 +579,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (received != len + CF_PROTO_OFFSET)
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SGET\n");
+            Log(LOG_LEVEL_VERBOSE, "Protocol error SGET");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -590,14 +590,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strcmp(check, "GET") != 0)
         {
-            Log(LOG_LEVEL_INFO, "SGET/GET problem\n");
+            Log(LOG_LEVEL_INFO, "SGET/GET problem");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
         if ((get_args.buf_size < 0) || (get_args.buf_size > 8192))
         {
-            Log(LOG_LEVEL_INFO, "SGET bounding error\n");
+            Log(LOG_LEVEL_INFO, "SGET bounding error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -612,14 +612,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, filename, conn, true))
         {
-            Log(LOG_LEVEL_INFO, "Access control error\n");
+            Log(LOG_LEVEL_INFO, "Access control error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -641,14 +641,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error OPENDIR: %d\n", len);
+            Log(LOG_LEVEL_VERBOSE, "Protocol error OPENDIR: %d", len);
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (conn->session_key == NULL)
         {
-            Log(LOG_LEVEL_INFO, "No session key\n");
+            Log(LOG_LEVEL_INFO, "No session key");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -659,7 +659,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "OPENDIR", 7) != 0)
         {
-            Log(LOG_LEVEL_INFO, "Opendir failed to decrypt\n");
+            Log(LOG_LEVEL_INFO, "Opendir failed to decrypt");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -669,14 +669,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
-            Log(LOG_LEVEL_INFO, "Access error\n");
+            Log(LOG_LEVEL_INFO, "Access error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -691,14 +691,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (!AccessControl(ctx, filename, conn, true))        /* opendir don't care about privacy */
         {
-            Log(LOG_LEVEL_INFO, "DIR access error\n");
+            Log(LOG_LEVEL_INFO, "DIR access error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -713,14 +713,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_VERBOSE, "Protocol error SSYNCH: %d\n", len);
+            Log(LOG_LEVEL_VERBOSE, "Protocol error SSYNCH: %d", len);
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
 
         if (conn->session_key == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Bad session key\n");
+            Log(LOG_LEVEL_INFO, "Bad session key");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -737,7 +737,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "SYNCH", 5) != 0)
         {
-            Log(LOG_LEVEL_INFO, "No synch\n");
+            Log(LOG_LEVEL_INFO, "No synch");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -748,7 +748,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -775,7 +775,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!AccessControl(ctx, filename, conn, true))
         {
-            Log(LOG_LEVEL_INFO, "Access control in sync\n");
+            Log(LOG_LEVEL_INFO, "Access control in sync");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -801,7 +801,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_INFO, "Decryption error\n");
+            Log(LOG_LEVEL_INFO, "Decryption error");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -811,7 +811,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "MD5", 3) != 0)
         {
-            Log(LOG_LEVEL_INFO, "MD5 protocol error\n");
+            Log(LOG_LEVEL_INFO, "MD5 protocol error");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -822,7 +822,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
@@ -836,7 +836,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_INFO, "Decrypt error SVAR\n");
+            Log(LOG_LEVEL_INFO, "Decrypt error SVAR");
             RefuseAccess(conn, 0, "decrypt error SVAR");
             return true;
         }
@@ -847,7 +847,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "VAR", 3) != 0)
         {
-            Log(LOG_LEVEL_INFO, "VAR protocol defect\n");
+            Log(LOG_LEVEL_INFO, "VAR protocol defect");
             RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
@@ -858,14 +858,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, encrypted))
         {
-            Log(LOG_LEVEL_INFO, "Literal access failure\n");
+            Log(LOG_LEVEL_INFO, "Literal access failure");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -879,7 +879,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_INFO, "Decrypt error SCONTEXT, len,received = %d,%d\n", len, received);
+            Log(LOG_LEVEL_INFO, "Decrypt error SCONTEXT, len,received = %d,%d", len, received);
             RefuseAccess(conn, 0, "decrypt error SCONTEXT");
             return true;
         }
@@ -890,7 +890,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "CONTEXT", 7) != 0)
         {
-            Log(LOG_LEVEL_INFO, "CONTEXT protocol defect...\n");
+            Log(LOG_LEVEL_INFO, "CONTEXT protocol defect...");
             RefuseAccess(conn, 0, "Decryption failed?");
             return false;
         }
@@ -901,14 +901,14 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, "Context probe");
             return true;
         }
 
         if ((classes = ContextAccessControl(ctx, recvbuffer, conn, encrypted)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Context access failure on %s\n", recvbuffer);
+            Log(LOG_LEVEL_INFO, "Context access failure on %s", recvbuffer);
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -922,7 +922,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_INFO, "Decrypt error SQUERY\n");
+            Log(LOG_LEVEL_INFO, "Decrypt error SQUERY");
             RefuseAccess(conn, 0, "decrypt error SQUERY");
             return true;
         }
@@ -932,21 +932,21 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if (strncmp(recvbuffer, "QUERY", 5) != 0)
         {
-            Log(LOG_LEVEL_INFO, "QUERY protocol defect\n");
+            Log(LOG_LEVEL_INFO, "QUERY protocol defect");
             RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
-            Log(LOG_LEVEL_INFO, "Query access failure\n");
+            Log(LOG_LEVEL_INFO, "Query access failure");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -964,7 +964,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
         if ((len >= sizeof(out)) || (received != (len + CF_PROTO_OFFSET)))
         {
-            Log(LOG_LEVEL_INFO, "Decrypt error CALL_ME_BACK\n");
+            Log(LOG_LEVEL_INFO, "Decrypt error CALL_ME_BACK");
             RefuseAccess(conn, 0, "decrypt error CALL_ME_BACK");
             return true;
         }
@@ -974,21 +974,21 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         
         if (strncmp(recvbuffer, "CALL_ME_BACK collect_calls", strlen("CALL_ME_BACK collect_calls")) != 0)
         {
-            Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect\n");
+            Log(LOG_LEVEL_INFO, "CALL_ME_BACK protocol defect");
             RefuseAccess(conn, 0, "decryption failure");
             return false;
         }
 
         if (!conn->id_verified)
         {
-            Log(LOG_LEVEL_INFO, "ID not verified\n");
+            Log(LOG_LEVEL_INFO, "ID not verified");
             RefuseAccess(conn, 0, recvbuffer);
             return true;
         }
 
         if (!LiteralAccessControl(ctx, recvbuffer, conn, true))
         {
-            Log(LOG_LEVEL_INFO, "Query access failure\n");
+            Log(LOG_LEVEL_INFO, "Query access failure");
             RefuseAccess(conn, 0, recvbuffer);
             return false;
         }
@@ -1006,7 +1006,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     sprintf(sendbuffer, "BAD: Request denied\n");
     SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
-    Log(LOG_LEVEL_INFO, "Closing connection, due to request: \"%s\"\n", recvbuffer);
+    Log(LOG_LEVEL_INFO, "Closing connection, due to request: \"%s\"", recvbuffer);
     return false;
 }
 
@@ -1049,7 +1049,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
         for (ip = classlist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "Checking whether class %s can be identified as me...\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Checking whether class %s can be identified as me...", ip->name);
 
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
@@ -1074,7 +1074,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
             if (strncmp(ip->name, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "No classes matched, rejecting....\n");
+                Log(LOG_LEVEL_VERBOSE, "No classes matched, rejecting....");
                 ReplyNothing(conn);
                 DeleteItemList(classlist);
                 return false;
@@ -1083,7 +1083,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
     }
 
     ReplyNothing(conn);
-    Log(LOG_LEVEL_VERBOSE, "No classes matched, rejecting....\n");
+    Log(LOG_LEVEL_VERBOSE, "No classes matched, rejecting....");
     DeleteItemList(classlist);
     return false;
 }
@@ -1103,14 +1103,14 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
 
     if (strlen(CFRUNCOMMAND) == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "cf-serverd exec request: no cfruncommand defined\n");
+        Log(LOG_LEVEL_VERBOSE, "cf-serverd exec request: no cfruncommand defined");
         char sendbuffer[CF_BUFSIZE];
         strlcpy(sendbuffer, "Exec request: no cfruncommand defined\n", CF_BUFSIZE);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Examining command string: %s\n", args);
+    Log(LOG_LEVEL_VERBOSE, "Examining command string: %s", args);
 
     for (sp = args; *sp != '\0'; sp++)  /* Blank out -K -f */
     {
@@ -1143,7 +1143,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         }
         else if ((OptionFound(args, sp, "--define")) || (OptionFound(args, sp, "-D")))
         {
-            Log(LOG_LEVEL_VERBOSE, "Attempt to activate a predefined role..\n");
+            Log(LOG_LEVEL_VERBOSE, "Attempt to activate a predefined role..");
 
             if (!AuthorizeRoles(ctx, conn, sp))
             {
@@ -1176,7 +1176,7 @@ static void DoExec(EvalContext *ctx, ServerConnectionState *conn, char *args)
         }
     }
 
-    Log(LOG_LEVEL_INFO, "Executing command %s\n", ebuff);
+    Log(LOG_LEVEL_INFO, "Executing command %s", ebuff);
 
     if ((pp = cf_popen_sh(ebuff, "r")) == NULL)
     {
@@ -1344,7 +1344,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
           "Socket caller address appears honest (%s matches %s)\n",
           ip_assert, MapAddress(conn->ipaddr));
 
-    Log(LOG_LEVEL_VERBOSE, "Socket originates from %s=%s\n",
+    Log(LOG_LEVEL_VERBOSE, "Socket originates from %s=%s",
           ip_assert, dns_assert);
 
     CfDebug("Attempting to verify honesty by looking up hostname (%s)\n",
@@ -1411,10 +1411,10 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
         return false;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host ID is %s\n", dns_assert);
+    Log(LOG_LEVEL_VERBOSE, "Host ID is %s", dns_assert);
     strncpy(conn->hostname, dns_assert, CF_MAXVARSIZE - 1);
 
-    Log(LOG_LEVEL_VERBOSE, "User ID seems to be %s\n", username);
+    Log(LOG_LEVEL_VERBOSE, "User ID seems to be %s", username);
     strncpy(conn->username, username, CF_MAXVARSIZE - 1);
 
     return true;
@@ -1426,11 +1426,11 @@ static int AllowedUser(char *user)
 {
     if (IsItemIn(SV.allowuserlist, user))
     {
-        Log(LOG_LEVEL_VERBOSE, "User %s granted connection privileges\n", user);
+        Log(LOG_LEVEL_VERBOSE, "User %s granted connection privileges", user);
         return true;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "User %s is not allowed on this server\n", user);
+    Log(LOG_LEVEL_VERBOSE, "User %s is not allowed on this server", user);
     return false;
 }
 
@@ -1523,7 +1523,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     if (SV.admit == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "cf-serverd access list is empty, no files are visible\n");
+        Log(LOG_LEVEL_VERBOSE, "cf-serverd access list is empty, no files are visible");
         return false;
     }
 
@@ -1558,7 +1558,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
         if (res)
         {
-            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)\n", transrequest, transpath);
+            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", transrequest, transpath);
 
             if (stat(transpath, &statbuf) == -1)
             {
@@ -1570,7 +1570,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
             if ((!encrypt) && (ap->encrypt == true))
             {
-                Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve\n", transpath);
+                Log(LOG_LEVEL_ERR, "File %s requires encrypt connection...will not serve", transpath);
                 access = false;
             }
             else
@@ -1580,7 +1580,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
                 if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
-                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files\n");
+                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges to access non-root files");
                 }
 
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
@@ -1601,7 +1601,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             if (IsRegexItemIn(ctx, ap->accesslist, conn->hostname))
             {
                 access = false;
-                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s\n", conn->hostname, transrequest);
+                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s", conn->hostname, transrequest);
                 break;
             }
         }
@@ -1609,17 +1609,17 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
 
     if (access)
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to %s\n", conn->hostname, req_path);
+        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to %s", conn->hostname, req_path);
 
         if (encrypt && LOGENCRYPT)
         {
             /* Log files that were marked as requiring encryption */
-            Log(LOG_LEVEL_INFO, "Host %s granted access to %s\n", conn->hostname, req_path);
+            Log(LOG_LEVEL_INFO, "Host %s granted access to %s", conn->hostname, req_path);
         }
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to %s\n", conn->hostname, req_path);
+        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to %s", conn->hostname, req_path);
     }
 
     if (!conn->rsa_auth)
@@ -1662,7 +1662,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
     {
         int res = false;
 
-        Log(LOG_LEVEL_VERBOSE, "Examining rule in access list (%s,%s)?\n", name, ap->path);
+        Log(LOG_LEVEL_VERBOSE, "Examining rule in access list (%s,%s)?", name, ap->path);
 
         if (strcmp(ap->path, name) == 0)
         {
@@ -1671,7 +1671,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
         if (res)
         {
-            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)\n", name, ap->path);
+            Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", name, ap->path);
 
             if ((!ap->literal) && (!ap->variable))
             {
@@ -1684,7 +1684,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
             if ((!encrypt) && (ap->encrypt == true))
             {
-                Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve\n", name);
+                Log(LOG_LEVEL_ERR, "Variable %s requires encrypt connection...will not serve", name);
                 access = false;
                 break;
             }
@@ -1695,11 +1695,11 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                 if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
                     conn->maproot = true;
-                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges\n");
+                    Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
                 }
                 else
                 {
-                    Log(LOG_LEVEL_VERBOSE, "No root privileges granted\n");
+                    Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                 }
 
                 if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
@@ -1720,7 +1720,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                 || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
             {
                 access = false;
-                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s\n", conn->hostname, name);
+                Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to %s", conn->hostname, name);
                 break;
             }
         }
@@ -1728,17 +1728,17 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
 
     if (access)
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to literal \"%s\"\n", conn->hostname, name);
+        Log(LOG_LEVEL_VERBOSE, "Host %s granted access to literal \"%s\"", conn->hostname, name);
 
         if (encrypt && LOGENCRYPT)
         {
             /* Log files that were marked as requiring encryption */
-            Log(LOG_LEVEL_INFO, "Host %s granted access to literal \"%s\"\n", conn->hostname, name);
+            Log(LOG_LEVEL_INFO, "Host %s granted access to literal \"%s\"", conn->hostname, name);
         }
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to literal \"%s\"\n", conn->hostname, name);
+        Log(LOG_LEVEL_VERBOSE, "Host %s denied access to literal \"%s\"", conn->hostname, name);
     }
 
     if (!conn->rsa_auth)
@@ -1789,14 +1789,14 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired\n", key);
+            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
             if (FullTextMatch(client_regex, key))
             {
-                Log(LOG_LEVEL_VERBOSE, " - Found key %s...\n", key);
+                Log(LOG_LEVEL_VERBOSE, " - Found key %s...", key);
                 AppendItem(&candidates, key, NULL);
             }
         }
@@ -1818,7 +1818,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
             if (res)
             {
-                Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)\n", ip->name, ap->path);
+                Log(LOG_LEVEL_VERBOSE, "Found a matching rule in access list (%s in %s)", ip->name, ap->path);
 
                 if (ap->classpattern == false)
                 {
@@ -1831,7 +1831,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
                 if ((!encrypt) && (ap->encrypt == true))
                 {
-                    Log(LOG_LEVEL_ERR, "Context %s requires encrypt connection...will not serve\n", ip->name);
+                    Log(LOG_LEVEL_ERR, "Context %s requires encrypt connection...will not serve", ip->name);
                     access = false;
                     break;
                 }
@@ -1843,11 +1843,11 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                     {
                         conn->maproot = true;
-                        Log(LOG_LEVEL_VERBOSE, "Mapping root privileges\n");
+                        Log(LOG_LEVEL_VERBOSE, "Mapping root privileges");
                     }
                     else
                     {
-                        Log(LOG_LEVEL_VERBOSE, "No root privileges granted\n");
+                        Log(LOG_LEVEL_VERBOSE, "No root privileges granted");
                     }
 
                     if ((IsMatchItemIn(ap->accesslist, MapAddress(conn->ipaddr)))
@@ -1868,7 +1868,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = false;
-                    Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to context %s\n", conn->hostname, ip->name);
+                    Log(LOG_LEVEL_VERBOSE, "Host %s explicitly denied access to context %s", conn->hostname, ip->name);
                     break;
                 }
             }
@@ -1876,18 +1876,18 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
         if (access)
         {
-            Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context \"%s\"\n", conn->hostname, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Host %s granted access to context \"%s\"", conn->hostname, ip->name);
             AppendItem(&matches, ip->name, NULL);
 
             if (encrypt && LOGENCRYPT)
             {
                 /* Log files that were marked as requiring encryption */
-                Log(LOG_LEVEL_INFO, "Host %s granted access to context \"%s\"\n", conn->hostname, ip->name);
+                Log(LOG_LEVEL_INFO, "Host %s granted access to context \"%s\"", conn->hostname, ip->name);
             }
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context \"%s\"\n", conn->hostname, ip->name);
+            Log(LOG_LEVEL_VERBOSE, "Host %s denied access to context \"%s\"", conn->hostname, ip->name);
         }
     }
 
@@ -1908,7 +1908,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
     snprintf(userid1, CF_MAXVARSIZE, "%s@%s", conn->username, conn->hostname);
     snprintf(userid2, CF_MAXVARSIZE, "%s@%s", conn->username, conn->ipaddr);
 
-    Log(LOG_LEVEL_VERBOSE, "Checking authorized roles in %s\n", args);
+    Log(LOG_LEVEL_VERBOSE, "Checking authorized roles in %s", args);
 
     if (strncmp(args, "--define", strlen("--define")) == 0)
     {
@@ -1930,7 +1930,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
     for (rp = defines; rp != NULL; rp = rp->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Verifying %s\n", RlistScalarValue(rp));
+        Log(LOG_LEVEL_VERBOSE, "Verifying %s", RlistScalarValue(rp));
 
         for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
@@ -1959,11 +1959,11 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
     if (permitted)
     {
-        Log(LOG_LEVEL_VERBOSE, "Role activation allowed\n");
+        Log(LOG_LEVEL_VERBOSE, "Role activation allowed");
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Role activation disallowed - abort execution\n");
+        Log(LOG_LEVEL_VERBOSE, "Role activation disallowed - abort execution");
     }
 
     RlistDestroy(defines);
@@ -1987,7 +1987,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((PRIVKEY == NULL) || (PUBKEY == NULL))
     {
-        Log(LOG_LEVEL_ERR, "No public/private key pair exists, create one with cf-key\n");
+        Log(LOG_LEVEL_ERR, "No public/private key pair exists, create one with cf-key");
         return false;
     }
 
@@ -2011,19 +2011,19 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((crypt_len == 0) || (nonce_len == 0) || (strlen(sauth) == 0))
     {
-        Log(LOG_LEVEL_INFO, "Protocol format error in authentation from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol format error in authentation from IP %s", conn->hostname);
         return false;
     }
 
     if (nonce_len > CF_NONCELEN * 2)
     {
-        Log(LOG_LEVEL_INFO, "Protocol deviant authentication nonce from %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol deviant authentication nonce from %s", conn->hostname);
         return false;
     }
 
     if (crypt_len > 2 * CF_NONCELEN)
     {
-        Log(LOG_LEVEL_INFO, "Protocol abuse in unlikely cipher from %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol abuse in unlikely cipher from %s", conn->hostname);
         return false;
     }
 
@@ -2031,13 +2031,13 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if (recvbuffer + CF_RSA_PROTO_OFFSET + nonce_len > recvbuffer + recvlen)
     {
-        Log(LOG_LEVEL_INFO, "Protocol consistency error in authentication from %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol consistency error in authentication from %s", conn->hostname);
         return false;
     }
 
     if ((strcmp(sauth, "SAUTH") != 0) || (nonce_len == 0) || (crypt_len == 0))
     {
-        Log(LOG_LEVEL_INFO, "Protocol error in RSA authentication from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol error in RSA authentication from IP %s", conn->hostname);
         return false;
     }
 
@@ -2056,7 +2056,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
             err = ERR_get_error();
 
             ThreadUnlock(cft_system);
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s\n", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
             free(decrypted_nonce);
             return false;
         }
@@ -2067,7 +2067,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         if (nonce_len > crypt_len)
         {
-            Log(LOG_LEVEL_ERR, "Illegal challenge\n");
+            Log(LOG_LEVEL_ERR, "Illegal challenge");
             free(decrypted_nonce);
             return false;
         }
@@ -2090,14 +2090,14 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 /* proposition C2 */
     if ((len_n = ReceiveTransaction(conn->sd_reply, recvbuffer, NULL)) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 1 in RSA authentation from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol error 1 in RSA authentation from IP %s", conn->hostname);
         RSA_free(newkey);
         return false;
     }
 
     if (len_n == 0)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 2 in RSA authentation from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol error 2 in RSA authentation from IP %s", conn->hostname);
         RSA_free(newkey);
         return false;
     }
@@ -2105,7 +2105,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     if ((newkey->n = BN_mpi2bn(recvbuffer, len_n, NULL)) == NULL)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
         RSA_free(newkey);
         return false;
     }
@@ -2114,14 +2114,14 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     if ((len_e = ReceiveTransaction(conn->sd_reply, recvbuffer, NULL)) == -1)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 3 in RSA authentation from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol error 3 in RSA authentation from IP %s", conn->hostname);
         RSA_free(newkey);
         return false;
     }
 
     if (len_e == 0)
     {
-        Log(LOG_LEVEL_INFO, "Protocol error 4 in RSA authentation from IP %s\n", conn->hostname);
+        Log(LOG_LEVEL_INFO, "Protocol error 4 in RSA authentation from IP %s", conn->hostname);
         RSA_free(newkey);
         return false;
     }
@@ -2129,7 +2129,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     if ((newkey->e = BN_mpi2bn(recvbuffer, len_e, NULL)) == NULL)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
         RSA_free(newkey);
         return false;
     }
@@ -2172,7 +2172,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     counter_challenge = BN_new();
     if (counter_challenge == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter challenge\n");
+        Log(LOG_LEVEL_ERR, "Cannot allocate BIGNUM structure for counter challenge");
         RSA_free(newkey);
         return false;
     }
@@ -2191,7 +2191,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     if (RSA_public_encrypt(nonce_len, in, out, newkey, RSA_PKCS1_PADDING) <= 0)
     {
         err = ERR_get_error();
-        Log(LOG_LEVEL_ERR, "Public encryption failed = %s\n", ERR_reason_error_string(err));
+        Log(LOG_LEVEL_ERR, "Public encryption failed = %s", ERR_reason_error_string(err));
         RSA_free(newkey);
         free(out);
         return false;
@@ -2238,7 +2238,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Weak authentication of trusted client %s/%s (key accepted on trust).\n",
+            Log(LOG_LEVEL_VERBOSE, "Weak authentication of trusted client %s/%s (key accepted on trust).",
                   conn->hostname, conn->ipaddr);
         }
     }
@@ -2296,7 +2296,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         {
             ThreadUnlock(cft_system);
             err = ERR_get_error();
-            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s\n", ERR_reason_error_string(err));
+            Log(LOG_LEVEL_ERR, "Private decrypt failed = %s", ERR_reason_error_string(err));
             return false;
         }
 
@@ -2936,7 +2936,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
 
     if ((dirh = DirOpen(dirname)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Couldn't open dir %s\n", dirname);
+        Log(LOG_LEVEL_VERBOSE, "Couldn't open dir %s", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
         cipherlen = EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, strlen(sendbuffer) + 1);
         SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
@@ -3131,7 +3131,7 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
             if (args->connect->maproot)
             {
-                Log(LOG_LEVEL_VERBOSE, "Caller %s not owner of \"%s\", but mapping privilege\n",
+                Log(LOG_LEVEL_VERBOSE, "Caller %s not owner of \"%s\", but mapping privilege",
                       (args->connect)->username, filename);
                 return true;
             }
@@ -3183,7 +3183,7 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
 
 static void AbortTransfer(int sd, char *filename)
 {
-    Log(LOG_LEVEL_VERBOSE, "Aborting transfer of file due to source changes\n");
+    Log(LOG_LEVEL_VERBOSE, "Aborting transfer of file due to source changes");
 
     char sendbuffer[CF_BUFSIZE];
     snprintf(sendbuffer, CF_BUFSIZE, "%s%s: %s", CF_CHANGEDSTR1, CF_CHANGEDSTR2, filename);
@@ -3198,7 +3198,7 @@ static void AbortTransfer(int sd, char *filename)
 
 static void FailedTransfer(int sd)
 {
-    Log(LOG_LEVEL_VERBOSE, "Transfer failure\n");
+    Log(LOG_LEVEL_VERBOSE, "Transfer failure");
 
     char sendbuffer[CF_BUFSIZE];
 
@@ -3236,15 +3236,15 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
     if ((savedkey = HavePublicKey(conn->username, MapAddress(conn->ipaddr), udigest)))
     {
-        Log(LOG_LEVEL_VERBOSE, "A public key was already known from %s/%s - no trust required\n", conn->hostname,
+        Log(LOG_LEVEL_VERBOSE, "A public key was already known from %s/%s - no trust required", conn->hostname,
               conn->ipaddr);
 
-        Log(LOG_LEVEL_VERBOSE, "Adding IP %s to SkipVerify - no need to check this if we have a key\n", conn->ipaddr);
+        Log(LOG_LEVEL_VERBOSE, "Adding IP %s to SkipVerify - no need to check this if we have a key", conn->ipaddr);
         IdempPrependItem(&SV.skipverify, MapAddress(conn->ipaddr), NULL);
 
         if ((BN_cmp(savedkey->e, key->e) == 0) && (BN_cmp(savedkey->n, key->n) == 0))
         {
-            Log(LOG_LEVEL_VERBOSE, "The public key identity was confirmed as %s@%s\n", conn->username, conn->hostname);
+            Log(LOG_LEVEL_VERBOSE, "The public key identity was confirmed as %s@%s", conn->username, conn->hostname);
             SendTransaction(conn->sd_reply, "OK: key accepted", 0, CF_DONE);
             RSA_free(savedkey);
             return true;
@@ -3255,7 +3255,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
 
     if ((SV.trustkeylist != NULL) && (IsMatchItemIn(SV.trustkeylist, MapAddress(conn->ipaddr))))
     {
-        Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust\n", conn->hostname, conn->ipaddr);
+        Log(LOG_LEVEL_VERBOSE, "Host %s/%s was found in the list of hosts to trust", conn->hostname, conn->ipaddr);
         conn->trust = true;
         /* conn->maproot = false; ?? */
         SendTransaction(conn->sd_reply, "OK: unknown key was accepted on trust", 0, CF_DONE);
@@ -3264,7 +3264,7 @@ static int CheckStoreKey(ServerConnectionState *conn, RSA *key)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "No previous key found, and unable to accept this one on trust\n");
+        Log(LOG_LEVEL_VERBOSE, "No previous key found, and unable to accept this one on trust");
         SendTransaction(conn->sd_reply, "BAD: key could not be accepted on trust", 0, CF_DONE);
         return false;
     }

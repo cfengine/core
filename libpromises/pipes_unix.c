@@ -632,7 +632,7 @@ static int CfSetuid(uid_t uid, gid_t gid)
 
     if (gid != (gid_t) - 1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Changing gid to %ju\n", (uintmax_t)gid);
+        Log(LOG_LEVEL_VERBOSE, "Changing gid to %ju", (uintmax_t)gid);
 
         if (setgid(gid) == -1)
         {

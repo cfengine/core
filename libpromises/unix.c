@@ -304,7 +304,7 @@ static bool IgnoreJailInterface(
     {
         if (fbsd_jia.s_addr == inaddr->sin_addr.s_addr)
         {
-            Log(LOG_LEVEL_VERBOSE, "Interface %d belongs to a FreeBSD jail %s\n", ifaceidx, inet_ntoa(fbsd_jia));
+            Log(LOG_LEVEL_VERBOSE, "Interface %d belongs to a FreeBSD jail %s", ifaceidx, inet_ntoa(fbsd_jia));
             return true;
         }
     }
@@ -367,7 +367,7 @@ static void GetMacAddress(EvalContext *ctx, AgentType ag, int fd, struct ifreq *
 
     if (getifaddrs(&ifaddr) == -1)
     {
-        Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses\n",
+        Log(LOG_LEVEL_ERR, "getifaddrs", "!! Could not get interface %s addresses",
           ifp->ifr_name);
 
         ScopeNewSpecialScalar(ctx, "sys", name, "mac_unknown", DATA_TYPE_STRING);
@@ -524,13 +524,13 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
         if (strstr(ifp->ifr_name, ":"))
         {
 #ifdef __linux__
-            Log(LOG_LEVEL_VERBOSE, "Skipping apparent virtual interface %d: %s\n", j + 1, ifp->ifr_name);
+            Log(LOG_LEVEL_VERBOSE, "Skipping apparent virtual interface %d: %s", j + 1, ifp->ifr_name);
             continue;
 #endif
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Interface %d: %s\n", j + 1, ifp->ifr_name);
+            Log(LOG_LEVEL_VERBOSE, "Interface %d: %s", j + 1, ifp->ifr_name);
         }
 
 
@@ -596,7 +596,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
-                                Log(LOG_LEVEL_VERBOSE, "Adding alias %s..\n", hp->h_aliases[i]);
+                                Log(LOG_LEVEL_VERBOSE, "Adding alias %s..", hp->h_aliases[i]);
                                 EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
                             }
                         }
@@ -731,7 +731,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
    book shows the suggestion which has not been implemented...
 */
 
-    Log(LOG_LEVEL_VERBOSE, "Trying to locate my IPv6 address\n");
+    Log(LOG_LEVEL_VERBOSE, "Trying to locate my IPv6 address");
 
 #if defined(__CYGWIN__)
     /* NT cannot do this */
@@ -739,19 +739,19 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 #elif defined(__hpux)
     if ((pp = cf_popen("/usr/sbin/ifconfig -a", "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not find interface info\n");
+        Log(LOG_LEVEL_VERBOSE, "Could not find interface info");
         return;
     }
 #elif defined(_AIX)
     if ((pp = cf_popen("/etc/ifconfig -a", "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not find interface info\n");
+        Log(LOG_LEVEL_VERBOSE, "Could not find interface info");
         return;
     }
 #else
     if ((pp = cf_popen("/sbin/ifconfig -a", "r", true)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not find interface info\n");
+        Log(LOG_LEVEL_VERBOSE, "Could not find interface info");
         return;
     }
 #endif
@@ -792,7 +792,7 @@ static void FindV6InterfacesInfo(EvalContext *ctx)
 
                 if ((IsIPV6Address(ip->name)) && ((strcmp(ip->name, "::1") != 0)))
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s\n", ip->name);
+                    Log(LOG_LEVEL_VERBOSE, "Found IPv6 address %s", ip->name);
                     AppendItem(&IPADDRESSES, ip->name, "");
                     EvalContextHeapAddHard(ctx, ip->name);
                 }

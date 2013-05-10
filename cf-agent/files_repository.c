@@ -74,7 +74,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
     if (!JoinPath(destination, file))
     {
-        Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space for long filename\n");
+        Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space for long filename");
         return false;
     }
 
@@ -137,12 +137,12 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (CopyRegularFileDisk(file, destination))
     {
-        Log(LOG_LEVEL_INFO, "Moved %s to repository location %s\n", file, destination);
+        Log(LOG_LEVEL_INFO, "Moved %s to repository location %s", file, destination);
         return true;
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "Failed to move %s to repository location %s\n", file, destination);
+        Log(LOG_LEVEL_INFO, "Failed to move %s to repository location %s", file, destination);
         return false;
     }
 }

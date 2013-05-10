@@ -156,12 +156,12 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
     {
         if (caller)
         {
-            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" in promise @ %s near line %zd\n",
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" in promise @ %s near line %zd",
                   fp->name, PromiseGetBundle(caller)->source_path, caller->offset.line);
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" - context info unavailable\n", fp->name);
+            Log(LOG_LEVEL_ERR, "No such FnCall \"%s()\" - context info unavailable", fp->name);
         }
 
         return (FnCallResult) { FNCALL_FAILURE, { FnCallCopy(fp), RVAL_TYPE_FNCALL } };

@@ -99,24 +99,24 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
         if (!ValidClassName(pp->promiser))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+                 "Attempted to name a class '%s', which is an illegal class identifier", pp->promiser);
         }
         else
         {
             if (global_class)
             {
-                Log(LOG_LEVEL_VERBOSE, " ?> defining additional global class %s\n", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "Adding global class '%s'", pp->promiser);
                 EvalContextHeapAddSoft(ctx, pp->promiser, PromiseGetNamespace(pp));
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, " ?> defining explicit local bundle class %s\n", pp->promiser);
+                Log(LOG_LEVEL_VERBOSE, "Adding local bundle class '%s'", pp->promiser);
                 EvalContextStackFrameAddSoft(ctx, pp->promiser);
             }
 
             if (a.context.persistent > 0)
             {
-                Log(LOG_LEVEL_VERBOSE, " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
+                Log(LOG_LEVEL_VERBOSE, "Adding persistent class '%s'. (%d minutes)", pp->promiser,
                       a.context.persistent);
                 EvalContextHeapPersistentSave(pp->promiser, PromiseGetNamespace(pp), a.context.persistent, CONTEXT_STATE_POLICY_RESET);
             }
@@ -263,7 +263,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp->rval.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_ERR, "RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
+        Log(LOG_LEVEL_ERR, "RHS of promise body attribute \"%s\" is not a list", cp->lval);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return true;
     }

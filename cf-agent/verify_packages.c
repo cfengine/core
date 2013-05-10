@@ -380,9 +380,16 @@ static bool PackageListInstalledFromCommand(EvalContext *ctx, PackageItem **inst
         ExecPackageCommand(ctx, a.packages.package_list_update_command, false, false, a, pp);
     }
 
-    Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
-    Log(LOG_LEVEL_VERBOSE, "   Reading package list from %s\n", CommandArg0(a.packages.package_list_command));
-    Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+        Log(LOG_LEVEL_VERBOSE, "   Reading package list from %s", CommandArg0(a.packages.package_list_command));
+        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Reading package list from '%s'", CommandArg0(a.packages.package_list_command));
+    }
 
     FILE *fin;
     
@@ -638,9 +645,16 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
 
     if (a.packages.package_patch_list_command != NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
-        Log(LOG_LEVEL_VERBOSE, "   Reading patches from %s\n", CommandArg0(a.packages.package_patch_list_command));
-        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+            Log(LOG_LEVEL_VERBOSE, "   Reading patches from %s", CommandArg0(a.packages.package_patch_list_command));
+            Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Reading patches from '%s'", CommandArg0(a.packages.package_patch_list_command));
+        }
 
         if ((!a.packages.package_commands_useshell) && (!IsExecutable(CommandArg0(a.packages.package_patch_list_command))))
         {
@@ -703,9 +717,16 @@ static int VerifyInstalledPackages(EvalContext *ctx, PackageManager **all_mgrs, 
 
     ReportPatches(INSTALLED_PACKAGE_LISTS);
 
-    Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
-    Log(LOG_LEVEL_VERBOSE, "  Done checking packages and patches \n");
-    Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+        Log(LOG_LEVEL_VERBOSE, "  Done checking packages and patches ");
+        Log(LOG_LEVEL_VERBOSE, " ???????????????????????????????????????????????????????????????");
+    }
+    else
+    {
+        Log(LOG_LEVEL_VERBOSE, "Done checking packages and patches");
+    }
 
     return true;
 }
@@ -831,7 +852,7 @@ static int IsNewerThanInstalled(EvalContext *ctx, const char *n, const char *v, 
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s) is not installed\n", n, a);
+    Log(LOG_LEVEL_VERBOSE, "Package (%s,%s) is not installed", n, a);
     return false;
 }
 
@@ -956,7 +977,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
         strlcpy(id, name, CF_EXPANDSIZE);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Package promises to refer to itself as \"%s\" to the manager\n", id);
+    Log(LOG_LEVEL_VERBOSE, "Package promises to refer to itself as \"%s\" to the manager", id);
 
     if (strchr(id, '*'))
     {
@@ -1018,7 +1039,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
                 }
             }
 
-            Log(LOG_LEVEL_VERBOSE, "Schedule package for addition\n");
+            Log(LOG_LEVEL_VERBOSE, "Schedule package for addition");
 
             if (a.packages.package_add_command == NULL)
             {
@@ -1038,7 +1059,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
-            Log(LOG_LEVEL_VERBOSE, "Schedule package for deletion\n");
+            Log(LOG_LEVEL_VERBOSE, "Schedule package for deletion");
 
             if (a.packages.package_delete_command == NULL)
             {
@@ -1087,7 +1108,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if (!no_version_specified)
         {
-            Log(LOG_LEVEL_VERBOSE, "Schedule package for reinstallation\n");
+            Log(LOG_LEVEL_VERBOSE, "Schedule package for reinstallation");
             if (a.packages.package_add_command == NULL)
             {
                 cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a, "Package add command undefined");
@@ -1213,7 +1234,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "Schedule package for update\n");
+                Log(LOG_LEVEL_VERBOSE, "Schedule package for update");
                 AddPackageToSchedule(ctx, &a, a.packages.package_update_command, PACKAGE_ACTION_UPDATE, id, "any", "any", pp);
             }
         }
@@ -1228,7 +1249,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if (matched && (!installed))
         {
-            Log(LOG_LEVEL_VERBOSE, "Schedule package for patching\n");
+            Log(LOG_LEVEL_VERBOSE, "Schedule package for patching");
             AddPatchToSchedule(ctx, &a, a.packages.package_patch_command, PACKAGE_ACTION_PATCH, id, "any", "any", pp);
         }
         else
@@ -1242,7 +1263,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
         if ((matched && package_select_in_range) || (installed && no_version_specified))
         {
-            Log(LOG_LEVEL_VERBOSE, "Schedule package for verification\n");
+            Log(LOG_LEVEL_VERBOSE, "Schedule package for verification");
             AddPackageToSchedule(ctx, &a, a.packages.package_verify_command, PACKAGE_ACTION_VERIFY, id, "any", "any", pp);
         }
         else
@@ -1266,7 +1287,7 @@ VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v,
         return VERCMP_NO_MATCH;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Matched name %s\n", n);
+    Log(LOG_LEVEL_VERBOSE, "Matched name %s", n);
 
     if (strcmp(arch, "*") != 0)
     {
@@ -1275,12 +1296,12 @@ VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v,
             return VERCMP_NO_MATCH;
         }
 
-        Log(LOG_LEVEL_VERBOSE, "Matched arch %s\n", arch);
+        Log(LOG_LEVEL_VERBOSE, "Matched arch %s", arch);
     }
 
     if (strcmp(v, "*") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Matched version *\n");
+        Log(LOG_LEVEL_VERBOSE, "Matched version *");
         return VERCMP_MATCH;
     }
 
@@ -1301,7 +1322,7 @@ static VersionCmpResult PatchMatch(EvalContext *ctx, const char *n, const char *
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)\n", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)", n, v, a);
 
     for (pi = mp->patch_list; pi != NULL; pi = pi->next)
     {
@@ -1319,7 +1340,7 @@ static VersionCmpResult PatchMatch(EvalContext *ctx, const char *n, const char *
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Unsatisfied constraints in promise (%s,%s,%s)\n", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Unsatisfied constraints in promise (%s,%s,%s)", n, v, a);
     return VERCMP_NO_MATCH;
 }
 
@@ -1339,7 +1360,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx, const char *n, const char
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)\n", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "Looking for (%s,%s,%s)", n, v, a);
 
     for (pi = mp->pack_list; pi != NULL; pi = pi->next)
     {
@@ -1351,7 +1372,7 @@ static VersionCmpResult PackageMatch(EvalContext *ctx, const char *n, const char
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "No installed packages matched (%s,%s,%s)\n", n, v, a);
+    Log(LOG_LEVEL_VERBOSE, "No installed packages matched (%s,%s,%s)", n, v, a);
     return VERCMP_NO_MATCH;
 }
 
@@ -1513,8 +1534,8 @@ static void VerifyPromisedPatch(EvalContext *ctx, Attributes a, Promise *pp)
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "%d patch(es) matching the name \"%s\" already installed\n", installed, name);
-    Log(LOG_LEVEL_VERBOSE, "%d patch(es) match the promise body's criteria fully\n", matches);
+    Log(LOG_LEVEL_VERBOSE, "%d patch(es) matching the name \"%s\" already installed", installed, name);
+    Log(LOG_LEVEL_VERBOSE, "%d patch(es) match the promise body's criteria fully", matches);
 
     SchedulePackageOp(ctx, name, version, arch, installed, matches, no_version, a, pp);
 }
@@ -1536,7 +1557,7 @@ static void VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promise *pp)
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
-                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch %s\n", RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch %s", RlistScalarValue(rp));
                 CheckPackageState(ctx, a, pp, package, a.packages.package_version, RlistScalarValue(rp), false);
             }
         }
@@ -1577,7 +1598,7 @@ static void VerifyPromisedPackage(EvalContext *ctx, Attributes a, Promise *pp)
         {
             for (Rlist *rp = a.packages.package_architectures; rp != NULL; rp = rp->next)
             {
-                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch %s\n", RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, " ... trying listed arch %s", RlistScalarValue(rp));
                 CheckPackageState(ctx, a, pp, package, "*", rp->item, true);
             }
         }
@@ -1665,7 +1686,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                 return false;
             }
 
-            Log(LOG_LEVEL_INFO, "Installing %-.39s...\n", pp->promiser);
+            Log(LOG_LEVEL_INFO, "Installing %-.39s...", pp->promiser);
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_add_command) + 2);
             strcpy(command_string, a.packages.package_add_command);
@@ -1681,7 +1702,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                 return false;
             }
 
-            Log(LOG_LEVEL_INFO, "Deleting %-.39s...\n", pp->promiser);
+            Log(LOG_LEVEL_INFO, "Deleting %-.39s...", pp->promiser);
 
             command_string = xmalloc(estimated_size + strlen(a.packages.package_delete_command) + 2);
             strcpy(command_string, a.packages.package_delete_command);
@@ -1697,7 +1718,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
                 return false;
             }
 
-            Log(LOG_LEVEL_INFO, "Updating %-.39s...\n", pp->promiser);
+            Log(LOG_LEVEL_INFO, "Updating %-.39s...", pp->promiser);
 
             command_string = xcalloc(1, estimated_size + strlen(a.packages.package_update_command) + 2);
             strcpy(command_string, a.packages.package_update_command);
@@ -1744,7 +1765,7 @@ static int ExecuteSchedule(EvalContext *ctx, PackageManager *schedule, PackageAc
         {
             strcat(command_string, " ");
 
-            Log(LOG_LEVEL_VERBOSE, "Command prefix: %s\n", command_string);
+            Log(LOG_LEVEL_VERBOSE, "Command prefix: %s", command_string);
 
             switch (pm->policy)
             {
@@ -1946,7 +1967,7 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
         {
             strcat(command_string, " ");
 
-            Log(LOG_LEVEL_VERBOSE, "Command prefix: %s\n", command_string);
+            Log(LOG_LEVEL_VERBOSE, "Command prefix: %s", command_string);
 
             switch (pm->policy)
             {
@@ -2026,13 +2047,13 @@ static int ExecutePatch(EvalContext *ctx, PackageManager *schedule, PackageActio
 
 static void ExecutePackageSchedule(EvalContext *ctx, PackageManager *schedule)
 {
-    Log(LOG_LEVEL_VERBOSE, " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
-    Log(LOG_LEVEL_VERBOSE, "   Offering these package-promise suggestions to the managers\n");
-    Log(LOG_LEVEL_VERBOSE, " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n");
+    Log(LOG_LEVEL_VERBOSE, " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    Log(LOG_LEVEL_VERBOSE, "   Offering these package-promise suggestions to the managers");
+    Log(LOG_LEVEL_VERBOSE, " >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
     /* Normal ordering */
 
-    Log(LOG_LEVEL_VERBOSE, "Deletion schedule...\n");
+    Log(LOG_LEVEL_VERBOSE, "Deletion schedule...");
 
     if (!ExecuteSchedule(ctx, schedule, PACKAGE_ACTION_DELETE))
     {
@@ -2040,28 +2061,28 @@ static void ExecutePackageSchedule(EvalContext *ctx, PackageManager *schedule)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Addition schedule...\n");
+    Log(LOG_LEVEL_VERBOSE, "Addition schedule...");
 
     if (!ExecuteSchedule(ctx, schedule, PACKAGE_ACTION_ADD))
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Update schedule...\n");
+    Log(LOG_LEVEL_VERBOSE, "Update schedule...");
 
     if (!ExecuteSchedule(ctx, schedule, PACKAGE_ACTION_UPDATE))
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Patch schedule...\n");
+    Log(LOG_LEVEL_VERBOSE, "Patch schedule...");
 
     if (!ExecutePatch(ctx, schedule, PACKAGE_ACTION_PATCH))
     {
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Verify schedule...\n");
+    Log(LOG_LEVEL_VERBOSE, "Verify schedule...");
 
     if (!ExecuteSchedule(ctx, schedule, PACKAGE_ACTION_VERIFY))
     {
@@ -2209,7 +2230,7 @@ int ExecPackageCommand(EvalContext *ctx, char *command, int verify, int setCmdCl
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Executing %-.60s...\n", command);
+    Log(LOG_LEVEL_VERBOSE, "Executing %-.60s...", command);
 
 /* Look for short command summary */
     for (cmd = command; (*cmd != '\0') && (*cmd != ' '); cmd++)

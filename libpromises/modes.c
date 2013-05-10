@@ -161,7 +161,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
                                    Any (POSIX)-constants ??
                                  */
             {
-                Log(LOG_LEVEL_ERR, "Mode-Value too big : %s\n", modestring);
+                Log(LOG_LEVEL_ERR, "Mode-Value too big : %s", modestring);
                 return false;
             }
 
@@ -223,7 +223,7 @@ int ParseModeString(const char *modestring, mode_t *plusmask, mode_t *minusmask)
 
     if (!no_error)
     {
-        Log(LOG_LEVEL_ERR, "Error validating mode string %s\n", modestring);
+        Log(LOG_LEVEL_ERR, "Error validating mode string %s", modestring);
     }
 
     return no_error;

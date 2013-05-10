@@ -289,7 +289,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
     if ((!NO_FORK) && (fork() != 0))
     {
-        Log(LOG_LEVEL_INFO, "cf-monitord: starting\n");
+        Log(LOG_LEVEL_INFO, "cf-monitord: starting");
         _exit(0);
     }
 
@@ -456,12 +456,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         Log(LOG_LEVEL_VERBOSE, "[%d] %s q=%lf, var=%lf, ex=%lf", i, name,
               newvals.Q[i].q, newvals.Q[i].var, newvals.Q[i].expect);
 
-        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]\n", i, This[i], newvals.Q[i].expect,
+        Log(LOG_LEVEL_VERBOSE, "[%d] = %lf -> (%lf#%lf) local [%lf#%lf]", i, This[i], newvals.Q[i].expect,
               sqrt(newvals.Q[i].var), LOCALAV.Q[i].expect, sqrt(LOCALAV.Q[i].var));
 
         if (This[i] > 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s\n", This[i], name);
+            Log(LOG_LEVEL_VERBOSE, "Storing %.2lf in %s", This[i], name);
         }
     }
 
@@ -621,7 +621,7 @@ static void ArmClasses(Averages av, char *timekey)
         {
             anomaly[i][LDT_POS] = true; /* Remember the last anomaly value */
 
-            Log(LOG_LEVEL_VERBOSE, "LDT(%d) in %s chi = %.2f thresh %.2f \n", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
+            Log(LOG_LEVEL_VERBOSE, "LDT(%d) in %s chi = %.2f thresh %.2f ", LDT_POS, name, CHI[i], CHI_LIMIT[i]);
 
             /* Last printed element is now */
 
@@ -772,7 +772,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
         return;
     }
 
-    Log(LOG_LEVEL_INFO, "Updated averages at %s\n", timekey);
+    Log(LOG_LEVEL_INFO, "Updated averages at %s", timekey);
 
     WriteDB(dbp, timekey, &newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));
@@ -1113,7 +1113,7 @@ static double RejectAnomaly(double new, double average, double variance, double 
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Value accepted\n");
+        Log(LOG_LEVEL_VERBOSE, "Value accepted");
         return new;
     }
 }
@@ -1166,21 +1166,36 @@ static void KeepMonitorPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *p
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant\n", pp->promiser,
-              pp->classes);
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as context %s is not relevant", pp->promiser,
+                  pp->classes);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as context '%s' is not relevant", pp->promiser, pp->classes);
+        }
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
-              sp);
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
+                  sp);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser,
+                  sp);
+        }
         return;
     }
 

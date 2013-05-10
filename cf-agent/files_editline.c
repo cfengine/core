@@ -300,13 +300,13 @@ static void EditClassBanner(const EvalContext *ctx, enum editlinetypesequence ty
     }
 
     {
-        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context\n");
+        Log(LOG_LEVEL_VERBOSE, "     ??  Private class context");
 
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            Log(LOG_LEVEL_VERBOSE, "     ??       %s\n", context);
+            Log(LOG_LEVEL_VERBOSE, "     ??       %s", context);
         }
 
         Log(LOG_LEVEL_VERBOSE, "\n");
@@ -323,20 +323,35 @@ static void KeepEditLinePromise(EvalContext *ctx, Promise *pp, void *param)
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
-        Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant\n", pp->classes);
-        Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
+            Log(LOG_LEVEL_VERBOSE, "   Skipping whole next edit promise, as context %s is not relevant", pp->classes);
+            Log(LOG_LEVEL_VERBOSE, "   .  .  .  .  .  .  .  .  .  .  .  .  .  .  . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next edit promise, as context '%s' is not relevant", pp->classes);
+        }
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant\n",
-              pp->promiser, sp);
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise (%s), as var-context %s is not relevant",
+                  pp->promiser, sp);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next edit promise '%s', as var-context '%s' is not relevant",
+                  pp->promiser, sp);
+        }
         return;
     }
 
@@ -516,7 +531,7 @@ static void VerifyPatterns(EvalContext *ctx, Promise *pp, EditContext *edcontext
     CfLock thislock;
     char lockname[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Looking at pattern %s\n", pp->promiser);
+    Log(LOG_LEVEL_VERBOSE, "Looking at pattern %s", pp->promiser);
 
 /* Are we working in a restricted region? */
 
@@ -853,7 +868,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
 
         if (matches)
         {
-            Log(LOG_LEVEL_VERBOSE, "Delete chunk of %d lines\n", matches);
+            Log(LOG_LEVEL_VERBOSE, "Delete chunk of %d lines", matches);
 
             if (a.transaction.action == cfa_warn)
             {
@@ -969,7 +984,7 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             match_len = end_off - start_off;
             ExpandScalar(ctx, PromiseGetBundle(pp)->name, a.replace.replace_value, replace);
 
-            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of \"%s\" with \"%s\" (%d)\n", pp->promiser, replace,
+            Log(LOG_LEVEL_VERBOSE, "Verifying replacement of \"%s\" with \"%s\" (%d)", pp->promiser, replace,
                   cutoff);
 
             before[0] = after[0] = '\0';
@@ -1019,8 +1034,8 @@ static int ReplacePatterns(EvalContext *ctx, Item *file_start, Item *file_end, A
             (edcontext->num_edits)++;
             retval = true;
 
-            Log(LOG_LEVEL_VERBOSE, "<< (%d)\"%s\"\n", cutoff, ip->name);
-            Log(LOG_LEVEL_VERBOSE, ">> (%d)\"%s\"\n", cutoff, line_buff);
+            Log(LOG_LEVEL_VERBOSE, "<< (%d)\"%s\"", cutoff, ip->name);
+            Log(LOG_LEVEL_VERBOSE, ">> (%d)\"%s\"", cutoff, line_buff);
 
             if (once_only)
             {
@@ -1076,7 +1091,7 @@ static int EditColumns(EvalContext *ctx, Item *file_start, Item *file_end, Attri
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " - Matched line (%s)\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, " - Matched line (%s)", ip->name);
         }
 
         if (!BlockTextMatch(a.column.column_separator, ip->name, &s, &e))
@@ -1514,7 +1529,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
 
         if (count == a.column.select_column)
         {
-            Log(LOG_LEVEL_VERBOSE, "Stopped at field %d\n", count);
+            Log(LOG_LEVEL_VERBOSE, "Stopped at field %d", count);
             break;
         }
     }
@@ -1542,7 +1557,7 @@ static int EditLineByColumn(EvalContext *ctx, Rlist **columns, Attributes a, Pro
                 count++;
                 if (count == a.column.select_column)
                 {
-                    Log(LOG_LEVEL_VERBOSE, "Stopped at column/field %d\n", count);
+                    Log(LOG_LEVEL_VERBOSE, "Stopped at column/field %d", count);
                     break;
                 }
             }
@@ -1770,7 +1785,7 @@ static int DoEditColumn(Rlist **columns, Attributes a, EditContext *edcontext)
         {
             if (strcmp((*columns)->item, a.column.column_value) == 0)
             {
-                Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised\n");
+                Log(LOG_LEVEL_VERBOSE, "Field sub-value set as promised");
                 return false;
             }
         }

@@ -178,7 +178,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
 {
     if (RlistLen(bp->args) != RlistLen(arguments))
     {
-        Log(LOG_LEVEL_ERR, "While constructing scope \"%s\"\n", bp->name);
+        Log(LOG_LEVEL_ERR, "While constructing scope \"%s\"", bp->name);
         fprintf(stderr, "Formal = ");
         RlistShow(stderr, bp->args);
         fprintf(stderr, ", Actual = ");
@@ -197,7 +197,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
     {
         const char *lval = rpl->item;
 
-        Log(LOG_LEVEL_VERBOSE, "    ? Augment scope %s with %s (%c)\n", bp->name, lval, rpr->type);
+        Log(LOG_LEVEL_VERBOSE, "Augment scope '%s' with variable '%s' (type: %c)", bp->name, lval, rpr->type);
 
         // CheckBundleParameters() already checked that there is no namespace collision
         // By this stage all functions should have been expanded, so we only have scalars left
@@ -665,7 +665,7 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
     if ((len = RlistLen(namelist)) != RlistLen(dereflist))
     {
-        Log(LOG_LEVEL_ERR, "Name list %d, dereflist %d\n", len, RlistLen(dereflist));
+        Log(LOG_LEVEL_ERR, "Name list %d, dereflist %d", len, RlistLen(dereflist));
         ProgrammingError("Software Error DeRefLists... correlated lists not same length");
     }
 
@@ -753,9 +753,9 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
         if (dtg != dtt)
         {
-            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s\n", (char *) rpg->item,
+            Log(LOG_LEVEL_ERR, "Type mismatch between logical/formal parameters %s/%s", (char *) rpg->item,
                   (char *) rpt->item);
-            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s\n", (char *) rpg->item, DataTypeToString(dtg),
+            Log(LOG_LEVEL_ERR, "%s is %s whereas %s is %s", (char *) rpg->item, DataTypeToString(dtg),
                   (char *) rpt->item, DataTypeToString(dtt));
         }
 

@@ -140,7 +140,7 @@ static void PrintFile(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (a.report.filename == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.\n");
+        Log(LOG_LEVEL_VERBOSE, "Printfile promise was incomplete, with no filename.");
         return;
     }
 

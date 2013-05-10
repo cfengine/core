@@ -259,7 +259,7 @@ int CheckPromises(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, "Verifying the syntax of the inputs...\n");
+    Log(LOG_LEVEL_VERBOSE, "Verifying the syntax of the inputs...");
     {
         char cfpromises[CF_MAXVARSIZE];
         snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
@@ -340,7 +340,7 @@ int CheckPromises(const GenericAgentConfig *config)
 
                 fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
                 fclose(fp);
-                Log(LOG_LEVEL_VERBOSE, "Caching the state of validation\n");
+                Log(LOG_LEVEL_VERBOSE, "Caching the state of validation");
             }
             else
             {
@@ -613,10 +613,10 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
         EvalContextHeapAddHard(ctx, "debug_mode");
     }
 
-    Log(LOG_LEVEL_VERBOSE, "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
+    Log(LOG_LEVEL_VERBOSE, "CFEngine - autonomous configuration engine - commence self-diagnostic prelude");
     if (LEGACY_OUTPUT)
     {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n");
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
     }
 
 /* Define trusted directories */
@@ -643,7 +643,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
     if (!LOOKUP)                /* cf-know should not do this in lookup mode */
     {
-        Log(LOG_LEVEL_VERBOSE, "Work directory is %s\n", CFWORKDIR);
+        Log(LOG_LEVEL_VERBOSE, "Work directory is %s", CFWORKDIR);
 
         snprintf(vbuff, CF_BUFSIZE, "%s%cinputs%cupdate.conf", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
         MakeParentDirectory(vbuff, force);
@@ -757,7 +757,7 @@ static Policy *Cf3ParseFiles(EvalContext *ctx, GenericAgentConfig *config, const
         // TODO: ad-hoc validation, necessary?
         if (rp->type != RVAL_TYPE_SCALAR)
         {
-            Log(LOG_LEVEL_ERR, "Non-file object in inputs list\n");
+            Log(LOG_LEVEL_ERR, "Non-file object in inputs list");
             continue;
         }
         else
@@ -907,7 +907,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
     {
         if (rp->type != RVAL_TYPE_SCALAR)
         {
-            Log(LOG_LEVEL_ERR, "Non file object %s in list\n", (char *) rp->item);
+            Log(LOG_LEVEL_ERR, "Non file object %s in list", (char *) rp->item);
         }
         else
         {
@@ -1002,12 +1002,12 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
 #endif
 
     CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
-    Log(LOG_LEVEL_VERBOSE, "  > Parsing file %s\n", input_path);
+    Log(LOG_LEVEL_VERBOSE, "Parsing file '%s'", input_path);
     CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
     if (!FileCanOpen(input_path, "r"))
     {
-        Log(LOG_LEVEL_ERR, "Can't open file for parsing: %s\n", input_path);
+        Log(LOG_LEVEL_ERR, "Can't open file for parsing: %s", input_path);
         exit(1);
     }
 
@@ -1135,7 +1135,7 @@ static int ParseFacility(const char *name)
 
 void SetFacility(const char *retval)
 {
-    Log(LOG_LEVEL_VERBOSE, "SET Syslog FACILITY = %s\n", retval);
+    Log(LOG_LEVEL_VERBOSE, "SET Syslog FACILITY = %s", retval);
 
     CloseLog();
     OpenLog(ParseFacility(retval));
@@ -1159,7 +1159,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "%s%c.", CFWORKDIR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    Log(LOG_LEVEL_VERBOSE, "Making sure that locks are private...\n");
+    Log(LOG_LEVEL_VERBOSE, "Making sure that locks are private...");
 
     if (chown(CFWORKDIR, getuid(), getgid()) == -1)
     {
@@ -1176,7 +1176,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate%c.", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR);
     MakeParentDirectory(vbuff, false);
 
-    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database\n");
+    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the state database");
     snprintf(vbuff, CF_BUFSIZE, "%s%cstate", CFWORKDIR, FILE_SEPARATOR);
 
     if (stat(vbuff, &statbuf) == -1)
@@ -1197,13 +1197,13 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private!\n", CFWORKDIR,
+            Log(LOG_LEVEL_ERR, "UNTRUSTED: State directory %s (mode %jo) was not private!", CFWORKDIR,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the module directory\n");
+    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the module directory");
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cmodules", CFWORKDIR, FILE_SEPARATOR);
 
@@ -1225,13 +1225,13 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 #ifndef __MINGW32__
         if (statbuf.st_mode & 022)
         {
-            Log(LOG_LEVEL_ERR, "UNTRUSTED: Module directory %s (mode %jo) was not private!\n", vbuff,
+            Log(LOG_LEVEL_ERR, "UNTRUSTED: Module directory %s (mode %jo) was not private!", vbuff,
                   (uintmax_t)(statbuf.st_mode & 0777));
         }
 #endif /* !__MINGW32__ */
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the PKI directory\n");
+    Log(LOG_LEVEL_VERBOSE, "Checking integrity of the PKI directory");
 
     snprintf(vbuff, CF_BUFSIZE, "%s%cppkeys", CFWORKDIR, FILE_SEPARATOR);
 
@@ -1338,7 +1338,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 
 static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
 {
-    Log(LOG_LEVEL_VERBOSE, "Checking common class promises...\n");
+    Log(LOG_LEVEL_VERBOSE, "Checking common class promises...");
 
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
@@ -1347,10 +1347,17 @@ static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
         char *sp = NULL;
         if (VarClassExcluded(ctx, pp, &sp))
         {
-            Log(LOG_LEVEL_VERBOSE, "\n");
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser, sp);
-            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+            if (LEGACY_OUTPUT)
+            {
+                Log(LOG_LEVEL_VERBOSE, "\n");
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+                Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser, sp);
+                Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            }
+            else
+            {
+                Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
+            }
             continue;
         }
 
@@ -1411,7 +1418,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
-            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
+            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu", control_body->source_path, cp->offset.line);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
@@ -1422,7 +1429,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_DOMAIN].lval) == 0)
         {
             strcpy(VDOMAIN, cp->rval.item);
-            Log(LOG_LEVEL_VERBOSE, "SET domain = %s\n", VDOMAIN);
+            Log(LOG_LEVEL_VERBOSE, "SET domain = %s", VDOMAIN);
             ScopeDeleteSpecialScalar("sys", "domain");
             ScopeDeleteSpecialScalar("sys", "fqhost");
             snprintf(VFQNAME, CF_MAXVARSIZE, "%s.%s", VUQNAME, VDOMAIN);
@@ -1433,13 +1440,13 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_INPUTS].lval) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s\n", RvalScalarValue(cp->rval));
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_inputs %s", RvalScalarValue(cp->rval));
             config->ignore_missing_inputs = BooleanFromString(cp->rval.item);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_IGNORE_MISSING_BUNDLES].lval) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s\n", RvalScalarValue(cp->rval));
+            Log(LOG_LEVEL_VERBOSE, "SET ignore_missing_bundles %s", RvalScalarValue(cp->rval));
             config->ignore_missing_bundles = BooleanFromString(cp->rval.item);
         }
 
@@ -1564,7 +1571,7 @@ void BundleHashVariables(EvalContext *ctx, Bundle *bundle)
 
 void PolicyHashVariables(EvalContext *ctx, Policy *policy)
 {
-    Log(LOG_LEVEL_VERBOSE, "Initiate variable convergence...\n");
+    Log(LOG_LEVEL_VERBOSE, "Initiate variable convergence...");
 
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
@@ -1644,7 +1651,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
 
         if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
         {
-            Log(LOG_LEVEL_ERR, "Bundle \"%s\" listed in the bundlesequence is not a defined bundle\n", name);
+            Log(LOG_LEVEL_ERR, "Bundle \"%s\" listed in the bundlesequence is not a defined bundle", name);
             ok = false;
         }
     }

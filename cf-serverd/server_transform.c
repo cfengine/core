@@ -138,13 +138,13 @@ void Summarize()
     Auth *ptr;
     Item *ip, *ipr;
 
-    Log(LOG_LEVEL_VERBOSE, "Summarize control promises\n");
+    Log(LOG_LEVEL_VERBOSE, "Summarize control promises");
 
-    Log(LOG_LEVEL_VERBOSE, "Granted access to paths :\n");
+    Log(LOG_LEVEL_VERBOSE, "Granted access to paths :");
 
     for (ptr = SV.admit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "Path: %s (encrypt=%d)", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
@@ -156,23 +156,23 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to paths :\n");
+    Log(LOG_LEVEL_VERBOSE, "Denied access to paths :");
 
     for (ptr = SV.deny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "Path: %s\n", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "Path: %s", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Deny: %s\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "   Deny: %s", ip->name);
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Granted access to literal/variable/query data :\n");
+    Log(LOG_LEVEL_VERBOSE, "Granted access to literal/variable/query data :");
 
     for (ptr = SV.varadmit; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "  Object: %s (encrypt=%d)\n", ptr->path, ptr->encrypt);
+        Log(LOG_LEVEL_VERBOSE, "  Object: %s (encrypt=%d)", ptr->path, ptr->encrypt);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
@@ -184,59 +184,59 @@ void Summarize()
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Denied access to literal/variable/query data :\n");
+    Log(LOG_LEVEL_VERBOSE, "Denied access to literal/variable/query data :");
 
     for (ptr = SV.vardeny; ptr != NULL; ptr = ptr->next)
     {
-        Log(LOG_LEVEL_VERBOSE, "  Object: %s\n", ptr->path);
+        Log(LOG_LEVEL_VERBOSE, "  Object: %s", ptr->path);
 
         for (ip = ptr->accesslist; ip != NULL; ip = ip->next)
         {
-            Log(LOG_LEVEL_VERBOSE, "   Deny: %s\n", ip->name);
+            Log(LOG_LEVEL_VERBOSE, "   Deny: %s", ip->name);
         }
     }
 
     
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access :");
 
     for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs denied connection access :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs denied connection access :");
 
     for (ip = SV.attackerlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed multiple connection access :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed multiple connection access :");
 
     for (ip = SV.multiconnlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from whom we shall accept public keys on trust :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs from whom we shall accept public keys on trust :");
 
     for (ip = SV.trustkeylist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections :\n");
+    Log(LOG_LEVEL_VERBOSE, "Users from whom we accept connections :");
 
     for (ip = SV.allowuserlist; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... USERS: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... USERS: %s", ip->name);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Host IPs from NAT which we don't verify :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs from NAT which we don't verify :");
 
     for (ip = SV.skipverify; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " .... IP: %s\n", ip->name);
+        Log(LOG_LEVEL_VERBOSE, " .... IP: %s", ip->name);
     }
 
 }
@@ -290,21 +290,21 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_DENY_BAD_CLOCKS].lval) == 0)
             {
                 DENYBADCLOCKS = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET denybadclocks = %d\n", DENYBADCLOCKS);
+                Log(LOG_LEVEL_VERBOSE, "SET denybadclocks = %d", DENYBADCLOCKS);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ENCRYPTED_TRANSFERS].lval) == 0)
             {
                 LOGENCRYPT = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET LOGENCRYPT = %d\n", LOGENCRYPT);
+                Log(LOG_LEVEL_VERBOSE, "SET LOGENCRYPT = %d", LOGENCRYPT);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LOG_ALL_CONNECTIONS].lval) == 0)
             {
                 SV.logconns = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET logconns = %d\n", SV.logconns);
+                Log(LOG_LEVEL_VERBOSE, "SET logconns = %d", SV.logconns);
                 continue;
             }
 
@@ -312,21 +312,21 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 CFD_MAXPROCESSES = (int) IntFromString(retval.item);
                 MAXTRIES = CFD_MAXPROCESSES / 3;
-                Log(LOG_LEVEL_VERBOSE, "SET maxconnections = %d\n", CFD_MAXPROCESSES);
+                Log(LOG_LEVEL_VERBOSE, "SET maxconnections = %d", CFD_MAXPROCESSES);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_INTERVAL].lval) == 0)
             {
                 COLLECT_INTERVAL = (int) 60 * IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET call_collect_interval = %d (seconds)\n", COLLECT_INTERVAL);
+                Log(LOG_LEVEL_VERBOSE, "SET call_collect_interval = %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_LISTEN].lval) == 0)
             {
                 SERVER_LISTEN = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET server listen = %s \n",
+                Log(LOG_LEVEL_VERBOSE, "SET server listen = %s ",
                       (SERVER_LISTEN)? "true":"false");
                 continue;
             }
@@ -334,14 +334,14 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CALL_COLLECT_WINDOW].lval) == 0)
             {
                 COLLECT_WINDOW = (int) IntFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET collect_window = %d (seconds)\n", COLLECT_INTERVAL);
+                Log(LOG_LEVEL_VERBOSE, "SET collect_window = %d (seconds)", COLLECT_INTERVAL);
                 continue;
             }
 
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_CF_RUN_COMMAND].lval) == 0)
             {
                 strncpy(CFRUNCOMMAND, retval.item, CF_BUFSIZE - 1);
-                Log(LOG_LEVEL_VERBOSE, "SET cfruncommand = %s\n", CFRUNCOMMAND);
+                Log(LOG_LEVEL_VERBOSE, "SET cfruncommand = %s", CFRUNCOMMAND);
                 continue;
             }
 
@@ -349,7 +349,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Allowing connections from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Allowing connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -366,7 +366,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Denying connections from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Denying connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -383,7 +383,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Skip verify connections from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Skip verify connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -401,7 +401,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Allowing multiple connections from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Allowing multiple connections from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -418,7 +418,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Allowing users ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Allowing users ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -435,7 +435,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "SET Trust keys from ...\n");
+                Log(LOG_LEVEL_VERBOSE, "SET Trust keys from ...");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
@@ -452,7 +452,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             {
                 SHORT_CFENGINEPORT = (short) IntFromString(retval.item);
                 strncpy(STR_CFENGINEPORT, retval.item, 15);
-                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u = %s = %s\n", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
+                Log(LOG_LEVEL_VERBOSE, "SET default portnumber = %u = %s = %s", (int) SHORT_CFENGINEPORT, STR_CFENGINEPORT,
                       RvalScalarValue(retval));
                 SHORT_CFENGINEPORT = htons((short) IntFromString(retval.item));
                 continue;
@@ -467,7 +467,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
             if (strcmp(cp->lval, CFS_CONTROLBODY[SERVER_CONTROL_BIND_TO_INTERFACE].lval) == 0)
             {
                 strncpy(BINDINTERFACE, retval.item, CF_BUFSIZE - 1);
-                Log(LOG_LEVEL_VERBOSE, "SET bindtointerface = %s\n", BINDINTERFACE);
+                Log(LOG_LEVEL_VERBOSE, "SET bindtointerface = %s", BINDINTERFACE);
                 continue;
             }
         }
@@ -497,7 +497,7 @@ static void KeepControlPromises(EvalContext *ctx, Policy *policy, GenericAgentCo
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_FIPS_MODE, &retval))
     {
         FIPS_MODE = BooleanFromString(retval.item);
-        Log(LOG_LEVEL_VERBOSE, "SET FIPS_MODE = %d\n", FIPS_MODE);
+        Log(LOG_LEVEL_VERBOSE, "SET FIPS_MODE = %d", FIPS_MODE);
     }
 
     if (EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_LASTSEEN_EXPIRE_AFTER, &retval))
@@ -612,17 +612,24 @@ static void KeepServerPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *pa
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
     {
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole promise, as context is %s\n", pp->classes);
+        Log(LOG_LEVEL_VERBOSE, "Skipping whole promise, as context is %s", pp->classes);
         return;
     }
 
     if (VarClassExcluded(ctx, pp, &sp))
     {
-        Log(LOG_LEVEL_VERBOSE, "\n");
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
-        Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant\n", pp->promiser,
-              sp);
-        Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . \n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "\n");
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+            Log(LOG_LEVEL_VERBOSE, "Skipping whole next promise (%s), as var-context %s is not relevant", pp->promiser,
+                  sp);
+            Log(LOG_LEVEL_VERBOSE, ". . . . . . . . . . . . . . . . . . . . . . . . . . . . ");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "Skipping next promise '%s', as var-context '%s' is not relevant", pp->promiser, sp);
+        }
         return;
     }
 
@@ -990,7 +997,7 @@ static void KeepServerRolePromise(EvalContext *ctx, Promise *pp)
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "RHS of authorize promise for %s should be a list\n", pp->promiser);
+                Log(LOG_LEVEL_ERR, "RHS of authorize promise for %s should be a list", pp->promiser);
             }
             break;
         }

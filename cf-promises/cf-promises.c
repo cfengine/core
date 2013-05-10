@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     Policy *policy = GenericAgentLoadPolicy(ctx, config);
     if (!policy)
     {
-        Log(LOG_LEVEL_ERR, "Input files contain errors.\n");
+        Log(LOG_LEVEL_ERR, "Input files contain errors.");
         exit(EXIT_FAILURE);
     }
 

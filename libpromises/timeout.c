@@ -49,12 +49,12 @@ void TimeOut()
 
     if (ALARM_PID != -1)
     {
-        Log(LOG_LEVEL_VERBOSE, "Time out of process %jd\n", (intmax_t)ALARM_PID);
+        Log(LOG_LEVEL_VERBOSE, "Time out of process %jd", (intmax_t)ALARM_PID);
         GracefulTerminate(ALARM_PID, PROCESS_START_TIME_UNKNOWN);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "%s> Time out\n", VPREFIX);
+        Log(LOG_LEVEL_VERBOSE, "%s> Time out", VPREFIX);
     }
 }
 

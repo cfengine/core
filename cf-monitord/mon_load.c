@@ -58,7 +58,7 @@ void MonLoadGatherData(double *cf_this)
 /* Scale load average by 100 to make it visible */
 
     cf_this[ob_loadavg] = sum;
-    Log(LOG_LEVEL_VERBOSE, "Load Average = %.2lf\n", cf_this[ob_loadavg]);
+    Log(LOG_LEVEL_VERBOSE, "Load Average = %.2lf", cf_this[ob_loadavg]);
 }
 
 #else

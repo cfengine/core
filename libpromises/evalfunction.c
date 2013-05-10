@@ -3872,6 +3872,221 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 }
 
 /*********************************************************************/
+
+static double EvaluateMathPrefix(Seq *stack, char *failure)
+{
+    if (SeqLength(stack) < 1)
+    {
+        strcpy(failure, "Unexpectedly empty evaluation stack");
+        return -1;
+    }
+
+    char* item = SeqAt(stack, 0);
+    SeqRemove(stack, 0);
+
+    if (NULL == item)
+    {
+        strcpy(failure, "NULL item off stack");
+        return -1;
+    }
+
+    double scanned = 0;
+
+    //CfOut(OUTPUT_LEVEL_INFORM, "", "eval(): item = %s", item);
+    if (0 == strcmp(item, "=="))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        // epsilon = 1e-16
+        return 0.00000000000000001 > fabs(temp - EvaluateMathPrefix(stack, failure)) ? 1 : 0;
+    }
+    else if (0 == strcmp(item, "+"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return temp + EvaluateMathPrefix(stack, failure);
+    }
+    else if (0 == strcmp(item, "-"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return temp - EvaluateMathPrefix(stack, failure);
+    }
+    else if (0 == strcmp(item, "%"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return fmod(temp, EvaluateMathPrefix(stack, failure));
+    }
+    else if (0 == strcmp(item, "**") || 0 == strcmp(item, "pow")) // note order: before '*'
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return pow(temp, EvaluateMathPrefix(stack, failure));
+    }
+    else if (0 == strcmp(item, "*"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return temp * EvaluateMathPrefix(stack, failure);
+    }
+    else if (0 == strcmp(item, "/"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        double over = EvaluateMathPrefix(stack, failure);
+        if (over == 0) // yes, this can be fuzzy with floating point numbers
+        {
+            strcpy(failure, "Division by zero");
+            return -1;
+        }
+
+        return temp / over;
+    }
+    else if (0 == strcmp(item, "sin"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return sin(temp);
+    }
+    else if (0 == strcmp(item, "exp"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return exp(temp);
+    }
+    else if (0 == strcmp(item, "asin"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return asin(temp);
+    }
+    else if (0 == strcmp(item, "cos"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return cos(temp);
+    }
+    else if (0 == strcmp(item, "acos"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return acos(temp);
+    }
+    else if (0 == strcmp(item, "tan"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return tan(temp);
+    }
+    else if (0 == strcmp(item, "atan"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return atan(temp);
+    }
+    else if (0 == strcmp(item, "log"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return log(temp);
+    }
+    else if (0 == strcmp(item, "log10"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return log10(temp);
+    }
+    else if (0 == strcmp(item, "log2"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return log2(temp);
+    }
+    else if (0 == strcmp(item, "sqrt"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return sqrt(temp);
+    }
+    else if (0 == strcmp(item, "ceil"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return ceil(temp);
+    }
+    else if (0 == strcmp(item, "floor"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return floor(temp);
+    }
+    else if (0 == strcmp(item, "abs"))
+    {
+        double temp = EvaluateMathPrefix(stack, failure);
+        if (strlen(failure) > 0) return -1;
+        return fabs(temp);
+    }
+    else if (0 == strcmp(item, "pi"))
+    {
+        return M_PI;
+    }
+    else if (0 == strcmp(item, "e"))
+    {
+        return M_E;
+    }
+    else if (1 == sscanf(item, "%lf", &scanned))
+    {
+        //CfOut(OUTPUT_LEVEL_INFORM, "", "eval(): number = %lf", scanned);
+        return scanned;
+    }
+
+    snprintf(failure, CF_BUFSIZE, "unhandled term '%s'", item);
+    return -1;
+}
+
+static FnCallResult FnCallEval(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+{
+    char *input = RlistScalarValue(finalargs);
+    char *type = RlistScalarValue(finalargs->next);
+    char *options = RlistScalarValue(finalargs->next->next);
+
+    if (0 != strcmp(type, "math") || 0 != strcmp(options, "prefix"))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unknown evaluation type %s or options %s", type, options);
+        return (FnCallResult) { FNCALL_FAILURE };
+    }
+
+    Seq *stack = SeqNew(3, NULL);
+
+    for (const Rlist *tokens = (const Rlist *) RlistFromSplitString(input, ' '); tokens != NULL; tokens = tokens->next)
+    {
+        SeqAppend(stack, RlistScalarValue(tokens));
+    }
+
+    char failure[CF_BUFSIZE];
+    memset(failure, 0, CF_BUFSIZE);
+
+    // CfOut(OUTPUT_LEVEL_INFORM, "", "eval(): stack depth = %d", SeqLength(stack));
+    double result = EvaluateMathPrefix(stack, failure);
+
+    if (strlen(failure) > 0)
+    {
+        CfOut(OUTPUT_LEVEL_VERBOSE, "", "eval(): exoression '%s' could not be evaluated (%s)", input, failure);
+        //return (FnCallResult) { FNCALL_FAILURE };
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(""), RVAL_TYPE_SCALAR } };
+    }
+
+    // TODO: will this leak?
+    SeqDestroy(stack);
+
+    char out[CF_BUFSIZE];
+    sprintf(out, "%lf", result);
+
+    return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(out), RVAL_TYPE_SCALAR } };
+}
+
+/*********************************************************************/
 /* Read functions                                                    */
 /*********************************************************************/
 
@@ -5647,6 +5862,14 @@ FnCallArg SETOP_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg EVAL_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Input string"},
+    {"math", DATA_TYPE_OPTION, "Evaluation type"},
+    {"prefix", DATA_TYPE_OPTION, "Evaluation options"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 /*********************************************************/
 /* FnCalls are rvalues in certain promise constraints    */
 /*********************************************************/
@@ -5671,6 +5894,7 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("dirname", DATA_TYPE_STRING, DIRNAME_ARGS, &FnCallDirname, "Return the parent directory name for given path", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("diskfree", DATA_TYPE_INT, DISKFREE_ARGS, &FnCallDiskFree, "Return the free space (in KB) available on the directory's current partition (0 if not found)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("escape", DATA_TYPE_STRING, ESCAPE_ARGS, &FnCallEscape, "Escape regular expression characters in a string", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("eval", DATA_TYPE_STRING, EVAL_ARGS, &FnCallEval, "Evaluate a mathematical expression", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("every", DATA_TYPE_CONTEXT, EVERY_SOME_NONE_ARGS, &FnCallEverySomeNone, "True if every element in the named list matches the given regular expression", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("execresult", DATA_TYPE_STRING, EXECRESULT_ARGS, &FnCallExecResult, "Execute named command and assign output to variable", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("fileexists", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named file can be accessed", false, SYNTAX_STATUS_NORMAL),

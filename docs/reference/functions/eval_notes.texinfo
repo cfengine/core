@@ -1,0 +1,31 @@
+
+Evaluates simple mathematical expressions as follows:
+
+All the input is space-separated in prefix notation, meaning that you
+write @code{+ 2 3} to say ``two plus three''.
+
+Any number by itself evaluates to the number.
+
+The constants @code{e} and @code{pi} are interpreted correctly.
+
+The mathematical operations of addition, subtraction, multiplication,
+and division are specified with @code{+-/*}.
+
+The remainder of two numbers is @code{%};
+
+The standard trigonometric and general mathematical functions
+@code{sin}, @code{cos}, @code{asin}, @code{acos}, @code{tan},
+@code{atan}, @code{log} (natural), @code{log2}, @code{log10},
+@code{sqrt}, @code{ceil}, @code{floor}, @code{abs} are understood.  They
+use radians where appropriate (see @code{math.h}).
+
+Exponentiation can be specified with @code{**} or @code{pow}.
+
+The @code{==} function will return 1 if its two arguments are equal with
+1e-16 and 0 otherwise.
+
+Some functions will return @code{NaN} for instance.  That's a problem
+this function can not solve for you.
+
+Any invalid expressions (e.g. not enough arguments to a function) cause
+the function to return the empty string ``''.

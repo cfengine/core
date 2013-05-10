@@ -21,6 +21,32 @@ vars:
   "c" slist => { };
   "d" slist => { "", "a", "", "b" };
   "e" slist => { "a", "1", "b" };
+  "f" slist => { "0", "100.0", "0.1", "3.2" };
+  "g" slist => { "", "-2.1", "0.88", "b", "00.88" };
+
+  "ip" slist => { "100.200.100.0", "1.2.3.4", "9.7.5.1", "9", "9.7", "9.7.5", "", "-1", "where are the IP addresses?" };
+  "ipv6" slist => { "FE80:0000:0000:0000:0202:B3FF:FE1E:8329",
+                    "FE80::0202:B3FF:FE1E:8329",
+                    "::1",
+                    # examples from https://www.ripe.net/lir-services/new-lir/ipv6_reference_card.pdf
+                    "8000:63bf:3fff:fdd2",
+                    "::ffff:192.0.2.47",
+                    "fdf8:f53b:82e4::53",
+                    "fe80::200:5aee:feaa:20a2",
+                    "2001:0000:4136:e378:",
+                    "8000:63bf:3fff:fdd2",
+                    "2001:0002:6c::430",
+                    "2001:10:240:ab::a",
+                    "2002:cb0a:3cdd:1::1",
+                    "2001:db8:8:4::2",
+                    "ff01:0:0:0:0:0:0:2",
+                    "-1", "where are the IP addresses?" };
+
+  "mac" slist => { "00:14:BF:F7:23:1D", "0:14:BF:F7:23:1D", ":14:BF:F7:23:1D", "00:014:BF:0F7:23:01D",
+                   "00:14:BF:F7:23:1D", "0:14:BF:F7:23:1D", ":14:BF:F7:23:1D", "00:014:BF:0F7:23:01D",
+                   "01:14:BF:F7:23:1D", "1:14:BF:F7:23:1D",
+                   "01:14:BF:F7:23:2D", "1:14:BF:F7:23:2D",
+                   "-1", "where are the MAC addresses?" };
 }
 
 #######################################################
@@ -28,11 +54,10 @@ vars:
 bundle agent test
 {
 vars:
-  "sa" slist => sort("init.a", "lex");
-  "sb" slist => sort("init.b", "lex");
-  "sc" slist => sort("init.c", "lex");
-  "sd" slist => sort("init.d", "lex");
-  "se" slist => sort("init.e", "lex");
+  "test" slist => { "a", "b", "c", "d", "e", "f", "g", "ip", "ipv6", "mac" };
+  "sort" slist => { "lex", "int", "real", "IPv4", "IPv6", "MAC" };
+
+  "$(sort)_sorted_$(test)" slist => sort("init.$(test)", $(sort));
 }
 
 
@@ -41,37 +66,74 @@ vars:
 bundle agent check
 {
 vars:
-      "ja" string => join(",", "test.sa");
-      "jb" string => join(",", "test.sb");
-      "jc" string => join(",", "test.sc");
-      "jd" string => join(",", "test.sd");
-      "je" string => join(",", "test.se");
+  "test" slist => { "a", "b", "c", "d", "e", "f", "g", "ip", "ipv6", "mac" };
+  "sort" slist => { "lex", "int", "real", "IPv4", "IPv6", "MAC" };
+      "numerics" slist => { "int", "real" };
+      "non_numerics" slist => { "lex", "IPv4", "IPv6", "MAC" };
 
-      "ea" string => "a,b,c";
-      "eb" string => "10,100,9";
-      "ec" string => "";
-      "ed" string => ",,a,b";
-      "ee" string => "1,a,b";
+      "$(sort)_joined_$(test)" string => join(",", "test.$(sort)_sorted_$(test)");
 
+      "$(sort)_check_a" string => "a,b,c";
 
+      "$(numerics)_check_b" string => "9,10,100";
+      "$(non_numerics)_check_b" string => "10,100,9";
+
+      "$(sort)_check_c" string => "";
+
+      "$(numerics)_check_d" string => "a,b,,";
+      "$(non_numerics)_check_d" string => ",,a,b";
+
+      "$(numerics)_check_e" string => "a,b,1";
+      "$(non_numerics)_check_e" string => "1,a,b";
+
+      "$(non_numerics)_check_f" string => "0,0.1,100.0,3.2";
+      "int_check_f" string => "0.1,0,3.2,100.0";
+      "real_check_f" string => "0,0.1,3.2,100.0";
+
+      "$(non_numerics)_check_g" string => ",-2.1,0.88,00.88,b";
+      "$(numerics)_check_g" string => "b,-2.1,,00.88,0.88";
+
+      "lex_check_ip" string => ",-1,1.2.3.4,100.200.100.0,9,9.7,9.7.5,9.7.5.1,where are the IP addresses?";
+      "int_check_ip" string => "where are the IP addresses?,-1,,1.2.3.4,9.7.5,9.7,9,9.7.5.1,100.200.100.0";
+      "real_check_ip" string => "where are the IP addresses?,-1,,1.2.3.4,9,9.7.5,9.7,9.7.5.1,100.200.100.0";
+      "IPv4_check_ip" string => ",-1,9,9.7,9.7.5,where are the IP addresses?,1.2.3.4,9.7.5.1,100.200.100.0";
+      "IPv6_check_ip" string => ",-1,9,9.7,9.7.5,where are the IP addresses?,1.2.3.4,9.7.5.1,100.200.100.0";
+      "MAC_check_ip" string => $(lex_check_ip);
+
+      "$(numerics)_check_ipv6" string => "::1,::ffff:192.0.2.47,FE80:0000:0000:0000:0202:B3FF:FE1E:8329,FE80::0202:B3FF:FE1E:8329,fdf8:f53b:82e4::53,fe80::200:5aee:feaa:20a2,ff01:0:0:0:0:0:0:2,where are the IP addresses?,-1,2001:db8:8:4::2,2001:10:240:ab::a,2001:0002:6c::430,2001:0000:4136:e378:,2002:cb0a:3cdd:1::1,8000:63bf:3fff:fdd2,8000:63bf:3fff:fdd2";
+      "lex_check_ipv6" string => "-1,2001:0000:4136:e378:,2001:0002:6c::430,2001:10:240:ab::a,2001:db8:8:4::2,2002:cb0a:3cdd:1::1,8000:63bf:3fff:fdd2,8000:63bf:3fff:fdd2,::1,::ffff:192.0.2.47,FE80:0000:0000:0000:0202:B3FF:FE1E:8329,FE80::0202:B3FF:FE1E:8329,fdf8:f53b:82e4::53,fe80::200:5aee:feaa:20a2,ff01:0:0:0:0:0:0:2,where are the IP addresses?";
+      "IPv4_check_ipv6" string => "-1,2001:0000:4136:e378:,2001:0002:6c::430,2001:10:240:ab::a,2001:db8:8:4::2,2002:cb0a:3cdd:1::1,8000:63bf:3fff:fdd2,8000:63bf:3fff:fdd2,::1,::ffff:192.0.2.47,FE80:0000:0000:0000:0202:B3FF:FE1E:8329,FE80::0202:B3FF:FE1E:8329,fdf8:f53b:82e4::53,fe80::200:5aee:feaa:20a2,ff01:0:0:0:0:0:0:2,where are the IP addresses?";
+      "MAC_check_ipv6" string => "-1,2001:0000:4136:e378:,2001:0002:6c::430,2001:10:240:ab::a,2001:db8:8:4::2,2002:cb0a:3cdd:1::1,8000:63bf:3fff:fdd2,8000:63bf:3fff:fdd2,::1,::ffff:192.0.2.47,FE80::0202:B3FF:FE1E:8329,fdf8:f53b:82e4::53,fe80::200:5aee:feaa:20a2,where are the IP addresses?,ff01:0:0:0:0:0:0:2,FE80:0000:0000:0000:0202:B3FF:FE1E:8329";
+      "IPv6_check_ipv6" string => "-1,2001:0000:4136:e378:,8000:63bf:3fff:fdd2,8000:63bf:3fff:fdd2,where are the IP addresses?,::1,::ffff:192.0.2.47,2001:0002:6c::430,2001:10:240:ab::a,2001:db8:8:4::2,2002:cb0a:3cdd:1::1,fdf8:f53b:82e4::53,fe80::200:5aee:feaa:20a2,FE80::0202:B3FF:FE1E:8329,FE80:0000:0000:0000:0202:B3FF:FE1E:8329,ff01:0:0:0:0:0:0:2";
+
+      "lex_check_mac" string => "-1,00:014:BF:0F7:23:01D,00:014:BF:0F7:23:01D,00:14:BF:F7:23:1D,00:14:BF:F7:23:1D,01:14:BF:F7:23:1D,01:14:BF:F7:23:2D,0:14:BF:F7:23:1D,0:14:BF:F7:23:1D,1:14:BF:F7:23:1D,1:14:BF:F7:23:2D,:14:BF:F7:23:1D,:14:BF:F7:23:1D,where are the MAC addresses?";
+      "$(numerics)_check_mac" string => ":14:BF:F7:23:1D,:14:BF:F7:23:1D,where are the MAC addresses?,-1,00:014:BF:0F7:23:01D,0:14:BF:F7:23:1D,00:14:BF:F7:23:1D,00:014:BF:0F7:23:01D,0:14:BF:F7:23:1D,00:14:BF:F7:23:1D,1:14:BF:F7:23:2D,01:14:BF:F7:23:2D,1:14:BF:F7:23:1D,01:14:BF:F7:23:1D";
+      "IPv4_check_mac" string => "-1,00:014:BF:0F7:23:01D,00:014:BF:0F7:23:01D,00:14:BF:F7:23:1D,00:14:BF:F7:23:1D,01:14:BF:F7:23:1D,01:14:BF:F7:23:2D,0:14:BF:F7:23:1D,0:14:BF:F7:23:1D,1:14:BF:F7:23:1D,1:14:BF:F7:23:2D,:14:BF:F7:23:1D,:14:BF:F7:23:1D,where are the MAC addresses?";
+      "IPv6_check_mac" string => "-1,00:014:BF:0F7:23:01D,00:014:BF:0F7:23:01D,00:14:BF:F7:23:1D,00:14:BF:F7:23:1D,01:14:BF:F7:23:1D,01:14:BF:F7:23:2D,0:14:BF:F7:23:1D,0:14:BF:F7:23:1D,1:14:BF:F7:23:1D,1:14:BF:F7:23:2D,:14:BF:F7:23:1D,:14:BF:F7:23:1D,where are the MAC addresses?";
+      "MAC_check_mac" string => "-1,:14:BF:F7:23:1D,:14:BF:F7:23:1D,where are the MAC addresses?,00:014:BF:0F7:23:01D,0:14:BF:F7:23:1D,00:14:BF:F7:23:1D,00:014:BF:0F7:23:01D,0:14:BF:F7:23:1D,00:14:BF:F7:23:1D,1:14:BF:F7:23:1D,01:14:BF:F7:23:1D,1:14:BF:F7:23:2D,01:14:BF:F7:23:2D";
 classes:
     any::
-      "ok_a" expression => strcmp($(ea), $(ja));
-      "ok_b" expression => strcmp($(eb), $(jb));
-      "ok_c" expression => strcmp($(ec), $(jc));
-      "ok_d" expression => strcmp($(ed), $(jd));
-      "ok_e" expression => strcmp($(ee), $(je));
+      "ok_$(sort)_$(test)" expression => strcmp("$($(sort)_check_$(test))", "$($(sort)_joined_$(test))");
 
-
-      "ok" and => { "ok_a", "ok_b", "ok_c", "ok_d", "ok_e" };
+      "ok" and => { 'ok_lex_a', 'ok_int_a', 'ok_real_a', 'ok_IPv4_a', 'ok_IPv6_a', 'ok_MAC_a',
+                    'ok_lex_b', 'ok_int_b', 'ok_real_b', 'ok_IPv4_b', 'ok_IPv6_b', 'ok_MAC_b',
+                    'ok_lex_c', 'ok_int_c', 'ok_real_c', 'ok_IPv4_c', 'ok_IPv6_c', 'ok_MAC_c',
+                    'ok_lex_d', 'ok_int_d', 'ok_real_d', 'ok_IPv4_d', 'ok_IPv6_d', 'ok_MAC_d',
+                    'ok_lex_e', 'ok_int_e', 'ok_real_e', 'ok_IPv4_e', 'ok_IPv6_e', 'ok_MAC_e',
+                    'ok_lex_f', 'ok_int_f', 'ok_real_f', 'ok_IPv4_f', 'ok_IPv6_f', 'ok_MAC_f',
+                    'ok_lex_g', 'ok_int_g', 'ok_real_g', 'ok_IPv4_g', 'ok_IPv6_g', 'ok_MAC_g',
+                    'ok_lex_ip', 'ok_int_ip', 'ok_real_ip', 'ok_IPv4_ip', 'ok_IPv6_ip', 'ok_MAC_ip',
+                    'ok_lex_ipv6', 'ok_int_ipv6', 'ok_real_ipv6', 'ok_IPv4_ipv6', 'ok_IPv6_ipv6', 'ok_MAC_ipv6',
+                    'ok_lex_mac', 'ok_int_mac', 'ok_real_mac', 'ok_IPv4_mac', 'ok_IPv6_mac', 'ok_MAC_mac',
+ };
 
 reports:
     DEBUG::
-        "a '$(ja)' <> '$(ea)'";
-        "b '$(jb)' <> '$(eb)'";
-        "c '$(jc)' <> '$(ec)'";
-        "d '$(jd)' <> '$(ed)'";
-        "e '$(je)' <> '$(ee)'";
+      "OK $(sort) $(test) class 'ok_$(sort)_$(test)': '$($(sort)_check_$(test))' == '$($(sort)_joined_$(test))'"
+      ifvarclass => "ok_$(sort)_$(test)";
+
+      "BAD $(sort) $(test) class 'ok_$(sort)_$(test)': '$($(sort)_check_$(test))' <> '$($(sort)_joined_$(test))'"
+      ifvarclass => "!ok_$(sort)_$(test)";
 
     ok::
         "$(this.promise_filename) Pass";

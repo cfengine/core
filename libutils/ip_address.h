@@ -63,4 +63,13 @@ Buffer *IPAddressGetAddress(IPAddress *address);
   @return A valid port for connections or -1 if it was not available.
   */
 int IPAddressGetPort(IPAddress *address);
+
+/**
+  @brief Sorts two IP addresses, treating IPv4 as a subset of IPv6.
+  @param a IPAddress object.
+  @param b IPAddress object.
+  @return Difference between the two as in memcmp()
+  */
+int IPAddressCompare(IPAddress *a, IPAddress *b);
+
 #endif // CFENGINE_IP_ADDRESS_H

@@ -30,6 +30,7 @@
 
 #include "rlist.h"
 #include "item_lib.h"
+#include "ip_address.h"
 
 typedef bool (*LessFn)(void *lhs, void *rhs, void *ctx);
 typedef void * (*GetNextElementFn)(void *element);
@@ -212,6 +213,131 @@ static bool RlistItemLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
     return strcmp(((Rlist*)lhs)->item, ((Rlist*)rhs)->item) < 0;
 }
 
+static bool RlistItemIntLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    char remainder[CF_BUFSIZE];
+    long left;
+    long right;
+    int matched_left = sscanf(((Rlist*)lhs)->item, "%ld%s", &left, remainder);
+    int matched_right = sscanf(((Rlist*)rhs)->item, "%ld%s", &right, remainder);
+
+    if (matched_left && matched_right)
+    {
+        return left - right < 0;
+    }
+
+    if (matched_left)
+    {
+        return false;
+    }
+
+    if (matched_right)
+    {
+        return true;
+    }
+
+    // neither item matched
+    return RlistItemLess(lhs, rhs, ctx);
+}
+
+static bool RlistItemRealLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    char remainder[CF_BUFSIZE];
+    double left;
+    double right;
+    int matched_left = sscanf(((Rlist*)lhs)->item, "%lf%s", &left, remainder);
+    int matched_right = sscanf(((Rlist*)rhs)->item, "%lf%s", &right, remainder);
+
+    if (matched_left && matched_right)
+    {
+        return left - right < 0;
+    }
+
+    // drop back to integer comparison if either number could not be parsed as a double
+    return RlistItemIntLess(lhs, rhs, ctx);
+}
+
+static bool RlistItemIPLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    char *left_item = ((Rlist*)lhs)->item;
+    char *right_item = ((Rlist*)rhs)->item;
+
+    Buffer *left_buffer = BufferNewFrom(left_item, strlen(left_item));
+    Buffer *right_buffer = BufferNewFrom(right_item, strlen(right_item));
+
+    IPAddress *left = IPAddressNew(left_buffer);
+    IPAddress *right = IPAddressNew(right_buffer);
+
+    bool matched_left = left != NULL;
+    bool matched_right = right != NULL;
+
+    BufferDestroy(&left_buffer);
+    BufferDestroy(&right_buffer);
+
+    if (matched_left && matched_right)
+    {
+        int difference = IPAddressCompare(left, right);
+        IPAddressDestroy(&left);
+        IPAddressDestroy(&right);
+        if (difference != 0) return difference < 0;
+    }
+
+    IPAddressDestroy(&left);
+    IPAddressDestroy(&right);
+
+    if (matched_left)
+    {
+        return false;
+    }
+
+    if (matched_right)
+    {
+        return true;
+    }
+
+    // neither item matched
+    return RlistItemLess(lhs, rhs, ctx);
+}
+
+static long ParseEtherAddress(const char* input, unsigned char *addr)
+{
+    if (strlen(input) > 12)
+    {
+        return sscanf(input, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", 
+                      &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
+    }
+
+    return sscanf(input, "%2hhx%2hhx%2hhx%2hhx%2hhx%2hhx", 
+                  &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
+}
+
+static bool RlistItemMACLess(void *lhs, void *rhs, ARG_UNUSED void *ctx)
+{
+    int bytes = 6;
+    unsigned char left[bytes], right[bytes];
+    int matched_left = 6 == ParseEtherAddress(((Rlist*)lhs)->item, left);
+    int matched_right = 6 == ParseEtherAddress(((Rlist*)rhs)->item, right);
+
+    if (matched_left && matched_right)
+    {
+        int difference = memcmp(left, right, bytes);
+        if (difference != 0) return difference < 0;
+    }
+
+    if (matched_left)
+    {
+        return false;
+    }
+
+    if (matched_right)
+    {
+        return true;
+    }
+
+    // neither item matched
+    return RlistItemLess(lhs, rhs, ctx);
+}
+
 static void *RlistGetNext(void *element)
 {
     return ((Rlist*)element)->next;
@@ -232,4 +358,24 @@ Rlist *SortRlist(Rlist *list, int (*CompareItems) ())
 Rlist *AlphaSortRListNames(Rlist *list)
 {
     return Sort(list, &RlistItemLess, &RlistGetNext, &RlistPutNext, NULL);
+}
+
+Rlist *IntSortRListNames(Rlist *list)
+{
+    return Sort(list, &RlistItemIntLess, &RlistGetNext, &RlistPutNext, NULL);
+}
+
+Rlist *RealSortRListNames(Rlist *list)
+{
+    return Sort(list, &RlistItemRealLess, &RlistGetNext, &RlistPutNext, NULL);
+}
+
+Rlist *IPSortRListNames(Rlist *list)
+{
+    return Sort(list, &RlistItemIPLess, &RlistGetNext, &RlistPutNext, NULL);
+}
+
+Rlist *MACSortRListNames(Rlist *list)
+{
+    return Sort(list, &RlistItemMACLess, &RlistGetNext, &RlistPutNext, NULL);
 }

@@ -2682,6 +2682,7 @@ static FnCallResult FnCallEverySomeNone(EvalContext *ctx, FnCall *fp, Rlist *fin
 static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     VarRef list_var_lval = VarRefParseFromBundle(RlistScalarValue(finalargs), PromiseGetBundle(fp->caller));
+    const char *sort_type = RlistScalarValue(finalargs->next); // list identifier
     Rval list_var_rval;
     DataType list_var_dtype = DATA_TYPE_NONE;
 
@@ -2698,7 +2699,28 @@ static FnCallResult FnCallSort(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
-    Rlist *sorted = AlphaSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    Rlist *sorted;
+
+    if (strcmp(sort_type, "int") == 0)
+    {
+        sorted = IntSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    }
+    else if (strcmp(sort_type, "real") == 0)
+    {
+        sorted = RealSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    }
+    else if (strcmp(sort_type, "IP") == 0 || strcmp(sort_type, "ip") == 0)
+    {
+        sorted = IPSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    }
+    else if (strcmp(sort_type, "MAC") == 0 || strcmp(sort_type, "mac") == 0)
+    {
+        sorted = MACSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    }
+    else // "lex"
+    {
+        sorted = AlphaSortRListNames(RlistCopy(RvalRlistValue(list_var_rval)));
+    }
 
     return (FnCallResult) { FNCALL_SUCCESS, (Rval) { sorted, RVAL_TYPE_LIST } };
 }
@@ -5794,7 +5816,7 @@ FnCallArg USEREXISTS_ARGS[] =
 FnCallArg SORT_ARGS[] =
 {
     {CF_IDRANGE, DATA_TYPE_STRING, "CFEngine list identifier"},
-    {"lex", DATA_TYPE_STRING, "Sorting method: lex"},
+    {"lex,int,real,IP,ip,MAC,mac", DATA_TYPE_OPTION, "Sorting method: lex or int or real (floating point) or IPv4/IPv6 or MAC address"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 

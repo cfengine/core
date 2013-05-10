@@ -23,7 +23,8 @@ bundle agent init
 bundle agent test
 {
   vars:
-    "result" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
+    linux|windows::
+      "result" string => execresult("$(sys.cf_agent) -Kf $(this.promise_filename).sub", "noshell");
 }
 
 #######################################################
@@ -31,7 +32,7 @@ bundle agent test
 bundle agent check
 {
   classes:
-    "ok" not => regcmp(".*failed.*", "$(test.result)");
+    "ok" not => regcmp(".*(error|failed).*", "$(test.result)");
   reports:
     DEBUG::
         "Tests various ACL features";

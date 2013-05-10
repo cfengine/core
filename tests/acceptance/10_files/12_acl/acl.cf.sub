@@ -261,8 +261,13 @@ body acl acldef(testname, file)
 
 bundle agent test_check(testname, file)
 {
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+
   vars:
-    linux::
+    linux.cfengine_internal_getfacl::
+      "cmd" string => execresult("/var/cfengine/bin/getfacl $(file)", "noshell");
+    linux.!cfengine_internal_getfacl::
       "cmd" string => execresult("/usr/bin/getfacl $(file)", "noshell");
     windows::
       "cmd" string => execresult("C:\windows\system32\cmd.exe /C cacls $(file)", "noshell");

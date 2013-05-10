@@ -36,7 +36,7 @@ typedef enum
     LOG_LEVEL_NOTICE,
     LOG_LEVEL_INFO,
     LOG_LEVEL_VERBOSE,
-    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_DEBUG
 } LogLevel;
 
 void Log(LogLevel level, const char *fmt, ...) FUNC_ATTR_PRINTF(2, 3);

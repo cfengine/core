@@ -27,7 +27,6 @@
 #include "dbm_api.h"
 #include "files_names.h"
 #include "item_lib.h"
-#include "logging_old.h"
 #include "string_lib.h"
 #include "policy.h"
 
@@ -45,7 +44,7 @@ struct timespec BeginMeasure()
 
     if (clock_gettime(CLOCK_REALTIME, &start) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
     }
 
     return start;
@@ -64,7 +63,7 @@ void EndMeasurePromise(EvalContext *ctx, struct timespec start, Promise *pp)
         snprintf(id, CF_BUFSIZE, "%s:%s:%.100s", (char *) mid, pp->parent_promise_type->name, pp->promiser);
         if (Chop(id, CF_EXPANDSIZE) == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Chop was called on a string that seemed to have no terminator");
+            Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
         }
         EndMeasure(id, start);
     }
@@ -80,7 +79,7 @@ void EndMeasure(char *eventname, struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
         measured_ok = false;
     }
 
@@ -102,7 +101,7 @@ int EndMeasureValueMs(struct timespec start)
 
     if (clock_gettime(CLOCK_REALTIME, &stop) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "clock_gettime", "Clock gettime failure");
+        Log(LOG_LEVEL_VERBOSE, "Clock gettime failure. (clock_gettime: %s)", GetErrorStr());
         measured_ok = false;
     }
 
@@ -164,7 +163,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
+        Log(LOG_LEVEL_VERBOSE, "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf\n", eventname, value, newe.Q.expect,
               sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }
@@ -274,7 +273,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (!NewDBCursor(dbp, &dbcp))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan class db");
+            Log(LOG_LEVEL_INFO, "Unable to scan class db");
             CloseDB(dbp);
             DeleteItemList(list);
             return;

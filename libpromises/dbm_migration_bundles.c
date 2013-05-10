@@ -24,7 +24,7 @@
 
 #include "dbm_migration.h"
 
-#include "logging_old.h"
+#include "logging.h"
 #include "string_lib.h"
 
 static bool BundlesMigrationVersion0(DBHandle *db)
@@ -45,7 +45,7 @@ static bool BundlesMigrationVersion0(DBHandle *db)
     {
         if (ksize == 0)
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "BundlesMigrationVersion0: Database structure error -- zero-length key.");
+            Log(LOG_LEVEL_INFO, "BundlesMigrationVersion0: Database structure error -- zero-length key.");
             continue;
         }
 
@@ -57,21 +57,21 @@ static bool BundlesMigrationVersion0(DBHandle *db)
         char *fqname = StringConcatenate(3, "default", ".", key);
         if (!WriteDB(db, fqname, value, vsize))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to write version 1 bundle entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to write version 1 bundle entry for %s", key);
             errors = true;
             continue;
         }
 
         if (!DBCursorDeleteEntry(cursor))
         {
-            CfOut(OUTPUT_LEVEL_INFORM, "", "Unable to delete version 0 bundle entry for %s", key);
+            Log(LOG_LEVEL_INFO, "Unable to delete version 0 bundle entry for %s", key);
             errors = true;
         }
     }
 
     if (DeleteDBCursor(cursor) == false)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "BundlesMigrationVersion0: Unable to close cursor");
+        Log(LOG_LEVEL_ERR, "BundlesMigrationVersion0: Unable to close cursor");
         errors = true;
     }
 

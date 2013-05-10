@@ -23,13 +23,12 @@
 */
 
 #include "cf3.defs.h"
-#include "logging_old.h"
 #include "process_lib.h"
 #include "process_unix_priv.h"
 
 time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+    Log(LOG_LEVEL_VERBOSE,
           "No platform-specific code for obtaining process start time. - "
           "Falling back to no PID double-checking on kill().\n");
 
@@ -38,7 +37,7 @@ time_t GetProcessStartTime(ARG_UNUSED pid_t pid)
 
 ProcessState GetProcessState(ARG_UNUSED pid_t pid)
 {
-    CfOut(OUTPUT_LEVEL_VERBOSE, "",
+    Log(LOG_LEVEL_VERBOSE,
           "No platform-specific code for obtaining process state. - "
           "Falling back to no PID double-checking on kill().\n");
 

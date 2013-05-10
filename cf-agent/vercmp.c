@@ -31,7 +31,6 @@
 /* ExpandScalar */
 #include "expand.h"
 #include "vars.h"
-#include "logging_old.h"
 #include "pipes.h"
 #include "misc_lib.h"
 #include "env_context.h"
@@ -76,18 +75,19 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
 
     if (pfp == NULL)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_popen", pp, a, "Can not start package version comparison command: %s", expanded_command);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Can not start package version comparison command '%s'. (cf_popen: %s)",
+             expanded_command, GetErrorStr());
         return VERCMP_ERROR;
     }
 
-    CfOut(OUTPUT_LEVEL_VERBOSE, "", "Executing %s", expanded_command);
+    Log(LOG_LEVEL_VERBOSE, "Executing %s", expanded_command);
 
     int retcode = cf_pclose(pfp);
 
     if (retcode == -1)
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "cf_pclose", pp, a, "Error during package version comparison command execution: %s",
-            expanded_command);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Error during package version comparison command execution '%s'. (cf_pclose: %s)",
+            expanded_command, GetErrorStr());
         return VERCMP_ERROR;
     }
 

@@ -28,8 +28,6 @@
 #include "files_names.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "logging.h"
-#include "logging_old.h"
 #include "promises.h"
 #include "matching.h"
 #include "misc_lib.h"
@@ -69,7 +67,7 @@ void PurgeItemList(Item **list, char *name)
     {
         if (stat(ip->name, &sb) == -1)
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", " -> Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
+            Log(LOG_LEVEL_VERBOSE, "Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
             DeleteItemLiteral(list, ip->name);
         }
     }
@@ -94,7 +92,7 @@ int RawSaveItemList(const Item *liststart, const char *file)
 
     if ((fp = fopen(new, "w")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Couldn't write file %s\n", new);
+        Log(LOG_LEVEL_ERR, "Couldn't write file '%s'. (fopen: %s)", new, GetErrorStr());
         return false;
     }
 
@@ -105,13 +103,13 @@ int RawSaveItemList(const Item *liststart, const char *file)
 
     if (fclose(fp) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fclose", "Unable to close file while writing");
+        Log(LOG_LEVEL_ERR, "Unable to close file '%s' while writing. (fclose: %s)", new, GetErrorStr());
         return false;
     }
 
     if (rename(new, file) == -1)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "rename", "Error while renaming %s\n", file);
+        Log(LOG_LEVEL_INFO, "Error while renaming file '%s' to '%s'. (rename: %s)", new, file, GetErrorStr());
         return false;
     }
 
@@ -198,7 +196,7 @@ ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
 
     if (ferror(fin))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "ferror", "FileContentsRead: Error while reading file %s", filename);
+        Log(LOG_LEVEL_ERR, "FileContentsRead: Error while reading file '%s'. (ferror: %s)", filename, GetErrorStr());
         fclose(fin);
         free(*output);
         *output = NULL;
@@ -207,7 +205,7 @@ ssize_t FileReadMax(char **output, const char *filename, size_t size_max)
 
     if (fclose(fin) != 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fclose", "FileContentsRead: Could not close file %s", filename);
+        Log(LOG_LEVEL_ERR, "FileContentsRead: Could not close file '%s'. (fclose: %s)", filename, GetErrorStr());
     }
 
     return bytes_read;
@@ -267,7 +265,7 @@ int MakeParentDirectory(char *parentandchild, int force)
 
     if (!IsAbsoluteFileName(parentandchild))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Will not create directories for a relative filename (%s). Has no invariant meaning\n",
+        Log(LOG_LEVEL_ERR, "Will not create directories for a relative filename (%s). Has no invariant meaning\n",
               parentandchild);
         return false;
     }
@@ -298,7 +296,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     {
         if (S_ISLNK(statbuf.st_mode))
         {
-            CfOut(OUTPUT_LEVEL_VERBOSE, "", "INFO: %s is a symbolic link, not a true directory!\n", pathbuf);
+            Log(LOG_LEVEL_VERBOSE, "INFO: %s is a symbolic link, not a true directory!\n", pathbuf);
         }
 
         if (force)              /* force in-the-way directories aside */
@@ -319,7 +317,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                 strcpy(currentpath, pathbuf);
                 DeleteSlash(currentpath);
                 strcat(currentpath, ".cf-moved");
-                CfOut(OUTPUT_LEVEL_INFORM, "", "Moving obstructing file/link %s to %s to make directory", pathbuf, currentpath);
+                Log(LOG_LEVEL_INFO, "Moving obstructing file/link %s to %s to make directory", pathbuf, currentpath);
 
                 /* If cfagent, remove an obstructing backup object */
 
@@ -333,8 +331,8 @@ int MakeParentDirectory(char *parentandchild, int force)
                     {
                         if (unlink(currentpath) == -1)
                         {
-                            CfOut(OUTPUT_LEVEL_INFORM, "unlink", "Couldn't remove file/link %s while trying to remove a backup\n",
-                                  currentpath);
+                            Log(LOG_LEVEL_INFO, "Couldn't remove file/link '%s' while trying to remove a backup. (unlink: %s)",
+                                  currentpath, GetErrorStr());
                         }
                     }
                 }
@@ -343,7 +341,7 @@ int MakeParentDirectory(char *parentandchild, int force)
 
                 if (rename(pathbuf, currentpath) == -1)
                 {
-                    CfOut(OUTPUT_LEVEL_INFORM, "rename", "Warning. The object %s is not a directory.\n", pathbuf);
+                    Log(LOG_LEVEL_INFO, "Warning: The object '%s' is not a directory. (rename: %s)", pathbuf, GetErrorStr());
                     return (false);
                 }
             }
@@ -352,7 +350,7 @@ int MakeParentDirectory(char *parentandchild, int force)
         {
             if (!S_ISLNK(statbuf.st_mode) && !S_ISDIR(statbuf.st_mode))
             {
-                CfOut(OUTPUT_LEVEL_INFORM, "",
+                Log(LOG_LEVEL_INFO,
                       "The object %s is not a directory. Cannot make a new directory without deleting it.", pathbuf);
                 return (false);
             }
@@ -383,15 +381,13 @@ int MakeParentDirectory(char *parentandchild, int force)
             }
             else if (stat(currentpath, &statbuf) == -1)
             {
-                CfDebug("cfengine: Making directory %s, mode %" PRIoMAX "\n", currentpath, (uintmax_t)DEFAULTMODE);
-
                 if (!DONTDO)
                 {
                     mask = umask(0);
 
                     if (mkdir(currentpath, DEFAULTMODE) == -1)
                     {
-                        CfOut(OUTPUT_LEVEL_ERROR, "mkdir", "Unable to make directories to %s\n", parentandchild);
+                        Log(LOG_LEVEL_ERR, "Unable to make directories to '%s'. (mkdir: %s)", parentandchild, GetErrorStr());
                         umask(mask);
                         return (false);
                     }
@@ -422,7 +418,7 @@ int MakeParentDirectory(char *parentandchild, int force)
                     }
 #endif
 
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Cannot make %s - %s is not a directory! (use forcedirs=true)\n", pathbuf,
+                    Log(LOG_LEVEL_ERR, "Cannot make %s - %s is not a directory! (use forcedirs=true)\n", pathbuf,
                           currentpath);
                     return (false);
                 }
@@ -447,26 +443,26 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 
     if (stat(file, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "stat", " ** Information: the proposed file \"%s\" could not be loaded", file);
+        Log(LOG_LEVEL_VERBOSE, "The proposed file '%s' could not be loaded. (stat: %s)", file, GetErrorStr());
         return false;
     }
 
     if (edits.maxfilesize != 0 && statbuf.st_size > edits.maxfilesize)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! File %s is bigger than the limit edit.max_file_size = %jd > %d bytes\n", file,
+        Log(LOG_LEVEL_INFO, "File '%s' is bigger than the limit edit.max_file_size = %jd > %d bytes", file,
               (intmax_t) statbuf.st_size, edits.maxfilesize);
         return (false);
     }
 
     if (!S_ISREG(statbuf.st_mode))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "%s is not a plain file\n", file);
+        Log(LOG_LEVEL_INFO, "%s is not a plain file\n", file);
         return false;
     }
 
     if ((fp = fopen(file, "r")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "fopen", "Couldn't read file %s for editing\n", file);
+        Log(LOG_LEVEL_INFO, "Couldn't read file '%s' for editing. (fopen: %s)", file, GetErrorStr());
         return false;
     }
 
@@ -483,7 +479,7 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
 
         if (res == -1)
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "fread", "Unable to read contents of %s", file);
+            Log(LOG_LEVEL_ERR, "Unable to read contents of '%s'. (fread: %s)", file, GetErrorStr());
             fclose(fp);
             return false;
         }
@@ -623,7 +619,7 @@ void RotateFiles(char *name, int number)
 
     if (stat(name, &statbuf) == -1)
     {
-        CfOut(OUTPUT_LEVEL_VERBOSE, "", "No access to file %s\n", name);
+        Log(LOG_LEVEL_VERBOSE, "No access to file %s\n", name);
         return;
     }
 
@@ -687,13 +683,14 @@ void RotateFiles(char *name, int number)
 
     if ((fd = creat(name, statbuf.st_mode)) == -1)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "creat", "Failed to create new %s in disable(rotate)\n", name);
+        Log(LOG_LEVEL_ERR, "Failed to create new '%s' in disable(rotate). (creat: %s)",
+            name, GetErrorStr());
     }
     else
     {
         if (chown(name, statbuf.st_uid, statbuf.st_gid))  /* NT doesn't have fchown */
         {
-            UnexpectedError("Failed to chown %s", name);
+            UnexpectedError("Failed to chown '%s'", name);
         }
         fchmod(fd, statbuf.st_mode);
         close(fd);
@@ -716,7 +713,7 @@ void CreateEmptyFile(char *name)
 
     if ((tempfd = open(name, O_CREAT | O_EXCL | O_WRONLY, 0600)) < 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "open", "Couldn't open a file %s\n", name);
+        Log(LOG_LEVEL_ERR, "Couldn't open a file '%s'. (open: %s)", name, GetErrorStr());
     }
 
     close(tempfd);

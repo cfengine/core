@@ -192,11 +192,6 @@ void __UnexpectedError(const char *file, int lineno, const char *format, ...)
     fail();
 }
 
-void CfOut(OutputLevel level, const char *errstr, const char *fmt, ...)
-{
-    fail();
-}
-
 const char *NameVersion(void)
 {
     fail();

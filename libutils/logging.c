@@ -34,8 +34,7 @@ int INFORM;
 int VERBOSE;
 int DEBUG;
 char VPREFIX[1024];
-
-void LogToSystemLog(const char *msg, LogLevel level);
+bool LEGACY_OUTPUT = false;
 
 typedef struct
 {
@@ -44,6 +43,8 @@ typedef struct
 
     LoggingPrivContext *pctx;
 } LoggingContext;
+
+void LogToSystemLog(const char *msg, LogLevel level);
 
 static pthread_once_t log_context_init_once;
 static pthread_key_t log_context_key;
@@ -109,52 +110,58 @@ void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level)
     lctx->report_level = report_level;
 }
 
-/* static const char *LogLevelToString(LogLevel level) */
-/* { */
-/*     switch (level) */
-/*     { */
-/*     case LOG_LEVEL_CRIT: return "!"; */
-/*     case LOG_LEVEL_ERR: return "E"; */
-/*     case LOG_LEVEL_WARNING: return "W"; */
-/*     case LOG_LEVEL_NOTICE: return "N"; */
-/*     case LOG_LEVEL_INFO: return "I"; */
-/*     case LOG_LEVEL_VERBOSE: return "V"; */
-/*     case LOG_LEVEL_DEBUG: return "D"; */
-/*     } */
-
-/*     ProgrammingError("Unknown log level passed to LogLevelToString: %d", level); */
-/* } */
+static const char *LogLevelToString(LogLevel level)
+{
+    switch (level)
+    {
+    case LOG_LEVEL_CRIT:
+        return "critical";
+    case LOG_LEVEL_ERR:
+        return "error";
+    case LOG_LEVEL_WARNING:
+        return "warning";
+    case LOG_LEVEL_NOTICE:
+        return "notice";
+    case LOG_LEVEL_INFO:
+        return "info";
+    case LOG_LEVEL_VERBOSE:
+        return "verbose";
+    case LOG_LEVEL_DEBUG:
+        return "debug";
+    default:
+        ProgrammingError("Unknown log level passed to LogLevelToString: %d", level);
+    }
+}
 
 void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 {
-    /* TODO: timestamps, logging levels in error messages */
-
-    /* struct tm now; */
-    /* time_t now_seconds = time(NULL); */
-    /* localtime_r(&now_seconds, &now); */
-
-    /* /\* 2000-01-01 23:01:01+0300 *\/ */
-    /* char formatted_timestamp[25]; */
-    /* if (strftime(formatted_timestamp, 25, "%Y-%m-%d %H:%M:%S%z", &now) == 0) */
-    /* { */
-    /*     /\* There was some massacre formating the timestamp. Wow *\/ */
-    /*     strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp)); */
-    /* } */
-
-    /* const char *string_level = LogLevelToString(level); */
-
-    /* printf("%s> %-24s %1s: %s\n", VPREFIX, formatted_timestamp, string_level, msg); */
-
-
-
-    /* FIXME: VPREFIX is only used in verbose mode. Is that ok? */
-    if (level >= LOG_LEVEL_VERBOSE)
+    if (LEGACY_OUTPUT)
     {
-        printf("%s> %s\n", VPREFIX, msg);
+        if (level >= LOG_LEVEL_VERBOSE)
+        {
+            printf("%s> %s\n", VPREFIX, msg);
+        }
+        else
+        {
+            printf("%s\n", msg);
+        }
     }
     else
     {
-        printf("%s\n", msg);
+        struct tm now;
+        time_t now_seconds = time(NULL);
+        localtime_r(&now_seconds, &now);
+
+        char formatted_timestamp[25];
+        if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
+        {
+            // There was some massacre formating the timestamp. Wow
+            strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
+        }
+
+        const char *string_level = LogLevelToString(level);
+
+        printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
     }
 }
 
@@ -191,20 +198,25 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     LoggingContext *lctx = GetCurrentThreadContext();
 
     char *msg = StringVFormat(fmt, ap);
+    const char *hooked_msg = NULL;
 
     if (lctx->pctx && lctx->pctx->log_hook)
     {
-        lctx->pctx->log_hook(lctx->pctx, msg);
+        hooked_msg = lctx->pctx->log_hook(lctx->pctx, msg);
+    }
+    else
+    {
+        hooked_msg = msg;
     }
 
     if (level <= lctx->report_level)
     {
-        LogToStdout(msg, level);
+        LogToStdout(hooked_msg, level);
     }
 
     if (level <= lctx->log_level)
     {
-        LogToSystemLog(msg, level);
+        LogToSystemLog(hooked_msg, level);
     }
     free(msg);
 }

@@ -29,7 +29,6 @@
 #include "files_names.h"
 #include "files_interfaces.h"
 #include "files_lib.h"
-#include "logging_old.h"
 #include "pipes.h"
 
 /* Globals */
@@ -385,7 +384,7 @@ void MonNetworkGatherData(double *cf_this)
         {
             if ((ByteSizeList(in[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(in[i]);
                 continue;
             }
@@ -409,7 +408,7 @@ void MonNetworkGatherData(double *cf_this)
         {
             if ((ByteSizeList(out[i]) < statbuf.st_size) && (now < statbuf.st_mtime + 40 * 60))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
+                Log(LOG_LEVEL_VERBOSE, "New state %s is smaller, retaining old for 40 mins longer\n", ECGSOCKS[i].name);
                 DeleteItemList(out[i]);
                 continue;
             }

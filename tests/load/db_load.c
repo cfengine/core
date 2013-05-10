@@ -34,8 +34,6 @@ static void DBWriteTestData(CF_DB *db);
 static void TestReadWriteData(CF_DB *db);
 static void TestCursorIteration(CF_DB *db);
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...);
-
 void *contend(void *param)
 {
     CF_DB *db;
@@ -284,7 +282,7 @@ static void DBWriteTestData(CF_DB *db)
 
         if (!WriteComplexKeyDB(db, (const char *)&i, sizeof(i), &value_num, sizeof(value_num)))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to write data to database");
+            Log(LOG_LEVEL_ERR, "Unable to write data to database");
             pthread_exit((void*)STATUS_ERROR);
         }
     }
@@ -299,7 +297,7 @@ void __ProgrammingError(const char *file, int lineno, const char *format, ...)
     exit(42);
 }
 
-void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     va_list ap;
     char buf[CF_BUFSIZE] = "";
@@ -307,7 +305,12 @@ void CfOut(OutputLevel level, const char *function, const char *fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
     va_end(ap);
-    printf("CfOut: %s\n", buf);
+    printf("Log: %s\n", buf);
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }
 
 void FatalError(const EvalContext *ctx, char *fmt, ...)
@@ -320,11 +323,11 @@ void FatalError(const EvalContext *ctx, char *fmt, ...)
         va_start(ap, fmt);
         vsnprintf(buf, CF_BUFSIZE - 1, fmt, ap);
         va_end(ap);
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error: %s", buf);
+        Log(LOG_LEVEL_ERR, "Fatal CFEngine error: %s", buf);
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Fatal CFEngine error (no description)");
+        Log(LOG_LEVEL_ERR, "Fatal CFEngine error (no description)");
     }
 
     exit(1);

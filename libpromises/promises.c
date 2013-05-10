@@ -30,7 +30,6 @@
 #include "files_names.h"
 #include "scope.h"
 #include "vars.h"
-#include "logging_old.h"
 #include "args.h"
 #include "locks.h"
 #include "misc_lib.h"
@@ -214,7 +213,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
             if (strcmp(bp->type, cp->lval) != 0)
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
+                Log(LOG_LEVEL_ERR,
                       "Body type mismatch for body reference \"%s\" in promise at line %zu of %s (%s != %s)\n",
                       bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path, bp->type, cp->lval);
             }
@@ -235,13 +234,13 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp == NULL || fp->args == NULL)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
+                    Log(LOG_LEVEL_ERR, "Argument mismatch for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
 
                 if (fp && bp && fp->args && bp->args && !ScopeMapBodyArgs(ctx, "body", fp->args, bp->args))
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                    Log(LOG_LEVEL_ERR,
                           "Number of arguments does not match for body reference \"%s\" in promise at line %zu of %s\n",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
@@ -266,7 +265,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
                 if (fp != NULL)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "",
+                    Log(LOG_LEVEL_ERR,
                           "An apparent body \"%s()\" was undeclared or could have incorrect args, but used in a promise near line %zu of %s (possible unquoted literal value)",
                           bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
                 }
@@ -302,7 +301,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
             if (cp->references_body && !IsBundle(policy->bundles, bodyname))
             {
-                CfOut(OUTPUT_LEVEL_ERROR, "",
+                Log(LOG_LEVEL_ERR,
                       "Apparent body \"%s()\" was undeclared, but used in a promise near line %zu of %s (possible unquoted literal value)",
                       bodyname, pp->offset.line, PromiseGetBundle(pp)->source_path);
             }
@@ -417,7 +416,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     return pcopy;
 }
 
-void PromiseRef(OutputLevel level, const Promise *pp)
+void PromiseRef(LogLevel level, const Promise *pp)
 {
     if (pp == NULL)
     {
@@ -426,36 +425,36 @@ void PromiseRef(OutputLevel level, const Promise *pp)
 
     if (PromiseGetBundle(pp)->source_path)
     {
-        CfOut(level, "", "Promise belongs to bundle \'%s\' in file \'%s\' near line %zu\n", PromiseGetBundle(pp)->name,
+        Log(level, "Promise belongs to bundle '%s' in file '%s' near line %zu", PromiseGetBundle(pp)->name,
              PromiseGetBundle(pp)->source_path, pp->offset.line);
     }
     else
     {
-        CfOut(level, "", "Promise belongs to bundle \'%s\' near line %zu\n", PromiseGetBundle(pp)->name,
+        Log(level, "Promise belongs to bundle '%s' near line %zu", PromiseGetBundle(pp)->name,
               pp->offset.line);
     }
 
     if (pp->comment)
     {
-        CfOut(level, "", "Comment: %s\n", pp->comment);
+        Log(level, "Comment is '%s'", pp->comment);
     }
 
     switch (pp->promisee.type)
     {
-       case RVAL_TYPE_SCALAR:
-           CfOut(level, "", "This was a promise to: %s\n", (char *)(pp->promisee.item));
-           break;
-       case RVAL_TYPE_LIST:
-       {
-           Writer *w = StringWriter();
-           RlistWrite(w, pp->promisee.item);
-           char *p = StringWriterClose(w);
-           CfOut(level, "", "This was a promise to: %s", p);
-           free(p);
-           break;
-       }
-       default:
-           break;
+    case RVAL_TYPE_SCALAR:
+        Log(level, "This was a promise to '%s'", (char *)(pp->promisee.item));
+        break;
+    case RVAL_TYPE_LIST:
+    {
+        Writer *w = StringWriter();
+        RlistWrite(w, pp->promisee.item);
+        char *p = StringWriterClose(w);
+        Log(level, "This was a promise to '%s'", p);
+        free(p);
+        break;
+    }
+    default:
+        break;
     }
 }
 

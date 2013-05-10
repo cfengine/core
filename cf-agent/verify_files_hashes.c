@@ -23,7 +23,7 @@
 */
 
 #include "verify_files_hashes.h"
-#include "logging_old.h"
+
 #include "rlist.h"
 #include "policy.h"
 #include "client_code.h"
@@ -145,7 +145,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
     if (!OpenDB(&dbp, dbid_checksums))
     {
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "Unable to open the hash database!");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Unable to open the hash database!");
         return false;
     }
 
@@ -157,16 +157,16 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             {
                 CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
 
-                CfOut(OUTPUT_LEVEL_ERROR, "", "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
+                Log(LOG_LEVEL_ERR, "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
                 if (pp->comment)
                 {
-                    CfOut(OUTPUT_LEVEL_ERROR, "", "Preceding promise: %s", pp->comment);
+                    Log(LOG_LEVEL_ERR, "Preceding promise: %s", pp->comment);
                 }
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " -> Updating hash for %s to %s", filename,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for %s to %s", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -174,7 +174,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
                 }
                 else
                 {
-                    cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_FAIL, "", pp, attr, "!! Hash for file \"%s\" changed", filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "!! Hash for file \"%s\" changed", filename);
                 }
 
                 CloseDB(dbp);
@@ -182,14 +182,14 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             }
         }
 
-        cfPS(ctx, OUTPUT_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, "", pp, attr, " -> File hash for %s is correct", filename);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File hash for %s is correct", filename);
         CloseDB(dbp);
         return false;
     }
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_CHANGE, "", pp, attr, " !! File %s was not in %s database - new file found", filename,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File %s was not in %s database - new file found", filename,
              FileHashName(type));
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
@@ -261,7 +261,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
 
             if ((bytes1 != bytes2) || (memcmp(buff1, buff2, bytes1) != 0))
             {
-                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Binary Comparison mismatch...\n");
+                Log(LOG_LEVEL_VERBOSE, "Binary Comparison mismatch...\n");
                 close(fd2);
                 close(fd1);
                 return true;
@@ -310,7 +310,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", " !! Unable to scan hash database");
+        Log(LOG_LEVEL_INFO, "Unable to scan hash database");
         CloseDB(dbp);
         return;
     }
@@ -329,7 +329,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
             }
             else
             {
-                cfPS(ctx, OUTPUT_LEVEL_ERROR, PROMISE_RESULT_WARN, "", pp, attr, "ALERT: File %s no longer exists!", obj);
+                cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "ALERT: File %s no longer exists!", obj);
             }
 
             LogHashChange(obj, FILE_STATE_REMOVED, "File removed", pp);
@@ -392,14 +392,14 @@ void LogHashChange(char *file, FileState status, char *msg, Promise *pp)
     {
         if (sb.st_mode & (S_IWGRP | S_IWOTH))
         {
-            CfOut(OUTPUT_LEVEL_ERROR, "", "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
+            Log(LOG_LEVEL_ERR, "File %s (owner %ju) is writable by others (security exception)", fname, (uintmax_t)sb.st_uid);
         }
     }
 #endif /* !__MINGW32__ */
 
     if ((fp = fopen(fname, "a")) == NULL)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "fopen", "Could not write to the hash change log");
+        Log(LOG_LEVEL_ERR, "Could not write to the hash change log. (fopen: %s)", GetErrorStr());
         return;
     }
 

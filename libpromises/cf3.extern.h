@@ -27,6 +27,8 @@
 
 /* See variables in cf3globals.c and syntax.c */
 
+extern bool LEGACY_OUTPUT;
+
 extern pid_t ALARM_PID;
 extern RSA *PRIVKEY, *PUBKEY;
 extern char BINDINTERFACE[CF_BUFSIZE];

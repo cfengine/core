@@ -29,7 +29,6 @@
 #include "files_lib.h"
 #include "files_copy.h"
 #include "item_lib.h"
-#include "logging_old.h"
 #include "mutex.h"
 #include "policy.h"
 
@@ -75,7 +74,7 @@ bool GetRepositoryPath(const char *file, Attributes attr, char *destination)
 
     if (!JoinPath(destination, file))
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "Internal limit: Buffer ran out of space for long filename\n");
+        Log(LOG_LEVEL_ERR, "Internal limit: Buffer ran out of space for long filename\n");
         return false;
     }
 
@@ -110,7 +109,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (IsItemIn(VREPOSLIST, file))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "",
+        Log(LOG_LEVEL_INFO,
               "The file %s has already been moved to the repository once. Multiple update will cause loss of backup.",
               file);
         return true;
@@ -138,12 +137,12 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (CopyRegularFileDisk(file, destination))
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Moved %s to repository location %s\n", file, destination);
+        Log(LOG_LEVEL_INFO, "Moved %s to repository location %s\n", file, destination);
         return true;
     }
     else
     {
-        CfOut(OUTPUT_LEVEL_INFORM, "", "Failed to move %s to repository location %s\n", file, destination);
+        Log(LOG_LEVEL_INFO, "Failed to move %s to repository location %s\n", file, destination);
         return false;
     }
 }

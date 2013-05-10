@@ -1,0 +1,11 @@
+
+Returns true if arg2 is between arg1 and arg3.
+
+The comparison of all the arguments is first attempted numerically, if
+all three are valid real numbers (note that negative numbers will work).
+If arg1 is greater than arg3, they will be swapped for the comparison,
+which is ``arg1 <= arg2 AND arg2 <= arg3''.
+
+If any of the three arguments is not a valid real number, the three
+strings are compared lexicographically as in strcmp(), meaning for
+example that "9" will be considered greater than "100".

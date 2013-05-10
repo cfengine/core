@@ -3421,7 +3421,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
 /*********************************************************************/
 
-static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
+static FnCallResult FnCallIsBetweenLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
     char buffer[CF_BUFSIZE];
 
@@ -3429,6 +3429,36 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
 
     char *argv0 = RlistScalarValue(finalargs);
     char *argv1 = RlistScalarValue(finalargs->next);
+
+    if (0 == strcmp(fp->name, "isbetween"))
+    {
+        bool between;
+        char *argv2 = RlistScalarValue(finalargs->next->next);
+
+        double a, b, c;
+        int parsed = sscanf(argv0, "%lf%s", &a, buffer) + sscanf(argv1, "%lf%s", &b, buffer) + sscanf(argv2, "%lf%s", &c, buffer);
+
+        if (parsed == 3)
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s, %s, and %s are all numerical\n", argv0, argv1, argv2);
+
+            if (a > c)                  // the function is BETWEEN so we need to handle an inverted range
+            {
+                double temp = c;
+                c = a;
+                a = temp;
+            }
+
+            between = (a <= b && b <= c);
+        }
+        else
+        {
+            CfOut(OUTPUT_LEVEL_VERBOSE, "", "%s, %s, and %s are NOT all numerical\n", argv0, argv1, argv2);
+            between = (strcmp(argv0, argv1) <= 0 && strcmp(argv1, argv2) <= 0);
+        }
+
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(between ? "any" : "!any"), RVAL_TYPE_SCALAR } };
+    }
 
     if (IsRealNumber(argv0) && IsRealNumber(argv1))
     {
@@ -3468,28 +3498,31 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
             }
         }
     }
-    else if (strcmp(argv0, argv1) > 0)
+    else
     {
         CfDebug("%s and %s are NOT numerical\n", argv0, argv1);
 
-        if (!strcmp(fp->name, "isgreaterthan"))
+        if (strcmp(argv0, argv1) > 0)
         {
-            strcpy(buffer, "any");
+            if (!strcmp(fp->name, "isgreaterthan"))
+            {
+                strcpy(buffer, "any");
+            }
+            else
+            {
+                strcpy(buffer, "!any");
+            }
         }
         else
         {
-            strcpy(buffer, "!any");
-        }
-    }
-    else
-    {
-        if (!strcmp(fp->name, "isgreaterthan"))
-        {
-            strcpy(buffer, "!any");
-        }
-        else
-        {
-            strcpy(buffer, "any");
+            if (!strcmp(fp->name, "isgreaterthan"))
+            {
+                strcpy(buffer, "!any");
+            }
+            else
+            {
+                strcpy(buffer, "any");
+            }
         }
     }
 
@@ -5212,6 +5245,14 @@ FnCallArg ISLESSTHAN_ARGS[] =
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
+FnCallArg ISBETWEEN_ARGS[] =
+{
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Beginning of range: string or value"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "Tested string or value"},
+    {CF_ANYSTRING, DATA_TYPE_STRING, "End of range: string or value"},
+    {NULL, DATA_TYPE_NONE, NULL}
+};
+
 FnCallArg ISNEWERTHAN_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Newer file name"},
@@ -5702,8 +5743,9 @@ const FnCallType CF_FNCALL_TYPES[] =
     FnCallTypeNew("irange", DATA_TYPE_INT_RANGE, IRANGE_ARGS, &FnCallIRange, "Define a range of integer values for cfengine internal use", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isdir", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a directory", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isexecutable", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object has execution rights for the current user", false, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("isgreaterthan", DATA_TYPE_CONTEXT, ISGREATERTHAN_ARGS, &FnCallIsLessGreaterThan, "True if arg1 is numerically greater than arg2, else compare strings like strcmp", false, SYNTAX_STATUS_NORMAL),
-    FnCallTypeNew("islessthan", DATA_TYPE_CONTEXT, ISLESSTHAN_ARGS, &FnCallIsLessGreaterThan, "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isgreaterthan", DATA_TYPE_CONTEXT, ISGREATERTHAN_ARGS, &FnCallIsBetweenLessGreaterThan, "True if arg1 is numerically greater than arg2, else compare strings like strcmp", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("islessthan", DATA_TYPE_CONTEXT, ISLESSTHAN_ARGS, &FnCallIsBetweenLessGreaterThan, "True if arg1 is numerically less than arg2, else compare strings like NOT strcmp", false, SYNTAX_STATUS_NORMAL),
+    FnCallTypeNew("isbetween", DATA_TYPE_CONTEXT, ISBETWEEN_ARGS, &FnCallIsBetweenLessGreaterThan, "True if arg1 is numerically between arg2 and arg3, else compare strings like strcmp", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("islink", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a symbolic link", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isnewerthan", DATA_TYPE_CONTEXT, ISNEWERTHAN_ARGS, &FnCallIsNewerThan, "True if arg1 is newer (modified later) than arg2 (mtime)", false, SYNTAX_STATUS_NORMAL),
     FnCallTypeNew("isplain", DATA_TYPE_CONTEXT, FILESTAT_ARGS, &FnCallFileStat, "True if the named object is a plain/regular file", false, SYNTAX_STATUS_NORMAL),

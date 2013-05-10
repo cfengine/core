@@ -1,0 +1,32 @@
+
+@verbatim
+
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "a" int => "100";
+      "b" int => "200";
+      "c" int => "300";
+  classes:
+      "between1" expression => isbetween("-2", 2, 4);
+      "between2" expression => isbetween(4, 2, "-2");
+      "between3" expression => isbetween("alpha", "beta", "delta");
+      "between4" expression => isbetween($(a), $(b), $(c));
+
+  reports:
+    between1::
+      "2 is between -2 and 4";
+    between2::
+      "2 is between -2 and 4 (note they were swapped)";
+    between3::
+      "'beta' is between 'alpha' and 'delta' lexicographically";
+    between4::
+      "$(b) is between $(a) and $(c)";
+}
+
+@end verbatim

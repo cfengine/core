@@ -2,4 +2,4 @@
 The mode may be specified in symbolic or numerical form with @samp{+}
 and @samp{-} constraints.
 Note that concatenation @code{ug+s} implies @code{u} OR @code{g},
- and @code{u+g,u+s} implies @code{u} AND @code{g}.
+ and @code{u+s,g+s} implies @code{u} AND @code{g}.

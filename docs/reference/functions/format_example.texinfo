@@ -1,0 +1,48 @@
+@verbatim
+
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "formats[0]" string => "%10s %d";
+      "formats[1]" string => "the %% the";
+      "formats[2]" string => "%3.2f floater";
+      "formats[3]" string => "%05d integer";
+      "formats[4]" string => "%s end with %";
+      "formats[5]" string => "%ss is a format followed by a s";
+      "formats[6]" string => "%sf invalid";
+      "formats[7]" string => "%dc invalid";
+      "formats[8]" string => "no format specifiers here";
+      "formats[9]" string => "%o";
+      "formats[10]" string => "%x";
+      "formats[11]" string => "%c";
+      "formats[12]" string => "%qd";
+
+      "indices" slist => getindices("formats");
+
+      "values[0]" string => "x";
+      "values[1]" string => "% inserted verbatim";
+      "values[2]" string => "10";
+      "values[3]" string => "-1";
+      "values[4]" string => "hello";
+      "values[5]" string => "bad1";
+      "values[6]" string => "bad2";
+      "values[7]" string => "bad3";
+
+      "vindices" slist => getindices("values");
+
+      # apply every format to every value above
+      "print[$(indices)_$(vindices)]" string => format("$(formats[$(indices)])", "$(values[$(vindices)])", "second parameter");
+
+      "bad" string => format("%s %s", "one parameter");
+
+  reports:
+      "format('$(formats[$(indices)])', '$(values[$(vindices)])') => $(print[$(indices)_$(vindices)])";
+      "this should be an unexpanded variable: $(bad)";
+}
+
+@end verbatim

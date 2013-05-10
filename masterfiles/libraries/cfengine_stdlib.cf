@@ -393,6 +393,44 @@ bundle edit_line set_variable_values_ini(tab, sectionName)
 
 }
 
+bundle edit_line set_quoted_values(v) {
+# Sets the RHS of variables in shell-like files
+#   that is:
+#      LHS="RHS"
+# Adds a new line if no LHS exists
+# repairs RHS values if one does exist
+# If the line is commented out with #, it gets uncommented first.
+#
+# To use:
+#   1) Define an array, where the keys are the LHS and the values are the RHS
+#        "stuff[lhs-1]" string => "rhs1";
+#        "stuff[lhs-2]" string => "rhs2";
+#   2) The parameter passed to the edit_line promise is the fully qualified
+#      name of the array (i.e., "bundlename.stuff") WITHOUT any "$" or "@"
+
+vars:
+	"index" slist => getindices("$(v)");
+	# Be careful if the index string contains funny chars
+
+	"cindex[$(index)]" string => canonify("$(index)");
+
+field_edits:
+	# If the line is there, but commented out, first uncomment it
+	"#+\s*$(index)\s*=.*"
+		edit_field => col("=","1","$(index)","set");
+
+	# match a line starting like the key = something
+	"\s*$(index)\s*=.*"
+		edit_field => col("=","2",'"$($(v)[$(index)])"',"set"),
+		classes    => if_ok("$(cindex[$(index)])_in_file"),
+		comment    => "Match a line starting like key = something";
+
+insert_lines:
+	'$(index)="$($(v)[$(index)])"',
+		comment    => "Insert a variable definition",
+		ifvarclass => "!$(cindex[$(index)])_in_file";
+}
+
 ##
 
 bundle edit_line set_variable_values(v)

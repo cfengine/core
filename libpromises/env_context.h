@@ -140,6 +140,7 @@ void EvalContextStackPushBodyFrame(EvalContext *ctx, const Body *owner);
 void EvalContextStackPushPromiseFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPushPromiseIterationFrame(EvalContext *ctx, const Promise *owner);
 void EvalContextStackPopFrame(EvalContext *ctx);
+char *EvalContextStackPath(const EvalContext *ctx);
 
 /**
  * @brief Returns the topmost promise from the stack, or NULL if no promises are pushed

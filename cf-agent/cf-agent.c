@@ -69,6 +69,7 @@
 #include "man.h"
 #include "bootstrap.h"
 #include "misc_lib.h"
+#include "buffer.h"
 
 #include "mod_common.h"
 
@@ -1102,9 +1103,20 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
 
     if (VERBOSE || DEBUG)
     {
-        printf("%s> -> Bundlesequence => ", VPREFIX);
-        RvalShow(stdout, retval);
-        printf("\n");
+        if (LEGACY_OUTPUT)
+        {
+            printf("%s> -> Bundlesequence => ", VPREFIX);
+            RvalShow(stdout, retval);
+            printf("\n");
+        }
+        else
+        {
+            Writer *w = StringWriter();
+            WriterWrite(w, "Using bundlesequence => ");
+            RvalWrite(w, retval);
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            WriterClose(w);
+        }
     }
 
 /* If all is okay, go ahead and evaluate */
@@ -1589,6 +1601,7 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         return;
     }
 
+    if (LEGACY_OUTPUT)
     {
         Log(LOG_LEVEL_VERBOSE, "\n");
         Log(LOG_LEVEL_VERBOSE, "     +  Private classes augmented:\n");
@@ -1602,20 +1615,51 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
 
         Log(LOG_LEVEL_VERBOSE, "\n");
     }
-
-    Log(LOG_LEVEL_VERBOSE, "     -  Private classes diminished:\n");
-
+    else
     {
+        Writer *w = StringWriter();
+        WriterWrite(w, "Private classes augmented:");
+        StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
+        const char *context = NULL;
+        while ((context = StringSetIteratorNext(&it)))
+        {
+            WriterWriteChar(w, ' ');
+            WriterWrite(w, context);
+        }
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
+    }
+
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "     -  Private classes diminished:\n");
+
+        {
+            StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
+            const char *context = NULL;
+            while ((context = StringSetIteratorNext(&it)))
+            {
+                Log(LOG_LEVEL_VERBOSE, "     -       %s\n", context);
+            }
+        }
+
+        Log(LOG_LEVEL_VERBOSE, "\n");
+        Log(LOG_LEVEL_VERBOSE, "\n");
+    }
+    else
+    {
+        Writer *w = StringWriter();
+        WriterWrite(w, "Private classes diminished:");
         StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            Log(LOG_LEVEL_VERBOSE, "     -       %s\n", context);
+            WriterWriteChar(w, ' ');
+            WriterWrite(w, context);
         }
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
     }
-
-    Log(LOG_LEVEL_VERBOSE, "\n");
-    Log(LOG_LEVEL_VERBOSE, "\n");
 }
 
 /**************************************************************/

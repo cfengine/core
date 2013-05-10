@@ -376,14 +376,20 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     Log(LOG_LEVEL_VERBOSE, "%s", NameVersion());
 
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    }
     Log(LOG_LEVEL_VERBOSE, "Host name is: %s\n", VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "Operating System Type is %s\n", VSYSNAME.sysname);
     Log(LOG_LEVEL_VERBOSE, "Operating System Release is %s\n", VSYSNAME.release);
     Log(LOG_LEVEL_VERBOSE, "Architecture = %s\n\n\n", VSYSNAME.machine);
     Log(LOG_LEVEL_VERBOSE, "Using internal soft-class %s for host %s\n\n", workbuf, VSYSNAME.nodename);
     Log(LOG_LEVEL_VERBOSE, "The time is now %s\n\n", ctime(&tloc));
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n\n");
+    }
 
     snprintf(workbuf, CF_MAXVARSIZE, "%s", ctime(&tloc));
     if (Chop(workbuf, CF_EXPANDSIZE) == -1)

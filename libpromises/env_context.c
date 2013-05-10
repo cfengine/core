@@ -40,6 +40,7 @@
 #include "audit.h"
 #include "promise_logging.h"
 #include "rlist.h"
+#include "buffer.h"
 
 #ifdef HAVE_NOVA
 # include "cf.nova.h"
@@ -1175,6 +1176,36 @@ const Promise *EvalContextStackGetTopPromise(const EvalContext *ctx)
     }
 
     return NULL;
+}
+
+char *EvalContextStackPath(const EvalContext *ctx)
+{
+    Writer *path = StringWriter();
+
+    for (size_t i = 0; i < SeqLength(ctx->stack); i++)
+    {
+        StackFrame *frame = SeqAt(ctx->stack, i);
+        WriterWriteChar(path, '/');
+        switch (frame->type)
+        {
+        case STACK_FRAME_TYPE_BODY:
+            WriterWrite(path, frame->data.body.owner->name);
+            break;
+
+        case STACK_FRAME_TYPE_BUNDLE:
+            WriterWrite(path, frame->data.bundle.owner->name);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE_ITERATION:
+            WriterWriteF(path, "'%s'", frame->data.promise.owner->promiser);
+            break;
+
+        case STACK_FRAME_TYPE_PROMISE:
+            break;
+        }
+    }
+
+    return StringWriterClose(path);
 }
 
 bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType type)

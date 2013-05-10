@@ -27,6 +27,11 @@
 
 void PromiseBanner(const Promise *pp)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     char handle[CF_MAXVARSIZE];
     const char *sp;
 
@@ -74,6 +79,11 @@ void PromiseBanner(const Promise *pp)
 
 void BannerSubBundle(const Bundle *bp, const Rlist *params)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "      * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
 
@@ -99,6 +109,11 @@ void BannerSubBundle(const Bundle *bp, const Rlist *params)
 
 void Banner(const char *s)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "***********************************************************\n");
     Log(LOG_LEVEL_VERBOSE, " %s ", s);
     Log(LOG_LEVEL_VERBOSE, "***********************************************************\n");
@@ -106,6 +121,11 @@ void Banner(const char *s)
 
 void BannerPromiseType(const char *bundlename, const char *type, int pass)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "   =========================================================\n");
     Log(LOG_LEVEL_VERBOSE, "   %s in bundle %s (%d)\n", type, bundlename, pass);
@@ -115,6 +135,11 @@ void BannerPromiseType(const char *bundlename, const char *type, int pass)
 
 void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const char *type)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     if (strcmp(type, "processes") == 0)
     {
         {
@@ -140,6 +165,11 @@ void BannerSubPromiseType(const EvalContext *ctx, const char *bundlename, const 
 
 void BannerBundle(Bundle *bp, Rlist *params)
 {
+    if (!LEGACY_OUTPUT)
+    {
+        return;
+    }
+
     Log(LOG_LEVEL_VERBOSE, "\n");
     Log(LOG_LEVEL_VERBOSE, "*****************************************************************\n");
 

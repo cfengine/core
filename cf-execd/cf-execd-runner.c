@@ -158,9 +158,16 @@ void LocalExec(const ExecConfig *config)
         char starttime_str[64];
         cf_strtimestamp_local(starttime, starttime_str);
 
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n\n");
-        Log(LOG_LEVEL_VERBOSE, "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n");
+        if (LEGACY_OUTPUT)
+        {
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n\n");
+            Log(LOG_LEVEL_VERBOSE, "  LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+            Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------\n");
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "LocalExec(%sscheduled) at %s\n", config->scheduled_run ? "" : "not ", starttime_str);
+        }
     }
 
 /* Need to make sure we have LD_LIBRARY_PATH here or children will die  */

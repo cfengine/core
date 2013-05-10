@@ -35,8 +35,6 @@ int VERBOSE;
 int DEBUG;
 char VPREFIX[1024];
 
-void LogToSystemLog(const char *msg, LogLevel level);
-
 typedef struct
 {
     LogLevel log_level;
@@ -44,6 +42,8 @@ typedef struct
 
     LoggingPrivContext *pctx;
 } LoggingContext;
+
+void LogToSystemLog(const char *msg, LogLevel level);
 
 static pthread_once_t log_context_init_once;
 static pthread_key_t log_context_key;
@@ -134,20 +134,34 @@ static const char *LogLevelToString(LogLevel level)
 
 void LogToStdout(const char *msg, ARG_UNUSED LogLevel level)
 {
-    struct tm now;
-    time_t now_seconds = time(NULL);
-    localtime_r(&now_seconds, &now);
-
-    char formatted_timestamp[25];
-    if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
+    if (LEGACY_OUTPUT)
     {
-        // There was some massacre formating the timestamp. Wow
-        strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
+        if (level >= LOG_LEVEL_VERBOSE)
+        {
+            printf("%s> %s\n", VPREFIX, msg);
+        }
+        else
+        {
+            printf("%s\n", msg);
+        }
     }
+    else
+    {
+        struct tm now;
+        time_t now_seconds = time(NULL);
+        localtime_r(&now_seconds, &now);
 
-    const char *string_level = LogLevelToString(level);
+        char formatted_timestamp[25];
+        if (strftime(formatted_timestamp, 25, "%Y-%m-%dT%H:%M:%S%z", &now) == 0)
+        {
+            // There was some massacre formating the timestamp. Wow
+            strlcpy(formatted_timestamp, "<unknown>", sizeof(formatted_timestamp));
+        }
 
-    printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+        const char *string_level = LogLevelToString(level);
+
+        printf("%-24s %8s: %s\n", formatted_timestamp, string_level, msg);
+    }
 }
 
 #if !defined(__MINGW32__)
@@ -183,20 +197,25 @@ void VLog(LogLevel level, const char *fmt, va_list ap)
     LoggingContext *lctx = GetCurrentThreadContext();
 
     char *msg = StringVFormat(fmt, ap);
+    const char *hooked_msg = NULL;
 
     if (lctx->pctx && lctx->pctx->log_hook)
     {
-        lctx->pctx->log_hook(lctx->pctx, msg);
+        hooked_msg = lctx->pctx->log_hook(lctx->pctx, msg);
+    }
+    else
+    {
+        hooked_msg = msg;
     }
 
     if (level <= lctx->report_level)
     {
-        LogToStdout(msg, level);
+        LogToStdout(hooked_msg, level);
     }
 
     if (level <= lctx->log_level)
     {
-        LogToSystemLog(msg, level);
+        LogToSystemLog(hooked_msg, level);
     }
     free(msg);
 }

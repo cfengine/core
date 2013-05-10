@@ -360,7 +360,17 @@ int CheckPromises(const GenericAgentConfig *config)
 static void ShowContext(EvalContext *ctx)
 {
     {
-        printf("%s>  -> Hard classes = { ", VPREFIX);
+        Writer *w = NULL;
+        if (LEGACY_OUTPUT)
+        {
+            w = FileWriter(stdout);
+            WriterWriteF(w, "%s>  -> Hard classes = {", VPREFIX);
+        }
+        else
+        {
+            w = StringWriter();
+            WriterWrite(w, "Discovered hard classes:");
+        }
 
         Seq *hard_contexts = SeqNew(1000, NULL);
         SetIterator it = EvalContextHeapIteratorHard(ctx);
@@ -378,15 +388,37 @@ static void ShowContext(EvalContext *ctx)
         for (size_t i = 0; i < SeqLength(hard_contexts); i++)
         {
             const char *context = SeqAt(hard_contexts, i);
-            printf("%s ", context);
+
+            WriterWriteF(w, " %s", context);
         }
 
-        printf("}\n");
+        if (LEGACY_OUTPUT)
+        {
+            printf("}\n");
+            FileWriterDetach(w);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            WriterClose(w);
+        }
+
+
         SeqDestroy(hard_contexts);
     }
 
     {
-        printf("%s>  -> Additional classes = { ", VPREFIX);
+        Writer *w = NULL;
+        if (LEGACY_OUTPUT)
+        {
+            w = FileWriter(stdout);
+            WriterWriteF(w, "%s>  -> Additional classes = {", VPREFIX);
+        }
+        else
+        {
+            w = StringWriter();
+            WriterWrite(w, "Additional classes:");
+        }
 
         Seq *soft_contexts = SeqNew(1000, NULL);
         SetIterator it = EvalContextHeapIteratorSoft(ctx);
@@ -404,24 +436,52 @@ static void ShowContext(EvalContext *ctx)
         for (size_t i = 0; i < SeqLength(soft_contexts); i++)
         {
             const char *context = SeqAt(soft_contexts, i);
-            printf("%s ", context);
+            WriterWriteF(w, " %s", context);
         }
 
-        printf("}\n");
+        if (LEGACY_OUTPUT)
+        {
+            printf("}\n");
+            FileWriterDetach(w);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            WriterClose(w);
+        }
         SeqDestroy(soft_contexts);
     }
 
     {
-        printf("%s>  -> Negated Classes = { ", VPREFIX);
+        Writer *w = NULL;
+        if (LEGACY_OUTPUT)
+        {
+            w = FileWriter(stdout);
+            WriterWriteF(w, "%s>  -> Negated classes = {", VPREFIX);
+        }
+        else
+        {
+            w = StringWriter();
+            WriterWrite(w, "Additional classes:");
+        }
 
         StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
         const char *context = NULL;
         while ((context = StringSetIteratorNext(&it)))
         {
-            printf("%s ", context);
+            WriterWriteF(w, " %s", context);
         }
 
-        printf("}\n");
+        if (LEGACY_OUTPUT)
+        {
+            printf("}\n");
+            FileWriterDetach(w);
+        }
+        else
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            WriterClose(w);
+        }
     }
 }
 
@@ -554,7 +614,10 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
     }
 
     Log(LOG_LEVEL_VERBOSE, "CFEngine - autonomous configuration engine - commence self-diagnostic prelude\n");
-    Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n");
+    if (LEGACY_OUTPUT)
+    {
+        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------\n");
+    }
 
 /* Define trusted directories */
 

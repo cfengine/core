@@ -126,18 +126,20 @@ const ConstraintSyntax CF_VARBODY[] =
 
 static bool CheckIdentifierNotPurelyNumerical(const char *identifier)
 {
-    // step through the string, exiting if we reach 0 or if we go over CF_BUFSIZE
-    for (char* check = (char*) identifier;
-         *check != '\0' && check - identifier < CF_BUFSIZE;
-         check++)
+    if (*identifier == '\0')
+    {
+        return true;
+    }
+
+    for (const char *check = identifier; *check != '\0' && check - identifier < CF_BUFSIZE; check++)
     {
         if (!isdigit(*check))
         {
-            return false;
+            return true;
         }
     }
 
-    return true;
+    return false;
 }
 
 static bool VarsParseTreeCheck(const Promise *pp, Seq *errors)

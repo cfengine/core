@@ -67,7 +67,7 @@ void PurgeItemList(Item **list, char *name)
     {
         if (stat(ip->name, &sb) == -1)
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
+            Log(LOG_LEVEL_VERBOSE, "Purging file \"%s\" from %s list as it no longer exists", ip->name, name);
             DeleteItemLiteral(list, ip->name);
         }
     }

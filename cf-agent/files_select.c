@@ -343,7 +343,7 @@ static int SelectModeMatch(struct stat *lstatptr, Rlist *list)
 
         if (!ParseModeString(rp->item, &plus, &minus))
         {
-            Log(LOG_LEVEL_ERR, " !! Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
+            Log(LOG_LEVEL_ERR, "Problem validating a mode string \"%s\" in search filter", RlistScalarValue(rp));
             continue;
         }
 
@@ -369,7 +369,7 @@ static int SelectBSDMatch(struct stat *lstatptr, Rlist *bsdflags)
 
     if (!ParseFlagString(bsdflags, &plus, &minus))
     {
-        Log(LOG_LEVEL_ERR, " !! Problem validating a BSD flag string");
+        Log(LOG_LEVEL_ERR, "Problem validating a BSD flag string");
     }
 
     newflags = (lstatptr->st_flags & CHFLAGS_MASK);

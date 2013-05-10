@@ -606,7 +606,7 @@ static void ThisAgentInit(void)
     char filename[CF_BUFSIZE];
 
 #ifdef HAVE_SETSID
-    Log(LOG_LEVEL_VERBOSE, " -> Immunizing against parental death");
+    Log(LOG_LEVEL_VERBOSE, "Immunizing against parental death");
     setsid();
 #endif
 
@@ -762,11 +762,11 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                Log(LOG_LEVEL_VERBOSE, "-> Add classes ...\n");
+                Log(LOG_LEVEL_VERBOSE, "Add classes ...\n");
 
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    Log(LOG_LEVEL_VERBOSE, " -> ... %s\n", RlistScalarValue(rp));
+                    Log(LOG_LEVEL_VERBOSE, "... %s\n", RlistScalarValue(rp));
                     EvalContextHeapAddSoft(ctx, rp->item, NULL);
                 }
 
@@ -903,7 +903,7 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
                 for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
                     AddFilenameToListOfSuspicious(RlistScalarValue(rp));
-                    Log(LOG_LEVEL_VERBOSE, "-> Considering %s as suspicious file", RlistScalarValue(rp));
+                    Log(LOG_LEVEL_VERBOSE, "Considering %s as suspicious file", RlistScalarValue(rp));
                 }
 
                 continue;
@@ -1049,9 +1049,9 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
     else if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
         // TODO: somewhat frenzied way of telling user about an error
-        Log(LOG_LEVEL_ERR, " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        Log(LOG_LEVEL_ERR, " !! No bundlesequence in the common control body");
-        Log(LOG_LEVEL_ERR, " !! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        Log(LOG_LEVEL_ERR, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        Log(LOG_LEVEL_ERR, "No bundlesequence in the common control body");
+        Log(LOG_LEVEL_ERR, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         exit(1);
     }
 

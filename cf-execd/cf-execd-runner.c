@@ -219,7 +219,7 @@ void LocalExec(const ExecConfig *config)
     }
 #endif
 
-    Log(LOG_LEVEL_VERBOSE, " -> Command => %s\n", cmd);
+    Log(LOG_LEVEL_VERBOSE, "Command => %s\n", cmd);
 
     FILE *pp = cf_popen_sh(esc_command, "r");
     if (!pp)
@@ -229,7 +229,7 @@ void LocalExec(const ExecConfig *config)
         return;
     }
 
-    Log(LOG_LEVEL_VERBOSE, " -> Command is executing...%s\n", esc_command);
+    Log(LOG_LEVEL_VERBOSE, "Command is executing...%s\n", esc_command);
 
     int count = 0;
     for (;;)
@@ -316,16 +316,16 @@ void LocalExec(const ExecConfig *config)
     CfDebug("Closing fp\n");
     fclose(fp);
 
-    Log(LOG_LEVEL_VERBOSE, " -> Command is complete\n");
+    Log(LOG_LEVEL_VERBOSE, "Command is complete\n");
 
     if (count)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Mailing result\n");
+        Log(LOG_LEVEL_VERBOSE, "Mailing result\n");
         MailResult(config, filename);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> No output\n");
+        Log(LOG_LEVEL_VERBOSE, "No output\n");
         unlink(filename);
     }
 }

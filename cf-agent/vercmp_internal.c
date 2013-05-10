@@ -47,7 +47,7 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
 /* If the format of the version string doesn't match, we're already doomed */
 
-    Log(LOG_LEVEL_VERBOSE, " -> Check for compatible versioning model in (%s,%s)\n", v1, v2);
+    Log(LOG_LEVEL_VERBOSE, "Check for compatible versioning model in (%s,%s)\n", v1, v2);
 
     for (rp_pr = separators_pr, rp_in = separators_in; (rp_pr != NULL) && (rp_in != NULL);
          rp_pr = rp_pr->next, rp_in = rp_in->next)
@@ -67,11 +67,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
     if (result)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Verified that versioning models are compatible\n");
+        Log(LOG_LEVEL_VERBOSE, "Verified that versioning models are compatible\n");
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " !! Versioning models for (%s,%s) were incompatible\n", v1, v2);
+        Log(LOG_LEVEL_VERBOSE, "Versioning models for (%s,%s) were incompatible\n", v1, v2);
     }
 
     int version_equal = (strcmp(v2, v1) == 0);
@@ -173,11 +173,11 @@ bool ComparePackageVersionsInternal(const char *v1, const char *v2, PackageVersi
 
     if (version_matched)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Verified version constraint promise kept\n");
+        Log(LOG_LEVEL_VERBOSE, "Verified version constraint promise kept\n");
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Versions did not match\n");
+        Log(LOG_LEVEL_VERBOSE, "Versions did not match\n");
     }
 
     return version_matched;

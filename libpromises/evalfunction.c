@@ -414,7 +414,7 @@ static FnCallResult FnCallGetUsers(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 static FnCallResult FnCallGetUsers(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    Log(LOG_LEVEL_ERR, " -> getusers is not implemented");
+    Log(LOG_LEVEL_ERR, "getusers is not implemented");
     return (FnCallResult) { FNCALL_FAILURE };
 }
 
@@ -568,7 +568,7 @@ static FnCallResult FnCallHash(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (FIPS_MODE && type == HASH_METHOD_MD5)
     {
-        Log(LOG_LEVEL_ERR, " !! FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
+        Log(LOG_LEVEL_ERR, "FIPS mode is enabled, and md5 is not an approved algorithm in call to hash()");
     }
 
     HashString(string, strlen(string), digest, type);
@@ -602,7 +602,7 @@ static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
     snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
-    Log(LOG_LEVEL_VERBOSE, " -> File \"%s\" hashes to \"%s\", compare to \"%s\"\n", string, buffer, compare);
+    Log(LOG_LEVEL_VERBOSE, "File \"%s\" hashes to \"%s\", compare to \"%s\"\n", string, buffer, compare);
 
     if (strcmp(buffer + 4, compare) == 0)
     {
@@ -1575,7 +1575,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
                 ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
-                Log(LOG_LEVEL_VERBOSE, " -> getfields: defining %s = %s\n", name, RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, "getfields: defining %s = %s\n", name, RlistScalarValue(rp));
                 vcount++;
             }
         }
@@ -1634,7 +1634,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
         if (FullTextMatch(regex, line))
         {
             lcount++;
-            Log(LOG_LEVEL_VERBOSE, " -> countlinesmatching: matched \"%s\"", line);
+            Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched \"%s\"", line);
             continue;
         }
     }
@@ -3130,7 +3130,7 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Accessing hub knowledge bank for \"%s\"", handle);
+        Log(LOG_LEVEL_VERBOSE, "Accessing hub knowledge bank for \"%s\"", handle);
         GetRemoteScalar(ctx, "VAR", handle, POLICY_SERVER, true, buffer);
 
         // This should always be successful - and this one doesn't cache
@@ -3516,7 +3516,7 @@ static FnCallResult FnCallRegExtract(EvalContext *ctx, FnCall *fp, Rlist *finala
             if (assoc->rval.type != RVAL_TYPE_SCALAR)
             {
                 Log(LOG_LEVEL_ERR,
-                      " !! Software error: pattern match was non-scalar in regextract (shouldn't happen)");
+                      "Software error: pattern match was non-scalar in regextract (shouldn't happen)");
                 return (FnCallResult) { FNCALL_FAILURE };
             }
             else
@@ -4776,7 +4776,7 @@ static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
             if (count++ > strlen(file_buffer))
             {
                 Log(LOG_LEVEL_ERR,
-                      " !! Comment regex \"%s\" was irreconcilable reading input \"%s\" probably because it legally matches nothing",
+                      "Comment regex \"%s\" was irreconcilable reading input \"%s\" probably because it legally matches nothing",
                       pattern, filename);
                 return file_buffer;
             }
@@ -4842,7 +4842,7 @@ static int BuildLineArray(EvalContext *ctx, const Bundle *bundle, char *array_lv
 
         if (lcount++ > CF_HASHTABLESIZE)
         {
-            Log(LOG_LEVEL_ERR, " !! Array is too big to be read into CFEngine (max 4000)");
+            Log(LOG_LEVEL_ERR, "Array is too big to be read into CFEngine (max 4000)");
             break;
         }
 

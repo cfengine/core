@@ -488,7 +488,7 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
 
         if (strcmp(cols2[i], cols1[i]) != 0)
         {
-            Log(LOG_LEVEL_INFO, " !! Unacceptable model uncertainty examining processes");
+            Log(LOG_LEVEL_INFO, "Unacceptable model uncertainty examining processes");
         }
 
         line[i] = xstrdup(cols1[i]);
@@ -749,7 +749,7 @@ int LoadProcessTable(Item **procdata)
 
     if (PROCESSTABLE)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Reusing cached process state");
+        Log(LOG_LEVEL_VERBOSE, "Reusing cached process state");
         return true;
     }
 

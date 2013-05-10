@@ -210,11 +210,11 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     if (stat(newname, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Did not find new key format %s", newname);
+        Log(LOG_LEVEL_VERBOSE, "Did not find new key format %s", newname);
         snprintf(oldname, CF_BUFSIZE, "%s/ppkeys/%s-%s.pub", CFWORKDIR, username, ipaddress);
         MapName(oldname);
 
-        Log(LOG_LEVEL_VERBOSE, " -> Trying old style %s", oldname);
+        Log(LOG_LEVEL_VERBOSE, "Trying old style %s", oldname);
 
         if (stat(oldname, &statbuf) == -1)
         {
@@ -224,7 +224,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
         if (strlen(digest) > 0)
         {
-            Log(LOG_LEVEL_INFO, " -> Renaming old key from %s to %s", oldname, newname);
+            Log(LOG_LEVEL_INFO, "Renaming old key from %s to %s", oldname, newname);
 
             if (rename(oldname, newname) != 0)
             {
@@ -235,7 +235,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
             // have no lastseen-map and/or root-SHA...pub of the server's key
             // yet) Just using old file format (root-IP.pub) without renaming for now.
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Could not map key file to new format - we have no digest yet (using %s)",
+            Log(LOG_LEVEL_VERBOSE, "Could not map key file to new format - we have no digest yet (using %s)",
                   oldname);
             snprintf(newname, sizeof(newname), "%s", oldname);
         }

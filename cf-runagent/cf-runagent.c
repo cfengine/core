@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
     if (BACKGROUND && INTERACTIVE)
     {
-        Log(LOG_LEVEL_ERR, " !! You cannot specify background mode and interactive mode together");
+        Log(LOG_LEVEL_ERR, "You cannot specify background mode and interactive mode together");
         exit(1);
     }
 
@@ -401,7 +401,7 @@ static int HailServer(EvalContext *ctx, char *host)
 
     if (INTERACTIVE)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Using interactive key trust...\n");
+        Log(LOG_LEVEL_VERBOSE, "Using interactive key trust...\n");
 
         gotkey = HavePublicKey(user, peer, digest) != NULL;
 
@@ -430,19 +430,19 @@ static int HailServer(EvalContext *ctx, char *host)
 
                 if (strcmp(reply, "yes") == 0)
                 {
-                    printf(" -> Will trust the key...\n");
+                    printf("Will trust the key...\n");
                     fc.trustkey = true;
                     break;
                 }
                 else if (strcmp(reply, "no") == 0)
                 {
-                    printf(" -> Will not trust the key...\n");
+                    printf("Will not trust the key...\n");
                     fc.trustkey = false;
                     break;
                 }
                 else
                 {
-                    printf(" !! Please reply yes or no...(%s)\n", reply);
+                    printf("Please reply yes or no...(%s)\n", reply);
                 }
             }
         }
@@ -489,7 +489,7 @@ static int HailServer(EvalContext *ctx, char *host)
         if (conn == NULL)
         {
             RlistDestroy(fc.servers);
-            Log(LOG_LEVEL_VERBOSE, " -> No suitable server responded to hail\n");
+            Log(LOG_LEVEL_VERBOSE, "No suitable server responded to hail\n");
             return false;
         }
     }

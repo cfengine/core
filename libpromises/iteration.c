@@ -108,9 +108,9 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
         dtype = DATA_TYPE_NONE;
         if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, rp->item }, &retval, &dtype))
         {
-            Log(LOG_LEVEL_ERR, " !! Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
+            Log(LOG_LEVEL_ERR, "Couldn't locate variable %s apparently in %s\n", RlistScalarValue(rp), scopeid);
             Log(LOG_LEVEL_ERR,
-                  " !! Could be incorrect use of a global iterator -- see reference manual on list substitution");
+                  "Could be incorrect use of a global iterator -- see reference manual on list substitution");
             continue;
         }
 
@@ -189,7 +189,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
 /* Go ahead and increment */
 
-    CfDebug(" -> Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
+    CfDebug("Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
 
     if (state->next == NULL)
     {

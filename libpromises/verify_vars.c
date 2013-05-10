@@ -252,14 +252,14 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
                 switch (rval.type)
                 {
                 case RVAL_TYPE_SCALAR:
-                    Log(LOG_LEVEL_VERBOSE, " !! Redefinition of a constant scalar \"%s\" (was %s now %s)",
+                    Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant scalar \"%s\" (was %s now %s)",
                           pp->promiser, RvalScalarValue(existing_var_rval), RvalScalarValue(rval));
                     PromiseRef(LOG_LEVEL_VERBOSE, pp);
                     break;
 
                 case RVAL_TYPE_LIST:
                     {
-                        Log(LOG_LEVEL_VERBOSE, " !! Redefinition of a constant list \"%s\".", pp->promiser);
+                        Log(LOG_LEVEL_VERBOSE, "Redefinition of a constant list \"%s\".", pp->promiser);
                         Writer *w = StringWriter();
                         RlistWrite(w, existing_var_rval.item);
                         char *oldstr = StringWriterClose(w);
@@ -292,7 +292,7 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
 
         if (!FullTextMatch("[a-zA-Z0-9_\200-\377.]+(\\[.+\\])*", pp->promiser))
         {
-            Log(LOG_LEVEL_ERR, " !! Variable identifier contains illegal characters");
+            Log(LOG_LEVEL_ERR, "Variable identifier contains illegal characters");
             PromiseRef(LOG_LEVEL_ERR, pp);
             RvalDestroy(rval);
             free(scope);
@@ -325,8 +325,8 @@ void VerifyVarPromise(EvalContext *ctx, const Promise *pp, bool allow_duplicates
     }
     else
     {
-        Log(LOG_LEVEL_ERR, " !! Variable %s has no promised value\n", pp->promiser);
-        Log(LOG_LEVEL_ERR, " !! Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
+        Log(LOG_LEVEL_ERR, "Variable %s has no promised value\n", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu\n", PromiseGetBundle(pp)->source_path, opts.cp_save->offset.line);
         promise_result = PROMISE_RESULT_FAIL;
     }
 

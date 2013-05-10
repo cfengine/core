@@ -460,7 +460,7 @@ static void Apoptosis(void)
 
     DeleteItemList(PROCESSTABLE);
 
-    Log(LOG_LEVEL_VERBOSE, " !! Pruning complete");
+    Log(LOG_LEVEL_VERBOSE, "Pruning complete");
 }
 
 #endif
@@ -475,7 +475,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
 {
     if (NewPromiseProposals(ctx, config, input_files))
     {
-        Log(LOG_LEVEL_VERBOSE, " -> New promises detected...\n");
+        Log(LOG_LEVEL_VERBOSE, "New promises detected...\n");
 
         if (CheckPromises(config))
         {
@@ -483,13 +483,13 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
         }
         else
         {
-            Log(LOG_LEVEL_INFO, " !! New promises file contains syntax errors -- ignoring");
+            Log(LOG_LEVEL_INFO, "New promises file contains syntax errors -- ignoring");
             PROMISETIME = time(NULL);
         }
     }
     else
     {
-        CfDebug(" -> No new promises found\n");
+        CfDebug("No new promises found\n");
     }
 
     return RELOAD_ENVIRONMENT;

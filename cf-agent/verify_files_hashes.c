@@ -166,7 +166,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
 
                 if (attr.change.update)
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, " -> Updating hash for %s to %s", filename,
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "Updating hash for %s to %s", filename,
                          HashPrintSafe(type, digest, buffer));
 
                     DeleteHash(dbp, type, filename);
@@ -182,14 +182,14 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
             }
         }
 
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, " -> File hash for %s is correct", filename);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File hash for %s is correct", filename);
         CloseDB(dbp);
         return false;
     }
     else
     {
         /* Key was not found, so install it */
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, " !! File %s was not in %s database - new file found", filename,
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File %s was not in %s database - new file found", filename,
              FileHashName(type));
         CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
@@ -310,7 +310,7 @@ void PurgeHashes(EvalContext *ctx, char *path, Attributes attr, Promise *pp)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        Log(LOG_LEVEL_INFO, " !! Unable to scan hash database");
+        Log(LOG_LEVEL_INFO, "Unable to scan hash database");
         CloseDB(dbp);
         return;
     }

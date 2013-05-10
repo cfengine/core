@@ -1778,7 +1778,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        Log(LOG_LEVEL_INFO, " !! Unable to scan persistence cache");
+        Log(LOG_LEVEL_INFO, "Unable to scan persistence cache");
         CloseDB(dbp);
         return NULL;
     }
@@ -1930,7 +1930,7 @@ static int AuthorizeRoles(EvalContext *ctx, ServerConnectionState *conn, char *a
 
     for (rp = defines; rp != NULL; rp = rp->next)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Verifying %s\n", RlistScalarValue(rp));
+        Log(LOG_LEVEL_VERBOSE, "Verifying %s\n", RlistScalarValue(rp));
 
         for (ap = SV.roles; ap != NULL; ap = ap->next)
         {
@@ -2144,7 +2144,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     if (VERBOSE)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        Log(LOG_LEVEL_VERBOSE, " -> Public key identity of host \"%s\" is \"%s\"", conn->ipaddr,
+        Log(LOG_LEVEL_VERBOSE, "Public key identity of host \"%s\" is \"%s\"", conn->ipaddr,
               HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
     }
 
@@ -2234,11 +2234,11 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     {
         if (!conn->trust)
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Strong authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
+            Log(LOG_LEVEL_VERBOSE, "Strong authentication of client %s/%s achieved", conn->hostname, conn->ipaddr);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Weak authentication of trusted client %s/%s (key accepted on trust).\n",
+            Log(LOG_LEVEL_VERBOSE, "Weak authentication of trusted client %s/%s (key accepted on trust).\n",
                   conn->hostname, conn->ipaddr);
         }
     }
@@ -2278,7 +2278,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
     conn->session_key = xmalloc(session_size);
     conn->encryption_type = enterprise_field;
 
-    Log(LOG_LEVEL_VERBOSE, " -> Receiving session key from client (size=%d)...", keylen);
+    Log(LOG_LEVEL_VERBOSE, "Receiving session key from client (size=%d)...", keylen);
 
     CfDebug("keylen=%d, session_size=%d\n", keylen, session_size);
 
@@ -2843,7 +2843,7 @@ static void ReplyServerContext(ServerConnectionState *conn, int encrypted, Item 
         }
         else
         {
-            Log(LOG_LEVEL_ERR, " !! Overflow in context grab");
+            Log(LOG_LEVEL_ERR, "Overflow in context grab");
             break;
         }
     }

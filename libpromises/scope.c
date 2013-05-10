@@ -105,7 +105,7 @@ void ScopePutMatch(int index, const char *value)
             /* Different value, bark and replace */
             if (!UnresolvedVariables(assoc, RVAL_TYPE_SCALAR))
             {
-                Log(LOG_LEVEL_INFO, " !! Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
+                Log(LOG_LEVEL_INFO, "Duplicate selection of value for variable \"%s\" in scope %s", lval, ptr->scope);
             }
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
@@ -227,7 +227,7 @@ void ScopeAugment(EvalContext *ctx, const Bundle *bp, const Promise *pp, const R
                 ScopeNewList(ctx, (VarRef) { NULL, bp->name, lval }, RvalCopy((Rval) { retval.item, RVAL_TYPE_LIST}).item, DATA_TYPE_STRING_LIST);
                 break;
             default:
-                Log(LOG_LEVEL_ERR, " !! List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
+                Log(LOG_LEVEL_ERR, "List parameter \"%s\" not found while constructing scope \"%s\" - use @(scope.variable) in calling reference", naked, bp->name);
                 ScopeNewScalar(ctx, (VarRef) { NULL, bp->name, lval }, rpr->item, DATA_TYPE_STRING);
                 break;
             }
@@ -297,7 +297,7 @@ void ScopeDeleteAll()
     while (ptr != NULL)
     {
         this = ptr;
-        CfDebug(" -> Deleting scope %s\n", ptr->scope);
+        CfDebug("Deleting scope %s\n", ptr->scope);
         HashFree(this->hashtable);
         free(this->scope);
         ptr = this->next;
@@ -665,7 +665,7 @@ void ScopeDeRefListsInHashtable(char *scope, Rlist *namelist, Rlist *dereflist)
 
     if ((len = RlistLen(namelist)) != RlistLen(dereflist))
     {
-        Log(LOG_LEVEL_ERR, " !! Name list %d, dereflist %d\n", len, RlistLen(dereflist));
+        Log(LOG_LEVEL_ERR, "Name list %d, dereflist %d\n", len, RlistLen(dereflist));
         ProgrammingError("Software Error DeRefLists... correlated lists not same length");
     }
 
@@ -742,7 +742,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
     if (len1 != len2)
     {
-        Log(LOG_LEVEL_ERR, " !! Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
+        Log(LOG_LEVEL_ERR, "Argument mismatch in body template give[+args] = %d, take[-args] = %d", len1, len2);
         return false;
     }
 
@@ -793,7 +793,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
                 if (VERBOSE)
                 {
                     printf
-                        (" !! Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
+                        ("Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
                     FnCallShow(stdout, fp);
                     printf(" (try simplifying)\n");
                 }

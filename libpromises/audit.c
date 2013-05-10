@@ -96,14 +96,14 @@ void EndAudit(const EvalContext *ctx, int background_tasks)
             char name[CF_MAXVARSIZE], datestr[CF_MAXVARSIZE];
             time_t now = time(NULL);
 
-            Log(LOG_LEVEL_INFO, " -> Recording promise valuations");
+            Log(LOG_LEVEL_INFO, "Recording promise valuations");
 
             snprintf(name, CF_MAXVARSIZE, "%s/state/%s", CFWORKDIR, CF_VALUE_LOG);
             snprintf(datestr, CF_MAXVARSIZE, "%s", ctime(&now));
 
             if ((fout = fopen(name, "a")) == NULL)
             {
-                Log(LOG_LEVEL_INFO, " !! Unable to write to the value log %s\n", name);
+                Log(LOG_LEVEL_INFO, "Unable to write to the value log %s\n", name);
                 return;
             }
 

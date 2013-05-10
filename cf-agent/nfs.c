@@ -531,7 +531,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
-            Log(LOG_LEVEL_ERR, " !! Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
+            Log(LOG_LEVEL_ERR, "Failed to open pipe from %s\n", CommandArg0(VMOUNTCOMM[VSYSTEMHARDCLASS]));
             return 0;
         }
 
@@ -546,7 +546,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, " !! The device under %s cannot be mounted\n", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under %s cannot be mounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -557,7 +557,7 @@ int VerifyMount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
     /* Since opts is either Rlist2String or xstrdup'd, we need to always free it */
     free(opts);
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Mounting %s to keep promise\n", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Mounting %s to keep promise\n", mountpt);
     return 0;
 }
 
@@ -577,7 +577,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if ((pfp = cf_popen(comm, "r", true)) == NULL)
         {
-            Log(LOG_LEVEL_ERR, " !! Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
+            Log(LOG_LEVEL_ERR, "Failed to open pipe from %s\n", VUNMOUNTCOMM[VSYSTEMHARDCLASS]);
             return 0;
         }
 
@@ -592,7 +592,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
 
         if (res != 0 && ((strstr(line, "busy")) || (strstr(line, "Busy"))))
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, " !! The device under %s cannot be unmounted\n", mountpt);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_INTERRUPTED, pp, a, "The device under %s cannot be unmounted\n", mountpt);
             cf_pclose(pfp);
             return 1;
         }
@@ -600,7 +600,7 @@ int VerifyUnmount(EvalContext *ctx, char *name, Attributes a, Promise *pp)
         cf_pclose(pfp);
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Unmounting %s to keep promise\n", mountpt);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Unmounting %s to keep promise\n", mountpt);
     return 0;
 }
 
@@ -635,7 +635,7 @@ void MountAll()
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Attempting to mount all filesystems.\n");
+        Log(LOG_LEVEL_VERBOSE, "Attempting to mount all filesystems.\n");
     }
 
 #if defined(__CYGWIN__)
@@ -754,7 +754,7 @@ static void DeleteThisItem(Item **liststart, Item *entry)
 void CleanupNFS(void)
 {
     Attributes a = { {0} };
-    Log(LOG_LEVEL_VERBOSE, " -> Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
+    Log(LOG_LEVEL_VERBOSE, "Number of changes observed in %s is %d\n", VFSTAB[VSYSTEMHARDCLASS], FSTAB_EDITS);
 
     if (FSTAB_EDITS && FSTABLIST && !DONTDO)
     {

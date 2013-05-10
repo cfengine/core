@@ -106,7 +106,7 @@ void CheckForPolicyHub(EvalContext *ctx)
     if (stat(name, &sb) != -1)
     {
         EvalContextHeapAddHard(ctx, "am_policy_hub");
-        Log(LOG_LEVEL_VERBOSE, " -> Additional class defined: am_policy_hub");
+        Log(LOG_LEVEL_VERBOSE, "Additional class defined: am_policy_hub");
     }
 }
 
@@ -210,17 +210,17 @@ static bool IsPolicyPrecheckNeeded(EvalContext *ctx, GenericAgentConfig *config,
     if (IsFileOutsideDefaultRepository(config->input_file))
     {
         check_policy = true;
-        Log(LOG_LEVEL_VERBOSE, " -> Input file is outside default repository, validating it");
+        Log(LOG_LEVEL_VERBOSE, "Input file is outside default repository, validating it");
     }
     if (NewPromiseProposals(ctx, config, NULL))
     {
         check_policy = true;
-        Log(LOG_LEVEL_VERBOSE, " -> Input file is changed since last validation, validating it");
+        Log(LOG_LEVEL_VERBOSE, "Input file is changed since last validation, validating it");
     }
     if (force_validation)
     {
         check_policy = true;
-        Log(LOG_LEVEL_VERBOSE, " -> always_validate is set, forcing policy validation");
+        Log(LOG_LEVEL_VERBOSE, "always_validate is set, forcing policy validation");
     }
 
     return check_policy;
@@ -236,7 +236,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
 
             if (config->agent_specific.agent.bootstrap_policy_server && !policy_check_ok)
             {
-                Log(LOG_LEVEL_VERBOSE, " -> Policy is not valid, but proceeding with bootstrap");
+                Log(LOG_LEVEL_VERBOSE, "Policy is not valid, but proceeding with bootstrap");
                 return true;
             }
 
@@ -244,7 +244,7 @@ bool GenericAgentCheckPolicy(EvalContext *ctx, GenericAgentConfig *config, bool 
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Policy is already validated");
+            Log(LOG_LEVEL_VERBOSE, "Policy is already validated");
             return true;
         }
     }
@@ -259,7 +259,7 @@ int CheckPromises(const GenericAgentConfig *config)
 {
     char cmd[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, " -> Verifying the syntax of the inputs...\n");
+    Log(LOG_LEVEL_VERBOSE, "Verifying the syntax of the inputs...\n");
     {
         char cfpromises[CF_MAXVARSIZE];
         snprintf(cfpromises, sizeof(cfpromises), "%s%cbin%ccf-promises%s", CFWORKDIR, FILE_SEPARATOR, FILE_SEPARATOR,
@@ -340,7 +340,7 @@ int CheckPromises(const GenericAgentConfig *config)
 
                 fprintf(fp, "%s", cf_strtimestamp_local(now, timebuf));
                 fclose(fp);
-                Log(LOG_LEVEL_VERBOSE, " -> Caching the state of validation\n");
+                Log(LOG_LEVEL_VERBOSE, "Caching the state of validation\n");
             }
             else
             {
@@ -597,7 +597,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
         if (stat(vbuff, &sb) == -1)
         {
-            FatalError(ctx, " !!! No access to WORKSPACE/inputs dir");
+            FatalError(ctx, " No access to WORKSPACE/inputs dir");
         }
         else
         {
@@ -608,7 +608,7 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 
         if (stat(vbuff, &sb) == -1)
         {
-            FatalError(ctx, " !!! No access to WORKSPACE/outputs dir");
+            FatalError(ctx, " No access to WORKSPACE/outputs dir");
         }
         else
         {
@@ -823,7 +823,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
 
     if (sb.st_mtime > validated_at || sb.st_mtime > PROMISETIME)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Promises seem to change");
+        Log(LOG_LEVEL_VERBOSE, "Promises seem to change");
         return true;
     }
 
@@ -834,7 +834,7 @@ int NewPromiseProposals(EvalContext *ctx, const GenericAgentConfig *config, cons
 
     if (IsNewerFileTree(filename, PROMISETIME))
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Quick search detected file changes");
+        Log(LOG_LEVEL_VERBOSE, "Quick search detected file changes");
         return true;
     }
 
@@ -1275,7 +1275,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 
 static void CheckCommonClassPromises(EvalContext *ctx, Seq *class_promises)
 {
-    Log(LOG_LEVEL_VERBOSE, " -> Checking common class promises...\n");
+    Log(LOG_LEVEL_VERBOSE, "Checking common class promises...\n");
 
     for (size_t i = 0; i < SeqLength(class_promises); i++)
     {
@@ -1348,7 +1348,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
         if (!EvalContextVariablePut(ctx, (VarRef) { NULL, scope, cp->lval }, returnval, ConstraintSyntaxGetDataType(body_syntax, cp->lval)))
         {
-            Log(LOG_LEVEL_ERR, " !! Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
+            Log(LOG_LEVEL_ERR, "Rule from %s at/before line %zu\n", control_body->source_path, cp->offset.line);
         }
 
         if (strcmp(cp->lval, CFG_CONTROLBODY[COMMON_CONTROL_OUTPUT_PREFIX].lval) == 0)
@@ -1543,7 +1543,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
 
     if (!EvalContextVariableControlCommonGet(ctx, COMMON_CONTROL_BUNDLESEQUENCE, &retval))
     {
-        Log(LOG_LEVEL_ERR, " !!! No bundlesequence in the common control body");
+        Log(LOG_LEVEL_ERR, " No bundlesequence in the common control body");
         return false;
     }
 

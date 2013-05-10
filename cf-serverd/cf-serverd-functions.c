@@ -359,7 +359,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
             timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
             timeout.tv_usec = 0;
 
-            CfDebug(" -> Waiting at incoming select...\n");
+            CfDebug("Waiting at incoming select...\n");
 
             ret_val = select((sd + 1), &rset, NULL, NULL, &timeout);
 
@@ -380,7 +380,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
                 continue;
             }
 
-            Log(LOG_LEVEL_VERBOSE, " -> Accepting a connection\n");
+            Log(LOG_LEVEL_VERBOSE, "Accepting a connection\n");
 
             if ((sd_reply = accept(sd, (struct sockaddr *) &cin, &addrlen)) != -1)
             {
@@ -512,7 +512,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
 
     if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
-        Log(LOG_LEVEL_VERBOSE, " -> New promises detected...\n");
+        Log(LOG_LEVEL_VERBOSE, "New promises detected...\n");
 
         if (CheckPromises(config))
         {
@@ -593,13 +593,13 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
         }
         else
         {
-            Log(LOG_LEVEL_INFO, " !! File changes contain errors -- ignoring");
+            Log(LOG_LEVEL_INFO, "File changes contain errors -- ignoring");
             PROMISETIME = time(NULL);
         }
     }
     else
     {
-        CfDebug(" -> No new promises found\n");
+        CfDebug("No new promises found\n");
     }
 }
 

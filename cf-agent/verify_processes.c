@@ -68,7 +68,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
     {
         if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
         {
-            Log(LOG_LEVEL_INFO, " -> (warning) Promise %s kills then restarts - never strictly converges",
+            Log(LOG_LEVEL_INFO, "(warning) Promise %s kills then restarts - never strictly converges",
                   pp->promiser);
             PromiseRef(LOG_LEVEL_INFO, pp);
         }
@@ -76,7 +76,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
         if (a.haveprocess_count)
         {
             Log(LOG_LEVEL_ERR,
-                  " !! process_count and restart_class should not be used in the same promise as this makes no sense");
+                  "process_count and restart_class should not be used in the same promise as this makes no sense");
             PromiseRef(LOG_LEVEL_INFO, pp);
             ret = false;
         }
@@ -92,7 +92,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
     if ((a.haveselect) && (!a.process_select.process_result))
     {
-        Log(LOG_LEVEL_ERR, " !! Process select constraint body promised no result (check body definition)");
+        Log(LOG_LEVEL_ERR, "Process select constraint body promised no result (check body definition)");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -147,7 +147,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " !! Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 if (!EvalContextHeapContainsSoft(ctx, rp->item))
@@ -166,7 +166,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                     EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
                 }
             }
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Process promise for %s is kept", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for %s is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -228,7 +228,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     if (!need_to_restart)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No restart promised for %s\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s\n", pp->promiser);
         return;
     }
     else
@@ -240,7 +240,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Making a one-time restart promise for %s", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for %s", pp->promiser);
             EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
         }
     }
@@ -263,7 +263,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 
     if (a.signals == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> No signals to send for %s\n", pp->promiser);
+        Log(LOG_LEVEL_VERBOSE, "No signals to send for %s\n", pp->promiser);
         return 0;
     }
 
@@ -285,18 +285,18 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
                 if (kill((pid_t) pid, signal) < 0)
                 {
                     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
-                         " !! Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
+                         "Couldn't send promised signal '%s' (%d) to pid %jd (might be dead). (kill: %s)", RlistScalarValue(rp),
                          signal, (intmax_t)pid, GetErrorStr());
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Signalled '%s' (%d) to process %jd (%s)\n",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)\n",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_ERR, " -> Need to keep signal promise \'%s\' in process entry %s",
+                Log(LOG_LEVEL_ERR, "Need to keep signal promise \'%s\' in process entry %s",
                       RlistScalarValue(rp), ip->name);
             }
         }
@@ -317,11 +317,11 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
     {
         if (a.transaction.action == cfa_warn)
         {
-            Log(LOG_LEVEL_ERR, " !! Matched: %s\n", ip->name);
+            Log(LOG_LEVEL_ERR, "Matched: %s\n", ip->name);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, " !! Matched: %s\n", ip->name);
+            Log(LOG_LEVEL_INFO, "Matched: %s\n", ip->name);
         }
 
         pid_t pid = ip->counter;
@@ -356,7 +356,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((pid == cfengine_pid) && (a.signals))
         {
-            Log(LOG_LEVEL_VERBOSE, " !! cf-agent will not signal itself!\n");
+            Log(LOG_LEVEL_VERBOSE, "cf-agent will not signal itself!\n");
             continue;
         }
 

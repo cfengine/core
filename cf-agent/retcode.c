@@ -39,7 +39,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
         if (RlistKeyIn(a.classes.retcode_kept, retcodeStr))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a,
-                 "-> Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
+                 "Command related to promiser \"%s\" returned code defined as promise kept (%d)", pp->promiser,
                  retcode);
             result = true;
             matched = true;
@@ -48,7 +48,7 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
         if (RlistKeyIn(a.classes.retcode_repaired, retcodeStr))
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a,
-                 "-> Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
+                 "Command related to promiser \"%s\" returned code defined as promise repaired (%d)", pp->promiser,
                  retcode);
             result = true;
             matched = true;
@@ -75,14 +75,14 @@ int VerifyCommandRetcode(EvalContext *ctx, int retcode, int fallback, Attributes
     {
         if (retcode == 0)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " -> Finished command related to promiser \"%s\" -- succeeded",
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Finished command related to promiser \"%s\" -- succeeded",
                  pp->promiser);
             result = true;
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
-                 " !! Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
+                 "Finished command related to promiser \"%s\" -- an error occurred (returned %d)", pp->promiser,
                  retcode);
             result = false;
         }

@@ -135,15 +135,15 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         switch (retval)
         {
         case PROMISE_RESULT_FAIL:
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, " !! Method failed in some repairs or aborted\n");
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method failed in some repairs or aborted\n");
             break;
 
         case PROMISE_RESULT_CHANGE:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, " !! Method invoked repairs\n");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method invoked repairs\n");
             break;
 
         default:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Method verified\n");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method verified\n");
             break;
 
         }
@@ -159,16 +159,16 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         if (IsCf3VarString(method_name))
         {
             Log(LOG_LEVEL_ERR,
-                  " !! A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
+                  "A variable seems to have been used for the name of the method. In this case, the promiser also needs to contain the unique name of the method");
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, " !! Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method \"%s\" was used but was not defined!\n", bp->name);
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 " !! A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
+                 "A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
         }
     }
 
@@ -193,7 +193,7 @@ static void GetReturnValue(EvalContext *ctx, char *scope, Promise *pp)
 
         if ((ptr = ScopeGet(scope)) == NULL)
         {
-            Log(LOG_LEVEL_INFO, " !! useresult was specified but the method returned no data");
+            Log(LOG_LEVEL_INFO, "useresult was specified but the method returned no data");
             return;
         }
     

@@ -57,7 +57,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 {
     DbMysqlConn *c;
 
-    Log(LOG_LEVEL_VERBOSE, " -> This is a MySQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a MySQL database\n");
 
     c = xcalloc(1, sizeof(DbMysqlConn));
 
@@ -187,7 +187,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
     DbPostgresqlConn *c;
     char format[CF_BUFSIZE];
 
-    Log(LOG_LEVEL_VERBOSE, " -> This is a PotsgreSQL database\n");
+    Log(LOG_LEVEL_VERBOSE, "This is a PotsgreSQL database\n");
 
     c = xcalloc(1, sizeof(DbPostgresqlConn));
 

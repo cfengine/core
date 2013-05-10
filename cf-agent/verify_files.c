@@ -64,14 +64,14 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
     if ((a.havelink) && (a.havecopy))
     {
         Log(LOG_LEVEL_ERR,
-              " !! Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
+              "Promise constraint conflicts - %s file cannot both be a copy of and a link to the source", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     if ((a.havelink) && (!a.link.source))
     {
-        Log(LOG_LEVEL_ERR, " !! Promise to establish a link at %s has no source", path);
+        Log(LOG_LEVEL_ERR, "Promise to establish a link at %s has no source", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -83,14 +83,14 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
     if ((a.havecopy) && (a.copy.source) && (!FullTextMatch(CF_ABSPATHRANGE, a.copy.source)))
     {
         /* FIXME: somehow redo a PromiseRef to be able to embed it into a string */
-        Log(LOG_LEVEL_ERR, " !! Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
+        Log(LOG_LEVEL_ERR, "Non-absolute path in source attribute (have no invariant meaning): %s", a.copy.source);
         PromiseRef(LOG_LEVEL_ERR, pp);
         FatalError(ctx, "Bailing out");
     }
 
     if ((a.haveeditline) && (a.haveeditxml))
     {
-        Log(LOG_LEVEL_ERR, " !! Promise constraint conflicts - %s editing file as both line and xml makes no sense",
+        Log(LOG_LEVEL_ERR, "Promise constraint conflicts - %s editing file as both line and xml makes no sense",
               path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
@@ -98,14 +98,14 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
 
     if ((a.havedepthsearch) && (a.haveedit))
     {
-        Log(LOG_LEVEL_ERR, " !! Recursive depth_searches are not compatible with general file editing");
+        Log(LOG_LEVEL_ERR, "Recursive depth_searches are not compatible with general file editing");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     if ((a.havedelete) && ((a.create) || (a.havecopy) || (a.haveedit) || (a.haverename)))
     {
-        Log(LOG_LEVEL_ERR, " !! Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
+        Log(LOG_LEVEL_ERR, "Promise constraint conflicts - %s cannot be deleted and exist at the same time", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -113,7 +113,7 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
     if ((a.haverename) && ((a.create) || (a.havecopy) || (a.haveedit)))
     {
         Log(LOG_LEVEL_ERR,
-              " !! Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
+              "Promise constraint conflicts - %s cannot be renamed/moved and exist there at the same time", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -121,7 +121,7 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
     if ((a.havedelete) && (a.havedepthsearch) && (!a.haveselect))
     {
         Log(LOG_LEVEL_ERR,
-              " !! Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
+              "Dangerous or ambiguous promise - %s specifies recursive deletion but has no file selection criteria",
               path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
@@ -129,14 +129,14 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
 
     if ((a.haveselect) && (!a.select.result))
     {
-        Log(LOG_LEVEL_ERR, " !! File select constraint body promised no result (check body definition)");
+        Log(LOG_LEVEL_ERR, "File select constraint body promised no result (check body definition)");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     if ((a.havedelete) && (a.haverename))
     {
-        Log(LOG_LEVEL_ERR, " !! File %s cannot promise both deletion and renaming", path);
+        Log(LOG_LEVEL_ERR, "File %s cannot promise both deletion and renaming", path);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -144,21 +144,21 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
     if ((a.havecopy) && (a.havedepthsearch) && (a.havedelete))
     {
         Log(LOG_LEVEL_INFO,
-              " !! Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
+              "Warning: depth_search of %s applies to both delete and copy, but these refer to different searches (source/destination)",
               pp->promiser);
         PromiseRef(LOG_LEVEL_INFO, pp);
     }
 
     if ((a.transaction.background) && (a.transaction.audit))
     {
-        Log(LOG_LEVEL_ERR, " !! Auditing cannot be performed on backgrounded promises (this might change).");
+        Log(LOG_LEVEL_ERR, "Auditing cannot be performed on backgrounded promises (this might change).");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     if (((a.havecopy) || (a.havelink)) && (a.transformer))
     {
-        Log(LOG_LEVEL_ERR, " !! File object(s) %s cannot both be a copy of source and transformed simultaneously",
+        Log(LOG_LEVEL_ERR, "File object(s) %s cannot both be a copy of source and transformed simultaneously",
               pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
@@ -166,14 +166,14 @@ static int FileSanityChecks(const EvalContext *ctx, char *path, Attributes a, Pr
 
     if ((a.haveselect) && (a.select.result == NULL))
     {
-        Log(LOG_LEVEL_ERR, " !! Missing file_result attribute in file_select body");
+        Log(LOG_LEVEL_ERR, "Missing file_result attribute in file_select body");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
 
     if ((a.havedepthsearch) && (a.change.report_diffs))
     {
-        Log(LOG_LEVEL_ERR, " !! Difference reporting is not allowed during a depth_search");
+        Log(LOG_LEVEL_ERR, "Difference reporting is not allowed during a depth_search");
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -227,14 +227,14 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         if ((a.create) || (a.touch))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> File \"%s\" exists as promised", path);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File \"%s\" exists as promised", path);
         }
         exists = true;
     }
 
     if ((a.havedelete) && (!exists))
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> File \"%s\" does not exist as promised", path);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "File \"%s\" does not exist as promised", path);
         goto exit;
     }
 
@@ -242,7 +242,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         char basedir[CF_BUFSIZE];
 
-        CfDebug(" -> Direct file reference %s, no search implied\n", path);
+        CfDebug("Direct file reference %s, no search implied\n", path);
         snprintf(basedir, sizeof(basedir), "%s", path);
 
         if (strcmp(ReadLastNode(basedir), ".") == 0)
@@ -339,7 +339,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
             /* unless child nodes were repaired, set a promise kept class */
             if (!IsDefinedClass(ctx, "repaired" , PromiseGetNamespace(pp)))
             {
-                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> Basedir \"%s\" not promising anything", path);
+                cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Basedir \"%s\" not promising anything", path);
             }
         }
 
@@ -456,7 +456,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             method_deref = edit_bundle_name;
         }        
 
-        Log(LOG_LEVEL_VERBOSE, " -> Handling file edits in edit_line bundle %s\n", method_deref);
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_line bundle %s\n", method_deref);
 
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_line", method_deref)))
@@ -509,7 +509,7 @@ int ScheduleEditOperation(EvalContext *ctx, char *filename, Attributes a, Promis
             method_deref = edit_bundle_name;
         }
         
-        Log(LOG_LEVEL_VERBOSE, " -> Handling file edits in edit_xml bundle %s\n", method_deref);
+        Log(LOG_LEVEL_VERBOSE, "Handling file edits in edit_xml bundle %s\n", method_deref);
 
         Bundle *bp = NULL;
         if ((bp = PolicyGetBundle(policy, NULL, "edit_xml", method_deref)))

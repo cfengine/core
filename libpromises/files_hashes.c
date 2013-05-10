@@ -113,7 +113,7 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
 
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);
@@ -164,7 +164,7 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
 
         if (md == NULL)
         {
-            Log(LOG_LEVEL_INFO, " !! Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
+            Log(LOG_LEVEL_INFO, "Digest type %s not supported by OpenSSL library", CF_DIGEST_TYPES[type][0]);
         }
 
         EVP_DigestInit(&context, md);

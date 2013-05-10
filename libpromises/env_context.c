@@ -193,7 +193,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         {
             if (IsDefinedClass(ctx, ip->name, ns))
             {
-                Log(LOG_LEVEL_ERR, " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -255,7 +255,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                Log(LOG_LEVEL_ERR, " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context_copy);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -339,7 +339,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         {
             if (IsDefinedClass(ctx, ip->name, frame.owner->ns))
             {
-                Log(LOG_LEVEL_ERR, " -> Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
+                Log(LOG_LEVEL_ERR, "Setting abort for \"%s\" when setting \"%s\"", ip->name, context);
                 ABORTBUNDLE = true;
                 break;
             }
@@ -531,7 +531,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
         {
             if (now < state.expires)
             {
-                Log(LOG_LEVEL_VERBOSE, " -> Persisent state %s is already in a preserved state --  %jd minutes to go\n",
+                Log(LOG_LEVEL_VERBOSE, "Persisent state %s is already in a preserved state --  %jd minutes to go\n",
                       name, (intmax_t)((state.expires - now) / 60));
                 CloseDB(dbp);
                 return;
@@ -540,7 +540,7 @@ void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> New persistent state %s\n", name);
+        Log(LOG_LEVEL_VERBOSE, "New persistent state %s\n", name);
     }
 
     state.expires = now + ttl_minutes * 60;
@@ -594,7 +594,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 
     if (!NewDBCursor(dbp, &dbcp))
     {
-        Log(LOG_LEVEL_INFO, " !! Unable to scan persistence cache");
+        Log(LOG_LEVEL_INFO, "Unable to scan persistence cache");
         return;
     }
 
@@ -1256,7 +1256,7 @@ bool EvalContextVariablePut(EvalContext *ctx, VarRef lval, Rval rval, DataType t
 
             if (listvars != NULL)
             {
-                Log(LOG_LEVEL_ERR, " !! Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
+                Log(LOG_LEVEL_ERR, "Redefinition of variable \"%s\" (embedded list in RHS) in context \"%s\"",
                       lval.lval, ScopeGetCurrent()->scope);
             }
 
@@ -1469,7 +1469,7 @@ static void AddAllClasses(EvalContext *ctx, const char *ns, const Rlist *list, b
 
         if (EvalContextHeapContainsHard(ctx, classname))
         {
-            Log(LOG_LEVEL_ERR, " !! You cannot use reserved hard class \"%s\" as post-condition class", classname);
+            Log(LOG_LEVEL_ERR, "You cannot use reserved hard class \"%s\" as post-condition class", classname);
             // TODO: ok.. but should we take any action? continue; maybe?
         }
 
@@ -1514,13 +1514,13 @@ static void DeleteAllClasses(EvalContext *ctx, const Rlist *list)
 
         if (EvalContextHeapContainsHard(ctx, (char *) rp->item))
         {
-            Log(LOG_LEVEL_ERR, " !! You cannot cancel a reserved hard class \"%s\" in post-condition classes",
+            Log(LOG_LEVEL_ERR, "You cannot cancel a reserved hard class \"%s\" in post-condition classes",
                   RlistScalarValue(rp));
         }
 
         const char *string = (char *) (rp->item);
 
-        Log(LOG_LEVEL_VERBOSE, " -> Cancelling class %s\n", string);
+        Log(LOG_LEVEL_VERBOSE, "Cancelling class %s\n", string);
 
         EvalContextHeapPersistentRemove(string);
 
@@ -1668,7 +1668,7 @@ static void SummarizeTransaction(EvalContext *ctx, TransactionContext tc, const 
                 return;
             }
 
-            Log(LOG_LEVEL_VERBOSE, " -> Logging string \"%s\" to %s\n", buffer, logname);
+            Log(LOG_LEVEL_VERBOSE, "Logging string \"%s\" to %s\n", buffer, logname);
             fprintf(fout, "%s\n", buffer);
 
             fclose(fout);

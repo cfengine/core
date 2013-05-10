@@ -42,7 +42,7 @@ int SetServerListenState(ARG_UNUSED EvalContext *ctx, ARG_UNUSED size_t queue_si
 {
     if (!SERVER_LISTEN)
     {
-        Log(LOG_LEVEL_VERBOSE, " !! Disable listening on port is only supported in CFEngine Enterprise");
+        Log(LOG_LEVEL_VERBOSE, "Disable listening on port is only supported in CFEngine Enterprise");
     }
 
     return InitServer(queue_size);
@@ -50,7 +50,7 @@ int SetServerListenState(ARG_UNUSED EvalContext *ctx, ARG_UNUSED size_t queue_si
 
 void TryCollectCall(void)
 {
-    Log(LOG_LEVEL_VERBOSE, " !! Collect calling is only supported in CFEngine Enterprise");
+    Log(LOG_LEVEL_VERBOSE, "Collect calling is only supported in CFEngine Enterprise");
 }
 
 int ReceiveCollectCall(ARG_UNUSED struct ServerConnectionState *conn)

@@ -243,7 +243,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
     {
         if (!ServerConnect(conn, server, fc))
         {
-            Log(LOG_LEVEL_INFO, " !! No server is responding on this port");
+            Log(LOG_LEVEL_INFO, "No server is responding on this port");
 
             DisconnectServer(conn);
 
@@ -261,7 +261,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
         if (!IdentifyAgent(conn->sd))
         {
-            Log(LOG_LEVEL_ERR, " !! Id-authentication for %s failed", VFQNAME);
+            Log(LOG_LEVEL_ERR, "Id-authentication for %s failed", VFQNAME);
             errno = EPERM;
             DisconnectServer(conn);
             *err = -2; // auth err
@@ -270,7 +270,7 @@ static AgentConnection *ServerConnection(const char *server, FileCopy fc, int *e
 
         if (!AuthenticateAgent(conn, fc.trustkey))
         {
-            Log(LOG_LEVEL_ERR, " !! Authentication dialogue with %s failed", server);
+            Log(LOG_LEVEL_ERR, "Authentication dialogue with %s failed", server);
             errno = EPERM;
             DisconnectServer(conn);
             *err = -2; // auth err
@@ -337,7 +337,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
     {
         if (conn->session_key == NULL)
         {
-            Log(LOG_LEVEL_ERR, " !! Cannot do encrypted copy without keys (use cf-key)");
+            Log(LOG_LEVEL_ERR, "Cannot do encrypted copy without keys (use cf-key)");
             return -1;
         }
 
@@ -496,7 +496,7 @@ int cf_remote_stat(char *file, struct stat *buf, char *stattype, bool encrypt, A
         return 0;
     }
 
-    Log(LOG_LEVEL_ERR, " !! Transmission refused or failed statting %s\nGot: %s", file, recvbuffer);
+    Log(LOG_LEVEL_ERR, "Transmission refused or failed statting %s\nGot: %s", file, recvbuffer);
     errno = EPERM;
     return -1;
 }
@@ -516,7 +516,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
 
     if (strlen(dirname) > CF_BUFSIZE - 20)
     {
-        Log(LOG_LEVEL_ERR, " !! Directory name too long");
+        Log(LOG_LEVEL_ERR, "Directory name too long");
         return NULL;
     }
 
@@ -524,7 +524,7 @@ Item *RemoteDirList(const char *dirname, bool encrypt, AgentConnection *conn)
     {
         if (conn->session_key == NULL)
         {
-            Log(LOG_LEVEL_ERR, " !! Cannot do encrypted copy without keys (use cf-key)");
+            Log(LOG_LEVEL_ERR, "Cannot do encrypted copy without keys (use cf-key)");
             return NULL;
         }
 
@@ -720,7 +720,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
     if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            " !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied): %s",
+            "NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied): %s",
             conn->this_server, new, GetErrorStr());
         unlink(new);
         return false;
@@ -812,7 +812,7 @@ int CopyRegularFileNet(char *source, char *new, off_t size, AgentConnection *con
 
         if (!FSWrite(new, dd, buf, n_read))
         {
-            Log(LOG_LEVEL_ERR, " !! Local disk write failed copying %s:%s to %s: %s",
+            Log(LOG_LEVEL_ERR, "Local disk write failed copying %s:%s to %s: %s",
                 conn->this_server, source, new, GetErrorStr());
             if (conn)
             {
@@ -880,7 +880,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
     if ((dd = open(new, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL | O_BINARY, 0600)) == -1)
     {
         Log(LOG_LEVEL_ERR,
-            " !! NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied): %s",
+            "NetCopy to destination %s:%s security - failed attempt to exploit a race? (Not copied): %s",
             conn->this_server, new, GetErrorStr());
         unlink(new);
         return false;
@@ -965,7 +965,7 @@ int EncryptCopyRegularFileNet(char *source, char *new, off_t size, AgentConnecti
 
         if (!FSWrite(new, dd, workbuf, towrite))
         {
-            Log(LOG_LEVEL_ERR, " !! Local disk write failed copying %s:%s to %s: %s",
+            Log(LOG_LEVEL_ERR, "Local disk write failed copying %s:%s to %s: %s",
                 conn->this_server, source, new, GetErrorStr());
             if (conn)
             {
@@ -1050,7 +1050,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
     if ((err = getaddrinfo(host, strport, &query, &response)) != 0)
     {
         Log(LOG_LEVEL_INFO,
-              " !! Unable to find host or service: (%s/%s): %s",
+              "Unable to find host or service: (%s/%s): %s",
               host, strport, gai_strerror(err));
         return false;
     }
@@ -1062,13 +1062,13 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
         getnameinfo(ap->ai_addr, ap->ai_addrlen,
                     txtaddr, sizeof(txtaddr),
                     NULL, 0, NI_NUMERICHOST);
-        Log(LOG_LEVEL_VERBOSE, " -> Connect to %s = %s on port %s",
+        Log(LOG_LEVEL_VERBOSE, "Connect to %s = %s on port %s",
               host, txtaddr, strport);
 
         conn->sd = socket(ap->ai_family, ap->ai_socktype, ap->ai_protocol);
         if (conn->sd == -1)
         {
-            Log(LOG_LEVEL_ERR, " !! Couldn't open a socket: %s", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Couldn't open a socket: %s", GetErrorStr());
             continue;
         }
 
@@ -1085,7 +1085,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
             if ((err) != 0)
             {
                 Log(LOG_LEVEL_ERR,
-                      " !! getaddrinfo: Unable to lookup interface %s to bind: %s",
+                      "getaddrinfo: Unable to lookup interface %s to bind: %s",
                       BINDINTERFACE, gai_strerror(err));
                 cf_closesocket(conn->sd);
                 conn->sd = SOCKET_INVALID;
@@ -1136,7 +1136,7 @@ int ServerConnect(AgentConnection *conn, const char *host, FileCopy fc)
 
     if (!connected)
     {
-        Log(LOG_LEVEL_VERBOSE, " !! Unable to connect to server %s: %s", host, GetErrorStr());
+        Log(LOG_LEVEL_VERBOSE, "Unable to connect to server %s: %s", host, GetErrorStr());
         return false;
     }
 
@@ -1525,13 +1525,13 @@ int TryConnect(AgentConnection *conn, struct timeval *tvp, struct sockaddr *cinp
 
             if (valopt || (res <= 0))
             {
-                Log(LOG_LEVEL_INFO, " !! Error connecting to server (timeout): %s", GetErrorStr());
+                Log(LOG_LEVEL_INFO, "Error connecting to server (timeout): %s", GetErrorStr());
                 return false;
             }
         }
         else
         {
-            Log(LOG_LEVEL_INFO, " !! Error connecting to server: %s", GetErrorStr());
+            Log(LOG_LEVEL_INFO, "Error connecting to server: %s", GetErrorStr());
             return false;
         }
     }

@@ -94,7 +94,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
     DBHandle *db = NULL;
     if (!OpenDB(&db, dbid_lastseen))
     {
-        Log(LOG_LEVEL_ERR, " !! Unable to open last seen db");
+        Log(LOG_LEVEL_ERR, "Unable to open last seen db");
         return;
     }
 
@@ -264,7 +264,7 @@ bool ScanLastSeenQuality(LastSeenQualityCallback callback, void *ctx)
 
     if (!NewDBCursor(db, &cursor))
     {
-        Log(LOG_LEVEL_ERR, " !! Unable to create lastseen database cursor");
+        Log(LOG_LEVEL_ERR, "Unable to create lastseen database cursor");
         CloseDB(db);
         return false;
     }

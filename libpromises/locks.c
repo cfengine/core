@@ -601,7 +601,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     {
         if (IsItemIn(DONELIST, str_digest))
         {
-            Log(LOG_LEVEL_VERBOSE, " -> This promise has already been verified");
+            Log(LOG_LEVEL_VERBOSE, "This promise has already been verified");
             return this;
         }
 
@@ -819,13 +819,13 @@ void PurgeLocks(void)
     {
         if (now - entry.time < SECONDS_PER_WEEK * 4)
         {
-            Log(LOG_LEVEL_VERBOSE, " -> No lock purging scheduled");
+            Log(LOG_LEVEL_VERBOSE, "No lock purging scheduled");
             CloseLock(dbp);
             return;
         }
     }
 
-    Log(LOG_LEVEL_VERBOSE, " -> Looking for stale locks to purge");
+    Log(LOG_LEVEL_VERBOSE, "Looking for stale locks to purge");
 
     if (!NewDBCursor(dbp, &dbcp))
     {

@@ -197,7 +197,7 @@ void Summarize()
     }
 
     
-    Log(LOG_LEVEL_VERBOSE, " -> Host IPs allowed connection access :\n");
+    Log(LOG_LEVEL_VERBOSE, "Host IPs allowed connection access :\n");
 
     for (ip = SV.nonattackerlist; ip != NULL; ip = ip->next)
     {
@@ -766,7 +766,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     
     if (strcmp(type, "literal") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE," -> Looking at literal access promise \"%s\", type %s",pp->promiser, type);
+        Log(LOG_LEVEL_VERBOSE,"Looking at literal access promise \"%s\", type %s",pp->promiser, type);
 
         if (!GetAuthPath(handle, SV.varadmit))
         {
@@ -785,7 +785,7 @@ void KeepLiteralAccessPromise(EvalContext *ctx, Promise *pp, char *type)
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE," -> Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
+        Log(LOG_LEVEL_VERBOSE,"Looking at context/var access promise \"%s\", type %s",pp->promiser, type);
 
         if (!GetAuthPath(pp->promiser, SV.varadmit))
         {

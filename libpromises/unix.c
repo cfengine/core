@@ -174,8 +174,8 @@ int IsExecutable(const char *file)
 
     if (sb.st_mode & 02)
     {
-        Log(LOG_LEVEL_ERR, " !! SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
-        Log(LOG_LEVEL_ERR, " !! SECURITY ALERT: cfengine will not execute this - requires human inspection");
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: promised executable \"%s\" is world writable! ", file);
+        Log(LOG_LEVEL_ERR, "SECURITY ALERT: cfengine will not execute this - requires human inspection");
         return false;
     }
 
@@ -606,7 +606,7 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                 if (strcmp(inet_ntoa(sin->sin_addr), "0.0.0.0") == 0)
                 {
                     // Maybe we need to do something windows specific here?
-                    Log(LOG_LEVEL_VERBOSE, " !! Cannot discover hardware IP, using DNS value");
+                    Log(LOG_LEVEL_VERBOSE, "Cannot discover hardware IP, using DNS value");
                     strcpy(ip, "ipv4_");
                     strcat(ip, VIPADDRESS);
                     AppendItem(&IPADDRESSES, VIPADDRESS, "");
@@ -816,7 +816,7 @@ static void InitIgnoreInterfaces()
 
     if ((fin = fopen(filename,"r")) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> No interface exception file %s",filename);
+        Log(LOG_LEVEL_VERBOSE, "No interface exception file %s",filename);
         return;
     }
     
@@ -844,7 +844,7 @@ static bool IgnoreInterface(char *name)
     {
         if (FullTextMatch(rp->item,name))
         {
-            Log(LOG_LEVEL_VERBOSE, " -> Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
+            Log(LOG_LEVEL_VERBOSE, "Ignoring interface \"%s\" because it matches %s",name,CF_IGNORE_INTERFACES);
             return true;
         }    
     }

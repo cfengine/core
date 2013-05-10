@@ -273,7 +273,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (!NewDBCursor(dbp, &dbcp))
         {
-            Log(LOG_LEVEL_INFO, " !! Unable to scan class db");
+            Log(LOG_LEVEL_INFO, "Unable to scan class db");
             CloseDB(dbp);
             DeleteItemList(list);
             return;

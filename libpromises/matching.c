@@ -439,7 +439,7 @@ int MatchPolicy(const char *camel, const char *haystack, Rlist *insert_match, co
             {
                 if ((rp->next != NULL) || (rp != insert_match))
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple policies conflict with \"exact_match\", using exact match");
+                    Log(LOG_LEVEL_ERR, "Multiple policies conflict with \"exact_match\", using exact match");
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
 

@@ -505,7 +505,7 @@ static const ConstraintSyntax *ConstraintGetSyntax(const Constraint *constraint)
 /*************************************************************************/
 
 /**
- * @return A reference to the full symbol value of the Rval regardless of type, e.g. "foo:bar" -> "foo:bar"
+ * @return A reference to the full symbol value of the Rval regardless of type, e.g. "foo:bar""foo:bar"
  */
 static const char *RvalFullSymbol(const Rval *rval)
 {
@@ -525,7 +525,7 @@ static const char *RvalFullSymbol(const Rval *rval)
 }
 
 /**
- * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar" -> "foo"
+ * @return A copy of the namespace compoent of an Rval, or NULL. e.g. "foo:bar""foo"
  */
 char *QualifiedNameNamespaceComponent(const char *qualified_name)
 {
@@ -543,7 +543,7 @@ char *QualifiedNameNamespaceComponent(const char *qualified_name)
 }
 
 /**
- * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar" -> "bar"
+ * @return A copy of the symbol compoent of an Rval, or NULL. e.g. "foo:bar""bar"
  */
 char *QualifiedNameScopeComponent(const char *qualified_name)
 {
@@ -1765,7 +1765,7 @@ void BundleToString(Writer *writer, Bundle *bundle)
              *
              if (pp->promisee != NULL)
              {
-             fprintf(out, " -> %s", pp->promisee);
+             fprintf(out, "%s", pp->promisee);
              }
              */
 
@@ -2110,7 +2110,7 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
             {
                 if (retval != CF_UNDEFINED)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (boolean) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (boolean) constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2121,7 +2121,7 @@ int PromiseGetConstraintAsBoolean(const EvalContext *ctx, const char *lval, cons
 
             if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
-                Log(LOG_LEVEL_ERR, " !! Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",
+                Log(LOG_LEVEL_ERR, "Type mismatch on rhs - expected type (%c) for boolean constraint \"%s\"\n",
                       cp->rval.type, lval);
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 FatalError(ctx, "Aborted");
@@ -2164,7 +2164,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
             {
                 if (retval != CF_UNDEFINED)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (boolean) body constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (boolean) body constraints break this promise\n", lval);
                 }
             }
             else
@@ -2174,7 +2174,7 @@ int ConstraintsGetAsBoolean(const EvalContext *ctx, const char *lval, const Seq 
 
             if (cp->rval.type != RVAL_TYPE_SCALAR)
             {
-                Log(LOG_LEVEL_ERR, " !! Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",
+                Log(LOG_LEVEL_ERR, "Type mismatch - expected type (%c) for boolean constraint \"%s\"\n",
                       cp->rval.type, lval);
                 FatalError(ctx, "Aborted");
             }
@@ -2216,7 +2216,7 @@ bool PromiseBundleConstraintExists(const EvalContext *ctx, const char *lval, con
             {
                 if (retval != CF_UNDEFINED)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2304,7 +2304,7 @@ int PromiseGetConstraintAsInt(const EvalContext *ctx, const char *lval, const Pr
             {
                 if (retval != CF_NOINT)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (int) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (int) constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2344,7 +2344,7 @@ bool PromiseGetConstraintAsReal(const EvalContext *ctx, const char *lval, const 
             {
                 if (found_constraint)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (real) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (real) constraints break this promise\n", lval);
                 }
             }
             else
@@ -2409,7 +2409,7 @@ mode_t PromiseGetConstraintAsOctal(const EvalContext *ctx, const char *lval, con
             {
                 if (retval != 077)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (int,octal) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (int,octal) constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2463,7 +2463,7 @@ uid_t PromiseGetConstraintAsUid(const EvalContext *ctx, const char *lval, const 
             {
                 if (retval != CF_UNDEFINED)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" (owner/uid) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" (owner/uid) constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2516,7 +2516,7 @@ gid_t PromiseGetConstraintAsGid(const EvalContext *ctx, char *lval, const Promis
             {
                 if (retval != CF_UNDEFINED)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\"  (group/gid) constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\"  (group/gid) constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2558,7 +2558,7 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
             {
                 if (retval != NULL)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Multiple \"%s\" int constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Multiple \"%s\" int constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
             }
@@ -2569,7 +2569,7 @@ Rlist *PromiseGetConstraintAsList(const EvalContext *ctx, const char *lval, cons
 
             if (cp->rval.type != RVAL_TYPE_LIST)
             {
-                Log(LOG_LEVEL_ERR, " !! Type mismatch on rhs - expected type for list constraint \"%s\" \n", lval);
+                Log(LOG_LEVEL_ERR, "Type mismatch on rhs - expected type for list constraint \"%s\" \n", lval);
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 FatalError(ctx, "Aborted");
             }
@@ -2601,7 +2601,7 @@ Constraint *PromiseGetConstraint(const EvalContext *ctx, const Promise *pp, cons
             {
                 if (retval != NULL)
                 {
-                    Log(LOG_LEVEL_ERR, " !! Inconsistent \"%s\" constraints break this promise\n", lval);
+                    Log(LOG_LEVEL_ERR, "Inconsistent \"%s\" constraints break this promise\n", lval);
                     PromiseRef(LOG_LEVEL_ERR, pp);
                 }
 
@@ -2718,7 +2718,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
                 if (strcmp(ptr->classes, PromiseGetBundle(pp)->name) == 0)
                 {
                     Log(LOG_LEVEL_INFO,
-                          " !! insert_lines promise uses the same select_line_matching anchor (\"%s\") as another promise. This will lead to non-convergent behaviour unless \"empty_file_before_editing\" is set.",
+                          "insert_lines promise uses the same select_line_matching anchor (\"%s\") as another promise. This will lead to non-convergent behaviour unless \"empty_file_before_editing\" is set.",
                           sp);
                     PromiseRef(LOG_LEVEL_INFO, pp);
                 }

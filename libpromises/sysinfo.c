@@ -627,11 +627,11 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if (strcmp(zone, "global") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a global solaris zone of name \"%s\"", zone);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, " -> CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
+        Log(LOG_LEVEL_VERBOSE, "CFEngine seems to be running inside a local solaris zone of name \"%s\"", zone);
     }
 #endif
 }
@@ -704,7 +704,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             Rlist *list = NULL;
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
-            CfDebug(" -> Setting new monitoring list %s => %s", name, value);
+            CfDebug("Setting new monitoring list %s => %s", name, value);
             list = RlistParseShown(value);
             ScopeNewSpecialList(ctx, "mon", name, list, DATA_TYPE_STRING_LIST);
 
@@ -721,7 +721,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             {
                 ScopeDeleteSpecialScalar("mon", name);
                 ScopeNewSpecialScalar(ctx, "mon", name, value, DATA_TYPE_STRING);
-                CfDebug(" -> Setting new monitoring scalar %s => %s", name, value);
+                CfDebug("Setting new monitoring scalar %s => %s", name, value);
             }
         }
         else
@@ -1659,7 +1659,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 strcat(classbuf, strminor);
                 EvalContextHeapAddHard(ctx, classbuf);
 
-                Log(LOG_LEVEL_VERBOSE, " -> Discovered SuSE version %s", classbuf);
+                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
@@ -1681,7 +1681,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
                 snprintf(classbuf, CF_MAXVARSIZE, "SuSE_%d", major);
                 SetFlavour(ctx, classbuf);
 
-                Log(LOG_LEVEL_VERBOSE, " -> Discovered SuSE version %s", classbuf);
+                Log(LOG_LEVEL_VERBOSE, "Discovered SuSE version %s", classbuf);
                 return 0;
             }
         }
@@ -2301,10 +2301,10 @@ static void GetCPUInfo(EvalContext *ctx)
 
     if (count < 1)
     {
-        Log(LOG_LEVEL_VERBOSE, " !! invalid processor count: %d\n", count);
+        Log(LOG_LEVEL_VERBOSE, "invalid processor count: %d\n", count);
         return;
     }
-    Log(LOG_LEVEL_VERBOSE, "-> Found %d processor%s\n", count, count > 1 ? "s" : "");
+    Log(LOG_LEVEL_VERBOSE, "Found %d processor%s\n", count, count > 1 ? "s" : "");
 
     if (count == 1) {
         EvalContextHeapAddHard(ctx, buf);  // "1_cpu" from init - change if buf is ever used above

@@ -67,7 +67,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
             return NULL;
         }
 #else
-        Log(LOG_LEVEL_ERR, " !! Cannot edit XML files without LIBXML2\n");
+        Log(LOG_LEVEL_ERR, "Cannot edit XML files without LIBXML2\n");
         free(ec);
         return NULL;
 #endif
@@ -75,7 +75,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (a.edits.empty_before_use)
     {
-        Log(LOG_LEVEL_VERBOSE, " -> Build file model from a blank slate (emptying)\n");
+        Log(LOG_LEVEL_VERBOSE, "Build file model from a blank slate (emptying)\n");
         DeleteItemList(ec->file_start);
         ec->file_start = NULL;
     }
@@ -91,7 +91,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         if (ec && (!CompareToFile(ctx, ec->file_start, ec->filename, a, pp)) && (ec->num_edits > 0))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, " -> Should edit file %s but only a warning promised", ec->filename);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a, "Should edit file %s but only a warning promised", ec->filename);
         }
         return;
     }
@@ -103,18 +103,18 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to file %s need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file %s need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveItemListAsFile(ec->file_start, ec->filename, a))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "-> Edit file %s", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edit file %s", ec->filename);
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "-> Unable to save file %s after editing", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Unable to save file %s after editing", ec->filename);
                 }
             }
         }
@@ -126,14 +126,14 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             {
                 if (ec)
                 {
-                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to xml file %s need saving", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to xml file %s need saving", ec->filename);
                 }
             }
             else
             {
                 if (SaveXmlDocAsFile(ec->xmldoc, ec->filename, a))
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, " -> Edited xml file %s", ec->filename);
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Edited xml file %s", ec->filename);
                 }
                 else
                 {
@@ -142,7 +142,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
             }
             xmlFreeDoc(ec->xmldoc);
 #else
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, " !! Cannot edit XML files without LIBXML2\n");
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Cannot edit XML files without LIBXML2\n");
 #endif
         }
     }
@@ -150,7 +150,7 @@ void FinishEditContext(EvalContext *ctx, EditContext *ec, Attributes a, const Pr
     {
         if (ec)
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, " -> No edit changes to file %s need saving", ec->filename);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No edit changes to file %s need saving", ec->filename);
         }
     }
 

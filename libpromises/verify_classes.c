@@ -99,7 +99,7 @@ void VerifyClassPromise(EvalContext *ctx, Promise *pp, ARG_UNUSED void *param)
         if (!ValidClassName(pp->promiser))
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 " !! Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
+                 "Attempted to name a class \"%s\", which is an illegal class identifier", pp->promiser);
         }
         else
         {
@@ -137,7 +137,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp == NULL)
     {
-        Log(LOG_LEVEL_ERR, " !! EvalClassExpression internal diagnostic discovered an ill-formed condition");
+        Log(LOG_LEVEL_ERR, "EvalClassExpression internal diagnostic discovered an ill-formed condition");
     }
 
     if (!IsDefinedClass(ctx, pp->classes, PromiseGetNamespace(pp)))
@@ -240,7 +240,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            Log(LOG_LEVEL_ERR, " !! No classes to select on RHS");
+            Log(LOG_LEVEL_ERR, "No classes to select on RHS");
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -263,7 +263,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
     if (cp->rval.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_ERR, " !! RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
+        Log(LOG_LEVEL_ERR, "RHS of promise body attribute \"%s\" is not a list\n", cp->lval);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return true;
     }
@@ -278,7 +278,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
             if (result < 0)
             {
-                Log(LOG_LEVEL_ERR, " !! Non-positive integer in class distribution");
+                Log(LOG_LEVEL_ERR, "Non-positive integer in class distribution");
                 PromiseRef(LOG_LEVEL_ERR, pp);
                 return false;
             }
@@ -288,7 +288,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
 
         if (total == 0)
         {
-            Log(LOG_LEVEL_ERR, " !! An empty distribution was specified on RHS");
+            Log(LOG_LEVEL_ERR, "An empty distribution was specified on RHS");
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }

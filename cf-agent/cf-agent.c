@@ -488,19 +488,19 @@ static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv)
 
     for(i = 0; i < argc; i++)
     {
-        CfDebug("Argument %d:\"%s\"\n", i, argv[i]);
+        Log(LOG_LEVEL_DEBUG, "Argument %d:\"%s\"\n", i, argv[i]);
 
         if(strcmp(argv[i], "--policy-server") == 0 || strcmp(argv[i], "-s") == 0)
         {
             policy_server_argnum = i;
-            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server option found at argument %d (%s)\n", 
+            Log(LOG_LEVEL_DEBUG, "TranslateOldBootstrapOptionsSeparate: Policy server option found at argument %d (%s)\n",
                    policy_server_argnum, argv[policy_server_argnum]);
         }
 
         if(strcmp(argv[i], "--bootstrap") == 0 || strcmp(argv[i], "-B") == 0)
         {
             bootstrap_argnum = i;
-            CfDebug("TranslateOldBootstrapOptionsSeparate: Bootstrap option found at argument %d (%s)\n", 
+            Log(LOG_LEVEL_DEBUG, "TranslateOldBootstrapOptionsSeparate: Bootstrap option found at argument %d (%s)\n",
                    bootstrap_argnum, argv[bootstrap_argnum]);
         }
     }
@@ -509,7 +509,7 @@ static char **TranslateOldBootstrapOptionsSeparate(int *argc_new, char **argv)
     {
         if(policy_server_argnum + 1 < argc)
         {
-            CfDebug("TranslateOldBootstrapOptionsSeparate: Policy server address assumed to be at argument %d (%s)\n", 
+            Log(LOG_LEVEL_DEBUG, "TranslateOldBootstrapOptionsSeparate: Policy server address assumed to be at argument %d (%s)\n",
                    server_address_argnum, argv[server_address_argnum]);
 
             server_address_argnum = policy_server_argnum + 1;
@@ -582,7 +582,7 @@ static char **TranslateOldBootstrapOptionsConcatenated(int argc, char **argv)
             printf("!! Rewriting your arguments now, but you need to adjust them as this support will be removed soon.\n");
             printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 
-            CfDebug("TranslateOldBootstrapOptionsConcatenated: Detected old bootstrap option '-Bs', replacing with '-B'\n");
+            Log(LOG_LEVEL_DEBUG, "TranslateOldBootstrapOptionsConcatenated: Detected old bootstrap option '-Bs', replacing with '-B'\n");
             argv_new[i] = xstrdup("-B");
         }
         else

@@ -508,7 +508,7 @@ int CompressPath(char *dest, const char *src)
     int nodelen;
     int rootlen;
 
-    CfDebug("CompressPath(%s,%s)\n", dest, src);
+    Log(LOG_LEVEL_DEBUG, "CompressPath(%s,%s)\n", dest, src);
 
     memset(dest, 0, CF_BUFSIZE);
 
@@ -545,7 +545,7 @@ int CompressPath(char *dest, const char *src)
         {
             if (!ChopLastNode(dest))
             {
-                CfDebug("cfengine: used .. beyond top of filesystem!\n");
+                Log(LOG_LEVEL_DEBUG, "cfengine: used .. beyond top of filesystem!\n");
                 return false;
             }
 

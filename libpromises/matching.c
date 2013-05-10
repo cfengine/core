@@ -194,12 +194,12 @@ char *ExtractFirstReference(const char *regexp, const char *teststring)
 
     if (strlen(backreference) == 0)
     {
-        CfDebug("The regular expression \"%s\" yielded no matching back-reference\n", regexp);
+        Log(LOG_LEVEL_DEBUG, "The regular expression \"%s\" yielded no matching back-reference\n", regexp);
         strncpy(backreference, "CF_NOMATCH", CF_MAXVARSIZE);
     }
     else
     {
-        CfDebug("The regular expression \"%s\" yielded backreference \"%s\" on %s\n", regexp, backreference,
+        Log(LOG_LEVEL_DEBUG, "The regular expression \"%s\" yielded backreference \"%s\" on %s\n", regexp, backreference,
                 teststring);
     }
 
@@ -395,7 +395,7 @@ int IsRegexItemIn(const EvalContext *ctx, Item *list, char *regex)
 
         if ((FullTextMatch(regex, ptr->name)) || (FullTextMatch(ptr->name, regex)))
         {
-            CfDebug("IsRegexItem(%s,%s)\n", regex, ptr->name);
+            Log(LOG_LEVEL_DEBUG, "IsRegexItem(%s,%s)\n", regex, ptr->name);
             return (true);
         }
     }
@@ -549,7 +549,7 @@ int MatchRlistItem(Rlist *listofregex, const char *teststring)
 
         if (FullTextMatch(rp->item, teststring))
         {
-            CfDebug("MatchRlistItem(%s > %s)\n", (char *) rp->item, teststring);
+            Log(LOG_LEVEL_DEBUG, "MatchRlistItem(%s > %s)\n", (char *) rp->item, teststring);
             return true;
         }
     }

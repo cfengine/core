@@ -125,7 +125,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
     int lsea = SECONDS_PER_WEEK;
     time_t now = time(NULL);
 
-    CfDebug("PerformanceEvent(%s,%.1f s)\n", eventname, value);
+    Log(LOG_LEVEL_DEBUG, "PerformanceEvent(%s,%.1f s)\n", eventname, value);
 
     if (!OpenDB(&dbp, dbid_performance))
     {
@@ -158,7 +158,7 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
     if (lastseen > (double) lsea)
     {
-        CfDebug("Performance record %s expired\n", eventname);
+        Log(LOG_LEVEL_DEBUG, "Performance record %s expired\n", eventname);
         DeleteDB(dbp, eventname);
     }
     else
@@ -213,7 +213,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
         {
             if ((IsContextIgnorableForReporting(context)))
             {
-                CfDebug("Ignoring class %s (not packing)", context);
+                Log(LOG_LEVEL_DEBUG, "Ignoring class %s (not packing)", context);
                 continue;
             }
 
@@ -232,7 +232,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
     {
         if (ReadDB(dbp, ip->name, &e, sizeof(e)))
         {
-            CfDebug("FOUND %s with %lf\n", ip->name, e.Q.expect);
+            Log(LOG_LEVEL_DEBUG, "FOUND %s with %lf\n", ip->name, e.Q.expect);
             lastseen = now - e.t;
             newe.t = now;
 
@@ -248,7 +248,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (lastseen > lsea)
         {
-            CfDebug("Class usage record %s expired\n", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", ip->name);
             DeleteDB(dbp, ip->name);
         }
         else
@@ -298,7 +298,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                 if (lastseen > lsea)
                 {
-                    CfDebug("Class usage record %s expired\n", eventname);
+                    Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", eventname);
                     DBCursorDeleteEntry(dbcp);
                 }
                 else if (!IsItemIn(list, eventname))
@@ -309,12 +309,12 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                     if (newe.Q.expect <= 0.0001)
                     {
-                        CfDebug("Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
                         DBCursorDeleteEntry(dbcp);
                     }
                     else
                     {
-                        CfDebug("Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
                         DBCursorWriteEntry(dbcp, &newe, sizeof(newe));
                     }
                 }

@@ -54,7 +54,7 @@ static bool GetLMSensors(double *cf_this);
 
 void MonTempGatherData(double *cf_this)
 {
-    CfDebug("GatherSensorData()\n");
+    Log(LOG_LEVEL_DEBUG, "GatherSensorData()\n");
 
     if (ACPI && GetAcpi(cf_this))
     {
@@ -83,7 +83,7 @@ void MonTempInit(void)
 
     if (stat("/proc/acpi/thermal_zone", &statbuf) != -1)
     {
-        CfDebug("Found an acpi service\n");
+        Log(LOG_LEVEL_DEBUG, "Found an acpi service\n");
         ACPI = true;
     }
 
@@ -91,7 +91,7 @@ void MonTempInit(void)
     {
         if (statbuf.st_mode & 0111)
         {
-            CfDebug("Found an lmsensor system\n");
+            Log(LOG_LEVEL_DEBUG, "Found an lmsensor system\n");
             LMSENSORS = true;
         }
     }
@@ -109,7 +109,7 @@ static bool GetAcpi(double *cf_this)
     char path[CF_BUFSIZE], buf[CF_BUFSIZE], index[4];
     double temp = 0;
 
-    CfDebug("ACPI temperature\n");
+    Log(LOG_LEVEL_DEBUG, "ACPI temperature\n");
 
     if ((dirh = DirOpen("/proc/acpi/thermal_zone")) == NULL)
     {
@@ -163,7 +163,7 @@ static bool GetAcpi(double *cf_this)
                     break;
                 }
 
-                CfDebug("Set temp%d to %lf\n", count, temp);
+                Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf\n", count, temp);
             }
         }
         fclose(fp);
@@ -229,7 +229,7 @@ static bool GetLMSensors(double *cf_this)
 
     if (ListLen(list) > 0)
     {
-        CfDebug("LM Sensors seemed to return ok data\n");
+        Log(LOG_LEVEL_DEBUG, "LM Sensors seemed to return ok data\n");
     }
     else
     {
@@ -264,7 +264,7 @@ static bool GetLMSensors(double *cf_this)
                     break;
                 }
 
-                CfDebug("Set temp%d to %lf from what looks like cpu temperature\n", count, temp);
+                Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf from what looks like cpu temperature\n", count, temp);
             }
         }
     }
@@ -303,7 +303,7 @@ static bool GetLMSensors(double *cf_this)
                     break;
                 }
 
-                CfDebug("Set temp%d to %lf from what looks like core temperatures\n", count, temp);
+                Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf from what looks like core temperatures\n", count, temp);
             }
         }
     }
@@ -319,28 +319,28 @@ static bool GetLMSensors(double *cf_this)
         if (strncmp(ip->name, "CPU Temp:", strlen("CPU Temp:")) == 0)
         {
             sscanf(ip->name, "%*[^:]: %lf", &temp);
-            CfDebug("Setting temp0 to CPU Temp\n");
+            Log(LOG_LEVEL_DEBUG, "Setting temp0 to CPU Temp\n");
             cf_this[ob_temp0] = temp;
         }
 
         if (strncmp(ip->name, "M/B Temp:", strlen("M/B Temp:")) == 0)
         {
             sscanf(ip->name, "%*[^:]: %lf", &temp);
-            CfDebug("Setting temp0 to M/B Temp\n");
+            Log(LOG_LEVEL_DEBUG, "Setting temp0 to M/B Temp\n");
             cf_this[ob_temp1] = temp;
         }
 
         if (strncmp(ip->name, "Sys Temp:", strlen("Sys Temp:")) == 0)
         {
             sscanf(ip->name, "%*[^:]: %lf", &temp);
-            CfDebug("Setting temp0 to Sys Temp\n");
+            Log(LOG_LEVEL_DEBUG, "Setting temp0 to Sys Temp\n");
             cf_this[ob_temp2] = temp;
         }
 
         if (strncmp(ip->name, "AUX Temp:", strlen("AUX Temp:")) == 0)
         {
             sscanf(ip->name, "%*[^:]: %lf", &temp);
-            CfDebug("Setting temp0 to AUX Temp\n");
+            Log(LOG_LEVEL_DEBUG, "Setting temp0 to AUX Temp\n");
             cf_this[ob_temp3] = temp;
         }
     }
@@ -379,7 +379,7 @@ static bool GetLMSensors(double *cf_this)
                     break;
                 }
 
-                CfDebug("Set temp%d to %lf\n", count, temp);
+                Log(LOG_LEVEL_DEBUG, "Set temp%d to %lf\n", count, temp);
             }
         }
     }

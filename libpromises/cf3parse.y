@@ -179,7 +179,7 @@ bodyid_values:         blockid
 typeid:                IDSYNTAX
                        {
                            strncpy(P.blocktype,P.currentid,CF_MAXVARSIZE);
-                           CfDebug("Found block type %s for %s\n",P.blocktype,P.block);
+                           Log(LOG_LEVEL_DEBUG, "Found block type %s for %s\n",P.blocktype,P.block);
 
                            RlistDestroy(P.useargs);
                            P.useargs = NULL;
@@ -191,7 +191,7 @@ blockid:               IDSYNTAX
                        {
                            strncpy(P.blockid,P.currentid,CF_MAXVARSIZE);
                            P.offsets.last_block_id = P.offsets.last_id;
-                           CfDebug("Found identifier %s for %s\n",P.currentid,P.block);
+                           Log(LOG_LEVEL_DEBUG, "Found identifier %s for %s\n",P.currentid,P.block);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -239,12 +239,12 @@ bundlebody:            body_begin
                        {
                            if (RelevantBundle(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype))
                            {
-                               CfDebug("We a compiling everything here\n");
+                               Log(LOG_LEVEL_DEBUG, "We a compiling everything here\n");
                                INSTALL_SKIP = false;
                            }
                            else if (strcmp(CF_AGENTTYPES[THIS_AGENT_TYPE], P.blocktype) != 0)
                            {
-                               CfDebug("This is for a different agent\n");
+                               Log(LOG_LEVEL_DEBUG, "This is for a different agent\n");
                                INSTALL_SKIP = true;
                            }
 
@@ -276,7 +276,7 @@ bundlebody:            body_begin
                            {
                                P.currentbundle->offset.end = P.offsets.current;
                            }
-                           CfDebug("End promise bundle\n\n");
+                           Log(LOG_LEVEL_DEBUG, "End promise bundle\n\n");
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -318,7 +318,7 @@ bundle_statement:      promise_type classpromises_decl
 promise_type:          PROMISE_TYPE             /* BUNDLE ONLY */
                        {
 
-                           CfDebug("\n* Begin new promise type %s in function \n\n",P.currenttype);
+                           Log(LOG_LEVEL_DEBUG, "\n* Begin new promise type %s in function \n\n",P.currenttype);
                            ParserDebug("\tP:%s:%s:%s promise_type = %s\n", P.block, P.blocktype, P.blockid, P.currenttype);
 
                            const PromiseTypeSyntax *promise_type_syntax = PromiseTypeSyntaxGet(P.blocktype, P.currenttype);
@@ -466,7 +466,7 @@ promiser:              QSTRING
                            P.promiser = P.currentstring;
                            P.currentstring = NULL;
                            ParserDebug("\tP:%s:%s:%s:%s:%s promiser = %s\n", P.block, P.blocktype, P.blockid, P.currenttype, P.currentclasses ? P.currentclasses : "any", P.promiser);
-                           CfDebug("Promising object name \'%s\'\n",P.promiser);
+                           Log(LOG_LEVEL_DEBUG, "Promising object name \'%s\'\n",P.promiser);
                        }
                      | error
                        {
@@ -515,7 +515,7 @@ promiser_constraints_decl:      /* empty */
 
 constraints_decl:      constraints
                        {
-                           CfDebug("End full promise with promisee %s\n\n",P.promiser);
+                           Log(LOG_LEVEL_DEBUG, "End full promise with promisee %s\n\n",P.promiser);
 
                            /* Don't free these */
                            strcpy(P.currentid,"");
@@ -627,7 +627,7 @@ constraint_id:         IDSYNTAX                        /* BUNDLE ONLY */
                            strncpy(P.lval,P.currentid,CF_MAXVARSIZE);
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
-                           CfDebug("Recorded LVAL %s\n",P.lval);
+                           Log(LOG_LEVEL_DEBUG, "Recorded LVAL %s\n",P.lval);
                        }
                      | error
                        {
@@ -684,7 +684,7 @@ bodybody:              body_begin
                            {
                                P.currentbody->offset.end = P.offsets.current;
                            }
-                           CfDebug("End promise body\n");
+                           Log(LOG_LEVEL_DEBUG, "End promise body\n");
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -803,7 +803,7 @@ selection_id:          IDSYNTAX
                            }
                            RlistDestroy(P.currentRlist);
                            P.currentRlist = NULL;
-                           CfDebug("Recorded LVAL %s\n",P.lval);
+                           Log(LOG_LEVEL_DEBUG, "Recorded LVAL %s\n",P.lval);
                        }
                      | error
                        {
@@ -864,7 +864,7 @@ class:                 CLASS
 
                            free(literal);
 
-                           CfDebug("  New class context \'%s\' :: \n\n",P.currentclasses);
+                           Log(LOG_LEVEL_DEBUG, "  New class context \'%s\' :: \n\n",P.currentclasses);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -878,20 +878,20 @@ rval:                  IDSYNTAX
                            ParserDebug("\tP:%s:%s:%s:%s id rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
-                           CfDebug("Recorded IDRVAL %s\n", P.currentid);
+                           Log(LOG_LEVEL_DEBUG, "Recorded IDRVAL %s\n", P.currentid);
                        }
                      | BLOCKID
                        {
                            ParserDebug("\tP:%s:%s:%s:%s blockid rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentid);
                            P.rval = (Rval) { xstrdup(P.currentid), RVAL_TYPE_SCALAR };
                            P.references_body = true;
-                           CfDebug("Recorded IDRVAL %s\n", P.currentid);
+                           Log(LOG_LEVEL_DEBUG, "Recorded IDRVAL %s\n", P.currentid);
                        }
                      | QSTRING
                        {
                            ParserDebug("\tP:%s:%s:%s:%s qstring rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
-                           CfDebug("Recorded scalarRVAL %s\n", P.currentstring);
+                           Log(LOG_LEVEL_DEBUG, "Recorded scalarRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
                            P.references_body = false;
@@ -908,7 +908,7 @@ rval:                  IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s nakedvar rval, %s = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.lval, P.currentstring);
                            P.rval = (Rval) { P.currentstring, RVAL_TYPE_SCALAR };
-                           CfDebug("Recorded saclarvariableRVAL %s\n", P.currentstring);
+                           Log(LOG_LEVEL_DEBUG, "Recorded saclarvariableRVAL %s\n", P.currentstring);
 
                            P.currentstring = NULL;
                            P.references_body = false;
@@ -990,7 +990,7 @@ litem:                 IDSYNTAX
 
                      | usefunction
                        {
-                           CfDebug("Install function call as list item from level %d\n",P.arg_nesting+1);
+                           Log(LOG_LEVEL_DEBUG, "Install function call as list item from level %d\n",P.arg_nesting+1);
                            RlistAppendFnCall((Rlist **)&P.currentRlist,(void *)P.currentfncall[P.arg_nesting+1]);
                            FnCallDestroy(P.currentfncall[P.arg_nesting+1]);
                        }
@@ -1006,12 +1006,12 @@ litem:                 IDSYNTAX
 functionid:            IDSYNTAX
                        {
                            ParserDebug("\tP:%s:%s:%s:%s function id = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
-                           CfDebug("Found function identifier %s\n",P.currentid);
+                           Log(LOG_LEVEL_DEBUG, "Found function identifier %s\n",P.currentid);
                        }
                      | BLOCKID
                        {
                            ParserDebug("\tP:%s:%s:%s:%s function blockid = %s\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.currentid);
-                           CfDebug("Found qualified function identifier %s\n",P.currentid);
+                           Log(LOG_LEVEL_DEBUG, "Found qualified function identifier %s\n",P.currentid);
                        }
                      | NAKEDVAR
                        {
@@ -1019,7 +1019,7 @@ functionid:            IDSYNTAX
                            strncpy(P.currentid,P.currentstring,CF_MAXVARSIZE); // Make a var look like an ID
                            free(P.currentstring);
                            P.currentstring = NULL;
-                           CfDebug("Found variable in place of a function identifier %s\n",P.currentid);
+                           Log(LOG_LEVEL_DEBUG, "Found variable in place of a function identifier %s\n",P.currentid);
                        }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1030,7 +1030,7 @@ functionid:            IDSYNTAX
 usefunction:           functionid givearglist
                        {
                            ParserDebug("\tP:%s:%s:%s:%s Finished with function, now at level %d\n", P.block, P.blocktype, P.blockid, P.currentclasses ? P.currentclasses : "any", P.arg_nesting);
-                           CfDebug("Finished with function call, now at level %d\n\n",P.arg_nesting);
+                           Log(LOG_LEVEL_DEBUG, "Finished with function call, now at level %d\n\n",P.arg_nesting);
                        };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -1043,7 +1043,7 @@ givearglist:           OP
                            }
                            P.currentfnid[P.arg_nesting] = xstrdup(P.currentid);
                            ParserDebug("\tP:%s:%s:%s begin givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
-                           CfDebug("Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
+                           Log(LOG_LEVEL_DEBUG, "Start FnCall %s args level %d\n",P.currentfnid[P.arg_nesting],P.arg_nesting);
                        }
 
                        gaitems
@@ -1051,7 +1051,7 @@ givearglist:           OP
                        CP 
                        {
                            ParserDebug("\tP:%s:%s:%s end givearglist for function %s, level %d\n", P.block,P.blocktype,P.blockid, P.currentfnid[P.arg_nesting], P.arg_nesting );
-                           CfDebug("End args level %d\n",P.arg_nesting);
+                           Log(LOG_LEVEL_DEBUG, "End args level %d\n",P.arg_nesting);
                            P.currentfncall[P.arg_nesting] = FnCallNew(P.currentfnid[P.arg_nesting],P.giveargs[P.arg_nesting]);
                            P.giveargs[P.arg_nesting] = NULL;
                            strcpy(P.currentid,"");
@@ -1231,9 +1231,9 @@ static void fatal_yyerror(const char *s)
 
 static void DebugBanner(const char *s)
 {
-    CfDebug("----------------------------------------------------------------\n");
-    CfDebug("  %s                                                            \n", s);
-    CfDebug("----------------------------------------------------------------\n");
+    Log(LOG_LEVEL_DEBUG, "----------------------------------------------------------------\n");
+    Log(LOG_LEVEL_DEBUG, "  %s                                                            \n", s);
+    Log(LOG_LEVEL_DEBUG, "----------------------------------------------------------------\n");
 }
 
 static int RelevantBundle(const char *agent, const char *blocktype)
@@ -1312,7 +1312,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
         {
             if (strcmp(type, CONTROL_BODIES[i].body_type) == 0)
             {
-                CfDebug("Found matching a body matching (%s,%s)\n", type, name);
+                Log(LOG_LEVEL_DEBUG, "Found matching a body matching (%s,%s)\n", type, name);
 
                 const ConstraintSyntax *bs = CONTROL_BODIES[i].constraints;
 
@@ -1320,16 +1320,16 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
                 {
                     if (strcmp(lval, bs[l].lval) == 0)
                     {
-                        CfDebug("Matched syntatically correct body (lval) item = (%s)\n", lval);
+                        Log(LOG_LEVEL_DEBUG, "Matched syntatically correct body (lval) item = (%s)\n", lval);
 
                         if (bs[l].dtype == DATA_TYPE_BODY)
                         {
-                            CfDebug("Constraint syntax ok, but definition of body is elsewhere\n");
+                            Log(LOG_LEVEL_DEBUG, "Constraint syntax ok, but definition of body is elsewhere\n");
                             return SYNTAX_TYPE_MATCH_OK;
                         }
                         else if (bs[l].dtype == DATA_TYPE_BUNDLE)
                         {
-                            CfDebug("Constraint syntax ok, but definition of bundle is elsewhere\n");
+                            Log(LOG_LEVEL_DEBUG, "Constraint syntax ok, but definition of bundle is elsewhere\n");
                             return SYNTAX_TYPE_MATCH_OK;
                         }
                         else
@@ -1346,7 +1346,7 @@ static SyntaxTypeMatch CheckSelection(const char *type, const char *name, const 
     // Now check the functional modules - extra level of indirection
     for (int i = 0; i < CF3_MODULES; i++)
     {
-        CfDebug("Trying function module %d for matching lval %s\n", i, lval);
+        Log(LOG_LEVEL_DEBUG, "Trying function module %d for matching lval %s\n", i, lval);
 
         const PromiseTypeSyntax *promise_type_syntax =  CF_ALL_PROMISE_TYPES[i];
         if (!promise_type_syntax)

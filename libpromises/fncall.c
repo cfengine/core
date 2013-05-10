@@ -49,7 +49,7 @@ bool FnCallIsBuiltIn(Rval rval)
 
     if (FnCallTypeGet(fp->name))
     {
-        CfDebug("%s is a builtin function\n", fp->name);
+        Log(LOG_LEVEL_DEBUG, "%s is a builtin function\n", fp->name);
         return true;
     }
     else
@@ -64,19 +64,19 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 {
     FnCall *fp;
 
-    CfDebug("Installing Function Call %s\n", name);
+    Log(LOG_LEVEL_DEBUG, "Installing Function Call %s\n", name);
 
     fp = xmalloc(sizeof(FnCall));
 
     fp->name = xstrdup(name);
     fp->args = args;
 
-    CfDebug("Installed ");
+    Log(LOG_LEVEL_DEBUG, "Installed ");
     if (DEBUG)
     {
         FnCallShow(stdout, fp);
     }
-    CfDebug("\n\n");
+    Log(LOG_LEVEL_DEBUG, "\n\n");
     return fp;
 }
 
@@ -84,7 +84,7 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 
 FnCall *FnCallCopy(const FnCall *f)
 {
-    CfDebug("CopyFnCall()\n");
+    Log(LOG_LEVEL_DEBUG, "CopyFnCall()\n");
     return FnCallNew(f->name, RlistCopy(f->args));
 }
 
@@ -104,7 +104,7 @@ void FnCallDestroy(FnCall *fp)
 
 FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
 {
-    CfDebug("ExpandFnCall()\n");
+    Log(LOG_LEVEL_DEBUG, "ExpandFnCall()\n");
     return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
 }
 

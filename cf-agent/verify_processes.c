@@ -137,7 +137,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     int matches = 0, do_signals = true, out_of_range, killed = 0, need_to_restart = true;
     Item *killlist = NULL;
 
-    CfDebug("VerifyProcessOp\n");
+    Log(LOG_LEVEL_DEBUG, "VerifyProcessOp\n");
 
     matches = FindPidMatches(procdata, &killlist, a, pp->promiser);
 
@@ -254,7 +254,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
     pid_t pid;
     int killed = false;
 
-    CfDebug("DoSignals(%s)\n", pp->promiser);
+    Log(LOG_LEVEL_DEBUG, "DoSignals(%s)\n", pp->promiser);
 
     if (siglist == NULL)
     {

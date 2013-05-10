@@ -139,7 +139,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
     CF_DB *dbp;
     char buffer[EVP_MAX_MD_SIZE * 4];
 
-    CfDebug("HashChanged: key %s (type=%d) with data %s\n", filename, type, HashPrintSafe(type, digest, buffer));
+    Log(LOG_LEVEL_DEBUG, "HashChanged: key %s (type=%d) with data %s\n", filename, type, HashPrintSafe(type, digest, buffer));
 
     size = FileHashSize(type);
 
@@ -155,7 +155,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
         {
             if (digest[i] != dbdigest[i])
             {
-                CfDebug("Found cryptohash for %s in database but it didn't match\n", filename);
+                Log(LOG_LEVEL_DEBUG, "Found cryptohash for %s in database but it didn't match\n", filename);
 
                 Log(LOG_LEVEL_ERR, "ALERT: Hash (%s) for %s changed!", FileHashName(type), filename);
 
@@ -191,7 +191,7 @@ int FileHashChanged(EvalContext *ctx, char *filename, unsigned char digest[EVP_M
         /* Key was not found, so install it */
         cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_CHANGE, pp, attr, "File %s was not in %s database - new file found", filename,
              FileHashName(type));
-        CfDebug("Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
+        Log(LOG_LEVEL_DEBUG, "Storing checksum for %s in database %s\n", filename, HashPrintSafe(type, digest, buffer));
         WriteHash(dbp, type, filename, digest);
 
         LogHashChange(filename, FILE_STATE_NEW, "New file found", pp);
@@ -206,11 +206,11 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
     unsigned char digest1[EVP_MAX_MD_SIZE + 1] = { 0 }, digest2[EVP_MAX_MD_SIZE + 1] = { 0 };
     int i;
 
-    CfDebug("CompareFileHashes(%s,%s)\n", file1, file2);
+    Log(LOG_LEVEL_DEBUG, "CompareFileHashes(%s,%s)\n", file1, file2);
 
     if (sstat->st_size != dstat->st_size)
     {
-        CfDebug("File sizes differ, no need to compute checksum\n");
+        Log(LOG_LEVEL_DEBUG, "File sizes differ, no need to compute checksum\n");
         return true;
     }
 
@@ -227,7 +227,7 @@ int CompareFileHashes(char *file1, char *file2, struct stat *sstat, struct stat 
             }
         }
 
-        CfDebug("Files were identical\n");
+        Log(LOG_LEVEL_DEBUG, "Files were identical\n");
         return false;           /* only if files are identical */
     }
     else
@@ -241,11 +241,11 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
     int fd1, fd2, bytes1, bytes2;
     char buff1[BUFSIZ], buff2[BUFSIZ];
 
-    CfDebug("CompareBinarySums(%s,%s)\n", file1, file2);
+    Log(LOG_LEVEL_DEBUG, "CompareBinarySums(%s,%s)\n", file1, file2);
 
     if (sstat->st_size != dstat->st_size)
     {
-        CfDebug("File sizes differ, no need to compute checksum\n");
+        Log(LOG_LEVEL_DEBUG, "File sizes differ, no need to compute checksum\n");
         return true;
     }
 
@@ -276,7 +276,7 @@ int CompareBinaryFiles(char *file1, char *file2, struct stat *sstat, struct stat
     }
     else
     {
-        CfDebug("Using network checksum instead\n");
+        Log(LOG_LEVEL_DEBUG, "Using network checksum instead\n");
         return CompareHashNet(file1, file2, fc.encrypt, conn);  /* client.c */
     }
 }

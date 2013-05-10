@@ -1022,13 +1022,13 @@ void PromiseTypeDestroy(PromiseType *promise_type)
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
-    CfDebug("Appending new bundle %s %s (", type, name);
+    Log(LOG_LEVEL_DEBUG, "Appending new bundle %s %s (", type, name);
 
     if (DEBUG)
     {
         RlistShow(stdout, args);
     }
-    CfDebug(")\n");
+    Log(LOG_LEVEL_DEBUG, ")\n");
 
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
 
@@ -1087,7 +1087,7 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 
 PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 {
-    CfDebug("Appending new type section %s\n", name);
+    Log(LOG_LEVEL_DEBUG, "Appending new type section %s\n", name);
 
     if (bundle == NULL)
     {
@@ -1128,7 +1128,7 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
 
 /* Check here for broken promises - or later with more info? */
 
-    CfDebug("Appending Promise from bundle %s %s if context %s\n", type->parent_bundle->name, promiser, classes);
+    Log(LOG_LEVEL_DEBUG, "Appending Promise from bundle %s %s if context %s\n", type->parent_bundle->name, promiser, classes);
 
     Promise *pp = xcalloc(1, sizeof(Promise));
 
@@ -1213,13 +1213,13 @@ static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classe
     switch (rval.type)
     {
     case RVAL_TYPE_SCALAR:
-        CfDebug("   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
+        Log(LOG_LEVEL_DEBUG, "   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
         break;
     case RVAL_TYPE_FNCALL:
-        CfDebug("   Appending a function call to rhs\n");
+        Log(LOG_LEVEL_DEBUG, "   Appending a function call to rhs\n");
         break;
     case RVAL_TYPE_LIST:
-        CfDebug("   Appending a list to rhs\n");
+        Log(LOG_LEVEL_DEBUG, "   Appending a list to rhs\n");
         break;
     default:
         break;
@@ -2736,7 +2736,7 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
 {
-    CfDebug("  Post Check Constraint: %s =>", cp->lval);
+    Log(LOG_LEVEL_DEBUG, "  Post Check Constraint: %s =>", cp->lval);
 
     if (DEBUG)
     {
@@ -2820,7 +2820,7 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
         if (strcmp(cp->lval, CF_COMMON_BODIES[i].lval) == 0)
         {
-            CfDebug("Found a match for lval %s in the common constraint attributes\n", cp->lval);
+            Log(LOG_LEVEL_DEBUG, "Found a match for lval %s in the common constraint attributes\n", cp->lval);
             return CheckConstraintTypeMatch(cp->lval, cp->rval, CF_COMMON_BODIES[i].dtype, CF_COMMON_BODIES[i].range.validation_string, 0);
         }
     }

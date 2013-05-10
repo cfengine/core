@@ -166,15 +166,15 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
 
         if (entrytime < now - horizon)
         {
-            CfDebug("Old entry.\n");
+            Log(LOG_LEVEL_DEBUG, "Old entry.\n");
 
             if (RlistKeyIn(recent, address))
             {
-                CfDebug("There is recent entry for this address. Do nothing.\n");
+                Log(LOG_LEVEL_DEBUG, "There is recent entry for this address. Do nothing.\n");
             }
             else
             {
-                CfDebug("Adding to list of aged hosts.\n");
+                Log(LOG_LEVEL_DEBUG, "Adding to list of aged hosts.\n");
                 RlistPrependScalarIdemp(&aged, address);
             }
         }
@@ -182,15 +182,15 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         {
             Rlist *r;
 
-            CfDebug("Recent entry.\n");
+            Log(LOG_LEVEL_DEBUG, "Recent entry.\n");
 
             if ((r = RlistKeyIn(aged, address)))
             {
-                CfDebug("Purging from list of aged hosts.\n");
+                Log(LOG_LEVEL_DEBUG, "Purging from list of aged hosts.\n");
                 RlistDestroyEntry(&aged, r);
             }
 
-            CfDebug("Adding to list of recent hosts.\n");
+            Log(LOG_LEVEL_DEBUG, "Adding to list of recent hosts.\n");
             RlistPrependScalarIdemp(&recent, address);
         }
     }
@@ -276,7 +276,7 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
     char *policy = RlistScalarValue(finalargs->next);
     char *format = RlistScalarValue(finalargs->next->next);
 
-    CfDebug("Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
+    Log(LOG_LEVEL_DEBUG, "Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
 
     if (!ScanLastSeenQuality(&CallHostsSeenCallback, &addresses))
     {
@@ -289,10 +289,10 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     DeleteItemList(addresses);
 
-    CfDebug(" | Return value:\n");
+    Log(LOG_LEVEL_DEBUG, " | Return value:\n");
     for (Rlist *rp = returnlist; rp; rp = rp->next)
     {
-        CfDebug(" |  %s\n", (char *) rp->item);
+        Log(LOG_LEVEL_DEBUG, " |  %s\n", (char *) rp->item);
     }
 
     if (returnlist == NULL)
@@ -1002,7 +1002,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         val = CF_BUFSIZE - CF_BUFFERMARGIN;
     }
 
-    CfDebug("Want to read %d bytes from port %d at %s\n", val, portnum, hostnameip);
+    Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at %s\n", val, portnum, hostnameip);
 
     conn = NewAgentConn(hostnameip);
 
@@ -1971,7 +1971,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {
-        CfDebug("Want to read %d bytes from port %d at %s\n", val, portnum, (char *) rp->item);
+        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at %s\n", val, portnum, (char *) rp->item);
 
         conn = NewAgentConn(RlistScalarValue(rp));
 
@@ -2425,7 +2425,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     {
         int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
 
-        CfDebug("%s() called: %s %s %s\n", fp->name, (char*) rp->item, found ? "matches" : "does not match", regex);
+        Log(LOG_LEVEL_DEBUG, "%s() called: %s %s %s\n", fp->name, (char*) rp->item, found ? "matches" : "does not match", regex);
 
         if (invert ? !found : found)
         {
@@ -2474,7 +2474,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
 
     if (contextmode)
     {
-        CfDebug("%s() called: found %ld matches for %s; tested %ld\n", fp->name, match_count, regex, total);
+        Log(LOG_LEVEL_DEBUG, "%s() called: found %ld matches for %s; tested %ld\n", fp->name, match_count, regex, total);
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret ? "any" : "!any"), RVAL_TYPE_SCALAR } };
     }
 
@@ -2891,21 +2891,21 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
     {
-        CfDebug("Checking IP Range against RDNS %s\n", VIPADDRESS);
+        Log(LOG_LEVEL_DEBUG, "Checking IP Range against RDNS %s\n", VIPADDRESS);
 
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            CfDebug("IPRange Matched\n");
+            Log(LOG_LEVEL_DEBUG, "IPRange Matched\n");
             strcpy(buffer, "any");
             break;
         }
         else
         {
-            CfDebug("Checking IP Range against iface %s\n", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Checking IP Range against iface %s\n", ip->name);
 
             if (FuzzySetMatch(range, ip->name) == 0)
             {
-                CfDebug("IPRange Matched\n");
+                Log(LOG_LEVEL_DEBUG, "IPRange Matched\n");
                 strcpy(buffer, "any");
                 break;
             }
@@ -3612,7 +3612,7 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
-        CfDebug("%s and %s are numerical\n", argv0, argv1);
+        Log(LOG_LEVEL_DEBUG, "%s and %s are numerical\n", argv0, argv1);
 
         if (!strcmp(fp->name, "isgreaterthan"))
         {
@@ -3639,7 +3639,7 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
     }
     else if (strcmp(argv0, argv1) > 0)
     {
-        CfDebug("%s and %s are NOT numerical\n", argv0, argv1);
+        Log(LOG_LEVEL_DEBUG, "%s and %s are NOT numerical\n", argv0, argv1);
 
         if (!strcmp(fp->name, "isgreaterthan"))
         {
@@ -3796,7 +3796,7 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
+    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
@@ -3874,7 +3874,7 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
+    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
 
     if (now > cftime)
     {
@@ -3923,14 +3923,14 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
     cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    CfDebug("Total negative offset = %.1f minutes\n", (double) (CFSTARTTIME - cftime) / 60.0);
-    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
+    Log(LOG_LEVEL_DEBUG, "Total negative offset = %.1f minutes\n", (double) (CFSTARTTIME - cftime) / 60.0);
+    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
     if (cftime < 0)
     {
-        CfDebug("AGO overflowed, truncating at zero\n");
+        Log(LOG_LEVEL_DEBUG, "AGO overflowed, truncating at zero\n");
         strcpy(buffer, "0");
     }
 
@@ -3996,7 +3996,7 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     cftime = CFSTARTTIME;
 
-    CfDebug("Time computed from input was: %s\n", ctime(&cftime));
+    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
 
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
 
@@ -4055,7 +4055,7 @@ static FnCallResult FnCallReadFile(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 // Read once to validate structure of file in itemlist
 
-    CfDebug("Read string data from file %s (up to %d)\n", filename, maxsize);
+    Log(LOG_LEVEL_DEBUG, "Read string data from file %s (up to %d)\n", filename, maxsize);
 
     contents = CfReadFile(filename, maxsize);
 
@@ -4089,7 +4089,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
 
 // Read once to validate structure of file in itemlist
 
-    CfDebug("Read string data from file %s\n", filename);
+    Log(LOG_LEVEL_DEBUG, "Read string data from file %s\n", filename);
     snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
@@ -4206,11 +4206,11 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
 
 // Read once to validate structure of file in itemlist
 
-    CfDebug("Read string data from file %s - , maxent %d, maxsize %d\n", filename, maxent, maxsize);
+    Log(LOG_LEVEL_DEBUG, "Read string data from file %s - , maxent %d, maxsize %d\n", filename, maxent, maxsize);
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
 
-    CfDebug("FILE: %s\n", file_buffer);
+    Log(LOG_LEVEL_DEBUG, "FILE: %s\n", file_buffer);
 
     if (file_buffer == NULL)
     {
@@ -4309,7 +4309,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
 // Read once to validate structure of file in itemlist
 
-    CfDebug("Parse string data from string %s - , maxent %d, maxsize %d\n", instring, maxent, maxsize);
+    Log(LOG_LEVEL_DEBUG, "Parse string data from string %s - , maxent %d, maxsize %d\n", instring, maxent, maxsize);
 
     if (instring == NULL)
     {
@@ -4694,7 +4694,7 @@ static void *CfReadFile(char *filename, int maxsize)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            CfDebug("Could not examine file %s in readfile on this system", filename);
+            Log(LOG_LEVEL_DEBUG, "Could not examine file %s in readfile on this system", filename);
         }
         else
         {

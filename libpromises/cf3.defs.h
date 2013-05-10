@@ -166,9 +166,6 @@ typedef enum
 
 #define CF_OBSERVABLES 100
 
-/* Output control defines */
-
-#define CfDebug   if (DEBUG) printf
 
 #include "statistics.h"
 

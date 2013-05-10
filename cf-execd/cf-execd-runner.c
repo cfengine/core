@@ -320,7 +320,7 @@ void LocalExec(const ExecConfig *config)
     }
 
     cf_pclose(pp);
-    CfDebug("Closing fp\n");
+    Log(LOG_LEVEL_DEBUG, "Closing fp\n");
     fclose(fp);
 
     Log(LOG_LEVEL_VERBOSE, "Command is complete");
@@ -413,7 +413,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if (statbuf.st_size == 0)
         {
             unlink(file);
-            CfDebug("Nothing to report in %s\n", file);
+            Log(LOG_LEVEL_DEBUG, "Nothing to report in %s\n", file);
             return;
         }
     }
@@ -439,11 +439,11 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (config->mail_max_lines == 0)
     {
-        CfDebug("Not mailing: EmailMaxLines was zero\n");
+        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero\n");
         return;
     }
 
-    CfDebug("Mailing results of (%s) to (%s)\n", file, config->mail_to_address);
+    Log(LOG_LEVEL_DEBUG, "Mailing results of (%s) to (%s)\n", file, config->mail_to_address);
 
 /* Check first for anomalies - for subject header */
 
@@ -504,7 +504,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
     raddr.sin_family = AF_INET;
 
-    CfDebug("Connecting...\n");
+    Log(LOG_LEVEL_DEBUG, "Connecting...\n");
 
     int sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd == -1)
@@ -531,7 +531,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     sprintf(vbuff, "HELO %s\r\n", config->fq_name);
-    CfDebug("%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
 
     if (!Dialogue(sd, vbuff))
     {
@@ -541,12 +541,12 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (strlen(config->mail_from_address) == 0)
     {
         sprintf(vbuff, "MAIL FROM: <cfengine@%s>\r\n", config->fq_name);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
         sprintf(vbuff, "MAIL FROM: <%s>\r\n", config->mail_from_address);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
     if (!Dialogue(sd, vbuff))
@@ -555,7 +555,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     sprintf(vbuff, "RCPT TO: <%s>\r\n", config->mail_to_address);
-    CfDebug("%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
 
     if (!Dialogue(sd, vbuff))
     {
@@ -570,12 +570,12 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (anomaly)
     {
         sprintf(vbuff, "Subject: **!! [%s/%s]\r\n", config->fq_name, config->ip_address);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
         sprintf(vbuff, "Subject: [%s/%s]\r\n", config->fq_name, config->ip_address);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
@@ -588,18 +588,18 @@ static void MailResult(const ExecConfig *config, const char *file)
     if (strlen(config->mail_from_address) == 0)
     {
         sprintf(vbuff, "From: cfengine@%s\r\n", config->fq_name);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
     else
     {
         sprintf(vbuff, "From: %s\r\n", config->mail_from_address);
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     }
 
     send(sd, vbuff, strlen(vbuff), 0);
 
     sprintf(vbuff, "To: %s\r\n\r\n", config->mail_to_address);
-    CfDebug("%s", vbuff);
+    Log(LOG_LEVEL_DEBUG, "%s", vbuff);
     send(sd, vbuff, strlen(vbuff), 0);
 
     int count = 0;
@@ -611,7 +611,7 @@ static void MailResult(const ExecConfig *config, const char *file)
             break;
         }
 
-        CfDebug("%s", vbuff);
+        Log(LOG_LEVEL_DEBUG, "%s", vbuff);
 
         if (strlen(vbuff) > 0)
         {
@@ -631,12 +631,12 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (!Dialogue(sd, ".\r\n"))
     {
-        CfDebug("mail_err\n");
+        Log(LOG_LEVEL_DEBUG, "mail_err\n");
         goto mail_err;
     }
 
     Dialogue(sd, "QUIT\r\n");
-    CfDebug("Done sending mail\n");
+    Log(LOG_LEVEL_DEBUG, "Done sending mail\n");
     fclose(fp);
     cf_closesocket(sd);
     return;
@@ -653,11 +653,11 @@ static int Dialogue(int sd, const char *s)
     if ((s != NULL) && (*s != '\0'))
     {
         int sent = send(sd, s, strlen(s), 0);
-        CfDebug("SENT(%d)->%s", sent, s);
+        Log(LOG_LEVEL_DEBUG, "SENT(%d)->%s", sent, s);
     }
     else
     {
-        CfDebug("Nothing to send .. waiting for opening\n");
+        Log(LOG_LEVEL_DEBUG, "Nothing to send .. waiting for opening\n");
     }
 
     int charpos = 0;
@@ -678,7 +678,7 @@ static int Dialogue(int sd, const char *s)
             rfclinetype = ch;
         }
 
-        CfDebug("%c", ch);
+        Log(LOG_LEVEL_DEBUG, "%c", ch);
 
         if ((ch == '\n') || (ch == '\0'))
         {

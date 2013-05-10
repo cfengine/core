@@ -132,7 +132,7 @@ void MonNetworkSnifferOpen(void)
 void MonNetworkSnifferEnable(bool enable)
 {
     TCPDUMP = enable;
-    CfDebug("use tcpdump = %d\n", TCPDUMP);
+    Log(LOG_LEVEL_DEBUG, "use tcpdump = %d\n", TCPDUMP);
 }
 
 /******************************************************************************/
@@ -179,7 +179,7 @@ static void Sniff(long iteration, double *cf_this)
 
         if (strstr(tcpbuffer, "tcpdump:"))      /* Error message protect sleeptime */
         {
-            CfDebug("Error - (%s)\n", tcpbuffer);
+            Log(LOG_LEVEL_DEBUG, "Error - (%s)\n", tcpbuffer);
             alarm(0);
             TCPDUMP = false;
             break;
@@ -264,7 +264,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         switch (flag)
         {
         case 'S':
-            CfDebug("%ld: TCP new connection from %s to %s - i am %s\n", iteration, src, dest, VIPADDRESS);
+            Log(LOG_LEVEL_DEBUG, "%ld: TCP new connection from %s to %s - i am %s\n", iteration, src, dest, VIPADDRESS);
             if (isme_dest)
             {
                 cf_this[ob_tcpsyn_in]++;
@@ -278,7 +278,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             break;
 
         case 'F':
-            CfDebug("%ld: TCP end connection from %s to %s\n", iteration, src, dest);
+            Log(LOG_LEVEL_DEBUG, "%ld: TCP end connection from %s to %s\n", iteration, src, dest);
             if (isme_dest)
             {
                 cf_this[ob_tcpfin_in]++;
@@ -292,7 +292,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
             break;
 
         default:
-            CfDebug("%ld: TCP established from %s to %s\n", iteration, src, dest);
+            Log(LOG_LEVEL_DEBUG, "%ld: TCP established from %s to %s\n", iteration, src, dest);
 
             if (isme_dest)
             {
@@ -315,7 +315,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         isme_dest = IsInterfaceAddress(dest);
         isme_src = IsInterfaceAddress(src);
 
-        CfDebug("%ld: DNS packet from %s to %s\n", iteration, src, dest);
+        Log(LOG_LEVEL_DEBUG, "%ld: DNS packet from %s to %s\n", iteration, src, dest);
         if (isme_dest)
         {
             cf_this[ob_dns_in]++;
@@ -335,7 +335,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         isme_dest = IsInterfaceAddress(dest);
         isme_src = IsInterfaceAddress(src);
 
-        CfDebug("%ld: UDP packet from %s to %s\n", iteration, src, dest);
+        Log(LOG_LEVEL_DEBUG, "%ld: UDP packet from %s to %s\n", iteration, src, dest);
         if (isme_dest)
         {
             cf_this[ob_udp_in]++;
@@ -355,7 +355,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
         isme_dest = IsInterfaceAddress(dest);
         isme_src = IsInterfaceAddress(src);
 
-        CfDebug("%ld: ICMP packet from %s to %s\n", iteration, src, dest);
+        Log(LOG_LEVEL_DEBUG, "%ld: ICMP packet from %s to %s\n", iteration, src, dest);
 
         if (isme_dest)
         {
@@ -370,7 +370,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
     }
     else
     {
-        CfDebug("%ld: Miscellaneous undirected packet (%.100s)\n", iteration, arrival);
+        Log(LOG_LEVEL_DEBUG, "%ld: Miscellaneous undirected packet (%.100s)\n", iteration, arrival);
 
         cf_this[ob_tcpmisc_in]++;
 
@@ -380,7 +380,7 @@ static void AnalyzeArrival(long iteration, char *arrival, double *cf_this)
 
         if (!isdigit((int) *src))
         {
-            CfDebug("Assuming continuation line...\n");
+            Log(LOG_LEVEL_DEBUG, "Assuming continuation line...\n");
             return;
         }
 
@@ -456,7 +456,7 @@ void MonNetworkSnifferGatherData(void)
         double entropy;
         time_t now = time(NULL);
 
-        CfDebug("save incoming %s\n", TCPNAMES[i]);
+        Log(LOG_LEVEL_DEBUG, "save incoming %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, TCPNAMES[i]);
 
         if (stat(vbuff, &statbuf) != -1)
@@ -484,7 +484,7 @@ void MonNetworkSnifferGatherData(void)
         double entropy;
         time_t now = time(NULL);
 
-        CfDebug("save outgoing %s\n", TCPNAMES[i]);
+        Log(LOG_LEVEL_DEBUG, "save outgoing %s\n", TCPNAMES[i]);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, TCPNAMES[i]);
 
         if (stat(vbuff, &statbuf) != -1)

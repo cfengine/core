@@ -45,7 +45,7 @@ int FixCompressedArrayValue(int i, char *value, CompressedArray **start)
         }
     }
 
-    CfDebug("FixCompressedArrayValue(%d,%s)\n", i, value);
+    Log(LOG_LEVEL_DEBUG, "FixCompressedArrayValue(%d,%s)\n", i, value);
 
     ap = xmalloc(sizeof(CompressedArray));
 
@@ -80,7 +80,7 @@ int CompressedArrayElementExists(CompressedArray *start, int key)
 {
     CompressedArray *ap;
 
-    CfDebug("CompressedArrayElementExists(%d)\n", key);
+    Log(LOG_LEVEL_DEBUG, "CompressedArrayElementExists(%d)\n", key);
 
     for (ap = start; ap != NULL; ap = ap->next)
     {

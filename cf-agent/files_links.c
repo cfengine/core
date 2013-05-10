@@ -63,7 +63,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
     char to[CF_BUFSIZE], linkbuf[CF_BUFSIZE], absto[CF_BUFSIZE];
     struct stat sb;
 
-    CfDebug("Linkfiles(%s -> %s)\n", destination, source);
+    Log(LOG_LEVEL_DEBUG, "Linkfiles(%s -> %s)\n", destination, source);
 
     memset(to, 0, CF_BUFSIZE);
 
@@ -78,9 +78,9 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
     {
-        CfDebug("Relative link destination detected: %s\n", to);
+        Log(LOG_LEVEL_DEBUG, "Relative link destination detected: %s\n", to);
         strcpy(absto, AbsLinkPath(destination, to));
-        CfDebug("Absolute path to relative link = %s, destination %s\n", absto, destination);
+        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link = %s, destination %s\n", absto, destination);
     }
     else
     {
@@ -91,7 +91,7 @@ PromiseResult VerifyLink(EvalContext *ctx, char *destination, const char *source
 
     if (stat(absto, &sb) == -1)
     {
-        CfDebug("No source file\n");
+        Log(LOG_LEVEL_DEBUG, "No source file\n");
         source_file_exists = false;
     }
 
@@ -190,7 +190,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
     char expand[CF_BUFSIZE];
     char linkto[CF_BUFSIZE];
 
-    CfDebug("VerifyAbsoluteLink(%s,%s)\n", destination, source);
+    Log(LOG_LEVEL_DEBUG, "VerifyAbsoluteLink(%s,%s)\n", destination, source);
 
     if (*source == '.')
     {
@@ -218,7 +218,7 @@ PromiseResult VerifyAbsoluteLink(EvalContext *ctx, char *destination, const char
         }
         else
         {
-            CfDebug("ExpandLinks returned %s\n", expand);
+            Log(LOG_LEVEL_DEBUG, "ExpandLinks returned %s\n", expand);
         }
     }
     else
@@ -239,7 +239,7 @@ PromiseResult VerifyRelativeLink(EvalContext *ctx, char *destination, const char
     char buff[CF_BUFSIZE], linkto[CF_BUFSIZE], add[CF_BUFSIZE];
     int levels = 0;
 
-    CfDebug("RelativeLink(%s,%s)\n", destination, source);
+    Log(LOG_LEVEL_DEBUG, "RelativeLink(%s,%s)\n", destination, source);
 
     if (*source == '.')
     {
@@ -327,9 +327,9 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
 
     if (!IsAbsoluteFileName(to))        /* relative path, must still check if exists */
     {
-        CfDebug("Relative link destination detected: %s\n", to);
+        Log(LOG_LEVEL_DEBUG, "Relative link destination detected: %s\n", to);
         strcpy(absto, AbsLinkPath(destination, to));
-        CfDebug("Absolute path to relative link = %s, destination %s\n", absto, destination);
+        Log(LOG_LEVEL_DEBUG, "Absolute path to relative link = %s, destination %s\n", absto, destination);
     }
     else
     {
@@ -349,7 +349,7 @@ PromiseResult VerifyHardLink(EvalContext *ctx, char *destination, const char *so
         return PROMISE_RESULT_WARN;
     }
 
-    CfDebug("Trying to (hard) link %s -> %s\n", destination, to);
+    Log(LOG_LEVEL_DEBUG, "Trying to (hard) link %s -> %s\n", destination, to);
 
     if (stat(destination, &dsb) == -1)
     {
@@ -410,7 +410,7 @@ int KillGhostLink(EvalContext *ctx, const char *name, Attributes attr, const Pro
     char linkpath[CF_BUFSIZE], *sp;
     struct stat statbuf;
 
-    CfDebug("KillGhostLink(%s)\n", name);
+    Log(LOG_LEVEL_DEBUG, "KillGhostLink(%s)\n", name);
 
     memset(linkbuf, 0, CF_BUFSIZE);
     memset(linkpath, 0, CF_BUFSIZE);
@@ -619,7 +619,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
                     if (strcmp(dest, from) == 0)
                     {
-                        CfDebug("No links to be expanded\n");
+                        Log(LOG_LEVEL_DEBUG, "No links to be expanded\n");
                         return true;
                     }
 
@@ -637,7 +637,7 @@ int ExpandLinks(char *dest, const char *from, int level)
 
                     if (strcmp(dest, from) == 0)
                     {
-                        CfDebug("No links to be expanded\n");
+                        Log(LOG_LEVEL_DEBUG, "No links to be expanded\n");
                         return true;
                     }
 
@@ -707,6 +707,6 @@ static char *AbsLinkPath(const char *from, const char *relto)
     }
 
     strcat(destination, sp);
-    CfDebug("Reconstructed absolute linkname = %s\n", destination);
+    Log(LOG_LEVEL_DEBUG, "Reconstructed absolute linkname = %s\n", destination);
     return destination;
 }

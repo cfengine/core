@@ -131,7 +131,7 @@ bool IsCf3VarString(const char *str)
     int dollar = false;
     int bracks = 0, vars = 0;
 
-    CfDebug("IsCf3VarString(%s) - syntax verify\n", str);
+    Log(LOG_LEVEL_DEBUG, "IsCf3VarString(%s) - syntax verify\n", str);
 
     if (str == NULL)
     {
@@ -201,7 +201,7 @@ bool IsCf3VarString(const char *str)
         return false;
     }
 
-    CfDebug("Found %d variables in (%s)\n", vars, str);
+    Log(LOG_LEVEL_DEBUG, "Found %d variables in (%s)\n", vars, str);
     return vars;
 }
 
@@ -214,7 +214,7 @@ static int IsCf3Scalar(char *str)
     int dollar = false;
     int bracks = 0, vars = 0;
 
-    CfDebug("IsCf3Scalar(%s) - syntax verify\n", str);
+    Log(LOG_LEVEL_DEBUG, "IsCf3Scalar(%s) - syntax verify\n", str);
 
     if (str == NULL)
     {
@@ -283,7 +283,7 @@ static int IsCf3Scalar(char *str)
         return false;
     }
 
-    CfDebug("Found %d variables in (%s)\n", vars, str);
+    Log(LOG_LEVEL_DEBUG, "Found %d variables in (%s)\n", vars, str);
     return vars;
 }
 
@@ -294,7 +294,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
     const char *sp;
     int bracks = 1;
 
-    CfDebug("ExtractInnerVarString( %s ) - syntax verify\n", str);
+    Log(LOG_LEVEL_DEBUG, "ExtractInnerVarString( %s ) - syntax verify\n", str);
 
     if (str == NULL || strlen(str) == 0)
     {
@@ -329,8 +329,8 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
             }
             else
             {
-                CfDebug("Illegal character found: '%c'\n", *sp);
-                CfDebug("Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
+                Log(LOG_LEVEL_DEBUG, "Illegal character found: '%c'\n", *sp);
+                Log(LOG_LEVEL_DEBUG, "Illegal character somewhere in variable \"%s\" or nested expansion\n", str);
             }
         }
 
@@ -346,7 +346,7 @@ const char *ExtractInnerCf3VarString(const char *str, char *substr)
                 return NULL;
             }
 
-            CfDebug("Returning substring value %s\n", substr);
+            Log(LOG_LEVEL_DEBUG, "Returning substring value %s\n", substr);
             return substr;
         }
     }
@@ -375,7 +375,7 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
     int dollar = false;
     int bracks = 0, onebrack = false;
 
-    CfDebug("ExtractOuterVarString(\"%s\") - syntax verify\n", str);
+    Log(LOG_LEVEL_DEBUG, "ExtractOuterVarString(\"%s\") - syntax verify\n", str);
 
     memset(substr, 0, CF_BUFSIZE);
 
@@ -409,7 +409,7 @@ const char *ExtractOuterCf3VarString(const char *str, char *substr)
         if (dollar && (bracks == 0) && onebrack)
         {
             strncpy(substr, str, sp - str + 1);
-            CfDebug("Extracted outer variable |%s|\n", substr);
+            Log(LOG_LEVEL_DEBUG, "Extracted outer variable |%s|\n", substr);
             return substr;
         }
     }

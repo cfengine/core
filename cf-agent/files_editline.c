@@ -857,7 +857,7 @@ static int DeletePromisedLinesMatching(EvalContext *ctx, Item **start, Item *beg
         }
         else
         {
-            CfDebug("Multi-line region didn't match text in the file");
+            Log(LOG_LEVEL_DEBUG, "Multi-line region didn't match text in the file");
         }
 
         if (!SelectLine(ip->name, a))       // Start search from location

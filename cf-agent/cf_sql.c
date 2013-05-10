@@ -410,7 +410,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
     cfdb->maxcolumns = 0;
     cfdb->maxrows = 0;
 
-    CfDebug("Before Query succeeded: %s - %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
+    Log(LOG_LEVEL_DEBUG, "Before Query succeeded: %s - %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
 
     switch (cfdb->type)
     {
@@ -427,7 +427,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
         break;
     }
 
-    CfDebug("Query succeeded: (%s) %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
+    Log(LOG_LEVEL_DEBUG, "Query succeeded: (%s) %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
 }
 
 /*****************************************************************************/

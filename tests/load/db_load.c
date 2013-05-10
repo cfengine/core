@@ -24,7 +24,7 @@
 #define VALUE_OFFSET2 100000
 
 
-int DEBUG = false;  // wether or not to get output from CfDebug()
+int DEBUG = false;
 char CFWORKDIR[CF_BUFSIZE];
 
 static bool CoinFlip(void);

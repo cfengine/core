@@ -406,7 +406,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
         Rlist *rp;
         Mount *entry;
 
-        CfDebug("[%s is on a different file system, not descending]\n", dir);
+        Log(LOG_LEVEL_DEBUG, "[%s is on a different file system, not descending]\n", dir);
 
         for (rp = MOUNTEDFSLIST; rp != NULL; rp = rp->next)
         {
@@ -422,7 +422,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
         }
     }
 
-    CfDebug("NotMountedFileSystem\n");
+    Log(LOG_LEVEL_DEBUG, "NotMountedFileSystem\n");
     return (false);
 }
 

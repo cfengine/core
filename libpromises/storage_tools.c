@@ -93,7 +93,7 @@ off_t GetDiskUsage(char *file, enum cfsizes type)
 
     capacity = (double) (avail) / (double) (avail + used) * 100;
 
-    CfDebug("GetDiskUsage(%s) = %" PRIdMAX "/%" PRIdMAX "\n", file, (intmax_t) avail, (intmax_t) capacity);
+    Log(LOG_LEVEL_DEBUG, "GetDiskUsage(%s) = %" PRIdMAX "/%" PRIdMAX "\n", file, (intmax_t) avail, (intmax_t) capacity);
 
     if (type == cfabs)
     {

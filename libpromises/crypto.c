@@ -67,7 +67,7 @@ static void RandomSeed(void)
     char vbuff[CF_BUFSIZE];
 
 /* Use the system database as the entropy source for random numbers */
-    CfDebug("RandomSeed() work directory is %s\n", CFWORKDIR);
+    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is %s\n", CFWORKDIR);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
 
@@ -203,7 +203,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", username, digest);
 
-    CfDebug("HavePublickey(%s)\n", keyname);
+    Log(LOG_LEVEL_DEBUG, "HavePublickey(%s)\n", keyname);
 
     snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(newname);
@@ -218,7 +218,7 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
         if (stat(oldname, &statbuf) == -1)
         {
-            CfDebug("Did not have old-style key %s\n", oldname);
+            Log(LOG_LEVEL_DEBUG, "Did not have old-style key %s\n", oldname);
             return NULL;
         }
 
@@ -378,7 +378,7 @@ void DebugBinOut(char *buffer, int len, char *comment)
 
     if (len >= (sizeof(buf) / 2))       // hex uses two chars per byte
     {
-        CfDebug("Debug binary print is too large (len=%d)", len);
+        Log(LOG_LEVEL_DEBUG, "Debug binary print is too large (len=%d)", len);
         return;
     }
 

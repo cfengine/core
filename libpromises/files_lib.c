@@ -261,7 +261,7 @@ int MakeParentDirectory(char *parentandchild, int force)
     char *tmpstr;
 #endif
 
-    CfDebug("Trying to create a parent directory for %s%s\n", parentandchild, force ? " (force applied)" : "");
+    Log(LOG_LEVEL_DEBUG, "Trying to create a parent directory for %s%s\n", parentandchild, force ? " (force applied)" : "");
 
     if (!IsAbsoluteFileName(parentandchild))
     {
@@ -430,7 +430,7 @@ int MakeParentDirectory(char *parentandchild, int force)
         }
     }
 
-    CfDebug("Directory for %s exists. Okay\n", parentandchild);
+    Log(LOG_LEVEL_DEBUG, "Directory for %s exists. Okay\n", parentandchild);
     return (true);
 }
 
@@ -630,7 +630,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.gz", name, i);
@@ -638,7 +638,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.Z", name, i);
@@ -646,7 +646,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.bz", name, i);
@@ -654,7 +654,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
         }
 
         snprintf(from, CF_BUFSIZE, "%s.%d.bz2", name, i);
@@ -662,7 +662,7 @@ void RotateFiles(char *name, int number)
 
         if (rename(from, to) == -1)
         {
-            CfDebug("Rename failed in RotateFiles %s -> %s\n", name, from);
+            Log(LOG_LEVEL_DEBUG, "Rename failed in RotateFiles %s -> %s\n", name, from);
         }
     }
 
@@ -670,7 +670,7 @@ void RotateFiles(char *name, int number)
 
     if (CopyRegularFileDisk(name, to) == false)
     {
-        CfDebug("cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
+        Log(LOG_LEVEL_DEBUG, "cfengine: copy failed in RotateFiles %s -> %s\n", name, to);
         return;
     }
 
@@ -707,7 +707,7 @@ void CreateEmptyFile(char *name)
     {
         if (errno != ENOENT)
         {
-            CfDebug("Unable to remove existing file %s: %s\n", name, strerror(errno));
+            Log(LOG_LEVEL_DEBUG, "Unable to remove existing file %s: %s\n", name, strerror(errno));
         }
     }
 

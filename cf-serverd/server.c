@@ -250,7 +250,7 @@ void PurgeOldConnections(Item **list, time_t now)
     Item *ip;
     int then = 0;
 
-    CfDebug("Purging Old Connections...\n");
+    Log(LOG_LEVEL_DEBUG, "Purging Old Connections...\n");
 
     if (!ThreadLock(cft_count))
     {
@@ -283,7 +283,7 @@ void PurgeOldConnections(Item **list, time_t now)
         return;
     }
 
-    CfDebug("Done purging\n");
+    Log(LOG_LEVEL_DEBUG, "Done purging\n");
 }
 
 /*********************************************************************/
@@ -437,11 +437,11 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
 
     if (strlen(recvbuffer) == 0)
     {
-        CfDebug("cf-serverd terminating NULL transmission!\n");
+        Log(LOG_LEVEL_DEBUG, "cf-serverd terminating NULL transmission!\n");
         return false;
     }
 
-    CfDebug(" * Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
+    Log(LOG_LEVEL_DEBUG, " * Received: [%s] on socket %d\n", recvbuffer, conn->sd_reply);
 
     switch (GetCommand(recvbuffer))
     {
@@ -607,8 +607,8 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
             get_args.buf_size = 2048;
         }
 
-        CfDebug("Confirm decryption, and thus validity of caller\n");
-        CfDebug("SGET %s with blocksize %d\n", filename, get_args.buf_size);
+        Log(LOG_LEVEL_DEBUG, "Confirm decryption, and thus validity of caller\n");
+        Log(LOG_LEVEL_DEBUG, "SGET %s with blocksize %d\n", filename, get_args.buf_size);
 
         if (!conn->id_verified)
         {
@@ -789,7 +789,7 @@ static int BusyWithConnection(EvalContext *ctx, ServerConnectionState *conn)
         }
         else
         {
-            CfDebug("Clocks were off by %ld\n", (long) tloc - (long) trem);
+            Log(LOG_LEVEL_DEBUG, "Clocks were off by %ld\n", (long) tloc - (long) trem);
             StatFile(conn, sendbuffer, filename);
         }
 
@@ -1020,7 +1020,7 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
     Item *classlist = NULL, *ip;
     int count = 0;
 
-    CfDebug("Match classes\n");
+    Log(LOG_LEVEL_DEBUG, "Match classes\n");
 
     while (true && (count < 10))        /* arbitrary check to avoid infinite loop, DoS attack */
     {
@@ -1032,13 +1032,13 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
             return false;
         }
 
-        CfDebug("Got class buffer %s\n", recvbuffer);
+        Log(LOG_LEVEL_DEBUG, "Got class buffer %s\n", recvbuffer);
 
         if (strncmp(recvbuffer, CFD_TERMINATOR, strlen(CFD_TERMINATOR)) == 0)
         {
             if (count == 1)
             {
-                CfDebug("No classes were sent, assuming no restrictions...\n");
+                Log(LOG_LEVEL_DEBUG, "No classes were sent, assuming no restrictions...\n");
                 return true;
             }
 
@@ -1053,21 +1053,21 @@ static int MatchClasses(EvalContext *ctx, ServerConnectionState *conn)
 
             if (IsDefinedClass(ctx, ip->name, NULL))
             {
-                CfDebug("Class %s matched, accepting...\n", ip->name);
+                Log(LOG_LEVEL_DEBUG, "Class %s matched, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
 
             if (EvalContextHeapMatchCountSoft(ctx, ip->name) > 0)
             {
-                CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
+                Log(LOG_LEVEL_DEBUG, "Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
 
             if (EvalContextHeapMatchCountHard(ctx, ip->name))
             {
-                CfDebug("Class matched regular expression %s, accepting...\n", ip->name);
+                Log(LOG_LEVEL_DEBUG, "Class matched regular expression %s, accepting...\n", ip->name);
                 DeleteItemList(classlist);
                 return true;
             }
@@ -1258,7 +1258,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     char dns_assert[CF_MAXVARSIZE], ip_assert[CF_MAXVARSIZE];
     int matched = false;
 
-    CfDebug("Connecting host identifies itself as %s\n", buf);
+    Log(LOG_LEVEL_DEBUG, "Connecting host identifies itself as %s\n", buf);
 
     memset(ipstring, 0, CF_MAXVARSIZE);
     memset(fqname, 0, CF_MAXVARSIZE);
@@ -1266,7 +1266,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
     sscanf(buf, "%255s %255s %255s", ipstring, fqname, username);
 
-    CfDebug("(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",
+    Log(LOG_LEVEL_DEBUG, "(ipstring=[%s],fqname=[%s],username=[%s],socket=[%s])\n",
             ipstring, fqname, username, conn->ipaddr);
 
     strlcpy(dns_assert, fqname, CF_MAXVARSIZE);
@@ -1347,7 +1347,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
     Log(LOG_LEVEL_VERBOSE, "Socket originates from %s=%s",
           ip_assert, dns_assert);
 
-    CfDebug("Attempting to verify honesty by looking up hostname (%s)\n",
+    Log(LOG_LEVEL_DEBUG, "Attempting to verify honesty by looking up hostname (%s)\n",
             dns_assert);
 
 /* Do a reverse DNS lookup, like tcp wrappers to see if hostname matches IP */
@@ -1377,7 +1377,7 @@ static int VerifyConnection(ServerConnectionState *conn, char buf[CF_BUFSIZE])
 
             if (strcmp(MapAddress(conn->ipaddr), txtaddr) == 0)
             {
-                CfDebug("Found match\n");
+                Log(LOG_LEVEL_DEBUG, "Found match\n");
                 matched = true;
             }
         }
@@ -1495,7 +1495,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
     char translated_req_path[CF_BUFSIZE];
     char transpath[CF_BUFSIZE];
 
-    CfDebug("AccessControl(%s)\n", req_path);
+    Log(LOG_LEVEL_DEBUG, "AccessControl(%s)\n", req_path);
 
 /*
  * /var/cfengine -> $workdir translation.
@@ -1519,7 +1519,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
         return false;
     }
 
-    CfDebug("AccessControl, match(%s,%s) encrypt request=%d\n", transrequest, conn->hostname, encrypt);
+    Log(LOG_LEVEL_DEBUG, "AccessControl, match(%s,%s) encrypt request=%d\n", transrequest, conn->hostname, encrypt);
 
     if (SV.admit == NULL)
     {
@@ -1533,7 +1533,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
     {
         int res = false;
 
-        CfDebug("Examining rule in access list (%s,%s)?\n", transrequest, ap->path);
+        Log(LOG_LEVEL_DEBUG, "Examining rule in access list (%s,%s)?\n", transrequest, ap->path);
 
         strncpy(transpath, ap->path, CF_BUFSIZE - 1);
         MapName(transpath);
@@ -1575,7 +1575,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
             }
             else
             {
-                CfDebug("Checking whether to map root privileges..\n");
+                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..\n");
 
                 if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
@@ -1587,7 +1587,7 @@ static int AccessControl(EvalContext *ctx, const char *req_path, ServerConnectio
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
-                    CfDebug("Access privileges - match found\n");
+                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
                 }
             }
             break;
@@ -1654,7 +1654,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
         sscanf(in, "QUERY %128s", name);
     }
 
-    CfDebug("\n\nLiteralAccessControl(%s)\n", name);
+    Log(LOG_LEVEL_DEBUG, "\n\nLiteralAccessControl(%s)\n", name);
 
     conn->maproot = false;
 
@@ -1690,7 +1690,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
             }
             else
             {
-                CfDebug("Checking whether to map root privileges..\n");
+                Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..\n");
 
                 if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr))) || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
                 {
@@ -1706,7 +1706,7 @@ static int LiteralAccessControl(EvalContext *ctx, char *in, ServerConnectionStat
                     || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                 {
                     access = true;
-                    CfDebug("Access privileges - match found\n");
+                    Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
                 }
             }
         }
@@ -1768,7 +1768,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
 
     sscanf(in, "CONTEXT %255[^\n]", client_regex);
 
-    CfDebug("\n\nContextAccessControl(%s)\n", client_regex);
+    Log(LOG_LEVEL_DEBUG, "\n\nContextAccessControl(%s)\n", client_regex);
 
 
     if (!OpenDB(&dbp, dbid_state))
@@ -1837,7 +1837,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                 }
                 else
                 {
-                    CfDebug("Checking whether to map root privileges..\n");
+                    Log(LOG_LEVEL_DEBUG, "Checking whether to map root privileges..\n");
 
                     if ((IsMatchItemIn(ap->maproot, MapAddress(conn->ipaddr)))
                         || (IsRegexItemIn(ctx, ap->maproot, conn->hostname)))
@@ -1854,7 +1854,7 @@ static Item *ContextAccessControl(EvalContext *ctx, char *in, ServerConnectionSt
                         || (IsRegexItemIn(ctx, ap->accesslist, conn->hostname)))
                     {
                         access = true;
-                        CfDebug("Access privileges - match found\n");
+                        Log(LOG_LEVEL_DEBUG, "Access privileges - match found\n");
                     }
                 }
             }
@@ -2041,7 +2041,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    CfDebug("Challenge encryption = %c, nonce = %d, buf = %d\n", iscrypt, nonce_len, crypt_len);
+    Log(LOG_LEVEL_DEBUG, "Challenge encryption = %c, nonce = %d, buf = %d\n", iscrypt, nonce_len, crypt_len);
 
 
     decrypted_nonce = xmalloc(crypt_len);
@@ -2280,7 +2280,7 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
 
     Log(LOG_LEVEL_VERBOSE, "Receiving session key from client (size=%d)...", keylen);
 
-    CfDebug("keylen=%d, session_size=%d\n", keylen, session_size);
+    Log(LOG_LEVEL_DEBUG, "keylen=%d, session_size=%d\n", keylen, session_size);
 
     if (keylen == CF_BLOWFISHSIZE)      /* Support the old non-ecnrypted for upgrade */
     {
@@ -2324,7 +2324,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
     char linkbuf[CF_BUFSIZE], filename[CF_BUFSIZE];
     int islink = false;
 
-    CfDebug("\nStatFile(%s)\n", filename);
+    Log(LOG_LEVEL_DEBUG, "\nStatFile(%s)\n", filename);
 
     TranslatePath(filename, ofilename);
 
@@ -2368,7 +2368,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
             return -1;
         }
 
-        CfDebug("readlink: %s\n", linkbuf);
+        Log(LOG_LEVEL_DEBUG, "readlink: %s\n", linkbuf);
 
         cfst.cf_readlink = linkbuf;
     }
@@ -2382,7 +2382,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
         return -1;
     }
 
-    CfDebug("Getting size of link deref %s\n", linkbuf);
+    Log(LOG_LEVEL_DEBUG, "Getting size of link deref %s\n", linkbuf);
 
     if (islink && (stat(filename, &statlinkbuf) != -1))       /* linktype=copy used by agent */
     {
@@ -2461,7 +2461,7 @@ static int StatFile(ServerConnectionState *conn, char *sendbuffer, char *ofilena
 
     /* send as plain text */
 
-    CfDebug("OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%" PRIdMAX "\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX "\n",
+    Log(LOG_LEVEL_DEBUG, "OK: type=%d\n mode=%" PRIoMAX "\n lmode=%" PRIoMAX "\n uid=%" PRIuMAX "\n gid=%" PRIuMAX "\n size=%" PRIdMAX "\n atime=%" PRIdMAX "\n mtime=%" PRIdMAX "\n",
             cfst.cf_type, (uintmax_t)cfst.cf_mode, (uintmax_t)cfst.cf_lmode, (intmax_t)cfst.cf_uid, (intmax_t)cfst.cf_gid, (intmax_t) cfst.cf_size,
             (intmax_t) cfst.cf_atime, (intmax_t) cfst.cf_mtime);
 
@@ -2505,7 +2505,7 @@ static void CfGetFile(ServerFileGetState *args)
 
     stat(filename, &sb);
 
-    CfDebug("CfGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
+    Log(LOG_LEVEL_DEBUG, "CfGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -2538,7 +2538,7 @@ static void CfGetFile(ServerFileGetState *args)
         {
             memset(sendbuffer, 0, CF_BUFSIZE);
 
-            CfDebug("Now reading from disk...\n");
+            Log(LOG_LEVEL_DEBUG, "Now reading from disk...\n");
 
             if ((n_read = read(fd, sendbuffer, blocksize)) == -1)
             {
@@ -2575,7 +2575,7 @@ static void CfGetFile(ServerFileGetState *args)
                         Log(LOG_LEVEL_VERBOSE, "Send failed in GetFile. (send: %s)", GetErrorStr());
                     }
 
-                    CfDebug("Aborting transfer after %" PRIdMAX ": file is changing rapidly at source.\n", (intmax_t)total);
+                    Log(LOG_LEVEL_DEBUG, "Aborting transfer after %" PRIdMAX ": file is changing rapidly at source.\n", (intmax_t)total);
                     break;
                 }
 
@@ -2601,7 +2601,7 @@ static void CfGetFile(ServerFileGetState *args)
         close(fd);
     }
 
-    CfDebug("Done with GetFile()\n");
+    Log(LOG_LEVEL_DEBUG, "Done with GetFile()\n");
 }
 
 /***************************************************************/
@@ -2629,7 +2629,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
     stat(filename, &sb);
 
-    CfDebug("CfEncryptGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
+    Log(LOG_LEVEL_DEBUG, "CfEncryptGetFile(%s on sd=%d), size=%" PRIdMAX "\n", filename, sd, (intmax_t) sb.st_size);
 
 /* Now check to see if we have remote permission */
 
@@ -2669,7 +2669,7 @@ static void CfEncryptGetFile(ServerFileGetState *args)
 
             if (count++ % div == 0)       /* Don't do this too often */
             {
-                CfDebug("Restatting %s - size %d\n", filename, n_read);
+                Log(LOG_LEVEL_DEBUG, "Restatting %s - size %d\n", filename, n_read);
                 if (stat(filename, &sb))
                 {
                     Log(LOG_LEVEL_ERR, "Cannot stat file '%s' (stat: %s)",
@@ -2764,13 +2764,13 @@ static void CompareLocalHash(ServerConnectionState *conn, char *sendbuffer, char
     if ((HashesMatch(digest1, digest2, CF_DEFAULT_DIGEST)) || (HashesMatch(digest1, digest2, HASH_METHOD_MD5)))
     {
         sprintf(sendbuffer, "%s", CFD_FALSE);
-        CfDebug("Hashes matched ok\n");
+        Log(LOG_LEVEL_DEBUG, "Hashes matched ok\n");
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
     }
     else
     {
         sprintf(sendbuffer, "%s", CFD_TRUE);
-        CfDebug("Hashes didn't match\n");
+        Log(LOG_LEVEL_DEBUG, "Hashes didn't match\n");
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
     }
 }
@@ -2872,7 +2872,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     TranslatePath(dirname, oldDirname);
 
-    CfDebug("CfOpenDirectory(%s)\n", dirname);
+    Log(LOG_LEVEL_DEBUG, "CfOpenDirectory(%s)\n", dirname);
 
     if (!IsAbsoluteFileName(dirname))
     {
@@ -2883,7 +2883,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     if ((dirh = DirOpen(dirname)) == NULL)
     {
-        CfDebug("cfengine, couldn't open dir %s\n", dirname);
+        Log(LOG_LEVEL_DEBUG, "cfengine, couldn't open dir %s\n", dirname);
         snprintf(sendbuffer, CF_BUFSIZE, "BAD: cfengine, couldn't open dir %s\n", dirname);
         SendTransaction(conn->sd_reply, sendbuffer, 0, CF_DONE);
         return -1;
@@ -2910,7 +2910,7 @@ static int CfOpenDirectory(ServerConnectionState *conn, char *sendbuffer, char *
 
     strcpy(sendbuffer + offset, CFD_TERMINATOR);
     SendTransaction(conn->sd_reply, sendbuffer, offset + 2 + strlen(CFD_TERMINATOR), CF_DONE);
-    CfDebug("END CfOpenDirectory(%s)\n", dirname);
+    Log(LOG_LEVEL_DEBUG, "END CfOpenDirectory(%s)\n", dirname);
     DirClose(dirh);
     return 0;
 }
@@ -2924,7 +2924,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
     int offset, cipherlen;
     char out[CF_BUFSIZE];
 
-    CfDebug("CfSecOpenDirectory(%s)\n", dirname);
+    Log(LOG_LEVEL_DEBUG, "CfSecOpenDirectory(%s)\n", dirname);
 
     if (!IsAbsoluteFileName(dirname))
     {
@@ -2970,7 +2970,7 @@ static int CfSecOpenDirectory(ServerConnectionState *conn, char *sendbuffer, cha
     cipherlen =
         EncryptString(conn->encryption_type, sendbuffer, out, conn->session_key, offset + 2 + strlen(CFD_TERMINATOR));
     SendTransaction(conn->sd_reply, out, cipherlen, CF_DONE);
-    CfDebug("END CfSecOpenDirectory(%s)\n", dirname);
+    Log(LOG_LEVEL_DEBUG, "END CfSecOpenDirectory(%s)\n", dirname);
     DirClose(dirh);
     return 0;
 }
@@ -3120,7 +3120,7 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
     {
         if (IsValidSid((args->connect)->sid) && EqualSid(ownerSid, (args->connect)->sid))
         {
-            CfDebug("Caller %s is the owner of the file\n", (args->connect)->username);
+            Log(LOG_LEVEL_DEBUG, "Caller %s is the owner of the file\n", (args->connect)->username);
         }
         else
         {
@@ -3158,17 +3158,17 @@ static int TransferRights(char *filename, ServerFileGetState *args, struct stat 
     {
         if (sb->st_uid == uid)
         {
-            CfDebug("Caller %s is the owner of the file\n", (args->connect)->username);
+            Log(LOG_LEVEL_DEBUG, "Caller %s is the owner of the file\n", (args->connect)->username);
         }
         else
         {
             if (sb->st_mode & S_IROTH)
             {
-                CfDebug("Caller %s not owner of the file but permission granted\n", (args->connect)->username);
+                Log(LOG_LEVEL_DEBUG, "Caller %s not owner of the file but permission granted\n", (args->connect)->username);
             }
             else
             {
-                CfDebug("Caller %s is not the owner of the file\n", (args->connect)->username);
+                Log(LOG_LEVEL_DEBUG, "Caller %s is not the owner of the file\n", (args->connect)->username);
                 Log(LOG_LEVEL_VERBOSE, "!! Remote user denied right to file \"%s\" (consider maproot?)", filename);
                 return false;
             }
@@ -3298,7 +3298,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
     conn->session_key = NULL;
     conn->encryption_type = 'c';
 
-    CfDebug("*** New socket [%d]\n", sd);
+    Log(LOG_LEVEL_DEBUG, "*** New socket [%d]\n", sd);
 
     return conn;
 }
@@ -3307,7 +3307,7 @@ static ServerConnectionState *NewConn(EvalContext *ctx, int sd)
 
 static void DeleteConn(ServerConnectionState *conn)
 {
-    CfDebug("***Closing socket %d from %s\n", conn->sd_reply, conn->ipaddr);
+    Log(LOG_LEVEL_DEBUG, "***Closing socket %d from %s\n", conn->sd_reply, conn->ipaddr);
 
     cf_closesocket(conn->sd_reply);
 

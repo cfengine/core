@@ -242,7 +242,7 @@ static void VerifyFilePromise(EvalContext *ctx, char *path, Promise *pp)
     {
         char basedir[CF_BUFSIZE];
 
-        CfDebug("Direct file reference %s, no search implied\n", path);
+        Log(LOG_LEVEL_DEBUG, "Direct file reference %s, no search implied\n", path);
         snprintf(basedir, sizeof(basedir), "%s", path);
 
         if (strcmp(ReadLastNode(basedir), ".") == 0)

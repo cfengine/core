@@ -239,7 +239,7 @@ bool LoadMountInfo(Rlist **list)
         }
 #endif
 
-        CfDebug("GOT: host=%s, source=%s, mounton=%s\n", host, source, mounton);
+        Log(LOG_LEVEL_DEBUG, "GOT: host=%s, source=%s, mounton=%s\n", host, source, mounton);
 
         if (nfs)
         {

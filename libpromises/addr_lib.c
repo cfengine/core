@@ -169,13 +169,13 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from < 0) || (to < 0))
                     {
-                        CfDebug("Couldn't read range\n");
+                        Log(LOG_LEVEL_DEBUG, "Couldn't read range\n");
                         return -1;
                     }
 
                     if ((from > cmp) || (cmp > to))
                     {
-                        CfDebug("Out of range %ld > %ld > %ld (range %s)\n", from, cmp, to, buffer2);
+                        Log(LOG_LEVEL_DEBUG, "Out of range %ld > %ld > %ld (range %s)\n", from, cmp, to, buffer2);
                         return -1;
                     }
                 }
@@ -186,15 +186,15 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if (from != cmp)
                     {
-                        CfDebug("Unequal\n");
+                        Log(LOG_LEVEL_DEBUG, "Unequal\n");
                         return -1;
                     }
                 }
 
-                CfDebug("Matched octet %s with %s\n", buffer1, buffer2);
+                Log(LOG_LEVEL_DEBUG, "Matched octet %s with %s\n", buffer1, buffer2);
             }
 
-            CfDebug("Matched IP range\n");
+            Log(LOG_LEVEL_DEBUG, "Matched IP range\n");
             return 0;
         }
     }
@@ -261,7 +261,7 @@ int FuzzySetMatch(const char *s1, const char *s2)
 
                     if ((from >= cmp) || (cmp > to))
                     {
-                        CfDebug("%lx < %lx < %lx\n", from, cmp, to);
+                        Log(LOG_LEVEL_DEBUG, "%lx < %lx < %lx\n", from, cmp, to);
                         return -1;
                     }
                 }
@@ -357,7 +357,7 @@ int FuzzyMatchParse(char *s)
     char address[CF_ADDRSIZE];
     int mask, count = 0;
 
-    CfDebug("Check ParsingIPRange(%s)\n", s);
+    Log(LOG_LEVEL_DEBUG, "Check ParsingIPRange(%s)\n", s);
 
     for (sp = s; *sp != '\0'; sp++)     /* Is this an address or hostname */
     {

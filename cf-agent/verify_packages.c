@@ -573,7 +573,7 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
 
         if (strcmp(thismanager, mgr) == 0)
         {
-            CfDebug("READPKG: %s\n", line);
+            Log(LOG_LEVEL_DEBUG, "READPKG: %s\n", line);
             PrependPackageItem(ctx, &list, name, version, arch, pp);
         }
     }
@@ -746,7 +746,7 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
     int match;
     Dir *dirh;
 
-    CfDebug("FindLargestVersionAvail()\n");
+    Log(LOG_LEVEL_DEBUG, "FindLargestVersionAvail()\n");
 
     match = false;
 
@@ -799,8 +799,8 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
         DirClose(dirh);
     }
 
-    CfDebug("largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
-    CfDebug("match=%d\n", match);
+    Log(LOG_LEVEL_DEBUG, "largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
+    Log(LOG_LEVEL_DEBUG, "match=%d\n", match);
 
     if (match)
     {
@@ -1280,7 +1280,7 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
 VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp)
 {
-    CfDebug("Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, arch, pi->name, pi->version, pi->arch);
+    Log(LOG_LEVEL_DEBUG, "Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, arch, pi->name, pi->version, pi->arch);
 
     if (CompareCSVName(n, pi->name) != 0)
     {
@@ -2387,10 +2387,10 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
         return false;
     }
 
-    CfDebug(" ?? Patch line: \"%s\"", item);
-    CfDebug(" -?      with name \"%s\"\n", name);
-    CfDebug(" -?      with version \"%s\"\n", version);
-    CfDebug(" -?      with architecture \"%s\"\n", arch);
+    Log(LOG_LEVEL_DEBUG, " ?? Patch line: \"%s\"", item);
+    Log(LOG_LEVEL_DEBUG, " -?      with name \"%s\"\n", name);
+    Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
+    Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
 
     if (PackageInItemList(chklist, name, version, arch))
     {
@@ -2419,9 +2419,9 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
 
         if ((strcmp(name, "") != 0) || (strcmp(version, "") != 0))
         {
-            CfDebug(" -? Extracted package name \"%s\"\n", name);
-            CfDebug(" -?      with version \"%s\"\n", version);
-            CfDebug(" -?      with architecture \"%s\"\n", arch);
+            Log(LOG_LEVEL_DEBUG, " -? Extracted package name \"%s\"\n", name);
+            Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
+            Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
 
             PrependPackageItem(ctx, list, name, version, arch, pp);
         }
@@ -2483,10 +2483,10 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *i
         return false;
     }
 
-    CfDebug(" -? Package line \"%s\"\n", item);
-    CfDebug(" -?      with name \"%s\"\n", name);
-    CfDebug(" -?      with version \"%s\"\n", version);
-    CfDebug(" -?      with architecture \"%s\"\n", arch);
+    Log(LOG_LEVEL_DEBUG, " -? Package line \"%s\"\n", item);
+    Log(LOG_LEVEL_DEBUG, " -?      with name \"%s\"\n", name);
+    Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
+    Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
 
     return PrependPackageItem(ctx, list, name, version, arch, pp);
 }

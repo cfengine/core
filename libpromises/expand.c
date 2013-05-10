@@ -122,9 +122,9 @@ void ExpandPromise(EvalContext *ctx, Promise *pp, PromiseActuator *ActOnPromise,
     Rlist *scalars = NULL;
     Promise *pcopy;
 
-    CfDebug("****************************************************\n");
-    CfDebug("* ExpandPromises (scope = %s )\n", PromiseGetBundle(pp)->name);
-    CfDebug("****************************************************\n\n");
+    Log(LOG_LEVEL_DEBUG, "****************************************************\n");
+    Log(LOG_LEVEL_DEBUG, "* ExpandPromises (scope = %s )\n", PromiseGetBundle(pp)->name);
+    Log(LOG_LEVEL_DEBUG, "****************************************************\n\n");
 
 // Set a default for packages here...general defaults that need to come before
 
@@ -236,13 +236,13 @@ void MapIteratorsFromRval(EvalContext *ctx, const char *scopeid, Rlist **listvar
 
         for (rp = (Rlist *) fp->args; rp != NULL; rp = rp->next)
         {
-            CfDebug("Looking at arg for function-like object %s()\n", fp->name);
+            Log(LOG_LEVEL_DEBUG, "Looking at arg for function-like object %s()\n", fp->name);
             MapIteratorsFromRval(ctx, scopeid, listvars, scalars, (Rval) {rp->item, rp->type});
         }
         break;
 
     default:
-        CfDebug("Unknown Rval type for scope %s", scopeid);
+        Log(LOG_LEVEL_DEBUG, "Unknown Rval type for scope %s", scopeid);
         break;
     }
 }
@@ -294,7 +294,7 @@ static void ExpandAndMapIteratorsFromScalar(EvalContext *ctx, const char *scopei
     strncpy(buffer, string, length);
     buffer[length] = '\0';
 
-    CfDebug("ExpandAndMapIteratorsFromScalar(\"%s\", %d)\n", buffer, level);
+    Log(LOG_LEVEL_DEBUG, "ExpandAndMapIteratorsFromScalar(\"%s\", %d)\n", buffer, level);
 
     for (sp = buffer; (*sp != '\0'); sp++)
     {
@@ -482,7 +482,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *scopeid, Rval rval)
     FnCall *fp, *fpe;
     Rval returnval;
 
-    CfDebug("ExpandPrivateRval(scope=%s,type=%c)\n", scopeid, rval.type);
+    Log(LOG_LEVEL_DEBUG, "ExpandPrivateRval(scope=%s,type=%c)\n", scopeid, rval.type);
 
 /* Allocates new memory for the copy */
 
@@ -524,7 +524,7 @@ Rval ExpandPrivateRval(EvalContext *ctx, const char *scopeid, Rval rval)
 
 Rval ExpandBundleReference(EvalContext *ctx, const char *scopeid, Rval rval)
 {
-    CfDebug("ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.type);
+    Log(LOG_LEVEL_DEBUG, "ExpandBundleReference(scope=%s,type=%c)\n", scopeid, rval.type);
 
 /* Allocates new memory for the copy */
 
@@ -585,7 +585,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         return false;
     }
 
-    CfDebug("\nExpandPrivateScalar(%s,%s)\n", scopeid, string);
+    Log(LOG_LEVEL_DEBUG, "\nExpandPrivateScalar(%s,%s)\n", scopeid, string);
 
     for (sp = string; /* No exit */ ; sp++)     /* check for varitems */
     {
@@ -612,7 +612,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
         strlcat(buffer, currentitem, CF_EXPANDSIZE);
         sp += strlen(currentitem);
 
-        CfDebug("  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n", buffer, sp, currentitem);
+        Log(LOG_LEVEL_DEBUG, "  Aggregate result |%s|, scanning at \"%s\" (current delta %s)\n", buffer, sp, currentitem);
 
         if (*sp == '\0')
         {
@@ -656,12 +656,12 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
 
         if (IsCf3VarString(temp))
         {
-            CfDebug("  Nested variables - %s\n", temp);
+            Log(LOG_LEVEL_DEBUG, "  Nested variables - %s\n", temp);
             ExpandScalar(ctx, scopeid, temp, currentitem);
         }
         else
         {
-            CfDebug("  Delta - %s\n", temp);
+            Log(LOG_LEVEL_DEBUG, "  Delta - %s\n", temp);
             strncpy(currentitem, temp, CF_BUFSIZE - 1);
         }
 
@@ -688,7 +688,7 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
             case DATA_TYPE_INT_LIST:
             case DATA_TYPE_REAL_LIST:
             case DATA_TYPE_NONE:
-                CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
+                Log(LOG_LEVEL_DEBUG, "  Currently non existent or list variable $(%s)\n", currentitem);
 
                 if (varstring == '}')
                 {
@@ -704,14 +704,14 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
                 break;
 
             default:
-                CfDebug("Returning Unknown Scalar (%s => %s)\n\n", string, buffer);
+                Log(LOG_LEVEL_DEBUG, "Returning Unknown Scalar (%s => %s)\n\n", string, buffer);
                 return false;
 
             }
         }
         else
         {
-            CfDebug("  Currently non existent or list variable $(%s)\n", currentitem);
+            Log(LOG_LEVEL_DEBUG, "  Currently non existent or list variable $(%s)\n", currentitem);
 
             if (varstring == '}')
             {
@@ -732,13 +732,13 @@ bool ExpandScalar(const EvalContext *ctx, const char *scopeid, const char *strin
 
     if (returnval)
     {
-        CfDebug("Returning complete scalar expansion (%s => %s)\n\n", string, buffer);
+        Log(LOG_LEVEL_DEBUG, "Returning complete scalar expansion (%s => %s)\n\n", string, buffer);
 
         /* Can we be sure this is complete? What about recursion */
     }
     else
     {
-        CfDebug("Returning partial / best effort scalar expansion (%s => %s)\n\n", string, buffer);
+        Log(LOG_LEVEL_DEBUG, "Returning partial / best effort scalar expansion (%s => %s)\n\n", string, buffer);
     }
 
     return returnval;
@@ -821,7 +821,7 @@ static void ExpandPromiseAndDo(EvalContext *ctx, const Promise *pp, Rlist *listv
             // This ordering is necessary to get automated canonification
             ExpandScalar(ctx, "this", handle, tmp);
             CanonifyNameInPlace(tmp);
-            CfDebug("Expanded handle to %s\n", tmp);
+            Log(LOG_LEVEL_DEBUG, "Expanded handle to %s\n", tmp);
             ScopeNewSpecialScalar(ctx, "this", "handle", tmp, DATA_TYPE_STRING);
         }
         else
@@ -860,7 +860,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
     char naked[CF_MAXVARSIZE];
     FnCall *fp;
 
-    CfDebug("EvaluateFinalRval -- type %c\n", rval.type);
+    Log(LOG_LEVEL_DEBUG, "EvaluateFinalRval -- type %c\n", rval.type);
 
     if ((rval.type == RVAL_TYPE_SCALAR) && IsNakedVar(rval.item, '@'))        /* Treat lists specially here */
     {
@@ -911,7 +911,7 @@ Rval EvaluateFinalRval(EvalContext *ctx, const char *scopeid, Rval rval, int for
                 FnCallDestroy(fp);
                 rp->item = res.rval.item;
                 rp->type = res.rval.type;
-                CfDebug("Replacing function call with new type (%c)\n", rp->type);
+                Log(LOG_LEVEL_DEBUG, "Replacing function call with new type (%c)\n", rp->type);
             }
             else
             {
@@ -1014,7 +1014,7 @@ int IsExpandable(const char *str)
     int dollar = false;
     int bracks = 0, vars = 0;
 
-    CfDebug("IsExpandable(%s) - syntax verify\n", str);
+    Log(LOG_LEVEL_DEBUG, "IsExpandable(%s) - syntax verify\n", str);
 
     for (sp = str; *sp != '\0'; sp++)   /* check for varitems */
     {
@@ -1059,11 +1059,11 @@ int IsExpandable(const char *str)
 
     if (bracks != 0)
     {
-        CfDebug("If this is an expandable variable string then it contained syntax errors");
+        Log(LOG_LEVEL_DEBUG, "If this is an expandable variable string then it contained syntax errors");
         return false;
     }
 
-    CfDebug("Found %d variables in (%s)\n", vars, str);
+    Log(LOG_LEVEL_DEBUG, "Found %d variables in (%s)\n", vars, str);
     return vars;
 }
 
@@ -1140,7 +1140,7 @@ int IsNakedVar(const char *str, char vtype)
         return false;
     }
 
-    CfDebug("IsNakedVar(%s,%c)!!\n", str, vtype);
+    Log(LOG_LEVEL_DEBUG, "IsNakedVar(%s,%c)!!\n", str, vtype);
     return true;
 }
 

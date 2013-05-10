@@ -153,7 +153,7 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
         strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
     }
     
-    CfDebug("EvalContextHeapAddSoft(%s)\n", context_copy);
+    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddSoft(%s)\n", context_copy);
 
     if (strlen(context_copy) == 0)
     {
@@ -215,7 +215,7 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
     }
     CanonifyNameInPlace(context_copy);
 
-    CfDebug("EvalContextHeapAddHard(%s)\n", context_copy);
+    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddHard(%s)\n", context_copy);
 
     if (strlen(context_copy) == 0)
     {
@@ -298,7 +298,7 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
         return;
     }
 
-    CfDebug("NewBundleClass(%s)\n", copy);
+    Log(LOG_LEVEL_DEBUG, "NewBundleClass(%s)\n", copy);
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
@@ -452,7 +452,7 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
         FreeExpression(res.result);
 
-        CfDebug("Evaluate(%s) -> %d\n", context, r);
+        Log(LOG_LEVEL_DEBUG, "Evaluate(%s) -> %d\n", context, r);
 
         /* r is EvalResult which could be ERROR */
         return r == true;
@@ -563,7 +563,7 @@ void EvalContextHeapPersistentRemove(const char *context)
     }
 
     DeleteDB(dbp, context);
-    CfDebug("Deleted any persistent state %s\n", context);
+    Log(LOG_LEVEL_DEBUG, "Deleted any persistent state %s\n", context);
     CloseDB(dbp);
 }
 
@@ -603,7 +603,7 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
-        CfDebug(" - Found key %s...\n", key);
+        Log(LOG_LEVEL_DEBUG, " - Found key %s...\n", key);
 
         if (now > q.expires)
         {
@@ -668,7 +668,7 @@ int VarClassExcluded(EvalContext *ctx, Promise *pp, char **classes)
 
     if (strchr(*classes, '$') || strchr(*classes, '@'))
     {
-        CfDebug("Class expression did not evaluate");
+        Log(LOG_LEVEL_DEBUG, "Class expression did not evaluate");
         return true;
     }
 

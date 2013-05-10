@@ -185,7 +185,7 @@ bool DBPrivRead(DBPriv *db, const void *key, int key_size, void *dest, int dest_
     {
         // FIXME: distinguish between "entry not found" and "failure to read"
 
-        CfDebug("QDBM_ReadComplexKeyDB(%s): Could not read: %s\n",
+        Log(LOG_LEVEL_DEBUG, "QDBM_ReadComplexKeyDB(%s): Could not read: %s\n",
                 (const char *)key, dperrmsg(dpecode));
 
         Unlock(db);

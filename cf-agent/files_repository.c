@@ -119,7 +119,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
     PrependItemList(&VREPOSLIST, file);
     ThreadUnlock(cft_getaddr);
 
-    CfDebug("Repository(%s)\n", file);
+    Log(LOG_LEVEL_DEBUG, "Repository(%s)\n", file);
     
     JoinPath(destination, CanonifyName(file));
 
@@ -129,7 +129,7 @@ int ArchiveToRepository(const char *file, Attributes attr)
 
     if (stat(file, &sb) == -1)
     {
-        CfDebug("File %s promised to archive to the repository but it disappeared!\n", file);
+        Log(LOG_LEVEL_DEBUG, "File %s promised to archive to the repository but it disappeared!\n", file);
         return true;
     }
 

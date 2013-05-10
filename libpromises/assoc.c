@@ -51,7 +51,7 @@ void DeleteAssoc(CfAssoc *ap)
         return;
     }
 
-    CfDebug(" ----> Delete variable association %s\n", ap->lval);
+    Log(LOG_LEVEL_DEBUG, " ----> Delete variable association %s\n", ap->lval);
 
     free(ap->lval);
     RvalDestroy(ap->rval);

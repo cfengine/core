@@ -276,7 +276,7 @@ Rlist *RlistCopy(const Rlist *list)
 {
     Rlist *start = NULL;
 
-    CfDebug("CopyRlist()\n");
+    Log(LOG_LEVEL_DEBUG, "CopyRlist()\n");
 
     if (list == NULL)
     {
@@ -439,17 +439,17 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return RlistAppendScalar(start, item);
 
     case RVAL_TYPE_FNCALL:
-        CfDebug("Appending function to rval-list function call: ");
+        Log(LOG_LEVEL_DEBUG, "Appending function to rval-list function call: ");
         fp = (FnCall *) item;
         if (DEBUG)
         {
             FnCallShow(stdout, fp);
         }
-        CfDebug("\n");
+        Log(LOG_LEVEL_DEBUG, "\n");
         break;
 
     case RVAL_TYPE_LIST:
-        CfDebug("Expanding and appending list object\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object\n");
 
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
@@ -459,7 +459,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return lp;
 
     default:
-        CfDebug("Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]\n", type, (char *) item);
         return NULL;
     }
 
@@ -536,7 +536,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
 
     case RVAL_TYPE_LIST:
 
-        CfDebug("Expanding and prepending list (ends up in reverse)\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and prepending list (ends up in reverse)\n");
 
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
@@ -547,7 +547,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_FNCALL:
         return RlistPrependFnCall(start, item);
     default:
-        CfDebug("Cannot prepend %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot prepend %c to rval-list [%s]\n", type, (char *) item);
         return NULL;
     }
 
@@ -841,18 +841,18 @@ void RvalDestroy(Rval rval)
 {
     Rlist *clist, *next = NULL;
 
-    CfDebug("DeleteRvalItem(%c)", rval.type);
+    Log(LOG_LEVEL_DEBUG, "DeleteRvalItem(%c)", rval.type);
 
     if (DEBUG)
     {
         RvalShow(stdout, rval);
     }
 
-    CfDebug("\n");
+    Log(LOG_LEVEL_DEBUG, "\n");
 
     if (rval.item == NULL)
     {
-        CfDebug("DeleteRval NULL\n");
+        Log(LOG_LEVEL_DEBUG, "DeleteRval NULL\n");
         return;
     }
 
@@ -890,7 +890,7 @@ void RvalDestroy(Rval rval)
         break;
 
     default:
-        CfDebug("Nothing to do\n");
+        Log(LOG_LEVEL_DEBUG, "Nothing to do\n");
         return;
     }
 }
@@ -1046,7 +1046,7 @@ Rlist *RlistFromSplitString(const char *string, char sep)
     char node[CF_MAXVARSIZE];
     int maxlen = strlen(string);
 
-    CfDebug("SplitStringAsRList(%s)\n", string);
+    Log(LOG_LEVEL_DEBUG, "SplitStringAsRList(%s)\n", string);
 
     for (const char *sp = string; *sp != '\0'; sp++)
     {
@@ -1083,7 +1083,7 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
         return NULL;
     }
 
-    CfDebug("\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
+    Log(LOG_LEVEL_DEBUG, "\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
 
     const char *sp = string;
 

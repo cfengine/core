@@ -1001,9 +1001,9 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     }
 #endif
 
-    CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+    Log(LOG_LEVEL_DEBUG, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
     Log(LOG_LEVEL_VERBOSE, "Parsing file '%s'", input_path);
-    CfDebug("+++++++++++++++++++++++++++++++++++++++++++++++\n");
+    Log(LOG_LEVEL_DEBUG, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
     if (!FileCanOpen(input_path, "r"))
     {
@@ -1061,7 +1061,7 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
         {
             if (strcmp(body->name, "control") == 0)
             {
-                CfDebug("%s body for type %s\n", body->name, body->type);
+                Log(LOG_LEVEL_DEBUG, "%s body for type %s\n", body->name, body->type);
                 return body->conlist;
             }
         }
@@ -1148,7 +1148,7 @@ static void CheckWorkingDirectories(EvalContext *ctx)
     struct stat statbuf;
     char vbuff[CF_BUFSIZE];
 
-    CfDebug("CheckWorkingDirectories()\n");
+    Log(LOG_LEVEL_DEBUG, "CheckWorkingDirectories()\n");
 
     if (uname(&VSYSNAME) == -1)
     {
@@ -1325,7 +1325,7 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 {
     int allow_redefine = false;
 
-    CfDebug("CheckVariablePromises()\n");
+    Log(LOG_LEVEL_DEBUG, "CheckVariablePromises()\n");
 
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
@@ -1372,7 +1372,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     const ConstraintSyntax *body_syntax = NULL;
     Rval returnval;
 
-    CfDebug("CheckControlPromises(%s)\n", control_body->type);
+    Log(LOG_LEVEL_DEBUG, "CheckControlPromises(%s)\n", control_body->type);
     assert(strcmp(control_body->name, "control") == 0);
 
     for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
@@ -1392,7 +1392,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
     char scope[CF_BUFSIZE];
     snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
-    CfDebug("Initiate control variable convergence...%s\n", scope);
+    Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence...%s\n", scope);
     ScopeClear(scope);
     ScopeSetCurrent(scope);
 

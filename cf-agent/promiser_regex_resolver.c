@@ -50,7 +50,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
     int create = PromiseGetConstraintAsBoolean(ctx, "create", pp);
     char *pathtype = ConstraintGetRvalValue(ctx, "pathtype", pp, RVAL_TYPE_SCALAR);
 
-    CfDebug("LocateFilePromiserGroup(%s)\n", wildpath);
+    Log(LOG_LEVEL_DEBUG, "LocateFilePromiserGroup(%s)\n", wildpath);
 
 /* Do a search for promiser objects matching wildpath */
 
@@ -142,13 +142,13 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                 if ((!lastnode) && (!S_ISDIR(statbuf.st_mode)))
                 {
-                    CfDebug("Skipping non-directory %s\n", dirp->d_name);
+                    Log(LOG_LEVEL_DEBUG, "Skipping non-directory %s\n", dirp->d_name);
                     continue;
                 }
 
                 if (FullTextMatch(regex, dirp->d_name))
                 {
-                    CfDebug("Link %s matched regex %s\n", dirp->d_name, regex);
+                    Log(LOG_LEVEL_DEBUG, "Link %s matched regex %s\n", dirp->d_name, regex);
                 }
                 else
                 {
@@ -186,7 +186,7 @@ void LocateFilePromiserGroup(EvalContext *ctx, char *wildpath, Promise *pp, void
 
                     if (!FullTextMatch(pp->promiser, nextbuffer))
                     {
-                        CfDebug("Error recomputing references for \"%s\" in: %s", pp->promiser, nextbuffer);
+                        Log(LOG_LEVEL_DEBUG, "Error recomputing references for \"%s\" in: %s", pp->promiser, nextbuffer);
                     }
 
                     /* If there were back references there could still be match.x vars to expand */

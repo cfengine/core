@@ -1737,7 +1737,7 @@ int XmlCompareToFile(xmlDocPtr doc, char *file, EditDefaults edits)
     struct stat statbuf;
     xmlDocPtr cmpdoc = NULL;
 
-    CfDebug("XmlCompareToFile(%s)\n", file);
+    Log(LOG_LEVEL_DEBUG, "XmlCompareToFile(%s)\n", file);
 
     if (stat(file, &statbuf) == -1)
     {

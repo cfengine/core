@@ -50,7 +50,7 @@ Scope *ScopeNew(const char *name)
 {
     Scope *ptr;
 
-    CfDebug("Adding scope data %s\n", name);
+    Log(LOG_LEVEL_DEBUG, "Adding scope data %s\n", name);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -63,7 +63,7 @@ Scope *ScopeNew(const char *name)
         if (strcmp(ptr->scope, name) == 0)
         {
             ThreadUnlock(cft_vscope);
-            CfDebug("SCOPE Object %s already exists\n", name);
+            Log(LOG_LEVEL_DEBUG, "SCOPE Object %s already exists\n", name);
             return NULL;
         }
     }
@@ -110,7 +110,7 @@ void ScopePutMatch(int index, const char *value)
             RvalDestroy(assoc->rval);
             assoc->rval = RvalCopy(rval);
             assoc->dtype = DATA_TYPE_STRING;
-            CfDebug("Stored \"%s\" in context %s\n", lval, "match");
+            Log(LOG_LEVEL_DEBUG, "Stored \"%s\" in context %s\n", lval, "match");
         }
     }
     else
@@ -134,7 +134,7 @@ Scope *ScopeGet(const char *scope)
        name = scope + strlen("default:");
        }
     
-    CfDebug("Searching for scope context %s\n", scope);
+    Log(LOG_LEVEL_DEBUG, "Searching for scope context %s\n", scope);
 
     if (strcmp("match", name) == 0)
     {
@@ -145,7 +145,7 @@ Scope *ScopeGet(const char *scope)
     {
         if (strcmp(cp->scope, name) == 0)
         {
-            CfDebug("Found scope reference %s\n", scope);
+            Log(LOG_LEVEL_DEBUG, "Found scope reference %s\n", scope);
             return cp;
         }
     }
@@ -284,7 +284,7 @@ void ScopeDeleteAll()
 {
     Scope *ptr, *this;
 
-    CfDebug("Deleting all scoped variables\n");
+    Log(LOG_LEVEL_DEBUG, "Deleting all scoped variables\n");
 
     if (!ThreadLock(cft_vscope))
     {
@@ -297,7 +297,7 @@ void ScopeDeleteAll()
     while (ptr != NULL)
     {
         this = ptr;
-        CfDebug("Deleting scope %s\n", ptr->scope);
+        Log(LOG_LEVEL_DEBUG, "Deleting scope %s\n", ptr->scope);
         HashFree(this->hashtable);
         free(this->scope);
         ptr = this->next;
@@ -314,7 +314,7 @@ void ScopeDeleteAll()
 
 void ScopeClear(const char *name)
 {
-    CfDebug("Clearing scope %s\n", name);
+    Log(LOG_LEVEL_DEBUG, "Clearing scope %s\n", name);
 
     if (!ThreadLock(cft_vscope))
     {
@@ -325,7 +325,7 @@ void ScopeClear(const char *name)
     Scope *scope = ScopeGet(name);
     if (!scope)
     {
-        CfDebug("No such scope to clear\n");
+        Log(LOG_LEVEL_DEBUG, "No such scope to clear\n");
         ThreadUnlock(cft_vscope);
         return;
     }
@@ -343,7 +343,7 @@ void ScopeCopy(const char *new_scopename, const Scope *old_scope)
  * Thread safe
  */
 {
-    CfDebug("\n*\nCopying scope data %s to %s\n*\n", old_scope->scope, new_scopename);
+    Log(LOG_LEVEL_DEBUG, "\n*\nCopying scope data %s to %s\n*\n", old_scope->scope, new_scopename);
 
     ScopeNew(new_scopename);
 
@@ -460,7 +460,7 @@ bool ScopeIsReserved(const char *scope)
 
 void ScopeNewScalar(EvalContext *ctx, VarRef lval, const char *rval, DataType dt)
 {
-    CfDebug("NewScalar(%s,%s,%s)\n", lval.scope, lval.lval, rval);
+    Log(LOG_LEVEL_DEBUG, "NewScalar(%s,%s,%s)\n", lval.scope, lval.lval, rval);
     assert(!ScopeIsReserved(lval.scope));
     if (ScopeIsReserved(lval.scope))
     {
@@ -512,7 +512,7 @@ void ScopeDeleteScalar(VarRef lval)
 
     if (HashDeleteElement(scope->hashtable, lval.lval) == false)
     {
-        CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval.lval, lval.scope);
+        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable %s in scope %s\n", lval.lval, lval.scope);
     }
 }
 
@@ -529,7 +529,7 @@ void ScopeDeleteSpecialScalar(const char *scope, const char *lval)
 
     if (HashDeleteElement(scope_ptr->hashtable, lval) == false)
     {
-        CfDebug("Attempt to delete non-existent variable %s in scope %s\n", lval, scope);
+        Log(LOG_LEVEL_DEBUG, "Attempt to delete non-existent variable %s in scope %s\n", lval, scope);
     }
 }
 
@@ -579,7 +579,7 @@ void ScopeDeleteVariable(const char *scope, const char *id)
 
     if (HashDeleteElement(ptr->hashtable, id) == false)
     {
-        CfDebug("No variable matched %s\n", id);
+        Log(LOG_LEVEL_DEBUG, "No variable matched %s\n", id);
     }
 }
 
@@ -735,7 +735,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
     void *rval;
     int len1, len2;
 
-    CfDebug("MapBodyArgs(begin)\n");
+    Log(LOG_LEVEL_DEBUG, "MapBodyArgs(begin)\n");
 
     len1 = RlistLen(give);
     len2 = RlistLen(take);
@@ -764,7 +764,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
         case RVAL_TYPE_SCALAR:
             lval = (char *) rpt->item;
             rval = rpg->item;
-            CfDebug("MapBodyArgs(SCALAR,%s,%s)\n", lval, (char *) rval);
+            Log(LOG_LEVEL_DEBUG, "MapBodyArgs(SCALAR,%s,%s)\n", lval, (char *) rval);
             EvalContextVariablePut(ctx, (VarRef) { NULL, scopeid, lval }, (Rval) { rval, RVAL_TYPE_SCALAR }, dtg);
             break;
 
@@ -819,7 +819,7 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
         }
     }
 
-    CfDebug("MapBodyArgs(end)\n");
+    Log(LOG_LEVEL_DEBUG, "MapBodyArgs(end)\n");
     return true;
 }
 

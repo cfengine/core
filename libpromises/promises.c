@@ -118,16 +118,16 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
 
     if (pp->promisee.item)
     {
-        CfDebug("CopyPromise(%s->", pp->promiser);
+        Log(LOG_LEVEL_DEBUG, "CopyPromise(%s->", pp->promiser);
         if (DEBUG)
         {
             RvalShow(stdout, pp->promisee);
         }
-        CfDebug("\n");
+        Log(LOG_LEVEL_DEBUG, "\n");
     }
     else
     {
-        CfDebug("CopyPromise(%s->)\n", pp->promiser);
+        Log(LOG_LEVEL_DEBUG, "CopyPromise(%s->)\n", pp->promiser);
     }
 
     pcopy = xcalloc(1, sizeof(Promise));
@@ -167,7 +167,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->org_pp = pp->org_pp;
     pcopy->offset = pp->offset;
 
-    CfDebug("Copying promise constraints\n\n");
+    Log(LOG_LEVEL_DEBUG, "Copying promise constraints\n\n");
 
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
@@ -226,7 +226,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
             }
 
 
-            CfDebug("Handling body-lval \"%s\"\n", cp->lval);
+            Log(LOG_LEVEL_DEBUG, "Handling body-lval \"%s\"\n", cp->lval);
 
             if (bp->args != NULL)
             {
@@ -249,7 +249,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 {
                     Constraint *scp = SeqAt(bp->conlist, k);
 
-                    CfDebug("Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
+                    Log(LOG_LEVEL_DEBUG, "Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval(ctx, "body", scp->rval);
                     {
                         Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
@@ -275,7 +275,7 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     {
                         Constraint *scp = SeqAt(bp->conlist, k);
 
-                        CfDebug("Doing sublval = %s (promises.c)\n", scp->lval);
+                        Log(LOG_LEVEL_DEBUG, "Doing sublval = %s (promises.c)\n", scp->lval);
 
                         Rval newrv = RvalCopy(scp->rval);
                         if (newrv.type == RVAL_TYPE_LIST)
@@ -331,7 +331,7 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
     Promise *pcopy;
     Rval returnval, final;
 
-    CfDebug("ExpandDerefPromise()\n");
+    Log(LOG_LEVEL_DEBUG, "ExpandDerefPromise()\n");
 
     pcopy = xcalloc(1, sizeof(Promise));
 

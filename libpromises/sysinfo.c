@@ -289,7 +289,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     struct stat sb;
     char name[CF_MAXVARSIZE], quoteName[CF_MAXVARSIZE], shortname[CF_MAXVARSIZE];
 
-    CfDebug("GetNameInfo()\n");
+    Log(LOG_LEVEL_DEBUG, "GetNameInfo()\n");
 
     if (uname(&VSYSNAME) == -1)
     {
@@ -343,7 +343,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
             }
             else
             {
-                CfDebug("CFEngine: I recognize %s but not %s\n", VSYSNAME.sysname, VSYSNAME.machine);
+                Log(LOG_LEVEL_DEBUG, "CFEngine: I recognize %s but not %s\n", VSYSNAME.sysname, VSYSNAME.machine);
                 continue;
             }
         }
@@ -614,7 +614,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
         for (i = 0; hp->h_aliases[i] != NULL; i++)
         {
-            CfDebug("Adding alias %s..\n", hp->h_aliases[i]);
+            Log(LOG_LEVEL_DEBUG, "Adding alias %s..\n", hp->h_aliases[i]);
             EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
         }
     }
@@ -710,7 +710,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             Rlist *list = NULL;
             sscanf(context + 1, "%[^=]=%[^\n]", name, value);
            
-            CfDebug("Setting new monitoring list %s => %s", name, value);
+            Log(LOG_LEVEL_DEBUG, "Setting new monitoring list %s => %s", name, value);
             list = RlistParseShown(value);
             ScopeNewSpecialList(ctx, "mon", name, list, DATA_TYPE_STRING_LIST);
 
@@ -727,7 +727,7 @@ void Get3Environment(EvalContext *ctx, AgentType agent_type)
             {
                 ScopeDeleteSpecialScalar("mon", name);
                 ScopeNewSpecialScalar(ctx, "mon", name, value, DATA_TYPE_STRING);
-                CfDebug("Setting new monitoring scalar %s => %s", name, value);
+                Log(LOG_LEVEL_DEBUG, "Setting new monitoring scalar %s => %s", name, value);
             }
         }
         else
@@ -751,12 +751,12 @@ _Bool IsInterfaceAddress(const char *adr)
     {
         if (strncasecmp(adr, ip->name, strlen(adr)) == 0)
         {
-            CfDebug("Identifying (%s) as one of my interfaces\n", adr);
+            Log(LOG_LEVEL_DEBUG, "Identifying (%s) as one of my interfaces\n", adr);
             return true;
         }
     }
 
-    CfDebug("(%s) is not one of my interfaces\n", adr);
+    Log(LOG_LEVEL_DEBUG, "(%s) is not one of my interfaces\n", adr);
     return false;
 }
 
@@ -1604,7 +1604,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
         for (version = 9; version < 13; version++)
         {
             snprintf(vbuf, CF_BUFSIZE, "%s %d ", SUSE_SLES_ID, version);
-            CfDebug("Checking for suse [%s]\n", vbuf);
+            Log(LOG_LEVEL_DEBUG, "Checking for suse [%s]\n", vbuf);
 
             if (!strncmp(relstring, vbuf, strlen(vbuf)))
             {
@@ -1614,7 +1614,7 @@ static int Linux_Suse_Version(EvalContext *ctx)
             else
             {
                 snprintf(vbuf, CF_BUFSIZE, "%s %d ", SUSE_SLED_ID, version);
-                CfDebug("Checking for suse [%s]\n", vbuf);
+                Log(LOG_LEVEL_DEBUG, "Checking for suse [%s]\n", vbuf);
 
                 if (!strncmp(relstring, vbuf, strlen(vbuf)))
                 {

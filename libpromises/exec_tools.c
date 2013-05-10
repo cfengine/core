@@ -40,7 +40,7 @@ bool GetExecOutput(const char *command, char *buffer, bool useshell)
     char line[CF_EXPANDSIZE];
     FILE *pp;
 
-    CfDebug("GetExecOutput(%s,%s) - use shell = %d\n", command, buffer, useshell);
+    Log(LOG_LEVEL_DEBUG, "GetExecOutput(%s,%s) - use shell = %d\n", command, buffer, useshell);
 
     if (useshell)
     {
@@ -93,7 +93,7 @@ bool GetExecOutput(const char *command, char *buffer, bool useshell)
         }
     }
 
-    CfDebug("GetExecOutput got: [%s]\n", buffer);
+    Log(LOG_LEVEL_DEBUG, "GetExecOutput got: [%s]\n", buffer);
 
     cf_pclose(pp);
     return true;

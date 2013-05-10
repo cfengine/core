@@ -97,7 +97,7 @@ int ParseFlagString(Rlist *bitlist, u_long *plusmask, u_long *minusmask)
         }
     }
 
-    CfDebug("ParseFlagString:[PLUS=%lo][MINUS=%lo]\n", *plusmask, *minusmask);
+    Log(LOG_LEVEL_DEBUG, "ParseFlagString:[PLUS=%lo][MINUS=%lo]\n", *plusmask, *minusmask);
     return true;
 }
 

@@ -96,7 +96,7 @@ void SetStartTime(void)
 
     CFINITSTARTTIME = tloc;
 
-    CfDebug("Job start time set to %s\n", ctime(&tloc));
+    Log(LOG_LEVEL_DEBUG, "Job start time set to %s\n", ctime(&tloc));
 }
 
 /*********************************************************************/

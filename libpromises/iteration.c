@@ -39,15 +39,15 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     Rlist *rp, *lp;
     CfAssoc *cp;
 
-    CfDebug("OrthogAppendRlist\n");
+    Log(LOG_LEVEL_DEBUG, "OrthogAppendRlist\n");
 
     switch (type)
     {
     case RVAL_TYPE_LIST:
-        CfDebug("Expanding and appending list object, orthogonally\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object, orthogonally\n");
         break;
     default:
-        CfDebug("Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]\n", type, (char *) item);
         return NULL;
     }
 
@@ -91,7 +91,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
     CfAssoc *new;
     Rval newret;
 
-    CfDebug("\n*\nNewIterationContext(from %s)\n*\n", scopeid);
+    Log(LOG_LEVEL_DEBUG, "\n*\nNewIterationContext(from %s)\n*\n", scopeid);
 
     ScopeCopy("this", ScopeGet(scopeid));
 
@@ -99,7 +99,7 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
 
     if (namelist == NULL)
     {
-        CfDebug("No lists to iterate over\n");
+        Log(LOG_LEVEL_DEBUG, "No lists to iterate over\n");
         return NULL;
     }
 
@@ -189,7 +189,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
 
 /* Go ahead and increment */
 
-    CfDebug("Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
+    Log(LOG_LEVEL_DEBUG, "Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
 
     if (state->next == NULL)
     {
@@ -223,7 +223,7 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
         /* Update the current wheel */
         iterator->state_ptr = state->next;
 
-        CfDebug(" <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
+        Log(LOG_LEVEL_DEBUG, " <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
 
         while (NullIterators(iterator))
         {

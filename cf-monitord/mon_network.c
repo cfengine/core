@@ -181,7 +181,7 @@ void MonNetworkGatherData(double *cf_this)
     enum cf_netstat_type { cfn_new, cfn_old } type = cfn_new;
     enum cf_packet_type { cfn_udp4, cfn_udp6, cfn_tcp4, cfn_tcp6} packet = cfn_tcp4;
 
-    CfDebug("GatherSocketData()\n");
+    Log(LOG_LEVEL_DEBUG, "GatherSocketData()\n");
 
     for (i = 0; i < ATTR; i++)
     {
@@ -378,7 +378,7 @@ void MonNetworkGatherData(double *cf_this)
         struct stat statbuf;
         time_t now = time(NULL);
 
-        CfDebug("save incoming %s\n", ECGSOCKS[i].name);
+        Log(LOG_LEVEL_DEBUG, "save incoming %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_incoming.%s", CFWORKDIR, ECGSOCKS[i].name);
         if (stat(vbuff, &statbuf) != -1)
         {
@@ -393,7 +393,7 @@ void MonNetworkGatherData(double *cf_this)
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "in", in[i]);
         RawSaveItemList(in[i], vbuff);
         DeleteItemList(in[i]);
-        CfDebug("Saved in netstat data in %s\n", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Saved in netstat data in %s\n", vbuff);
     }
 
     for (i = 0; i < ATTR; i++)
@@ -401,7 +401,7 @@ void MonNetworkGatherData(double *cf_this)
         struct stat statbuf;
         time_t now = time(NULL);
 
-        CfDebug("save outgoing %s\n", ECGSOCKS[i].name);
+        Log(LOG_LEVEL_DEBUG, "save outgoing %s\n", ECGSOCKS[i].name);
         snprintf(vbuff, CF_MAXVARSIZE, "%s/state/cf_outgoing.%s", CFWORKDIR, ECGSOCKS[i].name);
 
         if (stat(vbuff, &statbuf) != -1)
@@ -416,7 +416,7 @@ void MonNetworkGatherData(double *cf_this)
 
         SetNetworkEntropyClasses(CanonifyName(ECGSOCKS[i].name), "out", out[i]);
         RawSaveItemList(out[i], vbuff);
-        CfDebug("Saved out netstat data in %s\n", vbuff);
+        Log(LOG_LEVEL_DEBUG, "Saved out netstat data in %s\n", vbuff);
         DeleteItemList(out[i]);
     }
 }

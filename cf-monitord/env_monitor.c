@@ -170,7 +170,7 @@ void MonitorInitialize(void)
     MonTempInit();
     MonOtherInit();
 
-    CfDebug("Finished with initialization.\n");
+    Log(LOG_LEVEL_DEBUG, "Finished with initialization.\n");
 }
 
 /*********************************************************************/
@@ -189,11 +189,11 @@ static void GetDatabaseAge()
     if (ReadDB(dbp, "DATABASE_AGE", &AGE, sizeof(double)))
     {
         WAGE = AGE / SECONDS_PER_WEEK * CF_MEASURE_INTERVAL;
-        CfDebug("\n\nPrevious DATABASE_AGE %f\n\n", AGE);
+        Log(LOG_LEVEL_DEBUG, "\n\nPrevious DATABASE_AGE %f\n\n", AGE);
     }
     else
     {
-        CfDebug("No previous AGE\n");
+        Log(LOG_LEVEL_DEBUG, "No previous AGE\n");
         AGE = 0.0;
     }
 
@@ -339,7 +339,7 @@ void MonitorStartServer(EvalContext *ctx, const Policy *policy)
 
 static void GetQ(EvalContext *ctx, const Policy *policy)
 {
-    CfDebug("========================= GET Q ==============================\n");
+    Log(LOG_LEVEL_DEBUG, "========================= GET Q ==============================\n");
 
     MonEntropyClassesReset();
 
@@ -415,12 +415,12 @@ static Averages EvalAvQ(EvalContext *ctx, char *t)
         
         LOCALAV.Q[i].q = This[i];
 
-        CfDebug("Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
-        CfDebug("Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
-        CfDebug("Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
+        Log(LOG_LEVEL_DEBUG, "Previous week's %s.q %lf\n", name, lastweek_vals->Q[i].q);
+        Log(LOG_LEVEL_DEBUG, "Previous week's %s.var %lf\n", name, lastweek_vals->Q[i].var);
+        Log(LOG_LEVEL_DEBUG, "Previous week's %s.ex %lf\n", name, lastweek_vals->Q[i].expect);
 
-        CfDebug("Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
-        CfDebug("Just sanitized: This[%s] = %lf\n", name, This[i]);
+        Log(LOG_LEVEL_DEBUG, "Just measured: CF_THIS[%s] = %lf\n", name, CF_THIS[i]);
+        Log(LOG_LEVEL_DEBUG, "Just sanitized: This[%s] = %lf\n", name, This[i]);
 
         newvals.Q[i].expect = WAverage(This[i], lastweek_vals->Q[i].expect, WAGE);
         LOCALAV.Q[i].expect = WAverage(newvals.Q[i].expect, LOCALAV.Q[i].expect, ITER);
@@ -485,7 +485,7 @@ static void LeapDetection(void)
 
         if (!LDT_FULL)
         {
-            CfDebug("LDT Buffer full at %d\n", LDT_BUFSIZE);
+            Log(LOG_LEVEL_DEBUG, "LDT Buffer full at %d\n", LDT_BUFSIZE);
             LDT_FULL = true;
         }
     }
@@ -596,7 +596,7 @@ static void ArmClasses(Averages av, char *timekey)
     extern Item *ALL_INCOMING;
     extern Item *MON_UDP4, *MON_UDP6, *MON_TCP4, *MON_TCP6;
 
-    CfDebug("Arm classes for %s\n", timekey);
+    Log(LOG_LEVEL_DEBUG, "Arm classes for %s\n", timekey);
 
     for (i = 0; i < CF_OBSERVABLES; i++)
     {
@@ -749,12 +749,12 @@ static Averages *GetCurrentAverages(char *timekey)
 
         for (i = 0; i < CF_OBSERVABLES; i++)
         {
-            CfDebug("Previous values (%lf,..) for time index %s\n\n", entry.Q[i].expect, timekey);
+            Log(LOG_LEVEL_DEBUG, "Previous values (%lf,..) for time index %s\n\n", entry.Q[i].expect, timekey);
         }
     }
     else
     {
-        CfDebug("No previous value for time index %s\n", timekey);
+        Log(LOG_LEVEL_DEBUG, "No previous value for time index %s\n", timekey);
     }
 
     CloseDB(dbp);
@@ -912,7 +912,7 @@ static double SetClasses(char *name, double variable, double av_expect, double a
     char buffer[CF_BUFSIZE], buffer2[CF_BUFSIZE];
     double dev, delta, sigma, ldelta, lsigma, sig;
 
-    CfDebug("\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n", name, variable, av_expect, av_var,
+    Log(LOG_LEVEL_DEBUG, "\n SetClasses(%s,X=%lf,avX=%lf,varX=%lf,lavX=%lf,lvarX=%lf,%s)\n", name, variable, av_expect, av_var,
             localav_expect, localav_var, timekey);
 
     delta = variable - av_expect;
@@ -921,11 +921,11 @@ static double SetClasses(char *name, double variable, double av_expect, double a
     lsigma = sqrt(localav_var);
     sig = sqrt(sigma * sigma + lsigma * lsigma);
 
-    CfDebug(" delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
+    Log(LOG_LEVEL_DEBUG, " delta = %lf,sigma = %lf, lsigma = %lf, sig = %lf\n", delta, sigma, lsigma, sig);
 
     if ((sigma == 0.0) || (lsigma == 0.0))
     {
-        CfDebug(" No sigma variation .. can't measure class\n");
+        Log(LOG_LEVEL_DEBUG, " No sigma variation .. can't measure class\n");
 
         snprintf(buffer, CF_MAXVARSIZE, "entropy_%s.*", name);
         MonEntropyPurgeUnused(buffer);
@@ -933,11 +933,11 @@ static double SetClasses(char *name, double variable, double av_expect, double a
         return sig;
     }
 
-    CfDebug("Setting classes for %s...\n", name);
+    Log(LOG_LEVEL_DEBUG, "Setting classes for %s...\n", name);
 
     if (fabs(delta) < cf_noise_threshold)       /* Arbitrary limits on sensitivity  */
     {
-        CfDebug(" Sensitivity too high ..\n");
+        Log(LOG_LEVEL_DEBUG, " Sensitivity too high ..\n");
 
         buffer[0] = '\0';
         strcpy(buffer, name);

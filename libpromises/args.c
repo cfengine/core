@@ -91,7 +91,7 @@ Rlist *NewExpArgs(EvalContext *ctx, const FnCall *fp, const Promise *pp)
             break;
         }
 
-        CfDebug("EXPARG: %s.%s\n", ScopeGetCurrent()->scope, (char *) rval.item);
+        Log(LOG_LEVEL_DEBUG, "EXPARG: %s.%s\n", ScopeGetCurrent()->scope, (char *) rval.item);
         RlistAppend(&newargs, rval.item, rval.type);
         RvalDestroy(rval);
     }
@@ -160,8 +160,8 @@ void ArgTemplate(EvalContext *ctx, FnCall *fp, const FnCallArg *argtemplate, Rli
 
     for (rp = realargs; rp != NULL; rp = rp->next)
     {
-        CfDebug("finalarg: %s\n", (char *) rp->item);
+        Log(LOG_LEVEL_DEBUG, "finalarg: %s\n", (char *) rp->item);
     }
 
-    CfDebug("End ArgTemplate\n");
+    Log(LOG_LEVEL_DEBUG, "End ArgTemplate\n");
 }

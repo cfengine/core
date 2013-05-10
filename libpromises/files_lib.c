@@ -500,11 +500,20 @@ int LoadFileAsItemList(Item **liststart, const char *file, EditDefaults edits)
         if (join)
         {
             *(line + strlen(line) - 1) = '\0';
-            JoinSuffix(concat, line);
+
+            if (strlcat(concat, line, CF_BUFSIZE) >= CF_BUFSIZE)
+            {
+                Log(LOG_LEVEL_ERR, "Internal limit 3: Buffer ran out of space constructing string. Tried to add '%s' to '%s'",
+                    concat, line);
+            }
         }
         else
         {
-            JoinSuffix(concat, line);
+            if (strlcat(concat, line, CF_BUFSIZE) >= CF_BUFSIZE)
+            {
+                Log(LOG_LEVEL_ERR, "Internal limit 3: Buffer ran out of space constructing string. Tried to add '%s' to '%s'",
+                    concat, line);
+            }
 
             if (!feof(fp) || (strlen(concat) != 0))
             {

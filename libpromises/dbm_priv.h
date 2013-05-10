@@ -44,6 +44,8 @@ int DBPrivGetValueSize(DBPriv *db, const void *key, int key_size);
 
 bool DBPrivRead(DBPriv *db, const void *key, int key_size,
             void *dest, int dest_size);
+bool DBPrivReadInv(DBPriv *db, const char *key_list[],const char *value, int *iterator);
+
 
 bool DBPrivWrite(DBPriv *db, const void *key, int key_size,
              const void *value, int value_size);

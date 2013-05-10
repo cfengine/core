@@ -95,7 +95,7 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
         if (PromiseGetConstraintAsInt(ctx, "persistence", pp) == 0)
         {
             CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> Cancelling cached persistent class %s", pp->promiser);
-            DeletePersistentContext(pp->promiser);
+            EvalContextHeapPersistentRemove(pp->promiser);
         }
         return false;
     }
@@ -340,7 +340,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                 {
                     CfOut(OUTPUT_LEVEL_VERBOSE, "", " ?> defining explicit persistent class %s (%d mins)\n", pp->promiser,
                           a.context.persistent);
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapPersistentSave(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
                 }
                 else
@@ -376,7 +376,7 @@ void KeepClassContextPromise(EvalContext *ctx, Promise *pp)
                           a.context.persistent);
                     CfOut(OUTPUT_LEVEL_VERBOSE, "",
                           " ?> Warning: persistent classes are global in scope even in agent bundles\n");
-                    NewPersistentContext(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
+                    EvalContextHeapPersistentSave(pp->promiser, pp->ns, a.context.persistent, CONTEXT_STATE_POLICY_RESET);
                     EvalContextHeapAddSoft(ctx, pp->promiser, pp->ns);
                 }
                 else
@@ -955,7 +955,7 @@ bool EvalFileResult(EvalContext *ctx, const char *file_result, StringSet *leaf_a
 
 /*****************************************************************************/
 
-void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
+void EvalContextHeapPersistentSave(const char *context, const char *ns, unsigned int ttl_minutes, ContextStatePolicy policy)
 {
     CF_DB *dbp;
     CfState state;
@@ -967,7 +967,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
         return;
     }
 
-    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, unqualifiedname);
+    snprintf(name, CF_BUFSIZE, "%s%c%s", ns, CF_NS, context);
     
     if (ReadDB(dbp, name, &state, sizeof(state)))
     {
@@ -996,7 +996,7 @@ void NewPersistentContext(char *unqualifiedname, const char *ns, unsigned int tt
 
 /*****************************************************************************/
 
-void DeletePersistentContext(const char *name)
+void EvalContextHeapPersistentRemove(const char *context)
 {
     CF_DB *dbp;
 
@@ -1005,14 +1005,14 @@ void DeletePersistentContext(const char *name)
         return;
     }
 
-    DeleteDB(dbp, name);
-    CfDebug("Deleted any persistent state %s\n", name);
+    DeleteDB(dbp, context);
+    CfDebug("Deleted any persistent state %s\n", context);
     CloseDB(dbp);
 }
 
 /*****************************************************************************/
 
-void LoadPersistentContext(EvalContext *ctx)
+void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
 {
     CF_DB *dbp;
     CF_DBC *dbcp;

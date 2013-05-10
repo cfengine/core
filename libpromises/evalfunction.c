@@ -4058,17 +4058,21 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
         CfOut(OUTPUT_LEVEL_VERBOSE, "", "Deactivated classes: %s\n", line + 1);
         if (CheckID(line + 1))
         {
-            StringSet *negated = StringSetFromString(line + 1, ',');
-            StringSetIterator it = StringSetIteratorInit(negated);
-            const char *context = NULL;
-            while ((context = StringSetIteratorNext(&it)))
+            if (line[1] != '\0')
             {
-                if (EvalContextHeapContainsHard(ctx, context))
+                StringSet *negated = StringSetFromString(line + 1, ',');
+                StringSetIterator it = StringSetIteratorInit(negated);
+                const char *negated_context = NULL;
+                while ((negated_context = StringSetIteratorNext(&it)))
                 {
-                    FatalError("Cannot negate the reserved class [%s]\n", context);
-                }
+                    if (EvalContextHeapContainsHard(ctx, negated_context))
+                    {
+                        FatalError("Cannot negate the reserved class [%s]\n", negated_context);
+                    }
 
-                EvalContextHeapAddSoft(ctx, context, NULL);
+                    EvalContextHeapAddNegated(ctx, negated_context);
+                }
+                StringSetDestroy(negated);
             }
         }
         break;

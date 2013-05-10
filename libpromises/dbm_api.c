@@ -259,6 +259,11 @@ bool ReadDB(DBHandle *handle, const char *key, void *dest, int destSz)
     return DBPrivRead(handle->priv, key, strlen(key) + 1, dest, destSz);
 }
 
+bool ReadDBInv(DBHandle *handle, const char *key_list[], const char *value,int *iterator)
+{
+    return DBPrivReadInv(handle->priv, key_list, value, iterator);
+}
+
 bool WriteDB(DBHandle *handle, const char *key, const void *src, int srcSz)
 {
     return DBPrivWrite(handle->priv, key, strlen(key) + 1, src, srcSz);

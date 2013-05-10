@@ -40,7 +40,8 @@ typedef enum
 bool Address2Hostkey(const char *address, char *hostkey);
 
 void LastSaw(char *ipaddress, unsigned char digest[EVP_MAX_MD_SIZE + 1], LastSeenRole role);
-bool RemoveHostFromLastSeen(const char *hostkey);
+bool RemoveDigestFromLastSeen(const char *digest);
+bool RemoveIPFromLastSeen(const char *ip);
 
 /*
  * Return false in order to stop iteration

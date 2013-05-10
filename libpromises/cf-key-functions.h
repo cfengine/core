@@ -53,6 +53,7 @@ int TrustKey(const char* pubkey);
 bool ShowHost(const char *hostkey, const char *address, bool incoming, const KeyHostSeen *quality, void *ctx);
 void ShowLastSeenHosts();
 int RemoveKeys(const char *host);
+bool ParseHost(const char *host);
 void KeepKeyPromises(const char *public_key_file, const char *private_key_file);
 
 #ifndef HAVE_NOVA

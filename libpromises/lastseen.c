@@ -138,7 +138,7 @@ void UpdateLastSawHost(const char *hostkey, const char *address,
 
 /*****************************************************************************/
 
-bool RemoveHostFromLastSeen(const char *hostkey)
+bool RemoveIPFromLastSeen(const char *ip)
 {
     DBHandle *db;
     if (!OpenDB(&db, dbid_lastseen))
@@ -147,32 +147,83 @@ bool RemoveHostFromLastSeen(const char *hostkey)
         return false;
     }
 
-    /* Lookup corresponding address entry */
+    /* Lookup corresponding address entries */
 
-    char hostkey_key[CF_BUFSIZE];
-    snprintf(hostkey_key, CF_BUFSIZE, "k%s", hostkey);
-    char address[CF_BUFSIZE];
+    char *key_list[CF_BUFSIZE];
+    char quality_key[CF_BUFSIZE], hostkey[CF_BUFSIZE];
+    int iterator=0;
 
-    if (ReadDB(db, hostkey_key, &address, sizeof(address)) == true)
+    if (ReadDBInv(db, key_list,ip, &iterator) == true)
     {
-        /* Remove address entry */
-        char address_key[CF_BUFSIZE];
-        snprintf(address_key, CF_BUFSIZE, "a%s", address);
+        while(iterator>0)
+        {
+           /* Remove hostkey entry*/
+            DeleteDB(db,key_list[iterator-1]);
 
-        DeleteDB(db, address_key);
+            /* Remove quality-of-connection entries */
+            snprintf(hostkey, CF_BUFSIZE-1, "%s",key_list[iterator-1]+1);
+            snprintf(quality_key, CF_BUFSIZE, "qi%s",hostkey);
+            DeleteDB(db, quality_key);
+           
+            snprintf(quality_key, CF_BUFSIZE, "qo%s", hostkey);
+            DeleteDB(db, quality_key); 
+            
+            free(key_list[iterator-1]);
+            iterator--;
+
+        }
+    } 
+
+    /* Remove main entry */
+    char address_key[CF_BUFSIZE];
+    snprintf(address_key, CF_BUFSIZE, "a%s", ip);
+    DeleteDB(db, address_key);
+
+
+    CloseDB(db);
+
+    return true;
+}
+
+/*****************************************************************************/
+
+bool RemoveDigestFromLastSeen(const char *digest)
+{
+    DBHandle *db;
+    if (!OpenDB(&db, dbid_lastseen))
+    {
+        CfOut(OUTPUT_LEVEL_ERROR, "", "Unable to open lastseen database");
+        return false;
+    }
+
+    /* Lookup corresponding address entries */
+    
+    char *ip_list[CF_BUFSIZE];
+    char hostkey_key[CF_BUFSIZE], quality_key[CF_BUFSIZE];
+    int iterator=0;
+
+    if (ReadDBInv(db, ip_list, digest, &iterator) == true)
+    {
+        while(iterator > 0)
+        {
+            /* Remove address entry */
+            DeleteDB(db,ip_list[iterator-1]);
+            free(ip_list[iterator-1]);
+            iterator--;
+        }
     }
 
     /* Remove quality-of-connection entries */
 
-    char quality_key[CF_BUFSIZE];
-
-    snprintf(quality_key, CF_BUFSIZE, "qi%s", hostkey);
+    snprintf(quality_key, CF_BUFSIZE, "qi%s", digest);
     DeleteDB(db, quality_key);
 
-    snprintf(quality_key, CF_BUFSIZE, "qo%s", hostkey);
+    snprintf(quality_key, CF_BUFSIZE, "qo%s", digest);
     DeleteDB(db, quality_key);
 
     /* Remove main entry */
+    
+    snprintf(hostkey_key, CF_BUFSIZE, "k%s", digest);
 
     DeleteDB(db, hostkey_key);
 

@@ -135,15 +135,15 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         switch (retval)
         {
         case PROMISE_RESULT_FAIL:
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method failed in some repairs or aborted");
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Method \"%s\" failed in some repairs or aborted", bp->name);
             break;
 
         case PROMISE_RESULT_CHANGE:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method invoked repairs");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Method \"%s\" invoked repairs", bp->name);
             break;
 
         default:
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method verified");
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Method \"%s\" verified", bp->name);
             break;
 
         }

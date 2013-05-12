@@ -256,11 +256,6 @@ int AuthenticateAgent(AgentConnection *conn, bool trust_key)
     BN_free(nonce_challenge);
     free(out);
 
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, PUBKEY, 0);
-    }
-
 /*Send the public key - we don't know if server has it */
 /* proposition C2 */
 

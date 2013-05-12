@@ -65,12 +65,9 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
         return false;
     }
 
-    if (DEBUG)
+    for (i = 0; names[i] != NULL; i++)
     {
-        for (i = 0; names[i] != NULL; i++)
-        {
-            printf("COL[%s] = \"%s\"\n", names[i], column[i]);
-        }
+        Log(LOG_LEVEL_DEBUG, "In SelectProcess, COL[%s] = '%s'", names[i], column[i]);
     }
 
     for (rp = a.owner; rp != NULL; rp = rp->next)

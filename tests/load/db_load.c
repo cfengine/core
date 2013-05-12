@@ -23,8 +23,6 @@
 #define VALUE_OFFSET1 10000
 #define VALUE_OFFSET2 100000
 
-
-int DEBUG = false;
 char CFWORKDIR[CF_BUFSIZE];
 
 static bool CoinFlip(void);

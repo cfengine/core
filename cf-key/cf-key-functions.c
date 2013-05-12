@@ -253,11 +253,6 @@ void KeepKeyPromises(const char *public_key_file, const char *private_key_file)
         return;
     }
 
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, pair, 0);
-    }
-
     fd = open(private_key_file, O_WRONLY | O_CREAT | O_TRUNC, 0600);
 
     if (fd < 0)

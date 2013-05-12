@@ -1022,14 +1022,6 @@ void PromiseTypeDestroy(PromiseType *promise_type)
 Bundle *PolicyAppendBundle(Policy *policy, const char *ns, const char *name, const char *type, Rlist *args,
                      const char *source_path)
 {
-    Log(LOG_LEVEL_DEBUG, "Appending new bundle %s %s (", type, name);
-
-    if (DEBUG)
-    {
-        RlistShow(stdout, args);
-    }
-    Log(LOG_LEVEL_DEBUG, ")\n");
-
     Bundle *bundle = xcalloc(1, sizeof(Bundle));
 
     bundle->parent_policy = policy;
@@ -2734,18 +2726,8 @@ void PromiseRecheckAllConstraints(EvalContext *ctx, Promise *pp)
 /*****************************************************************************/
 
 static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
-
 {
-    Log(LOG_LEVEL_DEBUG, "  Post Check Constraint: %s =>", cp->lval);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, cp->rval);
-        printf("\n");
-    }
-
-// Check class
-
+    // Check class
     for (size_t i = 0; CF_CLASSBODY[i].lval != NULL; i++)
     {
         if (strcmp(cp->lval, CF_CLASSBODY[i].lval) == 0)

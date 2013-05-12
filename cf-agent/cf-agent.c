@@ -412,11 +412,11 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             break;
 
         case 'n':
@@ -703,19 +703,17 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
             {
                 Rlist *rp;
 
-                if (VERBOSE)
+                Log(LOG_LEVEL_VERBOSE, "SET refresh_processes when starting to...");
+                for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
                 {
-                    printf("%s> SET refresh_processes when starting: ", VPREFIX);
-
-                    for (rp = (Rlist *) retval.item; rp != NULL; rp = rp->next)
+                    Log(LOG_LEVEL_VERBOSE, "%s", RlistScalarValue(rp));
+                    // TODO: why is this only done in verbose mode?
+                    // original commit says 'optimization'.
+                    if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
                     {
-                        printf(" %s", (char *) rp->item);
                         PrependItem(&PROCESSREFRESH, rp->item, NULL);
                     }
-
-                    printf("\n");
                 }
-
                 continue;
             }
 
@@ -865,15 +863,39 @@ void KeepControlPromises(EvalContext *ctx, Policy *policy)
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_INFORM].lval) == 0)
             {
-                INFORM = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET inform = %c", INFORM);
+                bool inform = BooleanFromString(retval.item);
+                if (inform)
+                {
+                    LogSetGlobalLevel(MAX(LOG_LEVEL_INFO, LogGetGlobalLevel()));
+                }
+                else
+                {
+                    if (LogGetGlobalLevel() >= LOG_LEVEL_INFO)
+                    {
+                        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
+                    }
+                }
+                Log(LOG_LEVEL_VERBOSE, "body agent control, inform => '%s', sets new log level to '%s'",
+                    inform ? "true" : "false", LogLevelToString(LogGetGlobalLevel()));
                 continue;
             }
 
             if (strcmp(cp->lval, CFA_CONTROLBODY[AGENT_CONTROL_VERBOSE].lval) == 0)
             {
-                VERBOSE = BooleanFromString(retval.item);
-                Log(LOG_LEVEL_VERBOSE, "SET inform = %c", VERBOSE);
+                bool verbose = BooleanFromString(retval.item);
+                if (verbose)
+                {
+                    LogSetGlobalLevel(MAX(LOG_LEVEL_VERBOSE, LogGetGlobalLevel()));
+                }
+                else
+                {
+                    if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
+                    {
+                        LogSetGlobalLevel(LOG_LEVEL_INFO);
+                    }
+                }
+                Log(LOG_LEVEL_VERBOSE, "body agent control, verbose => '%s', sets new log level to '%s'",
+                    verbose ? "true" : "false", LogLevelToString(LogGetGlobalLevel()));
                 continue;
             }
 
@@ -1096,22 +1118,20 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy, GenericAgentCon
         FatalError(ctx, "Errors in agent bundles");
     }
 
-    if (VERBOSE || DEBUG)
+    if (LEGACY_OUTPUT)
     {
-        if (LEGACY_OUTPUT)
-        {
-            printf("%s> -> Bundlesequence => ", VPREFIX);
-            RvalShow(stdout, retval);
-            printf("\n");
-        }
-        else
-        {
-            Writer *w = StringWriter();
-            WriterWrite(w, "Using bundlesequence => ");
-            RvalWrite(w, retval);
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
-            WriterClose(w);
-        }
+        Writer *w = StringWriter();
+        RvalWrite(w, retval);
+        Log(LOG_LEVEL_VERBOSE, " -> Bundlesequence => %s", StringWriterData(w));
+        WriterClose(w);
+    }
+    else
+    {
+        Writer *w = StringWriter();
+        WriterWrite(w, "Using bundlesequence => ");
+        RvalWrite(w, retval);
+        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        WriterClose(w);
     }
 
 /* If all is okay, go ahead and evaluate */

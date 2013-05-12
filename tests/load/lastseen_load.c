@@ -82,8 +82,6 @@ bool IsItemIn(Item *list, const char *item)
     exit(42);
 }
 
-int DEBUG;
-
 void DeleteItemList(Item *item)
 {
     exit(42);

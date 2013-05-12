@@ -321,7 +321,6 @@ void RlistDestroy(Rlist *list)
 
 /* Stub out variables */
 
-int DEBUG;
 AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;

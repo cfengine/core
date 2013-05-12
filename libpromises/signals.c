@@ -68,11 +68,11 @@ void HandleSignalsForAgent(int signum)
     }
     else if (signum == SIGUSR1)
     {
-        DEBUG = true;
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     }
     else if (signum == SIGUSR2)
     {
-        DEBUG = false;
+        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
     }
 
 /* Reset the signal handler */
@@ -96,11 +96,11 @@ void HandleSignalsForDaemon(int signum)
     }
     else if (signum == SIGUSR1)
     {
-        DEBUG = true;
+        LogSetGlobalLevel(LOG_LEVEL_DEBUG);
     }
     else if (signum == SIGUSR2)
     {
-        DEBUG = false;
+        LogSetGlobalLevel(LOG_LEVEL_NOTICE);
     }
 
 /* Reset the signal handler */

@@ -57,9 +57,4 @@ LoggingPrivContext *LoggingPrivGetContext(void);
  */
 void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level);
 
-/**
- * @brief Return global logging level
- */
-LogLevel LoggingPrivGetGlobalLogLevel(void);
-
 #endif

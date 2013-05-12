@@ -394,7 +394,6 @@ int main()
 
 /* Stub out functionality we don't really use */
 
-int DEBUG;
 char CONTEXTID[32];
 
 void __ProgrammingError(const char *file, int lineno, const char *format, ...)

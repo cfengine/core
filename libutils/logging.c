@@ -29,15 +29,12 @@
 #include "string_lib.h"
 #include "misc_lib.h"
 
-/* TODO: get rid of */
-int INFORM;
-int VERBOSE;
-int DEBUG;
 char VPREFIX[1024];
 bool LEGACY_OUTPUT = false;
 
 typedef struct
 {
+    LogLevel global_level;
     LogLevel log_level;
     LogLevel report_level;
 
@@ -69,31 +66,12 @@ static LoggingContext *GetCurrentThreadContext(void)
     if (lctx == NULL)
     {
         lctx = xcalloc(1, sizeof(LoggingContext));
-        lctx->log_level = LoggingPrivGetGlobalLogLevel();
-        lctx->report_level = LoggingPrivGetGlobalLogLevel();
+        lctx->global_level = LOG_LEVEL_NOTICE;
+        lctx->log_level = lctx->global_level;
+        lctx->report_level =lctx->global_level;
         pthread_setspecific(log_context_key, lctx);
     }
     return lctx;
-}
-
-LogLevel LoggingPrivGetGlobalLogLevel(void)
-{
-    if (VERBOSE)
-    {
-        return LOG_LEVEL_VERBOSE;
-    }
-
-    if (INFORM)
-    {
-        return LOG_LEVEL_INFO;
-    }
-
-    if (DEBUG)
-    {
-        return LOG_LEVEL_DEBUG;
-    }
-
-    return LOG_LEVEL_NOTICE;
 }
 
 void LoggingPrivSetContext(LoggingPrivContext *pctx)
@@ -115,7 +93,7 @@ void LoggingPrivSetLevels(LogLevel log_level, LogLevel report_level)
     lctx->report_level = report_level;
 }
 
-static const char *LogLevelToString(LogLevel level)
+const char *LogLevelToString(LogLevel level)
 {
     switch (level)
     {
@@ -232,4 +210,17 @@ void Log(LogLevel level, const char *fmt, ...)
     va_start(ap, fmt);
     VLog(level, fmt, ap);
     va_end(ap);
+}
+
+void LogSetGlobalLevel(LogLevel level)
+{
+    LoggingContext *lctx = GetCurrentThreadContext();
+    lctx->global_level = level;
+    LoggingPrivSetLevels(level, level);
+}
+
+LogLevel LogGetGlobalLevel(void)
+{
+    const LoggingContext *lctx = GetCurrentThreadContext();
+    return lctx->global_level;
 }

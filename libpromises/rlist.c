@@ -428,10 +428,8 @@ Rlist *RlistAppendFnCall(Rlist **start, const FnCall *fn)
 }
 
 Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
-   /* Allocates new memory for objects - careful, could leak!  */
 {
     Rlist *rp, *lp = *start;
-    FnCall *fp;
 
     switch (type)
     {
@@ -439,17 +437,10 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return RlistAppendScalar(start, item);
 
     case RVAL_TYPE_FNCALL:
-        Log(LOG_LEVEL_DEBUG, "Appending function to rval-list function call: ");
-        fp = (FnCall *) item;
-        if (DEBUG)
-        {
-            FnCallShow(stdout, fp);
-        }
-        Log(LOG_LEVEL_DEBUG, "\n");
         break;
 
     case RVAL_TYPE_LIST:
-        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object");
 
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
@@ -459,7 +450,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return lp;
 
     default:
-        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]", type, (char *) item);
         return NULL;
     }
 
@@ -662,7 +653,7 @@ static Rlist *RlistParseStringBounded(char *left,
                     else
                     {
                         *s2='\0';
-                        Log(LOG_LEVEL_VERBOSE, "Extracted string [%s] of length (%d)", extract,
+                        Log(LOG_LEVEL_VERBOSE, "Extracted string [%s] of length (%zd)", extract,
                                (size_t) (s2 - extract));
                         RlistAppendScalar(&newlist, extract);
                         ignore = true;
@@ -841,18 +832,8 @@ void RvalDestroy(Rval rval)
 {
     Rlist *clist, *next = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "DeleteRvalItem(%c)", rval.type);
-
-    if (DEBUG)
-    {
-        RvalShow(stdout, rval);
-    }
-
-    Log(LOG_LEVEL_DEBUG, "\n");
-
     if (rval.item == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "DeleteRval NULL\n");
         return;
     }
 

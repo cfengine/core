@@ -61,7 +61,7 @@ static bool INSTALL_SKIP = false;
 
 #define YYMALLOC xmalloc
 
-#define ParserDebug if (DEBUG) printf
+#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
 
 %}
 

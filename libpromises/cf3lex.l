@@ -48,7 +48,7 @@
 #define malloc xmalloc
 #define realloc xrealloc
 
-#define ParserDebug if (DEBUG) printf
+#define ParserDebug if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG) printf
 
 static int DeEscapeQuotedString(const char *from, char *to);
 

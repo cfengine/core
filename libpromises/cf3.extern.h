@@ -62,11 +62,6 @@ extern PlatformContext VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern int DEBUG;
-
-extern int VERBOSE;
-extern int INFORM;
-
 extern int DONTDO;
 extern int IGNORELOCK;
 extern bool MINUSF;

@@ -2134,17 +2134,11 @@ static int AuthenticationDialogue(ServerConnectionState *conn, char *recvbuffer,
         return false;
     }
 
-    if (DEBUG)
-    {
-        RSA_print_fp(stdout, newkey, 0);
-    }
-
     HashPubKey(newkey, conn->digest, CF_DEFAULT_DIGEST);
 
-    if (VERBOSE)
     {
         char buffer[EVP_MAX_MD_SIZE * 4];
-        Log(LOG_LEVEL_VERBOSE, "Public key identity of host \"%s\" is \"%s\"", conn->ipaddr,
+        Log(LOG_LEVEL_VERBOSE, "Public key identity of host '%s' is '%s'", conn->ipaddr,
               HashPrintSafe(CF_DEFAULT_DIGEST, conn->digest, buffer));
     }
 

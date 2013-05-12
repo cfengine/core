@@ -116,20 +116,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     Promise *pcopy;
     Rval returnval;
 
-    if (pp->promisee.item)
-    {
-        Log(LOG_LEVEL_DEBUG, "CopyPromise(%s->", pp->promiser);
-        if (DEBUG)
-        {
-            RvalShow(stdout, pp->promisee);
-        }
-        Log(LOG_LEVEL_DEBUG, "\n");
-    }
-    else
-    {
-        Log(LOG_LEVEL_DEBUG, "CopyPromise(%s->)\n", pp->promiser);
-    }
-
     pcopy = xcalloc(1, sizeof(Promise));
 
     if (pp->promiser)

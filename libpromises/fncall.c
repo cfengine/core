@@ -64,19 +64,11 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 {
     FnCall *fp;
 
-    Log(LOG_LEVEL_DEBUG, "Installing Function Call %s\n", name);
-
     fp = xmalloc(sizeof(FnCall));
 
     fp->name = xstrdup(name);
     fp->args = args;
 
-    Log(LOG_LEVEL_DEBUG, "Installed ");
-    if (DEBUG)
-    {
-        FnCallShow(stdout, fp);
-    }
-    Log(LOG_LEVEL_DEBUG, "\n\n");
     return fp;
 }
 
@@ -143,16 +135,7 @@ FnCallResult FnCallEvaluate(EvalContext *ctx, FnCall *fp, const Promise *caller)
     Rlist *expargs;
     const FnCallType *fp_type = FnCallTypeGet(fp->name);
 
-    if (fp_type)
-    {
-        if (DEBUG)
-        {
-            printf("EVALUATE FN CALL %s\n", fp->name);
-            FnCallShow(stdout, fp);
-            printf("\n");
-        }
-    }
-    else
+    if (!fp_type)
     {
         if (caller)
         {

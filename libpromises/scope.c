@@ -789,14 +789,8 @@ int ScopeMapBodyArgs(EvalContext *ctx, const char *scopeid, Rlist *give, const R
 
             if (res.status == FNCALL_FAILURE && THIS_AGENT_TYPE != AGENT_TYPE_COMMON)
             {
-                // Unresolved variables
-                if (VERBOSE)
-                {
-                    printf
-                        ("Embedded function argument does not resolve to a name - probably too many evaluation levels for ");
-                    FnCallShow(stdout, fp);
-                    printf(" (try simplifying)\n");
-                }
+                Log(LOG_LEVEL_VERBOSE, "Embedded function argument does not resolve to a name - probably too many evaluation levels for '%s'",
+                    fp->name);
             }
             else
             {

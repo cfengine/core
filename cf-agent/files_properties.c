@@ -108,7 +108,7 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
         return true;
     }
 
-    if ((stat->st_size == 0) && (!(VERBOSE || INFORM)))   /* No sense in warning about empty files */
+    if ((stat->st_size == 0) && LogGetGlobalLevel() < LOG_LEVEL_INFO)   /* No sense in warning about empty files */
     {
         return false;
     }

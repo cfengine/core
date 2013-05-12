@@ -542,7 +542,7 @@ Policy *GenericAgentLoadPolicy(EvalContext *ctx, GenericAgentConfig *config)
         SeqDestroy(errors);
     }
 
-    if (VERBOSE || DEBUG)
+    if (LogGetGlobalLevel() >= LOG_LEVEL_VERBOSE)
     {
         ShowContext(ctx);
     }
@@ -597,21 +597,6 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
-
-    if (VERBOSE)
-    {
-        EvalContextHeapAddHard(ctx, "verbose_mode");
-    }
-
-    if (INFORM)
-    {
-        EvalContextHeapAddHard(ctx, "inform_mode");
-    }
-
-    if (DEBUG)
-    {
-        EvalContextHeapAddHard(ctx, "debug_mode");
-    }
 
     Log(LOG_LEVEL_VERBOSE, "CFEngine - autonomous configuration engine - commence self-diagnostic prelude");
     if (LEGACY_OUTPUT)
@@ -1808,15 +1793,24 @@ void GenericAgentConfigApply(EvalContext *ctx, const GenericAgentConfig *config)
         }
     }
 
-    if (config->debug_mode)
+    switch (LogGetGlobalLevel())
     {
+    case LOG_LEVEL_DEBUG:
+        EvalContextHeapAddHard(ctx, "debug_mode");
         EvalContextHeapAddHard(ctx, "opt_debug");
-        DEBUG = true;
+        // intentional fall
+    case LOG_LEVEL_VERBOSE:
+        EvalContextHeapAddHard(ctx, "verbose_mode");
+        // intentional fall
+    case LOG_LEVEL_INFO:
+        EvalContextHeapAddHard(ctx, "inform_mode");
+        break;
+    default:
+        break;
     }
 
     if (config->agent_specific.agent.bootstrap_policy_server)
     {
-
         EvalContextHeapAddHard(ctx, "bootstrap_mode");
     }
 }

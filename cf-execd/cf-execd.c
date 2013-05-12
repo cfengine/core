@@ -228,12 +228,12 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
-            NO_FORK = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
+            NO_FORK = true; // TODO: really?
             break;
 
         case 'n':

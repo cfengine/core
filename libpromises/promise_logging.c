@@ -80,7 +80,7 @@ static LogLevel GetLevelForPromise(const EvalContext *ctx, const Promise *pp, co
 
 static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel log_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel log_level = LogGetGlobalLevel();
 
     if (pp)
     {
@@ -99,7 +99,7 @@ static LogLevel CalculateLogLevel(const EvalContext *ctx, const Promise *pp)
 
 static LogLevel CalculateReportLevel(const EvalContext *ctx, const Promise *pp)
 {
-    LogLevel report_level = LoggingPrivGetGlobalLogLevel();
+    LogLevel report_level = LogGetGlobalLevel();
 
     if (pp)
     {
@@ -212,7 +212,7 @@ char *PromiseLoggingPromiseFinish(const EvalContext *eval_context, const Promise
     plctx->last_message = NULL;
     free(plctx->stack_path);
 
-    LoggingPrivSetLevels(LoggingPrivGetGlobalLogLevel(), LoggingPrivGetGlobalLogLevel());
+    LoggingPrivSetLevels(LogGetGlobalLevel(), LogGetGlobalLevel());
 
     return last_message;
 }

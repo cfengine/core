@@ -168,11 +168,11 @@ GenericAgentConfig *CheckOpts(int argc, char **argv)
             break;
 
         case 'I':
-            INFORM = true;
+            LogSetGlobalLevel(LOG_LEVEL_INFO);
             break;
 
         case 'v':
-            VERBOSE = true;
+            LogSetGlobalLevel(LOG_LEVEL_VERBOSE);
             NO_FORK = true;
             break;
 
@@ -479,15 +479,15 @@ int OpenReceiverChannel(void)
 
         if (bind(sd, ap->ai_addr, ap->ai_addrlen) != -1)
         {
-            if (DEBUG)
+            if (LogGetGlobalLevel() >= LOG_LEVEL_DEBUG)
             {
                 /* Convert IP address to string, no DNS lookup performed. */
                 char txtaddr[CF_MAX_IP_LEN] = "";
                 getnameinfo(ap->ai_addr, ap->ai_addrlen,
                             txtaddr, sizeof(txtaddr),
                             NULL, 0, NI_NUMERICHOST);
-                printf("Bound to address %s on %s=%d\n", txtaddr,
-                       CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
+                Log(LOG_LEVEL_DEBUG, "Bound to address %s on %s=%d\n", txtaddr,
+                    CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
             }
             break;
         }

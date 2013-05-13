@@ -1646,7 +1646,9 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
     }
     else
     {
+        bool have_classes = false;
         Writer *w = StringWriter();
+
         WriterWrite(w, "Private classes augmented:");
         StringSetIterator it = EvalContextStackFrameIteratorSoft(ctx);
         const char *context = NULL;
@@ -1654,8 +1656,14 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         {
             WriterWriteChar(w, ' ');
             WriterWrite(w, context);
+            have_classes = true;
         }
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+
+        if (have_classes)
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        }
+
         WriterClose(w);
     }
 
@@ -1677,7 +1685,9 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
     }
     else
     {
+        bool have_classes = false;
         Writer *w = StringWriter();
+
         WriterWrite(w, "Private classes diminished:");
         StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
         const char *context = NULL;
@@ -1685,8 +1695,14 @@ static void ClassBanner(EvalContext *ctx, TypeSequence type)
         {
             WriterWriteChar(w, ' ');
             WriterWrite(w, context);
+            have_classes = true;
         }
-        Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+
+        if (have_classes)
+        {
+            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+        }
+
         WriterClose(w);
     }
 }

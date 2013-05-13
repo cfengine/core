@@ -864,13 +864,13 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
 {
     if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
     {
-        Log(LOG_LEVEL_ERR, "execresult \"%s\" does not have an absolute path", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
-        Log(LOG_LEVEL_ERR, "execresult \"%s\" is assumed to be executable but isn't", RlistScalarValue(finalargs));
+        Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
         return (FnCallResult) { FNCALL_FAILURE };
     }
 

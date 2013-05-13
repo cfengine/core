@@ -446,13 +446,17 @@ static void ShowContext(EvalContext *ctx)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            if (SeqLength(soft_contexts) > 0)
+            {
+                Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            }
             WriterClose(w);
         }
         SeqDestroy(soft_contexts);
     }
 
     {
+        bool have_negated_classes = false;
         Writer *w = NULL;
         if (LEGACY_OUTPUT)
         {
@@ -462,7 +466,7 @@ static void ShowContext(EvalContext *ctx)
         else
         {
             w = StringWriter();
-            WriterWrite(w, "Additional classes:");
+            WriterWrite(w, "Negated classes:");
         }
 
         StringSetIterator it = EvalContextHeapIteratorNegated(ctx);
@@ -470,6 +474,7 @@ static void ShowContext(EvalContext *ctx)
         while ((context = StringSetIteratorNext(&it)))
         {
             WriterWriteF(w, " %s", context);
+            have_negated_classes = true;
         }
 
         if (LEGACY_OUTPUT)
@@ -479,7 +484,10 @@ static void ShowContext(EvalContext *ctx)
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            if (have_negated_classes)
+            {
+                Log(LOG_LEVEL_VERBOSE, "%s", StringWriterData(w));
+            }
             WriterClose(w);
         }
     }
@@ -597,12 +605,6 @@ void InitializeGA(EvalContext *ctx, GenericAgentConfig *config)
 #endif
 
     strcpy(VPREFIX, GetConsolePrefix());
-
-    Log(LOG_LEVEL_VERBOSE, "CFEngine - autonomous configuration engine - commence self-diagnostic prelude");
-    if (LEGACY_OUTPUT)
-    {
-        Log(LOG_LEVEL_VERBOSE, "------------------------------------------------------------------------");
-    }
 
 /* Define trusted directories */
 

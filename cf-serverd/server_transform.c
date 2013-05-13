@@ -558,6 +558,8 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 {
 /* Dial up the generic promise expansion with a callback */
 
+    CleanReportBookFilterSet();
+
     for (size_t i = 0; i < SeqLength(policy->bundles); i++)
     {
         Bundle *bp = SeqAt(policy->bundles, i);
@@ -585,8 +587,6 @@ static void KeepPromiseBundles(EvalContext *ctx, Policy *policy)
 
                 EvalContextStackPushBundleFrame(ctx, bp, false);
                 ScopeAugment(ctx, bp, NULL, NULL);
-
-                CleanReportBookFilterSet();
 
                 for (size_t ppi = 0; ppi < SeqLength(sp->promises); ppi++)
                 {

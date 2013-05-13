@@ -827,13 +827,13 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" does not have an absolute path\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 
     if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
     {
         CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
     }
 
     struct stat statbuf;

@@ -115,7 +115,14 @@ static bool IsReadReady(int fd, int timeout_sec)
 {
     fd_set  rset;
     FD_ZERO(&rset);
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// Avoid spurious HP-UX GCC type-pun warning on FD_SET() macro
+#endif
     FD_SET(fd, &rset);
+#if defined(__hpux) && defined(__GNUC__)
+#pragma GCC diagnostic warning "-Wstrict-aliasing"
+#endif
 
     struct timeval tv = {
         .tv_sec = timeout_sec,

@@ -1732,7 +1732,7 @@ static void ParallelFindAndVerifyFilesPromises(EvalContext *ctx, Promise *pp)
 
 static bool VerifyBootstrap(void)
 {
-    if (NULL_OR_EMPTY(POLICY_SERVER))
+    if (POLICY_SERVER[0] == '\0')
     {
         Log(LOG_LEVEL_ERR, "Bootstrapping failed, no policy server is specified");
         return false;

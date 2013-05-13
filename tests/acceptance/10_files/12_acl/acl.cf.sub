@@ -17,6 +17,18 @@ body common control
 
 bundle agent init
 {
+  classes:
+    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
+    "system_getfacl" expression => fileexists("/usr/bin/getfacl");
+
+  vars:
+    linux.cfengine_internal_getfacl::
+      "cmd" string => "/var/cfengine/bin/getfacl";
+    linux.!cfengine_internal_getfacl.system_getfacl::
+      "cmd" string => "/usr/bin/getfacl";
+    windows::
+      "cmd" string => "C:\windows\system32\cmd.exe /C cacls";
+
   vars:
     windows::
       "rootuser" string => "Administrator";
@@ -261,25 +273,17 @@ body acl acldef(testname, file)
 
 bundle agent test_check(testname, file)
 {
-  classes:
-    "cfengine_internal_getfacl" expression => fileexists("/var/cfengine/bin/getfacl");
-
   vars:
-    linux.cfengine_internal_getfacl::
-      "cmd" string => execresult("/var/cfengine/bin/getfacl $(file)", "noshell");
-    linux.!cfengine_internal_getfacl::
-      "cmd" string => execresult("/usr/bin/getfacl $(file)", "noshell");
-    windows::
-      "cmd" string => execresult("C:\windows\system32\cmd.exe /C cacls $(file)", "noshell");
+    "output" string => execresult("$(init.cmd) $(file)", "noshell");
 
   classes:
-    "regcmp_matched" expression => regcmp("$(init.regcmp[$(testname)])", "$(cmd)");
+    "regcmp_matched" expression => regcmp("$(init.regcmp[$(testname)])", "$(output)");
     "notregcmp_exists" expression => isvariable("init.notregcmp[$(testname)]");
     notregcmp_exists::
-      "notregcmp_matched" expression => regcmp("$(init.notregcmp[$(testname)])", "$(cmd)");
+      "notregcmp_matched" expression => regcmp("$(init.notregcmp[$(testname)])", "$(output)");
   reports:
     !regcmp_matched|notregcmp_matched::
-      "Test \"$(testname)\" failed: Got \"$(cmd)\"";
+      "Test \"$(testname)\" failed: Got \"$(output)\"";
       "Should contain \"$(init.regcmp[$(testname)])\"";
     (!regcmp_matched|notregcmp_matched)&notregcmp_exists::
       "Should NOT contain \"$(init.notregcmp[$(testname)])\"";

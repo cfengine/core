@@ -112,7 +112,7 @@ void SetPolicyServer(EvalContext *ctx, const char *new_policy_server)
 {
     if (new_policy_server)
     {
-        snprintf(POLICY_SERVER, CF_MAXVARSIZE, "%s", new_policy_server);
+        snprintf(POLICY_SERVER, CF_MAX_IP_LEN, "%s", new_policy_server);
         ScopeNewSpecialScalar(ctx, "sys", "policy_hub", new_policy_server, DATA_TYPE_STRING);
     }
     else
@@ -147,7 +147,7 @@ static char *PolicyServerFilename(const char *workdir)
 
 char *ReadPolicyServerFile(const char *workdir)
 {
-    char contents[4096] = "";
+    char contents[CF_MAX_IP_LEN] = "";
 
     char *filename = PolicyServerFilename(workdir);
     FILE *fp = fopen(filename, "r");
@@ -155,7 +155,7 @@ char *ReadPolicyServerFile(const char *workdir)
 
     if (fp)
     {
-        if (fscanf(fp, "%4095s", contents) != 1)
+        if (fscanf(fp, "%63s", contents) != 1)
         {
             fclose(fp);
             return NULL;

@@ -376,7 +376,6 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
 
     case DATA_TYPE_BODY:
     case DATA_TYPE_BUNDLE:
-        Log(LOG_LEVEL_DEBUG, "Nothing to check for body reference\n");
         break;
 
     case DATA_TYPE_OPTION:
@@ -398,7 +397,6 @@ SyntaxTypeMatch CheckConstraintTypeMatch(const char *lval, Rval rval, DataType d
         break;
     }
 
-    Log(LOG_LEVEL_DEBUG, "end CheckConstraintTypeMatch---------\n");
     return SYNTAX_TYPE_MATCH_OK;
 }
 
@@ -410,8 +408,6 @@ DataType StringDataType(EvalContext *ctx, const char *scopeid, const char *strin
     Rval rval;
     int islist = false;
     char var[CF_BUFSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "StringDataType(%s)\n", string);
 
 /*-------------------------------------------------------
 What happens if we embed vars in a literal string
@@ -468,8 +464,6 @@ vars:
 
 static SyntaxTypeMatch CheckParseString(const char *lval, const char *s, const char *range)
 {
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseString(%s => %s/%s)\n", lval, s, range);
-
     if (s == NULL)
     {
         return SYNTAX_TYPE_MATCH_OK;
@@ -539,9 +533,7 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
 
-/* Numeric types are registered by range separated by comma str "min,max" */
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseInt(%s => %s/%s)\n", lval, s, range);
-
+    // Numeric types are registered by range separated by comma str "min,max"
     split = SplitString(range, ',');
 
     if ((n = ListLen(split)) != 2)
@@ -584,8 +576,6 @@ static SyntaxTypeMatch CheckParseInt(const char *lval, const char *s, const char
         return SYNTAX_TYPE_MATCH_ERROR_INT_OUT_OF_RANGE;
     }
 
-    Log(LOG_LEVEL_DEBUG, "CheckParseInt - syntax verified\n\n");
-
     return SYNTAX_TYPE_MATCH_OK;
 }
 
@@ -597,9 +587,7 @@ static SyntaxTypeMatch CheckParseIntRange(const char *lval, const char *s, const
     int n;
     long max = CF_LOWINIT, min = CF_HIGHINIT, val;
 
-/* Numeric types are registered by range separated by comma str "min,max" */
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseIntRange(%s => %s/%s)\n", lval, s, range);
-
+    // Numeric types are registered by range separated by comma str "min,max"
     if (*s == '[' || *s == '(')
     {
         return SYNTAX_TYPE_MATCH_ERROR_RANGE_BRACKETED;
@@ -665,8 +653,6 @@ static SyntaxTypeMatch CheckParseReal(const char *lval, const char *s, const cha
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
 
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseReal(%s => %s/%s)\n", lval, s, range);
-
     if (strcmp(s, "inf") == 0)
     {
         return SYNTAX_TYPE_MATCH_ERROR_REAL_INF;
@@ -715,8 +701,6 @@ static SyntaxTypeMatch CheckParseRealRange(const char *lval, const char *s, cons
     Item *split, *rangep, *ip;
     double max = (double) CF_LOWINIT, min = (double) CF_HIGHINIT, val;
     int n;
-
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseRealRange(%s => %s/%s)\n", lval, s, range);
 
     if (*s == '[' || *s == '(')
     {
@@ -783,8 +767,6 @@ static SyntaxTypeMatch CheckParseOpts(const char *lval, const char *s, const cha
     Item *split;
 
 /* List/menu types are separated by comma str "a,b,c,..." */
-
-    Log(LOG_LEVEL_DEBUG, "\nCheckParseOpts(%s => %s/%s)\n", lval, s, range);
 
     if (IsNakedVar(s, '@') || IsNakedVar(s, '$'))
     {
@@ -880,8 +862,6 @@ static SyntaxTypeMatch CheckFnCallType(const char *lval, const char *s, DataType
 {
     DataType dt;
     const FnCallType *fn;
-
-    Log(LOG_LEVEL_DEBUG, "CheckFnCallType(%s => %s/%s)\n", lval, s, range);
 
     fn = FnCallTypeGet(s);
 

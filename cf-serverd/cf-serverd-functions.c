@@ -365,7 +365,7 @@ void StartServer(EvalContext *ctx, Policy *policy, GenericAgentConfig *config)
             timeout.tv_sec = 10;    /* Set a 10 second timeout for select */
             timeout.tv_usec = 0;
 
-            Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...\n");
+            Log(LOG_LEVEL_DEBUG, "Waiting at incoming select...");
 
             ret_val = select((sd + 1), &rset, NULL, NULL, &timeout);
 
@@ -486,7 +486,7 @@ int OpenReceiverChannel(void)
                 getnameinfo(ap->ai_addr, ap->ai_addrlen,
                             txtaddr, sizeof(txtaddr),
                             NULL, 0, NI_NUMERICHOST);
-                Log(LOG_LEVEL_DEBUG, "Bound to address %s on %s=%d\n", txtaddr,
+                Log(LOG_LEVEL_DEBUG, "Bound to address '%s' on '%s' = %d", txtaddr,
                     CLASSTEXT[VSYSTEMHARDCLASS], VSYSTEMHARDCLASS);
             }
             break;
@@ -514,7 +514,7 @@ int OpenReceiverChannel(void)
 
 void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *config)
 {
-    Log(LOG_LEVEL_DEBUG, "Checking file updates on %s\n", config->input_file);
+    Log(LOG_LEVEL_DEBUG, "Checking file updates for input file '%s'", config->input_file);
 
     if (NewPromiseProposals(ctx, config, InputFiles(ctx, *policy)))
     {
@@ -605,7 +605,7 @@ void CheckFileChanges(EvalContext *ctx, Policy **policy, GenericAgentConfig *con
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "No new promises found\n");
+        Log(LOG_LEVEL_DEBUG, "No new promises found");
     }
 }
 

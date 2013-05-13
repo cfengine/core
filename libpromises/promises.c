@@ -153,8 +153,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
     pcopy->org_pp = pp->org_pp;
     pcopy->offset = pp->offset;
 
-    Log(LOG_LEVEL_DEBUG, "Copying promise constraints\n\n");
-
 /* No further type checking should be necessary here, already done by CheckConstraintTypeMatch */
 
     for (size_t i = 0; i < SeqLength(pp->conlist); i++)
@@ -211,9 +209,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 cp_copy->offset = cp->offset;
             }
 
-
-            Log(LOG_LEVEL_DEBUG, "Handling body-lval \"%s\"\n", cp->lval);
-
             if (bp->args != NULL)
             {
                 /* There are arguments to insert */
@@ -235,7 +230,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                 {
                     Constraint *scp = SeqAt(bp->conlist, k);
 
-                    Log(LOG_LEVEL_DEBUG, "Doing arg-mapped sublval = %s (promises.c)\n", scp->lval);
                     returnval = ExpandPrivateRval(ctx, "body", scp->rval);
                     {
                         Constraint *scp_copy = PromiseAppendConstraint(pcopy, scp->lval, returnval, scp->classes, false);
@@ -260,8 +254,6 @@ Promise *DeRefCopyPromise(EvalContext *ctx, const Promise *pp)
                     for (size_t k = 0; k < SeqLength(bp->conlist); k++)
                     {
                         Constraint *scp = SeqAt(bp->conlist, k);
-
-                        Log(LOG_LEVEL_DEBUG, "Doing sublval = %s (promises.c)\n", scp->lval);
 
                         Rval newrv = RvalCopy(scp->rval);
                         if (newrv.type == RVAL_TYPE_LIST)
@@ -316,8 +308,6 @@ Promise *ExpandDeRefPromise(EvalContext *ctx, const char *scopeid, const Promise
 {
     Promise *pcopy;
     Rval returnval, final;
-
-    Log(LOG_LEVEL_DEBUG, "ExpandDerefPromise()\n");
 
     pcopy = xcalloc(1, sizeof(Promise));
 

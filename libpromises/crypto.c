@@ -67,15 +67,15 @@ static void RandomSeed(void)
     char vbuff[CF_BUFSIZE];
 
 /* Use the system database as the entropy source for random numbers */
-    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is %s\n", CFWORKDIR);
+    Log(LOG_LEVEL_DEBUG, "RandomSeed() work directory is '%s'", CFWORKDIR);
 
     snprintf(vbuff, CF_BUFSIZE, "%s%crandseed", CFWORKDIR, FILE_SEPARATOR);
 
-    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in %s", vbuff);
+    Log(LOG_LEVEL_VERBOSE, "Looking for a source of entropy in '%s'", vbuff);
 
     if (!RAND_load_file(vbuff, -1))
     {
-        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from %s", vbuff);
+        Log(LOG_LEVEL_VERBOSE, "Could not read sufficient randomness from '%s'", vbuff);
     }
 
     /* Submit some random data to random pool */
@@ -203,8 +203,6 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
     snprintf(keyname, CF_MAXVARSIZE, "%s-%s", username, digest);
 
-    Log(LOG_LEVEL_DEBUG, "HavePublickey(%s)\n", keyname);
-
     snprintf(newname, CF_BUFSIZE, "%s/ppkeys/%s.pub", CFWORKDIR, keyname);
     MapName(newname);
 
@@ -218,13 +216,13 @@ RSA *HavePublicKey(const char *username, const char *ipaddress, const char *dige
 
         if (stat(oldname, &statbuf) == -1)
         {
-            Log(LOG_LEVEL_DEBUG, "Did not have old-style key %s\n", oldname);
+            Log(LOG_LEVEL_DEBUG, "Did not have old-style key '%s'", oldname);
             return NULL;
         }
 
         if (strlen(digest) > 0)
         {
-            Log(LOG_LEVEL_INFO, "Renaming old key from %s to %s", oldname, newname);
+            Log(LOG_LEVEL_INFO, "Renaming old key from '%s' to '%s'", oldname, newname);
 
             if (rename(oldname, newname) != 0)
             {

@@ -318,8 +318,6 @@ int ListLen(const Item *list)
 {
     int count = 0;
 
-    Log(LOG_LEVEL_DEBUG, "Check ListLen\n");
-
     for (const Item *ip = list; ip != NULL; ip = ip->next)
     {
         count++;
@@ -620,8 +618,6 @@ Item *SplitString(const char *string, char sep)
     char before[CF_BUFSIZE];
     int i = 0;
 
-    Log(LOG_LEVEL_DEBUG, "SplitString([%s],%c=%d)\n", string, sep, sep);
-
     for (sp = string; (*sp != '\0'); sp++, i++)
     {
         before[i] = *sp;
@@ -665,8 +661,6 @@ Item *SplitStringAsItemList(const char *string, char sep)
     Item *liststart = NULL;
     char format[9];
     char node[CF_MAXVARSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "SplitStringAsItemList(%s,%c)\n", string, sep);
 
     sprintf(format, "%%255[^%c]", sep); /* set format string to search */
 

@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
                 else
                 {
                     pid = wait(&status);
-                    Log(LOG_LEVEL_DEBUG, "child = %d, child number = %d\n", pid, count);
+                    Log(LOG_LEVEL_DEBUG, "child = %d, child number = %d", pid, count);
                     count--;
                 }
             }

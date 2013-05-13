@@ -49,7 +49,6 @@ bool FnCallIsBuiltIn(Rval rval)
 
     if (FnCallTypeGet(fp->name))
     {
-        Log(LOG_LEVEL_DEBUG, "%s is a builtin function\n", fp->name);
         return true;
     }
     else
@@ -76,7 +75,6 @@ FnCall *FnCallNew(const char *name, Rlist *args)
 
 FnCall *FnCallCopy(const FnCall *f)
 {
-    Log(LOG_LEVEL_DEBUG, "CopyFnCall()\n");
     return FnCallNew(f->name, RlistCopy(f->args));
 }
 
@@ -96,7 +94,6 @@ void FnCallDestroy(FnCall *fp)
 
 FnCall *ExpandFnCall(EvalContext *ctx, const char *contextid, FnCall *f)
 {
-    Log(LOG_LEVEL_DEBUG, "ExpandFnCall()\n");
     return FnCallNew(f->name, ExpandList(ctx, contextid, f->args, false));
 }
 

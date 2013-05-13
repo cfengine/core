@@ -125,8 +125,6 @@ static void NotePerformance(char *eventname, time_t t, double value)
     int lsea = SECONDS_PER_WEEK;
     time_t now = time(NULL);
 
-    Log(LOG_LEVEL_DEBUG, "PerformanceEvent(%s,%.1f s)\n", eventname, value);
-
     if (!OpenDB(&dbp, dbid_performance))
     {
         return;
@@ -158,13 +156,11 @@ static void NotePerformance(char *eventname, time_t t, double value)
 
     if (lastseen > (double) lsea)
     {
-        Log(LOG_LEVEL_DEBUG, "Performance record %s expired\n", eventname);
+        Log(LOG_LEVEL_DEBUG, "Performance record '%s' expired", eventname);
         DeleteDB(dbp, eventname);
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Performance(%s): time=%.4lf secs, av=%.4lf +/- %.4lf", eventname, value, newe.Q.expect,
-              sqrt(newe.Q.var));
         WriteDB(dbp, eventname, &newe, sizeof(newe));
     }
 
@@ -213,7 +209,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
         {
             if ((IsContextIgnorableForReporting(context)))
             {
-                Log(LOG_LEVEL_DEBUG, "Ignoring class %s (not packing)", context);
+                Log(LOG_LEVEL_DEBUG, "Ignoring class '%s' (not packing)", context);
                 continue;
             }
 
@@ -232,7 +228,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
     {
         if (ReadDB(dbp, ip->name, &e, sizeof(e)))
         {
-            Log(LOG_LEVEL_DEBUG, "FOUND %s with %lf\n", ip->name, e.Q.expect);
+            Log(LOG_LEVEL_DEBUG, "Found '%s' with %lf", ip->name, e.Q.expect);
             lastseen = now - e.t;
             newe.t = now;
 
@@ -248,7 +244,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
         if (lastseen > lsea)
         {
-            Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", ip->name);
+            Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", ip->name);
             DeleteDB(dbp, ip->name);
         }
         else
@@ -298,7 +294,7 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                 if (lastseen > lsea)
                 {
-                    Log(LOG_LEVEL_DEBUG, "Class usage record %s expired\n", eventname);
+                    Log(LOG_LEVEL_DEBUG, "Class usage record '%s' expired", eventname);
                     DBCursorDeleteEntry(dbcp);
                 }
                 else if (!IsItemIn(list, eventname))
@@ -309,12 +305,12 @@ void NoteClassUsage(StringSetIterator context_iterator, int purge)
 
                     if (newe.Q.expect <= 0.0001)
                     {
-                        Log(LOG_LEVEL_DEBUG, "Deleting class %s as %lf is zero\n", eventname, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Deleting class '%s' as %lf is zero", eventname, newe.Q.expect);
                         DBCursorDeleteEntry(dbcp);
                     }
                     else
                     {
-                        Log(LOG_LEVEL_DEBUG, "Downgrading class %s from %lf to %lf\n", eventname, entry.Q.expect, newe.Q.expect);
+                        Log(LOG_LEVEL_DEBUG, "Downgrading class '%s' from %lf to %lf", eventname, entry.Q.expect, newe.Q.expect);
                         DBCursorWriteEntry(dbcp, &newe, sizeof(newe));
                     }
                 }

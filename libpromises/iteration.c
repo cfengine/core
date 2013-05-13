@@ -39,15 +39,13 @@ static Rlist *RlistAppendOrthog(Rlist **start, void *item, RvalType type)
     Rlist *rp, *lp;
     CfAssoc *cp;
 
-    Log(LOG_LEVEL_DEBUG, "OrthogAppendRlist\n");
-
     switch (type)
     {
     case RVAL_TYPE_LIST:
-        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object, orthogonally\n");
+        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object, orthogonally");
         break;
     default:
-        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -91,15 +89,12 @@ Rlist *NewIterationContext(EvalContext *ctx, const char *scopeid, Rlist *namelis
     CfAssoc *new;
     Rval newret;
 
-    Log(LOG_LEVEL_DEBUG, "\n*\nNewIterationContext(from %s)\n*\n", scopeid);
-
     ScopeCopy("this", ScopeGet(scopeid));
 
     ScopeGet("this");
 
     if (namelist == NULL)
     {
-        Log(LOG_LEVEL_DEBUG, "No lists to iterate over\n");
         return NULL;
     }
 
@@ -166,31 +161,24 @@ void DeleteIterationContext(Rlist *deref)
 
 /*****************************************************************************/
 
-static int IncrementIterationContextInternal(Rlist *iterator, int level)
+static bool IncrementIterationContextInternal(Rlist *iterator, int level)
 {
-    Rlist *state;
-    CfAssoc *cp;
-
     if (iterator == NULL)
     {
         return false;
     }
 
-// iterator->next points to the next list
-// iterator->state_ptr points to the current item in the current list
-
-    cp = (CfAssoc *) iterator->item;
-    state = iterator->state_ptr;
+    // iterator->next points to the next list
+    // iterator->state_ptr points to the current item in the current list
+    CfAssoc *cp = (CfAssoc *) iterator->item;
+    Rlist *state = iterator->state_ptr;
 
     if (state == NULL)
     {
         return false;
     }
 
-/* Go ahead and increment */
-
-    Log(LOG_LEVEL_DEBUG, "Incrementing (%s - level %d) from \"%s\"\n", cp->lval, level, (char *) iterator->state_ptr->item);
-
+    // Go ahead and increment
     if (state->next == NULL)
     {
         /* This wheel has come to full revolution, so move to next */
@@ -222,8 +210,6 @@ static int IncrementIterationContextInternal(Rlist *iterator, int level)
     {
         /* Update the current wheel */
         iterator->state_ptr = state->next;
-
-        Log(LOG_LEVEL_DEBUG, " <- Incrementing wheel (%s) to \"%s\"\n", cp->lval, (char *) iterator->state_ptr->item);
 
         while (NullIterators(iterator))
         {

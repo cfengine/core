@@ -988,13 +988,11 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
     }
 #endif
 
-    Log(LOG_LEVEL_DEBUG, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
     Log(LOG_LEVEL_VERBOSE, "Parsing file '%s'", input_path);
-    Log(LOG_LEVEL_DEBUG, "+++++++++++++++++++++++++++++++++++++++++++++++\n");
 
     if (!FileCanOpen(input_path, "r"))
     {
-        Log(LOG_LEVEL_ERR, "Can't open file for parsing: %s", input_path);
+        Log(LOG_LEVEL_ERR, "Can't open file '%s' for parsing", input_path);
         exit(1);
     }
 
@@ -1004,14 +1002,14 @@ static Policy *Cf3ParseFile(const GenericAgentConfig *config, const char *input_
         char *contents = NULL;
         if (FileReadMax(&contents, input_path, SIZE_MAX) == -1)
         {
-            Log(LOG_LEVEL_ERR, "Error reading JSON input file: %s", input_path);
+            Log(LOG_LEVEL_ERR, "Error reading JSON input file '%s'", input_path);
             return NULL;
         }
         JsonElement *json_policy = NULL;
         const char *data = contents; // TODO: need to fix JSON parser signature, just silly
         if (JsonParse(&data, &json_policy) != JSON_PARSE_OK)
         {
-            Log(LOG_LEVEL_ERR, "Error parsing JSON input file: %s", input_path);
+            Log(LOG_LEVEL_ERR, "Error parsing JSON input file '%s'", input_path);
             free(contents);
             return NULL;
         }
@@ -1048,7 +1046,6 @@ Seq *ControlBodyConstraints(const Policy *policy, AgentType agent)
         {
             if (strcmp(body->name, "control") == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "%s body for type %s\n", body->name, body->type);
                 return body->conlist;
             }
         }
@@ -1134,8 +1131,6 @@ static void CheckWorkingDirectories(EvalContext *ctx)
 {
     struct stat statbuf;
     char vbuff[CF_BUFSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "CheckWorkingDirectories()\n");
 
     if (uname(&VSYSNAME) == -1)
     {
@@ -1312,8 +1307,6 @@ static void CheckVariablePromises(EvalContext *ctx, Seq *var_promises)
 {
     int allow_redefine = false;
 
-    Log(LOG_LEVEL_DEBUG, "CheckVariablePromises()\n");
-
     for (size_t i = 0; i < SeqLength(var_promises); i++)
     {
         Promise *pp = SeqAt(var_promises, i);
@@ -1359,7 +1352,6 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
     const ConstraintSyntax *body_syntax = NULL;
     Rval returnval;
 
-    Log(LOG_LEVEL_DEBUG, "CheckControlPromises(%s)\n", control_body->type);
     assert(strcmp(control_body->name, "control") == 0);
 
     for (int i = 0; CONTROL_BODIES[i].constraints != NULL; i++)
@@ -1379,7 +1371,7 @@ static void CheckControlPromises(EvalContext *ctx, GenericAgentConfig *config, c
 
     char scope[CF_BUFSIZE];
     snprintf(scope, CF_BUFSIZE, "%s_%s", control_body->name, control_body->type);
-    Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence...%s\n", scope);
+    Log(LOG_LEVEL_DEBUG, "Initiate control variable convergence for scope '%s'", scope);
     ScopeClear(scope);
     ScopeSetCurrent(scope);
 

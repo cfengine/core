@@ -467,8 +467,6 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
     char last_name[CF_BUFSIZE];
     Rlist *interfaces = NULL, *hardware = NULL, *flags = NULL, *ips = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "GetInterfacesInfo()\n");
-
     // Long-running processes may call this many times
     DeleteItemList(IPADDRESSES);
     IPADDRESSES = NULL;
@@ -577,26 +575,26 @@ void GetInterfacesInfo(EvalContext *ctx, AgentType ag)
                     continue;
                 }
 
-                Log(LOG_LEVEL_DEBUG, "Adding hostip %s..\n", inet_ntoa(sin->sin_addr));
+                Log(LOG_LEVEL_DEBUG, "Adding hostip '%s'", inet_ntoa(sin->sin_addr));
                 EvalContextHeapAddHard(ctx, inet_ntoa(sin->sin_addr));
 
                 if ((hp =
                      gethostbyaddr((char *) &(sin->sin_addr.s_addr), sizeof(sin->sin_addr.s_addr), AF_INET)) == NULL)
                 {
-                    Log(LOG_LEVEL_DEBUG, "No hostinformation for %s found\n", inet_ntoa(sin->sin_addr));
+                    Log(LOG_LEVEL_DEBUG, "No hostinformation for '%s' found", inet_ntoa(sin->sin_addr));
                 }
                 else
                 {
                     if (hp->h_name != NULL)
                     {
-                        Log(LOG_LEVEL_DEBUG, "Adding hostname %s..\n", hp->h_name);
+                        Log(LOG_LEVEL_DEBUG, "Adding hostname '%s'", hp->h_name);
                         EvalContextHeapAddHard(ctx, hp->h_name);
 
                         if (hp->h_aliases != NULL)
                         {
                             for (i = 0; hp->h_aliases[i] != NULL; i++)
                             {
-                                Log(LOG_LEVEL_VERBOSE, "Adding alias %s..", hp->h_aliases[i]);
+                                Log(LOG_LEVEL_VERBOSE, "Adding alias '%s'", hp->h_aliases[i]);
                                 EvalContextHeapAddHard(ctx, hp->h_aliases[i]);
                             }
                         }

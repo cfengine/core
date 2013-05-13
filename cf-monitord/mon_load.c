@@ -41,8 +41,6 @@ void MonLoadGatherData(double *cf_this)
     double load[LOADAVG_5MIN], sum = 0.0;
     int i, n;
 
-    Log(LOG_LEVEL_DEBUG, "GatherLoadData\n\n");
-
     if ((n = getloadavg(load, LOADAVG_5MIN)) == -1)
     {
         cf_this[ob_loadavg] = 0.0;
@@ -65,7 +63,7 @@ void MonLoadGatherData(double *cf_this)
 
 void MonLoadGatherData(double *cf_this)
 {
-    Log(LOG_LEVEL_DEBUG, "Average load data is not available.\n");
+    Log(LOG_LEVEL_DEBUG, "Average load data is not available.");
 }
 
 #endif

@@ -449,8 +449,6 @@ long TimeAbs2Int(const char *s)
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "(%s)\n%ld=%s,%ld=%s,%ld,%ld,%ld\n", s, year, VYEAR, month, VMONTH, day, hour, min);
-
     cftime = 0;
     cftime += min * 60;
     cftime += hour * 3600;
@@ -464,7 +462,6 @@ long TimeAbs2Int(const char *s)
 
     cftime += (year - 1970) * 365 * 24 * 3600;
 
-    Log(LOG_LEVEL_DEBUG, "Time %s CORRESPONDS %s\n", s, ctime(&cftime));
     return (long) cftime;
 }
 

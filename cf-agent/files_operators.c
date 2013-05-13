@@ -375,8 +375,6 @@ int CompareToFile(EvalContext *ctx, const Item *liststart, const char *file, Att
     struct stat statbuf;
     Item *cmplist = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "CompareToFile(%s)\n", file);
-
     if (stat(file, &statbuf) == -1)
     {
         return false;

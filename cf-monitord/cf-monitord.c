@@ -253,7 +253,7 @@ static void KeepPromises(EvalContext *ctx, Policy *policy)
             if (strcmp(cp->lval, CFM_CONTROLBODY[MONITOR_CONTROL_FORGET_RATE].lval) == 0)
             {
                 sscanf(retval.item, "%lf", &FORGETRATE);
-                Log(LOG_LEVEL_DEBUG, "forget rate = %f\n", FORGETRATE);
+                Log(LOG_LEVEL_DEBUG, "forget rate %f", FORGETRATE);
             }
         }
     }

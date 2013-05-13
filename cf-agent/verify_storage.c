@@ -398,7 +398,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
     if (stat(vbuff, &parentstat) == -1)
     {
         Log(LOG_LEVEL_VERBOSE, "Unable to stat '%s'. (stat: %s)", vbuff, GetErrorStr());
-        return (false);
+        return false;
     }
 
     if (childstat->st_dev != parentstat.st_dev)
@@ -406,7 +406,7 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
         Rlist *rp;
         Mount *entry;
 
-        Log(LOG_LEVEL_DEBUG, "[%s is on a different file system, not descending]\n", dir);
+        Log(LOG_LEVEL_DEBUG, "'%s' is on a different file system, not descending", dir);
 
         for (rp = MOUNTEDFSLIST; rp != NULL; rp = rp->next)
         {
@@ -416,14 +416,13 @@ static int IsForeignFileSystem(struct stat *childstat, char *dir)
             {
                 if ((entry->options) && (strstr(entry->options, "nfs")))
                 {
-                    return (true);
+                    return true;
                 }
             }
         }
     }
 
-    Log(LOG_LEVEL_DEBUG, "NotMountedFileSystem\n");
-    return (false);
+    return false;
 }
 
 static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promise *pp)

@@ -1079,8 +1079,6 @@ Body *PolicyAppendBody(Policy *policy, const char *ns, const char *name, const c
 
 PromiseType *BundleAppendPromiseType(Bundle *bundle, const char *name)
 {
-    Log(LOG_LEVEL_DEBUG, "Appending new type section %s\n", name);
-
     if (bundle == NULL)
     {
         ProgrammingError("Attempt to add a type without a bundle");
@@ -1117,10 +1115,6 @@ Promise *PromiseTypeAppendPromise(PromiseType *type, const char *promiser, Rval 
     {
         ProgrammingError("Attempt to add a promise without a type");
     }
-
-/* Check here for broken promises - or later with more info? */
-
-    Log(LOG_LEVEL_DEBUG, "Appending Promise from bundle %s %s if context %s\n", type->parent_bundle->name, promiser, classes);
 
     Promise *pp = xcalloc(1, sizeof(Promise));
 
@@ -1202,21 +1196,6 @@ void PromiseDestroy(Promise *pp)
 
 static Constraint *ConstraintNew(const char *lval, Rval rval, const char *classes, bool references_body)
 {
-    switch (rval.type)
-    {
-    case RVAL_TYPE_SCALAR:
-        Log(LOG_LEVEL_DEBUG, "   Appending Constraint: %s => %s\n", lval, (const char *) rval.item);
-        break;
-    case RVAL_TYPE_FNCALL:
-        Log(LOG_LEVEL_DEBUG, "   Appending a function call to rhs\n");
-        break;
-    case RVAL_TYPE_LIST:
-        Log(LOG_LEVEL_DEBUG, "   Appending a list to rhs\n");
-        break;
-    default:
-        break;
-    }
-
     Constraint *cp = xcalloc(1, sizeof(Constraint));
 
     cp->lval = SafeStringDuplicate(lval);
@@ -2802,7 +2781,6 @@ static SyntaxTypeMatch ConstraintCheckType(const Constraint *cp)
 
         if (strcmp(cp->lval, CF_COMMON_BODIES[i].lval) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "Found a match for lval %s in the common constraint attributes\n", cp->lval);
             return CheckConstraintTypeMatch(cp->lval, cp->rval, CF_COMMON_BODIES[i].dtype, CF_COMMON_BODIES[i].range.validation_string, 0);
         }
     }

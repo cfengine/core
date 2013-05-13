@@ -327,7 +327,7 @@ void LocalExec(const ExecConfig *config)
     }
 
     cf_pclose(pp);
-    Log(LOG_LEVEL_DEBUG, "Closing fp\n");
+    Log(LOG_LEVEL_DEBUG, "Closing fp");
     fclose(fp);
 
     Log(LOG_LEVEL_VERBOSE, "Command is complete");
@@ -420,7 +420,7 @@ static void MailResult(const ExecConfig *config, const char *file)
         if (statbuf.st_size == 0)
         {
             unlink(file);
-            Log(LOG_LEVEL_DEBUG, "Nothing to report in %s\n", file);
+            Log(LOG_LEVEL_DEBUG, "Nothing to report in file '%s'", file);
             return;
         }
     }
@@ -446,11 +446,11 @@ static void MailResult(const ExecConfig *config, const char *file)
 
     if (config->mail_max_lines == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero\n");
+        Log(LOG_LEVEL_DEBUG, "Not mailing: EmailMaxLines was zero");
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Mailing results of (%s) to (%s)\n", file, config->mail_to_address);
+    Log(LOG_LEVEL_DEBUG, "Mailing results of '%s' to '%s'", file, config->mail_to_address);
 
 /* Check first for anomalies - for subject header */
 
@@ -511,7 +511,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     raddr.sin_addr.s_addr = ((struct in_addr *) (hp->h_addr))->s_addr;
     raddr.sin_family = AF_INET;
 
-    Log(LOG_LEVEL_DEBUG, "Connecting...\n");
+    Log(LOG_LEVEL_DEBUG, "Connecting...");
 
     int sd = socket(AF_INET, SOCK_STREAM, 0);
     if (sd == -1)
@@ -643,7 +643,7 @@ static void MailResult(const ExecConfig *config, const char *file)
     }
 
     Dialogue(sd, "QUIT\r\n");
-    Log(LOG_LEVEL_DEBUG, "Done sending mail\n");
+    Log(LOG_LEVEL_DEBUG, "Done sending mail");
     fclose(fp);
     cf_closesocket(sd);
     return;
@@ -660,11 +660,11 @@ static int Dialogue(int sd, const char *s)
     if ((s != NULL) && (*s != '\0'))
     {
         int sent = send(sd, s, strlen(s), 0);
-        Log(LOG_LEVEL_DEBUG, "SENT(%d)->%s", sent, s);
+        Log(LOG_LEVEL_DEBUG, "SENT(%d) -> '%s'", sent, s);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Nothing to send .. waiting for opening\n");
+        Log(LOG_LEVEL_DEBUG, "Nothing to send .. waiting for opening");
     }
 
     int charpos = 0;
@@ -684,8 +684,6 @@ static int Dialogue(int sd, const char *s)
         {
             rfclinetype = ch;
         }
-
-        Log(LOG_LEVEL_DEBUG, "%c", ch);
 
         if ((ch == '\n') || (ch == '\0'))
         {

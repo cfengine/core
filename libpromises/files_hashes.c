@@ -67,8 +67,6 @@ void HashFile(char *filename, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMet
     unsigned char buffer[1024];
     const EVP_MD *md = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "HashFile(%d,%s)\n", type, filename);
-
     if ((file = fopen(filename, "rb")) == NULL)
     {
         Log(LOG_LEVEL_INFO, "Cannot open file for hashing '%s'. (fopen: %s)", filename, GetErrorStr());
@@ -98,8 +96,6 @@ void HashString(const char *buffer, int len, unsigned char digest[EVP_MAX_MD_SIZ
     EVP_MD_CTX context;
     const EVP_MD *md = NULL;
     int md_len;
-
-    Log(LOG_LEVEL_DEBUG, "HashString(%c)\n", type);
 
     switch (type)
     {
@@ -131,8 +127,6 @@ void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod 
     const EVP_MD *md = NULL;
     int md_len, i, buf_len, actlen;
     unsigned char *buffer;
-
-    Log(LOG_LEVEL_DEBUG, "HashPubKey(%d)\n", type);
 
     if (key->n)
     {
@@ -186,12 +180,8 @@ int HashesMatch(unsigned char digest1[EVP_MAX_MD_SIZE + 1], unsigned char digest
                 HashMethod type)
 {
     int i, size = EVP_MAX_MD_SIZE;
-    char buffer[EVP_MAX_MD_SIZE * 4];
 
     size = FileHashSize(type);
-
-    Log(LOG_LEVEL_DEBUG, "1. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest1, buffer));
-    Log(LOG_LEVEL_DEBUG, "2. CHECKING DIGEST type %d - size %d (%s)\n", type, size, HashPrintSafe(type, digest2, buffer));
 
     for (i = 0; i < size; i++)
     {

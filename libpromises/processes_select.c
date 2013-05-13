@@ -56,8 +56,6 @@ static int SelectProcess(char *procentry, char **names, int *start, int *end, Pr
     char *column[CF_PROCCOLS];
     Rlist *rp;
 
-    Log(LOG_LEVEL_DEBUG, "SelectProcess(%s)\n", procentry);
-
     StringSet *proc_attr = StringSetNew();
 
     if (!SplitProcLine(procentry, names, start, end, column))
@@ -299,7 +297,7 @@ static int SelectProcTimeCounterRangeMatch(char *name1, char *name2, time_t min,
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Selection filter REJECTED counter range %s/%s = %s in [%" PRIdMAX ",%" PRIdMAX "] (= %" PRIdMAX " secs)\n", name1, name2,
+            Log(LOG_LEVEL_DEBUG, "Selection filter REJECTED counter range '%s/%s' = '%s' in [%" PRIdMAX ",%" PRIdMAX "] (= %" PRIdMAX " secs)", name1, name2,
                     line[i], (intmax_t)min, (intmax_t)max, (intmax_t)value);
             return false;
         }
@@ -382,8 +380,6 @@ static int SplitProcLine(char *proc, char **names, int *start, int *end, char **
     char *sp = NULL;
     char cols1[CF_PROCCOLS][CF_SMALLBUF] = { "" };
     char cols2[CF_PROCCOLS][CF_SMALLBUF] = { "" };
-
-    Log(LOG_LEVEL_DEBUG, "SplitProcLine(%s)\n", proc);
 
     if ((proc == NULL) || (strlen(proc) == 0))
     {
@@ -592,7 +588,7 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
         {
             if (start[col] != -1)
             {
-                Log(LOG_LEVEL_DEBUG, "End of %s is %d\n", title, offset - 1);
+                Log(LOG_LEVEL_DEBUG, "End of '%s' is %d", title, offset - 1);
                 end[col++] = offset - 1;
                 if (col > CF_PROCCOLS - 1)
                 {
@@ -607,15 +603,15 @@ static void GetProcessColumnNames(char *proc, char **names, int *start, int *end
         {
             start[col] = offset;
             sscanf(sp, "%15s", title);
-            Log(LOG_LEVEL_DEBUG, "Start of %s is %d\n", title, offset);
+            Log(LOG_LEVEL_DEBUG, "Start of '%s' is %d", title, offset);
             names[col] = xstrdup(title);
-            Log(LOG_LEVEL_DEBUG, "Col[%d]=%s\n", col, names[col]);
+            Log(LOG_LEVEL_DEBUG, "Col[%d] = '%s'", col, names[col]);
         }
     }
 
     if (end[col] == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "End of %s is %d\n", title, offset);
+        Log(LOG_LEVEL_DEBUG, "End of '%s' is %d", title, offset);
         end[col] = offset;
     }
 }

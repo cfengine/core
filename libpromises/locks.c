@@ -120,8 +120,6 @@ time_t FindLockTime(char *name)
         .process_start_time = PROCESS_START_TIME_UNKNOWN,
     };
 
-    Log(LOG_LEVEL_DEBUG, "FindLockTime(%s)\n", name);
-
     if ((dbp = OpenLock()) == NULL)
     {
         return -1;
@@ -325,8 +323,6 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
     struct stat statbuf;
     time_t tim;
 
-    Log(LOG_LEVEL_DEBUG, "LockLogCompletion(%s)\n", str);
-
     if (cflog == NULL)
     {
         return;
@@ -340,7 +336,7 @@ static void LogLockCompletion(char *cflog, int pid, char *str, char *operator, c
 
     if ((tim = time((time_t *) NULL)) == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "CFEngine: couldn't read system clock\n");
+        Log(LOG_LEVEL_DEBUG, "Couldn't read system clock");
     }
 
     sprintf(buffer, "%s", ctime(&tim));
@@ -624,8 +620,8 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
 
     free(promise);
 
-    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter=%d, IfElapsed=%d\n", cc_operator, cc_operand, tc.expireafter,
-            tc.ifelapsed);
+    Log(LOG_LEVEL_DEBUG, "AcquireLock(%s,%s), ExpireAfter = %d, IfElapsed = %d", cc_operator, cc_operand, tc.expireafter,
+        tc.ifelapsed);
 
     for (i = 0; cc_operator[i] != '\0'; i++)
     {
@@ -641,7 +637,7 @@ CfLock AcquireLock(EvalContext *ctx, char *operand, char *host, time_t now, Tran
     snprintf(cflock, CF_BUFSIZE, "lock.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
     snprintf(cflast, CF_BUFSIZE, "last.%.100s.%s.%.100s_%d_%s", PromiseGetBundle(pp)->name, cc_operator, cc_operand, sum, str_digest);
 
-    Log(LOG_LEVEL_DEBUG, "LOCK(%s)[%s]\n", PromiseGetBundle(pp)->name, cflock);
+    Log(LOG_LEVEL_DEBUG, "Log for bundle '%s', '%s'", PromiseGetBundle(pp)->name, cflock);
 
 // Now see if we can get exclusivity to edit the locks
 
@@ -734,7 +730,7 @@ void YieldCurrentLock(CfLock this)
         return;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Yielding lock %s\n", this.lock);
+    Log(LOG_LEVEL_DEBUG, "Yielding lock '%s'", this.lock);
 
     if (RemoveLock(this.lock) == -1)
     {
@@ -858,8 +854,6 @@ void PurgeLocks(void)
 int WriteLock(char *name)
 {
     CF_DB *dbp;
-
-    Log(LOG_LEVEL_DEBUG, "WriteLock(%s)\n", name);
 
     ThreadLock(cft_lock);
     if ((dbp = OpenLock()) == NULL)

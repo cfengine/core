@@ -152,40 +152,40 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
             {
                 free(exec_config->mail_from_address);
                 exec_config->mail_from_address = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "mailfrom = %s\n", exec_config->mail_from_address);
+                Log(LOG_LEVEL_DEBUG, "mailfrom '%s'", exec_config->mail_from_address);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILTO].lval) == 0)
             {
                 free(exec_config->mail_to_address);
                 exec_config->mail_to_address = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "mailto = %s\n", exec_config->mail_to_address);
+                Log(LOG_LEVEL_DEBUG, "mailto '%s'", exec_config->mail_to_address);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SMTPSERVER].lval) == 0)
             {
                 free(exec_config->mail_server);
                 exec_config->mail_server = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "smtpserver = %s\n", exec_config->mail_server);
+                Log(LOG_LEVEL_DEBUG, "smtpserver '%s'", exec_config->mail_server);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECCOMMAND].lval) == 0)
             {
                 free(exec_config->exec_command);
                 exec_config->exec_command = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "exec_command = %s\n", exec_config->exec_command);
+                Log(LOG_LEVEL_DEBUG, "exec_command '%s'", exec_config->exec_command);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_AGENT_EXPIREAFTER].lval) == 0)
             {
                 exec_config->agent_expireafter = IntFromString(retval.item);
-                Log(LOG_LEVEL_DEBUG, "agent_expireafter = %d\n", exec_config->agent_expireafter);
+                Log(LOG_LEVEL_DEBUG, "agent_expireafter %d", exec_config->agent_expireafter);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_EXECUTORFACILITY].lval) == 0)
             {
                 exec_config->log_facility = xstrdup(retval.item);
-                Log(LOG_LEVEL_DEBUG, "executorfacility = %s\n", exec_config->log_facility);
+                Log(LOG_LEVEL_DEBUG, "executorfacility '%s'", exec_config->log_facility);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_MAILMAXLINES].lval) == 0)
             {
                 exec_config->mail_max_lines = IntFromString(retval.item);
-                Log(LOG_LEVEL_DEBUG, "maxlines = %d\n", exec_config->mail_max_lines);
+                Log(LOG_LEVEL_DEBUG, "maxlines %d", exec_config->mail_max_lines);
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SPLAYTIME].lval) == 0)
             {
@@ -194,13 +194,13 @@ void ExecConfigUpdate(const EvalContext *ctx, const Policy *policy, ExecConfig *
             }
             else if (strcmp(cp->lval, CFEX_CONTROLBODY[EXEC_CONTROL_SCHEDULE].lval) == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "Loading user-defined schedule...\n");
+                Log(LOG_LEVEL_DEBUG, "Loading user-defined schedule...");
                 StringSetClear(exec_config->schedule);
 
                 for (const Rlist *rp = retval.item; rp; rp = rp->next)
                 {
                     StringSetAdd(exec_config->schedule, xstrdup(RlistScalarValue(rp)));
-                    Log(LOG_LEVEL_DEBUG, "Adding %s\n", RlistScalarValue(rp));
+                    Log(LOG_LEVEL_DEBUG, "Adding '%s'", RlistScalarValue(rp));
                 }
             }
         }

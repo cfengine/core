@@ -495,7 +495,7 @@ static Reload CheckNewPromises(EvalContext *ctx, const GenericAgentConfig *confi
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "No new promises found\n");
+        Log(LOG_LEVEL_DEBUG, "No new promises found");
     }
 
     return RELOAD_ENVIRONMENT;

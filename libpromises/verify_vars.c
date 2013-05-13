@@ -457,9 +457,6 @@ static bool Epimenides(EvalContext *ctx, const char *scope, const char *var, Rva
                 return false;
             }
 
-            Log(LOG_LEVEL_DEBUG, "bling %d-%s: (look for %s) in \"%s\" => %s \n", level, scope, var, (const char *) rval.item,
-                    exp);
-
             if (level > 3)
             {
                 return false;

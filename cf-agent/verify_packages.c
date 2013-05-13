@@ -573,7 +573,6 @@ static PackageItem *GetCachedPackageList(EvalContext *ctx, PackageManager *manag
 
         if (strcmp(thismanager, mgr) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "READPKG: %s\n", line);
             PrependPackageItem(ctx, &list, name, version, arch, pp);
         }
     }
@@ -746,8 +745,6 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
     int match;
     Dir *dirh;
 
-    Log(LOG_LEVEL_DEBUG, "FindLargestVersionAvail()\n");
-
     match = false;
 
     // match any version
@@ -799,8 +796,8 @@ int FindLargestVersionAvail(EvalContext *ctx, char *matchName, char *matchVers, 
         DirClose(dirh);
     }
 
-    Log(LOG_LEVEL_DEBUG, "largest ver is \"%s\", name is \"%s\"\n", largestVer, largestVerName);
-    Log(LOG_LEVEL_DEBUG, "match=%d\n", match);
+    Log(LOG_LEVEL_DEBUG, "largest ver is '%s', name is '%s'", largestVer, largestVerName);
+    Log(LOG_LEVEL_DEBUG, "match %d", match);
 
     if (match)
     {
@@ -1280,8 +1277,6 @@ static void SchedulePackageOp(EvalContext *ctx, const char *name, const char *ve
 
 VersionCmpResult ComparePackages(EvalContext *ctx, const char *n, const char *v, const char *arch, PackageItem * pi, Attributes a, Promise *pp)
 {
-    Log(LOG_LEVEL_DEBUG, "Compare (%s,%s,%s) and (%s,%s,%s)\n", n, v, arch, pi->name, pi->version, pi->arch);
-
     if (CompareCSVName(n, pi->name) != 0)
     {
         return VERCMP_NO_MATCH;
@@ -2387,10 +2382,7 @@ static int PrependPatchItem(EvalContext *ctx, PackageItem ** list, char *item, P
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, " ?? Patch line: \"%s\"", item);
-    Log(LOG_LEVEL_DEBUG, " -?      with name \"%s\"\n", name);
-    Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
-    Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
+    Log(LOG_LEVEL_DEBUG, "Patch line '%s', with name '%s', version '%s', arch '%s'", item, name, version, arch);
 
     if (PackageInItemList(chklist, name, version, arch))
     {
@@ -2419,10 +2411,7 @@ static int PrependMultiLinePackageItem(EvalContext *ctx, PackageItem ** list, ch
 
         if ((strcmp(name, "") != 0) || (strcmp(version, "") != 0))
         {
-            Log(LOG_LEVEL_DEBUG, " -? Extracted package name \"%s\"\n", name);
-            Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
-            Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
-
+            Log(LOG_LEVEL_DEBUG, "Extracted package name '%s', version '%s', arch '%s'", name, version, arch);
             PrependPackageItem(ctx, list, name, version, arch, pp);
         }
 
@@ -2483,10 +2472,7 @@ static int PrependListPackageItem(EvalContext *ctx, PackageItem ** list, char *i
         return false;
     }
 
-    Log(LOG_LEVEL_DEBUG, " -? Package line \"%s\"\n", item);
-    Log(LOG_LEVEL_DEBUG, " -?      with name \"%s\"\n", name);
-    Log(LOG_LEVEL_DEBUG, " -?      with version \"%s\"\n", version);
-    Log(LOG_LEVEL_DEBUG, " -?      with architecture \"%s\"\n", arch);
+    Log(LOG_LEVEL_DEBUG, "Package line '%s', name '%s', version '%s', arch '%s'", item, name, version, arch);
 
     return PrependPackageItem(ctx, list, name, version, arch, pp);
 }

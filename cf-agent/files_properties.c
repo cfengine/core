@@ -74,7 +74,7 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
     {
         if (strcmp(nodename, SKIPFILES[i]) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "Filename %s/%s is classified as ignorable\n", path, nodename);
+            Log(LOG_LEVEL_DEBUG, "Filename '%s/%s' is classified as ignorable", path, nodename);
             return false;
         }
     }
@@ -113,8 +113,7 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
         return false;
     }
 
-    Log(LOG_LEVEL_ERR, "Suspicious looking file object \"%s\" masquerading as hidden file in %s", nodename, path);
-    Log(LOG_LEVEL_DEBUG, "Filename looks suspicious\n");
+    Log(LOG_LEVEL_ERR, "Suspicious looking file object '%s' masquerading as hidden file in '%s'", nodename, path);
 
     if (S_ISLNK(stat->st_mode))
     {

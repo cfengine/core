@@ -320,7 +320,6 @@ static int EvalClassExpression(EvalContext *ctx, Constraint *cp, Promise *pp)
             EvalContextStackFrameAddSoft(ctx, buffer);
         }
 
-        Log(LOG_LEVEL_DEBUG, " ?? \'Strategy\' distribution class interval -> %s\n", buffer);
         return true;
     }
 

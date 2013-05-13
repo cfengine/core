@@ -187,7 +187,7 @@ int SelectLeaf(char *path, struct stat *sb, FileSelect fs)
 
     result = EvalFileResult(fs.result, leaf_attr);
 
-    Log(LOG_LEVEL_DEBUG, "Select result \"%s\"on %s was %d\n", fs.result, path, result);
+    Log(LOG_LEVEL_DEBUG, "Select result '%s' on '%s' was %d", fs.result, path, result);
 
     StringSetDestroy(leaf_attr);
 
@@ -303,14 +303,14 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
     {
         if (EvalFileResult((char *) rp->item, leafattrib))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (gotOwner && (FullTextMatch((char *) rp->item, ownerName)))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
@@ -318,7 +318,7 @@ static int SelectOwnerMatch(char *path, struct stat *lstatptr, Rlist *crit)
 #ifndef __MINGW32__
         if (FullTextMatch((char *) rp->item, buffer))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select owner match");
             StringSetDestroy(leafattrib);
             return true;
         }
@@ -503,7 +503,7 @@ static int SelectExecProgram(char *filename, char *command)
 
     if (ShellCommandReturnsZero(buf, false))
     {
-        Log(LOG_LEVEL_DEBUG, " - ? Select ExecProgram match for %s\n", buf);
+        Log(LOG_LEVEL_DEBUG, "Select ExecProgram match for '%s'", buf);
         return true;
     }
     else
@@ -563,21 +563,21 @@ static int SelectGroupMatch(struct stat *lstatptr, Rlist *crit)
     {
         if (EvalFileResult((char *) rp->item, leafattrib))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select group match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (gr && (FullTextMatch((char *) rp->item, gr->gr_name)))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }
 
         if (FullTextMatch((char *) rp->item, buffer))
         {
-            Log(LOG_LEVEL_DEBUG, " - ? Select owner match\n");
+            Log(LOG_LEVEL_DEBUG, "Select group match");
             StringSetDestroy(leafattrib);
             return true;
         }

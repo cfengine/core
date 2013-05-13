@@ -116,11 +116,11 @@ int VerifyFileLeaf(EvalContext *ctx, char *path, struct stat *sb, Attributes att
 
     if (attr.haveselect && !SelectLeaf(path, sb, attr.select))
     {
-        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file %s\n", path);
+        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", path);
         return false;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Handling file existence constraints on %s", path);
+    Log(LOG_LEVEL_VERBOSE, "Handling file existence constraints on '%s'", path);
 
 /* We still need to augment the scope of context "this" for commands */
 
@@ -177,8 +177,6 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
     int found;
     mode_t srcmode = ssb.st_mode;
 
-    Log(LOG_LEVEL_DEBUG, "CopyFile(%s,%s)\n", sourcefile, destfile);
-
 #ifdef __MINGW32__
     if (attr.copy.copy_links != NULL)
     {
@@ -206,13 +204,13 @@ static void CfCopyFile(EvalContext *ctx, char *sourcefile, char *destfile, struc
 
     if (attr.haveselect && !SelectLeaf(sourcefile, &ssb, attr.select))
     {
-        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file %s\n", sourcefile);
+        Log(LOG_LEVEL_DEBUG, "Skipping non-selected file '%s'", sourcefile);
         return;
     }
 
     if (RlistIsInListOfRegex(SINGLE_COPY_CACHE, destfile))
     {
-        Log(LOG_LEVEL_INFO, "Skipping single-copied file %s", destfile);
+        Log(LOG_LEVEL_INFO, "Skipping single-copied file '%s'", destfile);
         return;
     }
 
@@ -531,11 +529,9 @@ static void PurgeLocalFiles(EvalContext *ctx, Item *filelist, char *localdir, At
     const struct dirent *dirp;
     char filename[CF_BUFSIZE] = { 0 };
 
-    Log(LOG_LEVEL_DEBUG, "PurgeLocalFiles(%s)\n", localdir);
-
     if (strlen(localdir) < 2)
     {
-        Log(LOG_LEVEL_ERR, "Purge of %s denied -- too dangerous!", localdir);
+        Log(LOG_LEVEL_ERR, "Purge of '%s' denied - too dangerous!", localdir);
         return;
     }
 
@@ -634,11 +630,9 @@ static void SourceSearchAndCopy(EvalContext *ctx, char *from, char *to, int maxr
 
     if (maxrecurse == 0)        /* reached depth limit */
     {
-        Log(LOG_LEVEL_DEBUG, "MAXRECURSE ran out, quitting at level %s\n", from);
+        Log(LOG_LEVEL_DEBUG, "MAXRECURSE ran out, quitting at level '%s'", from);
         return;
     }
-
-    Log(LOG_LEVEL_DEBUG, "RecursiveCopy(%s,%s,lev=%d)\n", from, to, maxrecurse);
 
     if (strlen(from) == 0)      /* Check for root dir */
     {
@@ -847,11 +841,9 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
     const struct dirent *dirp;
     int found;
 
-    Log(LOG_LEVEL_DEBUG, "VerifyCopy (source=%s destination=%s)\n", source, destination);
-
     if (attr.copy.link_type == FILE_LINK_TYPE_NONE)
     {
-        Log(LOG_LEVEL_DEBUG, "Treating links as files for %s\n", source);
+        Log(LOG_LEVEL_DEBUG, "Treating links as files for '%s'", source);
         found = cf_stat(source, &ssb, attr.copy, conn);
     }
     else
@@ -861,7 +853,7 @@ static void VerifyCopy(EvalContext *ctx, char *source, char *destination, Attrib
 
     if (found == -1)
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat %s in verify copy\n", source);
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, attr, "Can't stat '%s' in verify copy", source);
         return;
     }
 
@@ -1097,8 +1089,6 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
     selinux_enabled = (is_selinux_enabled() > 0);
 #endif
 
-    Log(LOG_LEVEL_DEBUG, "CopyRegularFile(%s,%s)\n", source, dest);
-
     discardbackup = ((attr.copy.backup == BACKUP_OPTION_NO_BACKUP) || (attr.copy.backup == BACKUP_OPTION_REPOSITORY_STORE));
 
     if (DONTDO)
@@ -1142,7 +1132,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
 
     if ((attr.copy.servers != NULL) && (strcmp(attr.copy.servers->item, "localhost") != 0))
     {
-        Log(LOG_LEVEL_DEBUG, "This is a remote copy from server: %s\n", (char *) attr.copy.servers->item);
+        Log(LOG_LEVEL_DEBUG, "This is a remote copy from server '%s'", (const char *) attr.copy.servers->item);
         remote = true;
     }
 
@@ -1224,7 +1214,7 @@ int CopyRegularFile(EvalContext *ctx, char *source, char *dest, struct stat ssta
         char stamp[CF_BUFSIZE];
         time_t stampnow;
 
-        Log(LOG_LEVEL_DEBUG, "Backup file %s\n", source);
+        Log(LOG_LEVEL_DEBUG, "Backup file '%s'", source);
 
         strncpy(backup, dest, CF_BUFSIZE);
 
@@ -1865,15 +1855,13 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
         newperm |= attr.perms.plus;
         newperm &= ~(attr.perms.minus);
 
-        Log(LOG_LEVEL_DEBUG, "VerifyFileAttributes(%s -> %" PRIoMAX ")\n", file, (uintmax_t)newperm);
-
         /* directories must have x set if r set, regardless  */
 
         if (S_ISDIR(dstat->st_mode))
         {
             if (attr.perms.rxdirs)
             {
-                Log(LOG_LEVEL_DEBUG, "Directory...fixing x bits\n");
+                Log(LOG_LEVEL_DEBUG, "Directory...fixing x bits");
 
                 if (newperm & S_IRUSR)
                 {
@@ -1945,18 +1933,18 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
     if ((newperm & 07777) == (dstat->st_mode & 07777))  /* file okay */
     {
-        Log(LOG_LEVEL_DEBUG, "File okay, newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File permissions on %s as promised\n", file);
+        Log(LOG_LEVEL_DEBUG, "File okay, newperm '%" PRIoMAX "', stat '%" PRIoMAX "'", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, attr, "File permissions on '%s' as promised", file);
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm = %" PRIoMAX ", stat = %" PRIoMAX "\n", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
+        Log(LOG_LEVEL_DEBUG, "Trying to fix mode...newperm '%" PRIoMAX "', stat '%" PRIoMAX "'", (uintmax_t)(newperm & 07777), (uintmax_t)(dstat->st_mode & 07777));
 
         switch (attr.transaction.action)
         {
         case cfa_warn:
 
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "%s has permission %04jo - [should be %04jo]\n", file,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr, "'%s' has permission %04jo - [should be %04jo]", file,
                  (uintmax_t)dstat->st_mode & 07777, (uintmax_t)newperm & 07777);
             break;
 
@@ -1988,13 +1976,13 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 
     if ((newflags & CHFLAGS_MASK) == (dstat->st_flags & CHFLAGS_MASK))  /* file okay */
     {
-        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags = %" PRIxMAX ", current = %" PRIxMAX "\n",
+        Log(LOG_LEVEL_DEBUG, "BSD File okay, flags '%" PRIxMAX "', current '%" PRIxMAX "'",
                 (uintmax_t)(newflags & CHFLAGS_MASK),
                 (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
     }
     else
     {
-        Log(LOG_LEVEL_DEBUG, "BSD Fixing %s, newflags = %" PRIxMAX ", flags = %" PRIxMAX "\n",
+        Log(LOG_LEVEL_DEBUG, "BSD Fixing '%s', newflags '%" PRIxMAX "', flags '%" PRIxMAX "'",
                 file, (uintmax_t)(newflags & CHFLAGS_MASK),
                 (uintmax_t)(dstat->st_flags & CHFLAGS_MASK));
 
@@ -2003,7 +1991,7 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
         case cfa_warn:
 
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, attr,
-                 "%s has flags %jo - [should be %jo]\n",
+                 "'%s' has flags %jo - [should be %jo]",
                  file, (uintmax_t)(dstat->st_mode & CHFLAGS_MASK),
                  (uintmax_t)(newflags & CHFLAGS_MASK));
             break;
@@ -2051,7 +2039,6 @@ void VerifyFileAttributes(EvalContext *ctx, char *file, struct stat *dstat, Attr
 #ifndef __MINGW32__
     umask(maskvalue);
 #endif
-    Log(LOG_LEVEL_DEBUG, "VerifyFileAttributes(Done)\n");
 }
 
 int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attributes attr, Promise *pp, dev_t rootdevice)
@@ -2066,7 +2053,7 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
     {
         char basedir[CF_BUFSIZE];
 
-        Log(LOG_LEVEL_DEBUG, "Direct file reference %s, no search implied\n", name);
+        Log(LOG_LEVEL_DEBUG, "Direct file reference '%s', no search implied", name);
         snprintf(basedir, sizeof(basedir), "%s", name);
         ChopLastNode(basedir);
         if (chdir(basedir))
@@ -2079,19 +2066,17 @@ int DepthSearch(EvalContext *ctx, char *name, struct stat *sb, int rlevel, Attri
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        Log(LOG_LEVEL_ERR, "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
+        Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
         return false;
     }
 
     if (rlevel > CF_RECURSION_LIMIT)
     {
-        Log(LOG_LEVEL_ERR, "WARNING: Very deep nesting of directories (>%d deep): %s (Aborting files)", rlevel, name);
+        Log(LOG_LEVEL_WARNING, "Very deep nesting of directories (>%d deep) for '%s' (Aborting files)", rlevel, name);
         return false;
     }
 
     memset(path, 0, CF_BUFSIZE);
-
-    Log(LOG_LEVEL_DEBUG, "To iterate is Human, to recurse is Divine...(%s)\n", name);
 
     if (!PushDirState(ctx, name, sb))
     {
@@ -2244,7 +2229,7 @@ static bool CheckLinkSecurity(struct stat *sb, char *name)
 {
     struct stat security;
 
-    Log(LOG_LEVEL_DEBUG, "Checking the inode and device to make sure we are where we think we are...\n");
+    Log(LOG_LEVEL_DEBUG, "Checking the inode and device to make sure we are where we think we are...");
 
     if (stat(".", &security) == -1)
     {
@@ -2273,8 +2258,6 @@ static void VerifyCopiedFileAttributes(EvalContext *ctx, char *file, struct stat
     gid_t save_gid;
 
 // If we get here, there is both a src and dest file
-
-    Log(LOG_LEVEL_DEBUG, "VerifyCopiedFile(%s,+%" PRIoMAX ",-%" PRIoMAX ")\n", file, (uintmax_t)attr.perms.plus, (uintmax_t)attr.perms.minus);
 
     save_uid = (attr.perms.owners)->uid;
     save_gid = (attr.perms.groups)->gid;
@@ -2337,8 +2320,6 @@ static void *CopyFileSources(EvalContext *ctx, char *destination, Attributes att
     struct stat ssb, dsb;
     struct timespec start;
     char eventname[CF_BUFSIZE];
-
-    Log(LOG_LEVEL_DEBUG, "CopyFileSources(%s,%s)", source, destination);
 
     if (conn != NULL && (!conn->authenticated))
     {
@@ -2858,7 +2839,7 @@ static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise 
         return 0;
     }
 
-    Log(LOG_LEVEL_DEBUG, "VerifyFinderType of %s for %s\n", file, a.perms.findertype);
+    Log(LOG_LEVEL_DEBUG, "VerifyFinderType of '%s' for '%s'", file, a.perms.findertype);
 
     if (strncmp(a.perms.findertype, "*", CF_BUFSIZE) == 0 || strncmp(a.perms.findertype, "", CF_BUFSIZE) == 0)
     {
@@ -2894,7 +2875,7 @@ static int VerifyFinderType(EvalContext *ctx, char *file, Attributes a, Promise 
             /* setattrlist does not take back in the long ssize */
             retval = setattrlist(file, &attrs, &fndrInfo.created, 4 * sizeof(struct timespec) + sizeof(FInfo), 0);
 
-            Log(LOG_LEVEL_DEBUG, "CheckFinderType setattrlist returned %d\n", retval);
+            Log(LOG_LEVEL_DEBUG, "CheckFinderType setattrlist returned '%d'", retval);
 
             if (retval >= 0)
             {
@@ -2932,7 +2913,7 @@ static void TruncateFile(char *name)
 
     if (stat(name, &statbuf) == -1)
     {
-        Log(LOG_LEVEL_DEBUG, "cfengine: didn't find %s to truncate\n", name);
+        Log(LOG_LEVEL_DEBUG, "Didn't find '%s' to truncate", name);
     }
     else
     {
@@ -3036,8 +3017,6 @@ static bool CopyRegularFileDiskReport(EvalContext *ctx, char *source, char *dest
 
 static int SkipDirLinks(char *path, const char *lastnode, Recursion r)
 {
-    Log(LOG_LEVEL_DEBUG, "SkipDirLinks(%s,%s)\n", path, lastnode);
-
     if (r.exclude_dirs)
     {
         if ((MatchRlistItem(r.exclude_dirs, path)) || (MatchRlistItem(r.exclude_dirs, lastnode)))
@@ -3070,8 +3049,6 @@ int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, stru
     short uidmatch = false, gidmatch = false;
     uid_t uid = CF_SAME_OWNER;
     gid_t gid = CF_SAME_GROUP;
-
-    Log(LOG_LEVEL_DEBUG, "VerifyOwner: %" PRIdMAX "\n", (uintmax_t) sb->st_uid);
 
     for (ulp = attr.perms.owners; ulp != NULL; ulp = ulp->next)
     {
@@ -3145,19 +3122,19 @@ int VerifyOwner(EvalContext *ctx, char *file, Promise *pp, Attributes attr, stru
             {
                 if (uid != CF_SAME_OWNER)
                 {
-                    Log(LOG_LEVEL_DEBUG, "(Change owner to uid %" PRIuMAX " if possible)\n", (uintmax_t)uid);
+                    Log(LOG_LEVEL_DEBUG, "Change owner to uid '%" PRIuMAX "' if possible", (uintmax_t)uid);
                 }
 
                 if (gid != CF_SAME_GROUP)
                 {
-                    Log(LOG_LEVEL_DEBUG, "Change group to gid %" PRIuMAX " if possible)\n", (uintmax_t)gid);
+                    Log(LOG_LEVEL_DEBUG, "Change group to gid '%" PRIuMAX "' if possible)", (uintmax_t)gid);
                 }
             }
 
             if (!DONTDO && S_ISLNK(sb->st_mode))
             {
 # ifdef HAVE_LCHOWN
-                Log(LOG_LEVEL_DEBUG, "Using LCHOWN function\n");
+                Log(LOG_LEVEL_DEBUG, "Using lchown function");
                 if (lchown(file, uid, gid) == -1)
                 {
                     Log(LOG_LEVEL_INFO, "Cannot set ownership on link '%s'. (lchown: %s)", file, GetErrorStr());
@@ -3381,7 +3358,7 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
 
     if (strcmp(".", ReadLastNode(file)) == 0)
     {
-        Log(LOG_LEVEL_DEBUG, "File object \"%s \"seems to be a directory\n", file);
+        Log(LOG_LEVEL_DEBUG, "File object '%s' seems to be a directory", file);
 
         if (!DONTDO && attr.transaction.action != cfa_warn)
         {
@@ -3392,7 +3369,7 @@ int CfCreateFile(EvalContext *ctx, char *file, Promise *pp, Attributes attr)
                 return false;
             }
 
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created directory %s\n", file);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, attr, "Created directory '%s'", file);
         }
         else
         {

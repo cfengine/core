@@ -152,8 +152,6 @@ void EvalContextHeapAddSoft(EvalContext *ctx, const char *context, const char *n
     {
         strncpy(context_copy, canonified_context, CF_MAXVARSIZE);
     }
-    
-    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddSoft(%s)\n", context_copy);
 
     if (strlen(context_copy) == 0)
     {
@@ -214,8 +212,6 @@ void EvalContextHeapAddHard(EvalContext *ctx, const char *context)
         Log(LOG_LEVEL_ERR, "Chop was called on a string that seemed to have no terminator");
     }
     CanonifyNameInPlace(context_copy);
-
-    Log(LOG_LEVEL_DEBUG, "EvalContextHeapAddHard(%s)\n", context_copy);
 
     if (strlen(context_copy) == 0)
     {
@@ -297,8 +293,6 @@ void EvalContextStackFrameAddSoft(EvalContext *ctx, const char *context)
     {
         return;
     }
-
-    Log(LOG_LEVEL_DEBUG, "NewBundleClass(%s)\n", copy);
     
     if (IsRegexItemIn(ctx, ctx->heap_abort_current_bundle, copy))
     {
@@ -452,8 +446,6 @@ bool IsDefinedClass(const EvalContext *ctx, const char *context, const char *ns)
 
         FreeExpression(res.result);
 
-        Log(LOG_LEVEL_DEBUG, "Evaluate(%s) -> %d\n", context, r);
-
         /* r is EvalResult which could be ERROR */
         return r == true;
     }
@@ -563,7 +555,7 @@ void EvalContextHeapPersistentRemove(const char *context)
     }
 
     DeleteDB(dbp, context);
-    Log(LOG_LEVEL_DEBUG, "Deleted any persistent state %s\n", context);
+    Log(LOG_LEVEL_DEBUG, "Deleted persistent class '%s'", context);
     CloseDB(dbp);
 }
 
@@ -603,17 +595,17 @@ void EvalContextHeapPersistentLoadAll(EvalContext *ctx)
     {
         memcpy((void *) &q, value, sizeof(CfState));
 
-        Log(LOG_LEVEL_DEBUG, " - Found key %s...\n", key);
+        Log(LOG_LEVEL_DEBUG, "Found key persistent class key '%s'", key);
 
         if (now > q.expires)
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s expired", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class %s expired", key);
             DBCursorDeleteEntry(dbcp);
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, " Persistent class %s for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
-            Log(LOG_LEVEL_VERBOSE, " Adding persistent class %s to heap", key);
+            Log(LOG_LEVEL_VERBOSE, "Persistent class %s for %jd more minutes", key, (intmax_t)((q.expires - now) / 60));
+            Log(LOG_LEVEL_VERBOSE, "Adding persistent class %s to heap", key);
             if (strchr(key, CF_NS))
                {
                char ns[CF_MAXVARSIZE], name[CF_MAXVARSIZE];

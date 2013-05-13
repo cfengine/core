@@ -166,15 +166,15 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
 
         if (entrytime < now - horizon)
         {
-            Log(LOG_LEVEL_DEBUG, "Old entry.\n");
+            Log(LOG_LEVEL_DEBUG, "Old entry");
 
             if (RlistKeyIn(recent, address))
             {
-                Log(LOG_LEVEL_DEBUG, "There is recent entry for this address. Do nothing.\n");
+                Log(LOG_LEVEL_DEBUG, "There is recent entry for this address. Do nothing.");
             }
             else
             {
-                Log(LOG_LEVEL_DEBUG, "Adding to list of aged hosts.\n");
+                Log(LOG_LEVEL_DEBUG, "Adding to list of aged hosts.");
                 RlistPrependScalarIdemp(&aged, address);
             }
         }
@@ -182,15 +182,15 @@ static Rlist *GetHostsFromLastseenDB(Item *addresses, time_t horizon, bool retur
         {
             Rlist *r;
 
-            Log(LOG_LEVEL_DEBUG, "Recent entry.\n");
+            Log(LOG_LEVEL_DEBUG, "Recent entry");
 
             if ((r = RlistKeyIn(aged, address)))
             {
-                Log(LOG_LEVEL_DEBUG, "Purging from list of aged hosts.\n");
+                Log(LOG_LEVEL_DEBUG, "Purging from list of aged hosts.");
                 RlistDestroyEntry(&aged, r);
             }
 
-            Log(LOG_LEVEL_DEBUG, "Adding to list of recent hosts.\n");
+            Log(LOG_LEVEL_DEBUG, "Adding to list of recent hosts.");
             RlistPrependScalarIdemp(&recent, address);
         }
     }
@@ -276,7 +276,7 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
     char *policy = RlistScalarValue(finalargs->next);
     char *format = RlistScalarValue(finalargs->next->next);
 
-    Log(LOG_LEVEL_DEBUG, "Calling hostsseen(%d,%s,%s)\n", horizon, policy, format);
+    Log(LOG_LEVEL_DEBUG, "Calling hostsseen(%d,%s,%s)", horizon, policy, format);
 
     if (!ScanLastSeenQuality(&CallHostsSeenCallback, &addresses))
     {
@@ -289,10 +289,15 @@ static FnCallResult FnCallHostsSeen(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     DeleteItemList(addresses);
 
-    Log(LOG_LEVEL_DEBUG, " | Return value:\n");
-    for (Rlist *rp = returnlist; rp; rp = rp->next)
     {
-        Log(LOG_LEVEL_DEBUG, " |  %s\n", (char *) rp->item);
+        Writer *w = StringWriter();
+        WriterWrite(w, "hostsseen return values:");
+        for (Rlist *rp = returnlist; rp; rp = rp->next)
+        {
+            WriterWriteF(w, " '%s'", (const char *)rp->item);
+        }
+        Log(LOG_LEVEL_DEBUG, "%s", StringWriterData(w));
+        WriterClose(w);
     }
 
     if (returnlist == NULL)
@@ -1002,7 +1007,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
         val = CF_BUFSIZE - CF_BUFFERMARGIN;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at %s\n", val, portnum, hostnameip);
+    Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, hostnameip);
 
     conn = NewAgentConn(hostnameip);
 
@@ -2423,9 +2428,7 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     long total = 0;
     for (const Rlist *rp = (const Rlist *) rval2.item; rp != NULL && match_count < max; rp = rp->next)
     {
-        int found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
-
-        Log(LOG_LEVEL_DEBUG, "%s() called: %s %s %s\n", fp->name, (char*) rp->item, found ? "matches" : "does not match", regex);
+        bool found = do_regex ? FullTextMatch(regex, rp->item) : (0==strcmp(regex, rp->item));
 
         if (invert ? !found : found)
         {
@@ -2467,14 +2470,11 @@ static FnCallResult FilterInternal(EvalContext *ctx, FnCall *fp, char *regex, ch
     }
     else if (0 != strcmp(fp->name, "grep") && 0 != strcmp(fp->name, "filter"))
     {
-        contextmode = -1;
-        ret = -1;
-        FatalError(ctx, "in built-in FnCall %s: unhandled FilterInternal() contextmode", fp->name);
+        ProgrammingError("built-in FnCall %s: unhandled FilterInternal() contextmode", fp->name);
     }
 
     if (contextmode)
     {
-        Log(LOG_LEVEL_DEBUG, "%s() called: found %ld matches for %s; tested %ld\n", fp->name, match_count, regex, total);
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(ret ? "any" : "!any"), RVAL_TYPE_SCALAR } };
     }
 
@@ -2891,21 +2891,15 @@ static FnCallResult FnCallIPRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     for (ip = IPADDRESSES; ip != NULL; ip = ip->next)
     {
-        Log(LOG_LEVEL_DEBUG, "Checking IP Range against RDNS %s\n", VIPADDRESS);
-
         if (FuzzySetMatch(range, VIPADDRESS) == 0)
         {
-            Log(LOG_LEVEL_DEBUG, "IPRange Matched\n");
             strcpy(buffer, "any");
             break;
         }
         else
         {
-            Log(LOG_LEVEL_DEBUG, "Checking IP Range against iface %s\n", ip->name);
-
             if (FuzzySetMatch(range, ip->name) == 0)
             {
-                Log(LOG_LEVEL_DEBUG, "IPRange Matched\n");
                 strcpy(buffer, "any");
                 break;
             }
@@ -3612,8 +3606,6 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
-        Log(LOG_LEVEL_DEBUG, "%s and %s are numerical\n", argv0, argv1);
-
         if (!strcmp(fp->name, "isgreaterthan"))
         {
             if (a > b)
@@ -3639,8 +3631,6 @@ static FnCallResult FnCallIsLessGreaterThan(EvalContext *ctx, FnCall *fp, Rlist 
     }
     else if (strcmp(argv0, argv1) > 0)
     {
-        Log(LOG_LEVEL_DEBUG, "%s and %s are NOT numerical\n", argv0, argv1);
-
         if (!strcmp(fp->name, "isgreaterthan"))
         {
             strcpy(buffer, "any");
@@ -3796,8 +3786,6 @@ static FnCallResult FnCallOn(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
-
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
@@ -3874,8 +3862,6 @@ static FnCallResult FnCallLaterThan(EvalContext *ctx, FnCall *fp, Rlist *finalar
         Log(LOG_LEVEL_INFO, "Illegal time value");
     }
 
-    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
-
     if (now > cftime)
     {
         strcpy(buffer, CF_ANYCLASS);
@@ -3923,14 +3909,10 @@ static FnCallResult FnCallAgoDate(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     cftime -= Months2Seconds(d[DATE_TEMPLATE_MONTH]);
     cftime -= d[DATE_TEMPLATE_YEAR] * 365 * 24 * 3600;
 
-    Log(LOG_LEVEL_DEBUG, "Total negative offset = %.1f minutes\n", (double) (CFSTARTTIME - cftime) / 60.0);
-    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
-
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", cftime);
 
     if (cftime < 0)
     {
-        Log(LOG_LEVEL_DEBUG, "AGO overflowed, truncating at zero\n");
         strcpy(buffer, "0");
     }
 
@@ -3996,8 +3978,6 @@ static FnCallResult FnCallNow(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     cftime = CFSTARTTIME;
 
-    Log(LOG_LEVEL_DEBUG, "Time computed from input was: %s\n", ctime(&cftime));
-
     snprintf(buffer, CF_BUFSIZE - 1, "%ld", (long) cftime);
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
@@ -4048,15 +4028,10 @@ static FnCallResult FnCallReadFile(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 {
     char *contents;
 
-/* begin fn specific content */
-
     char *filename = RlistScalarValue(finalargs);
     int maxsize = IntFromString(RlistScalarValue(finalargs->next));
 
-// Read once to validate structure of file in itemlist
-
-    Log(LOG_LEVEL_DEBUG, "Read string data from file %s (up to %d)\n", filename, maxsize);
-
+    // Read once to validate structure of file in itemlist
     contents = CfReadFile(filename, maxsize);
 
     if (contents)
@@ -4077,19 +4052,13 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
     char fnname[CF_MAXVARSIZE], *file_buffer = NULL;
     int noerrors = true, blanks = false;
 
-/* begin fn specific content */
-
-    /* 5args: filename,comment_regex,split_regex,max number of entries,maxfilesize  */
-
     char *filename = RlistScalarValue(finalargs);
     char *comment = RlistScalarValue(finalargs->next);
     char *split = RlistScalarValue(finalargs->next->next);
     int maxent = IntFromString(RlistScalarValue(finalargs->next->next->next));
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next));
 
-// Read once to validate structure of file in itemlist
-
-    Log(LOG_LEVEL_DEBUG, "Read string data from file %s\n", filename);
+    // Read once to validate structure of file in itemlist
     snprintf(fnname, CF_MAXVARSIZE - 1, "read%slist", DataTypeToString(type));
 
     file_buffer = (char *) CfReadFile(filename, maxsize);
@@ -4205,14 +4174,8 @@ static FnCallResult ReadArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Da
     int maxsize = IntFromString(RlistScalarValue(finalargs->next->next->next->next->next));
 
 // Read once to validate structure of file in itemlist
-
-    Log(LOG_LEVEL_DEBUG, "Read string data from file %s - , maxent %d, maxsize %d\n", filename, maxent, maxsize);
-
-    file_buffer = (char *) CfReadFile(filename, maxsize);
-
-    Log(LOG_LEVEL_DEBUG, "FILE: %s\n", file_buffer);
-
-    if (file_buffer == NULL)
+    file_buffer = CfReadFile(filename, maxsize);
+    if (!file_buffer)
     {
         entries = 0;
     }
@@ -4694,13 +4657,13 @@ static void *CfReadFile(char *filename, int maxsize)
     {
         if (THIS_AGENT_TYPE == AGENT_TYPE_COMMON)
         {
-            Log(LOG_LEVEL_DEBUG, "Could not examine file %s in readfile on this system", filename);
+            Log(LOG_LEVEL_DEBUG, "Could not examine file '%s' in CfReadFile", filename);
         }
         else
         {
             if (IsCf3VarString(filename))
             {
-                Log(LOG_LEVEL_VERBOSE, "Cannot converge/reduce variable \"%s\" yet .. assuming it will resolve later",
+                Log(LOG_LEVEL_VERBOSE, "Cannot converge/reduce variable '%s' yet .. assuming it will resolve later",
                       filename);
             }
             else

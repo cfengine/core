@@ -276,8 +276,6 @@ Rlist *RlistCopy(const Rlist *list)
 {
     Rlist *start = NULL;
 
-    Log(LOG_LEVEL_DEBUG, "CopyRlist()\n");
-
     if (list == NULL)
     {
         return NULL;
@@ -440,8 +438,6 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         break;
 
     case RVAL_TYPE_LIST:
-        Log(LOG_LEVEL_DEBUG, "Expanding and appending list object");
-
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
             lp = RlistAppend(start, rp->item, rp->type);
@@ -450,7 +446,7 @@ Rlist *RlistAppend(Rlist **start, const void *item, RvalType type)
         return lp;
 
     default:
-        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list [%s]", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot append %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -526,9 +522,6 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
         return RlistPrependScalar(start, item);
 
     case RVAL_TYPE_LIST:
-
-        Log(LOG_LEVEL_DEBUG, "Expanding and prepending list (ends up in reverse)\n");
-
         for (rp = (Rlist *) item; rp != NULL; rp = rp->next)
         {
             lp = RlistPrepend(start, rp->item, rp->type);
@@ -538,7 +531,7 @@ Rlist *RlistPrepend(Rlist **start, const void *item, RvalType type)
     case RVAL_TYPE_FNCALL:
         return RlistPrependFnCall(start, item);
     default:
-        Log(LOG_LEVEL_DEBUG, "Cannot prepend %c to rval-list [%s]\n", type, (char *) item);
+        Log(LOG_LEVEL_DEBUG, "Cannot prepend %c to rval-list '%s'", type, (char *) item);
         return NULL;
     }
 
@@ -871,7 +864,6 @@ void RvalDestroy(Rval rval)
         break;
 
     default:
-        Log(LOG_LEVEL_DEBUG, "Nothing to do\n");
         return;
     }
 }
@@ -1027,8 +1019,6 @@ Rlist *RlistFromSplitString(const char *string, char sep)
     char node[CF_MAXVARSIZE];
     int maxlen = strlen(string);
 
-    Log(LOG_LEVEL_DEBUG, "SplitStringAsRList(%s)\n", string);
-
     for (const char *sp = string; *sp != '\0'; sp++)
     {
         if (*sp == '\0' || sp > string + maxlen)
@@ -1063,8 +1053,6 @@ Rlist *RlistFromSplitRegex(const char *string, const char *regex, int max, int b
     {
         return NULL;
     }
-
-    Log(LOG_LEVEL_DEBUG, "\n\nSplit \"%s\" with regex \"%s\" (up to maxent %d)\n\n", string, regex, max);
 
     const char *sp = string;
 

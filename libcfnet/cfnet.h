@@ -106,6 +106,6 @@ typedef struct
 /* misc.c */
 
 const char *sockaddr_ntop(const void *src, char *dst, socklen_t size);
-
+int IsIPAddress(const char *addr);
 
 #endif

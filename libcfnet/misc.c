@@ -61,3 +61,28 @@ const char *sockaddr_ntop(const void *src, char *dst, socklen_t size)
     const char *ret = inet_ntop(family, addr, dst, size);
     return ret;
 }
+
+/**
+ * @return 0 if @s is not an IP address. If it is it returns true, in
+ *         particular it returns the address family (AF_INET or AF_INET6).
+ */
+int IsIPAddress(const char *addr)
+{
+    struct addrinfo *res;
+    struct addrinfo hints = {
+        .ai_family = AF_UNSPEC,
+        .ai_flags = AI_NUMERICHOST
+    };
+
+    int ret = getaddrinfo(addr, NULL, &hints, &res);
+    if (ret == 0)
+    {
+        int family = res->ai_family;
+        freeaddrinfo(res);
+        return family;
+    }
+    else
+    {
+        return 0;
+    }
+}

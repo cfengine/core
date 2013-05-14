@@ -12,8 +12,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { "g", default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 bundle common g
@@ -49,7 +47,7 @@ files:
 bundle edit_line init_insert(str)
 {
 insert_lines:
-        "$(str)",
+        "$(str)"
             # Promise never executed, so classes not set!
             classes => all_classes;
 }

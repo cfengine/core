@@ -6,23 +6,23 @@ man_MANS = \
     cf-key.8 \
     cf-monitord.8 \
     cf-promises.8 \
-    cf-report.8 \
     cf-runagent.8 \
     cf-serverd.8
 
-if HAVE_NOVA
-if MONGO
-  man_MANS += cf-hub.8
-endif
-  man_MANS += cf-know.8
-endif
+#if HAVE_NOVA
+#if MONGO
+#  man_MANS += cf-hub.8
+#endif
+#endif
 
 endif
 
-.PRECIOUS: ../../src/%
+.PRECIOUS: ../../%/%
 
-../../src/%:
-	$(MAKE) -C ../../src $(AM_MAKEFLAGS) $<
+../../%/.doc-stamp:
+	echo $@
+	$(MAKE) -C $(dir $@) $(AM_MAKEFLAGS)
+	touch $@
 
-%.8 : ../../src/%
-	$(AM_V_GEN)$< -M > $@
+%.8 : ../../%/.doc-stamp
+	$(AM_V_GEN)$(dir $<)$(notdir $(patsubst %/,%,$(dir $<))) -M > $@

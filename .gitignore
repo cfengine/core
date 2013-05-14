@@ -24,6 +24,7 @@ m4/lt*.m4
 missing
 stamp-h1
 ylwrap
+test-driver
 
 # docs
 
@@ -42,6 +43,7 @@ ylwrap
 docs/doxygen
 docs/guides/*.html
 docs/guides/*.pdf
+docs/guides/*.tmp
 docs/guides/cf3-solutions.texinfo
 docs/manpages/*.8
 docs/reference/cf3-Reference.html
@@ -49,41 +51,44 @@ docs/reference/cf3-Reference.pdf
 docs/reference/cf3-Reference.texinfo
 docs/tools/build-solutions-guide
 docs/tools/build-solutions-guide.exe
+docs/tools/build-stdlib
+docs/tools/build-stdlib.exe
 
 # binaries
 
-src/cf-agent
-src/cf-agent.exe
-src/cf-execd
-src/cf-execd.exe
-src/cf-hub
-src/cf-hub.exe
-src/cf-key
-src/cf-key.exe
-src/cf-know
-src/cf-know.exe
-src/cf-monitord
-src/cf-monitord.exe
-src/cf-promises
-src/cf-promises.exe
-src/cf-report
-src/cf-report.exe
-src/cf-runagent
-src/cf-runagent.exe
-src/cf-serverd
-src/cf-serverd.exe
-src/cf-gendoc
-src/cf-gendoc.exe
+nova/cf-hub/cf-hub
+nova/cf-hub/cf-hub.exe
+nova/cf-know/cf-know
+nova/cf-know/cf-know.exe
+cf-agent/cf-agent
+cf-agent/cf-agent.exe
+cf-execd/cf-execd
+cf-execd/cf-execd.exe
+cf-key/cf-key
+cf-key/cf-key.exe
+cf-monitord/cf-monitord
+cf-monitord/cf-monitord.exe
+cf-promises/cf-promises
+cf-promises/cf-promises.exe
+cf-report/cf-report
+cf-report/cf-report.exe
+cf-runagent/cf-runagent
+cf-runagent/cf-runagent.exe
+cf-serverd/cf-serverd
+cf-serverd/cf-serverd.exe
+cf-gendoc/cf-gendoc
+cf-gendoc/cf-gendoc.exe
 ext/rpmvercmp
 
 # autogen
 
-src/cf3lex.c
-src/cf3parse.c
-src/cf3parse.h
-src/cf3parse.output
-src/conf.h
-src/conf.h.in
+libpromises/cf3lex.c
+libpromises/cf3parse.c
+libpromises/cf3parse.h
+cf3parse.output
+libutils/config.h
+libutils/config.h.in
+libutils/config.post.h
 
 # acceptance tests
 
@@ -92,14 +97,18 @@ tests/acceptance/.succeeded
 tests/acceptance/workdir
 tests/acceptance/mock-package-manager
 tests/acceptance/mock-package-manager.exe
+tests/acceptance/xml-c14nize
+tests/acceptance//xml-c14nize.exe
 tests/acceptance/dnswrapper.so
 tests/*/*.xml
 tests/*/xml.tmp
 tests/*/xml_tmp_*
+tests/*/*.trs
 
 # unit tests
 
 tests/unit/*_test
+tests/unit/exec-config-test
 
 # load tests
 

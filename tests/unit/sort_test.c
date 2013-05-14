@@ -1,15 +1,16 @@
 #include "cf3.defs.h"
 #include "sort.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
-#include <stdarg.h>
+#include "rlist.h"
+#include "item_lib.h"
+
+#include "test.h"
 
 /*
  * Those testcases only perform smoke testing of sorting functionality.
  */
 
-void test_sort_item_list_names(void **ctx)
+void test_sort_item_list_names(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->name = "c";
@@ -26,7 +27,7 @@ void test_sort_item_list_names(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_classes(void **ctx)
+void test_sort_item_list_classes(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->classes = "b";
@@ -43,7 +44,7 @@ void test_sort_item_list_classes(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_counters(void **ctx)
+void test_sort_item_list_counters(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->counter = -1;
@@ -61,7 +62,7 @@ void test_sort_item_list_counters(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_sort_item_list_times(void **ctx)
+void test_sort_item_list_times(void)
 {
     Item *head = xcalloc(1, sizeof(Item));
     head->time = 1;
@@ -83,7 +84,7 @@ int FirstItemShorter(const char *lhs, const char *rhs)
     return strlen(lhs) < strlen(rhs);
 }
 
-void test_sort_rlist(void **ctx)
+void test_sort_rlist(void)
 {
     Rlist *head = xcalloc(1, sizeof(Rlist));
     head->item = "a";
@@ -100,7 +101,7 @@ void test_sort_rlist(void **ctx)
     assert_int_equal(sorted->next->next->next, NULL);
 }
 
-void test_alpha_sort_rlist_names(void **ctx)
+void test_alpha_sort_rlist_names(void)
 {
     Rlist *head = xcalloc(1, sizeof(Rlist));
     head->item = "c";
@@ -119,20 +120,27 @@ void test_alpha_sort_rlist_names(void **ctx)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_sort_item_list_names),
-            unit_test(test_sort_item_list_classes),
-            unit_test(test_sort_item_list_counters),
-            unit_test(test_sort_item_list_times),
-            unit_test(test_sort_rlist),
-            unit_test(test_alpha_sort_rlist_names),
-        };
+    {
+        unit_test(test_sort_item_list_names),
+        unit_test(test_sort_item_list_classes),
+        unit_test(test_sort_item_list_counters),
+        unit_test(test_sort_item_list_times),
+        unit_test(test_sort_rlist),
+        unit_test(test_alpha_sort_rlist_names),
+    };
 
     return run_tests(tests);
 }
 
 /* STUBS */
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
 
 void FatalError(char *s, ...)
 {

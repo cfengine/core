@@ -1,2 +1,0 @@
-
-The host name of IP address of the server. The default is to look on the localhost.

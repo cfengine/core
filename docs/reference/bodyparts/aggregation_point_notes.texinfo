@@ -1,6 +1,0 @@
-
-This feature is only used in enterprise level versions of CFEngine.
-It specifies the directory where reports from multiple hosts are
-to be aggregated in sub-directories. This should be somewhere under
-the document root of the web server for the CFEngine knowledge base
-in order to make the reports browsable.

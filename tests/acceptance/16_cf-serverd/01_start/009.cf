@@ -1,0 +1,15 @@
+body common control
+{
+  inputs => { "../../default.cf.sub", "./run_with_server.cf.sub" };
+  bundlesequence => { test };
+  version => "1.0";
+}
+
+bundle agent test
+{
+methods:
+  "any" usebundle => generate_key;
+  "any" usebundle => start_server("localhost_open_with_data_select");
+  "any" usebundle => run_test("$(this.promise_filename).sub");
+  "any" usebundle => stop_server("localhost_open_with_data_select");
+}

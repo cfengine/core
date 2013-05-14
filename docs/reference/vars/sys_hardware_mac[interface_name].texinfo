@@ -10,6 +10,6 @@ reports:
 
   linux::
 
-    "Tell me $(harware_mac[eth0])";
+    "Tell me $(sys.hardware_mac[eth0])";
 @end verbatim
 

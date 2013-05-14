@@ -1,0 +1,71 @@
+#######################################################
+#
+# Test classesmatching()
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "known" slist => { "cfengine", "cfengine_3", "agent", "any", $(dow), $(dow) };
+      "known_str" string => join(" ", "known");
+
+    Monday::
+      "dow" string => "Monday";
+    Tuesday::
+      "dow" string => "Tuesday";
+    Wednesday::
+      "dow" string => "Wednesday";
+    Thursday::
+      "dow" string => "Thursday";
+    Friday::
+      "dow" string => "Friday";
+    Saturday::
+      "dow" string => "Saturday";
+    Sunday::
+      "dow" string => "Sunday";
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "matched" slist => { classesmatching("^cfengine$"), # static string
+                           # range of multiples
+                           classesmatching("^cfengine_[0-9]$"),
+                           # alternation/capture of single
+                           classesmatching("^a(g)ent$"),
+                           # range of single
+                           classesmatching("^a[n]y$"),
+                           # alternation of multiples
+                           classesmatching("^(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day$"),
+                           # interpolation
+                           classesmatching("^$(init.dow)$"),
+      };
+      "matched_str" string => join(" ", "matched");
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+        "ok" expression => strcmp($(init.known_str), $(test.matched_str));
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+    DEBUG.!ok::
+        "$(this.promise_filename) expected '$(init.known_str)', got '$(test.matched_str)'";
+}

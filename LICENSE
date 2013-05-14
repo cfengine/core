@@ -10,7 +10,7 @@ CFEngine is provided under the terms of the GNU General Public License version 3
 library and and PCRE library.
 
 On some systems, code under the Frontier Artistic License
-(/pub/snprintf) might become compiled. This is compatible with the
+(/libcompat/snprintf) might become compiled. This is compatible with the
 GPL.
 
 Users of the software may, at their option, choose the COSL license

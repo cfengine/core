@@ -1,0 +1,104 @@
+#######################################################
+#
+# mtime server copy, localhost, explicit deny connect access, should not copy
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+files:
+
+  "$(G.testdir)/destination_file"
+      delete => clean;
+
+  "$(G.testdir)/source_file"
+       create => "true",
+    edit_line => init_src_file,
+edit_defaults => empty;
+}
+
+#######################################################
+
+body edit_defaults empty
+{
+empty_file_before_editing => "true";
+edit_backup => "false";
+}
+
+#######################################################
+
+body delete clean
+{
+rmdirs => "true";
+}
+
+#######################################################
+
+bundle edit_line init_src_file
+{
+insert_lines:
+   "This is the source file to copy $(sys.date) - always fresh";
+}
+
+#######################################################
+
+bundle agent test 
+
+{
+files:
+
+    "$(G.testdir)/destination_file" copy_from => copy_src_file,
+                    classes => if_repaired("repaired"); 
+ 
+}
+
+#########################################################
+
+body copy_from copy_src_file
+
+{
+source      => "$(G.testdir)/source_file";
+servers     => { "127.0.0.1" };
+compare     => "mtime";
+copy_backup => "false";
+
+portnumber => "9877";
+
+#encrypt     => "true";
+#verify      => "true";
+#purge       => "false";
+#type_check  => "true";
+#force_ipv4  => "true";
+trustkey => "true";
+}
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "dummy" expression => regextract("(.*)\.sub", $(this.promise_filename), "fn");
+
+reports:
+
+    !repaired::
+        "$(fn[1]) Pass";
+    repaired::
+        "$(fn[1]) FAIL";
+}
+
+#######################################################
+
+body classes if_repaired(x)
+{
+promise_repaired => { "$(x)" };
+}

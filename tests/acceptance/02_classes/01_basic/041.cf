@@ -1,0 +1,56 @@
+#######################################################
+#
+# Check that weekday classes make sense
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+
+  # Only one of these should be set at a time
+
+  "num" int => countclassesmatching("(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)");
+
+classes:
+
+  # One and only one match
+
+ "ok" and => { isgreaterthan("$(num)", "0"), islessthan("$(num)", "2") };
+
+reports:
+
+    cfengine::
+      "Found val $(num) matches when there should be 1";
+
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}
+

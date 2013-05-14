@@ -1,0 +1,20 @@
+
+@verbatim
+
+body common control
+{
+      bundlesequence => { run };
+}
+
+bundle agent run
+{
+  vars:
+      "all" slist => classesmatching(".*");
+      "c" slist => classesmatching("cfengine");
+  reports:
+      "All classes = $(all)";
+      "Classes matching 'cfengine' = $(c)";
+}
+
+
+@end verbatim

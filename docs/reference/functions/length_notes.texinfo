@@ -1,0 +1,2 @@
+
+Returns the number of elements in the list variable specified in arg1.

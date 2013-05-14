@@ -11,8 +11,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 bundle agent init
@@ -20,9 +18,9 @@ bundle agent init
 commands:
   "$(G.mkdir) -p $(G.testdir)";
   "$(G.touch) $(G.testdir)/dest";
-  "$(G.ln) -s dest link",
+  "$(G.ln) -s dest link"
     contain => in_dir("$(G.testdir)");
-  "$(G.ln) -s ./dest link-currdir",
+  "$(G.ln) -s ./dest link-currdir"
     contain => in_dir("$(G.testdir)");
 }
 

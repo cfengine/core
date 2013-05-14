@@ -1,3 +1,5 @@
+#include "test.h"
+
 #include "cf3.defs.h"
 #include "atexit.h"
 
@@ -77,6 +79,8 @@ void fn3(void)
 
 int main()
 {
+    PRINT_TEST_BANNER();
+
     RegisterAtExitFunction(&fn1);
     atexit(&fn2);
     RegisterAtExitFunction(&fn3);

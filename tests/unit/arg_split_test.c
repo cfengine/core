@@ -1,11 +1,12 @@
-#include "cf3.defs.h"
+#include "test.h"
 
 #include <setjmp.h>
 #include <cmockery.h>
 
 #include "conversion.h"
+#include "exec_tools.h"
 
-static void test_split_empty(void **state)
+static void test_split_empty(void)
 {
     char **s = ArgSplitCommand("");
 
@@ -14,7 +15,7 @@ static void test_split_empty(void **state)
     ArgFree(s);
 }
 
-static void test_split_easy(void **state)
+static void test_split_easy(void)
 {
     char **s = ArgSplitCommand("zero one two");
 
@@ -26,7 +27,7 @@ static void test_split_easy(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_beginning(void **state)
+static void test_split_quoted_beginning(void)
 {
     char **s = ArgSplitCommand("\"quoted string\" atbeginning");
 
@@ -36,7 +37,7 @@ static void test_split_quoted_beginning(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_end(void **state)
+static void test_split_quoted_end(void)
 {
     char **s = ArgSplitCommand("atend 'quoted string'");
 
@@ -46,7 +47,7 @@ static void test_split_quoted_end(void **state)
     ArgFree(s);
 }
 
-static void test_split_quoted_middle(void **state)
+static void test_split_quoted_middle(void)
 {
     char **s = ArgSplitCommand("at `quoted string` middle");
 
@@ -57,7 +58,7 @@ static void test_split_quoted_middle(void **state)
     ArgFree(s);
 }
 
-static void test_complex_quoting(void **state)
+static void test_complex_quoting(void)
 {
     char **s = ArgSplitCommand("\"foo`'bar\"");
 
@@ -66,7 +67,7 @@ static void test_complex_quoting(void **state)
     ArgFree(s);
 }
 
-static void test_arguments_resize_for_null(void **state)
+static void test_arguments_resize_for_null(void)
 {
 /* This test checks that extending returned argument list for NULL terminator
  * works correctly */
@@ -77,7 +78,7 @@ static void test_arguments_resize_for_null(void **state)
     ArgFree(s);
 }
 
-static void test_arguments_resize(void **state)
+static void test_arguments_resize(void)
 {
     char **s = ArgSplitCommand("0 1 2 3 4 5 6 7 8");
 
@@ -87,71 +88,72 @@ static void test_arguments_resize(void **state)
     ArgFree(s);
 }
 
-static void test_command_promiser(void **state)
+static void test_command_promiser(void)
 {
     char *t1 = "/bin/echo";
-    assert_string_equal(GetArg0(t1), "/bin/echo");
+    assert_string_equal(CommandArg0(t1), "/bin/echo");
 
     char *t2 = "/bin/rpm -qa --queryformat \"i | repos | %{name} | %{version}-%{release} | %{arch}\n\"";
-    assert_string_equal(GetArg0(t2), "/bin/rpm");
+    assert_string_equal(CommandArg0(t2), "/bin/rpm");
     
     char *t3 = "/bin/mount -va";
-    assert_string_equal(GetArg0(t3), "/bin/mount");
+    assert_string_equal(CommandArg0(t3), "/bin/mount");
 
     char *t4 = "\"/bin/echo\"";
-    assert_string_equal(GetArg0(t4), "/bin/echo");
+    assert_string_equal(CommandArg0(t4), "/bin/echo");
     
     char *t5 = "\"/bin/echo\" 123";
-    assert_string_equal(GetArg0(t5), "/bin/echo");
+    assert_string_equal(CommandArg0(t5), "/bin/echo");
 
     char *t6 = "\"/bin/echo with space\" 123";
-    assert_string_equal(GetArg0(t6), "/bin/echo with space");
+    assert_string_equal(CommandArg0(t6), "/bin/echo with space");
 
     char *t7 = "c:\\Windows\\System32\\cmd.exe";
-    assert_string_equal(GetArg0(t7), "c:\\Windows\\System32\\cmd.exe");
+    assert_string_equal(CommandArg0(t7), "c:\\Windows\\System32\\cmd.exe");
 
     char *t8 = "\"c:\\Windows\\System32\\cmd.exe\"";
-    assert_string_equal(GetArg0(t8), "c:\\Windows\\System32\\cmd.exe");
+    assert_string_equal(CommandArg0(t8), "c:\\Windows\\System32\\cmd.exe");
 
     char *t9 = "\"c:\\Windows\\System32\\cmd.exe\" /some args here";
-    assert_string_equal(GetArg0(t9), "c:\\Windows\\System32\\cmd.exe");
+    assert_string_equal(CommandArg0(t9), "c:\\Windows\\System32\\cmd.exe");
 
     char *t10 = "\"c:\\Windows\\System32 with space\\cmd.exe\"";
-    assert_string_equal(GetArg0(t10), "c:\\Windows\\System32 with space\\cmd.exe");
+    assert_string_equal(CommandArg0(t10), "c:\\Windows\\System32 with space\\cmd.exe");
 
     char *t11 = "\"c:\\Windows\\System32 with space\\cmd.exe\" /some args here";
-    assert_string_equal(GetArg0(t11), "c:\\Windows\\System32 with space\\cmd.exe");
+    assert_string_equal(CommandArg0(t11), "c:\\Windows\\System32 with space\\cmd.exe");
 
     char *t12 = "\"c:\\Windows\\System32 with space\\cmd.exe\" /some \"args here\"";
-    assert_string_equal(GetArg0(t12), "c:\\Windows\\System32 with space\\cmd.exe");
+    assert_string_equal(CommandArg0(t12), "c:\\Windows\\System32 with space\\cmd.exe");
 
     char *t13 = "\\\\mycommand";
-    assert_string_equal(GetArg0(t13), "\\\\mycommand");
+    assert_string_equal(CommandArg0(t13), "\\\\mycommand");
 
     char *t14 = "\\\\myhost\\share\\command.exe";
-    assert_string_equal(GetArg0(t14), "\\\\myhost\\share\\command.exe");
+    assert_string_equal(CommandArg0(t14), "\\\\myhost\\share\\command.exe");
 
     char *t15 = "\"\\\\myhost\\share\\command.exe\"";
-    assert_string_equal(GetArg0(t15), "\\\\myhost\\share\\command.exe");
+    assert_string_equal(CommandArg0(t15), "\\\\myhost\\share\\command.exe");
 
 
     /* bad input */
 
     char *b1 = "\"/bin/echo 123";
-    assert_string_equal(GetArg0(b1), "/bin/echo 123");
+    assert_string_equal(CommandArg0(b1), "/bin/echo 123");
 
     char *b2 = "/bin/echo\" 123";
-    assert_string_equal(GetArg0(b2), "/bin/echo\"");
+    assert_string_equal(CommandArg0(b2), "/bin/echo\"");
 
     char *b3 = "";
-    assert_string_equal(GetArg0(b3), "");
+    assert_string_equal(CommandArg0(b3), "");
     
 }
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_split_empty),
         unit_test(test_split_easy),
         unit_test(test_split_quoted_beginning),

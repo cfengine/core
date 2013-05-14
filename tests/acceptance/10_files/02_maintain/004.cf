@@ -10,8 +10,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 bundle common g
@@ -47,7 +45,9 @@ body delete init_delete
 bundle agent test
 {
 vars:
-    "mode" int => "0600";
+    "mode" string => execresult(
+    "/usr/bin/perl -le 'printf \"%o\", (stat(\"$(g.source)\"))[2]&07777'",
+    "noshell");
 
 files:
         "$(G.testfile)"

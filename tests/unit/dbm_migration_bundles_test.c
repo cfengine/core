@@ -53,12 +53,12 @@ static DBHandle *setup(bool clean)
         void *value;
         int ksize, vsize;
 
-        while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+        while (NextDB(cursor, &key, &ksize, &value, &vsize))
         {
             DBCursorDeleteEntry(cursor);
         }
 
-        if (!DeleteDBCursor(db, cursor))
+        if (!DeleteDBCursor(cursor))
         {
             return NULL;
         }
@@ -67,7 +67,7 @@ static DBHandle *setup(bool clean)
     return db;
 }
 
-static void test_no_migration(void **context)
+static void test_no_migration(void)
 {
     DBHandle *db = setup(true);
     CloseDB(db);
@@ -83,7 +83,7 @@ static void test_no_migration(void **context)
     void *value;
     int ksize, vsize;
 
-    while (NextDB(db, cursor, &key, &ksize, &value, &vsize))
+    while (NextDB(cursor, &key, &ksize, &value, &vsize))
     {
         assert_int_equal(ksize, strlen("version") + 1);
         assert_string_equal(key, "version");
@@ -91,12 +91,12 @@ static void test_no_migration(void **context)
         assert_string_equal(value, "1");
     }
 
-    assert_int_equal(DeleteDBCursor(db, cursor), true);
+    assert_int_equal(DeleteDBCursor(cursor), true);
 
     CloseDB(db);
 }
 
-static void test_up_to_date(void **context)
+static void test_up_to_date(void)
 {
     /* Test that upgrade is not performed if there is already a version
      * marker */
@@ -119,7 +119,7 @@ static void test_up_to_date(void **context)
     CloseDB(db);
 }
 
-void test_migrate_unqualified_names(void **state)
+void test_migrate_unqualified_names(void)
 {
     DBHandle *db = setup(true);
     assert_int_equal(WriteDB(db, "foo", &dummy_event, sizeof(dummy_event)), true);
@@ -169,22 +169,29 @@ int main()
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     fail();
     exit(42);
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
-    if (errstr)
-    {
-        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
-    }
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     fprintf(stderr, "\n");
+}
+
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
 }

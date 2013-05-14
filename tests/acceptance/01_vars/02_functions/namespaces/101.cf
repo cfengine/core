@@ -1,0 +1,34 @@
+# Check that getindices() works correctly within and across namespaces
+
+# 101: getindices() with local variable in its argument, from a non-default namespace to the default namespace
+#      same as 001.cf but without using a parameter
+
+body common control
+{
+      inputs => { "../../../default.cf.sub", "101_namespaced_getindices.cf.sub" };
+      bundlesequence => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+bundle common g
+{
+  vars:
+      "array[key]" string => "string";
+}
+
+bundle agent init
+{
+  vars:
+}
+
+bundle agent test
+{
+  methods:
+      "test_in_namespace"   usebundle => b:test_in_namespace;
+}
+
+bundle agent check
+{
+  methods:
+      "check_in_namespace"  usebundle => b:check_in_namespace("$(this.promise_filename)");
+}

@@ -1,12 +1,9 @@
-#include "cf3.defs.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "files_names.h"
 
 
-static void test_first_file_separator(void **state)
+static void test_first_file_separator(void)
 {
     const char *out;
 
@@ -27,11 +24,11 @@ static void test_first_file_separator(void **state)
     assert_true(out == in4 + 1);
 }
 
-static void test_get_parent_directory_copy(void **state)
+static void test_get_parent_directory_copy(void)
 {
     char *out;
 
-#ifndef NT
+#ifndef _WIN32
 
     /* unix, will fail on windows because of IsFileSep */
 
@@ -51,7 +48,7 @@ static void test_get_parent_directory_copy(void **state)
     assert_string_equal(out, "/");
     free(out);
 
-#else  /* NT */
+#else  /* _WIN32 */
 
     /* windows, will fail on unix because of IsFileSep */
 
@@ -71,17 +68,18 @@ static void test_get_parent_directory_copy(void **state)
     assert_string_equal(out, "\\\\");
     free(out);
 
-#endif  /* __MINGW32__ */
+#endif  /* _WIN32 */
 }
 
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-        {
-            unit_test(test_first_file_separator),
-            unit_test(test_get_parent_directory_copy)
-        };
+    {
+        unit_test(test_first_file_separator),
+        unit_test(test_get_parent_directory_copy)
+    };
 
     return run_tests(tests);
 }

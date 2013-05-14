@@ -16,7 +16,7 @@ body common control
                  # Design Center
                     "cfsketch_run",
 
-                 # Agent buddles from here
+                 # Agent bundles from here
                     "main",
 
                    };
@@ -30,7 +30,6 @@ body common control
             "controls/cf_agent.cf",
             "controls/cf_execd.cf",
             "controls/cf_monitord.cf",
-            "controls/cf_report.cf",
             "controls/cf_runagent.cf",
             "controls/cf_serverd.cf",
 

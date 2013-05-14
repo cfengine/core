@@ -1,10 +1,8 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
 #include "item_lib.h"
 
-static void test_prepend_item(void **state)
+static void test_prepend_item(void)
 {
     Item *ip = NULL, *list = NULL;
 
@@ -15,7 +13,7 @@ static void test_prepend_item(void **state)
     assert_int_equal(list, NULL);
 }
 
-static void test_list_len(void **state)
+static void test_list_len(void)
 {
     Item *list = NULL;
 
@@ -26,7 +24,7 @@ static void test_list_len(void **state)
     DeleteItemList(list);
 }
 
-static void test_list_select_last_matching_finds_first(void **state)
+static void test_list_select_last_matching_finds_first(void)
 {
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result = false;
@@ -43,7 +41,7 @@ static void test_list_select_last_matching_finds_first(void **state)
     DeleteItemList(list);
 }
 
-static void test_list_select_last_matching_finds_last(void **state)
+static void test_list_select_last_matching_finds_last(void)
 {
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result;
@@ -60,7 +58,7 @@ static void test_list_select_last_matching_finds_last(void **state)
     DeleteItemList(list);
 }
 
-static void test_list_select_last_matching_not_found(void **state)
+static void test_list_select_last_matching_not_found(void)
 {
     Item *list = NULL, *match = NULL, *prev = NULL;
     bool result;
@@ -79,8 +77,9 @@ static void test_list_select_last_matching_not_found(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_prepend_item),
         unit_test(test_list_len),
         unit_test(test_list_select_last_matching_finds_first),

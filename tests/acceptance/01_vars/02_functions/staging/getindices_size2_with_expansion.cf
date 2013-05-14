@@ -1,0 +1,83 @@
+#######################################################
+#
+# Test getindices(), size 2 with variable expansion
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };   
+  version => "1.0";
+}
+
+bundle agent init
+{
+vars:
+    "dummy" string => "dummy";
+
+files:
+    "$(G.testfile).expected"
+	create => "true",
+	edit_line => init_insert;
+}
+
+bundle edit_line init_insert
+{
+insert_lines:
+    "the fini$end";
+    "the end$(const.dollar)fini";
+    "XXX dummy XXX";
+    "YYY $(init.dummy) YYY";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+    "array[the fini$end]" string =>
+"additional line
+again";
+    "array[the end$(const.dollar)fini]" string => "one$(const.n)extra line";
+    "array[XXX dummy XXX]" string => "XXX dummy XXX";
+    "array[YYY $(init.dummy) YYY]" string => "YYY $(init.dummy) YYY";
+
+    "keys" slist => getindices("array");
+
+files:
+    "$(G.testfile).actual"
+	create => "true",
+	edit_line => test_insert;
+
+reports:
+    DEBUG::
+	"Inserting line: $(keys)";
+}
+
+bundle edit_line test_insert
+{
+vars:
+    "keys" slist => { @{test.keys} };
+
+insert_lines:
+    "$(keys)";
+}
+
+#######################################################
+
+bundle agent check
+{
+methods:
+	"any" usebundle => sorted_check_diff("$(G.testfile).actual",
+					      "$(G.testfile).expected",
+					      "$(this.promise_filename)");
+}
+
+#######################################################
+
+bundle agent fini
+{
+methods:
+	"any" usebundle => default_fini("$(G.testfile).*");
+}

@@ -1,9 +1,10 @@
 #include "cf3.defs.h"
 
 #include "sysinfo.h"
+#include "env_context.h"
+#include "item_lib.h"
 
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 /* Global variables we care about */
 
@@ -17,7 +18,11 @@ static struct hostent h = {
     .h_name = "laptop.intra.cfengine.com"
 };
 
+#ifdef SOLARIS
+int gethostname(char *name, int len)
+#else
 int gethostname(char *name, size_t len)
+#endif
 {
     strcpy(name, "laptop.intra");
     return 0;
@@ -44,7 +49,7 @@ ExpectedClasses expected_classes[] =
     {"laptop.intra"},
 };
 
-void HardClass(const char *classname)
+void EvalContextHeapAddHard(EvalContext *ctx, const char *classname)
 {
     int i;
 
@@ -74,12 +79,12 @@ ExpectedVars expected_vars[] =
     {"domain", "cfengine.com"},
 };
 
-void NewScalar(const char *namespace, const char *varname, const char *value, enum cfdatatype type)
+void ScopeNewScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
 {
     int i;
 
-    assert_string_equal(namespace, "sys");
-    assert_int_equal(type, cf_str);
+    assert_string_equal(ns, "sys");
+    assert_int_equal(type, DATA_TYPE_STRING);
 
     for (i = 0; i < sizeof(expected_vars) / sizeof(expected_vars[0]); ++i)      /* LCOV_EXCL_LINE */
     {
@@ -90,15 +95,21 @@ void NewScalar(const char *namespace, const char *varname, const char *value, en
             return;
         }
     }
-    fprintf(stderr, "${%s.%s} <- %s (%c)\n", namespace, varname, value, type);  /* LCOV_EXCL_LINE */
+    fprintf(stderr, "${%s.%s} <- %s (%c)\n", ns, varname, value, type);  /* LCOV_EXCL_LINE */
     fail();                     /* LCOV_EXCL_LINE */
 }
 
-static void test_set_names(void **state)
+void ScopeNewSpecialScalar(EvalContext *ctx, const char *ns, const char *varname, const char *value, DataType type)
+{
+    ScopeNewScalar(ctx, ns, varname, value, type);
+}
+
+static void test_set_names(void)
 {
     int i = 0;
 
-    DetectDomainName("laptop.intra");
+    EvalContext *ctx = EvalContextNew();
+    DetectDomainName(ctx, "laptop.intra");
 
     for (i = 0; i < sizeof(expected_classes) / sizeof(expected_classes[0]); ++i)
     {
@@ -109,12 +120,14 @@ static void test_set_names(void **state)
     {
         assert_int_equal(expected_vars[i].found, true);
     }
+    EvalContextDestroy(ctx);
 }
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_set_names),
     };
 
@@ -125,12 +138,56 @@ int main()
 
 /* Stub out functions we do not use in test */
 
-void StripTrailingNewline(char *str)
+int LOOKUP = false;
+
+EvalContext *EvalContextNew(void)
 {
-    fail();
+    EvalContext *ctx = xmalloc(sizeof(EvalContext));
+
+    ctx->heap_soft = StringSetNew();
+    ctx->heap_hard = StringSetNew();
+
+    return ctx;
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void EvalContextDestroy(EvalContext *ctx)
+{
+    if (ctx)
+    {
+        StringSetDestroy(ctx->heap_soft);
+        StringSetDestroy(ctx->heap_hard);
+    }
+}
+
+void DeleteItemList(Item *item) /* delete starting from item */
+{
+    Item *ip, *next;
+
+    for (ip = item; ip != NULL; ip = next)
+    {
+        next = ip->next;        // save before free
+
+        if (ip->name != NULL)
+        {
+            free(ip->name);
+        }
+
+        if (ip->classes != NULL)
+        {
+            free(ip->classes);
+        }
+
+        free((char *) ip);
+    }
+}
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
+void __UnexpectedError(const char *file, int lineno, const char *format, ...)
 {
     fail();
 }
@@ -150,20 +207,10 @@ void Unix_FindV6InterfaceInfo(void)
     fail();
 }
 
-int cfstat(const char *path, struct stat *buf)
-{
-    fail();
-}
-
 void FatalError(char *s, ...)
 {
     fail();
     exit(42);
-}
-
-void DeleteItemList(Item *item)
-{
-    fail();
 }
 
 Item *SplitString(const char *string, char sep)
@@ -171,17 +218,12 @@ Item *SplitString(const char *string, char sep)
     fail();
 }
 
-void Chop(char *str)
-{
-    fail();
-}
-
-char *cf_ctime(const time_t *timep)
-{
-    fail();
-}
-
 char *CanonifyName(const char *str)
+{
+    fail();
+}
+
+void CanonifyNameInPlace(char *str)
 {
     fail();
 }
@@ -206,32 +248,27 @@ char *Constellation_Version(void)
     fail();
 }
 
-void LoadSlowlyVaryingObservations(void)
+void LoadSlowlyVaryingObservations(EvalContext *ctx)
 {
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     fail();
 }
 
-char *MapName(char *s)
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     fail();
 }
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+void Unix_GetInterfaceInfo(AgentType ag)
 {
     fail();
 }
 
-void Unix_GetInterfaceInfo(enum cfagenttype ag)
-{
-    fail();
-}
-
-void EnterpriseContext(void)
+void EnterpriseContext(EvalContext *ctx)
 {
     fail();
 }
@@ -241,32 +278,43 @@ int StrnCmp(char *s1, char *s2, size_t n)
     fail();
 }
 
-int CfReadLine(char *buff, int size, FILE *fp)
+ssize_t CfReadLine(char *buff, int size, FILE *fp)
 {
     fail();
 }
 
-bool IsDefinedClass(const char *class)
+bool IsDefinedClass(const EvalContext *ctx, const char *class, const char *ns)
 {
     fail();
 }
 
-void DeleteVariable(const char *scope, const char *id)
+void ScopeDeleteSpecialScalar(const char *scope, const char *id)
 {
     fail();
 }
 
-Rlist *ParseShownRlist(char *string)
+void ScopeDeleteVariable(const char *scope, const char *id)
 {
     fail();
 }
 
-void NewList(const char *scope, const char *lval, void *rval, enum cfdatatype dt)
+
+Rlist *RlistParseShown(char *string)
 {
     fail();
 }
 
-void DeleteRlist(Rlist *list)
+void ScopeNewList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
+{
+    fail();
+}
+
+void ScopeNewSpecialList(EvalContext *ctx, const char *scope, const char *lval, void *rval, DataType dt)
+{
+    fail();
+}
+
+void RlistDestroy(Rlist *list)
 {
     fail();
 }
@@ -274,14 +322,14 @@ void DeleteRlist(Rlist *list)
 /* Stub out variables */
 
 int DEBUG;
-enum cfagenttype THIS_AGENT_TYPE;
+AgentType THIS_AGENT_TYPE;
 Item *IPADDRESSES;
 struct utsname VSYSNAME;
-enum classes VSYSTEMHARDCLASS;
+PlatformContext VSYSTEMHARDCLASS;
 char CFWORKDIR[CF_BUFSIZE];
 char PUBKEY_DIGEST[CF_MAXVARSIZE];
-enum cfhashes CF_DEFAULT_DIGEST;
-char *CLASSATTRIBUTES[HARD_CLASSES_MAX][3];
+HashMethod CF_DEFAULT_DIGEST;
+char *CLASSATTRIBUTES[PLATFORM_CONTEXT_MAX][3];
 const char *VFSTAB[1];
 char *VRESOLVCONF[1];
 char *VMAILDIR[1];
@@ -290,6 +338,6 @@ char EXPIRY[CF_SMALLBUF];
 RSA *PUBKEY;
 const char *CLASSTEXT[1] = { };
 
-char VIPADDRESS[18];
+char VIPADDRESS[CF_MAX_IP_LEN];
 
 /* LCOV_EXCL_STOP */

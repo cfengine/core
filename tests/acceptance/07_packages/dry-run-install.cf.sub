@@ -1,0 +1,41 @@
+# Test that if the action => 'warn' is specified, no packages are installed.
+
+body common control
+{
+  inputs => { "../default.cf.sub" };
+  bundlesequence => { "test" };
+  version => "1.0";
+}
+
+bundle agent test
+{
+packages:
+  "bash"
+    package_policy => "add",
+    package_method => mock_do_not_install_pkg,
+    package_select => ">=",
+    package_version => "1.0",
+    action => dryrun;
+}
+
+body action dryrun
+{
+  action_policy => "warn";
+}
+
+body package_method mock_do_not_install_pkg
+{
+  package_changes => "individual";
+
+  package_list_command => "$(G.true)";
+
+  package_list_name_regex => "^([^-]+)";
+  package_list_version_regex => "^[^-]+-([^-]+)";
+  package_list_arch_regex => "^[^-]+-[^-]+-(.*)";
+  package_installed_regex => ".*";
+
+  package_add_command => "/bin/should-not-be-called";
+  package_update_command => "/bin/should-not-be-called";
+  package_delete_command => "/bin/should-not-be-called";
+  package_verify_command => "/bin/should-not-be-called";
+}

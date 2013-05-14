@@ -1,0 +1,51 @@
+#######################################################
+#
+# Test abortclasses regexp - should abort in same agent bundle
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+body agent control {
+  abortclasses => { "quitquit.*" };
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+        "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent check
+{
+vars:
+        "dummy" string => "dummy";
+
+classes:
+        "ok" expression => "any";
+        "quitquit" expression => "any";
+
+reports:
+    ok::
+        "$(this.promise_filename) FAIL";
+    !ok::
+        "$(this.promise_filename) Pass";
+}
+

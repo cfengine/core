@@ -1,9 +1,6 @@
-#include "cf3.defs.h"
+#include "test.h"
 
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
-
+#include "alloc.h"
 #include "writer.h"
 
 static Writer *global_w;
@@ -27,7 +24,7 @@ int fclose(FILE *stream)
     return 0;
 }
 
-void test_empty_file_buffer(void **p)
+void test_empty_file_buffer(void)
 {
     global_w = StringWriter();
     global_w_closed = false;
@@ -41,7 +38,7 @@ void test_empty_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_write_empty_file_buffer(void **p)
+void test_write_empty_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);
@@ -56,7 +53,7 @@ void test_write_empty_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_write_file_buffer(void **p)
+void test_write_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);
@@ -71,7 +68,7 @@ void test_write_file_buffer(void **p)
     assert_int_equal(global_w_closed, true);
 }
 
-void test_multiwrite_file_buffer(void **p)
+void test_multiwrite_file_buffer(void)
 {
     global_w = StringWriter();
     Writer *w = FileWriter(NULL);
@@ -89,8 +86,9 @@ void test_multiwrite_file_buffer(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_empty_file_buffer),
         unit_test(test_write_empty_file_buffer),
         unit_test(test_write_file_buffer),
@@ -101,6 +99,12 @@ int main()
 }
 
 /* STUB */
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
 
 void FatalError(char *s, ...)
 {

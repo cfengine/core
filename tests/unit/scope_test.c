@@ -1,7 +1,7 @@
 #include "test.h"
 #include "scope.h"
 
-static void test_name_join(void **state)
+static void test_name_join(void)
 {
     {
         char buf[CF_MAXVARSIZE] = { 0 };
@@ -16,7 +16,7 @@ static void test_name_join(void **state)
     }
 }
 
-static void test_name_split(void **state)
+static void test_name_split(void)
 {
     {
         char ns[CF_MAXVARSIZE] = { 0 };

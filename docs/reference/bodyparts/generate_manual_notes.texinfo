@@ -1,6 +1,0 @@
-
-
-Auto-creates a manual based on the self-documented code. As the
-promise syntax is extended the manual self-heals. The resulting manual
-is generated in Texinfo format, from which all other formats can be
-generated.

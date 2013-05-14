@@ -1,11 +1,9 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
+
 
 #include "misc_lib.h"
 
-static void test_unsigned_modulus(void **state)
+static void test_unsigned_modulus(void)
 {
     assert_int_equal(UnsignedModulus(0, 3), 0);
     assert_int_equal(UnsignedModulus(1, 3), 1);
@@ -22,6 +20,7 @@ static void test_unsigned_modulus(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
     {
         unit_test(test_unsigned_modulus),
@@ -29,3 +28,5 @@ int main()
 
     return run_tests(tests);
 }
+
+// STUBS

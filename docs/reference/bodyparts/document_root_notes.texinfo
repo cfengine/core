@@ -1,2 +1,0 @@
-
-The local file path of the system's web document root.

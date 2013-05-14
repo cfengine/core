@@ -1,7 +1,0 @@
-
-@verbatim
-things:
-
-  "host 1" is_part_of => { "123.456.789.0/24" };
-
-@end verbatim

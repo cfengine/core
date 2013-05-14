@@ -22,12 +22,12 @@
 
 body common control
 {
-bundlesequence => { "test" };
+bundlesequence => { "kill_process" };
 }
 
 
 
-bundle agent test
+bundle agent kill_process
 {
 processes:
 

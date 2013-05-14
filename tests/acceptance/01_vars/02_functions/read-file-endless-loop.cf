@@ -1,0 +1,28 @@
+# Test that regline, getfields and countlinesmatching do not loop endlessly if
+# supplied with a directory (Redmine #2453)
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence => { default("$(this.promise_filename)") };
+}
+
+bundle common init
+{
+}
+
+bundle agent test
+{
+classes:
+  "foo" expression => regline("foo", "/");
+
+vars:
+  "bar" int => getfields(".*", "/", ":", "foo");
+  "baz" int => countlinesmatching(".*", "/");
+}
+
+bundle agent check
+{
+reports:
+  "$(this.promise_filename) Pass";
+}

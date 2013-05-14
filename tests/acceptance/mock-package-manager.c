@@ -1,5 +1,8 @@
 #include "cf3.defs.h"
 
+#include "rlist.h"
+#include "generic_agent.h" // Syntax()
+
 static char AVAILABLE_PACKAGES_FILE_NAME[PATH_MAX];
 static char INSTALLED_PACKAGES_FILE_NAME[PATH_MAX];
 
@@ -8,9 +11,6 @@ static const int MAX_PACKAGE_ENTRY_LENGTH = 256;
 #define DEFAULT_ARCHITECTURE "x666"
 
 #define Error(msg) fprintf(stderr, "%s:%d: %s", __FILE__, __LINE__, msg)
-
-static const char *ID = "The CFEngine mock package manager tricks cf-agent into thinking\n"
-    "it has actually installed something on the system. Knock yourself out!";
 
 static const struct option OPTIONS[] =
 {
@@ -192,7 +192,7 @@ static Rlist *ReadPackageEntries(const char *database_filename)
         {
             Package *package = DeserializePackage(serialized_package);
 
-            AppendRlistAlien(&packages, package);
+            RlistAppendAlien(&packages, package);
         }
 
         fclose(packages_file);
@@ -254,7 +254,7 @@ static Rlist *FindPackages(const char *database_filename, PackagePattern *patter
 
         if (MatchPackage(pattern, package))
         {
-            AppendRlistAlien(&matching, package);
+            RlistAppendAlien(&matching, package);
         }
     }
 
@@ -336,7 +336,7 @@ static void AddPackage(PackagePattern *pattern)
     {
         Package *p = (Package *) rp->item;
 
-        AppendRlistAlien(&installed_packages, p);
+        RlistAppendAlien(&installed_packages, p);
         fprintf(stderr, "Succesfully installed package %s\n", SerializePackage(p));
     }
 
@@ -359,7 +359,7 @@ static void PopulateAvailable(const char *arg)
 
     Rlist *available_packages = ReadPackageEntries(AVAILABLE_PACKAGES_FILE_NAME);
 
-    AppendRlistAlien(&available_packages, p);
+    RlistAppendAlien(&available_packages, p);
     SavePackages(AVAILABLE_PACKAGES_FILE_NAME, available_packages);
 }
 
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
             /*         break; */
 
         default:
-            Syntax("mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, ID);
+            PrintHelp("mock-package-manager - pretend that you are managing packages!", OPTIONS, HINTS, false);
             exit(1);
         }
 

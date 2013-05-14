@@ -15,7 +15,7 @@ vars:
 
 reports:
 
-  Yr2009::
+  cfengine::
 
     "Last = $(last1),$(last2),$(last3)";
 

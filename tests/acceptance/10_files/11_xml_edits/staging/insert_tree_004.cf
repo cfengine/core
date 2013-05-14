@@ -10,8 +10,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 #######################################################
@@ -86,7 +84,7 @@ insert_tree:
 bundle agent check
 {
 methods:
-        "any" usebundle => default_check_diff("$(G.testfile).actual",
-                                              "$(G.testfile).expected",
-                                              "$(this.promise_filename)");
+        "any" usebundle => check_diff("$(G.testfile).actual",
+                                          "$(G.testfile).expected",
+                                          "$(this.promise_filename)", "no");
 }

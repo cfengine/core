@@ -45,7 +45,8 @@ COMMON_GUIDES = \
     cf3-solutions \
     cf3-tutorial \
     cf3-upgrade \
-    cf_Quickref3
+    cf_Quickref3 \
+    CfengineStdLibrary
 
 HTML_ONLY_GUIDES =
 
@@ -64,9 +65,14 @@ PDF_GUIDES = $(COMMON_GUIDES) $(PDF_ONLY_GUIDES)
 ../tools/build-solutions-guide:
 	$(MAKE) -C ../tools $(AM_MAKEFLAGS) build-solutions-guide
 
+../tools/build-stdlib:
+	$(MAKE) -C ../tools $(AM_MAKEFLAGS) build-stdlib
+
 cf3-solutions.texinfo: cf3-solutions.texinfo.in ../tools/build-solutions-guide
 	$(AM_V_GEN)../tools/build-solutions-guide $(top_srcdir)/examples < $< > $@ || (rm -f $@; false)
 
+CfengineStdLibrary.texinfo: ../../masterfiles/libraries/cfengine_stdlib.cf ../tools/build-stdlib
+	$(AM_V_GEN)../tools/build-stdlib $(srcdir)/../../masterfiles/libraries/cfengine_stdlib.cf || (rm -f $@; false)
 
 %.html: %.texinfo
 	$(AM_V_GEN)$(MAKEINFO) \
@@ -75,6 +81,7 @@ cf3-solutions.texinfo: cf3-solutions.texinfo.in ../tools/build-solutions-guide
 	    --error-limit=0 \
 	    --html \
 	    --no-split \
+	    --no-validate \
 	    --css-include=cfcomdoc.css
 
 TEXI2PDFFLAGS = -I $(TEX_INCLUDEDIR) --batch $(if $(filter-out 0,$(V)),,--quiet)

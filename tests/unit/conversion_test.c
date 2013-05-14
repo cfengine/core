@@ -1,34 +1,36 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
+#include "test.h"
 
 #include "cmockery.h"
 #include "conversion.h"
 
-static void test_null_agent_type_to_string(void **state)
+static void test_str_to_service_policy(void)
 {
-    assert_int_equal(Agent2Type(NULL), cf_noagent);
+    assert_int_equal(ServicePolicyFromString("start"), SERVICE_POLICY_START);
+    assert_int_equal(ServicePolicyFromString("restart"), SERVICE_POLICY_RESTART);
 }
 
-static void test_invalid_agent_type_to_string(void **state)
+static void test_double_from_string(void)
 {
-    assert_int_equal(Agent2Type("InvalidAgentType"), cf_noagent);
-}
+    {
+        double val;
+        assert_true(DoubleFromString("1.2k", &val));
+        assert_double_close(1200.0, val);
+    }
 
-static void str_to_service_policy(void **state)
-{
-    assert_int_equal(Str2ServicePolicy("start"), cfsrv_start);
-    assert_int_equal(Str2ServicePolicy("restart"), cfsrv_restart);
+    {
+        double val;
+        assert_false(DoubleFromString("abc", &val));
+    }
 }
 
 int main()
 {
-    const UnitTest tests[] = {
-        unit_test(test_null_agent_type_to_string),
-        unit_test(test_invalid_agent_type_to_string),
-        unit_test(str_to_service_policy)
+    PRINT_TEST_BANNER();
+    const UnitTest tests[] =
+    {
+        unit_test(test_str_to_service_policy),
+        unit_test(test_double_from_string),
     };
 
     return run_tests(tests);
 }
-

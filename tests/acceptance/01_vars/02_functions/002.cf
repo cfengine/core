@@ -9,8 +9,6 @@ body common control
   inputs => { "../../default.cf.sub" };
   bundlesequence  => { default("$(this.promise_filename)") };
   version => "1.0";
-nova_edition::
-  host_licenses_paid => "5";
 }
 
 #######################################################
@@ -26,34 +24,34 @@ vars:
 bundle agent test
 {
 vars:
-  linux|freebsd|solaris::
+  linux|freebsd|solaris|openbsd::
     "gid_daemon" int => getgid("daemon");
     "gid_sys" int => getgid("sys");
   darwin::
     "gid_daemon" int => getgid("daemon");
-  !linux.!freebsd.!solaris.!darwin::
+  !linux.!freebsd.!solaris.!darwin.!openbsd::
     "gid_daemon" string => "fixme";
     "gid_sys" string => "fixme";
 
   linux|solaris::
     "gid_0" int => getgid("root");
-  freebsd|darwin::
+  freebsd|darwin|openbsd::
     "gid_0" int => getgid("wheel");
-  !linux.!freebsd.!solaris.!darwin::
+  !linux.!freebsd.!solaris.!darwin.!openbsd::
     "gid_0" string => "fixme";
 
-  SuSE|redhat::
+  SuSE|redhat|gentoo::
     "num_daemon" int => "2";
-  (linux.!SuSE.!redhat)|freebsd|darwin::
+  (linux.!SuSE.!redhat.!gentoo)|freebsd|darwin|openbsd::
     "num_daemon" int => "1";
   solaris::
     "num_daemon" int => "12";
-  !linux.!freebsd.!solaris.!darwin::
+  !linux.!freebsd.!solaris.!darwin.!openbsd::
     "num_daemon" string => "fixme";
 
-  linux|freebsd|solaris::
+  linux|freebsd|solaris|openbsd::
     "num_sys" int => "3";
-  !linux.!freebsd.!solaris.!darwin::
+  !linux.!freebsd.!solaris.!darwin.!openbsd::
     "num_sys" string => "fixme";
 }
 

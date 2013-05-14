@@ -1,8 +1,0 @@
-
-
-@verbatim
-things:
-
-   "The Moon"   affects => {  "surf", "tides" };
-
-@end verbatim

@@ -31,7 +31,7 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-static void test_newentry(void **context)
+static void test_newentry(void)
 {
     setup();
 
@@ -62,7 +62,7 @@ static void test_newentry(void **context)
     CloseDB(db);
 }
 
-static void test_update(void **context)
+static void test_update(void)
 {
     setup();
 
@@ -84,7 +84,7 @@ static void test_update(void **context)
     CloseDB(db);
 }
 
-static void test_reverse_missing(void **context)
+static void test_reverse_missing(void)
 {
     setup();
 
@@ -93,7 +93,7 @@ static void test_reverse_missing(void **context)
     assert_int_equal(Address2Hostkey("127.0.0.64", result), false);
 }
 
-static void test_reverse_conflict(void **context)
+static void test_reverse_conflict(void)
 {
     setup();
 
@@ -114,7 +114,7 @@ static void test_reverse_conflict(void **context)
     CloseDB(db);
 }
 
-static void test_reverse_missing_forward(void **context)
+static void test_reverse_missing_forward(void)
 {
     setup();
 
@@ -135,7 +135,7 @@ static void test_reverse_missing_forward(void **context)
     CloseDB(db);
 }
 
-static void test_remove(void **context)
+static void test_remove(void)
 {
     setup();
 
@@ -179,19 +179,21 @@ int main()
 
 /* STUBS */
 
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
+
 void FatalError(char *s, ...)
 {
     fail();
     exit(42);
 }
 
-void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
+void Log(LogLevel level, const char *fmt, ...)
 {
     fprintf(stderr, "CFOUT<%d>: ", level);
-    if (errstr)
-    {
-        fprintf(stderr, " %s: %s ", errstr, strerror(errno));
-    }
     va_list ap;
     va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);
@@ -199,24 +201,29 @@ void CfOut(enum cfreport level, const char *errstr, const char *fmt, ...)
     fprintf(stderr, "\n");
 }
 
-enum cfhashes CF_DEFAULT_DIGEST;
+const char *GetErrorStr(void)
+{
+    return strerror(errno);
+}
+
+HashMethod CF_DEFAULT_DIGEST;
 const char *DAY_TEXT[] = {};
 const char *MONTH_TEXT[] = {};
 const char *SHIFT_TEXT[] = {};
 pthread_mutex_t *cft_output;
-char VIPADDRESS[18];
+char VIPADDRESS[CF_MAX_IP_LEN];
 RSA *PUBKEY;
 
 int DEBUG;
 
-int MINUSF;
+bool MINUSF;
 
 char *MapAddress(char *addr)
 {
     fail();
 }
 
-char *HashPrint(enum cfhashes type, unsigned char digest[EVP_MAX_MD_SIZE + 1])
+char *HashPrintSafe(HashMethod type, unsigned char digest[EVP_MAX_MD_SIZE + 1], char buffer[EVP_MAX_MD_SIZE * 4])
 {
     fail();
 }
@@ -231,7 +238,7 @@ int ThreadUnlock(pthread_mutex_t *name)
     fail();
 }
 
-void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], enum cfhashes type)
+void HashPubKey(RSA *key, unsigned char digest[EVP_MAX_MD_SIZE + 1], HashMethod type)
 {
     fail();
 }

@@ -1,0 +1,48 @@
+#######################################################
+#
+# Test regarray
+#
+#######################################################
+
+body common control
+{
+  inputs => { "../../default.cf.sub" };
+  bundlesequence  => { default("$(this.promise_filename)") };
+  version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+vars:
+        "dummy" string => "dummy";
+}
+
+#######################################################
+
+bundle agent test
+{
+vars:
+
+  "myarray[0]" string => "bla1";
+  "myarray[1]" string => "bla2";
+  "myarray[3]" string => "bla";
+  "myarray"    string => "345";  
+  "not"        string => "345";
+}
+
+
+#######################################################
+
+bundle agent check
+{
+classes:
+  "ok" expression => regarray("test.myarray","b.*2");
+
+reports:
+    ok::
+        "$(this.promise_filename) Pass";
+    !ok::
+        "$(this.promise_filename) FAIL";
+}

@@ -1,12 +1,8 @@
-#include "cf3.defs.h"
-
-#include <setjmp.h>
-#include <stdarg.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "csv_writer.h"
 
-void test_empty(void **state)
+void test_empty(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -15,7 +11,7 @@ void test_empty(void **state)
     assert_string_equal(StringWriterClose(w), "");
 }
 
-void test_single_field(void **state)
+void test_single_field(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -26,7 +22,7 @@ void test_single_field(void **state)
     assert_string_equal(StringWriterClose(w), "test\r\n");
 }
 
-void test_several_fields(void **state)
+void test_several_fields(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -39,7 +35,7 @@ void test_several_fields(void **state)
     assert_string_equal(StringWriterClose(w), "test1,test2,test3\r\n");
 }
 
-void test_two_records(void **state)
+void test_two_records(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -53,7 +49,7 @@ void test_two_records(void **state)
     assert_string_equal(StringWriterClose(w), "test1\r\ntest2\r\n");
 }
 
-void test_empty_record(void **state)
+void test_empty_record(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -66,7 +62,7 @@ void test_empty_record(void **state)
     assert_string_equal(StringWriterClose(w), "\r\ntest2\r\n");
 }
 
-void test_empty_last_record(void **state)
+void test_empty_last_record(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -79,7 +75,7 @@ void test_empty_last_record(void **state)
     assert_string_equal(StringWriterClose(w), "test1\r\n\r\n");
 }
 
-void test_escape(void **state)
+void test_escape(void)
 {
     Writer *w = StringWriter();
     CsvWriter *c = CsvWriterOpen(w);
@@ -92,8 +88,9 @@ void test_escape(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_empty),
         unit_test(test_single_field),
         unit_test(test_several_fields),
@@ -107,6 +104,12 @@ int main()
 }
 
 /* STUB OUT */
+
+void __ProgrammingError(const char *file, int lineno, const char *format, ...)
+{
+    fail();
+    exit(42);
+}
 
 void FatalError(char *s, ...)
 {

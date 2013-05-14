@@ -1,9 +1,0 @@
-
-@verbatim
-
-body knowledge control
-{
-generate_manual => "true";
-}
-
-@end verbatim

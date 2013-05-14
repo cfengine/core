@@ -1,21 +1,19 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmockery.h>
+#include "test.h"
 
 #include "cf3.defs.h"
+#include "matching.h"
 
-static void test_full_text_match(void **state)
+static void test_full_text_match(void)
 {
     assert_int_equal(FullTextMatch("[a-z]*", "1234abcd6789"), 0);
 }
 
-static void test_full_text_match2(void **state)
+static void test_full_text_match2(void)
 {
     assert_int_not_equal(FullTextMatch("[1-4]*[a-z]*.*", "1234abcd6789"), 0);
 }
 
-static void test_block_text_match(void **state)
+static void test_block_text_match(void)
 {
     int start, end;
 
@@ -26,7 +24,7 @@ static void test_block_text_match(void **state)
     assert_int_equal(end, 31);
 }
 
-static void test_block_text_match2(void **state)
+static void test_block_text_match2(void)
 {
     int start, end;
 
@@ -37,8 +35,9 @@ static void test_block_text_match2(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_full_text_match),
         unit_test(test_full_text_match2),
         unit_test(test_block_text_match),

@@ -1,0 +1,27 @@
+bundle agent generate_key
+{
+commands:
+  "$(sys.cf_key)";
+}
+
+bundle agent start_server(server_name)
+{
+vars:
+  "cwd" string => dirname("$(this.promise_filename)");
+
+commands:
+  "$(sys.cf_serverd) -Kf $(cwd)/$(server_name).srv";
+}
+
+bundle agent run_test(test_name)
+{
+commands:
+  "$(sys.cf_agent) -Kf $(test_name) -D AUTO,ok";
+}
+
+bundle agent stop_server(server_name)
+{
+processes:
+  "$(server_name)"
+    signals => { "term", "kill" };
+}

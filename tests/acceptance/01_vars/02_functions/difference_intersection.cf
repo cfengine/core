@@ -1,0 +1,155 @@
+#######################################################
+#
+# Test difference() and intersection()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  vars:
+      "a" slist => { "x", "y", "z" };
+      "b" slist => { "100", "9", "10" };
+      "c" slist => { };
+      "d" slist => { "" };
+      "e" slist => { "x" };
+}
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "list1" slist => { "a", "b", "c", "d", "e" };
+      "list2" slist => { "a", "b", "c", "d", "e" };
+
+      "uniq_$(list1)" slist => uniq("init.$(list1)");
+      "difference_$(list1)_$(list2)" slist => difference("init.$(list1)",
+                                                         "init.$(list2)");
+
+      "intersection_$(list1)_$(list2)" slist => intersection("init.$(list1)",
+                                                             "init.$(list2)");
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "call" slist => { "difference", "intersection" };
+      "list1" slist => { "a", "b", "c", "d", "e" };
+      "list2" slist => { "a", "b", "c", "d", "e" };
+      "or_joined_list_names" string => join("|", "list1");
+
+      "check_$(call)_$(list1)_$(list2)" string => join(",", "test.$(call)_$(list1)_$(list2)");
+
+      "joined_$(list1)" string => join(",", "test.uniq_$(list1)");
+
+      # the difference of any list with itself is empty
+      "verify_difference_$(list1)_$(list1)" string => "";
+      # the intersection of any list with itself is the list
+      "verify_intersection_$(list1)_$(list1)" string => "$(joined_$(list1))";
+
+      # the difference and intersection of the empty list with any list is itself
+      "verify_$(call)_c_$(list1)" string => "";
+
+      # the difference and intersection of list d with any list is empty
+      "verify_$(call)_d_$(list1)" string => "";
+
+      # the intersection of any list with the empty list is empty
+      "verify_intersection_$(list1)_c" string => "";
+      # the difference of any list with the empty list is the list
+      "verify_difference_$(list1)_c" string => "$(joined_$(list1))";
+
+      "verify_intersection_b_a" string => "";
+      "verify_difference_b_a" string => "$(joined_b)";
+
+      "verify_intersection_a_b" string => "";
+      "verify_difference_a_b" string => "$(joined_a)";
+
+      "verify_intersection_e_a" string => "x";
+      "verify_difference_e_a" string => "";
+
+      "verify_intersection_e_b" string => "";
+      "verify_difference_e_b" string => "x";
+
+      "verify_intersection_e_d" string => "";
+      "verify_difference_e_d" string => "$(joined_e)";
+
+      "verify_intersection_a_d" string => "";
+      "verify_difference_a_d" string => "$(joined_a)";
+
+      "verify_intersection_a_e" string => "x";
+      "verify_difference_a_e" string => "y,z";
+
+      "verify_intersection_b_d" string => "";
+      "verify_difference_b_d" string => "$(joined_b)";
+
+      "verify_intersection_b_e" string => "";
+      "verify_difference_b_e" string => "$(joined_b)";
+
+  classes:
+      "ok_$(call)_$(list1)_$(list2)" expression => strcmp("$(check_$(call)_$(list1)_$(list2))",
+                                                          "$(verify_$(call)_$(list1)_$(list2))");
+
+      "ok" and => { ok_difference_a_a, ok_difference_a_b,
+                    ok_difference_a_c, ok_difference_a_d,
+                    ok_difference_a_e, ok_difference_b_a,
+                    ok_difference_b_b, ok_difference_b_c,
+                    ok_difference_b_d, ok_difference_b_e,
+                    ok_difference_c_a, ok_difference_c_b,
+                    ok_difference_c_c, ok_difference_c_d,
+                    ok_difference_c_e, ok_difference_d_a,
+                    ok_difference_d_b, ok_difference_d_c,
+                    ok_difference_d_d, ok_difference_d_e,
+                    ok_difference_e_a, ok_difference_e_b,
+                    ok_difference_e_c, ok_difference_e_d,
+                    ok_difference_e_e,
+
+                    ok_intersection_a_a, ok_intersection_a_b,
+                    ok_intersection_a_c, ok_intersection_a_d,
+                    ok_intersection_a_e, ok_intersection_b_a,
+                    ok_intersection_b_b, ok_intersection_b_c,
+                    ok_intersection_b_d, ok_intersection_b_e,
+                    ok_intersection_c_a, ok_intersection_c_b,
+                    ok_intersection_c_c, ok_intersection_c_d,
+                    ok_intersection_c_e, ok_intersection_d_a,
+                    ok_intersection_d_b, ok_intersection_d_c,
+                    ok_intersection_d_d, ok_intersection_d_e,
+                    ok_intersection_e_a, ok_intersection_e_b,
+                    ok_intersection_e_c, ok_intersection_e_d,
+                    ok_intersection_e_e };
+
+  reports:
+    DEBUG::
+      "OK: ok_$(call)_$(list1)_$(list2) '$(check_$(call)_$(list1)_$(list2))' == '$(verify_$(call)_$(list1)_$(list2))'"
+      ifvarclass => "ok_$(call)_$(list1)_$(list2)";
+      "FAIL: ok_$(call)_$(list1)_$(list2) '$(check_$(call)_$(list1)_$(list2))' <> '$(verify_$(call)_$(list1)_$(list2))'"
+      ifvarclass => "!ok_$(call)_$(list1)_$(list2)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}
+
+body classes always(x)
+
+# Define a class no matter what the outcome of the promise is
+
+{
+  promise_repaired => { "$(x)" };
+  promise_kept => { "$(x)" };
+  repair_failed => { "$(x)" };
+  repair_denied => { "$(x)" };
+  repair_timeout => { "$(x)" };
+}

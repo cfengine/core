@@ -1,10 +1,7 @@
+#include "test.h"
+
 #include "cf3.defs.h"
-
 #include "files_lib.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
-#include <stdarg.h>
 
 #define FILE_CONTENTS "8aysd9a8ydhsdkjnaldn12lk\njndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljew\nnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1l\rkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1\r\nlkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn38aysd9a8ydhsdkjnaldn12lkjndl1jndljewnbfdhwjebfkjhbnkjdn1lkdjn1lkjn3"
 #define FILE_SIZE (sizeof(FILE_CONTENTS) - 1)
@@ -30,13 +27,13 @@ static void tests_teardown(void)
     system(cmd);
 }
 
-void test_file_write(void **p)
+void test_file_write(void)
 {
     bool res = FileWriteOver(FILE_NAME, FILE_CONTENTS);
     assert_true(res);
 }
 
-void test_file_read_all(void **p)
+void test_file_read_all(void)
 {
     char *output;
 
@@ -55,7 +52,7 @@ void test_file_read_all(void **p)
     free(output2);
 }
 
-void test_file_read_truncate(void **p)
+void test_file_read_truncate(void)
 {
     char expected_output[FILE_SIZE + 1];
     char *output;
@@ -82,7 +79,7 @@ void test_file_read_truncate(void **p)
     free(output3);
 }
 
-void test_file_read_empty(void **p)
+void test_file_read_empty(void)
 {
     int creat_fd = creat(FILE_NAME_EMPTY, 0600);
     assert_true(creat_fd > -1);
@@ -96,7 +93,7 @@ void test_file_read_empty(void **p)
     assert_true(output);
 }
 
-void test_file_read_invalid(void **p)
+void test_file_read_invalid(void)
 {
     char *output;
     ssize_t bytes_read = FileReadMax(&output, "nonexisting file", 100);
@@ -105,6 +102,7 @@ void test_file_read_invalid(void **p)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     tests_setup();
 
     const UnitTest tests[] =

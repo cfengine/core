@@ -1,0 +1,107 @@
+#######################################################
+#
+# Test filestat()
+#
+#######################################################
+
+body common control
+{
+      inputs => { "../../default.cf.sub" };
+      bundlesequence  => { default("$(this.promise_filename)") };
+      version => "1.0";
+}
+
+#######################################################
+
+bundle agent init
+{
+  files:
+      "$(G.testfile)"
+      create => "true",
+      perms => init_m(600),
+      edit_defaults => init_empty,
+      edit_line => init_fill_in;
+
+  reports:
+    DEBUG::
+      "Created $(G.testfile)";
+}
+
+body edit_defaults init_empty
+{
+      empty_file_before_editing => "true";
+      edit_backup => "false";
+}
+
+body perms init_m(mode)
+{
+      mode   => "$(mode)";
+}
+
+bundle edit_line init_fill_in
+{
+  insert_lines:
+      "012345789";
+      "112345789";
+      "212345789";
+      "312345789";
+      "4";
+}
+
+body delete init_delete
+{
+      dirlinks => "delete";
+      rmdirs   => "true";
+}
+
+
+#######################################################
+
+bundle agent test
+{
+  vars:
+      "fields" slist => splitstring("size,gid,uid,ino,nlink,ctime,atime,mtime,mode,modeoct,permstr,permoct,type,devno,dev_minor,dev_major,basename,dirname", ",", 999);
+
+      "stat[$(fields)]" string => filestat($(G.testfile), $(fields));
+}
+
+
+#######################################################
+
+bundle agent check
+{
+  vars:
+      "expected[size]" string => "42";
+      "expected[mode]" string => "33152";
+      "expected[type]" string => "regular file";
+      "expected[permoct]" string => "600";
+      "expected[modeoct]" string => "100600";
+      "expected[permstr]" string => "-rw-------";
+      "expected[nlink]" string => "1";
+      "expected[dirname]" string => dirname($(G.testfile));
+      "expected[basename]" string => lastnode($(G.testfile), "/");
+
+      "expects" slist => getindices("expected");
+
+      "fields" slist => getindices("test.stat");
+
+      "joint_condition" string => join("|", "expects");
+  classes:
+      "$(expects)" expression => strcmp("$(test.stat[$(expects)])", "$(expected[$(expects)])");
+      "ok" expression => "$(joint_condition)";
+
+  reports:
+    DEBUG::
+      "got $(G.testfile) field $(fields)=$(test.stat[$(fields)])";
+
+      "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) matches expected"
+      ifvarclass => "$(expects)";
+
+      "got $(G.testfile) field $(expects)=$(test.stat[$(expects)]) did NOT match expected $(expected[$(expects)])"
+      ifvarclass => "!$(expects)";
+
+    ok::
+      "$(this.promise_filename) Pass";
+    !ok::
+      "$(this.promise_filename) FAIL";
+}

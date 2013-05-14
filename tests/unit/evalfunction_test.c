@@ -1,4 +1,6 @@
 #include "test.h"
+
+#include "env_context.h"
 #include "evalfunction.h"
 
 static bool netgroup_more = false;
@@ -43,32 +45,41 @@ int getnetgrent(char **hostp, char **userp, char **domainp)
     }
 }
 
-static void test_hostinnetgroup_found(void **state)
+static void test_hostinnetgroup_found(void)
 {
+    EvalContext *ctx = EvalContextNew();
+
     FnCallResult res;
     Rlist *args = NULL;
 
-    AppendRlist(&args, "valid_netgroup", 's');
+    RlistAppendScalar(&args, "valid_netgroup");
 
-    res = FnCallHostInNetgroup(NULL, args);
+    res = FnCallHostInNetgroup(ctx, NULL, args);
     assert_string_equal("any", (char *) res.rval.item);
+
+    EvalContextDestroy(ctx);
 }
 
-static void test_hostinnetgroup_not_found(void **state)
+static void test_hostinnetgroup_not_found(void)
 {
+    EvalContext *ctx = EvalContextNew();
+
     FnCallResult res;
     Rlist *args = NULL;
 
-    AppendRlist(&args, "invalid_netgroup", 's');
+    RlistAppendScalar(&args, "invalid_netgroup");
 
-    res = FnCallHostInNetgroup(NULL, args);
+    res = FnCallHostInNetgroup(ctx, NULL, args);
     assert_string_equal("!any", (char *) res.rval.item);
+
+    EvalContextDestroy(ctx);
 }
 
 int main()
 {
+    PRINT_TEST_BANNER();
     const UnitTest tests[] =
-{
+    {
         unit_test(test_hostinnetgroup_found),
         unit_test(test_hostinnetgroup_not_found),
     };

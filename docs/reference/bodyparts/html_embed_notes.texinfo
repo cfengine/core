@@ -1,4 +1,0 @@
-
-Embedded HTML means something that could be put into a frame or table, without
-html or body tags, headers footers etc.
-

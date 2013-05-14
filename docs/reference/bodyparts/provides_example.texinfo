@@ -1,8 +1,0 @@
-
-@verbatim
-
-things:
-
-   "host 23" provides => { "www", "email" };
-
-@end verbatim

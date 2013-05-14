@@ -1,9 +1,7 @@
+#include "test.h"
+
 #include "cf3.defs.h"
-
 #include "crypto.h"
-
-#include <setjmp.h>
-#include <cmockery.h>
 
 #define PLAINTEXT "123456789012345678901234567890123"
 #define KEY "1234567890123456789012345678901234567890123456789012345678901234"  /* at least 512 bits long (to be sure) */
@@ -28,7 +26,7 @@ static int ComputeCiphertextLen(int plaintext_len, int cipher_block_size_bytes)
     return (plaintext_len + padding);
 }
 
-static void test_cipher_init(void **state)
+static void test_cipher_init(void)
 {
     unsigned char key[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
     unsigned char iv[] = {1,2,3,4,5,6,7,8};
@@ -39,7 +37,7 @@ static void test_cipher_init(void **state)
     EVP_CIPHER_CTX_cleanup(&ctx);
 }
 
-static void test_symmetric_encrypt(void **state)
+static void test_symmetric_encrypt(void)
 {
     char ciphertext[CF_BUFSIZE];
     int plaintext_len = strlen(PLAINTEXT) + 1;
@@ -51,7 +49,7 @@ static void test_symmetric_encrypt(void **state)
     assert_memory_equal(ciphertext, CIPHERTEXT_PRECOMPUTED, ciphertext_len);
 }
 
-static void test_symmetric_decrypt(void **state)
+static void test_symmetric_decrypt(void)
 {
     char *ciphertext = (char *)CIPHERTEXT_PRECOMPUTED;
     int ciphertext_len = sizeof(CIPHERTEXT_PRECOMPUTED);
@@ -67,14 +65,15 @@ static void test_symmetric_decrypt(void **state)
 
 int main()
 {
+    PRINT_TEST_BANNER();
     CryptoInitialize();
 
     const UnitTest tests[] =
-      {
+    {
         unit_test(test_cipher_init),
         unit_test(test_symmetric_encrypt),
         unit_test(test_symmetric_decrypt),
-      };
+    };
     
     return run_tests(tests);
 }

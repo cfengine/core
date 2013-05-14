@@ -607,7 +607,7 @@ static FnCallResult FnCallHashMatch(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     char hashbuffer[EVP_MAX_MD_SIZE * 4];
     snprintf(buffer, CF_BUFSIZE - 1, "%s", HashPrintSafe(type, digest, hashbuffer));
-    Log(LOG_LEVEL_VERBOSE, "File \"%s\" hashes to \"%s\", compare to \"%s\"", string, buffer, compare);
+    Log(LOG_LEVEL_VERBOSE, "File '%s' hashes to '%s', compare to '%s'", string, buffer, compare);
 
     if (strcmp(buffer + 4, compare) == 0)
     {
@@ -849,13 +849,13 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
     {
         if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
         {
-            Log(LOG_LEVEL_ERR, "execresult \"%s\" does not have an absolute path", RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
         }
 
         if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
         {
-            Log(LOG_LEVEL_ERR, "execresult \"%s\" is assumed to be executable but isn't", RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
             return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
         }
     }
@@ -896,13 +896,13 @@ static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finala
     {
         if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
         {
-            Log(LOG_LEVEL_ERR, "execresult \"%s\" does not have an absolute path", RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_ERR, "execresult '%s' does not have an absolute path", RlistScalarValue(finalargs));
             return (FnCallResult) { FNCALL_FAILURE };
         }
 
         if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
         {
-            Log(LOG_LEVEL_ERR, "execresult \"%s\" is assumed to be executable but isn't", RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_ERR, "execresult '%s' is assumed to be executable but isn't", RlistScalarValue(finalargs));
             return (FnCallResult) { FNCALL_FAILURE };
         }
     }
@@ -936,13 +936,13 @@ static FnCallResult FnCallUseModule(EvalContext *ctx, FnCall *fp, Rlist *finalar
 
     if (stat(CommandArg0(modulecmd), &statbuf) == -1)
     {
-        Log(LOG_LEVEL_ERR, "(Plug-in module %s not found)", modulecmd);
+        Log(LOG_LEVEL_ERR, "Plug-in module '%s' not found", modulecmd);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if ((statbuf.st_uid != 0) && (statbuf.st_uid != getuid()))
     {
-        Log(LOG_LEVEL_ERR, "Module %s was not owned by uid=%ju who is executing agent", modulecmd, (uintmax_t)getuid());
+        Log(LOG_LEVEL_ERR, "Module '%s' was not owned by uid %ju who is executing agent", modulecmd, (uintmax_t)getuid());
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1030,7 +1030,7 @@ static FnCallResult FnCallReadTcp(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (val > CF_BUFSIZE - 1)
     {
-        Log(LOG_LEVEL_ERR, "Too many bytes to read from TCP port %s@%s", port, hostnameip);
+        Log(LOG_LEVEL_ERR, "Too many bytes to read from TCP port '%s@%s'", port, hostnameip);
         val = CF_BUFSIZE - CF_BUFFERMARGIN;
     }
 
@@ -1098,19 +1098,19 @@ static FnCallResult FnCallRegList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called \"%s\" but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this was not found", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function REGLIST was promised a list called \"%s\" but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function REGLIST was promised a list called '%s' but this was not found", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (retval.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called \"%s\" but this variable is not a list",
+        Log(LOG_LEVEL_VERBOSE, "Function reglist was promised a list called '%s' but this variable is not a list",
               listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1156,7 +1156,7 @@ static FnCallResult FnCallRegArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
     if ((ptr = ScopeGet(var.scope)) == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called \"%s\" but this was not found",
+        Log(LOG_LEVEL_VERBOSE, "Function regarray was promised an array called '%s' but this was not found",
               arrayname);
         VarRefDestroy(var);
         return (FnCallResult) { FNCALL_FAILURE };
@@ -1215,7 +1215,7 @@ static FnCallResult FnCallGetIndices(EvalContext *ctx, FnCall *fp, Rlist *finala
     if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-              "Function getindices was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
+            "Function getindices was promised an array called '%s' in scope '%s' but this was not found", lval,
               scopeid);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1288,7 +1288,7 @@ static FnCallResult FnCallGetValues(EvalContext *ctx, FnCall *fp, Rlist *finalar
     if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-              "Function getvalues was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
+            "Function getvalues was promised an array called '%s' in scope '%s' but this was not found", lval,
               scopeid);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_SUCCESS, { returnlist, RVAL_TYPE_LIST } };
@@ -1370,19 +1370,19 @@ static FnCallResult FnCallSum(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (!ScopeExists(scopeid))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"sum\" was promised a list in scope \"%s\" but this was not found", scopeid);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list in scope '%s' but this was not found", scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"sum\" was promised a list called \"%s\" but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"sum\" was promised a list called \"%s\" but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function sum was promised a list called '%s' but this was not found", name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1432,20 +1432,20 @@ static FnCallResult FnCallProduct(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (!ScopeExists(scopeid))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"product\" was promised a list in scope \"%s\" but this was not found",
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list in scope '%s' but this was not found",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"product\" was promised a list called \"%s\" but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"product\" was promised a list called \"%s\" but this was not found", name);
+        Log(LOG_LEVEL_VERBOSE, "Function 'product' was promised a list called '%s' but this was not found", name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -1496,21 +1496,21 @@ static FnCallResult FnCallJoin(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 
     if (!ScopeExists(scopeid))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"join\" was promised an array in scope \"%s\" but this was not found",
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised an array in scope '%s' but this was not found",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, scopeid, lval }, &rval2, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"join\" was promised a list called \"%s.%s\" but this was not (yet) found",
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s.%s' but this was not (yet) found",
               scopeid, name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (rval2.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"join\" was promised a list called \"%s\" but this was not (yet) found",
+        Log(LOG_LEVEL_VERBOSE, "Function 'join' was promised a list called '%s' but this was not (yet) found",
               name);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1607,7 +1607,7 @@ static FnCallResult FnCallGetFields(EvalContext *ctx, FnCall *fp, Rlist *finalar
             {
                 snprintf(name, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, vcount);
                 ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, name }, RlistScalarValue(rp), DATA_TYPE_STRING);
-                Log(LOG_LEVEL_VERBOSE, "getfields: defining %s = %s", name, RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, "getfields: defining '%s' => '%s'", name, RlistScalarValue(rp));
                 vcount++;
             }
         }
@@ -1666,7 +1666,7 @@ static FnCallResult FnCallCountLinesMatching(EvalContext *ctx, FnCall *fp, Rlist
         if (FullTextMatch(regex, line))
         {
             lcount++;
-            Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched \"%s\"", line);
+            Log(LOG_LEVEL_VERBOSE, "countlinesmatching: matched '%s'", line);
             continue;
         }
     }
@@ -1761,7 +1761,7 @@ static FnCallResult FnCallMapArray(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     if ((ptr = ScopeGet(scopeid)) == NULL)
     {
         Log(LOG_LEVEL_VERBOSE,
-              "Function maparray was promised an array called \"%s\" in scope \"%s\" but this was not found\n", lval,
+            "Function maparray was promised an array called '%s' in scope '%s' but this was not found", lval,
               scopeid);
         RlistAppendScalarIdemp(&returnlist, CF_NULL_VALUE);
         return (FnCallResult) { FNCALL_FAILURE, { returnlist, RVAL_TYPE_LIST } };
@@ -1887,7 +1887,7 @@ static FnCallResult FnCallMapList(EvalContext *ctx, FnCall *fp, Rlist *finalargs
 
     if (!ScopeExists(scopeid))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function \"maplist\" was promised an list in scope \"%s\" but this was not found",
+        Log(LOG_LEVEL_VERBOSE, "Function 'maplist' was promised an list in scope '%s' but this was not found",
               scopeid);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1950,14 +1950,14 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Function selectservers was promised a list called \"%s\" but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function selectservers was promised a list called '%s' but this was not found", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
         Log(LOG_LEVEL_VERBOSE,
-              "Function selectservers was promised a list called \"%s\" but this was not found from context %s.%s\n",
+            "Function selectservers was promised a list called '%s' but this was not found from context '%s.%s'",
               listvar, PromiseGetBundle(fp->caller)->name, naked);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -1965,7 +1965,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
     if (retval.type != RVAL_TYPE_LIST)
     {
         Log(LOG_LEVEL_VERBOSE,
-              "Function selectservers was promised a list called \"%s\" but this variable is not a list\n", listvar);
+            "Function selectservers was promised a list called '%s' but this variable is not a list", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -2003,7 +2003,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
     for (Rlist *rp = hostnameip; rp != NULL; rp = rp->next)
     {
-        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at %s\n", val, portnum, (char *) rp->item);
+        Log(LOG_LEVEL_DEBUG, "Want to read %d bytes from port %d at '%s'", val, portnum, (char *) rp->item);
 
         conn = NewAgentConn(RlistScalarValue(rp));
 
@@ -2041,7 +2041,7 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
 
             if (strlen(regex) == 0 || FullTextMatch(regex, buffer))
             {
-                Log(LOG_LEVEL_VERBOSE, "Host %s is alive and responding correctly", RlistScalarValue(rp));
+                Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive and responding correctly", RlistScalarValue(rp));
                 snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
                 ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
                 count++;
@@ -2049,13 +2049,13 @@ static FnCallResult FnCallSelectServers(EvalContext *ctx, FnCall *fp, Rlist *fin
         }
         else
         {
-            Log(LOG_LEVEL_VERBOSE, "Host %s is alive", RlistScalarValue(rp));
+            Log(LOG_LEVEL_VERBOSE, "Host '%s' is alive", RlistScalarValue(rp));
             snprintf(buffer, CF_MAXVARSIZE - 1, "%s[%d]", array_lval, count);
             ScopeNewScalar(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, buffer }, rp->item, DATA_TYPE_STRING);
 
             if (IsDefinedClass(ctx, CanonifyName(rp->item), PromiseGetNamespace(fp->caller)))
             {
-                Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class %s - joined",
+                Log(LOG_LEVEL_VERBOSE, "This host is in the list and has promised to join the class '%s' - joined",
                       array_lval);
                 EvalContextHeapAddSoft(ctx, array_lval, PromiseGetNamespace(fp->caller));
             }
@@ -2985,14 +2985,14 @@ FnCallResult FnCallHostInNetgroup(EvalContext *ctx, FnCall *fp, Rlist *finalargs
     {
         if (host == NULL)
         {
-            Log(LOG_LEVEL_VERBOSE, "Matched %s in netgroup %s", VFQNAME, RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", VFQNAME, RlistScalarValue(finalargs));
             strcpy(buffer, "any");
             break;
         }
 
         if (strcmp(host, VFQNAME) == 0 || strcmp(host, VUQNAME) == 0)
         {
-            Log(LOG_LEVEL_VERBOSE, "Matched %s in netgroup %s", host, RlistScalarValue(finalargs));
+            Log(LOG_LEVEL_VERBOSE, "Matched '%s' in netgroup '%s'", host, RlistScalarValue(finalargs));
             strcpy(buffer, "any");
             break;
         }
@@ -3151,7 +3151,7 @@ static FnCallResult FnCallHubKnowledge(EvalContext *ctx, FnCall *fp, Rlist *fina
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Accessing hub knowledge bank for \"%s\"", handle);
+        Log(LOG_LEVEL_VERBOSE, "Accessing hub knowledge base for '%s'", handle);
         GetRemoteScalar(ctx, "VAR", handle, POLICY_SERVER, true, buffer);
 
         // This should always be successful - and this one doesn't cache
@@ -3581,7 +3581,7 @@ static FnCallResult FnCallRegLine(EvalContext *ctx, FnCall *fp, Rlist *finalargs
             {
                 if (ferror(fin))
                 {
-                    Log(LOG_LEVEL_ERR, "Unable to read from the file %s", argv1);
+                    Log(LOG_LEVEL_ERR, "Function regline, unable to read from the file '%s'", argv1);
                     fclose(fin);
                     return (FnCallResult) { FNCALL_FAILURE };
                 }
@@ -3727,14 +3727,14 @@ static FnCallResult FnCallRRange(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
     double from = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &from))
     {
-        Log(LOG_LEVEL_ERR, "Error reading assumed real value %s => %lf", (char *) (finalargs->item), from);
+        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", (char *) (finalargs->item), from);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     double to = 0;
     if (!DoubleFromString(RlistScalarValue(finalargs), &to))
     {
-        Log(LOG_LEVEL_ERR, "Error reading assumed real value %s => %lf", (char *) (finalargs->next->item), from);
+        Log(LOG_LEVEL_ERR, "Function rrange, error reading assumed real value '%s' => %lf", (char *) (finalargs->next->item), from);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
@@ -4041,7 +4041,7 @@ static FnCallResult FnCallStrftime(EvalContext *ctx, FnCall *fp, Rlist *finalarg
     }
     else
     {
-        Log(LOG_LEVEL_INFO, "The given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
+        Log(LOG_LEVEL_WARNING, "Function strftime, the given time stamp '%ld' was invalid. (strftime: %s)", when, GetErrorStr());
     }
 
     return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
@@ -4118,7 +4118,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
         {
             if (IntFromString(RlistScalarValue(rp)) == CF_NOINT)
             {
-                Log(LOG_LEVEL_ERR, "Presumed int value \"%s\" read from file %s has no recognizable value",
+                Log(LOG_LEVEL_ERR, "Presumed int value '%s' read from file '%s' has no recognizable value",
                       RlistScalarValue(rp), filename);
                 noerrors = false;
             }
@@ -4131,7 +4131,7 @@ static FnCallResult ReadList(EvalContext *ctx, FnCall *fp, Rlist *finalargs, Dat
             double real_value = 0;
             if (!DoubleFromString(RlistScalarValue(rp), &real_value))
             {
-                Log(LOG_LEVEL_ERR, "Presumed real value \"%s\" read from file %s has no recognizable value",
+                Log(LOG_LEVEL_ERR, "Presumed real value '%s' read from file '%s' has no recognizable value",
                       RlistScalarValue(rp), filename);
                 noerrors = false;
             }
@@ -4299,7 +4299,7 @@ static FnCallResult ParseArray(EvalContext *ctx, FnCall *fp, Rlist *finalargs, D
 
 // Read once to validate structure of file in itemlist
 
-    Log(LOG_LEVEL_DEBUG, "Parse string data from string %s - , maxent %d, maxsize %d\n", instring, maxent, maxsize);
+    Log(LOG_LEVEL_DEBUG, "Parse string data from string '%s' - , maxent %d, maxsize %d", instring, maxent, maxsize);
 
     if (instring == NULL)
     {
@@ -4413,20 +4413,20 @@ static FnCallResult FnCallFileSexist(EvalContext *ctx, FnCall *fp, Rlist *finala
     }
     else
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called \"%s\" but this was not found", listvar);
+        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found", listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (!EvalContextVariableGet(ctx, (VarRef) { NULL, PromiseGetBundle(fp->caller)->name, naked }, &retval, NULL))
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called \"%s\" but this was not found",
+        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this was not found",
               listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
 
     if (retval.type != RVAL_TYPE_LIST)
     {
-        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called \"%s\" but this variable is not a list",
+        Log(LOG_LEVEL_VERBOSE, "Function filesexist was promised a list called '%s' but this variable is not a list",
               listvar);
         return (FnCallResult) { FNCALL_FAILURE };
     }
@@ -4703,7 +4703,7 @@ static void *CfReadFile(char *filename, int maxsize)
 
     if (sb.st_size > maxsize)
     {
-        Log(LOG_LEVEL_INFO, "Truncating long file %s in readfile to max limit %d", filename, maxsize);
+        Log(LOG_LEVEL_INFO, "Truncating long file '%s' in readfile to max limit %d", filename, maxsize);
         size = maxsize;
     }
     else
@@ -4766,7 +4766,7 @@ static char *StripPatterns(char *file_buffer, char *pattern, char *filename)
             if (count++ > strlen(file_buffer))
             {
                 Log(LOG_LEVEL_ERR,
-                      "Comment regex \"%s\" was irreconcilable reading input \"%s\" probably because it legally matches nothing",
+                    "Comment regex '%s' was irreconcilable reading input '%s' probably because it legally matches nothing",
                       pattern, filename);
                 return file_buffer;
             }
@@ -4979,7 +4979,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 
     CanonifyNameInPlace(filename);
     strcpy(context, filename);
-    Log(LOG_LEVEL_VERBOSE, "Module context: %s", context);
+    Log(LOG_LEVEL_VERBOSE, "Module context '%s'", context);
 
     name[0] = '\0';
     content[0] = '\0';
@@ -4987,14 +4987,14 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
     switch (*line)
     {
     case '+':
-        Log(LOG_LEVEL_VERBOSE, "Activated classes: %s", line + 1);
+        Log(LOG_LEVEL_VERBOSE, "Activated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
              EvalContextHeapAddSoft(ctx, line + 1, ns);
         }
         break;
     case '-':
-        Log(LOG_LEVEL_VERBOSE, "Deactivated classes: %s", line + 1);
+        Log(LOG_LEVEL_VERBOSE, "Deactivated classes '%s'", line + 1);
         if (CheckID(line + 1))
         {
             if (line[1] != '\0')
@@ -5006,7 +5006,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
                 {
                     if (EvalContextHeapContainsHard(ctx, negated_context))
                     {
-                        FatalError(ctx, "Cannot negate the reserved class [%s]\n", negated_context);
+                        FatalError(ctx, "Cannot negate the reserved class '%s'", negated_context);
                     }
 
                     EvalContextHeapAddNegated(ctx, negated_context);
@@ -5021,7 +5021,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
 
         if (CheckID(name))
         {
-            Log(LOG_LEVEL_VERBOSE, "Defined variable: %s in context %s with value: %s", name, context, content);
+            Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
             ScopeNewScalar(ctx, (VarRef) { NULL, context, name }, content, DATA_TYPE_STRING);
         }
         break;
@@ -5035,7 +5035,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
             Rlist *list = NULL;
 
             list = RlistParseString(content, NULL);
-            Log(LOG_LEVEL_VERBOSE, "Defined variable: %s in context %s with value: %s", name, context, content);
+            Log(LOG_LEVEL_VERBOSE, "Defined variable '%s' in context '%s' with value '%s'", name, context, content);
 
             ScopeNewList(ctx, (VarRef) { NULL, context, name }, list, DATA_TYPE_STRING_LIST);
         }
@@ -5047,7 +5047,7 @@ void ModuleProtocol(EvalContext *ctx, char *command, char *line, int print, cons
     default:
         if (print)
         {
-            Log(LOG_LEVEL_INFO, "M \"%s\": %s", command, line);
+            Log(LOG_LEVEL_INFO, "M '%s': %s", command, line);
         }
         break;
     }
@@ -5066,7 +5066,7 @@ static int CheckID(char *id)
         if (!isalnum((int) *sp) && (*sp != '.') && (*sp != '-') && (*sp != '_') && (*sp != '[') && (*sp != ']'))
         {
             Log(LOG_LEVEL_ERR,
-                  "Module protocol contained an illegal character \'%c\' in class/variable identifier \'%s\'.", *sp,
+                  "Module protocol contained an illegal character '%c' in class/variable identifier '%s'.", *sp,
                   id);
             return false;
         }

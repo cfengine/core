@@ -65,7 +65,7 @@ static DbMysqlConn *CfConnectMysqlDB(const char *host, const char *user, const c
 
     if (!mysql_real_connect(&c->conn, host, user, password, database, 0, NULL, 0))
     {
-        Log(LOG_LEVEL_ERR, "Failed to connect to existing MySQL database: %s", mysql_error(&c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing MySQL database '%s'", mysql_error(&c->conn));
         free(c);
         return NULL;
     }
@@ -89,7 +89,7 @@ static void CfNewQueryMysqlDb(CfdbConn *c, const char *query)
 
     if (mysql_query(&mc->conn, query) != 0)
     {
-        Log(LOG_LEVEL_INFO, "MySQL query failed: %s, (%s)", query, mysql_error(&mc->conn));
+        Log(LOG_LEVEL_INFO, "MySQL query failed '%s'. (mysql_query: %s)", query, mysql_error(&mc->conn));
     }
     else
     {
@@ -219,7 +219,7 @@ static DbPostgresqlConn *CfConnectPostgresqlDB(const char *host,
 
     if (PQstatus(c->conn) == CONNECTION_BAD)
     {
-        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database: %s", PQerrorMessage(c->conn));
+        Log(LOG_LEVEL_ERR, "Failed to connect to existing PostgreSQL database. (PQconnectdb: %s)", PQerrorMessage(c->conn));
         free(c);
         return NULL;
     }
@@ -245,7 +245,7 @@ static void CfNewQueryPostgresqlDb(CfdbConn *c, const char *query)
 
     if (PQresultStatus(pc->res) != PGRES_COMMAND_OK && PQresultStatus(pc->res) != PGRES_TUPLES_OK)
     {
-        Log(LOG_LEVEL_INFO, "PostgreSQL query failed: %s, %s", query, PQerrorMessage(pc->conn));
+        Log(LOG_LEVEL_INFO, "PostgreSQL query '%s' failed. (PQExec: %s)", query, PQerrorMessage(pc->conn));
     }
     else
     {
@@ -332,7 +332,7 @@ int CfConnectDB(CfdbConn *cfdb, DatabaseType dbtype, char *remotehost, char *dbu
         db = "no db specified";
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database \"%s\" user=%s, host=%s (type=%d)", db, dbuser, remotehost,
+    Log(LOG_LEVEL_VERBOSE, "Connect to SQL database '%s', user '%s', host '%s', type %d", db, dbuser, remotehost,
           dbtype);
 
     switch (dbtype)
@@ -410,7 +410,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
     cfdb->maxcolumns = 0;
     cfdb->maxrows = 0;
 
-    Log(LOG_LEVEL_DEBUG, "Before Query succeeded: %s - %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
+    Log(LOG_LEVEL_DEBUG, "Before query '%s' succeeded, maxrows %d, maxcolumns %d", query, cfdb->maxrows, cfdb->maxcolumns);
 
     switch (cfdb->type)
     {
@@ -427,7 +427,7 @@ void CfNewQueryDB(CfdbConn *cfdb, char *query)
         break;
     }
 
-    Log(LOG_LEVEL_DEBUG, "Query succeeded: (%s) %d,%d\n", query, cfdb->maxrows, cfdb->maxcolumns);
+    Log(LOG_LEVEL_DEBUG, "Query '%s' succeeded. maxrows %d, maxcolumns %d", query, cfdb->maxrows, cfdb->maxcolumns);
 }
 
 /*****************************************************************************/

@@ -203,7 +203,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
 
             if (optarg && strlen(optarg) < 5)
             {
-                Log(LOG_LEVEL_ERR, " -f used but argument \"%s\" incorrect", optarg);
+                Log(LOG_LEVEL_ERR, " -f used but argument '%s' incorrect", optarg);
                 exit(EXIT_FAILURE);
             }
 
@@ -212,7 +212,7 @@ static GenericAgentConfig *CheckOpts(EvalContext *ctx, int argc, char **argv)
             break;
 
         case 'd':
-            config->debug_mode = true;
+            LogSetGlobalLevel(LOG_LEVEL_DEBUG);
             break;
 
         case 'K':
@@ -514,7 +514,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
     {
         /* Full reload */
 
-        Log(LOG_LEVEL_INFO, "Re-reading promise file %s..", config->input_file);
+        Log(LOG_LEVEL_INFO, "Re-reading promise file '%s'", config->input_file);
 
         EvalContextHeapClear(ctx);
 
@@ -580,7 +580,7 @@ static bool ScheduleRun(EvalContext *ctx, Policy **policy, GenericAgentConfig *c
         {
             if (IsDefinedClass(ctx, time_context, NULL))
             {
-                Log(LOG_LEVEL_VERBOSE, "Waking up the agent at %s ~ %s ", ctime(&CFSTARTTIME), time_context);
+                Log(LOG_LEVEL_VERBOSE, "Waking up the agent at %s ~ %s", ctime(&CFSTARTTIME), time_context);
                 return true;
             }
         }

@@ -51,7 +51,7 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
 
     if (strlen(nodename) < 1)
     {
-        Log(LOG_LEVEL_ERR, "Empty (null) filename detected in %s", path);
+        Log(LOG_LEVEL_ERR, "Empty (null) filename detected in '%s'", path);
         return true;
     }
 
@@ -59,14 +59,14 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
     {
         if (stat && (S_ISREG(stat->st_mode) || S_ISLNK(stat->st_mode)))
         {
-            Log(LOG_LEVEL_ERR, "Suspicious file %s found in %s", nodename, path);
+            Log(LOG_LEVEL_ERR, "Suspicious file '%s' found in '%s'", nodename, path);
                 return false;
         }
     }
 
     if (strcmp(nodename, "...") == 0)
     {
-        Log(LOG_LEVEL_VERBOSE, "Possible DFS/FS cell node detected in %s...", path);
+        Log(LOG_LEVEL_VERBOSE, "Possible DFS/FS cell node detected in '%s' ...", path);
         return true;
     }
 
@@ -117,14 +117,14 @@ static bool ConsiderFile(const char *nodename, const char *path, struct stat *st
 
     if (S_ISLNK(stat->st_mode))
     {
-        Log(LOG_LEVEL_INFO, "   %s is a symbolic link", nodename);
+        Log(LOG_LEVEL_INFO, "'%s' is a symbolic link", nodename);
     }
     else if (S_ISDIR(stat->st_mode))
     {
-        Log(LOG_LEVEL_INFO, "   %s is a directory", nodename);
+        Log(LOG_LEVEL_INFO, "'%s' is a directory", nodename);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "[%s] has size %ld and full mode %o", nodename, (unsigned long) (stat->st_size),
+    Log(LOG_LEVEL_VERBOSE, "'%s' has size %ld and full mode %o", nodename, (unsigned long) (stat->st_size),
           (unsigned int) (stat->st_mode));
     return true;
 }

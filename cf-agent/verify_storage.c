@@ -42,7 +42,7 @@
 #include "env_context.h"
 
 Rlist *MOUNTEDFSLIST;
-int CF_MOUNTALL;
+bool CF_MOUNTALL;
 
 static void FindStoragePromiserObjects(EvalContext *ctx, Promise *pp);
 static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise *pp);
@@ -234,20 +234,20 @@ static int VerifyFileSystem(EvalContext *ctx, char *name, Attributes a, Promise 
 
         if (sizeinbytes < a.volume.sensible_size)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "File system %s is suspiciously small! (%jd bytes)\n", name,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "File system '%s' is suspiciously small! (%jd bytes)", name,
                  (intmax_t) sizeinbytes);
             return (false);
         }
 
         if (filecount < a.volume.sensible_count)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Filesystem %s has only %ld files/directories.\n", name,
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Filesystem '%s' has only %ld files/directories.", name,
                  filecount);
             return (false);
         }
     }
 
-    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem %s's content seems to be sensible as promised\n", name);
+    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' content seems to be sensible as promised", name);
     return (true);
 }
 
@@ -275,7 +275,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
     {
         if (IsForeignFileSystem(&statbuf, file))
         {
-            Log(LOG_LEVEL_INFO, "Filesystem %s is mounted from a foreign system, so skipping it", file);
+            Log(LOG_LEVEL_INFO, "Filesystem '%s' is mounted from a foreign system, so skipping it", file);
             return true;
         }
     }
@@ -301,7 +301,7 @@ static int VerifyFreeSpace(EvalContext *ctx, char *file, Attributes a, Promise *
 
         if (free_bytes < threshold)
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Disk space under %jd kB for volume containing %s (%jd kB free)\n",
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Disk space under %jd kB for volume containing '%s' (%jd kB free)",
                  (intmax_t) (threshold / 1024), file, (intmax_t) (free_bytes / 1024));
             return false;
         }
@@ -349,13 +349,13 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
 
             if ((a.mount.mount_source) && (strcmp(mp->source, a.mount.mount_source) != 0))
             {
-                Log(LOG_LEVEL_INFO, "A different file system (%s:%s) is mounted on %s than what is promised",
+                Log(LOG_LEVEL_INFO, "A different file system '%s:%s' is mounted on '%s' than what is promised",
                       mp->host, mp->source, name);
                 return false;
             }
             else
             {
-                Log(LOG_LEVEL_VERBOSE, "File system %s seems to be mounted correctly", mp->source);
+                Log(LOG_LEVEL_VERBOSE, "File system '%s' seems to be mounted correctly", mp->source);
                 break;
             }
         }
@@ -365,7 +365,7 @@ static int FileSystemMountedCorrectly(Rlist *list, char *name, Attributes a)
     {
         if (!a.mount.unmount)
         {
-            Log(LOG_LEVEL_VERBOSE, "File system %s seems not to be mounted correctly", name);
+            Log(LOG_LEVEL_VERBOSE, "File system '%s' seems not to be mounted correctly", name);
             CF_MOUNTALL = true;
         }
     }
@@ -431,13 +431,13 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
     char dir[CF_BUFSIZE];
     int changes = 0;
 
-    Log(LOG_LEVEL_VERBOSE, "Verifying mounted file systems on %s", name);
+    Log(LOG_LEVEL_VERBOSE, "Verifying mounted file systems on '%s'", name);
 
     snprintf(dir, CF_BUFSIZE, "%s/.", name);
 
     if (!IsPrivileged())
     {
-        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Only root can mount filesystems.\n");
+        cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_INTERRUPTED, pp, a, "Only root can mount filesystems");
         return false;
     }
 
@@ -458,7 +458,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
             else
             {
                 cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a,
-                     "Filesystem %s was not mounted as promised, and no edits were promised in %s\n", name,
+                     "Filesystem '%s' was not mounted as promised, and no edits were promised in '%s'", name,
                      VFSTAB[VSYSTEMHARDCLASS]);
                 // Mount explicitly
                 VerifyMount(ctx, name, a, pp);
@@ -489,7 +489,7 @@ static int VerifyMountPromise(EvalContext *ctx, char *name, Attributes a, Promis
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem %s seems to be mounted as promised\n", name);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_NOOP, pp, a, "Filesystem '%s' seems to be mounted as promised", name);
         }
     }
 

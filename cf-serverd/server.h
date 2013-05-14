@@ -132,9 +132,9 @@ extern int CLOCK_DRIFT;
 extern int ACTIVE_THREADS;
 
 extern int CFD_MAXPROCESSES;
-extern int DENYBADCLOCKS;
+extern bool DENYBADCLOCKS;
 extern int MAXTRIES;
-extern int LOGENCRYPT;
+extern bool LOGENCRYPT;
 extern int COLLECT_INTERVAL;
 extern bool SERVER_LISTEN;
 

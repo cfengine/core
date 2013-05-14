@@ -546,7 +546,7 @@ static bool ExpandOverflow(const char *str1, const char *str2)
     if ((strlen(str1) + len) > (CF_EXPANDSIZE - CF_BUFFERMARGIN))
     {
         Log(LOG_LEVEL_ERR,
-              "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add %s to %s\n", str2,
+            "Expansion overflow constructing string. Increase CF_EXPANDSIZE macro. Tried to add '%s' to '%s'", str2,
               str1);
         return true;
     }

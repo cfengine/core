@@ -75,7 +75,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         if (strcmp(a.service.service_autostart_policy, "none") != 0)
         {
             Log(LOG_LEVEL_ERR,
-                  "!! Autostart policy of service promiser \"%s\" needs to be \"none\" when service policy is not \"start\", but is \"%s\"",
+                "!! Autostart policy of service promiser '%s' needs to be 'none' when service policy is not 'start', but is '%s'",
                   pp->promiser, a.service.service_autostart_policy);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
@@ -83,7 +83,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
         break;
 
     default:
-        Log(LOG_LEVEL_ERR, "Invalid service policy for service \"%s\"", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Invalid service policy for service '%s'", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -92,7 +92,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
     {
         if (strcmp(pp->promiser, dep->item) == 0)
         {
-            Log(LOG_LEVEL_ERR, "Service promiser \"%s\" has itself as dependency", pp->promiser);
+            Log(LOG_LEVEL_ERR, "Service promiser '%s' has itself as dependency", pp->promiser);
             PromiseRef(LOG_LEVEL_ERR, pp);
             return false;
         }
@@ -100,7 +100,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (a.service.service_type == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Service type for service \"%s\" is not known", pp->promiser);
+        Log(LOG_LEVEL_ERR, "Service type for service '%s' is not known", pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
     }
@@ -109,7 +109,7 @@ static int ServicesSanityChecks(Attributes a, Promise *pp)
 
     if (strcmp(a.service.service_type, "windows") != 0)
     {
-        Log(LOG_LEVEL_ERR, "Service type for promiser \"%s\" must be \"windows\" on this system, but is \"%s\"",
+        Log(LOG_LEVEL_ERR, "Service type for promiser '%s' must be 'windows' on this system, but is '%s'",
               pp->promiser, a.service.service_type);
         PromiseRef(LOG_LEVEL_ERR, pp);
         return false;
@@ -255,7 +255,7 @@ static void DoVerifyServices(EvalContext *ctx, Attributes a, Promise *pp)
 
     if (default_bundle && bp == NULL)
     {
-        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service %s could not be invoked successfully\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_FAIL, pp, a, "Service '%s' could not be invoked successfully", pp->promiser);
     }
 
     if (!DONTDO)

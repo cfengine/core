@@ -41,7 +41,7 @@ EditContext *NewEditContext(char *filename, Attributes a)
 
     if (!IsAbsoluteFileName(filename))
     {
-        Log(LOG_LEVEL_ERR, "Relative file name %s was marked for editing but has no invariant meaning", filename);
+        Log(LOG_LEVEL_ERR, "Relative file name '%s' was marked for editing but has no invariant meaning", filename);
         return NULL;
     }
 
@@ -194,13 +194,13 @@ int LoadFileAsXmlDoc(xmlDocPtr *doc, const char *file, EditDefaults edits)
     {
         if ((*doc = xmlNewDoc(BAD_CAST "1.0")) == NULL)
         {
-            Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
+            Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlNewDoc: %s)", file, GetErrorStr());
             return false;
         }
     }
     else if ((*doc = xmlParseFile(file)) == NULL)
     {
-        Log(LOG_LEVEL_INFO, "Document %s not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
+        Log(LOG_LEVEL_INFO, "Document '%s' not parsed successfully. (xmlParseFile: %s)", file, GetErrorStr());
         return false;
     }
 

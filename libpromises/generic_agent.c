@@ -309,7 +309,7 @@ int CheckPromises(const GenericAgentConfig *config)
         strlcat(cmd, " -D bootstrap_mode", CF_BUFSIZE);
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Checking policy with command \"%s\"", cmd);
+    Log(LOG_LEVEL_VERBOSE, "Checking policy with command '%s'", cmd);
 
     if (ShellCommandReturnsZero(cmd, true))
     {
@@ -394,7 +394,7 @@ static void ShowContext(EvalContext *ctx)
 
         if (LEGACY_OUTPUT)
         {
-            printf("}\n");
+            WriterWrite(w, "}\n");
             FileWriterDetach(w);
         }
         else
@@ -441,7 +441,7 @@ static void ShowContext(EvalContext *ctx)
 
         if (LEGACY_OUTPUT)
         {
-            printf("}\n");
+            WriterWrite(w, "}\n");
             FileWriterDetach(w);
         }
         else
@@ -479,7 +479,7 @@ static void ShowContext(EvalContext *ctx)
 
         if (LEGACY_OUTPUT)
         {
-            printf("}\n");
+            WriterWrite(w, "}\n");
             FileWriterDetach(w);
         }
         else
@@ -1616,10 +1616,15 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
 
         default:
             name = NULL;
-            Log(LOG_LEVEL_ERR, "Illegal item found in bundlesequence: ");
-            RvalShow(stdout, (Rval) {rp->item, rp->type});
-            printf(" = %c\n", rp->type);
             ok = false;
+            {
+                Writer *w = StringWriter();
+                WriterWrite(w, "Illegal item found in bundlesequence '");
+                RvalWrite(w, (Rval) {rp->item, rp->type});
+                WriterWrite(w, "'");
+                Log(LOG_LEVEL_ERR, "%s", StringWriterData(w));
+                WriterClose(w);
+            }
             break;
         }
 
@@ -1630,7 +1635,7 @@ static bool VerifyBundleSequence(EvalContext *ctx, const Policy *policy, const G
 
         if (!config->ignore_missing_bundles && !PolicyGetBundle(policy, NULL, NULL, name))
         {
-            Log(LOG_LEVEL_ERR, "Bundle \"%s\" listed in the bundlesequence is not a defined bundle", name);
+            Log(LOG_LEVEL_ERR, "Bundle '%s' listed in the bundlesequence is not a defined bundle", name);
             ok = false;
         }
     }
@@ -1724,7 +1729,6 @@ GenericAgentConfig *GenericAgentConfigNewDefault(AgentType agent_type)
     config->check_runnable = agent_type != AGENT_TYPE_COMMON;
     config->ignore_missing_bundles = false;
     config->ignore_missing_inputs = false;
-    config->debug_mode = false;
 
     config->heap_soft = NULL;
     config->heap_negated = NULL;

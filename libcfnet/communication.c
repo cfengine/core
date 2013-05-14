@@ -172,7 +172,7 @@ int Hostname2IPString(char *dst, const char *hostname, size_t dst_size)
     if ((ret) != 0)
     {
         Log(LOG_LEVEL_INFO,
-            "Unable to lookup hostname (%s) or cfengine service: getaddrinfo: %s",
+            "Unable to lookup hostname '%s' or cfengine service. (getaddrinfo: %s)",
             hostname, gai_strerror(ret));
         return -1;
     }
@@ -216,7 +216,7 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
     if (ret != 0)
     {
         Log(LOG_LEVEL_ERR,
-              "getaddrinfo: Unable to convert IP address (%s): %s",
+            "Unable to convert IP address '%s'. (getaddrinfo: %s)",
               ipaddr, gai_strerror(ret));
         return -1;
     }
@@ -230,7 +230,7 @@ int IPString2Hostname(char *dst, const char *ipaddr, size_t dst_size)
     if (ret != 0)
     {
         Log(LOG_LEVEL_INFO,
-            "Couldn't reverse resolve %s: getaddrinfo: %s",
+            "Couldn't reverse resolve '%s'. (getaddrinfo: %s)",
             ipaddr, gai_strerror(ret));
         freeaddrinfo(response);
         return -1;
@@ -258,12 +258,12 @@ int GetMyHostInfo(char nameBuf[MAXHOSTNAMELEN], char ipBuf[MAXIP4CHARLEN])
         }
         else
         {
-            Log(LOG_LEVEL_ERR, "!! Could not get host entry for local host: %s", GetErrorStr());
+            Log(LOG_LEVEL_ERR, "Could not get host entry for local host. (gethostbyname: %s)", GetErrorStr());
         }
     }
     else
     {
-        Log(LOG_LEVEL_ERR, "!! Could not get host name: %s", GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Could not get host name. (gethostname: %s)", GetErrorStr());
     }
 
     return false;
@@ -278,7 +278,7 @@ unsigned short SocketFamily(int sd)
 
    if (getsockname(sd, &sa, &len) == -1)
    {
-       Log(LOG_LEVEL_ERR, "!! Could not get socket family: %s", GetErrorStr());
+       Log(LOG_LEVEL_ERR, "Could not get socket family. (getsockname: %s)", GetErrorStr());
    }
 
    return sa.sa_family;

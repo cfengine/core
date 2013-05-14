@@ -69,7 +69,7 @@ void TexinfoManual(EvalContext *ctx, const char *source_dir, const char *output_
 
     if ((fout = fopen(output_file, "w")) == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Unable to open %s for writing. (fopen: %s)", filename, GetErrorStr());
+        Log(LOG_LEVEL_ERR, "Unable to open '%s' for writing. (fopen: %s)", filename, GetErrorStr());
         return;
     }
 

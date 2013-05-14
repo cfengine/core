@@ -163,12 +163,12 @@ int VerifyMethod(EvalContext *ctx, char *attrname, Attributes a, Promise *pp)
         }
         if (bp && (bp->name))
         {
-            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method \"%s\" was used but was not defined!\n", bp->name);
+            cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a, "Method '%s' was used but was not defined", bp->name);
         }
         else
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_FAIL, pp, a,
-                 "A method attempted to use a bundle \"%s\" that was apparently not defined!\n", method_name);
+                 "A method attempted to use a bundle '%s' that was apparently not defined", method_name);
         }
     }
 

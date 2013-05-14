@@ -3316,11 +3316,7 @@ static ServerConnectionState *NewConn(int sd)
        return NULL;
        }
     
-    ThreadLock(cft_system);
-
     conn = xmalloc(sizeof(ServerConnectionState));
-
-    ThreadUnlock(cft_system);
 
     conn->sd_reply = sd;
     conn->id_verified = false;

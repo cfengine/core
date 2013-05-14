@@ -3822,11 +3822,7 @@ static ServerConnectionState *NewConn(int sd)
 {
     ServerConnectionState *conn;
 
-    ThreadLock(cft_system);
-
     conn = xmalloc(sizeof(ServerConnectionState));
-
-    ThreadUnlock(cft_system);
 
     conn->sd_reply = sd;
     conn->id_verified = false;

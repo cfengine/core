@@ -205,7 +205,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             {
                 if (IsExecutable(CommandArg0(a.process_stop)))
                 {
-                    ShellCommandReturnsZero(a.process_stop, false);
+                    ShellCommandReturnsZero(a.process_stop, SHELL_TYPE_NONE);
                 }
                 else
                 {

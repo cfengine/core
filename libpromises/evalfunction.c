@@ -824,30 +824,40 @@ static FnCallResult FnCallClassify(EvalContext *ctx, FnCall *fp, Rlist *finalarg
 
 static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
 {
-    if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" does not have an absolute path\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
-
-    if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
-    {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
-    }
-
-    struct stat statbuf;
     char comm[CF_BUFSIZE];
-    int useshell = strcmp(RlistScalarValue(finalargs->next), "useshell") == 0;
+    const char *shellarg = RlistScalarValue(finalargs->next);
+    ShellType shelltype;
+    if (strcmp(shellarg, "useshell") == 0)
+    {
+        shelltype = SHELL_TYPE_USE;
+    }
+    else if (strcmp(shellarg, "powershell") == 0)
+    {
+        shelltype = SHELL_TYPE_POWERSHELL;
+    }
+    else
+    {
+        shelltype = SHELL_TYPE_NONE;
+    }
+
+    if (shelltype == SHELL_TYPE_NONE)
+    {
+        if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
+        {
+            Log(LOG_LEVEL_ERR, "execresult \"%s\" does not have an absolute path\n", RlistScalarValue(finalargs));
+            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+        }
+
+        if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+        {
+            Log(LOG_LEVEL_ERR, "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
+            return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("!any"), RVAL_TYPE_SCALAR } };
+        }
+    }
 
     snprintf(comm, CF_BUFSIZE, "%s", RlistScalarValue(finalargs));
 
-    if (stat(CommandArg0(RlistScalarValue(finalargs)), &statbuf) == -1)
-    {
-        return (FnCallResult) { FNCALL_FAILURE };
-    }
-
-    if (ShellCommandReturnsZero(comm, useshell))
+    if (ShellCommandReturnsZero(comm, shelltype))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup("any"), RVAL_TYPE_SCALAR } };
     }
@@ -860,24 +870,41 @@ static FnCallResult FnCallReturnsZero(EvalContext *ctx, FnCall *fp, Rlist *final
 /*********************************************************************/
 
 static FnCallResult FnCallExecResult(EvalContext *ctx, FnCall *fp, Rlist *finalargs)
-  /* execresult("/programpath",useshell|noshell) */
+  /* execresult("/programpath",useshell|noshell|powershell) */
 {
-    if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
+    const char *shellarg = RlistScalarValue(finalargs->next);
+    ShellType shelltype;
+    if (strcmp(shellarg, "useshell") == 0)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" does not have an absolute path\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        shelltype = SHELL_TYPE_USE;
+    }
+    else if (strcmp(shellarg, "powershell") == 0)
+    {
+        shelltype = SHELL_TYPE_POWERSHELL;
+    }
+    else
+    {
+        shelltype = SHELL_TYPE_NONE;
     }
 
-    if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+    if (shelltype == SHELL_TYPE_NONE)
     {
-        CfOut(OUTPUT_LEVEL_ERROR, "", "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
-        return (FnCallResult) { FNCALL_FAILURE };
+        if (!IsAbsoluteFileName(RlistScalarValue(finalargs)))
+        {
+            Log(LOG_LEVEL_ERR, "execresult \"%s\" does not have an absolute path\n", RlistScalarValue(finalargs));
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
+
+        if (!IsExecutable(CommandArg0(RlistScalarValue(finalargs))))
+        {
+            Log(LOG_LEVEL_ERR, "execresult \"%s\" is assumed to be executable but isn't\n", RlistScalarValue(finalargs));
+            return (FnCallResult) { FNCALL_FAILURE };
+        }
     }
 
-    bool useshell = strcmp(RlistScalarValue(finalargs->next), "useshell") == 0;
     char buffer[CF_EXPANDSIZE];
 
-    if (GetExecOutput(RlistScalarValue(finalargs), buffer, useshell))
+    if (GetExecOutput(RlistScalarValue(finalargs), buffer, shelltype))
     {
         return (FnCallResult) { FNCALL_SUCCESS, { xstrdup(buffer), RVAL_TYPE_SCALAR } };
     }
@@ -5035,8 +5062,8 @@ FnCallArg ESCAPE_ARGS[] =
 
 FnCallArg EXECRESULT_ARGS[] =
 {
-    {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
-    {"useshell,noshell", DATA_TYPE_OPTION, "Shell encapsulation option"},
+    {CF_PATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
+    {"useshell,noshell,powershell", DATA_TYPE_OPTION, "Shell encapsulation option"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 
@@ -5515,7 +5542,7 @@ FnCallArg REMOTECLASSESMATCHING_ARGS[] =
 FnCallArg RETURNSZERO_ARGS[] =
 {
     {CF_ABSPATHRANGE, DATA_TYPE_STRING, "Fully qualified command path"},
-    {"useshell,noshell", DATA_TYPE_OPTION, "Shell encapsulation option"},
+    {"useshell,noshell,powershell", DATA_TYPE_OPTION, "Shell encapsulation option"},
     {NULL, DATA_TYPE_NONE, NULL}
 };
 

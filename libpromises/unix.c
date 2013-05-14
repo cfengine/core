@@ -32,6 +32,7 @@
 #include "conversion.h"
 #include "matching.h"
 #include "logging_old.h"
+#include "logging.h"
 #include "communication.h"
 #include "pipes.h"
 #include "exec_tools.h"
@@ -218,10 +219,16 @@ int IsExecutable(const char *file)
     return false;
 }
 
-bool ShellCommandReturnsZero(const char *command, bool useshell)
+bool ShellCommandReturnsZero(const char *command, ShellType shell)
 {
     int status;
     pid_t pid;
+
+    if (shell == SHELL_TYPE_POWERSHELL)
+    {
+        Log(LOG_LEVEL_ERR, "Powershell is only supported on Windows");
+        return false;
+    }
 
     if ((pid = fork()) < 0)
     {
@@ -232,7 +239,7 @@ bool ShellCommandReturnsZero(const char *command, bool useshell)
     {
         ALARM_PID = -1;
 
-        if (useshell)
+        if (shell == SHELL_TYPE_USE)
         {
             if (execl(SHELL_PATH, "sh", "-c", command, NULL) == -1)
             {

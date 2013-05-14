@@ -99,6 +99,51 @@ int SyslogPriorityFromString(const char *s)
     return FindTypeInArray(SYSLOG_PRIORITY_TYPES, s, 3, 3);
 }
 
+ShellType ShellTypeFromString(const char *string)
+{
+    // For historical reasons, supports all CF_BOOL values (true/false/yes/no...),
+    // as well as "noshell,useshell,powershell".
+    char *start, *end;
+    char *options = "noshell,useshell,powershell," CF_BOOL;
+    int i;
+    int size;
+
+    if (string == NULL)
+    {
+        return SHELL_TYPE_NONE;
+    }
+
+    start = options;
+    size = strlen(string);
+    for (i = 0;; i++)
+    {
+        end = strchr(start, ',');
+        if (end == NULL)
+        {
+            break;
+        }
+        if (size == end - start && strncmp(string, start, end - start) == 0)
+        {
+            int cfBoolIndex;
+            switch (i)
+            {
+            case 0:
+                return SHELL_TYPE_NONE;
+            case 1:
+                return SHELL_TYPE_USE;
+            case 2:
+                return SHELL_TYPE_POWERSHELL;
+            default:
+                // Even cfBoolIndex is true, odd cfBoolIndex is false (from CF_BOOL).
+                cfBoolIndex = i-3;
+                return (cfBoolIndex & 1) ? SHELL_TYPE_NONE : SHELL_TYPE_USE;
+            }
+        }
+        start = end + 1;
+    }
+    return SHELL_TYPE_NONE;
+}
+
 DatabaseType DatabaseTypeFromString(const char *s)
 {
     static const char *DB_TYPES[] = { "mysql", "postgres", NULL };

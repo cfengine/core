@@ -289,10 +289,7 @@ int getaddrinfo(const char *node,
 
 	if (node) {
 		if (node[0] == '\0') {
-			return getaddr_info_single_addr(service,
-					INADDR_ANY,
-					&hints,
-					res);
+			return EAI_FAIL;
 		} else if (hints.ai_flags & AI_NUMERICHOST) {
 			struct in_addr ip;
 			if (inet_pton(AF_INET, node, &ip) <= 0)

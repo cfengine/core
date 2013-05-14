@@ -1,6 +1,12 @@
 
 @verbatim
-bundle common g
+
+body common control 
+{
+  bundlesequence => { "select" };
+}
+
+bundle agent select
 {
 classes:
   "selection" select_class => { "one", "two" };

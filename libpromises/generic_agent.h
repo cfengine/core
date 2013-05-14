@@ -42,7 +42,6 @@ typedef struct
 
     bool check_not_writable_by_others;
     bool check_runnable;
-    bool debug_mode;
 
     StringSet *heap_soft;
     StringSet *heap_negated;

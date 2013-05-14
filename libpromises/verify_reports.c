@@ -122,8 +122,7 @@ static void ReportToFile(const char *logfile, const char *message)
     FILE *fp = fopen(logfile, "a");
     if (fp == NULL)
     {
-        Log(LOG_LEVEL_ERR, "Could not open log file '%s'. (fopen: %s)", logfile, GetErrorStr());
-        printf("%s\n", message);
+        Log(LOG_LEVEL_ERR, "Could not open log file '%s', message '%s'. (fopen: %s)", logfile, message, GetErrorStr());
     }
     else
     {

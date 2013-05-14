@@ -1556,7 +1556,7 @@ Report GetReportConstraints(const EvalContext *ctx, const Promise *pp)
 
     if ((r.result) && ((r.haveprintfile) || (r.filename) || (r.showstate) || (r.to_file) || (r.lastseen)))
     {
-        Log(LOG_LEVEL_ERR, "bundle_return_value promise for \"%s\" in bundle \"%s\" with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
+        Log(LOG_LEVEL_ERR, "bundle_return_value promise for '%s' in bundle '%s' with too many constraints (ignored)", pp->promiser, PromiseGetBundle(pp)->name);
     }
     
     return r;
@@ -1645,7 +1645,7 @@ Database GetDatabaseConstraints(const EvalContext *ctx, const Promise *pp)
 
     if (value && ((d.db_server_type) == DATABASE_TYPE_NONE))
     {
-        Log(LOG_LEVEL_ERR, "Unsupported database type \"%s\" in databases promise", value);
+        Log(LOG_LEVEL_ERR, "Unsupported database type '%s' in databases promise", value);
         PromiseRef(LOG_LEVEL_ERR, pp);
     }
 

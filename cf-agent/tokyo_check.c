@@ -63,17 +63,12 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
     DBMeta *dbmeta;
 
     dbmeta = (DBMeta *) xcalloc(1, sizeof(DBMeta));
-    if (!dbmeta)
-    {
-        Log(LOG_LEVEL_ERR, "Error allocating memory : %s", strerror(errno));
-        return NULL;
-    }
 
     realpath(dbfilename, dbmeta->dbpath);
     if (-1 == (dbmeta->fd = open(dbmeta->dbpath, O_RDONLY)))
     {
-        Log(LOG_LEVEL_ERR, "Failure opening file [%s] : %s", dbmeta->dbpath,
-                strerror(errno));
+        Log(LOG_LEVEL_ERR, "Failure opening file '%s'. (open: %s)", dbmeta->dbpath,
+                GetErrorStr());
         if (dbmeta)
         {
             free(dbmeta);
@@ -83,8 +78,8 @@ static DBMeta *DBMetaNewDirect(const char *dbfilename)
 
     if (256 != read(dbmeta->fd, hbuf, 256))
     {
-        Log(LOG_LEVEL_ERR, "Failure reading from database [%s] : %s",
-                dbmeta->dbpath, strerror(errno));
+        Log(LOG_LEVEL_ERR, "Failure reading from database '%s'. (read: %s)",
+                dbmeta->dbpath, GetErrorStr());
         close(dbmeta->fd);
         if (dbmeta)
         {

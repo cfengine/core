@@ -62,7 +62,7 @@ extern PlatformContext VSYSTEMHARDCLASS;
 extern char VFQNAME[];
 extern char VUQNAME[];
 
-extern int DONTDO;
+extern bool DONTDO;
 extern int IGNORELOCK;
 extern bool MINUSF;
 
@@ -76,7 +76,7 @@ extern int VEXPIREAFTER;
 
 extern const char *OBS[CF_OBSERVABLES][2];
 
-extern int FIPS_MODE;
+extern bool FIPS_MODE;
 extern char POLICY_SERVER[CF_MAX_IP_LEN];
 extern HashMethod CF_DEFAULT_DIGEST;
 extern int CF_DEFAULT_DIGEST_LEN;

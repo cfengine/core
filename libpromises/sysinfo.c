@@ -367,7 +367,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
 
     if ((tloc = time((time_t *) NULL)) == -1)
     {
-        printf("Couldn't read system clock\n");
+        Log(LOG_LEVEL_ERR, "Couldn't read system clock");
     }
 
     snprintf(workbuf, CF_BUFSIZE, "%s", CLASSTEXT[i]);

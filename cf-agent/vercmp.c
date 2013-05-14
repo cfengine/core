@@ -80,7 +80,7 @@ static VersionCmpResult RunCmpCommand(EvalContext *ctx, const char *command, con
         return VERCMP_ERROR;
     }
 
-    Log(LOG_LEVEL_VERBOSE, "Executing %s", expanded_command);
+    Log(LOG_LEVEL_VERBOSE, "Executing '%s'", expanded_command);
 
     int retcode = cf_pclose(pfp);
 

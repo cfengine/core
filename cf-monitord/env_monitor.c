@@ -768,7 +768,7 @@ static void UpdateAverages(EvalContext *ctx, char *timekey, Averages newvals)
         return;
     }
 
-    Log(LOG_LEVEL_INFO, "Updated averages at %s", timekey);
+    Log(LOG_LEVEL_INFO, "Updated averages at '%s'", timekey);
 
     WriteDB(dbp, timekey, &newvals, sizeof(Averages));
     WriteDB(dbp, "DATABASE_AGE", &AGE, sizeof(double));

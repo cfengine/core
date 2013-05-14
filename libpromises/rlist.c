@@ -1154,7 +1154,7 @@ void RlistReverse(Rlist **list)
 
 /* Human-readable serialization */
 
-static void FnCallPrint(Writer *writer, const FnCall *call)
+static void FnCallWrite(Writer *writer, const FnCall *call)
 {
     WriterWrite(writer, call->name);
     WriterWriteChar(writer, '(');
@@ -1168,7 +1168,7 @@ static void FnCallPrint(Writer *writer, const FnCall *call)
             break;
 
         case RVAL_TYPE_FNCALL:
-            FnCallPrint(writer, RlistFnCallValue(rp));
+            FnCallWrite(writer, RlistFnCallValue(rp));
             break;
 
         default:
@@ -1238,7 +1238,7 @@ void RvalWrite(Writer *writer, Rval rval)
         break;
 
     case RVAL_TYPE_FNCALL:
-        FnCallPrint(writer, RvalFnCallValue(rval));
+        FnCallWrite(writer, RvalFnCallValue(rval));
         break;
 
     case RVAL_TYPE_NOPROMISEE:

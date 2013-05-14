@@ -68,7 +68,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
     {
         if ((RlistIsStringIn(a.signals, "term")) || (RlistIsStringIn(a.signals, "kill")))
         {
-            Log(LOG_LEVEL_INFO, "(warning) Promise %s kills then restarts - never strictly converges",
+            Log(LOG_LEVEL_WARNING, "Promise '%s' kills then restarts - never strictly converges",
                   pp->promiser);
             PromiseRef(LOG_LEVEL_INFO, pp);
         }
@@ -84,7 +84,7 @@ static int ProcessSanityChecks(Attributes a, Promise *pp)
 
     if (promised_zero && (a.restart_class))
     {
-        Log(LOG_LEVEL_ERR, "Promise constraint conflicts - %s processes cannot have zero count if restarted",
+        Log(LOG_LEVEL_ERR, "Promise constraint conflicts - '%s' processes cannot have zero count if restarted",
               pp->promiser);
         PromiseRef(LOG_LEVEL_ERR, pp);
         ret = false;
@@ -145,7 +145,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
     {
         if ((matches < a.process_count.min_range) || (matches > a.process_count.max_range))
         {
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for \'%s\' was out of promised range (%d found)\n", pp->promiser, matches);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_CHANGE, pp, a, "Process count for '%s' was out of promised range (%d found)", pp->promiser, matches);
             for (const Rlist *rp = a.process_count.out_of_range_define; rp != NULL; rp = rp->next)
             {
                 if (!EvalContextHeapContainsSoft(ctx, rp->item))
@@ -164,7 +164,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                     EvalContextHeapAddSoft(ctx, rp->item, PromiseGetNamespace(pp));
                 }
             }
-            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for %s is kept", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "Process promise for '%s' is kept", pp->promiser);
             out_of_range = false;
         }
     }
@@ -196,7 +196,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
             if (DONTDO)
             {
                 cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                     " -- Need to keep process-stop promise for %s, but only a warning is promised", pp->promiser);
+                     "Need to keep process-stop promise for '%s', but only a warning is promised", pp->promiser);
             }
             else
             {
@@ -207,7 +207,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
                 else
                 {
                     cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_FAIL, pp, a,
-                         "Process promise to stop %s could not be kept because %s the stop operator failed",
+                         "Process promise to stop '%s' could not be kept because '%s' the stop operator failed",
                          pp->promiser, a.process_stop);
                     DeleteItemList(killlist);
                     return;
@@ -226,7 +226,7 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
 
     if (!need_to_restart)
     {
-        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s\n", pp->promiser);
+        cfPS(ctx, LOG_LEVEL_VERBOSE, PROMISE_RESULT_NOOP, pp, a, "No restart promised for %s", pp->promiser);
         return;
     }
     else
@@ -234,11 +234,11 @@ static void VerifyProcessOp(EvalContext *ctx, Item *procdata, Attributes a, Prom
         if (a.transaction.action == cfa_warn)
         {
             cfPS(ctx, LOG_LEVEL_ERR, PROMISE_RESULT_WARN, pp, a,
-                 " -- Need to keep restart promise for %s, but only a warning is promised", pp->promiser);
+                 "Need to keep restart promise for '%s', but only a warning is promised", pp->promiser);
         }
         else
         {
-            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for %s", pp->promiser);
+            cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Making a one-time restart promise for '%s'", pp->promiser);
             EvalContextHeapAddSoft(ctx, a.restart_class, PromiseGetNamespace(pp));
         }
     }
@@ -259,7 +259,7 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
 
     if (a.signals == NULL)
     {
-        Log(LOG_LEVEL_VERBOSE, "No signals to send for %s", pp->promiser);
+        Log(LOG_LEVEL_VERBOSE, "No signals to send for '%s'", pp->promiser);
         return 0;
     }
 
@@ -286,13 +286,13 @@ int DoAllSignals(EvalContext *ctx, Item *siglist, Attributes a, Promise *pp)
                 }
                 else
                 {
-                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)\n",
+                    cfPS(ctx, LOG_LEVEL_INFO, PROMISE_RESULT_CHANGE, pp, a, "Signalled '%s' (%d) to process %jd (%s)",
                          RlistScalarValue(rp), signal, (intmax_t)pid, ip->name);
                 }
             }
             else
             {
-                Log(LOG_LEVEL_ERR, "Need to keep signal promise \'%s\' in process entry %s",
+                Log(LOG_LEVEL_ERR, "Need to keep signal promise '%s' in process entry '%s'",
                       RlistScalarValue(rp), ip->name);
             }
         }
@@ -313,11 +313,11 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
     {
         if (a.transaction.action == cfa_warn)
         {
-            Log(LOG_LEVEL_ERR, "Matched: %s", ip->name);
+            Log(LOG_LEVEL_ERR, "Matched '%s'", ip->name);
         }
         else
         {
-            Log(LOG_LEVEL_INFO, "Matched: %s", ip->name);
+            Log(LOG_LEVEL_INFO, "Matched '%s'", ip->name);
         }
 
         pid_t pid = ip->counter;
@@ -326,7 +326,7 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
         {
             if ((RlistLen(a.signals) == 1) && (RlistIsStringIn(a.signals, "hup")))
             {
-                Log(LOG_LEVEL_VERBOSE, "(Okay to send only HUP to init)");
+                Log(LOG_LEVEL_VERBOSE, "Okay to send only HUP to init");
             }
             else
             {
@@ -345,8 +345,8 @@ static int FindPidMatches(Item *procdata, Item **killlist, Attributes a, const c
 
         if ((a.transaction.action == cfa_warn) && promised_zero)
         {
-            Log(LOG_LEVEL_ERR, "Process alert: %s", procdata->name);     /* legend */
-            Log(LOG_LEVEL_ERR, "Process alert: %s", ip->name);
+            Log(LOG_LEVEL_ERR, "Process alert '%s'", procdata->name);     /* legend */
+            Log(LOG_LEVEL_ERR, "Process alert '%s'", ip->name);
             continue;
         }
 

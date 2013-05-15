@@ -18,6 +18,11 @@ void test_benchmark(void)
     PolicyDestroy(p);
 }
 
+void test_no_bundle_or_body_keyword(void)
+{
+    assert_false(LoadPolicy("no_bundle_or_body_keyword.cf"));
+}
+
 void test_bundle_invalid_type(void)
 {
     assert_false(LoadPolicy("bundle_invalid_type.cf"));
@@ -257,7 +262,9 @@ int main()
         unit_test(test_rval_function_wrong_input_type),
         unit_test(test_rval_function_forgot_cp_semicolon),
         unit_test(test_rval_function_forgot_cp_colon),
-        unit_test(test_rval_wrong_input_type)
+        unit_test(test_rval_wrong_input_type),
+
+        unit_test(test_no_bundle_or_body_keyword)
 
     };
 

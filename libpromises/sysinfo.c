@@ -470,7 +470,7 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
         }
     }
 
-/* Windows special directories */
+/* Windows special directories and tools */
 
 #ifdef __MINGW32__
     if (NovaWin_GetWinDir(workbuf, sizeof(workbuf)))
@@ -481,6 +481,16 @@ void GetNameInfo3(EvalContext *ctx, AgentType agent_type)
     if (NovaWin_GetSysDir(workbuf, sizeof(workbuf)))
     {
         ScopeNewSpecialScalar(ctx, "sys", "winsysdir", workbuf, DATA_TYPE_STRING);
+
+        char filename[CF_BUFSIZE];
+        if (snprintf(filename, sizeof(filename), "%s%s", workbuf, "\\WindowsPowerShell\\v1.0\\powershell.exe") < sizeof(filename))
+        {
+            if (NovaWin_FileExists(filename))
+            {
+                EvalContextHeapAddHard(ctx, "powershell");
+                CfOut(OUTPUT_LEVEL_VERBOSE, "", "Additional hard class defined as: %s\n", "powershell");
+            }
+        }
     }
 
     if (NovaWin_GetProgDir(workbuf, sizeof(workbuf)))
